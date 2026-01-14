@@ -89,11 +89,11 @@ export function ProposalsDataTable<TData, TValue>({
         <Tabs value={statusFilter} onValueChange={setStatusFilter}>
             <TabsList>
                 <TabsTrigger value="Todos">Todos</TabsTrigger>
-                <TabsTrigger value="In Progress">Em Andamento</TabsTrigger>
-                <TabsTrigger value="Approved">Averbados</TabsTrigger>
-                <TabsTrigger value="Paid">Pagos</TabsTrigger>
-                <TabsTrigger value="Rejected">Reprovados</TabsTrigger>
-                <TabsTrigger value="Awaiting Balance">Aguardando Saldo</TabsTrigger>
+                <TabsTrigger value="Em Andamento">Em Andamento</TabsTrigger>
+                <TabsTrigger value="Aprovado">Aprovados</TabsTrigger>
+                <TabsTrigger value="Pago">Pagos</TabsTrigger>
+                <TabsTrigger value="Rejeitado">Reprovados</TabsTrigger>
+                <TabsTrigger value="Aguardando Saldo">Aguardando Saldo</TabsTrigger>
             </TabsList>
         </Tabs>
         <div className="flex items-center justify-between py-4">

@@ -26,7 +26,7 @@ export function Header() {
               <AvatarImage src="https://picsum.photos/seed/user/100/100" data-ai-hint="person face" />
               <AvatarFallback>CB</AvatarFallback>
             </Avatar>
-            <span className="sr-only">Toggle user menu</span>
+            <span className="sr-only">Alternar menu de usuário</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">

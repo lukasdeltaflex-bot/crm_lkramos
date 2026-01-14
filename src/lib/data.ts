@@ -13,68 +13,68 @@ export const customers: Customer[] = [
   { id: '10', name: 'Fernanda Rocha', cpf: '000.111.222-33', phone: '(11) 91111-2222', email: 'fernanda.rocha@example.com', dateOfBirth: '1954-10-12' },
 ];
 
-const productTypes: ProductType[] = ['Margin', 'Port', 'Refin', 'Plastic Card', 'Supplementary Withdrawal', 'Refin Port'];
-const proposalStatuses: ProposalStatus[] = ['Paid', 'Approved', 'In Progress', 'Awaiting Balance', 'Rejected'];
+const productTypes: ProductType[] = ['Margem', 'Portabilidade', 'Refinanciamento', 'Cartão de Crédito', 'Saque Complementar', 'Refin da Port'];
+const proposalStatuses: ProposalStatus[] = ['Pago', 'Aprovado', 'Em Andamento', 'Aguardando Saldo', 'Rejeitado'];
 
 export const proposals: Proposal[] = [
   {
-    id: 'p1', proposalNumber: 'PRO123456', customerId: '1', product: 'Margin', table: 'Tabela A', term: 84,
-    installmentAmount: 350.50, netAmount: 15000, grossAmount: 29442, status: 'Paid', commissionValue: 750,
+    id: 'p1', proposalNumber: 'PRO123456', customerId: '1', product: 'Margem', table: 'Tabela A', term: 84,
+    installmentAmount: 350.50, netAmount: 15000, grossAmount: 29442, status: 'Pago', commissionValue: 750,
     commissionPaid: true, dateDigitized: '2023-01-10', dateApproved: '2023-01-12', datePaid: '2023-01-15', commissionPaymentDate: '2023-02-01'
   },
   {
-    id: 'p2', proposalNumber: 'PRO123457', customerId: '2', product: 'Port', table: 'Tabela B', term: 72,
-    installmentAmount: 500.00, netAmount: 20000, grossAmount: 36000, status: 'Approved', commissionValue: 1200,
+    id: 'p2', proposalNumber: 'PRO123457', customerId: '2', product: 'Portabilidade', table: 'Tabela B', term: 72,
+    installmentAmount: 500.00, netAmount: 20000, grossAmount: 36000, status: 'Aprovado', commissionValue: 1200,
     commissionPaid: false, dateDigitized: '2023-02-05', dateApproved: '2023-02-10'
   },
   {
-    id: 'p3', proposalNumber: 'PRO123458', customerId: '3', product: 'Refin', table: 'Tabela C', term: 84,
-    installmentAmount: 200.00, netAmount: 8000, grossAmount: 16800, status: 'In Progress', commissionValue: 400,
+    id: 'p3', proposalNumber: 'PRO123458', customerId: '3', product: 'Refinanciamento', table: 'Tabela C', term: 84,
+    installmentAmount: 200.00, netAmount: 8000, grossAmount: 16800, status: 'Em Andamento', commissionValue: 400,
     commissionPaid: false, dateDigitized: '2023-03-01'
   },
   {
-    id: 'p4', proposalNumber: 'PRO123459', customerId: '4', product: 'Plastic Card', table: 'Cartão Benefício', term: 1,
-    installmentAmount: 0, netAmount: 1500, grossAmount: 1500, status: 'Rejected', commissionValue: 50,
+    id: 'p4', proposalNumber: 'PRO123459', customerId: '4', product: 'Cartão de Crédito', table: 'Cartão Benefício', term: 1,
+    installmentAmount: 0, netAmount: 1500, grossAmount: 1500, status: 'Rejeitado', commissionValue: 50,
     commissionPaid: false, dateDigitized: '2023-03-15'
   },
   {
-    id: 'p5', proposalNumber: 'PRO123460', customerId: '5', product: 'Supplementary Withdrawal', table: 'Saque RMC', term: 1,
-    installmentAmount: 0, netAmount: 2500, grossAmount: 2500, status: 'Paid', commissionValue: 125,
+    id: 'p5', proposalNumber: 'PRO123460', customerId: '5', product: 'Saque Complementar', table: 'Saque RMC', term: 1,
+    installmentAmount: 0, netAmount: 2500, grossAmount: 2500, status: 'Pago', commissionValue: 125,
     commissionPaid: true, dateDigitized: '2023-04-02', dateApproved: '2023-04-03', datePaid: '2023-04-05', commissionPaymentDate: '2023-05-01'
   },
   {
-    id: 'p6', proposalNumber: 'PRO123461', customerId: '6', product: 'Refin Port', table: 'Tabela D', term: 84,
-    installmentAmount: 450.75, netAmount: 18000, grossAmount: 37863, status: 'Awaiting Balance', commissionValue: 900,
+    id: 'p6', proposalNumber: 'PRO123461', customerId: '6', product: 'Refin da Port', table: 'Tabela D', term: 84,
+    installmentAmount: 450.75, netAmount: 18000, grossAmount: 37863, status: 'Aguardando Saldo', commissionValue: 900,
     commissionPaid: false, dateDigitized: '2023-04-20'
   },
   {
-    id: 'p7', proposalNumber: 'PRO123462', customerId: '1', product: 'Refin', table: 'Tabela A', term: 84,
-    installmentAmount: 150.00, netAmount: 5000, grossAmount: 12600, status: 'Paid', commissionValue: 250,
+    id: 'p7', proposalNumber: 'PRO123462', customerId: '1', product: 'Refinanciamento', table: 'Tabela A', term: 84,
+    installmentAmount: 150.00, netAmount: 5000, grossAmount: 12600, status: 'Pago', commissionValue: 250,
     commissionPaid: true, dateDigitized: '2023-05-10', dateApproved: '2023-05-12', datePaid: '2023-05-16', commissionPaymentDate: '2023-06-01'
   },
   {
-    id: 'p8', proposalNumber: 'PRO123463', customerId: '7', product: 'Margin', table: 'Tabela F', term: 84,
-    installmentAmount: 1000.00, netAmount: 40000, grossAmount: 84000, status: 'Approved', commissionValue: 2000,
+    id: 'p8', proposalNumber: 'PRO123463', customerId: '7', product: 'Margem', table: 'Tabela F', term: 84,
+    installmentAmount: 1000.00, netAmount: 40000, grossAmount: 84000, status: 'Aprovado', commissionValue: 2000,
     commissionPaid: false, dateDigitized: '2023-05-25', dateApproved: '2023-05-28'
   },
   {
-    id: 'p9', proposalNumber: 'PRO123464', customerId: '8', product: 'Port', table: 'Tabela B', term: 60,
-    installmentAmount: 800.00, netAmount: 30000, grossAmount: 48000, status: 'In Progress', commissionValue: 1800,
+    id: 'p9', proposalNumber: 'PRO123464', customerId: '8', product: 'Portabilidade', table: 'Tabela B', term: 60,
+    installmentAmount: 800.00, netAmount: 30000, grossAmount: 48000, status: 'Em Andamento', commissionValue: 1800,
     commissionPaid: false, dateDigitized: '2023-06-01'
   },
   {
-    id: 'p10', proposalNumber: 'PRO123465', customerId: '9', product: 'Margin', table: 'Tabela G', term: 84,
-    installmentAmount: 650.00, netAmount: 25000, grossAmount: 54600, status: 'Paid', commissionValue: 1250,
+    id: 'p10', proposalNumber: 'PRO123465', customerId: '9', product: 'Margem', table: 'Tabela G', term: 84,
+    installmentAmount: 650.00, netAmount: 25000, grossAmount: 54600, status: 'Pago', commissionValue: 1250,
     commissionPaid: true, dateDigitized: '2023-06-10', dateApproved: '2023-06-12', datePaid: '2023-06-15', commissionPaymentDate: '2023-07-01'
   },
   {
-    id: 'p11', proposalNumber: 'PRO123466', customerId: '10', product: 'Refin Port', table: 'Tabela E', term: 84,
-    installmentAmount: 300.00, netAmount: 12000, grossAmount: 25200, status: 'Approved', commissionValue: 600,
+    id: 'p11', proposalNumber: 'PRO123466', customerId: '10', product: 'Refin da Port', table: 'Tabela E', term: 84,
+    installmentAmount: 300.00, netAmount: 12000, grossAmount: 25200, status: 'Aprovado', commissionValue: 600,
     commissionPaid: false, dateDigitized: '2023-07-02', dateApproved: '2023-07-05'
   },
   {
-    id: 'p12', proposalNumber: 'PRO123467', customerId: '2', product: 'Plastic Card', table: 'Cartão Benefício', term: 1,
-    installmentAmount: 0, netAmount: 1800, grossAmount: 1800, status: 'Paid', commissionValue: 90,
+    id: 'p12', proposalNumber: 'PRO123467', customerId: '2', product: 'Cartão de Crédito', table: 'Cartão Benefício', term: 1,
+    installmentAmount: 0, netAmount: 1800, grossAmount: 1800, status: 'Pago', commissionValue: 90,
     commissionPaid: true, dateDigitized: '2023-07-20', dateApproved: '2023-07-21', datePaid: '2023-07-22', commissionPaymentDate: '2023-08-01'
   }
 ];
@@ -84,7 +84,7 @@ export const getProposalsWithCustomerData = () => {
   return proposals.map(proposal => {
     const customer = customers.find(c => c.id === proposal.customerId);
     if (!customer) {
-        throw new Error(`Customer with id ${proposal.customerId} not found for proposal ${proposal.id}`);
+        throw new Error(`Cliente com id ${proposal.customerId} não encontrado para a proposta ${proposal.id}`);
     }
     return {
       ...proposal,

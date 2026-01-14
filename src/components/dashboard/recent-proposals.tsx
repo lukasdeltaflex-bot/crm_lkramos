@@ -45,13 +45,13 @@ export function RecentProposals() {
                     variant="outline"
                     className={cn({
                       'border-green-500 text-green-500':
-                        proposal.status === 'Paid' ||
-                        proposal.status === 'Approved',
+                        proposal.status === 'Pago' ||
+                        proposal.status === 'Aprovado',
                       'border-yellow-500 text-yellow-500':
-                        proposal.status === 'In Progress' ||
-                        proposal.status === 'Awaiting Balance',
+                        proposal.status === 'Em Andamento' ||
+                        proposal.status === 'Aguardando Saldo',
                       'border-red-500 text-red-500':
-                        proposal.status === 'Rejected',
+                        proposal.status === 'Rejeitado',
                     })}
                   >
                     {proposal.status}

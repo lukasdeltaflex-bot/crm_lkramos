@@ -8,21 +8,21 @@ export type Customer = {
 };
 
 export type ProductType =
-  | 'Margin'
-  | 'Margin CLT'
-  | 'Supplementary Withdrawal'
-  | 'Plastic Card'
-  | 'Port'
-  | 'Refin Port'
-  | 'Refin'
-  | 'FGTS Withdrawal';
+  | 'Margem'
+  | 'Margem CLT'
+  | 'Saque Complementar'
+  | 'Cartão de Crédito'
+  | 'Portabilidade'
+  | 'Refin da Port'
+  | 'Refinanciamento'
+  | 'Saque FGTS';
 
 export type ProposalStatus =
-  | 'In Progress'
-  | 'Awaiting Balance'
-  | 'Approved'
-  | 'Paid'
-  | 'Rejected';
+  | 'Em Andamento'
+  | 'Aguardando Saldo'
+  | 'Aprovado'
+  | 'Pago'
+  | 'Rejeitado';
 
 export type Proposal = {
   id: string;

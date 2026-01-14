@@ -29,14 +29,14 @@ export const columns: ColumnDef<ProposalWithCustomer>[] = [
           (table.getIsSomePageRowsSelected() && 'indeterminate')
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
+        aria-label="Selecionar tudo"
       />
     ),
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
+        aria-label="Selecionar linha"
       />
     ),
     enableSorting: false,
@@ -81,9 +81,9 @@ export const columns: ColumnDef<ProposalWithCustomer>[] = [
         <Badge
           variant="outline"
           className={cn({
-            'border-green-500 text-green-500': status === 'Paid' || status === 'Approved',
-            'border-yellow-500 text-yellow-500': status === 'In Progress' || status === 'Awaiting Balance',
-            'border-red-500 text-red-500': status === 'Rejected',
+            'border-green-500 text-green-500': status === 'Pago' || status === 'Aprovado',
+            'border-yellow-500 text-yellow-500': status === 'Em Andamento' || status === 'Aguardando Saldo',
+            'border-red-500 text-red-500': status === 'Rejeitado',
           })}
         >
           {status}
@@ -115,7 +115,7 @@ export const columns: ColumnDef<ProposalWithCustomer>[] = [
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
+                <span className="sr-only">Abrir menu</span>
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
