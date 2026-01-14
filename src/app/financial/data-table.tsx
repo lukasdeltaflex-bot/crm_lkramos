@@ -43,7 +43,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { ChevronDown, X, Printer } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { CommissionStatus, Proposal, Customer } from '@/lib/types';
@@ -93,10 +93,6 @@ export function FinancialDataTable<TData extends ProposalWithCustomer, TValue>({
     }
   });
 
-  const handlePrint = () => {
-    window.print();
-  }
-
   React.useEffect(() => {
     const statusColumn = table.getColumn('commissionStatus');
     if (statusFilter === 'Todos') {
@@ -122,7 +118,7 @@ export function FinancialDataTable<TData extends ProposalWithCustomer, TValue>({
 
   return (
     <Card>
-      <div className="p-4 space-y-4 print:p-0">
+      <div className="p-4 space-y-4 print:p-0 print:border-none print:shadow-none">
         <div className="flex flex-wrap gap-2 items-center print:hidden">
             <Tabs value={statusFilter} onValueChange={(value) => setStatusFilter(value as CommissionStatus | 'Todos')}>
                 <TabsList>
@@ -171,7 +167,6 @@ export function FinancialDataTable<TData extends ProposalWithCustomer, TValue>({
             </Popover>
             {date && <Button variant="ghost" size="icon" onClick={() => setDate(undefined)}><X className="h-4 w-4" /></Button>}
             <div className="flex-grow" />
-            <Button onClick={handlePrint}><Printer /> Imprimir Relatório</Button>
         </div>
 
         <FinancialSummary rows={table.getFilteredRowModel().rows as Row<ProposalWithCustomer>[]} isPrivacyMode={isPrivacyMode}/>
@@ -212,7 +207,7 @@ export function FinancialDataTable<TData extends ProposalWithCustomer, TValue>({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <div className="rounded-md border">
+        <div className="rounded-md border print:border-none">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (

@@ -17,8 +17,9 @@ import { useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
-export function Header() {
+export function Header({ className }: { className?: string }) {
   const auth = useAuth();
   const router = useRouter();
 
@@ -45,7 +46,7 @@ export function Header() {
   };
 
   return (
-    <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6">
+    <header className={cn("flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6", className)}>
       <SidebarTrigger className="md:hidden" />
       <div className="w-full flex-1">
         {/* Pode ser usado para uma busca global */}

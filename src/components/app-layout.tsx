@@ -15,7 +15,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
       <SidebarProvider>
-        <Sidebar>
+        <Sidebar className="print:hidden">
           <SidebarHeader>
             <Logo />
           </SidebarHeader>
@@ -23,9 +23,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <SidebarNav />
           </SidebarContent>
         </Sidebar>
-        <SidebarInset>
-          <Header />
-          <main className="flex-1 p-4 sm:p-6">{children}</main>
+        <SidebarInset className="print:m-0 print:p-0">
+          <Header className="print:hidden" />
+          <main className="flex-1 p-4 sm:p-6 print:p-0">{children}</main>
         </SidebarInset>
       </SidebarProvider>
     </AuthGuard>

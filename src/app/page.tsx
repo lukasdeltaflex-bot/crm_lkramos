@@ -71,6 +71,7 @@ export default function DashboardPage() {
       toDate.setHours(23, 59, 59, 999);
   
       return proposals.filter(p => {
+          if (!p.dateDigitized) return false;
           const proposalDate = new Date(p.dateDigitized);
           return proposalDate >= fromDate && proposalDate <= toDate;
       })
@@ -81,6 +82,7 @@ export default function DashboardPage() {
     const end = new Date(start.getFullYear(), start.getMonth() + 1, 0);
     end.setHours(23, 59, 59, 999);
     return proposals.filter(p => {
+        if (!p.dateDigitized) return false;
         const proposalDate = new Date(p.dateDigitized);
         return proposalDate >= start && proposalDate <= end;
     });

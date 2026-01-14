@@ -10,7 +10,7 @@ import { collection, query, where, doc } from 'firebase/firestore';
 import type { Proposal, Customer } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Printer } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -20,6 +20,8 @@ import {
 import { CommissionForm } from './commission-form';
 import { toast } from '@/hooks/use-toast';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export type ProposalWithCustomer = Proposal & { customer: Customer | undefined };
 
@@ -49,7 +51,7 @@ export default function FinancialPage() {
     return proposals.map(p => ({
       ...p,
       customer: customersMap.get(p.customerId),
-    }));
+    })).filter(p => p.customer); // Filter out proposals with no customer
   }, [proposals, customers]);
 
   const isLoading = proposalsLoading || customersLoading || isUserLoading;
@@ -78,16 +80,29 @@ export default function FinancialPage() {
     setIsSheetOpen(false);
   };
 
+  const handlePrint = () => {
+    window.print();
+  }
+
   const columns = React.useMemo(() => getColumns({ onEdit: handleEditCommission }), []);
 
   return (
     <AppLayout>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between print:hidden">
         <PageHeader title="Controle Financeiro" />
-        <Button variant="ghost" size="icon" onClick={() => setIsPrivacyMode(!isPrivacyMode)}>
-          {isPrivacyMode ? <EyeOff /> : <Eye />}
-          <span className="sr-only">{isPrivacyMode ? 'Mostrar valores' : 'Ocultar valores'}</span>
-        </Button>
+        <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={() => setIsPrivacyMode(!isPrivacyMode)}>
+            {isPrivacyMode ? <EyeOff /> : <Eye />}
+            <span className="sr-only">{isPrivacyMode ? 'Mostrar valores' : 'Ocultar valores'}</span>
+            </Button>
+            <Button onClick={handlePrint}><Printer /> Imprimir Relatório</Button>
+        </div>
+      </div>
+      <div className="print:block hidden mb-4">
+        <h1 className="text-2xl font-bold">Relatório Financeiro</h1>
+        <p className="text-sm text-muted-foreground">
+            Gerado em: {format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+        </p>
       </div>
 
        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
