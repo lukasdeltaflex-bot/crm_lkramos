@@ -1,4 +1,3 @@
-
 'use client';
 import React from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -19,21 +18,9 @@ import { toast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, query, where, deleteDoc } from 'firebase/firestore';
 import {
-  addDocumentNonBlocking,
   setDocumentNonBlocking,
 } from '@/firebase/non-blocking-updates';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-  } from "@/components/ui/alert-dialog"
 
 export type ProposalWithCustomer = Proposal & { customer: Customer | undefined };
 
@@ -120,7 +107,6 @@ export default function ProposalsPage() {
     if (sheetMode === 'edit' && selectedProposal) {
       const proposalToUpdate: Partial<Proposal> = {
         ...data,
-        // Ensure dates are strings
         dateDigitized: data.dateDigitized ? new Date(data.dateDigitized).toISOString() : '',
         dateApproved: data.dateApproved ? new Date(data.dateApproved).toISOString() : undefined,
         datePaidToClient: data.datePaidToClient ? new Date(data.datePaidToClient).toISOString() : undefined,

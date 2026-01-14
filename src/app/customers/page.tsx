@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
 import { CustomerDataTable } from './data-table';
@@ -15,11 +15,11 @@ import {
 import { CustomerForm } from './customer-form';
 import type { Customer } from '@/lib/types';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, writeBatch, query, where, getDocs } from 'firebase/firestore';
+import { collection, doc, writeBatch, query, where } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import {
-  setDocumentNonBlocking,
   updateDocumentNonBlocking,
+  setDocumentNonBlocking
 } from '@/firebase/non-blocking-updates';
 import {
   AlertDialog,
@@ -42,18 +42,16 @@ export default function CustomersPage() {
   const [sheetMode, setSheetMode] = React.useState<'new' | 'edit'>('new');
   const [rowSelection, setRowSelection] = React.useState({});
 
-  // Query to get only non-anonymized customers for the current user
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(collection(firestore, 'customers'), where('userId', '==', user.uid));
   }, [firestore, user]);
 
-  const { data: customers, isLoading } = useCollection<Customer>(customersQuery);
+  const { data: customers, isLoading, error } = useCollection<Customer>(customersQuery);
 
-  // Function to seed data
-  useEffect(() => {
+  React.useEffect(() => {
     const seedData = async () => {
-      if (firestore && user && customers && customers.length === 0) {
+      if (firestore && user && customers?.length === 0) {
         console.log("Seeding initial data...");
         const batch = writeBatch(firestore);
         
@@ -72,7 +70,6 @@ export default function CustomersPage() {
 
         sampleProposals.forEach((proposalData, index) => {
             const docRef = doc(collection(firestore, 'loanProposals'));
-            // Assign a customer ID cyclically
             const customerId = customerRefs.get(`customer_${index % sampleCustomers.length}`);
             if (customerId) {
               const newProposal = {
@@ -97,7 +94,6 @@ export default function CustomersPage() {
         }
       }
     };
-    // Only run seed if not loading and data is confirmed empty
     if (!isLoading && customers) {
         seedData();
     }
@@ -119,7 +115,7 @@ export default function CustomersPage() {
   const handleAnonymizeCustomer = (customerId: string) => {
     if (!firestore) return;
     const customerRef = doc(firestore, 'customers', customerId);
-    const anonymizedData = {
+    const anonymizedData: Partial<Customer> = {
       name: 'Cliente Removido',
       cpf: '000.000.000-00',
       benefitNumber: '0000000000',
@@ -140,7 +136,7 @@ export default function CustomersPage() {
     if (selectedIds.length === 0) return;
 
     const batch = writeBatch(firestore);
-    const anonymizedData = {
+    const anonymizedData: Partial<Customer> = {
         name: 'Cliente Removido',
         cpf: '000.000.000-00',
         benefitNumber: '0000000000',

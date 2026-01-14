@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -38,7 +37,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ChevronDown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import type { ProposalStatus } from '@/lib/types';
+import { proposalStatuses } from '@/lib/config-data';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -58,6 +57,8 @@ export function ProposalsDataTable<TData, TValue>({
       dateApproved: false,
       datePaidToClient: false,
       debtBalanceArrivalDate: false,
+      operator: false,
+      commissionValue: false,
     });
   const [rowSelection, setRowSelection] = React.useState({});
   
@@ -81,9 +82,11 @@ export function ProposalsDataTable<TData, TValue>({
     },
   });
   
-  const statusFilter = table.getColumn('status')?.getFilterValue() as string[] | undefined;
-  const setStatusFilter = (value?: string) => {
-    table.getColumn('status')?.setFilterValue(value ? [value] : undefined);
+  const statusFilter = (table.getColumn('status')?.getFilterValue() as string[])?.[0] ?? 'Todos';
+
+  const setStatusFilter = (value: string) => {
+    const newValue = value === 'Todos' ? undefined : [value];
+    table.getColumn('status')?.setFilterValue(newValue);
   };
   
 
@@ -91,17 +94,14 @@ export function ProposalsDataTable<TData, TValue>({
     <Card>
       <div className="p-4">
         <Tabs 
-          value={statusFilter?.[0] ?? 'Todos'} 
-          onValueChange={(value) => setStatusFilter(value === 'Todos' ? undefined : value)}
+          value={statusFilter} 
+          onValueChange={setStatusFilter}
         >
             <TabsList className="h-auto flex-wrap justify-start">
                 <TabsTrigger value="Todos">Todos</TabsTrigger>
-                <TabsTrigger value="Em Andamento">Em Andamento</TabsTrigger>
-                <TabsTrigger value="Aguardando Saldo">Aguardando Saldo</TabsTrigger>
-                <TabsTrigger value="Pago">Pago</TabsTrigger>
-                <TabsTrigger value="Saldo Pago">Saldo Pago</TabsTrigger>
-                <TabsTrigger value="Pendente">Pendente</TabsTrigger>
-                <TabsTrigger value="Reprovado">Reprovado</TabsTrigger>
+                {proposalStatuses.map(status => (
+                    <TabsTrigger key={status} value={status}>{status}</TabsTrigger>
+                ))}
             </TabsList>
         </Tabs>
         <div className="flex items-center justify-between py-4">

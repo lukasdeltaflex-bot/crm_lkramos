@@ -11,6 +11,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+  } from "@/components/ui/alert-dialog"
 import { MoreHorizontal, ArrowUpDown } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { formatCurrency } from '@/lib/utils';
@@ -31,8 +42,14 @@ type ActionsCellProps = {
 
 const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
-    const date = new Date(dateString);
-    return format(date, "dd/MM/yyyy", { locale: ptBR });
+    try {
+        const date = new Date(dateString);
+        // Check if date is valid
+        if (isNaN(date.getTime())) return '-';
+        return format(date, "dd/MM/yyyy", { locale: ptBR });
+    } catch (e) {
+        return '-';
+    }
 }
 
 
@@ -52,12 +69,28 @@ const ActionsCell: React.FC<ActionsCellProps> = ({ row, onEdit, onView, onDelete
             <DropdownMenuItem onClick={() => onView(proposal)}>Ver detalhes</DropdownMenuItem>
             <DropdownMenuItem onClick={() => onEdit(proposal)}>Editar</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              className="text-destructive focus:text-destructive focus:bg-destructive/10"
-              onClick={() => onDelete(proposal.id)}
-            >
-              Cancelar
-            </DropdownMenuItem>
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <DropdownMenuItem 
+                        onSelect={(e) => e.preventDefault()}
+                        className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                        >
+                        Cancelar
+                    </DropdownMenuItem>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Essa ação não pode ser desfeita. A proposta nº {proposal.proposalNumber} será cancelada permanentemente.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Voltar</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => onDelete(proposal.id)}>Cancelar Proposta</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

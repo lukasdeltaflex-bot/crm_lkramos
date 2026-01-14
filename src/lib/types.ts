@@ -26,7 +26,6 @@ export type ProposalStatus =
   | 'Em Andamento'
   | 'Aguardando Saldo'
   | 'Pago'
-  | 'Rejeitado'
   | 'Saldo Pago'
   | 'Pendente'
   | 'Reprovado';
