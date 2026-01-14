@@ -19,14 +19,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Sparkles } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Customer } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { summarizeNotes } from '@/ai/flows/summarize-notes-flow';
+import { toast } from '@/hooks/use-toast';
 
 const customerSchema = z.object({
   name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres.'),
@@ -49,6 +51,7 @@ interface CustomerFormProps {
 }
 
 export function CustomerForm({ customer, onSubmit }: CustomerFormProps) {
+  const [isSummarizing, setIsSummarizing] = useState(false);
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
     defaultValues: {
@@ -94,6 +97,37 @@ export function CustomerForm({ customer, onSubmit }: CustomerFormProps) {
     value = value.replace(/(\d{3})(\d)/, "$1.$2");
     value = value.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
     form.setValue('cpf', value, { shouldValidate: true });
+  };
+  
+  const handleSummarize = async () => {
+    const currentObservations = form.getValues('observations');
+    if (!currentObservations || currentObservations.trim() === '') {
+      toast({
+        variant: 'destructive',
+        title: 'Campo vazio',
+        description: 'Não há observações para resumir.',
+      });
+      return;
+    }
+
+    setIsSummarizing(true);
+    try {
+      const summary = await summarizeNotes(currentObservations);
+      form.setValue('observations', summary, { shouldValidate: true });
+      toast({
+        title: 'Observações Resumidas!',
+        description: 'As anotações foram resumidas com sucesso pela IA.',
+      });
+    } catch (error) {
+      console.error('Error summarizing notes:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao resumir',
+        description: 'Não foi possível gerar o resumo. Tente novamente.',
+      });
+    } finally {
+      setIsSummarizing(false);
+    }
   };
 
 
@@ -200,7 +234,19 @@ export function CustomerForm({ customer, onSubmit }: CustomerFormProps) {
               name="observations"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Observações</FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Observações</FormLabel>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleSummarize}
+                      disabled={isSummarizing}
+                    >
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      {isSummarizing ? 'Resumindo...' : 'Resumir com IA'}
+                    </Button>
+                  </div>
                   <FormControl>
                     <Textarea
                       placeholder="Anotações sobre o cliente..."
