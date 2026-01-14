@@ -107,9 +107,9 @@ export function ProposalsDataTable<TData, TValue>({
         <div className="flex items-center justify-between py-4">
           <Input
             placeholder="Filtrar por cliente..."
-            value={(table.getColumn('customer_name')?.getFilterValue() as string) ?? ''}
+            value={(table.getColumn('customer.name')?.getFilterValue() as string) ?? ''}
             onChange={(event) =>
-              table.getColumn('customer_name')?.setFilterValue(event.target.value)
+              table.getColumn('customer.name')?.setFilterValue(event.target.value)
             }
             className="max-w-sm"
           />
@@ -126,7 +126,7 @@ export function ProposalsDataTable<TData, TValue>({
                 .map((column) => {
                   const idMap: {[key: string]: string} = {
                     proposalNumber: 'Proposta nº',
-                    customer_name: 'Cliente',
+                    'customer.name': 'Cliente',
                     grossAmount: 'Valor Bruto',
                     commissionValue: 'Comissão',
                     dateDigitized: 'Data Digitação',

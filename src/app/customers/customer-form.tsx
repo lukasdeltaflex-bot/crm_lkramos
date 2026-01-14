@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -34,7 +33,7 @@ const customerSchema = z.object({
   benefit: z.string().min(1, 'O benefício é obrigatório.'),
   phone: z.string().min(10, 'O telefone é obrigatório.'),
   email: z.string().email('O email é inválido.'),
-  dateOfBirth: z.date({ required_error: 'A data de nascimento é obrigatória.' }),
+  birthDate: z.date({ required_error: 'A data de nascimento é obrigatória.' }),
   observations: z.string().optional(),
 });
 
@@ -50,7 +49,7 @@ export function CustomerForm({ customer, onSubmit }: CustomerFormProps) {
     resolver: zodResolver(customerSchema),
     defaultValues: {
       ...customer,
-      dateOfBirth: customer?.dateOfBirth ? new Date(customer.dateOfBirth) : undefined,
+      birthDate: customer?.birthDate ? new Date(customer.birthDate) : undefined,
     },
   });
 
@@ -58,7 +57,7 @@ export function CustomerForm({ customer, onSubmit }: CustomerFormProps) {
     const newCustomer: Customer = {
       id: customer?.id || Date.now().toString(),
       ...data,
-      dateOfBirth: format(data.dateOfBirth, 'yyyy-MM-dd'),
+      birthDate: format(data.birthDate, 'yyyy-MM-dd'),
     }
     console.log('New Customer Data:', newCustomer);
     toast({
@@ -149,7 +148,7 @@ export function CustomerForm({ customer, onSubmit }: CustomerFormProps) {
             />
              <FormField
                     control={form.control}
-                    name="dateOfBirth"
+                    name="birthDate"
                     render={({ field }) => (
                     <FormItem className="flex flex-col pt-2">
                         <FormLabel>Data de Nascimento</FormLabel>

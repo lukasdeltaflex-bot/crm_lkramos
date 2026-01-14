@@ -9,22 +9,25 @@ import {
 import { Logo } from '@/components/logo';
 import { SidebarNav } from '@/components/sidebar-nav';
 import { Header } from '@/components/header';
+import { AuthGuard } from '@/components/auth/auth-guard';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
-          <Logo />
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarNav />
-        </SidebarContent>
-      </Sidebar>
-      <SidebarInset>
-        <Header />
-        <main className="flex-1 p-4 sm:p-6">{children}</main>
-      </SidebarInset>
-    </SidebarProvider>
+    <AuthGuard>
+      <SidebarProvider>
+        <Sidebar>
+          <SidebarHeader>
+            <Logo />
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarNav />
+          </SidebarContent>
+        </Sidebar>
+        <SidebarInset>
+          <Header />
+          <main className="flex-1 p-4 sm:p-6">{children}</main>
+        </SidebarInset>
+      </SidebarProvider>
+    </AuthGuard>
   );
 }
