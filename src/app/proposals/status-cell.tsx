@@ -25,9 +25,8 @@ const getStatusClass = (status: ProposalStatus) => {
     'border-green-500/50 text-green-500 hover:bg-green-500/10': status === 'Pago' || status === 'Saldo Pago',
     'border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/10': status === 'Em Andamento',
     'border-blue-500/50 text-blue-500 hover:bg-blue-500/10': status === 'Aguardando Saldo',
-    'border-red-500/50 text-red-500 hover:bg-red-500/10': status === 'Rejeitado',
+    'border-red-500/50 text-red-500 hover:bg-red-500/10': status === 'Reprovado',
     'border-purple-500/50 text-purple-500 hover:bg-purple-500/10': status === 'Pendente',
-    'border-orange-500/50 text-orange-500 hover:bg-orange-500/10': status === 'Saldo Pago',
   });
 };
 

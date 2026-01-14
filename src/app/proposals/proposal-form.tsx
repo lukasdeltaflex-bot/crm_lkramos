@@ -138,6 +138,30 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
         },
     });
 
+  const { watch, setValue } = form;
+  const product = watch('product');
+  const commissionBase = watch('commissionBase');
+  const commissionPercentage = watch('commissionPercentage');
+  const grossAmount = watch('grossAmount');
+  const netAmount = watch('netAmount');
+
+  useEffect(() => {
+    if (isReadOnly) return;
+    
+    let baseValue = 0;
+    if (commissionBase === 'gross') {
+        baseValue = grossAmount || 0;
+    } else if (commissionBase === 'net') {
+        baseValue = netAmount || 0;
+    }
+
+    if (baseValue > 0 && commissionPercentage >= 0) {
+        const calculatedCommission = baseValue * (commissionPercentage / 100);
+        setValue('commissionValue', parseFloat(calculatedCommission.toFixed(2)), { shouldValidate: true });
+    }
+  }, [commissionBase, commissionPercentage, grossAmount, netAmount, setValue, isReadOnly]);
+
+
   useEffect(() => {
     if (proposal) {
       form.reset({
@@ -174,8 +198,6 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
     }
   }, [proposal, form]);
 
-
-  const product = form.watch('product');
 
   function handleFormSubmit(data: ProposalFormValues) {
     onSubmit(data);
@@ -319,7 +341,7 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
                         </FormItem>
                         )}
                     />
-                    <FormField
+                     <FormField
                         control={form.control}
                         name="grossAmount"
                         render={({ field }) => (

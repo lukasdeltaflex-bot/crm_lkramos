@@ -60,7 +60,7 @@ export function ProposalsDataTable<TData, TValue>({
       debtBalanceArrivalDate: false,
     });
   const [rowSelection, setRowSelection] = React.useState({});
-  const [statusFilter, setStatusFilter] = React.useState<ProposalStatus | 'Todos'>('Todos');
+  
 
   const table = useReactTable({
     data,
@@ -81,19 +81,19 @@ export function ProposalsDataTable<TData, TValue>({
     },
   });
   
-  React.useEffect(() => {
-    const statusColumn = table.getColumn('status');
-    if (statusFilter === 'Todos') {
-        statusColumn?.setFilterValue(undefined);
-    } else {
-        statusColumn?.setFilterValue([statusFilter]);
-    }
-  }, [statusFilter, table]);
+  const statusFilter = table.getColumn('status')?.getFilterValue() as string[] | undefined;
+  const setStatusFilter = (value?: string) => {
+    table.getColumn('status')?.setFilterValue(value ? [value] : undefined);
+  };
+  
 
   return (
     <Card>
       <div className="p-4">
-        <Tabs value={statusFilter} onValueChange={(value) => setStatusFilter(value as ProposalStatus | 'Todos')}>
+        <Tabs 
+          value={statusFilter?.[0] ?? 'Todos'} 
+          onValueChange={(value) => setStatusFilter(value === 'Todos' ? undefined : value)}
+        >
             <TabsList className="h-auto flex-wrap justify-start">
                 <TabsTrigger value="Todos">Todos</TabsTrigger>
                 <TabsTrigger value="Em Andamento">Em Andamento</TabsTrigger>
