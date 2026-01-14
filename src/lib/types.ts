@@ -3,11 +3,11 @@ export type Customer = {
   id: string;
   name: string;
   cpf: string;
-  benefit: string;
   phone: string;
   email: string;
-  dateOfBirth: string; // YYYY-MM-DD
+  birthDate: string; // YYYY-MM-DD
   observations?: string;
+  userId: string;
 };
 
 export type ProductType =

@@ -39,7 +39,7 @@ export function BirthdayAlerts() {
     return age;
   };
 
-  const upcoming75 = customers.filter(c => getAge(c.dateOfBirth) >= 74);
+  const upcoming75 = customers.filter(c => getAge(c.birthDate) >= 74);
 
   useEffect(() => {
     async function fetchAlerts() {

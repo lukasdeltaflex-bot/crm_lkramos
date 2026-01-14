@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,15 +23,14 @@ import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { toast } from '@/hooks/use-toast';
 import type { Customer } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
+import { useEffect } from 'react';
 
 const customerSchema = z.object({
   name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres.'),
-  cpf: z.string().min(14, 'O CPF deve ter 11 dígitos.').max(14, 'O CPF deve ter 11 dígitos.'),
-  benefit: z.string().min(1, 'O benefício é obrigatório.'),
+  cpf: z.string().length(14, 'O CPF deve ter 11 dígitos.'),
   phone: z.string().min(10, 'O telefone é obrigatório.'),
   email: z.string().email('O email é inválido.'),
   birthDate: z.date({ required_error: 'A data de nascimento é obrigatória.' }),
@@ -39,32 +39,53 @@ const customerSchema = z.object({
 
 type CustomerFormValues = z.infer<typeof customerSchema>;
 
+// The form now only deals with the data it needs to edit.
+// It doesn't need to know about `id` or `userId`.
+type FormCustomer = Omit<Customer, 'id' | 'userId'>;
+
 interface CustomerFormProps {
   customer?: Customer;
-  onSubmit: () => void;
+  onSubmit: (data: FormCustomer) => void;
 }
 
 export function CustomerForm({ customer, onSubmit }: CustomerFormProps) {
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
     defaultValues: {
-      ...customer,
-      birthDate: customer?.birthDate ? new Date(customer.birthDate) : undefined,
+      name: '',
+      cpf: '',
+      phone: '',
+      email: '',
+      observations: '',
     },
   });
 
+  useEffect(() => {
+    if (customer) {
+      form.reset({
+        ...customer,
+        birthDate: customer.birthDate ? new Date(customer.birthDate) : undefined,
+      });
+    } else {
+      form.reset({
+        name: '',
+        cpf: '',
+        phone: '',
+        email: '',
+        birthDate: undefined,
+        observations: '',
+      });
+    }
+  }, [customer, form]);
+
   function handleFormSubmit(data: CustomerFormValues) {
-    const newCustomer: Customer = {
-      id: customer?.id || Date.now().toString(),
+    // We only pass back the data that the parent component needs.
+    // The parent is responsible for adding id/userId.
+    const newCustomerData: FormCustomer = {
       ...data,
       birthDate: format(data.birthDate, 'yyyy-MM-dd'),
-    }
-    console.log('New Customer Data:', newCustomer);
-    toast({
-      title: 'Cliente Salvo!',
-      description: `O cliente ${data.name} foi salvo com sucesso.`,
-    });
-    onSubmit();
+    };
+    onSubmit(newCustomerData);
   }
   
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,19 +123,6 @@ export function CustomerForm({ customer, onSubmit }: CustomerFormProps) {
                   <FormLabel>CPF</FormLabel>
                   <FormControl>
                     <Input placeholder="000.000.000-00" {...field} onChange={handleCpfChange} maxLength={14}/>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="benefit"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nº do Benefício</FormLabel>
-                  <FormControl>
-                    <Input placeholder="123456789-0" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

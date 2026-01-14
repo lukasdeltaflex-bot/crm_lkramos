@@ -19,7 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import type { Proposal } from '@/lib/types';
+import type { Customer, Proposal } from '@/lib/types';
 import { statusColumns } from './status-columns';
 import { customers } from '@/lib/data';
 
@@ -118,8 +118,10 @@ type ProposalWithCustomer = Proposal & { customer: { name: string } };
 export function ProposalsStatusTable({ proposals }: { proposals: Proposal[] }) {
     
     const data: ProposalWithCustomer[] = React.useMemo(() => {
+        const customerData = customers as (Omit<Customer, 'userId'> & { userId?: string })[];
+
         return proposals.map(proposal => {
-            const customer = customers.find(c => c.id === proposal.customerId);
+            const customer = customerData.find(c => c.id === proposal.customerId);
             return {
                 ...proposal,
                 customer: {
