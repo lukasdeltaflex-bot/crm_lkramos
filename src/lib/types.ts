@@ -49,10 +49,11 @@ export type Proposal = {
   promoter: string;
   bank: string;
   dateDigitized: string; // YYYY-MM-DD
-  dateApproved?: string; // YYYY-MM-DD
-  datePaid?: string; // YYYY-MM-DD
+  dateApproved?: string; // YYYY-MM-DD - Data de Averbação
+  datePaidToClient?: string; // YYYY-MM-DD - Data de Pagamento ao Cliente
   commissionPaymentDate?: string; // YYYY-MM-DD
   bankOrigin?: string;
+  debtBalanceArrivalDate?: string; // YYYY-MM-DD
   interestRate?: number;
   operator?: string;
   commissionBase?: 'gross' | 'net';

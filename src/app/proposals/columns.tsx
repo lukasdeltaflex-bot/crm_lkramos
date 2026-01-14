@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
@@ -26,6 +27,15 @@ type ActionsCellProps = {
     onEdit: (proposal: ProposalWithCustomer) => void;
     onView: (proposal: ProposalWithCustomer) => void;
 };
+
+const formatDate = (dateString?: string) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    // Adjust for timezone to show the correct date
+    const adjustedDate = new Date(date.valueOf() + date.getTimezoneOffset() * 60 * 1000);
+    return new Intl.DateTimeFormat('pt-BR').format(adjustedDate);
+}
+
 
 const ActionsCell: React.FC<ActionsCellProps> = ({ row, onEdit, onView }) => {
     const proposal = row.original;
@@ -143,12 +153,22 @@ export const getColumns = (
   {
     accessorKey: 'dateDigitized',
     header: 'Data Digitação',
-    cell: ({ row }) => {
-        const date = new Date(row.getValue('dateDigitized'))
-        // Adjust for timezone to show the correct date
-        const adjustedDate = new Date(date.valueOf() + date.getTimezoneOffset() * 60 * 1000);
-        return new Intl.DateTimeFormat('pt-BR').format(adjustedDate);
-    }
+    cell: ({ row }) => formatDate(row.getValue('dateDigitized'))
+  },
+  {
+    accessorKey: 'dateApproved',
+    header: 'Data Averbação',
+    cell: ({ row }) => formatDate(row.getValue('dateApproved'))
+  },
+  {
+    accessorKey: 'datePaidToClient',
+    header: 'Data Pgto. Cliente',
+    cell: ({ row }) => formatDate(row.getValue('datePaidToClient'))
+  },
+  {
+    accessorKey: 'debtBalanceArrivalDate',
+    header: 'Chegada Saldo',
+    cell: ({ row }) => formatDate(row.getValue('debtBalanceArrivalDate'))
   },
   {
     id: 'actions',

@@ -65,6 +65,9 @@ const proposalSchema = z.object({
   operator: z.string().min(1, "O nome do operador é obrigatório."),
 
   dateDigitized: z.date({ required_error: 'A data de digitação é obrigatória.' }),
+  dateApproved: z.date().optional(),
+  datePaidToClient: z.date().optional(),
+  debtBalanceArrivalDate: z.date().optional(),
 });
 
 type ProposalFormValues = z.infer<typeof proposalSchema>;
@@ -75,6 +78,52 @@ interface ProposalFormProps {
   onSubmit: () => void;
 }
 
+const DatePickerField = ({ name, label, control, isReadOnly }: { name: any, label: string, control: any, isReadOnly?: boolean }) => (
+    <FormField
+        control={control}
+        name={name}
+        render={({ field }) => (
+        <FormItem className="flex flex-col pt-2">
+            <FormLabel>{label}</FormLabel>
+            <Popover>
+            <PopoverTrigger asChild>
+                <FormControl>
+                <Button
+                    variant={'outline'}
+                    className={cn(
+                    'w-[240px] pl-3 text-left font-normal',
+                    !field.value && 'text-muted-foreground'
+                    )}
+                    disabled={isReadOnly}
+                >
+                    {field.value ? (
+                    format(field.value, 'PPP')
+                    ) : (
+                    <span>Escolha uma data</span>
+                    )}
+                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                </Button>
+                </FormControl>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                mode="single"
+                selected={field.value}
+                onSelect={field.onChange}
+                disabled={(date) =>
+                    date > new Date() || date < new Date('1900-01-01')
+                }
+                initialFocus
+                />
+            </PopoverContent>
+            </Popover>
+            <FormMessage />
+        </FormItem>
+        )}
+    />
+);
+
+
 export function ProposalForm({ proposal, isReadOnly, onSubmit }: ProposalFormProps) {
   const form = useForm<ProposalFormValues>({
     resolver: zodResolver(proposalSchema),
@@ -82,6 +131,9 @@ export function ProposalForm({ proposal, isReadOnly, onSubmit }: ProposalFormPro
         ...(proposal ? {
             ...proposal,
             dateDigitized: proposal.dateDigitized ? new Date(proposal.dateDigitized) : undefined,
+            dateApproved: proposal.dateApproved ? new Date(proposal.dateApproved) : undefined,
+            datePaidToClient: proposal.datePaidToClient ? new Date(proposal.datePaidToClient) : undefined,
+            debtBalanceArrivalDate: proposal.debtBalanceArrivalDate ? new Date(proposal.debtBalanceArrivalDate) : undefined,
         } : {
             dateDigitized: new Date(),
         })
@@ -353,7 +405,7 @@ export function ProposalForm({ proposal, isReadOnly, onSubmit }: ProposalFormPro
                         </FormItem>
                         )}
                     />
-                    {product === 'Portabilidade' && (
+                    {(product === 'Portabilidade' || product === 'Refin Port') && (
                         <FormField
                             control={form.control}
                             name="bankOrigin"
@@ -414,7 +466,7 @@ export function ProposalForm({ proposal, isReadOnly, onSubmit }: ProposalFormPro
             
             {/* Status and Finalization */}
             <div className="space-y-4">
-                <h3 className="text-lg font-medium">Finalização</h3>
+                <h3 className="text-lg font-medium">Finalização e Datas</h3>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                         control={form.control}
@@ -465,48 +517,14 @@ export function ProposalForm({ proposal, isReadOnly, onSubmit }: ProposalFormPro
                         )}
                     />
                  </div>
-                  <FormField
-                    control={form.control}
-                    name="dateDigitized"
-                    render={({ field }) => (
-                    <FormItem className="flex flex-col pt-2">
-                        <FormLabel>Data de Digitação</FormLabel>
-                        <Popover>
-                        <PopoverTrigger asChild>
-                            <FormControl>
-                            <Button
-                                variant={'outline'}
-                                className={cn(
-                                'w-[240px] pl-3 text-left font-normal',
-                                !field.value && 'text-muted-foreground'
-                                )}
-                                disabled={isReadOnly}
-                            >
-                                {field.value ? (
-                                format(field.value, 'PPP')
-                                ) : (
-                                <span>Escolha uma data</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                            </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) =>
-                                date > new Date() || date < new Date('1900-01-01')
-                            }
-                            initialFocus
-                            />
-                        </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                    </FormItem>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
+                    <DatePickerField name="dateDigitized" label="Data de Digitação" control={form.control} isReadOnly={isReadOnly} />
+                    <DatePickerField name="dateApproved" label="Data de Averbação" control={form.control} isReadOnly={isReadOnly} />
+                    <DatePickerField name="datePaidToClient" label="Data de Pagamento ao Cliente" control={form.control} isReadOnly={isReadOnly} />
+                    {(product === 'Portabilidade' || product === 'Refin Port') && (
+                        <DatePickerField name="debtBalanceArrivalDate" label="Chegada Saldo Devedor" control={form.control} isReadOnly={isReadOnly} />
                     )}
-                />
+                 </div>
             </div>
           </div>
         </ScrollArea>
@@ -519,5 +537,3 @@ export function ProposalForm({ proposal, isReadOnly, onSubmit }: ProposalFormPro
     </Form>
   );
 }
-
-    

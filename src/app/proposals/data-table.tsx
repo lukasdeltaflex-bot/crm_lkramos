@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -53,7 +54,11 @@ export function ProposalsDataTable<TData, TValue>({
     []
   );
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+    React.useState<VisibilityState>({
+      dateApproved: false,
+      datePaidToClient: false,
+      debtBalanceArrivalDate: false,
+    });
   const [rowSelection, setRowSelection] = React.useState({});
   const [statusFilter, setStatusFilter] = React.useState<ProposalStatus | 'Todos'>('Todos');
 
@@ -124,7 +129,10 @@ export function ProposalsDataTable<TData, TValue>({
                     customer_name: 'Cliente',
                     grossAmount: 'Valor Bruto',
                     commissionValue: 'Comissão',
-                    dateDigitized: 'Data Digitação'
+                    dateDigitized: 'Data Digitação',
+                    dateApproved: 'Data Averbação',
+                    datePaidToClient: 'Data Pgto. Cliente',
+                    debtBalanceArrivalDate: 'Chegada Saldo',
                   }
                   return (
                     <DropdownMenuCheckboxItem

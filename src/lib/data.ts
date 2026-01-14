@@ -18,14 +18,14 @@ export const proposals: Proposal[] = [
   {
     id: 'p1', proposalNumber: 'PRO123456', customerId: '1', product: 'Margem', table: 'Tabela A', term: 84,
     installmentAmount: 350.50, netAmount: 15000, grossAmount: 29442, status: 'Pago', approvingBody: 'INSS', commissionValue: 750,
-    commissionStatus: 'Paga', amountPaid: 750, commissionPercentage: 5, promoter: 'Promotora X', bank: '104 - Caixa Econômica Federal', dateDigitized: '2024-01-10', dateApproved: '2024-01-12', datePaid: '2024-01-15', commissionPaymentDate: '2024-02-01',
+    commissionStatus: 'Paga', amountPaid: 750, commissionPercentage: 5, promoter: 'Promotora X', bank: '104 - Caixa Econômica Federal', dateDigitized: '2024-01-10', dateApproved: '2024-01-12', datePaidToClient: '2024-01-15', commissionPaymentDate: '2024-02-01',
     operator: 'Operador 1', commissionBase: 'net', interestRate: 1.8
   },
   {
     id: 'p2', proposalNumber: 'PRO123457', customerId: '2', product: 'Portabilidade', table: 'Tabela B', term: 72,
     installmentAmount: 500.00, netAmount: 20000, grossAmount: 36000, status: 'Pendente', approvingBody: 'SPPREV', commissionValue: 1200,
-    commissionStatus: 'Pendente', commissionPercentage: 6, promoter: 'Promotora Y', bank: '237 - Bradesco S.A.', dateDigitized: '2024-05-05', dateApproved: '2024-05-10',
-    bankOrigin: '033 - Santander (Brasil) S.A.', operator: 'Operador 2', commissionBase: 'gross', interestRate: 1.9
+    commissionStatus: 'Pendente', commissionPercentage: 6, promoter: 'Promotora Y', bank: '237 - Bradesco S.A.', dateDigitized: '2024-05-05',
+    bankOrigin: '033 - Santander (Brasil) S.A.', operator: 'Operador 2', commissionBase: 'gross', interestRate: 1.9, debtBalanceArrivalDate: '2024-05-10',
   },
   {
     id: 'p3', proposalNumber: 'PRO123458', customerId: '3', product: 'Refin', table: 'Tabela C', term: 84,
@@ -42,49 +42,49 @@ export const proposals: Proposal[] = [
   {
     id: 'p5', proposalNumber: 'PRO123460', customerId: '5', product: 'Saque Complementar', table: 'Saque RMC', term: 1,
     installmentAmount: 0, netAmount: 2500, grossAmount: 2500, status: 'Saldo Pago', approvingBody: 'Federal', commissionValue: 125,
-    commissionStatus: 'Paga', amountPaid: 125, commissionPercentage: 5, promoter: 'Promotora Y', bank: '260 - Nu Pagamentos S.A. - Nubank', dateDigitized: '2024-05-02', dateApproved: '2024-05-03', datePaid: '2024-05-05', commissionPaymentDate: '2024-06-01',
+    commissionStatus: 'Paga', amountPaid: 125, commissionPercentage: 5, promoter: 'Promotora Y', bank: '260 - Nu Pagamentos S.A. - Nubank', dateDigitized: '2024-05-02', dateApproved: '2024-05-03', datePaidToClient: '2024-05-05', commissionPaymentDate: '2024-06-01',
     operator: 'Operador 2', commissionBase: 'net', interestRate: 0
   },
   {
     id: 'p6', proposalNumber: 'PRO123461', customerId: '6', product: 'Refin Port', table: 'Tabela D', term: 84,
     installmentAmount: 450.75, netAmount: 18000, grossAmount: 37863, status: 'Aguardando Saldo', approvingBody: 'INSS', commissionValue: 900,
     commissionStatus: 'Pendente', commissionPercentage: 5, promoter: 'Promotora Z', bank: '001 - Banco do Brasil S.A.', dateDigitized: '2024-06-20',
-    operator: 'Operador 1', commissionBase: 'gross', interestRate: 1.85
+    operator: 'Operador 1', commissionBase: 'gross', interestRate: 1.85, debtBalanceArrivalDate: '2024-06-25'
   },
   {
     id: 'p7', proposalNumber: 'PRO123462', customerId: '1', product: 'Refin', table: 'Tabela A', term: 84,
     installmentAmount: 150.00, netAmount: 5000, grossAmount: 12600, status: 'Pago', approvingBody: 'SPPREV', commissionValue: 250,
-    commissionStatus: 'Parcial', amountPaid: 200, commissionPercentage: 5, promoter: 'Promotora X', bank: '237 - Bradesco S.A.', dateDigitized: '2024-07-10', dateApproved: '2024-07-12', datePaid: '2024-07-16', commissionPaymentDate: '2024-08-01',
+    commissionStatus: 'Parcial', amountPaid: 200, commissionPercentage: 5, promoter: 'Promotora X', bank: '237 - Bradesco S.A.', dateDigitized: '2024-07-10', dateApproved: '2024-07-12', datePaidToClient: '2024-07-16', commissionPaymentDate: '2024-08-01',
     operator: 'Operador 3', commissionBase: 'net', interestRate: 1.95
   },
   {
     id: 'p8', proposalNumber: 'PRO123463', customerId: '7', product: 'Margem', table: 'Tabela F', term: 84,
     installmentAmount: 1000.00, netAmount: 40000, grossAmount: 84000, status: 'Pendente', approvingBody: 'INSS', commissionValue: 2000,
-    commissionStatus: 'Pendente', commissionPercentage: 5, promoter: 'Promotora Y', bank: '341 - Itaú Unibanco S.A.', dateDigitized: '2024-07-25', dateApproved: '2024-07-28',
+    commissionStatus: 'Pendente', commissionPercentage: 5, promoter: 'Promotora Y', bank: '341 - Itaú Unibanco S.A.', dateDigitized: '2024-07-25',
     operator: 'Operador 2', commissionBase: 'gross', interestRate: 1.75
   },
   {
     id: 'p9', proposalNumber: 'PRO123464', customerId: '8', product: 'Portabilidade', table: 'Tabela B', term: 60,
     installmentAmount: 800.00, netAmount: 30000, grossAmount: 48000, status: 'Em Andamento', approvingBody: 'Federal', commissionValue: 1800,
     commissionStatus: 'Pendente', commissionPercentage: 6, promoter: 'Promotora Z', bank: '077 - Inter S.A.', dateDigitized: '2023-11-01',
-    bankOrigin: '041 - Banrisul - do Estado do Rio Grande do Sul S.A.', operator: 'Operador 1', commissionBase: 'gross', interestRate: 2.1
+    bankOrigin: '041 - Banrisul - do Estado do Rio Grande do Sul S.A.', operator: 'Operador 1', commissionBase: 'gross', interestRate: 2.1, debtBalanceArrivalDate: '2023-11-10'
   },
   {
     id: 'p10', proposalNumber: 'PRO123465', customerId: '9', product: 'Margem', table: 'Tabela G', term: 84,
     installmentAmount: 650.00, netAmount: 25000, grossAmount: 54600, status: 'Saldo Pago', approvingBody: 'INSS', commissionValue: 1250,
-    commissionStatus: 'Paga', amountPaid: 1250, commissionPercentage: 5, promoter: 'Promotora X', bank: '260 - Nu Pagamentos S.A. - Nubank', dateDigitized: '2023-12-10', dateApproved: '2023-12-12', datePaid: '2023-12-15', commissionPaymentDate: '2024-01-01',
+    commissionStatus: 'Paga', amountPaid: 1250, commissionPercentage: 5, promoter: 'Promotora X', bank: '260 - Nu Pagamentos S.A. - Nubank', dateDigitized: '2023-12-10', dateApproved: '2023-12-12', datePaidToClient: '2023-12-15', commissionPaymentDate: '2024-01-01',
     operator: 'Operador 3', commissionBase: 'net', interestRate: 1.88
   },
   {
     id: 'p11', proposalNumber: 'PRO123466', customerId: '10', product: 'Refin Port', table: 'Tabela E', term: 84,
     installmentAmount: 300.00, netAmount: 12000, grossAmount: 25200, status: 'Pendente', approvingBody: 'SPPREV', commissionValue: 600,
-    commissionStatus: 'Pendente', commissionPercentage: 5, promoter: 'Promotora Y', bank: '001 - Banco do Brasil S.A.', dateDigitized: '2024-07-02', dateApproved: '2024-07-05',
-    operator: 'Operador 2', commissionBase: 'gross', interestRate: 1.99
+    commissionStatus: 'Pendente', commissionPercentage: 5, promoter: 'Promotora Y', bank: '001 - Banco do Brasil S.A.', dateDigitized: '2024-07-02',
+    operator: 'Operador 2', commissionBase: 'gross', interestRate: 1.99, debtBalanceArrivalDate: '2024-07-08'
   },
   {
     id: 'p12', proposalNumber: 'PRO123467', customerId: '2', product: 'Cartão - Plástico', table: 'Cartão Benefício', term: 1,
     installmentAmount: 0, netAmount: 1800, grossAmount: 1800, status: 'Saldo Pago', approvingBody: 'INSS', commissionValue: 90,
-    commissionStatus: 'Parcial', amountPaid: 70, commissionPercentage: 5, promoter: 'Promotora Z', bank: '237 - Bradesco S.A.', dateDigitized: '2024-05-20', dateApproved: '2024-05-21', datePaid: '2024-05-22', commissionPaymentDate: '2024-06-01',
+    commissionStatus: 'Parcial', amountPaid: 70, commissionPercentage: 5, promoter: 'Promotora Z', bank: '237 - Bradesco S.A.', dateDigitized: '2024-05-20', dateApproved: '2024-05-21', datePaidToClient: '2024-05-22', commissionPaymentDate: '2024-06-01',
     operator: 'Operador 1', commissionBase: 'net', interestRate: 23.5
   }
 ];
@@ -102,5 +102,3 @@ export const getProposalsWithCustomerData = () => {
     }
   });
 };
-
-    
