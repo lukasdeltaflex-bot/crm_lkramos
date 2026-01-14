@@ -257,7 +257,7 @@ export function CustomerForm({ customer, onSubmit }: CustomerFormProps) {
                                 mode="single"
                                 selected={field.value}
                                 onSelect={field.onChange}
-                                defaultMonth={field.value || new Date()}
+                                defaultMonth={field.value || new Date(new Date().setFullYear(new Date().getFullYear() - 30))}
                                 locale={ptBR}
                                 disabled={(date) =>
                                     date > new Date() || date < new Date('1900-01-01')

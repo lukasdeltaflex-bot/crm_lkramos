@@ -197,7 +197,7 @@ export default function DashboardPage() {
                 initialFocus
                 captionLayout="dropdown-buttons"
                 fromYear={2020}
-                toYear={2030}
+                toYear={new Date().getFullYear() + 5}
                 />
             </PopoverContent>
             </Popover>

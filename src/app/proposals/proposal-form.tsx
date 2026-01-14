@@ -116,6 +116,9 @@ const DatePickerField = ({ name, label, control, isReadOnly }: { name: any, labe
                     date > new Date() || date < new Date('1900-01-01')
                 }
                 initialFocus
+                fromYear={new Date().getFullYear() - 10}
+                toYear={new Date().getFullYear() + 5}
+                captionLayout="dropdown-buttons"
                 />
             </PopoverContent>
             </Popover>
