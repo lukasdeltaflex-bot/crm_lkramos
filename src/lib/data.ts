@@ -17,7 +17,7 @@ export const customers: Customer[] = [
 export const productTypes: ProductType[] = ['Margem', 'Margem CLT', 'Saque Complementar', 'Cartão - Plástico', 'Portabilidade', 'Refin Port', 'Refin', 'Saque FGTS'];
 export const proposalStatuses: ProposalStatus[] = ['Em Andamento', 'Aguardando Saldo', 'Pago', 'Saldo Pago', 'Pendente', 'Reprovado'];
 export const commissionStatuses: CommissionStatus[] = ['Pendente', 'Paga', 'Parcial'];
-export const approvingBodies: string[] = ['INSS', 'SPPREV', 'Federal', 'Outro'];
+export const approvingBodies: string[] = ['INSS', 'SPPREV', 'Federal', 'SIAPE', 'USP', 'GOVERNO', 'CLT', 'Outro'];
 
 export const banks: string[] = [
   "001 - Banco do Brasil S.A.",
