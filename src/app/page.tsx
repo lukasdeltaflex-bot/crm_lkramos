@@ -19,8 +19,10 @@ import {
   Calendar as CalendarIcon,
   Eye,
   EyeOff,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
-import { format, startOfMonth } from 'date-fns';
+import { format, startOfMonth, addMonths, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatCurrency, cn } from '@/lib/utils';
 import type { Proposal, ProposalStatus, Customer } from '@/lib/types';
@@ -32,12 +34,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import { FollowUpReminders } from '@/components/dashboard/follow-up-reminders';
 import { ProposalsStatusTable } from '@/components/dashboard/proposals-status-table';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -163,44 +159,31 @@ export default function DashboardPage() {
     },
   ];
 
+  const handleNextMonth = () => {
+    setDate(current => addMonths(current, 1));
+  };
+
+  const handlePreviousMonth = () => {
+    setDate(current => subMonths(current, 1));
+  };
+
+
   return (
     <AppLayout>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <PageHeader title="Dashboard" />
         <div className="flex items-center gap-2">
-            <Popover>
-            <PopoverTrigger asChild>
-                <Button
-                variant={'outline'}
-                className={cn(
-                    'w-[280px] justify-start text-left font-normal',
-                    !date && 'text-muted-foreground'
-                )}
-                >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {date ? (
-                    <span className="capitalize">
-                    {format(date, 'MMMM yyyy', { locale: ptBR })}
-                    </span>
-                ) : (
-                    <span>Escolha um mês</span>
-                )}
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-                <Calendar
-                mode="single"
-                selected={date}
-                onSelect={(newDate) => setDate(newDate || new Date())}
-                defaultMonth={date || new Date()}
-                locale={ptBR}
-                initialFocus
-                captionLayout="dropdown-buttons"
-                fromYear={2020}
-                toYear={new Date().getFullYear() + 5}
-                />
-            </PopoverContent>
-            </Popover>
+            <div className="flex items-center gap-2 rounded-md border p-1">
+              <Button variant="ghost" size="icon" onClick={handlePreviousMonth}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="w-40 text-center font-semibold capitalize">
+                {format(date, 'MMMM yyyy', { locale: ptBR })}
+              </span>
+              <Button variant="ghost" size="icon" onClick={handleNextMonth}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
             <Button variant="ghost" size="icon" onClick={() => setIsPrivacyMode(!isPrivacyMode)}>
             {isPrivacyMode ? <EyeOff /> : <Eye />}
             <span className="sr-only">{isPrivacyMode ? 'Mostrar valores' : 'Ocultar valores'}</span>
