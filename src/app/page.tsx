@@ -73,8 +73,8 @@ export default function DashboardPage() {
             title="Pendente"
             value={formatCurrency(pendingAmount)}
             icon={BadgePercent}
-            className="border-yellow-500/50"
-            valueClassName="text-yellow-500"
+            className="border-purple-500/50"
+            valueClassName="text-purple-500"
           />
         </div>
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
