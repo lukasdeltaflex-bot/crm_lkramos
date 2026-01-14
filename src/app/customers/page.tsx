@@ -44,13 +44,13 @@ export default function CustomersPage() {
   const [sheetMode, setSheetMode] = React.useState<'new' | 'edit'>('new');
   const [rowSelection, setRowSelection] = React.useState({});
 
-  // Query to get only non-anonymized customers
-  const customersCollectionRef = useMemoFirebase(() => {
+  // Query to get only non-anonymized customers for the current user
+  const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(collection(firestore, 'customers'), where('userId', '==', user.uid), where('name', '!=', 'Cliente Removido'));
   }, [firestore, user]);
 
-  const { data: customers, isLoading } = useCollection<Customer>(customersCollectionRef);
+  const { data: customers, isLoading } = useCollection<Customer>(customersQuery);
 
   const handleNewCustomer = () => {
     setSelectedCustomer(undefined);
@@ -131,13 +131,12 @@ export default function CustomersPage() {
         description: `O cliente ${data.name} foi atualizado com sucesso.`,
       });
     } else {
-      const newCustomer: Omit<Customer, 'id'> = {
+      const newDocRef = doc(collection(firestore, 'customers'));
+      const newCustomerWithId: Customer = {
         ...data,
+        id: newDocRef.id,
         userId: user.uid,
       };
-      // We need to add 'id' to the object before adding it to Firestore for it to be queryable by id
-      const newDocRef = doc(collection(firestore, 'customers'));
-      const newCustomerWithId = { ...newCustomer, id: newDocRef.id };
       setDocumentNonBlocking(newDocRef, newCustomerWithId, {});
       
       toast({

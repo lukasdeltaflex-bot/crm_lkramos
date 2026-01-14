@@ -1,3 +1,4 @@
+
 /**
  * Core Philosophy:
  * This ruleset enforces a strict user-ownership security model. All data entities,
@@ -27,11 +28,11 @@
  *
  * Denormalization for Authorization:
  * This ruleset leverages denormalization for efficient and secure authorization.
- * The /loanProposals collection contains a `customerId` field. This allows
+ * The /loanProposals collection contains a `userId` field. This allows
  * security rules to verify ownership with a direct field check, avoiding slow
  * and costly `get()` calls to the parent `/customers` document.
  *
- * However, the /commissions collection does not have a direct `customerId`. Its
+ * However, the /commissions collection does not have a direct `userId`. Its
  * rules must perform a `get()` call to the related `/loanProposals` document to
  * determine ownership, which is less performant but necessary given the current
  * data model.
@@ -58,58 +59,53 @@ service cloud.firestore {
     /**
       * Checks if the user is the owner of a loan proposal, which is referenced
       * by a commission document. This requires an extra database read (`get`)
-      * because the commission document itself does not contain the customerId.
+      * because the commission document itself does not contain the userId.
       */
     function ownsReferencedProposal(loanProposalId) {
       let proposalData = get(/databases/$(database)/documents/loanProposals/$(loanProposalId)).data;
-      return isOwner(proposalData.customerId);
+      return isOwner(proposalData.userId);
     }
 
 
     /**
      * @description
-     *   Manages customer profiles. Each user can create, read, update, and
-     *   delete their own customer document.
+     *   Manages customer profiles. Each user can manage their own data.
      * @path
      *   /customers/{customerId}
      * @allow
-     *   (create) A signed-in user creates their own profile: `create /customers/user_abc` where auth.uid is 'user_abc'.
+     *   (list) A signed-in user can list their own customers: `query /customers where userId == 'user_abc'`.
      * @deny
-     *   (get) A user tries to read another user's profile: `get /customers/user_xyz` where auth.uid is 'user_abc'.
-     * @deny
-     *   (list) A user tries to list all customers: `list /customers`.
-     * @principle
-     *   Restricts access to a user's own data tree using the document ID as the ownership key.
+     *   (list) A user tries to list all customers without a filter: `list /customers`.
      */
     match /customers/{customerId} {
-      allow get: if isOwner(customerId);
-      allow list: if false;
-      allow create: if isOwner(customerId) && request.resource.data.id == customerId;
-      allow update: if isOwner(customerId) && isExistingDocument() && request.resource.data.id == resource.data.id;
-      allow delete: if isOwner(customerId) && isExistingDocument();
+      allow get: if isOwner(resource.data.userId);
+      allow list: if isSignedIn() && request.query.resource.data.userId == request.auth.uid;
+      allow create: if isOwner(request.resource.data.userId) && request.resource.data.id == customerId;
+      allow update: if isOwner(resource.data.userId) && request.resource.data.id == resource.data.id && request.resource.data.userId == resource.data.userId;
+      allow delete: if isOwner(resource.data.userId);
     }
 
     /**
      * @description
      *   Stores loan proposals. Access is granted if the user's UID matches the
-     *   `customerId` field denormalized onto the proposal document.
+     *   `userId` field denormalized onto the proposal document.
      * @path
      *   /loanProposals/{loanProposalId}
      * @allow
-     *   (create) A user creates a proposal for themselves: `create /loanProposals/prop_123` with data `{ customerId: 'user_abc' }` where auth.uid is 'user_abc'.
+     *   (create) A user creates a proposal for themselves: `create /loanProposals/prop_123` with data `{ userId: 'user_abc' }` where auth.uid is 'user_abc'.
      * @deny
      *   (get) A user tries to read a proposal belonging to someone else.
      * @deny
-     *   (list) Listing all proposals is forbidden to prevent data leakage.
+     *   (list) Listing all proposals is forbidden without a filter.
      * @principle
-     *   Enforces document ownership for all operations using a denormalized `customerId` field.
+     *   Enforces document ownership for all operations using a denormalized `userId` field.
      */
     match /loanProposals/{loanProposalId} {
-      allow get: if isExistingDocument() && isOwner(resource.data.customerId);
-      allow list: if false;
-      allow create: if isOwner(request.resource.data.customerId);
-      allow update: if isExistingDocument() && isOwner(resource.data.customerId) && request.resource.data.customerId == resource.data.customerId;
-      allow delete: if isExistingDocument() && isOwner(resource.data.customerId);
+      allow get: if isExistingDocument() && isOwner(resource.data.userId);
+      allow list: if isSignedIn() && request.query.resource.data.userId == request.auth.uid;
+      allow create: if isOwner(request.resource.data.userId);
+      allow update: if isExistingDocument() && isOwner(resource.data.userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingDocument() && isOwner(resource.data.userId);
     }
 
     /**
@@ -129,7 +125,7 @@ service cloud.firestore {
      */
     match /commissions/{commissionId} {
       allow get: if isExistingDocument() && ownsReferencedProposal(resource.data.loanProposalId);
-      allow list: if false;
+      allow list: if false; // Add specific list rules if needed, e.g., based on user-specific queries
       allow create: if isSignedIn() && ownsReferencedProposal(request.resource.data.loanProposalId);
       allow update: if isExistingDocument() && ownsReferencedProposal(resource.data.loanProposalId) && request.resource.data.loanProposalId == resource.data.loanProposalId;
       allow delete: if isExistingDocument() && ownsReferencedProposal(resource.data.loanProposalId);
