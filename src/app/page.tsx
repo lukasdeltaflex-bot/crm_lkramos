@@ -93,6 +93,14 @@ export default function DashboardPage() {
 
   const cardData = [
     {
+      title: 'Pendente',
+      value: getProposalsSum(pendenteProposals),
+      icon: BadgePercent,
+      className: 'border-purple-500/50',
+      valueClassName: 'text-purple-500',
+      proposals: pendenteProposals,
+    },
+    {
       title: 'Em Andamento',
       value: getProposalsSum(emAndamentoProposals),
       icon: Hourglass,
@@ -107,6 +115,14 @@ export default function DashboardPage() {
       className: 'border-blue-500/50',
       valueClassName: 'text-blue-500',
       proposals: aguardandoSaldoProposals,
+    },
+     {
+      title: 'Saldo Pago',
+      value: getProposalsSum(saldoPagoProposals),
+      icon: CircleDollarSign,
+      className: 'border-orange-500/50',
+      valueClassName: 'text-orange-500',
+      proposals: saldoPagoProposals,
     },
     {
       title: 'Pago',
@@ -123,22 +139,6 @@ export default function DashboardPage() {
       className: 'border-red-500/50',
       valueClassName: 'text-red-500',
       proposals: rejeitadoProposals,
-    },
-    {
-      title: 'Saldo Pago',
-      value: getProposalsSum(saldoPagoProposals),
-      icon: CircleDollarSign,
-      className: 'border-orange-500/50',
-      valueClassName: 'text-orange-500',
-      proposals: saldoPagoProposals,
-    },
-    {
-      title: 'Pendente',
-      value: getProposalsSum(pendenteProposals),
-      icon: BadgePercent,
-      className: 'border-purple-500/50',
-      valueClassName: 'text-purple-500',
-      proposals: pendenteProposals,
     },
   ];
 
