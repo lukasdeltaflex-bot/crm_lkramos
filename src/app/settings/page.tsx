@@ -1,4 +1,7 @@
 
+'use client';
+
+import React, { useState } from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
 import {
@@ -10,38 +13,24 @@ import {
 } from '@/components/ui/card';
 import {
   Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
 } from '@/components/ui/accordion';
 import {
-  productTypes,
-  proposalStatuses,
-  approvingBodies,
-  banks,
-  commissionStatuses,
+  productTypes as initialProductTypes,
+  proposalStatuses as initialProposalStatuses,
+  approvingBodies as initialApprovingBodies,
+  banks as initialBanks,
+  commissionStatuses as initialCommissionStatuses,
 } from '@/lib/config-data';
-import { Badge } from '@/components/ui/badge';
 import { ListChecks } from 'lucide-react';
-
-function renderList(title: string, items: readonly string[]) {
-  return (
-    <AccordionItem value={title}>
-      <AccordionTrigger>{title}</AccordionTrigger>
-      <AccordionContent>
-        <div className="flex flex-wrap gap-2">
-          {items.map((item) => (
-            <Badge key={item} variant="secondary">
-              {item}
-            </Badge>
-          ))}
-        </div>
-      </AccordionContent>
-    </AccordionItem>
-  );
-}
+import { EditableList } from '@/components/settings/editable-list';
 
 export default function SettingsPage() {
+  const [productTypes, setProductTypes] = useState([...initialProductTypes]);
+  const [proposalStatuses, setProposalStatuses] = useState([...initialProposalStatuses]);
+  const [commissionStatuses, setCommissionStatuses] = useState([...initialCommissionStatuses]);
+  const [approvingBodies, setApprovingBodies] = useState([...initialApprovingBodies]);
+  const [banks, setBanks] = useState([...initialBanks]);
+
   return (
     <AppLayout>
       <PageHeader title="Configurações" />
@@ -52,19 +41,19 @@ export default function SettingsPage() {
             <div>
               <CardTitle>Gerenciamento de Opções</CardTitle>
               <CardDescription>
-                Visualize as listas de opções usadas em todo o sistema. Em
-                breve, você poderá editar, adicionar ou remover itens.
+                Visualize e edite as listas de opções usadas em todo o sistema.
+                As alterações serão salvas para uso futuro.
               </CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <Accordion type="multiple" className="w-full">
-            {renderList('Tipos de Produto', productTypes)}
-            {renderList('Status da Proposta', proposalStatuses)}
-            {renderList('Status da Comissão', commissionStatuses)}
-            {renderList('Órgãos Aprovadores', approvingBodies)}
-            {renderList('Bancos', banks)}
+          <Accordion type="multiple" className="w-full space-y-4">
+            <EditableList title="Tipos de Produto" items={productTypes} setItems={setProductTypes} />
+            <EditableList title="Status da Proposta" items={proposalStatuses} setItems={setProposalStatuses} />
+            <EditableList title="Status da Comissão" items={commissionStatuses} setItems={setCommissionStatuses} />
+            <EditableList title="Órgãos Aprovadores" items={approvingBodies} setItems={setApprovingBodies} />
+            <EditableList title="Bancos" items={banks} setItems={setBanks} />
           </Accordion>
         </CardContent>
       </Card>
