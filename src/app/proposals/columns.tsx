@@ -16,10 +16,47 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import React from 'react';
 
 type ProposalWithCustomer = Proposal & { customer: Customer };
 
-export const columns: ColumnDef<ProposalWithCustomer>[] = [
+type ActionsCellProps = {
+    row: {
+      original: ProposalWithCustomer;
+    };
+    onEdit: (proposal: ProposalWithCustomer) => void;
+    onView: (proposal: ProposalWithCustomer) => void;
+};
+
+const ActionsCell: React.FC<ActionsCellProps> = ({ row, onEdit, onView }) => {
+    const proposal = row.original;
+    return (
+      <div className="text-right">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Abrir menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Ações</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => onView(proposal)}>Ver detalhes</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onEdit(proposal)}>Editar</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10">
+              Cancelar
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+};
+
+export const getColumns = (
+    onEdit: (proposal: ProposalWithCustomer) => void,
+    onView: (proposal: ProposalWithCustomer) => void
+    ): ColumnDef<ProposalWithCustomer>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -122,27 +159,6 @@ export const columns: ColumnDef<ProposalWithCustomer>[] = [
   },
   {
     id: 'actions',
-    cell: ({ row }) => {
-      return (
-        <div className="text-right">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Abrir menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Ações</DropdownMenuLabel>
-              <DropdownMenuItem>Ver detalhes</DropdownMenuItem>
-              <DropdownMenuItem>Editar</DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10">
-                Cancelar
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      );
-    },
+    cell: (props) => <ActionsCell {...props} onEdit={onEdit} onView={onView} />,
   },
 ];

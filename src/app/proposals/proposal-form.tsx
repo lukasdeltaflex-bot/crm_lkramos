@@ -71,15 +71,20 @@ type ProposalFormValues = z.infer<typeof proposalSchema>;
 
 interface ProposalFormProps {
   proposal?: Proposal;
+  isReadOnly?: boolean;
   onSubmit: () => void;
 }
 
-export function ProposalForm({ proposal, onSubmit }: ProposalFormProps) {
+export function ProposalForm({ proposal, isReadOnly, onSubmit }: ProposalFormProps) {
   const form = useForm<ProposalFormValues>({
     resolver: zodResolver(proposalSchema),
     defaultValues: {
-      ...proposal,
-      dateDigitized: proposal?.dateDigitized ? new Date(proposal.dateDigitized) : new Date(),
+        ...(proposal ? {
+            ...proposal,
+            dateDigitized: proposal.dateDigitized ? new Date(proposal.dateDigitized) : undefined,
+        } : {
+            dateDigitized: new Date(),
+        })
     } as any,
   });
 
@@ -89,7 +94,7 @@ export function ProposalForm({ proposal, onSubmit }: ProposalFormProps) {
     console.log(data);
     toast({
       title: 'Proposta Salva!',
-      description: 'A nova proposta foi salva com sucesso.',
+      description: `A proposta para o cliente foi ${proposal ? 'atualizada' : 'criada'} com sucesso.`,
     });
     onSubmit();
   }
@@ -108,7 +113,7 @@ export function ProposalForm({ proposal, onSubmit }: ProposalFormProps) {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Cliente</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isReadOnly}>
                         <FormControl>
                             <SelectTrigger>
                             <SelectValue placeholder="Selecione um cliente" />
@@ -132,7 +137,7 @@ export function ProposalForm({ proposal, onSubmit }: ProposalFormProps) {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Produto</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isReadOnly}>
                         <FormControl>
                             <SelectTrigger>
                             <SelectValue placeholder="Selecione o produto" />
@@ -165,7 +170,7 @@ export function ProposalForm({ proposal, onSubmit }: ProposalFormProps) {
                         <FormItem>
                             <FormLabel>Tabela</FormLabel>
                             <FormControl>
-                            <Input placeholder="Tabela A" {...field} />
+                            <Input placeholder="Tabela A" {...field} readOnly={isReadOnly} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -178,7 +183,7 @@ export function ProposalForm({ proposal, onSubmit }: ProposalFormProps) {
                         <FormItem>
                             <FormLabel>Prazo (meses)</FormLabel>
                             <FormControl>
-                            <Input type="number" placeholder="84" {...field} />
+                            <Input type="number" placeholder="84" {...field} readOnly={isReadOnly} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -191,7 +196,7 @@ export function ProposalForm({ proposal, onSubmit }: ProposalFormProps) {
                         <FormItem>
                             <FormLabel>Taxa de Juros (%)</FormLabel>
                             <FormControl>
-                            <Input type="number" step="0.01" placeholder="1.8" {...field} />
+                            <Input type="number" step="0.01" placeholder="1.8" {...field} readOnly={isReadOnly} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -213,7 +218,7 @@ export function ProposalForm({ proposal, onSubmit }: ProposalFormProps) {
                         <FormItem>
                             <FormLabel>Valor Bruto</FormLabel>
                             <FormControl>
-                            <Input type="number" step="0.01" placeholder="30000" {...field} />
+                            <Input type="number" step="0.01" placeholder="30000" {...field} readOnly={isReadOnly} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -226,7 +231,7 @@ export function ProposalForm({ proposal, onSubmit }: ProposalFormProps) {
                         <FormItem>
                             <FormLabel>Valor Líquido</FormLabel>
                             <FormControl>
-                            <Input type="number" step="0.01" placeholder="25000" {...field} />
+                            <Input type="number" step="0.01" placeholder="25000" {...field} readOnly={isReadOnly} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -239,7 +244,7 @@ export function ProposalForm({ proposal, onSubmit }: ProposalFormProps) {
                         <FormItem>
                             <FormLabel>Valor da Parcela</FormLabel>
                             <FormControl>
-                            <Input type="number" step="0.01" placeholder="450.50" {...field} />
+                            <Input type="number" step="0.01" placeholder="450.50" {...field} readOnly={isReadOnly} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -264,6 +269,7 @@ export function ProposalForm({ proposal, onSubmit }: ProposalFormProps) {
                             onValueChange={field.onChange}
                             defaultValue={field.value}
                             className="flex items-center space-x-4"
+                            disabled={isReadOnly}
                             >
                             <FormItem className="flex items-center space-x-2 space-y-0">
                                 <FormControl>
@@ -295,7 +301,7 @@ export function ProposalForm({ proposal, onSubmit }: ProposalFormProps) {
                         <FormItem>
                             <FormLabel>Comissão (%)</FormLabel>
                             <FormControl>
-                            <Input type="number" step="0.01" placeholder="5" {...field} />
+                            <Input type="number" step="0.01" placeholder="5" {...field} readOnly={isReadOnly} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -308,7 +314,7 @@ export function ProposalForm({ proposal, onSubmit }: ProposalFormProps) {
                         <FormItem>
                             <FormLabel>Comissão (R$)</FormLabel>
                             <FormControl>
-                            <Input type="number" step="0.01" placeholder="1500" {...field} />
+                            <Input type="number" step="0.01" placeholder="1500" {...field} readOnly={isReadOnly} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -329,7 +335,7 @@ export function ProposalForm({ proposal, onSubmit }: ProposalFormProps) {
                         render={({ field }) => (
                         <FormItem>
                             <FormLabel>Banco Digitado</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isReadOnly}>
                                 <FormControl>
                                     <SelectTrigger>
                                     <SelectValue placeholder="Selecione um banco" />
@@ -354,7 +360,7 @@ export function ProposalForm({ proposal, onSubmit }: ProposalFormProps) {
                             render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Banco de Origem</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isReadOnly}>
                                 <FormControl>
                                     <SelectTrigger>
                                     <SelectValue placeholder="Selecione um banco" />
@@ -382,7 +388,7 @@ export function ProposalForm({ proposal, onSubmit }: ProposalFormProps) {
                         <FormItem>
                             <FormLabel>Promotora</FormLabel>
                             <FormControl>
-                            <Input placeholder="Promotora X" {...field} />
+                            <Input placeholder="Promotora X" {...field} readOnly={isReadOnly} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -395,7 +401,7 @@ export function ProposalForm({ proposal, onSubmit }: ProposalFormProps) {
                         <FormItem>
                             <FormLabel>Operador</FormLabel>
                             <FormControl>
-                            <Input placeholder="Nome do Operador" {...field} />
+                            <Input placeholder="Nome do Operador" {...field} readOnly={isReadOnly} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -416,7 +422,7 @@ export function ProposalForm({ proposal, onSubmit }: ProposalFormProps) {
                         render={({ field }) => (
                         <FormItem>
                             <FormLabel>Status da Proposta</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isReadOnly}>
                             <FormControl>
                                 <SelectTrigger>
                                 <SelectValue placeholder="Selecione o status" />
@@ -440,7 +446,7 @@ export function ProposalForm({ proposal, onSubmit }: ProposalFormProps) {
                         render={({ field }) => (
                         <FormItem>
                             <FormLabel>Órgão Aprovador</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isReadOnly}>
                                 <FormControl>
                                     <SelectTrigger>
                                     <SelectValue placeholder="Selecione o órgão" />
@@ -474,6 +480,7 @@ export function ProposalForm({ proposal, onSubmit }: ProposalFormProps) {
                                 'w-[240px] pl-3 text-left font-normal',
                                 !field.value && 'text-muted-foreground'
                                 )}
+                                disabled={isReadOnly}
                             >
                                 {field.value ? (
                                 format(field.value, 'PPP')
@@ -503,9 +510,11 @@ export function ProposalForm({ proposal, onSubmit }: ProposalFormProps) {
             </div>
           </div>
         </ScrollArea>
-        <div className="flex justify-end pt-8">
-          <Button type="submit">Salvar Proposta</Button>
-        </div>
+        {!isReadOnly && (
+            <div className="flex justify-end pt-8">
+                <Button type="submit">Salvar Proposta</Button>
+            </div>
+        )}
       </form>
     </Form>
   );
