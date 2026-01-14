@@ -45,8 +45,8 @@ export default function DashboardPage() {
             title="Aguardando Saldo"
             value={formatCurrency(getProposalsSumByStatus('Aguardando Saldo'))}
             icon={Clock}
-            className="border-yellow-500/50"
-            valueClassName="text-yellow-500"
+            className="border-blue-500/50"
+            valueClassName="text-blue-500"
           />
           <StatsCard
             title="Pago"
