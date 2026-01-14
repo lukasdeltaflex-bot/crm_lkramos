@@ -98,7 +98,8 @@ export const getColumns = (
     header: 'Proposta nº',
   },
   {
-    accessorKey: 'customer.name',
+    id: 'customerName',
+    accessorFn: (row) => row.customer?.name,
     header: 'Cliente',
     cell: ({ row }) => {
         return row.original.customer?.name || <span className="text-muted-foreground">Cliente não encontrado</span>
