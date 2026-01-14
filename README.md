@@ -31,13 +31,13 @@ npm run dev
 
 ### **Passo 2: Iniciar o Servidor de Inteligência Artificial (IA)**
 
-Este comando "liga" o cérebro de IA do seu sistema.
+Este comando "liga" o cérebro de IA do seu sistema. Ele agora observa as mudanças automaticamente, o que o torna mais estável.
 
 1.  Encontre a **segunda aba de Terminal**. Se não houver, clique no ícone de `+` para abrir um novo.
 2.  Neste segundo terminal, digite o seguinte comando:
 
 ```bash
-npm run genkit:dev
+npm run genkit:watch
 ```
 
 3.  Pressione **Enter**. Deixe este segundo terminal rodando também.
