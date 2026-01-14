@@ -29,20 +29,51 @@ import {
 import { StatusBreakdownChart } from '@/components/dashboard/status-breakdown-chart';
 
 export default function DashboardPage() {
-  const getProposalsByStatus = (statuses: ProposalStatus[]): Proposal[] => {
-    return proposals.filter((p) => statuses.includes(p.status));
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  
+  // Previous month logic
+  const previousMonthDate = new Date(now);
+  previousMonthDate.setMonth(previousMonthDate.getMonth() - 1);
+  const previousMonth = previousMonthDate.getMonth();
+  const previousMonthYear = previousMonthDate.getFullYear();
+
+  const getProposalsByStatus = (
+    statuses: ProposalStatus[],
+    includePreviousMonth: boolean = false
+  ): Proposal[] => {
+    return proposals.filter((p) => {
+      if (!statuses.includes(p.status)) {
+        return false;
+      }
+      const proposalDate = new Date(p.dateDigitized);
+      const proposalYear = proposalDate.getFullYear();
+      const proposalMonth = proposalDate.getMonth();
+
+      const isCurrentMonth = proposalYear === currentYear && proposalMonth === currentMonth;
+      
+      if (includePreviousMonth) {
+        const isPreviousMonth = proposalYear === previousMonthYear && proposalMonth === previousMonth;
+        return isCurrentMonth || isPreviousMonth;
+      }
+      
+      return isCurrentMonth;
+    });
   };
 
   const getProposalsSum = (proposalsList: Proposal[]): number => {
     return proposalsList.reduce((sum, p) => sum + p.grossAmount, 0);
   };
   
-  const emAndamentoProposals = getProposalsByStatus(['Em Andamento']);
-  const aguardandoSaldoProposals = getProposalsByStatus(['Aguardando Saldo']);
+  const emAndamentoProposals = getProposalsByStatus(['Em Andamento'], true);
+  const aguardandoSaldoProposals = getProposalsByStatus(['Aguardando Saldo'], true);
+  const saldoPagoProposals = getProposalsByStatus(['Saldo Pago'], true);
+  const pendenteProposals = getProposalsByStatus(['Pendente'], true);
+  
   const pagoProposals = getProposalsByStatus(['Pago']);
   const rejeitadoProposals = getProposalsByStatus(['Rejeitado']);
-  const saldoPagoProposals = getProposalsByStatus(['Saldo Pago']);
-  const pendenteProposals = getProposalsByStatus(['Pendente']);
+
 
   const cardData = [
     {
