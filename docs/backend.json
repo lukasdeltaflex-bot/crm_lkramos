@@ -19,6 +19,10 @@
           "type": "string",
           "description": "Customer's CPF (Brazilian individual taxpayer registry number)."
         },
+        "benefitNumber": {
+          "type": "string",
+          "description": "Customer's INSS benefit number."
+        },
         "phone": {
           "type": "string",
           "description": "Customer's phone number."

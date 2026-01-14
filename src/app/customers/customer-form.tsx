@@ -34,6 +34,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 const customerSchema = z.object({
   name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres.'),
   cpf: z.string().length(14, 'O CPF deve ter 11 dígitos.'),
+  benefitNumber: z.string().optional(),
   phone: z.string().min(10, 'O telefone é obrigatório.'),
   email: z.string().email('O email é inválido.'),
   birthDate: z.date({ required_error: 'A data de nascimento é obrigatória.' }),
@@ -60,6 +61,7 @@ export function CustomerForm({ customer, onSubmit }: CustomerFormProps) {
     defaultValues: {
       name: '',
       cpf: '',
+      benefitNumber: '',
       phone: '',
       email: '',
       observations: '',
@@ -93,6 +95,7 @@ export function CustomerForm({ customer, onSubmit }: CustomerFormProps) {
       form.reset({
         name: '',
         cpf: '',
+        benefitNumber: '',
         phone: '',
         email: '',
         birthDate: undefined,
@@ -177,6 +180,19 @@ export function CustomerForm({ customer, onSubmit }: CustomerFormProps) {
                   <FormLabel>CPF</FormLabel>
                   <FormControl>
                     <Input placeholder="000.000.000-00" {...field} onChange={handleCpfChange} maxLength={14}/>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="benefitNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Número do Benefício</FormLabel>
+                  <FormControl>
+                    <Input placeholder="123.456.789-0" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -300,4 +316,3 @@ export function CustomerForm({ customer, onSubmit }: CustomerFormProps) {
     </Form>
   );
 }
-

@@ -1,7 +1,9 @@
+
 export type Customer = {
   id: string;
   name: string;
   cpf: string;
+  benefitNumber?: string;
   phone: string;
   email: string;
   birthDate: string; // YYYY-MM-DD

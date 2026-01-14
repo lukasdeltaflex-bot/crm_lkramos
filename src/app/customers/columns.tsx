@@ -124,6 +124,10 @@ export const getColumns = (
     header: 'CPF',
   },
   {
+    accessorKey: 'benefitNumber',
+    header: 'Nº Benefício',
+  },
+  {
     accessorKey: 'phone',
     header: 'Telefone',
   },

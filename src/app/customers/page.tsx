@@ -70,6 +70,7 @@ export default function CustomersPage() {
     const anonymizedData = {
       name: 'Cliente Removido',
       cpf: '000.000.000-00',
+      benefitNumber: '0000000000',
       phone: '(00) 00000-0000',
       email: 'removido@removido.com',
       observations: `Dados do cliente anonimizados em ${new Date().toISOString()}`
@@ -90,6 +91,7 @@ export default function CustomersPage() {
     const anonymizedData = {
         name: 'Cliente Removido',
         cpf: '000.000.000-00',
+        benefitNumber: '0000000000',
         phone: '(00) 00000-0000',
         email: 'removido@removido.com',
         observations: `Dados do cliente anonimizados em ${new Date().toISOString()}`
