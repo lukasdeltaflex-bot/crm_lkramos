@@ -33,7 +33,7 @@ const formatDate = (dateString?: string) => {
     const date = new Date(dateString);
     // Adjust for timezone to show the correct date
     const adjustedDate = new Date(date.valueOf() + date.getTimezoneOffset() * 60 * 1000);
-    return new Intl.DateTimeFormat('pt-BR').format(adjustedDate);
+    return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(adjustedDate);
 }
 
 

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
@@ -160,7 +161,7 @@ export const getColumns = (
         // Adjusting for timezone to show the correct date
         const adjustedDate = new Date(date);
         adjustedDate.setMinutes(adjustedDate.getMinutes() + adjustedDate.getTimezoneOffset());
-        return new Intl.DateTimeFormat('pt-BR').format(adjustedDate);
+        return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(adjustedDate);
     }
   },
   {

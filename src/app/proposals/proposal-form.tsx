@@ -26,6 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon, Info } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { productTypes, proposalStatuses, approvingBodies, banks } from '@/lib/config-data';
 import type { Proposal, Customer } from '@/lib/types';
@@ -49,9 +50,9 @@ const proposalSchema = z.object({
   term: z.coerce.number().min(1, 'O prazo é obrigatório.'),
   interestRate: z.coerce.number().optional(),
 
-  grossAmount: z.coerce.number().min(0, 'O valor bruto é obrigatório.'),
-  netAmount: z.coerce.number().min(0, 'O valor líquido é obrigatório.'),
   installmentAmount: z.coerce.number().min(0, 'O valor da parcela é obrigatório.'),
+  netAmount: z.coerce.number().min(0, 'O valor líquido é obrigatório.'),
+  grossAmount: z.coerce.number().min(0, 'O valor bruto é obrigatório.'),
   
   commissionBase: z.enum(['gross', 'net'], { required_error: 'Selecione a base da comissão.' }),
   commissionPercentage: z.coerce.number().min(0, 'A porcentagem da comissão é obrigatória.'),
@@ -97,7 +98,7 @@ const DatePickerField = ({ name, label, control, isReadOnly }: { name: any, labe
                     disabled={isReadOnly}
                 >
                     {field.value ? (
-                    format(field.value, 'PPP')
+                    format(field.value, 'dd/MM/yyyy', { locale: ptBR })
                     ) : (
                     <span>Escolha uma data</span>
                     )}
@@ -111,6 +112,7 @@ const DatePickerField = ({ name, label, control, isReadOnly }: { name: any, labe
                 selected={field.value}
                 onSelect={field.onChange}
                 defaultMonth={field.value || new Date()}
+                locale={ptBR}
                 disabled={(date) =>
                     date > new Date() || date < new Date('1900-01-01')
                 }
@@ -566,4 +568,3 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
     </Form>
   );
 }
-

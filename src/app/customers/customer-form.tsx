@@ -22,6 +22,7 @@ import {
 import { CalendarIcon, Sparkles, AlertCircle } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import type { Customer } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -244,7 +245,7 @@ export function CustomerForm({ customer, onSubmit }: CustomerFormProps) {
                                     )}
                                 >
                                     {field.value ? (
-                                    format(field.value, 'PPP')
+                                    format(field.value, 'dd/MM/yyyy', { locale: ptBR })
                                     ) : (
                                     <span>Escolha uma data</span>
                                     )}
@@ -257,7 +258,8 @@ export function CustomerForm({ customer, onSubmit }: CustomerFormProps) {
                                 mode="single"
                                 selected={field.value}
                                 onSelect={field.onChange}
-                                defaultMonth={field.value}
+                                defaultMonth={field.value || new Date()}
+                                locale={ptBR}
                                 disabled={(date) =>
                                     date > new Date() || date < new Date('1900-01-01')
                                 }

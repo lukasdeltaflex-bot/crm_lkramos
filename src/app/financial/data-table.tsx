@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -15,6 +16,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 
@@ -144,11 +146,11 @@ export function FinancialDataTable<TData extends ProposalWithCustomer, TValue>({
                     {date?.from ? (
                         date.to ? (
                         <>
-                            {format(date.from, "LLL dd, y")} -{" "}
-                            {format(date.to, "LLL dd, y")}
+                            {format(date.from, "dd/MM/y", {locale: ptBR})} -{" "}
+                            {format(date.to, "dd/MM/y", {locale: ptBR})}
                         </>
                         ) : (
-                        format(date.from, "LLL dd, y")
+                        format(date.from, "dd/MM/y", {locale: ptBR})
                         )
                     ) : (
                         <span>Filtrar por data</span>
@@ -163,6 +165,7 @@ export function FinancialDataTable<TData extends ProposalWithCustomer, TValue>({
                     selected={date}
                     onSelect={setDate}
                     numberOfMonths={2}
+                    locale={ptBR}
                 />
                 </PopoverContent>
             </Popover>

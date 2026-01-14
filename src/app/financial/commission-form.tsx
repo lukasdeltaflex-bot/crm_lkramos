@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,6 +25,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { commissionStatuses } from '@/lib/config-data';
 import type { Proposal } from '@/lib/types';
@@ -127,7 +129,7 @@ export function CommissionForm({ proposal, onSubmit }: CommissionFormProps) {
                                     )}
                                 >
                                     {field.value ? (
-                                    format(field.value, 'PPP')
+                                    format(field.value, 'dd/MM/yyyy', { locale: ptBR })
                                     ) : (
                                     <span>Escolha uma data</span>
                                     )}
@@ -140,7 +142,8 @@ export function CommissionForm({ proposal, onSubmit }: CommissionFormProps) {
                                 mode="single"
                                 selected={field.value}
                                 onSelect={field.onChange}
-                                defaultMonth={field.value}
+                                defaultMonth={field.value || new Date()}
+                                locale={ptBR}
                                 disabled={(date) =>
                                     date > new Date() || date < new Date('1900-01-01')
                                 }
