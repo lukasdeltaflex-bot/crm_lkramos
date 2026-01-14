@@ -15,7 +15,7 @@ import {
 import { CustomerForm } from './customer-form';
 import type { Customer } from '@/lib/types';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, writeBatch, query, where } from 'firebase/firestore';
+import { collection, doc, writeBatch, query, where, updateDoc } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import {
   updateDocumentNonBlocking,
@@ -123,11 +123,14 @@ export default function CustomersPage() {
       email: 'removido@removido.com',
       observations: `Dados do cliente anonimizados em ${new Date().toISOString()}`
     };
+    // Use non-blocking update here
     updateDocumentNonBlocking(customerRef, anonymizedData);
     toast({
       title: 'Cliente Removido',
       description: 'Os dados do cliente foram anonimizados com sucesso. O histórico de propostas foi mantido.',
     });
+    // Optimistically update UI if needed or let real-time listener handle it
+    setRowSelection({});
   };
 
   const handleAnonymizeSelected = async () => {

@@ -103,14 +103,17 @@ export default function ProposalsPage() {
 
   const handleFormSubmit = (data: Omit<Proposal, 'id' | 'userId' | 'proposalNumber'> & { proposalNumber?: string }) => {
     if (!firestore || !user) return;
-
+  
+    // Helper to convert date to ISO string if it exists
+    const toISO = (date: any) => (date ? new Date(date).toISOString() : undefined);
+  
     if (sheetMode === 'edit' && selectedProposal) {
       const proposalToUpdate: Partial<Proposal> = {
         ...data,
-        dateDigitized: data.dateDigitized ? new Date(data.dateDigitized).toISOString() : '',
-        dateApproved: data.dateApproved ? new Date(data.dateApproved).toISOString() : undefined,
-        datePaidToClient: data.datePaidToClient ? new Date(data.datePaidToClient).toISOString() : undefined,
-        debtBalanceArrivalDate: data.debtBalanceArrivalDate ? new Date(data.debtBalanceArrivalDate).toISOString() : undefined,
+        dateDigitized: toISO(data.dateDigitized) || selectedProposal.dateDigitized,
+        dateApproved: toISO(data.dateApproved),
+        datePaidToClient: toISO(data.datePaidToClient),
+        debtBalanceArrivalDate: toISO(data.debtBalanceArrivalDate),
       };
       setDocumentNonBlocking(doc(firestore, 'loanProposals', selectedProposal.id), proposalToUpdate, { merge: true });
       toast({
@@ -118,23 +121,23 @@ export default function ProposalsPage() {
         description: `A proposta foi atualizada com sucesso.`,
       });
     } else {
-        const newDocRef = doc(collection(firestore, 'loanProposals'));
-        const newProposal: Omit<Proposal, 'id'> = {
-            ...data,
-            userId: user.uid,
-            proposalNumber: `PRO${Date.now()}`,
-            dateDigitized: data.dateDigitized ? new Date(data.dateDigitized).toISOString() : '',
-            dateApproved: data.dateApproved ? new Date(data.dateApproved).toISOString() : undefined,
-            datePaidToClient: data.datePaidToClient ? new Date(data.datePaidToClient).toISOString() : undefined,
-            debtBalanceArrivalDate: data.debtBalanceArrivalDate ? new Date(data.debtBalanceArrivalDate).toISOString() : undefined,
-        };
-        const newProposalWithId = { ...newProposal, id: newDocRef.id };
-
-        setDocumentNonBlocking(newDocRef, newProposalWithId, {});
-        toast({
-            title: 'Proposta Salva!',
-            description: `A nova proposta foi criada com sucesso.`,
-        });
+      const newDocRef = doc(collection(firestore, 'loanProposals'));
+      const newProposal: Omit<Proposal, 'id'> = {
+        ...data,
+        userId: user.uid,
+        proposalNumber: `PRO${Date.now()}`,
+        dateDigitized: toISO(data.dateDigitized)!,
+        dateApproved: toISO(data.dateApproved),
+        datePaidToClient: toISO(data.datePaidToClient),
+        debtBalanceArrivalDate: toISO(data.debtBalanceArrivalDate),
+      };
+      const newProposalWithId = { ...newProposal, id: newDocRef.id };
+  
+      setDocumentNonBlocking(newDocRef, newProposalWithId, {});
+      toast({
+        title: 'Proposta Salva!',
+        description: `A nova proposta foi criada com sucesso.`,
+      });
     }
     setIsSheetOpen(false);
   };

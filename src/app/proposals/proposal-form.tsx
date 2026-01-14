@@ -134,16 +134,15 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
         defaultValues: {
             // Set sensible defaults for a new proposal
             status: 'Em Andamento',
-            dateDigitized: new Date(),
         },
     });
 
-  const { watch, setValue } = form;
-  const product = watch('product');
+  const { watch, setValue, trigger } = form;
   const commissionBase = watch('commissionBase');
   const commissionPercentage = watch('commissionPercentage');
   const grossAmount = watch('grossAmount');
   const netAmount = watch('netAmount');
+  const product = watch('product');
 
   useEffect(() => {
     if (isReadOnly) return;
@@ -157,15 +156,25 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
 
     if (baseValue > 0 && commissionPercentage >= 0) {
         const calculatedCommission = baseValue * (commissionPercentage / 100);
-        setValue('commissionValue', parseFloat(calculatedCommission.toFixed(2)), { shouldValidate: true });
+        // Check if the new value is different before setting it to avoid infinite loops
+        if (form.getValues('commissionValue') !== parseFloat(calculatedCommission.toFixed(2))) {
+            setValue('commissionValue', parseFloat(calculatedCommission.toFixed(2)), { shouldValidate: true });
+        }
     }
-  }, [commissionBase, commissionPercentage, grossAmount, netAmount, setValue, isReadOnly]);
+  }, [commissionBase, commissionPercentage, grossAmount, netAmount, setValue, isReadOnly, form]);
 
 
   useEffect(() => {
     if (proposal) {
       form.reset({
         ...proposal,
+        term: proposal.term || undefined,
+        interestRate: proposal.interestRate || undefined,
+        grossAmount: proposal.grossAmount || undefined,
+        netAmount: proposal.netAmount || undefined,
+        installmentAmount: proposal.installmentAmount || undefined,
+        commissionPercentage: proposal.commissionPercentage || undefined,
+        commissionValue: proposal.commissionValue || undefined,
         dateDigitized: proposal.dateDigitized ? new Date(proposal.dateDigitized) : new Date(),
         dateApproved: proposal.dateApproved ? new Date(proposal.dateApproved) : undefined,
         datePaidToClient: proposal.datePaidToClient ? new Date(proposal.datePaidToClient) : undefined,
@@ -572,9 +581,7 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
                  </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
                     <DatePickerField name="dateDigitized" label="Data de Digitação" control={form.control} isReadOnly={isReadOnly} />
-                    {proposal && (
-                      <DatePickerField name="dateApproved" label="Data de Averbação" control={form.control} isReadOnly={isReadOnly} />
-                    )}
+                    <DatePickerField name="dateApproved" label="Data de Averbação" control={form.control} isReadOnly={isReadOnly} />
                     <DatePickerField name="datePaidToClient" label="Data de Pagamento ao Cliente" control={form.control} isReadOnly={isReadOnly} />
                     {(product === 'Portabilidade' || product === 'Refin Port') && (
                         <DatePickerField name="debtBalanceArrivalDate" label="Chegada Saldo Devedor" control={form.control} isReadOnly={isReadOnly} />
