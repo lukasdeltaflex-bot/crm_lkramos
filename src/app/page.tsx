@@ -37,6 +37,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { StatusBreakdownChart } from '@/components/dashboard/status-breakdown-chart';
+import { FollowUpReminders } from '@/components/dashboard/follow-up-reminders';
 
 export default function DashboardPage() {
   const [date, setDate] = React.useState<Date>(startOfMonth(new Date()));
@@ -204,6 +205,7 @@ export default function DashboardPage() {
           </div>
           <div className="space-y-8">
             <BirthdayAlerts />
+            <FollowUpReminders />
           </div>
         </div>
         <div>
