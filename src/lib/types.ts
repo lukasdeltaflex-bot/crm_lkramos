@@ -15,6 +15,7 @@ export type ProductType =
   | 'Margem CLT'
   | 'Saque Complementar'
   | 'Cartão - Plástico'
+  | 'Cartão com saque'
   | 'Portabilidade'
   | 'Refin Port'
   | 'Refin'
