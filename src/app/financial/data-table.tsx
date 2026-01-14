@@ -4,6 +4,7 @@ import * as React from 'react';
 import {
   ColumnDef,
   ColumnFiltersState,
+  Row,
   SortingState,
   VisibilityState,
   flexRender,
@@ -39,17 +40,19 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { ChevronDown, X } from 'lucide-react';
+import { ChevronDown, X, Printer } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import type { CommissionStatus } from '@/lib/types';
+import type { CommissionStatus, Proposal } from '@/lib/types';
+import { FinancialSummary } from '@/components/financial/financial-summary';
 
+type ProposalWithCustomer = Proposal & { customer: Customer };
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
 
-export function FinancialDataTable<TData, TValue>({
+export function FinancialDataTable<TData extends ProposalWithCustomer, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
@@ -82,6 +85,10 @@ export function FinancialDataTable<TData, TValue>({
     },
   });
 
+  const handlePrint = () => {
+    window.print();
+  }
+
   React.useEffect(() => {
     const statusColumn = table.getColumn('commissionStatus');
     if (statusFilter === 'Todos') {
@@ -107,8 +114,8 @@ export function FinancialDataTable<TData, TValue>({
 
   return (
     <Card>
-      <div className="p-4">
-        <div className="flex flex-wrap gap-2 items-center mb-4">
+      <div className="p-4 space-y-4 print:p-0">
+        <div className="flex flex-wrap gap-2 items-center print:hidden">
             <Tabs value={statusFilter} onValueChange={(value) => setStatusFilter(value as CommissionStatus | 'Todos')}>
                 <TabsList>
                     <TabsTrigger value="Todos">Todos</TabsTrigger>
@@ -140,8 +147,13 @@ export function FinancialDataTable<TData, TValue>({
                 </PopoverContent>
             </Popover>
             {date && <Button variant="ghost" size="icon" onClick={() => setDate(undefined)}><X className="h-4 w-4" /></Button>}
+            <div className="flex-grow" />
+            <Button onClick={handlePrint}><Printer /> Imprimir Relatório</Button>
         </div>
-        <div className="flex items-center justify-between py-4">
+
+        <FinancialSummary rows={table.getFilteredRowModel().rows as Row<ProposalWithCustomer>[]} />
+
+        <div className="flex items-center justify-between py-4 print:hidden">
           <Input
             placeholder="Filtrar por promotora..."
             value={(table.getColumn('promoter')?.getFilterValue() as string) ?? ''}
@@ -184,7 +196,7 @@ export function FinancialDataTable<TData, TValue>({
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
                     return (
-                      <TableHead key={header.id}>
+                      <TableHead key={header.id} className="print:text-xs print:p-2">
                         {header.isPlaceholder
                           ? null
                           : flexRender(
@@ -205,7 +217,7 @@ export function FinancialDataTable<TData, TValue>({
                     data-state={row.getIsSelected() && 'selected'}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell key={cell.id} className="print:text-xs print:p-2">
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
@@ -227,7 +239,7 @@ export function FinancialDataTable<TData, TValue>({
             </TableBody>
           </Table>
         </div>
-        <div className="flex items-center justify-end space-x-2 py-4">
+        <div className="flex items-center justify-end space-x-2 py-4 print:hidden">
           <div className="flex-1 text-sm text-muted-foreground">
             {table.getFilteredSelectedRowModel().rows.length} de{' '}
             {table.getFilteredRowModel().rows.length} linha(s) selecionadas.
