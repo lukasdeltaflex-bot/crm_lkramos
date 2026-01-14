@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Search } from 'lucide-react';
 import { Input } from './ui/input';
+import Link from 'next/link';
 
 export function Header() {
   return (
@@ -32,7 +33,9 @@ export function Header() {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>Configurações</DropdownMenuItem>
+          <Link href="/settings" passHref>
+            <DropdownMenuItem>Configurações</DropdownMenuItem>
+          </Link>
           <DropdownMenuItem>Suporte</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem>Sair</DropdownMenuItem>

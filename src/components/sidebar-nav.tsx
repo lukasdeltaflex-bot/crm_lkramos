@@ -7,7 +7,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, FileText, Users, CircleDollarSign } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, CircleDollarSign, Cog } from 'lucide-react';
 
 const links = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -16,10 +16,15 @@ const links = [
   { href: '/financial', label: 'Financeiro', icon: CircleDollarSign },
 ];
 
+const bottomLinks = [
+    { href: '/settings', label: 'Configurações', icon: Cog },
+]
+
 export function SidebarNav() {
   const pathname = usePathname();
 
   return (
+    <>
     <SidebarMenu>
       {links.map((link) => (
         <SidebarMenuItem key={link.href}>
@@ -38,5 +43,25 @@ export function SidebarNav() {
         </SidebarMenuItem>
       ))}
     </SidebarMenu>
+    <div className="flex-grow" />
+     <SidebarMenu>
+        {bottomLinks.map((link) => (
+            <SidebarMenuItem key={link.href}>
+            <Link href={link.href} passHref>
+                <SidebarMenuButton
+                asChild
+                isActive={pathname === link.href}
+                tooltip={link.label}
+                >
+                <span>
+                    <link.icon />
+                    <span>{link.label}</span>
+                </span>
+                </SidebarMenuButton>
+            </Link>
+            </SidebarMenuItem>
+        ))}
+     </SidebarMenu>
+    </>
   );
 }
