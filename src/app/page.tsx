@@ -21,7 +21,7 @@ import {
   EyeOff,
   X,
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, startOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatCurrency, cn } from '@/lib/utils';
 import type { Proposal, ProposalStatus, Customer } from '@/lib/types';
@@ -63,8 +63,9 @@ export default function DashboardPage() {
 
   const filteredProposals = React.useMemo(() => {
     if (!proposals) return [];
+    
+    // If no date range is selected, default to the current month.
     if (!date?.from) {
-        // Default to current month if no range is selected
         const start = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
         const end = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
         end.setHours(23, 59, 59, 999);
@@ -73,6 +74,7 @@ export default function DashboardPage() {
             return proposalDate >= start && proposalDate <= end;
         });
     }
+
     const fromDate = date.from;
     const toDate = date.to ? new Date(date.to) : new Date(date.from);
     toDate.setHours(23, 59, 59, 999);
