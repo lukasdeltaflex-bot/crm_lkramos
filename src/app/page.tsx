@@ -66,8 +66,8 @@ export default function DashboardPage() {
             title="Saldo Pago"
             value={formatCurrency(paidAmount)}
             icon={CircleDollarSign}
-            className="border-green-500/50"
-            valueClassName="text-green-500"
+            className="border-orange-500/50"
+            valueClassName="text-orange-500"
           />
           <StatsCard
             title="Pendente"
