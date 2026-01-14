@@ -193,6 +193,7 @@ export default function DashboardPage() {
                 mode="single"
                 selected={date}
                 onSelect={(newDate) => setDate(newDate || new Date())}
+                defaultMonth={date}
                 onMonthChange={setDate}
                 initialFocus
                 captionLayout="dropdown-buttons"

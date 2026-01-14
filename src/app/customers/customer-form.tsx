@@ -257,6 +257,7 @@ export function CustomerForm({ customer, onSubmit }: CustomerFormProps) {
                                 mode="single"
                                 selected={field.value}
                                 onSelect={field.onChange}
+                                defaultMonth={field.value}
                                 disabled={(date) =>
                                     date > new Date() || date < new Date('1900-01-01')
                                 }
