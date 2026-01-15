@@ -37,7 +37,7 @@ const customerSchema = z.object({
   cpf: z.string().length(14, 'O CPF deve ter 11 dígitos.'),
   benefitNumber: z.string().optional(),
   phone: z.string().min(10, 'O telefone é obrigatório.'),
-  email: z.string().email('O email é inválido.'),
+  email: z.string().email('O email é inválido.').or(z.literal('')).optional(),
   birthDate: z.date({ required_error: 'A data de nascimento é obrigatória.' }),
   observations: z.string().optional(),
   // Address
@@ -125,6 +125,7 @@ export function CustomerForm({ customer, defaultValues, onSubmit }: CustomerForm
 
         if (customer) {
           return {
+            ...initial,
             ...customer,
             birthDate: customer.birthDate ? new Date(customer.birthDate) : undefined,
           };
@@ -133,6 +134,7 @@ export function CustomerForm({ customer, defaultValues, onSubmit }: CustomerForm
             return {
                 ...initial,
                 ...defaultValues,
+                birthDate: defaultValues.birthDate ? new Date(defaultValues.birthDate) : undefined,
             };
         }
         return initial;
@@ -303,7 +305,7 @@ export function CustomerForm({ customer, defaultValues, onSubmit }: CustomerForm
                         <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                            <Input placeholder="joao.silva@example.com" {...field} />
+                            <Input placeholder="joao.silva@example.com" {...field} value={field.value ?? ''}/>
                         </FormControl>
                         <FormMessage />
                         </FormItem>

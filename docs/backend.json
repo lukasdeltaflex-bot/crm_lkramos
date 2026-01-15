@@ -115,7 +115,6 @@
         "name",
         "cpf",
         "phone",
-        "email",
         "birthDate",
         "userId"
       ]
