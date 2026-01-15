@@ -5,7 +5,6 @@ import { BirthdayAlerts } from '@/components/dashboard/birthday-alerts';
 import { CommissionChart } from '@/components/dashboard/commission-chart';
 import { RecentProposals } from '@/components/dashboard/recent-proposals';
 import { StatsCard } from '@/components/dashboard/stats-card';
-import { PageHeader } from '@/components/page-header';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import {
@@ -211,28 +210,28 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
             <p className='text-sm text-muted-foreground'>{getFilterDescription()}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
             <Input 
-                placeholder="Data Início (dd/mm/aaaa)" 
+                placeholder="Data Início" 
                 value={startDateInput}
                 onChange={(e) => handleDateInputChange(e.target.value, 'start')}
                 maxLength={10}
-                className="w-40"
+                className="h-9 w-32"
             />
              <Input 
-                placeholder="Data Fim (dd/mm/aaaa)" 
+                placeholder="Data Fim" 
                 value={endDateInput}
                 onChange={(e) => handleDateInputChange(e.target.value, 'end')}
                 maxLength={10}
-                className="w-40"
+                className="h-9 w-32"
             />
-            <Button onClick={handleApplyFilter}><Filter /> Aplicar</Button>
-            {(startDateInput || endDateInput) && <Button variant="ghost" size="icon" onClick={clearDates}><X className="h-4 w-4" /></Button>}
+            <Button size="sm" onClick={handleApplyFilter}><Filter /> Aplicar</Button>
+            {(startDateInput || endDateInput) && <Button variant="ghost" size="icon" className="h-9 w-9" onClick={clearDates}><X className="h-4 w-4" /></Button>}
             
             <div className='flex-grow'></div>
 
