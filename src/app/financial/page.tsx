@@ -26,7 +26,7 @@ import {
 import { CommissionForm } from './commission-form';
 import { toast } from '@/hooks/use-toast';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { format } from 'date-fns';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Logo } from '@/components/logo';
 import { CommissionReconciliation } from '@/components/financial/commission-reconciliation';
@@ -54,13 +54,26 @@ export default function FinancialPage() {
   const { data: proposals, isLoading: proposalsLoading } = useCollection<Proposal>(proposalsQuery);
   const { data: customers, isLoading: customersLoading } = useCollection<Customer>(customersQuery);
 
-  const proposalsWithCustomerData: ProposalWithCustomer[] = React.useMemo(() => {
-    if (!proposals || !customers) return [];
+  const { proposalsWithCustomerData, currentMonthProposals } = React.useMemo(() => {
+    if (!proposals || !customers) return { proposalsWithCustomerData: [], currentMonthProposals: [] };
+    
     const customersMap = new Map(customers.map(c => [c.id, c]));
-    return proposals.map(p => ({
+    
+    const proposalsWithCustomer = proposals.map(p => ({
       ...p,
       customer: customersMap.get(p.customerId),
-    })).filter(p => p.customer); // Filter out proposals with no customer
+    })).filter(p => p.customer);
+
+    const today = new Date();
+    const start = startOfMonth(today);
+    const end = endOfMonth(today);
+
+    const currentMonthData = proposalsWithCustomer.filter(p => {
+        const proposalDate = p.commissionPaymentDate ? new Date(p.commissionPaymentDate) : new Date(p.dateDigitized);
+        return proposalDate >= start && proposalDate <= end;
+    });
+
+    return { proposalsWithCustomerData: proposalsWithCustomer, currentMonthProposals: currentMonthData };
   }, [proposals, customers]);
 
   const isLoading = proposalsLoading || customersLoading || isUserLoading;
@@ -165,6 +178,7 @@ export default function FinancialPage() {
         <FinancialDataTable 
             columns={columns} 
             data={proposalsWithCustomerData}
+            currentMonthData={currentMonthProposals}
             isPrivacyMode={isPrivacyMode} 
         />
       )}

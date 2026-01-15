@@ -65,12 +65,14 @@ type ProposalWithCustomer = Proposal & { customer: Customer };
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  currentMonthData: TData[];
   isPrivacyMode: boolean;
 }
 
 export function FinancialDataTable<TData extends ProposalWithCustomer, TValue>({
   columns,
   data,
+  currentMonthData,
   isPrivacyMode
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -91,6 +93,8 @@ export function FinancialDataTable<TData extends ProposalWithCustomer, TValue>({
     useSensor(PointerSensor),
     useSensor(KeyboardSensor)
   );
+
+  const isAnyFilterActive = !!globalFilter || statusFilter !== 'Todos' || !!date;
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -229,7 +233,11 @@ export function FinancialDataTable<TData extends ProposalWithCustomer, TValue>({
                 <div className="flex-grow" />
             </div>
 
-            <FinancialSummary rows={table.getFilteredRowModel().rows as Row<ProposalWithCustomer>[]} isPrivacyMode={isPrivacyMode}/>
+            <FinancialSummary 
+                rows={isAnyFilterActive ? (table.getFilteredRowModel().rows as Row<ProposalWithCustomer>[]) : (currentMonthData as Row<ProposalWithCustomer>[])}
+                isPrivacyMode={isPrivacyMode}
+                isFiltered={isAnyFilterActive}
+            />
 
             <div className="flex items-center justify-between py-4 print:hidden">
             <Input
