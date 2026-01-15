@@ -38,6 +38,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { DateRange } from 'react-day-picker';
 import { Input } from '@/components/ui/input';
+import { CommissionReminders } from '@/components/dashboard/commission-reminders';
 
 export default function DashboardPage() {
   const [startDateInput, setStartDateInput] = React.useState('');
@@ -299,6 +300,7 @@ export default function DashboardPage() {
           <div className="space-y-8">
             <BirthdayAlerts customers={customers || []} isLoading={isLoading}/>
             <FollowUpReminders proposals={proposals || []} customers={customers || []} isLoading={isLoading}/>
+            <CommissionReminders proposals={proposals || []} customers={customers || []} isLoading={isLoading}/>
           </div>
         </div>
         <div>

@@ -9,3 +9,4 @@ import '@/ai/flows/summarize-notes-flow.ts';
 import '@/ai/flows/summarize-customer-history-flow.ts';
 import '@/ai/flows/extract-customer-data-flow.ts';
 import '@/ai/flows/reconcile-commissions-flow.ts';
+import '@/ai/flows/commission-reminder-flow.ts';
