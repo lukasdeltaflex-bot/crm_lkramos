@@ -93,7 +93,7 @@
     --accent: 142.1 76.2% 46.3%;
     --ring: 142.1 76.2% 36.3%;
     --sidebar-primary: 142.1 76.2% 46.3%;
-    --sidebar-ring: 142.1 76.2% 46.3%;
+    --sidebar-ring: 142.1 76.2% 36.3%;
   }
   .dark.theme-green {
     --primary: 142.1 76.2% 26.3%;
@@ -110,7 +110,7 @@
     --accent: 217.2 91.2% 69.8%;
     --ring: 217.2 91.2% 59.8%;
     --sidebar-primary: 217.2 91.2% 69.8%;
-    --sidebar-ring: 217.2 91.2% 69.8%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark.theme-blue {
