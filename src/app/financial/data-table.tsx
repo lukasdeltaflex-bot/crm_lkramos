@@ -16,9 +16,8 @@ import {
   ColumnOrderState,
   Header,
 } from '@tanstack/react-table';
-import { format } from 'date-fns';
+import { format, parse, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar as CalendarIcon } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import {
     DndContext,
@@ -52,9 +51,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { ChevronDown, X } from 'lucide-react';
+import { ChevronDown, X, Filter } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { CommissionStatus, Proposal, Customer } from '@/lib/types';
@@ -83,18 +80,56 @@ export function FinancialDataTable<TData extends ProposalWithCustomer, TValue>({
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [statusFilter, setStatusFilter] = React.useState<CommissionStatus | 'Todos'>('Todos');
-  const [date, setDate] = React.useState<DateRange | undefined>(undefined);
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(
     columns.map(c => c.id!).filter(id => id !== 'select' && id !== 'actions')
   );
+
+  const [startDateInput, setStartDateInput] = React.useState('');
+  const [endDateInput, setEndDateInput] = React.useState('');
+  const [appliedDateRange, setAppliedDateRange] = React.useState<DateRange | undefined>(undefined);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor)
   );
 
-  const isAnyFilterActive = !!globalFilter || statusFilter !== 'Todos' || !!date;
+  const isAnyFilterActive = !!globalFilter || statusFilter !== 'Todos' || !!appliedDateRange;
+
+  const handleDateInputChange = (value: string, type: 'start' | 'end') => {
+    let formattedValue = value.replace(/\D/g, '');
+    if (formattedValue.length > 8) formattedValue = formattedValue.substring(0, 8);
+    formattedValue = formattedValue.replace(/(\d{2})(\d)/, '$1/$2');
+    formattedValue = formattedValue.replace(/(\d{2})(\d)/, '$1/$2');
+    
+    if (type === 'start') {
+      setStartDateInput(formattedValue);
+    } else {
+      setEndDateInput(formattedValue);
+    }
+  };
+
+  const handleApplyFilter = () => {
+    const startDate = parse(startDateInput, 'dd/MM/yyyy', new Date());
+    const endDate = parse(endDateInput, 'dd/MM/yyyy', new Date());
+
+    const isValidStart = isValid(startDate) && startDateInput.length === 10;
+    const isValidEnd = isValid(endDate) && endDateInput.length === 10;
+
+    if (isValidStart && isValidEnd) {
+        setAppliedDateRange({ from: startDate, to: endDate });
+    } else if (isValidStart) {
+        setAppliedDateRange({ from: startDate, to: startDate }); // Filtra por um único dia
+    } else {
+        setAppliedDateRange(undefined);
+    }
+  };
+
+  const clearDates = () => {
+    setStartDateInput('');
+    setEndDateInput('');
+    setAppliedDateRange(undefined);
+  }
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -144,17 +179,19 @@ export function FinancialDataTable<TData extends ProposalWithCustomer, TValue>({
 
   React.useEffect(() => {
     const dateColumn = table.getColumn('commissionPaymentDate');
-    if (date?.from && date?.to) {
-        date.to.setHours(23, 59, 59, 999); // Include the whole end day
+    if (appliedDateRange?.from) {
+        const fromDate = appliedDateRange.from;
+        const toDate = appliedDateRange.to ? new Date(appliedDateRange.to) : new Date(appliedDateRange.from);
+        toDate.setHours(23, 59, 59, 999);
         dateColumn?.setFilterValue((cellValue: unknown) => {
             if (typeof cellValue !== 'string') return false;
             const cellDate = new Date(cellValue);
-            return cellDate >= date.from! && cellDate <= date.to!;
+            return cellDate >= fromDate && cellDate <= toDate;
         });
     } else {
         dateColumn?.setFilterValue(undefined);
     }
-  }, [date, table]);
+  }, [appliedDateRange, table]);
 
   const idToLabelMap: { [key: string]: string } = {
     customerName: 'Cliente',
@@ -189,47 +226,24 @@ export function FinancialDataTable<TData extends ProposalWithCustomer, TValue>({
                         <TabsTrigger value="Parcial">Parciais</TabsTrigger>
                     </TabsList>
                 </Tabs>
-                <Popover>
-                    <PopoverTrigger asChild>
-                    <Button
-                        id="date"
-                        variant={"outline"}
-                        className={cn(
-                            "w-[300px] justify-start text-left font-normal",
-                            !date && "text-muted-foreground"
-                        )}
-                    >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {date?.from ? (
-                            date.to ? (
-                            <>
-                                {format(date.from, "dd/MM/y", {locale: ptBR})} -{" "}
-                                {format(date.to, "dd/MM/y", {locale: ptBR})}
-                            </>
-                            ) : (
-                            format(date.from, "dd/MM/y", {locale: ptBR})
-                            )
-                        ) : (
-                            <span>Filtrar por data de pagamento</span>
-                        )}
-                    </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                        initialFocus
-                        mode="range"
-                        defaultMonth={date?.from}
-                        selected={date}
-                        onSelect={setDate}
-                        numberOfMonths={2}
-                        locale={ptBR}
-                        captionLayout="dropdown-buttons"
-                        fromYear={new Date().getFullYear() - 20}
-                        toYear={new Date().getFullYear() + 20}
+                <div className="flex items-center gap-2 flex-wrap">
+                    <Input 
+                        placeholder="Data Início" 
+                        value={startDateInput}
+                        onChange={(e) => handleDateInputChange(e.target.value, 'start')}
+                        maxLength={10}
+                        className="h-9 w-32"
                     />
-                    </PopoverContent>
-                </Popover>
-                {date && <Button variant="ghost" size="icon" onClick={() => setDate(undefined)}><X className="h-4 w-4" /></Button>}
+                    <Input 
+                        placeholder="Data Fim" 
+                        value={endDateInput}
+                        onChange={(e) => handleDateInputChange(e.target.value, 'end')}
+                        maxLength={10}
+                        className="h-9 w-32"
+                    />
+                    <Button size="sm" onClick={handleApplyFilter}><Filter className="h-4 w-4" /> Aplicar</Button>
+                    {(startDateInput || endDateInput || appliedDateRange) && <Button variant="ghost" size="icon" className="h-9 w-9" onClick={clearDates}><X className="h-4 w-4" /></Button>}
+                </div>
                 <div className="flex-grow" />
             </div>
 
