@@ -12,7 +12,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 setDefaultOptions({ locale: ptBR });
 
 export const metadata: Metadata = {
-  title: 'LKRAMOS',
+  title: 'LK RAMOS',
   description: 'Gerenciador de propostas e clientes para correspondentes bancários.',
 };
 
