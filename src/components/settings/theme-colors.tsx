@@ -12,9 +12,17 @@ const themes = [
   { name: "green", color: "hsl(142.1 76.2% 36.3%)" },
   { name: "violet", color: "hsl(262.1 83.3% 57.8%)" },
   { name: "orange", color: "hsl(24.6 95% 53.1%)" },
-  { name: "red", color: "hsl(0 84.2% 60.2%)" },
+  { name: "red", color: "hsl(0 72.2% 50.6%)" },
   { name: "rose", color: "hsl(346.8 77.2% 49.8%)" },
   { name: "gray", color: "hsl(220 9% 46%)" },
+  { name: "yellow", color: "hsl(45 93% 47%)" },
+  { name: "cyan", color: "hsl(184 90% 41%)" },
+  { name: "purple", color: "hsl(282 78% 51%)" },
+  { name: "magenta", color: "hsl(322 84% 50%)" },
+  { name: "emerald", color: "hsl(158 78% 41%)" },
+  { name: "burnt-orange", color: "hsl(16 84% 44%)" },
+  { name: "sky-blue", color: "hsl(199 89% 48%)" },
+  { name: "pink", color: "hsl(336 82% 54%)" },
 ]
 
 export function ThemeColors() {
