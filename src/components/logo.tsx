@@ -1,4 +1,4 @@
-import { Gem } from 'lucide-react';
+import { Landmark } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function Logo({ className }: { className?: string }) {
@@ -10,7 +10,7 @@ export function Logo({ className }: { className?: string }) {
       )}
     >
       <div className="bg-primary text-primary-foreground p-2 rounded-md">
-        <Gem className="h-5 w-5" />
+        <Landmark className="h-5 w-5" />
       </div>
       <span className="text-xl">LKRAMOS</span>
     </div>
