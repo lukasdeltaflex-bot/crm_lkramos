@@ -93,8 +93,16 @@ export function ProposalAttachmentUploader({
         toast({ title: 'Anexo Removido', description: `O arquivo ${attachmentToDelete.name} foi removido.` });
       })
       .catch((error) => {
-        console.error('Delete failed:', error);
-        toast({ variant: 'destructive', title: 'Falha ao Remover', description: `Não foi possível remover o anexo ${attachmentToDelete.name}.` });
+        // If the object does not exist, we can still remove it from the list
+        if (error.code === 'storage/object-not-found') {
+            const updatedAttachments = attachments.filter(att => att.url !== attachmentToDelete.url);
+            setAttachments(updatedAttachments);
+            onAttachmentsChange(updatedAttachments);
+            toast({ title: 'Anexo Removido', description: `O arquivo ${attachmentToDelete.name} foi removido da lista.` });
+        } else {
+            console.error('Delete failed:', error);
+            toast({ variant: 'destructive', title: 'Falha ao Remover', description: `Não foi possível remover o anexo ${attachmentToDelete.name}.` });
+        }
       });
   };
 

@@ -168,7 +168,14 @@ const MaskedDatePicker = ({ name, label, control, isReadOnly }: { name: any, lab
 export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDuplicate, defaultValues, sheetMode }: ProposalFormProps) {
     const { user } = useUser();
     const firestore = useFirestore();
-    const [tempProposalId] => useState(() => doc(collection(firestore, 'proposals')).id);
+    const [tempProposalId, setTempProposalId] = useState<string | undefined>(undefined);
+
+    useEffect(() => {
+        if (firestore && !tempProposalId) {
+            setTempProposalId(doc(collection(firestore, 'proposals')).id);
+        }
+    }, [firestore, tempProposalId]);
+    
     const proposalId = proposal?.id || tempProposalId;
 
     const form = useForm<ProposalFormValues>({
@@ -266,7 +273,7 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDupl
     setValue('attachments', attachments, { shouldValidate: true });
   };
 
-  const isAttachmentSectionDisabled = !user || !selectedCustomerId;
+  const isAttachmentSectionDisabled = !user || !selectedCustomerId || !proposalId;
   
   const handleDateDigitizedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = handleDateMask(e);
@@ -344,7 +351,7 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDupl
                         <FormItem>
                             <FormLabel>Nº Proposta</FormLabel>
                             <FormControl>
-                            <Input placeholder="Digite o número da proposta" {...field} readOnly={isReadOnly && !!proposal} value={field.value || ''}/>
+                            <Input placeholder="Digite o número da proposta" {...field} readOnly={isReadOnly && sheetMode === 'edit'} value={field.value || ''}/>
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -681,7 +688,7 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDupl
                 ) : (
                     <ProposalAttachmentUploader
                         userId={user!.uid}
-                        proposalId={proposalId}
+                        proposalId={proposalId!}
                         initialAttachments={form.getValues('attachments') || []}
                         onAttachmentsChange={handleAttachmentsChange}
                         isReadOnly={isReadOnly || isAttachmentSectionDisabled}
