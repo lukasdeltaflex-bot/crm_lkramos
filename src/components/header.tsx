@@ -21,6 +21,7 @@ import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { UserProfile } from '@/lib/types';
 import { doc } from 'firebase/firestore';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export function Header({ className }: { className?: string }) {
   const auth = useAuth();
@@ -68,6 +69,7 @@ export function Header({ className }: { className?: string }) {
       <div className="w-full flex-1">
         {/* Pode ser usado para uma busca global */}
       </div>
+      <ThemeToggle />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="secondary" size="icon" className="rounded-full">

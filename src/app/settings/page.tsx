@@ -27,7 +27,6 @@ import type { UserSettings } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ThemeColors } from '@/components/settings/theme-colors';
@@ -160,7 +159,6 @@ export default function SettingsPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-8">
-                        <ThemeToggle />
                         <ThemeColors />
                     </CardContent>
                 </Card>
