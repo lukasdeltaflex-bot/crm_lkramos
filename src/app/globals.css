@@ -495,8 +495,17 @@
     .print\:p-0 {
       padding: 0 !important;
     }
+    .print\:p-1 {
+      padding: 0.25rem !important;
+    }
     .print\:p-2 {
       padding: 0.5rem !important;
+    }
+    .print\:pb-1 {
+        padding-bottom: 0.25rem !important;
+    }
+    .print\:pt-1 {
+        padding-top: 0.25rem !important;
     }
     .print\:m-0 {
       margin: 0 !important;
@@ -517,6 +526,17 @@
       font-size: 0.75rem !important;
       line-height: 1rem !important;
     }
+    .print\:text-sm {
+        font-size: 0.875rem !important;
+        line-height: 1.25rem !important;
+    }
+    .print\:text-lg {
+        font-size: 1.125rem !important;
+        line-height: 1.75rem !important;
+    }
+    .print\:font-bold {
+        font-weight: 700 !important;
+    }
     .print\:text-black {
         color: black !important;
     }
@@ -534,6 +554,9 @@
     }
     .print\:border-gray-300 {
       border-color: #d1d5db !important;
+    }
+    .print\:border-gray-400 {
+        border-color: #9ca3af !important;
     }
     .print\:even\:bg-gray-50:nth-child(even) {
         background-color: #f9fafb !important;
