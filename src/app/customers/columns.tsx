@@ -1,7 +1,7 @@
 
 'use client';
 
-import { ColumnDef } from '@tanstack/react-table';
+import { ColumnDef, Header } from '@tanstack/react-table';
 import type { Customer } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, ArrowUpDown } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, GripVertical } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   AlertDialog,
@@ -28,11 +28,23 @@ import {
 import Link from 'next/link';
 import { isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
+import { cn } from '@/lib/utils';
 
 interface ActionsCellProps {
   row: { original: Customer };
   onEdit: (customer: Customer) => void;
   onDelete: (customerId: string) => void;
+}
+
+const DraggableHeader = ({ header, children }: { header: Header<Customer, unknown>, children: React.ReactNode}) => {
+    return (
+      <div className="flex items-center gap-2">
+        <div className={cn("h-6 w-6 cursor-grab p-1 rounded-md hover:bg-accent")}>
+          <GripVertical />
+        </div>
+        {children}
+      </div>
+    )
 }
 
 const ActionsCell: React.FC<ActionsCellProps> = ({ row, onEdit, onDelete }) => {
@@ -107,16 +119,20 @@ export const getColumns = (
     ),
     enableSorting: false,
     enableHiding: false,
+    enableColumnOrdering: false,
   },
   {
     accessorKey: 'name',
-    header: ({ column }) => {
+    id: 'name',
+    header: ({ column, header }) => {
         return (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           >
-            Nome
+            <DraggableHeader header={header}>
+                Nome
+            </DraggableHeader>
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         );
@@ -132,11 +148,13 @@ export const getColumns = (
   },
   {
     accessorKey: 'cpf',
-    header: 'CPF',
+    id: 'cpf',
+    header: ({ header }) => <DraggableHeader header={header}>CPF</DraggableHeader>,
   },
   {
     accessorKey: 'phone',
-    header: 'Telefone',
+    id: 'phone',
+    header: ({ header }) => <DraggableHeader header={header}>Telefone</DraggableHeader>,
     cell: ({ row }) => {
         const phone = row.getValue('phone') as string;
         const isWhatsAppNumber = isWhatsApp(phone);
@@ -154,7 +172,8 @@ export const getColumns = (
   },
   {
     accessorKey: 'phone2',
-    header: 'Telefone 2',
+    id: 'phone2',
+    header: ({ header }) => <DraggableHeader header={header}>Telefone 2</DraggableHeader>,
     cell: ({ row }) => {
         const phone = row.getValue('phone2') as string;
         if (!phone) return null;
@@ -173,19 +192,23 @@ export const getColumns = (
   },
   {
     accessorKey: 'benefitNumber',
-    header: 'Benefício',
+    id: 'benefitNumber',
+    header: ({ header }) => <DraggableHeader header={header}>Benefício</DraggableHeader>,
   },
   {
     accessorKey: 'city',
-    header: 'Cidade',
+    id: 'city',
+    header: ({ header }) => <DraggableHeader header={header}>Cidade</DraggableHeader>,
   },
   {
     accessorKey: 'state',
-    header: 'Estado',
+    id: 'state',
+    header: ({ header }) => <DraggableHeader header={header}>Estado</DraggableHeader>,
   },
   {
     accessorKey: 'observations',
-    header: 'Observações',
+    id: 'observations',
+    header: ({ header }) => <DraggableHeader header={header}>Observações</DraggableHeader>,
     cell: ({ row }) => {
         const obs = row.getValue('observations') as string;
         return <div className="truncate max-w-[200px]">{obs}</div>
@@ -194,7 +217,6 @@ export const getColumns = (
   {
     id: 'actions',
     cell: (props) => <ActionsCell {...props} onEdit={onEdit} onDelete={onDelete} />,
+    enableColumnOrdering: false,
   },
 ];
-
-    
