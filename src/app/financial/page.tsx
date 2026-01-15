@@ -22,6 +22,7 @@ import { toast } from '@/hooks/use-toast';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Logo } from '@/components/logo';
 
 export type ProposalWithCustomer = Proposal & { customer: Customer | undefined };
 
@@ -99,8 +100,8 @@ export default function FinancialPage() {
         </div>
       </div>
       <div className="print:block hidden mb-4">
-        <h1 className="text-2xl font-bold">Relatório Financeiro</h1>
-        <p className="text-sm text-muted-foreground">
+        <Logo forPrinting={true} />
+        <p className="text-sm text-muted-foreground mt-1">
             Gerado em: {format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
         </p>
       </div>
