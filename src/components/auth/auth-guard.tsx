@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useUser } from '@/firebase';
@@ -27,7 +28,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const isAuthPage = pathname === '/login' || pathname === '/signup';
+    const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/verify-email';
     
     // If there is no user, and we're not on an auth page, redirect to login.
     if (!user && !isAuthPage) {
@@ -36,15 +37,17 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
     // If there is a user, and they are on an auth page, redirect to dashboard.
     if (user && isAuthPage) {
-        router.replace('/');
+        if (user.emailVerified) {
+            router.replace('/');
+        }
     }
 
   }, [user, isUserLoading, router, pathname]);
 
-  const isAuthPage = pathname === '/login' || pathname === '/signup';
+  const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/verify-email';
 
   // While loading, or if redirecting, show a loader.
-  if (isUserLoading || (!user && !isAuthPage) || (user && isAuthPage)) {
+  if (isUserLoading || (!user && !isAuthPage) || (user && isAuthPage && user.emailVerified)) {
     return <FullPageLoader />;
   }
 

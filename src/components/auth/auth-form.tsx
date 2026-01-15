@@ -28,6 +28,7 @@ import Link from 'next/link';
 import { useAuth, useFirestore } from '@/firebase';
 import {
   createUserWithEmailAndPassword,
+  sendEmailVerification,
   signInWithEmailAndPassword,
 } from 'firebase/auth';
 import { doc } from 'firebase/firestore';
@@ -77,7 +78,17 @@ export function AuthForm({ type }: AuthFormProps) {
   async function handleFormSubmit(data: FormValues) {
     try {
       if (type === 'login') {
-        await signInWithEmailAndPassword(auth, data.email, data.password);
+        const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
+        if (!userCredential.user.emailVerified) {
+          toast({
+            variant: 'destructive',
+            title: 'E-mail não verificado',
+            description: 'Por favor, verifique seu e-mail antes de fazer login.',
+          });
+          await auth.signOut();
+          router.push(`/verify-email?email=${data.email}`);
+          return;
+        }
         toast({
           title: 'Login realizado com sucesso!',
         });
@@ -88,6 +99,7 @@ export function AuthForm({ type }: AuthFormProps) {
         
         // Create user profile document
         if (user && firestore) {
+          await sendEmailVerification(user);
           const userProfileRef = doc(firestore, 'users', user.uid);
           const newUserProfile: UserProfile = {
             uid: user.uid,
@@ -99,14 +111,15 @@ export function AuthForm({ type }: AuthFormProps) {
 
         toast({
           title: 'Conta criada com sucesso!',
-          description: 'Você já pode fazer o login.',
+          description: 'Enviamos um link de verificação para o seu e-mail.',
         });
-        router.push('/login');
+        await auth.signOut();
+        router.push(`/verify-email?email=${data.email}`);
       }
     } catch (error: any) {
       console.error(error);
       let message = 'Ocorreu um erro. Tente novamente.';
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
         message = 'Email ou senha inválidos.';
       } else if (error.code === 'auth/email-already-in-use') {
         message = 'Este email já está em uso.';
