@@ -5,6 +5,7 @@ import {
   SidebarHeader,
   SidebarContent,
   SidebarInset,
+  SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
 import { SidebarNav } from '@/components/sidebar-nav';

@@ -65,7 +65,7 @@ export function Header({ className }: { className?: string }) {
 
   return (
     <header className={cn("flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6", className)}>
-      <SidebarTrigger className="md:hidden" />
+      <SidebarTrigger />
       <div className="w-full flex-1">
         {/* Pode ser usado para uma busca global */}
       </div>
