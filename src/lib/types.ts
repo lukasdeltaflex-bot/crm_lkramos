@@ -1,8 +1,7 @@
 
-
-
 export type Customer = {
   id: string;
+  numericId: number;
   name: string;
   cpf: string;
   benefitNumber?: string;
@@ -98,5 +97,3 @@ export type UserProfile = {
   birthDate?: string; // YYYY-MM-DD
   phone?: string;
 }
-
-    

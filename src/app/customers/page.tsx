@@ -1,3 +1,4 @@
+
 'use client';
 import React from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -44,7 +45,7 @@ import { CustomerAiForm } from '@/components/customers/customer-ai-form';
 import type { ExtractCustomerDataOutput } from '@/ai/flows/extract-customer-data-flow';
 import { parse } from 'date-fns';
 
-type CustomerFormData = Partial<Omit<Customer, 'id' | 'userId'>>;
+type CustomerFormData = Partial<Omit<Customer, 'id' | 'userId' | 'numericId'>>;
 
 export default function CustomersPage() {
   const { user } = useUser();
@@ -77,6 +78,7 @@ export default function CustomersPage() {
             const newCustomer: Customer = {
               ...customerData,
               id: docRef.id,
+              numericId: Date.now() + index,
               userId: user.uid,
             };
             batch.set(docRef, newCustomer);
@@ -146,6 +148,7 @@ export default function CustomersPage() {
     const customerRef = doc(firestore, 'customers', customerId);
     const anonymizedData: Partial<Customer> = {
       name: 'Cliente Removido',
+      numericId: 0,
       cpf: '000.000.000-00',
       benefitNumber: '0000000000',
       phone: '(00) 00000-0000',
@@ -178,6 +181,7 @@ export default function CustomersPage() {
     const batch = writeBatch(firestore);
     const anonymizedData: Partial<Customer> = {
         name: 'Cliente Removido',
+        numericId: 0,
         cpf: '000.000.000-00',
         benefitNumber: '0000000000',
         phone: '(00) 00000-0000',
@@ -215,7 +219,7 @@ export default function CustomersPage() {
     }
   };
 
-  const handleFormSubmit = (data: Omit<Customer, 'id' | 'userId'>) => {
+  const handleFormSubmit = (data: Omit<Customer, 'id' | 'userId' | 'numericId'>) => {
     if (!firestore || !user) return;
 
     if (sheetMode === 'edit' && selectedCustomer) {
@@ -233,6 +237,7 @@ export default function CustomersPage() {
       const newCustomerWithId: Customer = {
         ...data,
         id: newDocRef.id,
+        numericId: Date.now(),
         userId: user.uid,
       };
       setDocumentNonBlocking(newDocRef, newCustomerWithId, {});

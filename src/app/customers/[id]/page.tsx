@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useMemo } from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -57,7 +58,7 @@ const CustomerInfoCard = ({ customer }: { customer: Customer }) => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
                         <div className="flex items-center gap-2">
                             <Hash className="h-4 w-4 text-muted-foreground" />
-                            <strong>ID Cliente:</strong> <span className='truncate'>{customer.id}</span>
+                            <strong>ID Cliente:</strong> <span className='truncate'>{customer.numericId}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <FileText className="h-4 w-4 text-muted-foreground" />

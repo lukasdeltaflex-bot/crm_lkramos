@@ -152,6 +152,11 @@ export const getColumns = (
     enableColumnOrdering: false,
   },
   {
+    accessorKey: 'numericId',
+    id: 'numericId',
+    header: 'ID',
+  },
+  {
     accessorKey: 'name',
     id: 'name',
     header: ({ column }) => {
