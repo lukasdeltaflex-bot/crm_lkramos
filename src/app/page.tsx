@@ -157,7 +157,7 @@ export default function DashboardPage() {
         }
         return `Exibindo dados de ${from} a ${to}`;
     }
-    return `Exibindo dados para o mês de ${format(new Date(), 'MMMM', { locale: ptBR })} (incluindo pendências do mês anterior)`;
+    return `Exibindo dados para o mês de ${format(new Date(), 'MMMM', { locale: ptBR })}`;
   }
 
 
