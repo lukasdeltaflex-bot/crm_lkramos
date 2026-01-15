@@ -20,7 +20,7 @@ import {
   X,
   Filter,
 } from 'lucide-react';
-import { format, parse, startOfMonth, endOfMonth, isValid } from 'date-fns';
+import { format, parse, startOfMonth, endOfMonth, isValid, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatCurrency, cn } from '@/lib/utils';
 import type { Proposal, ProposalStatus, Customer } from '@/lib/types';
@@ -99,10 +99,10 @@ export default function DashboardPage() {
   const filteredProposals = React.useMemo(() => {
     if (!proposals) return [];
     
-    const range = appliedDateRange;
-    if (range?.from) {
-      const fromDate = range.from;
-      const toDate = range.to ? new Date(range.to) : new Date(range.from);
+    // Se o usuário aplicou um filtro de data, use esse filtro.
+    if (appliedDateRange?.from) {
+      const fromDate = appliedDateRange.from;
+      const toDate = appliedDateRange.to ? new Date(appliedDateRange.to) : new Date(appliedDateRange.from);
       toDate.setHours(23, 59, 59, 999);
   
       return proposals.filter(p => {
@@ -112,15 +112,39 @@ export default function DashboardPage() {
       })
     }
 
-    // Default para o mês atual
-    const start = startOfMonth(new Date());
-    const end = endOfMonth(new Date());
-    end.setHours(23, 59, 59, 999);
-    return proposals.filter(p => {
+    // Lógica padrão: mês atual + pendentes do mês anterior.
+    const today = new Date();
+    const startOfCurrentMonth = startOfMonth(today);
+    const endOfCurrentMonth = endOfMonth(today);
+
+    const startOfPreviousMonth = startOfMonth(subMonths(today, 1));
+    const endOfPreviousMonth = endOfMonth(subMonths(today, 1));
+
+    const statusesToCarryOver: ProposalStatus[] = ['Pendente', 'Em Andamento', 'Aguardando Saldo', 'Saldo Pago'];
+
+    const proposalsFromCurrentMonth = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const proposalDate = new Date(p.dateDigitized);
-        return proposalDate >= start && proposalDate <= end;
+        return proposalDate >= startOfCurrentMonth && proposalDate <= endOfCurrentMonth;
     });
+
+    const proposalsToCarryOver = proposals.filter(p => {
+        if (!p.dateDigitized) return false;
+        const proposalDate = new Date(p.dateDigitized);
+        return proposalDate >= startOfPreviousMonth && proposalDate <= endOfPreviousMonth && statusesToCarryOver.includes(p.status);
+    });
+
+    // Combina os dois, evitando duplicatas.
+    const combinedProposals = [...proposalsFromCurrentMonth];
+    const currentMonthIds = new Set(proposalsFromCurrentMonth.map(p => p.id));
+    
+    proposalsToCarryOver.forEach(p => {
+        if (!currentMonthIds.has(p.id)) {
+            combinedProposals.push(p);
+        }
+    });
+
+    return combinedProposals;
 
   }, [proposals, appliedDateRange]);
 
@@ -133,7 +157,7 @@ export default function DashboardPage() {
         }
         return `Exibindo dados de ${from} a ${to}`;
     }
-    return `Exibindo dados para o mês de ${format(new Date(), 'MMMM', { locale: ptBR })}`;
+    return `Exibindo dados para o mês de ${format(new Date(), 'MMMM', { locale: ptBR })} (incluindo pendências do mês anterior)`;
   }
 
 
@@ -211,7 +235,7 @@ export default function DashboardPage() {
   return (
     <AppLayout>
        <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-        <div>
+        <div className="flex-1 min-w-fit">
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
             <p className='text-sm text-muted-foreground'>{getFilterDescription()}</p>
         </div>
@@ -230,11 +254,9 @@ export default function DashboardPage() {
                 maxLength={10}
                 className="h-9 w-32"
             />
-            <Button size="sm" onClick={handleApplyFilter}><Filter /> Aplicar</Button>
-            {(startDateInput || endDateInput) && <Button variant="ghost" size="icon" className="h-9 w-9" onClick={clearDates}><X className="h-4 w-4" /></Button>}
+            <Button size="sm" onClick={handleApplyFilter}><Filter className="h-4 w-4" /> Aplicar</Button>
+            {(startDateInput || endDateInput || appliedDateRange) && <Button variant="ghost" size="icon" className="h-9 w-9" onClick={clearDates}><X className="h-4 w-4" /></Button>}
             
-            <div className='flex-grow'></div>
-
             <Button variant="ghost" size="icon" onClick={() => setIsPrivacyMode(!isPrivacyMode)}>
                 {isPrivacyMode ? <EyeOff /> : <Eye />}
                 <span className="sr-only">{isPrivacyMode ? 'Mostrar valores' : 'Ocultar valores'}</span>
