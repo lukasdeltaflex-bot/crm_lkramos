@@ -143,12 +143,9 @@ export function CommissionForm({ proposal, onSubmit }: CommissionFormProps) {
                                 onSelect={field.onChange}
                                 defaultMonth={field.value || new Date()}
                                 locale={ptBR}
-                                disabled={(date) =>
-                                    date > new Date() || date < new Date('1900-01-01')
-                                }
                                 initialFocus
-                                fromYear={new Date().getFullYear() -10}
-                                toYear={new Date().getFullYear()}
+                                fromYear={new Date().getFullYear() - 10}
+                                toYear={new Date().getFullYear() + 5}
                                 captionLayout="dropdown-buttons"
                                 />
                             </PopoverContent>

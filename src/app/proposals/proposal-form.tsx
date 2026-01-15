@@ -112,9 +112,6 @@ const DatePickerField = ({ name, label, control, isReadOnly }: { name: any, labe
                 onSelect={field.onChange}
                 defaultMonth={field.value || new Date()}
                 locale={ptBR}
-                disabled={(date) =>
-                    date > new Date() || date < new Date('1900-01-01')
-                }
                 initialFocus
                 fromYear={new Date().getFullYear() - 10}
                 toYear={new Date().getFullYear() + 5}

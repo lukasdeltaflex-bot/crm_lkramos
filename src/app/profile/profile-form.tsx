@@ -233,10 +233,10 @@ export function ProfileForm({ userProfile, onSubmit }: ProfileFormProps) {
                       defaultMonth={field.value || new Date(new Date().setFullYear(new Date().getFullYear() - 30))}
                       locale={ptBR}
                       disabled={(date) =>
-                        date > new Date() || date < new Date('1900-01-01')
+                        date > new Date()
                       }
                       initialFocus
-                      fromYear={1930}
+                      fromYear={1920}
                       toYear={new Date().getFullYear()}
                       captionLayout="dropdown-buttons"
                     />

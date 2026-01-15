@@ -162,6 +162,9 @@ export function FinancialDataTable<TData extends ProposalWithCustomer, TValue>({
                     onSelect={setDate}
                     numberOfMonths={2}
                     locale={ptBR}
+                    captionLayout="dropdown-buttons"
+                    fromYear={new Date().getFullYear() - 10}
+                    toYear={new Date().getFullYear() + 5}
                 />
                 </PopoverContent>
             </Popover>
