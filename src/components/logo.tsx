@@ -12,13 +12,13 @@ const LogoSvg = ({ className }: { className?: string }) => (
     >
         <defs>
             <linearGradient id="gold-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" style={{ stopColor: '#c09543' }} />
-                <stop offset="50%" style={{ stopColor: '#f7d37a' }} />
-                <stop offset="100%" style={{ stopColor: '#c09543' }} />
+                <stop offset="0%" style={{ stopColor: '#d4af37' }} />
+                <stop offset="50%" style={{ stopColor: '#ffd700' }} />
+                <stop offset="100%" style={{ stopColor: '#d4af37' }} />
             </linearGradient>
             <linearGradient id="blue-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style={{ stopColor: '#3a5a8a' }} />
-                <stop offset="100%" style={{ stopColor: '#1e3a5f' }} />
+                <stop offset="0%" style={{ stopColor: '#4c6a9a' }} />
+                <stop offset="100%" style={{ stopColor: '#2a4a7f' }} />
             </linearGradient>
             <style>
                 {`
@@ -45,11 +45,11 @@ const LogoSvg = ({ className }: { className?: string }) => (
         />
         <path
             d="M30 10 L 32 8 L 38 14 L 38 10 Z"
-            fill="#5b7aaa"
+            fill="#6b8ac0"
         />
         <path
             d="M30 50 L 38 42 L 40 44 L 32 52 Z"
-            fill="#1e3a5f"
+            fill="#2a4a7f"
         />
 
         {/* K Shape */}
@@ -80,19 +80,19 @@ const PrintLogo = ({ className }: { className?: string }) => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 40" className="h-10 w-auto">
              <defs>
                 <linearGradient id="print-gold-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" style={{ stopColor: '#c09543' }} />
-                    <stop offset="50%" style={{ stopColor: '#f7d37a' }} />
-                    <stop offset="100%" style={{ stopColor: '#c09543' }} />
+                    <stop offset="0%" style={{ stopColor: '#d4af37' }} />
+                    <stop offset="50%" style={{ stopColor: '#ffd700' }} />
+                    <stop offset="100%" style={{ stopColor: '#d4af37' }} />
                 </linearGradient>
                 <linearGradient id="print-blue-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style={{ stopColor: '#3a5a8a' }} />
-                    <stop offset="100%" style={{ stopColor: '#1e3a5f' }} />
+                    <stop offset="0%" style={{ stopColor: '#4c6a9a' }} />
+                    <stop offset="100%" style={{ stopColor: '#2a4a7f' }} />
                 </linearGradient>
             </defs>
              {/* L Shape */}
             <path d="M5 5 L 5 25 L 17.5 25 L 17.5 21 L 9 21 L 9 5 Z" fill="url(#print-blue-gradient)" />
-            <path d="M5 5 L 6 4 L 9 7 L 9 5 Z" fill="#5b7aaa" />
-            <path d="M5 25 L 9 21 L 10 22 L 6 26 Z" fill="#1e3a5f" />
+            <path d="M5 5 L 6 4 L 9 7 L 9 5 Z" fill="#6b8ac0" />
+            <path d="M5 25 L 9 21 L 10 22 L 6 26 Z" fill="#2a4a7f" />
 
             {/* K Shape */}
             <path d="M22.5 5 L 22.5 25 L 26.5 25 L 26.5 16.5 L 35 25 L 39 22.5 L 30 15 L 39 7.5 L 35 5 L 26.5 13.5 L 26.5 5 Z" fill="url(#print-gold-gradient)" />
