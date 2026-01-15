@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { UploadCloud, File, Trash2, Download } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import type { Attachment } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 interface ProposalAttachmentUploaderProps {
   userId: string;
@@ -37,6 +38,7 @@ export function ProposalAttachmentUploader({
   };
 
   const handleUpload = (file: File) => {
+    if (isReadOnly) return;
     const filePath = `proposals/${userId}/${proposalId}/${file.name}`;
     const storageRef = ref(storage, filePath);
     const uploadTask = uploadBytesResumable(storageRef, file);
@@ -105,10 +107,13 @@ export function ProposalAttachmentUploader({
   };
 
   return (
-    <Card>
+    <Card className={cn(isReadOnly && "bg-muted/50")}>
       <CardContent className="p-4 space-y-4">
         {!isReadOnly && (
-          <div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-8 flex flex-col items-center justify-center text-center">
+          <div className={cn(
+            "relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-8 flex flex-col items-center justify-center text-center",
+            isReadOnly && "cursor-not-allowed opacity-50"
+            )}>
             <UploadCloud className="h-12 w-12 text-muted-foreground" />
             <p className="mt-4 text-sm text-muted-foreground">Arraste e solte arquivos aqui, ou clique para selecionar</p>
             <Input

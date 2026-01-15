@@ -43,6 +43,8 @@ import { ProposalAttachmentUploader } from '@/components/proposals/proposal-atta
 import { useUser } from '@/firebase';
 import { doc, collection } from 'firebase/firestore'; // Only for ID generation
 import { useFirestore } from '@/firebase';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+
 
 const attachmentSchema = z.object({
   name: z.string(),
@@ -256,6 +258,8 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
   const handleAttachmentsChange = (attachments: Attachment[]) => {
     setValue('attachments', attachments, { shouldValidate: true });
   };
+
+  const isAttachmentSectionDisabled = !user || !selectedCustomerId;
 
   return (
     <Form {...form}>
@@ -637,18 +641,26 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
             <Separator />
 
             {/* Attachments */}
-            {user && selectedCustomerId && (
-                 <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Anexos da Proposta</h3>
+            <div className="space-y-4">
+                <h3 className="text-lg font-medium">Anexos da Proposta</h3>
+                {isAttachmentSectionDisabled ? (
+                    <Alert variant="default" className="bg-secondary">
+                        <Info className="h-4 w-4" />
+                        <AlertTitle>Campo Desabilitado</AlertTitle>
+                        <AlertDescription>
+                            Selecione um cliente para habilitar os anexos.
+                        </AlertDescription>
+                    </Alert>
+                ) : (
                     <ProposalAttachmentUploader
-                        userId={user.uid}
+                        userId={user!.uid}
                         proposalId={proposalId}
                         initialAttachments={form.getValues('attachments') || []}
                         onAttachmentsChange={handleAttachmentsChange}
-                        isReadOnly={isReadOnly}
+                        isReadOnly={isReadOnly || isAttachmentSectionDisabled}
                     />
-                 </div>
-            )}
+                )}
+            </div>
           </div>
         </ScrollArea>
         {!isReadOnly && (
