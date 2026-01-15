@@ -18,18 +18,18 @@ const themes = [
 ]
 
 export function ThemeColors() {
-  const { setTheme, currentTheme } = useTheme()
+  const { setColorTheme, colorTheme } = useTheme()
 
   return (
     <div className="space-y-2">
       <h4 className="text-sm font-medium">Cor do Tema</h4>
       <div className="flex flex-wrap items-center gap-2">
         {themes.map((theme) => {
-          const isActive = currentTheme === theme.name
+          const isActive = colorTheme === theme.name
           return (
             <button
               key={theme.name}
-              onClick={() => setTheme(theme.name)}
+              onClick={() => setColorTheme(theme.name)}
               className={cn(
                 "flex h-9 w-9 items-center justify-center rounded-full border-2 text-white",
                 isActive ? "border-primary" : "border-transparent"
