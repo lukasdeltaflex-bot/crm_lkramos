@@ -12,7 +12,7 @@ export function Logo({ className }: { className?: string }) {
       <div className="bg-primary text-primary-foreground p-2 rounded-md">
         <Landmark className="h-5 w-5" />
       </div>
-      <span className="text-xl">INSS Manager</span>
+      <span className="text-xl">LKRAMOS</span>
     </div>
   );
 }

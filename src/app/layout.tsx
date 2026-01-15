@@ -11,8 +11,8 @@ import { ptBR } from 'date-fns/locale';
 setDefaultOptions({ locale: ptBR });
 
 export const metadata: Metadata = {
-  title: 'INSS Manager',
-  description: 'Gerenciador de propostas e clientes para correspondentes bancários INSS.',
+  title: 'LKRAMOS',
+  description: 'Gerenciador de propostas e clientes para correspondentes bancários.',
 };
 
 const fontSans = FontSans({

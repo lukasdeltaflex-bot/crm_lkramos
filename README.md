@@ -1,6 +1,6 @@
-# INSS Manager
+# LKRAMOS
 
-Este é um sistema de gerenciamento completo para correspondentes bancários INSS, construído com Next.js, Firebase e IA generativa.
+Este é um sistema de gerenciamento completo para correspondentes bancários, construído com Next.js, Firebase e IA generativa.
 
 ## Link de Acesso Rápido
 
