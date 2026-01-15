@@ -10,19 +10,27 @@ import { collection, query, where, doc } from 'firebase/firestore';
 import type { Proposal, Customer } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Eye, EyeOff, Printer } from 'lucide-react';
+import { Eye, EyeOff, Printer, FileCheck2 } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+  } from '@/components/ui/dialog';
 import { CommissionForm } from './commission-form';
 import { toast } from '@/hooks/use-toast';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Logo } from '@/components/logo';
+import { CommissionReconciliation } from '@/components/financial/commission-reconciliation';
 
 export type ProposalWithCustomer = Proposal & { customer: Customer | undefined };
 
@@ -31,6 +39,7 @@ export default function FinancialPage() {
   const firestore = useFirestore();
   const [isPrivacyMode, setIsPrivacyMode] = React.useState(false);
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
+  const [isReconciliationOpen, setIsReconciliationOpen] = React.useState(false);
   const [selectedProposal, setSelectedProposal] = React.useState<ProposalWithCustomer | undefined>(undefined);
 
   const proposalsQuery = useMemoFirebase(() => {
@@ -81,6 +90,15 @@ export default function FinancialPage() {
     setIsSheetOpen(false);
   };
 
+  const handleReconciliationComplete = () => {
+    setIsReconciliationOpen(false);
+    // Here you could trigger a re-fetch of the data or rely on the real-time updates
+    toast({
+      title: "Conciliação Finalizada",
+      description: "O processo de conciliação foi concluído."
+    })
+  }
+
   const handlePrint = () => {
     window.print();
   }
@@ -92,6 +110,23 @@ export default function FinancialPage() {
       <div className="flex items-center justify-between print:hidden">
         <PageHeader title="Controle Financeiro" />
         <div className="flex items-center gap-2">
+            <Dialog open={isReconciliationOpen} onOpenChange={setIsReconciliationOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="outline">
+                        <FileCheck2 />
+                        Conciliar Relatórios
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl">
+                    <DialogHeader>
+                        <DialogTitle>Conciliação de Comissões com IA</DialogTitle>
+                    </DialogHeader>
+                    <CommissionReconciliation 
+                        proposals={proposalsWithCustomerData} 
+                        onFinished={handleReconciliationComplete}
+                    />
+                </DialogContent>
+            </Dialog>
             <Button variant="ghost" size="icon" onClick={() => setIsPrivacyMode(!isPrivacyMode)}>
             {isPrivacyMode ? <EyeOff /> : <Eye />}
             <span className="sr-only">{isPrivacyMode ? 'Mostrar valores' : 'Ocultar valores'}</span>
