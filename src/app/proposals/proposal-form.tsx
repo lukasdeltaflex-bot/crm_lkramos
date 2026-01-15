@@ -38,9 +38,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ProposalAttachmentUploader } from '@/components/proposals/proposal-attachment-uploader';
 import { useUser } from '@/firebase';
+import { doc, collection } from 'firebase/firestore'; // Only for ID generation
+import { useFirestore } from '@/firebase';
 
 const attachmentSchema = z.object({
   name: z.string(),
@@ -138,31 +140,35 @@ const DatePickerField = ({ name, label, control, isReadOnly }: { name: any, labe
 
 export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: ProposalFormProps) {
     const { user } = useUser();
+    const firestore = useFirestore();
+    const [tempProposalId] = useState(() => doc(collection(firestore, 'proposals')).id);
+    const proposalId = proposal?.id || tempProposalId;
+
     const form = useForm<ProposalFormValues>({
         resolver: zodResolver(proposalSchema),
         defaultValues: {
-            customerId: '',
-            product: '',
-            status: 'Em Andamento',
-            table: '',
-            term: undefined,
-            interestRate: undefined,
-            grossAmount: undefined,
-            netAmount: undefined,
-            installmentAmount: undefined,
-            commissionBase: 'gross',
-            commissionPercentage: undefined,
-            commissionValue: undefined,
-            promoter: '',
-            bank: '',
-            bankOrigin: '',
-            approvingBody: '',
-            operator: '',
-            dateDigitized: new Date(),
-            dateApproved: undefined,
-            datePaidToClient: undefined,
-            debtBalanceArrivalDate: undefined,
-            attachments: [],
+            customerId: proposal?.customerId || '',
+            product: proposal?.product || '',
+            status: proposal?.status || 'Em Andamento',
+            table: proposal?.table || '',
+            term: proposal?.term || undefined,
+            interestRate: proposal?.interestRate || undefined,
+            grossAmount: proposal?.grossAmount || undefined,
+            netAmount: proposal?.netAmount || undefined,
+            installmentAmount: proposal?.installmentAmount || undefined,
+            commissionBase: proposal?.commissionBase || 'gross',
+            commissionPercentage: proposal?.commissionPercentage || undefined,
+            commissionValue: proposal?.commissionValue || undefined,
+            promoter: proposal?.promoter || '',
+            bank: proposal?.bank || '',
+            bankOrigin: proposal?.bankOrigin || '',
+            approvingBody: proposal?.approvingBody || '',
+            operator: proposal?.operator || '',
+            dateDigitized: proposal?.dateDigitized ? new Date(proposal.dateDigitized) : new Date(),
+            dateApproved: proposal?.dateApproved ? new Date(proposal.dateApproved) : undefined,
+            datePaidToClient: proposal?.datePaidToClient ? new Date(proposal.datePaidToClient) : undefined,
+            debtBalanceArrivalDate: proposal?.debtBalanceArrivalDate ? new Date(proposal.debtBalanceArrivalDate) : undefined,
+            attachments: proposal?.attachments || [],
         },
     });
 
@@ -172,6 +178,7 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
   const grossAmount = watch('grossAmount');
   const netAmount = watch('netAmount');
   const product = watch('product');
+  const selectedCustomerId = watch('customerId');
 
   useEffect(() => {
     if (isReadOnly) return;
@@ -321,7 +328,7 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
                         <FormItem>
                             <FormLabel>Tabela</FormLabel>
                             <FormControl>
-                            <Input placeholder="Tabela A" {...field} readOnly={isReadOnly} />
+                            <Input placeholder="Tabela A" {...field} readOnly={isReadOnly} value={field.value || ''} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -334,7 +341,7 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
                         <FormItem>
                             <FormLabel>Prazo (meses)</FormLabel>
                             <FormControl>
-                            <Input type="number" placeholder="84" {...field} readOnly={isReadOnly} />
+                            <Input type="number" placeholder="84" {...field} readOnly={isReadOnly} value={field.value || ''} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -347,7 +354,7 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
                         <FormItem>
                             <FormLabel>Taxa de Juros (%)</FormLabel>
                             <FormControl>
-                            <Input type="number" step="0.01" placeholder="1.8" {...field} readOnly={isReadOnly} />
+                            <Input type="number" step="0.01" placeholder="1.8" {...field} readOnly={isReadOnly} value={field.value || ''} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -369,7 +376,7 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
                         <FormItem>
                             <FormLabel>Valor da Parcela</FormLabel>
                             <FormControl>
-                            <Input type="number" step="0.01" placeholder="450.50" {...field} readOnly={isReadOnly} />
+                            <Input type="number" step="0.01" placeholder="450.50" {...field} readOnly={isReadOnly} value={field.value || ''} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -382,7 +389,7 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
                         <FormItem>
                             <FormLabel>Valor Líquido</FormLabel>
                             <FormControl>
-                            <Input type="number" step="0.01" placeholder="25000" {...field} readOnly={isReadOnly} />
+                            <Input type="number" step="0.01" placeholder="25000" {...field} readOnly={isReadOnly} value={field.value || ''} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -395,7 +402,7 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
                         <FormItem>
                             <FormLabel>Valor Bruto</FormLabel>
                             <FormControl>
-                            <Input type="number" step="0.01" placeholder="30000" {...field} readOnly={isReadOnly} />
+                            <Input type="number" step="0.01" placeholder="30000" {...field} readOnly={isReadOnly} value={field.value || ''} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -453,7 +460,7 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
                         <FormItem>
                             <FormLabel>Comissão (%)</FormLabel>
                             <FormControl>
-                            <Input type="number" step="0.01" placeholder="5" {...field} readOnly={isReadOnly} />
+                            <Input type="number" step="0.01" placeholder="5" {...field} readOnly={isReadOnly} value={field.value || ''} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -466,7 +473,7 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
                         <FormItem>
                             <FormLabel>Comissão (R$)</FormLabel>
                             <FormControl>
-                            <Input type="number" step="0.01" placeholder="1500" {...field} readOnly={isReadOnly} />
+                            <Input type="number" step="0.01" placeholder="1500" {...field} readOnly={isReadOnly} value={field.value || ''} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -540,7 +547,7 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
                         <FormItem>
                             <FormLabel>Promotora</FormLabel>
                             <FormControl>
-                            <Input placeholder="Promotora X" {...field} readOnly={isReadOnly} />
+                            <Input placeholder="Promotora X" {...field} readOnly={isReadOnly} value={field.value || ''} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -553,7 +560,7 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
                         <FormItem>
                             <FormLabel>Operador</FormLabel>
                             <FormControl>
-                            <Input placeholder="Nome do Operador" {...field} readOnly={isReadOnly} />
+                            <Input placeholder="Nome do Operador" {...field} readOnly={isReadOnly} value={field.value || ''} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -630,12 +637,12 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
             <Separator />
 
             {/* Attachments */}
-            {user && proposal && (
+            {user && selectedCustomerId && (
                  <div className="space-y-4">
                     <h3 className="text-lg font-medium">Anexos da Proposta</h3>
                     <ProposalAttachmentUploader
                         userId={user.uid}
-                        proposalId={proposal.id}
+                        proposalId={proposalId}
                         initialAttachments={form.getValues('attachments') || []}
                         onAttachmentsChange={handleAttachmentsChange}
                         isReadOnly={isReadOnly}
