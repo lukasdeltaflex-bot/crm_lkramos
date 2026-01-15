@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/page-header';
 import { CustomerDataTable } from './data-table';
 import { getColumns } from './columns';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Sparkles, Trash2 } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -33,12 +33,22 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { customers as sampleCustomers, proposals as sampleProposals } from '@/lib/data';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { CustomerAiForm } from '@/components/customers/customer-ai-form';
+import type { ExtractCustomerDataOutput } from '@/ai/flows/extract-customer-data-flow';
 
 export default function CustomersPage() {
   const { user } = useUser();
   const firestore = useFirestore();
 
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
+  const [isAiModalOpen, setIsAiModalOpen] = React.useState(false);
   const [selectedCustomer, setSelectedCustomer] = React.useState<Customer | undefined>(undefined);
   const [sheetMode, setSheetMode] = React.useState<'new' | 'edit'>('new');
   const [rowSelection, setRowSelection] = React.useState({});
@@ -112,6 +122,17 @@ export default function CustomersPage() {
     setSheetMode('edit');
     setIsSheetOpen(true);
   };
+
+  const handleAiFormSubmit = (aiData: ExtractCustomerDataOutput) => {
+    const prefilledData = {
+        ...aiData,
+        birthDate: aiData.birthDate ? new Date(aiData.birthDate) : undefined,
+    } as any; // Cast to any to match form expectations
+    setSelectedCustomer(prefilledData);
+    setSheetMode('new');
+    setIsAiModalOpen(false);
+    setIsSheetOpen(true);
+  }
 
   const handleAnonymizeCustomer = (customerId: string) => {
     if (!firestore) return;
@@ -252,6 +273,20 @@ export default function CustomersPage() {
                     </AlertDialogContent>
                  </AlertDialog>
             )}
+            <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="outline">
+                        <Sparkles />
+                        Novo Cliente com IA
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-xl">
+                    <DialogHeader>
+                        <DialogTitle>Assistente de Cadastro de Cliente</DialogTitle>
+                    </DialogHeader>
+                    <CustomerAiForm onSubmit={handleAiFormSubmit} />
+                </DialogContent>
+            </Dialog>
             <Button onClick={handleNewCustomer}>
                 <PlusCircle />
                 Novo Cliente
