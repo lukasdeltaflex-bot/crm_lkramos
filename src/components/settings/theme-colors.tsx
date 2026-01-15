@@ -11,6 +11,10 @@ const themes = [
   { name: "blue", color: "hsl(217.2 91.2% 59.8%)" },
   { name: "green", color: "hsl(142.1 76.2% 36.3%)" },
   { name: "violet", color: "hsl(262.1 83.3% 57.8%)" },
+  { name: "orange", color: "hsl(24.6 95% 53.1%)" },
+  { name: "red", color: "hsl(0 84.2% 60.2%)" },
+  { name: "rose", color: "hsl(346.8 77.2% 49.8%)" },
+  { name: "gray", color: "hsl(220 9% 46%)" },
 ]
 
 export function ThemeColors() {
@@ -19,7 +23,7 @@ export function ThemeColors() {
   return (
     <div className="space-y-2">
       <h4 className="text-sm font-medium">Cor do Tema</h4>
-      <div className="flex items-center space-x-2">
+      <div className="flex flex-wrap items-center gap-2">
         {themes.map((theme) => {
           const isActive = currentTheme === theme.name
           return (

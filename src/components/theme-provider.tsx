@@ -4,7 +4,7 @@ import * as React from "react"
 import { ThemeProvider as NextThemesProvider, useTheme as useNextTheme } from "next-themes"
 import { type ThemeProviderProps } from "next-themes/dist/types"
 
-const THEMES = ["zinc", "blue", "green", "violet"];
+const THEMES = ["zinc", "blue", "green", "violet", "orange", "red", "rose", "gray"];
 
 type CustomThemeProviderProps = ThemeProviderProps & {
   children: React.ReactNode;
