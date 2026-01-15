@@ -23,8 +23,10 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     setIsMounted(true);
-    const savedTheme = localStorage.getItem("color-theme") || "zinc";
-    setColorThemeState(savedTheme);
+    const savedTheme = localStorage.getItem("color-theme");
+    if (savedTheme && COLOR_THEMES.includes(savedTheme)) {
+        setColorThemeState(savedTheme);
+    }
   }, []);
 
   React.useEffect(() => {
