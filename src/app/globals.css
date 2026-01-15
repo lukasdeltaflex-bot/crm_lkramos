@@ -68,6 +68,59 @@
     --chart-4: 215 20.2% 65.1%;
     --chart-5: 222.2 47.4% 11.2%;
   }
+
+  .theme-green {
+    --primary: 142.1 76.2% 36.3%;
+    --primary-foreground: 142.1 76.2% 96.3%;
+    --accent: 142.1 76.2% 46.3%;
+    --ring: 142.1 76.2% 36.3%;
+    --sidebar-primary: 142.1 76.2% 46.3%;
+    --sidebar-ring: 142.1 76.2% 46.3%;
+  }
+  .dark.theme-green {
+    --primary: 142.1 76.2% 26.3%;
+    --primary-foreground: 142.1 76.2% 86.3%;
+    --accent: 142.1 76.2% 36.3%;
+    --ring: 142.1 76.2% 26.3%;
+    --sidebar-primary: 142.1 76.2% 36.3%;
+    --sidebar-ring: 142.1 76.2% 36.3%;
+  }
+  
+  .theme-blue {
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 217.2 91.2% 99.8%;
+    --accent: 217.2 91.2% 69.8%;
+    --ring: 217.2 91.2% 59.8%;
+    --sidebar-primary: 217.2 91.2% 69.8%;
+    --sidebar-ring: 217.2 91.2% 69.8%;
+  }
+
+  .dark.theme-blue {
+    --primary: 217.2 91.2% 49.8%;
+    --primary-foreground: 217.2 91.2% 89.8%;
+    --accent: 217.2 91.2% 59.8%;
+    --ring: 217.2 91.2% 49.8%;
+    --sidebar-primary: 217.2 91.2% 59.8%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .theme-violet {
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 262.1 83.3% 97.8%;
+    --accent: 262.1 83.3% 67.8%;
+    --ring: 262.1 83.3% 57.8%;
+    --sidebar-primary: 262.1 83.3% 67.8%;
+    --sidebar-ring: 262.1 83.3% 67.8%;
+  }
+  
+  .dark.theme-violet {
+    --primary: 262.1 83.3% 47.8%;
+    --primary-foreground: 262.1 83.3% 87.8%;
+    --accent: 262.1 83.3% 57.8%;
+    --ring: 262.1 83.3% 47.8%;
+    --sidebar-primary: 262.1 83.3% 57.8%;
+    --sidebar-ring: 262.1 83.3% 57.8%;
+  }
 }
 
 @layer base {

@@ -30,6 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { ThemeColors } from '@/components/settings/theme-colors';
 
 
 export default function SettingsPage() {
@@ -158,8 +159,9 @@ export default function SettingsPage() {
                            Personalize a aparência do sistema.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-8">
                         <ThemeToggle />
+                        <ThemeColors />
                     </CardContent>
                 </Card>
             </TabsContent>
