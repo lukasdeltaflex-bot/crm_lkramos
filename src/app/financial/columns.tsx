@@ -98,7 +98,7 @@ export const getColumns = (
       );
     },
     cell: ({ row, table }) => {
-      const isPrivacyMode = table.options.meta?.isPrivacyMode;
+      const isPrivacyMode = (table.options.meta as {isPrivacyMode?: boolean})?.isPrivacyMode;
       if (isPrivacyMode) return <div className="text-left font-medium">•••••</div>;
       const amount = parseFloat(row.getValue('grossAmount'));
       return <div className="text-left font-medium">{formatCurrency(amount)}</div>;
@@ -108,7 +108,7 @@ export const getColumns = (
     accessorKey: 'commissionPercentage',
     header: 'Comissão (%)',
     cell: ({ row, table }) => {
-      const isPrivacyMode = table.options.meta?.isPrivacyMode;
+      const isPrivacyMode = (table.options.meta as {isPrivacyMode?: boolean})?.isPrivacyMode;
       if (isPrivacyMode) return '•••••';
       const percentage = parseFloat(row.getValue('commissionPercentage'));
       return `${percentage.toFixed(2)}%`;
@@ -118,7 +118,7 @@ export const getColumns = (
     accessorKey: 'commissionValue',
     header: 'Valor Comissão',
     cell: ({ row, table }) => {
-        const isPrivacyMode = table.options.meta?.isPrivacyMode;
+        const isPrivacyMode = (table.options.meta as {isPrivacyMode?: boolean})?.isPrivacyMode;
         if (isPrivacyMode) return '•••••';
         const amount = parseFloat(row.getValue('commissionValue'));
         return formatCurrency(amount);
@@ -128,7 +128,7 @@ export const getColumns = (
     accessorKey: 'amountPaid',
     header: 'Valor Pago',
     cell: ({ row, table }) => {
-      const isPrivacyMode = table.options.meta?.isPrivacyMode;
+      const isPrivacyMode = (table.options.meta as {isPrivacyMode?: boolean})?.isPrivacyMode;
       if (isPrivacyMode) return '•••••';
       const amount = parseFloat(row.getValue('amountPaid') || '0');
       return formatCurrency(amount);
