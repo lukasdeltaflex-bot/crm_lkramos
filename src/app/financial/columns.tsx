@@ -86,6 +86,13 @@ export const getColumns = (
     id: 'customerName',
   },
   {
+    accessorKey: 'customer.cpf',
+    header: 'CPF',
+    id: 'customerCpf',
+    cell: ({row}) => row.original.customer.cpf,
+    enableHiding: false, // This ensures the column data is available for filtering even if hidden
+  },
+  {
     accessorKey: 'product',
     header: 'Produto',
     id: 'produto'
@@ -115,13 +122,6 @@ export const getColumns = (
       const amount = parseFloat(row.getValue('grossAmount'));
       return <div className="text-left font-medium">{formatCurrency(amount)}</div>;
     },
-  },
-  {
-    accessorKey: 'customer.cpf',
-    header: 'CPF',
-    id: 'customerCpf',
-    cell: ({row}) => row.original.customer.cpf,
-    enableHiding: false, // This ensures the column data is available for filtering even if hidden
   },
   {
     accessorKey: 'commissionPercentage',
