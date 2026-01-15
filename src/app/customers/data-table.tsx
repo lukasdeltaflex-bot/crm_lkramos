@@ -15,6 +15,7 @@ import {
   getSortedRowModel,
   useReactTable,
   RowSelectionState,
+  Header,
 } from '@tanstack/react-table';
 import {
     DndContext,
@@ -25,6 +26,7 @@ import {
     useSensors,
     DragEndEvent,
   } from '@dnd-kit/core';
+  import { SortableContext, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 
 import {
   Table,
@@ -45,6 +47,9 @@ import {
 import { ChevronDown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DraggableHeader } from './columns';
+import type { Customer } from '@/lib/types';
+
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -54,7 +59,7 @@ interface DataTableProps<TData, TValue> {
   setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>;
 }
 
-export function CustomerDataTable<TData, TValue>({
+export function CustomerDataTable<TData extends {id: string}, TValue>({
   columns,
   data,
   isLoading,
@@ -86,10 +91,7 @@ export function CustomerDataTable<TData, TValue>({
       setColumnOrder((items) => {
         const oldIndex = items.indexOf(active.id as string);
         const newIndex = items.indexOf(over!.id as string);
-        const newItems = Array.from(items);
-        newItems.splice(oldIndex, 1);
-        newItems.splice(newIndex, 0, active.id as string);
-        return newItems;
+        return arrayMove(items, oldIndex, newIndex);
       });
     }
   };
@@ -107,7 +109,6 @@ export function CustomerDataTable<TData, TValue>({
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     onColumnOrderChange: setColumnOrder,
-    enableColumnOrdering: true,
     state: {
       sorting,
       globalFilter,
@@ -134,6 +135,17 @@ export function CustomerDataTable<TData, TValue>({
       );
     },
   });
+
+  const idMap: {[key: string]: string} = {
+    name: 'Nome',
+    cpf: 'CPF',
+    phone: 'Telefone',
+    phone2: 'Telefone 2',
+    benefitNumber: 'Benefício',
+    city: 'Cidade',
+    state: 'Estado',
+    observations: 'Observações'
+  }
 
   return (
     <DndContext
@@ -163,17 +175,6 @@ export function CustomerDataTable<TData, TValue>({
                   .getAllColumns()
                   .filter((column) => column.getCanHide())
                   .map((column) => {
-                    const idMap: {[key: string]: string} = {
-                      name: 'Nome',
-                      cpf: 'CPF',
-                      phone: 'Telefone',
-                      phone2: 'Telefone 2',
-                      benefitNumber: 'Benefício',
-                      city: 'Cidade',
-                      state: 'Estado',
-                      observations: 'Observações'
-                    }
-
                     return (
                       <DropdownMenuCheckboxItem
                         key={column.id}
@@ -191,26 +192,22 @@ export function CustomerDataTable<TData, TValue>({
             </DropdownMenu>
           </div>
           <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      return (
-                        <TableHead key={header.id}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                        </TableHead>
-                      );
-                    })}
-                  </TableRow>
+          <Table>
+            <TableHeader>
+                {table.getHeaderGroups().map(headerGroup => (
+                <TableRow key={headerGroup.id}>
+                    <SortableContext
+                    items={columnOrder}
+                    strategy={horizontalListSortingStrategy}
+                    >
+                    {headerGroup.headers.map(header => (
+                        <DraggableHeader key={header.id} header={header as Header<Customer, unknown>} />
+                    ))}
+                    </SortableContext>
+                </TableRow>
                 ))}
-              </TableHeader>
-              <TableBody>
+            </TableHeader>
+            <TableBody>
                 {isLoading ? (
                   Array.from({ length: 10 }).map((_, i) => (
                     <TableRow key={i}>

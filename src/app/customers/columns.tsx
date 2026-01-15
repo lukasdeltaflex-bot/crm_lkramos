@@ -1,7 +1,7 @@
 
 'use client';
 
-import { ColumnDef, Header } from '@tanstack/react-table';
+import { ColumnDef, Header, flexRender } from '@tanstack/react-table';
 import type { Customer } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,6 +29,9 @@ import Link from 'next/link';
 import { isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
 import { cn } from '@/lib/utils';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { TableHead } from '@/components/ui/table';
 
 interface ActionsCellProps {
   row: { original: Customer };
@@ -36,14 +39,40 @@ interface ActionsCellProps {
   onDelete: (customerId: string) => void;
 }
 
-const DraggableHeader = ({ header, children }: { header: Header<Customer, unknown>, children: React.ReactNode}) => {
+export const DraggableHeader = ({ header }: { header: Header<Customer, unknown>}) => {
+    const { attributes, listeners, setNodeRef, transform } = useSortable({
+        id: header.column.id,
+      });
+    
+      const style = {
+        transform: CSS.Transform.toString(transform),
+      };
+
     return (
-      <div className="flex items-center gap-2">
-        <div className={cn("h-6 w-6 cursor-grab p-1 rounded-md hover:bg-accent")}>
-          <GripVertical />
-        </div>
-        {children}
-      </div>
+        <TableHead
+            ref={setNodeRef}
+            style={style}
+            className={cn(
+                'relative',
+                header.column.getCanSort() && 'cursor-pointer select-none'
+            )}
+        >
+            <div className="flex items-center gap-1">
+                <div
+                    {...attributes}
+                    {...listeners}
+                    className="cursor-grab p-1"
+                >
+                    <GripVertical className="h-4 w-4" />
+                </div>
+                {header.isPlaceholder
+                ? null
+                : flexRender(
+                    header.column.columnDef.header,
+                    header.getContext()
+                )}
+            </div>
+      </TableHead>
     )
 }
 
@@ -124,15 +153,13 @@ export const getColumns = (
   {
     accessorKey: 'name',
     id: 'name',
-    header: ({ column, header }) => {
+    header: ({ column }) => {
         return (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           >
-            <DraggableHeader header={header}>
-                Nome
-            </DraggableHeader>
+            Nome
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         );
@@ -149,12 +176,12 @@ export const getColumns = (
   {
     accessorKey: 'cpf',
     id: 'cpf',
-    header: ({ header }) => <DraggableHeader header={header}>CPF</DraggableHeader>,
+    header: 'CPF',
   },
   {
     accessorKey: 'phone',
     id: 'phone',
-    header: ({ header }) => <DraggableHeader header={header}>Telefone</DraggableHeader>,
+    header: 'Telefone',
     cell: ({ row }) => {
         const phone = row.getValue('phone') as string;
         const isWhatsAppNumber = isWhatsApp(phone);
@@ -173,7 +200,7 @@ export const getColumns = (
   {
     accessorKey: 'phone2',
     id: 'phone2',
-    header: ({ header }) => <DraggableHeader header={header}>Telefone 2</DraggableHeader>,
+    header: 'Telefone 2',
     cell: ({ row }) => {
         const phone = row.getValue('phone2') as string;
         if (!phone) return null;
@@ -193,22 +220,22 @@ export const getColumns = (
   {
     accessorKey: 'benefitNumber',
     id: 'benefitNumber',
-    header: ({ header }) => <DraggableHeader header={header}>Benefício</DraggableHeader>,
+    header: 'Benefício',
   },
   {
     accessorKey: 'city',
     id: 'city',
-    header: ({ header }) => <DraggableHeader header={header}>Cidade</DraggableHeader>,
+    header: 'Cidade',
   },
   {
     accessorKey: 'state',
     id: 'state',
-    header: ({ header }) => <DraggableHeader header={header}>Estado</DraggableHeader>,
+    header: 'Estado',
   },
   {
     accessorKey: 'observations',
     id: 'observations',
-    header: ({ header }) => <DraggableHeader header={header}>Observações</DraggableHeader>,
+    header: 'Observações',
     cell: ({ row }) => {
         const obs = row.getValue('observations') as string;
         return <div className="truncate max-w-[200px]">{obs}</div>
