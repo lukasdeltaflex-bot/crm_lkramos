@@ -42,8 +42,9 @@ import {
 } from '@/components/ui/dialog';
 import { CustomerAiForm } from '@/components/customers/customer-ai-form';
 import type { ExtractCustomerDataOutput } from '@/ai/flows/extract-customer-data-flow';
+import { parse } from 'date-fns';
 
-type CustomerFormData = Partial<Omit<Customer, 'id' | 'userId'>> & { birthDate?: Date };
+type CustomerFormData = Partial<Omit<Customer, 'id' | 'userId'>>;
 
 export default function CustomersPage() {
   const { user } = useUser();
@@ -131,7 +132,7 @@ export default function CustomersPage() {
   const handleAiFormSubmit = (aiData: ExtractCustomerDataOutput) => {
     const prefilledData: CustomerFormData = {
         ...aiData,
-        birthDate: aiData.birthDate ? new Date(aiData.birthDate) : undefined,
+        birthDate: aiData.birthDate, // Keep as YYYY-MM-DD string
     };
     setSelectedCustomer(undefined);
     setDefaultValues(prefilledData);
@@ -323,5 +324,3 @@ export default function CustomersPage() {
     </AppLayout>
   );
 }
-
-    

@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/popover';
 import { CalendarIcon, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import type { Customer } from '@/lib/types';
@@ -41,7 +41,14 @@ const customerSchema = z.object({
   phone: z.string().min(10, 'O telefone é obrigatório.'),
   phone2: z.string().optional(),
   email: z.string().email('O email é inválido.').or(z.literal('')).optional(),
-  birthDate: z.date({ required_error: 'A data de nascimento é obrigatória.' }),
+  birthDate: z.string().refine((date) => {
+    try {
+      const parsedDate = parse(date, 'dd/MM/yyyy', new Date());
+      return !isNaN(parsedDate.getTime());
+    } catch {
+      return false;
+    }
+  }, { message: 'Data inválida. Use o formato dd/mm/aaaa.' }),
   observations: z.string().optional(),
   // Address
   cep: z.string().optional(),
@@ -57,7 +64,7 @@ type CustomerFormValues = z.infer<typeof customerSchema>;
 
 type FormCustomer = Omit<Customer, 'id' | 'userId'>;
 
-type CustomerFormData = Partial<Omit<Customer, 'id' | 'userId'>> & { birthDate?: Date };
+type CustomerFormData = Partial<Omit<Customer, 'id' | 'userId'>>;
 
 interface CustomerFormProps {
   customer?: Customer;
@@ -79,7 +86,7 @@ export function CustomerForm({ customer, defaultValues, onSubmit }: CustomerForm
       phone: '',
       phone2: '',
       email: '',
-      birthDate: undefined,
+      birthDate: '',
       observations: '',
       cep: '',
       street: '',
@@ -91,24 +98,32 @@ export function CustomerForm({ customer, defaultValues, onSubmit }: CustomerForm
     },
   });
 
-  const birthDate = form.watch('birthDate');
+  const birthDateValue = form.watch('birthDate');
   const phone1Value = form.watch('phone');
   const phone2Value = form.watch('phone2');
 
   useEffect(() => {
-    if (birthDate) {
-      const today = new Date();
-      const birth = new Date(birthDate);
-      let calculatedAge = today.getFullYear() - birth.getFullYear();
-      const m = today.getMonth() - birth.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-        calculatedAge--;
+    if (birthDateValue && birthDateValue.length === 10) {
+      try {
+        const birth = parse(birthDateValue, 'dd/MM/yyyy', new Date());
+        if (!isNaN(birth.getTime())) {
+          const today = new Date();
+          let calculatedAge = today.getFullYear() - birth.getFullYear();
+          const m = today.getMonth() - birth.getMonth();
+          if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+            calculatedAge--;
+          }
+          setAge(calculatedAge);
+        } else {
+            setAge(null)
+        }
+      } catch {
+        setAge(null);
       }
-      setAge(calculatedAge);
     } else {
       setAge(null);
     }
-  }, [birthDate]);
+  }, [birthDateValue]);
 
   useEffect(() => {
     const getInitialData = () => {
@@ -119,7 +134,7 @@ export function CustomerForm({ customer, defaultValues, onSubmit }: CustomerForm
             phone: '',
             phone2: '',
             email: '',
-            birthDate: undefined,
+            birthDate: '',
             observations: '',
             cep: '',
             street: '',
@@ -130,19 +145,26 @@ export function CustomerForm({ customer, defaultValues, onSubmit }: CustomerForm
             state: '',
         };
 
-        if (customer) {
+        const source = customer || defaultValues;
+
+        if (source) {
+          let formattedBirthDate = '';
+          if (source.birthDate) {
+              try {
+                  // The date from DB is YYYY-MM-DD, need to parse it correctly
+                  const date = parse(source.birthDate, 'yyyy-MM-dd', new Date());
+                  if (!isNaN(date.getTime())) {
+                      formattedBirthDate = format(date, 'dd/MM/yyyy');
+                  }
+              } catch (e) {
+                // If parsing fails, leave it blank
+              }
+          }
           return {
             ...initial,
-            ...customer,
-            birthDate: customer.birthDate ? new Date(customer.birthDate) : undefined,
+            ...source,
+            birthDate: formattedBirthDate,
           };
-        }
-        if (defaultValues) {
-            return {
-                ...initial,
-                ...defaultValues,
-                birthDate: defaultValues.birthDate ? new Date(defaultValues.birthDate) : undefined,
-            };
         }
         return initial;
     }
@@ -150,9 +172,10 @@ export function CustomerForm({ customer, defaultValues, onSubmit }: CustomerForm
   }, [customer, defaultValues, form]);
 
   function handleFormSubmit(data: CustomerFormValues) {
+    const parsedDate = parse(data.birthDate, 'dd/MM/yyyy', new Date());
     const newCustomerData: FormCustomer = {
       ...data,
-      birthDate: format(data.birthDate, 'yyyy-MM-dd'),
+      birthDate: format(parsedDate, 'yyyy-MM-dd'),
     };
     onSubmit(newCustomerData);
   }
@@ -185,6 +208,16 @@ export function CustomerForm({ customer, defaultValues, onSubmit }: CustomerForm
     e.target.value = value;
     form.setValue('cep', value, { shouldValidate: true });
   }
+
+  const handleBirthDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 8) value = value.substring(0, 8);
+    value = value.replace(/(\d{2})(\d)/, '$1/$2');
+    value = value.replace(/(\d{2})(\d)/, '$1/$2');
+    e.target.value = value;
+    form.setValue('birthDate', value, { shouldValidate: true });
+  };
+
 
   const handleCepBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const cep = e.target.value.replace(/\D/g, '');
@@ -374,53 +407,24 @@ export function CustomerForm({ customer, defaultValues, onSubmit }: CustomerForm
                 </div>
                 <div className="flex items-start gap-4">
                     <FormField
-                            control={form.control}
-                            name="birthDate"
-                            render={({ field }) => (
-                            <FormItem className="flex flex-col pt-2">
-                                <FormLabel>
-                                    Data de Nascimento {age !== null && <span className="text-muted-foreground">({age} anos)</span>}
-                                </FormLabel>
-                                <Popover>
-                                <PopoverTrigger asChild>
-                                    <FormControl>
-                                    <Button
-                                        variant={'outline'}
-                                        className={cn(
-                                        'w-[240px] pl-3 text-left font-normal',
-                                        !field.value && 'text-muted-foreground'
-                                        )}
-                                    >
-                                        {field.value ? (
-                                        format(field.value, 'dd/MM/yyyy', { locale: ptBR })
-                                        ) : (
-                                        <span>Escolha uma data</span>
-                                        )}
-                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                    </Button>
-                                    </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                    mode="single"
-                                    selected={field.value}
-                                    onSelect={field.onChange}
-                                    defaultMonth={field.value || new Date(new Date().setFullYear(new Date().getFullYear() - 30))}
-                                    locale={ptBR}
-                                    disabled={(date) =>
-                                        date > new Date()
-                                    }
-                                    initialFocus
-                                    fromYear={1920}
-                                    toYear={new Date().getFullYear()}
-                                    captionLayout="dropdown-buttons"
-                                    />
-                                </PopoverContent>
-                                </Popover>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
+                        control={form.control}
+                        name="birthDate"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Data de Nascimento {age !== null && <span className="text-muted-foreground">({age} anos)</span>}</FormLabel>
+                            <FormControl>
+                                <Input 
+                                    placeholder="dd/mm/aaaa" 
+                                    {...field} 
+                                    onChange={handleBirthDateChange} 
+                                    maxLength={10} 
+                                    className="w-[240px]"
+                                />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
                     {age !== null && age >= 74 && (
                         <Alert variant="destructive" className="mt-2 max-w-xs">
                             <AlertCircle className="h-4 w-4" />
