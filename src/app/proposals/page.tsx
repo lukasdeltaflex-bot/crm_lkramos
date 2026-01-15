@@ -131,7 +131,7 @@ export default function ProposalsPage() {
   };
 
 
-  const handleFormSubmit = (data: Omit<Proposal, 'id' | 'userId' | 'proposalNumber'> & { proposalNumber?: string }) => {
+  const handleFormSubmit = (data: Omit<Proposal, 'id' | 'userId'>) => {
     if (!firestore || !user) return;
   
     // Helper to convert date to ISO string if it exists
@@ -155,7 +155,6 @@ export default function ProposalsPage() {
       const newProposal: Omit<Proposal, 'id'> = {
         ...data,
         userId: user.uid,
-        proposalNumber: `PRO${Date.now()}`,
         dateDigitized: toISO(data.dateDigitized)!,
         dateApproved: toISO(data.dateApproved),
         datePaidToClient: toISO(data.datePaidToClient),
@@ -226,3 +225,5 @@ export default function ProposalsPage() {
     </AppLayout>
   );
 }
+
+    

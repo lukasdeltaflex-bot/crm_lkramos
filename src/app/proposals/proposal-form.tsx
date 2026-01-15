@@ -54,7 +54,7 @@ const attachmentSchema = z.object({
 });
 
 const proposalSchema = z.object({
-  proposalNumber: z.string().optional(),
+  proposalNumber: z.string().min(1, "O número da proposta é obrigatório."),
   customerId: z.string({ required_error: 'Selecione um cliente.' }),
   product: z.string({ required_error: 'Selecione um produto.' }),
   status: z.string({ required_error: 'Selecione um status.' }),
@@ -328,21 +328,19 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
             <div className="space-y-4">
                 <h3 className="text-lg font-medium">Detalhes da Proposta</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {proposal?.proposalNumber && (
-                        <FormField
-                            control={form.control}
-                            name="proposalNumber"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Nº Proposta</FormLabel>
-                                <FormControl>
-                                <Input {...field} readOnly value={field.value || ''}/>
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                    )}
+                    <FormField
+                        control={form.control}
+                        name="proposalNumber"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Nº Proposta</FormLabel>
+                            <FormControl>
+                            <Input placeholder="Digite o número da proposta" {...field} readOnly={isReadOnly || !!proposal} value={field.value || ''}/>
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
                     <FormField
                         control={form.control}
                         name="table"
@@ -692,3 +690,5 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit }: Prop
     </Form>
   );
 }
+
+    
