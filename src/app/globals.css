@@ -101,7 +101,7 @@
     --accent: 217.2 91.2% 59.8%;
     --ring: 217.2 91.2% 49.8%;
     --sidebar-primary: 217.2 91.2% 59.8%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 217.2 91.2% 49.8%;
   }
 
   .theme-violet {
@@ -110,7 +110,7 @@
     --accent: 262.1 83.3% 67.8%;
     --ring: 262.1 83.3% 57.8%;
     --sidebar-primary: 262.1 83.3% 67.8%;
-    --sidebar-ring: 262.1 83.3% 67.8%;
+    --sidebar-ring: 262.1 83.3% 57.8%;
   }
   
   .dark.theme-violet {
@@ -137,7 +137,7 @@
     --accent: 24.6 95% 53.1%;
     --ring: 24.6 95% 43.1%;
     --sidebar-primary: 24.6 95% 53.1%;
-    --sidebar-ring: 24.6 95% 43.1%;
+    --sidebar-ring: 24.6 95% 53.1%;
   }
 
   .theme-red {
