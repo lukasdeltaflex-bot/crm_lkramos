@@ -23,6 +23,15 @@ export function FinancialSummary({ rows, isPrivacyMode, isFiltered }: FinancialS
     let totalCommissionValue = 0;
     let totalAmountPaid = 0;
 
+    if (!rows || rows.length === 0) {
+        return {
+          totalGrossAmount,
+          totalCommissionValue,
+          totalAmountPaid,
+          pendingAmount: 0,
+        };
+    }
+    
     const items = 'original' in rows[0] ? (rows as Row<ProposalWithCustomer>[]).map(r => r.original) : rows as ProposalWithCustomer[];
 
     items.forEach((proposal) => {
