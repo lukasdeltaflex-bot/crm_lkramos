@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
@@ -75,6 +76,11 @@ export const getColumns = (
     enableHiding: false,
   },
   {
+    accessorKey: 'promoter',
+    header: 'Promotora',
+    id: 'promotora'
+  },
+  {
     accessorKey: 'customer.name',
     header: 'Cliente',
     id: 'customerName',
@@ -82,14 +88,12 @@ export const getColumns = (
   {
     accessorKey: 'product',
     header: 'Produto',
-  },
-  {
-    accessorKey: 'promoter',
-    header: 'Promotora',
+    id: 'produto'
   },
   {
     accessorKey: 'bank',
     header: 'Banco',
+    id: 'banco'
   },
   {
     accessorKey: 'grossAmount',
@@ -176,5 +180,6 @@ export const getColumns = (
   {
     id: 'actions',
     cell: (props) => <ActionsCell {...props} onEdit={onEdit} />,
+    enableHiding: false,
   },
 ];

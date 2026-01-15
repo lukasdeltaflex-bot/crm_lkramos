@@ -116,6 +116,20 @@ export function FinancialDataTable<TData extends ProposalWithCustomer, TValue>({
     }
   }, [date, table]);
 
+  const idToLabelMap: { [key: string]: string } = {
+    customerName: 'Cliente',
+    promotora: 'Promotora',
+    produto: 'Produto',
+    banco: 'Banco',
+    grossAmount: 'Valor Bruto',
+    commissionPercentage: 'Comissão (%)',
+    commissionValue: 'Valor Comissão',
+    amountPaid: 'Valor Pago',
+    commissionStatus: 'Status Comissão',
+    commissionPaymentDate: 'Data Pagamento',
+  };
+
+
   return (
     <Card className="print:shadow-none print:border-none">
       <div className="p-4 space-y-4 print:p-0">
@@ -203,7 +217,7 @@ export function FinancialDataTable<TData extends ProposalWithCustomer, TValue>({
                         column.toggleVisibility(!!value)
                       }
                     >
-                      {column.id === 'customerName' ? 'Cliente' : column.id}
+                      {idToLabelMap[column.id] || column.id}
                     </DropdownMenuCheckboxItem>
                   );
                 })}
