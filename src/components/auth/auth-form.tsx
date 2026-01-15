@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -31,8 +29,7 @@ import {
   sendEmailVerification,
   signInWithEmailAndPassword,
 } from 'firebase/auth';
-import { doc } from 'firebase/firestore';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { doc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { Logo } from '../logo';
 import type { UserProfile } from '@/lib/types';
@@ -97,22 +94,26 @@ export function AuthForm({ type }: AuthFormProps) {
         const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
         const user = userCredential.user;
         
-        // Create user profile document
         if (user && firestore) {
-          await sendEmailVerification(user);
+          // Create user profile document
           const userProfileRef = doc(firestore, 'users', user.uid);
           const newUserProfile: UserProfile = {
             uid: user.uid,
             email: user.email!,
             displayName: user.email!.split('@')[0], // Default display name
           };
-          setDocumentNonBlocking(userProfileRef, newUserProfile, {});
+          // IMPORTANT: Await the creation of the user profile before signing out.
+          // This ensures the security rules for creating a user document will pass.
+          await setDoc(userProfileRef, newUserProfile);
+          await sendEmailVerification(user);
         }
 
         toast({
           title: 'Conta criada com sucesso!',
           description: 'Enviamos um link de verificação para o seu e-mail.',
         });
+        
+        // Sign out to force email verification flow
         await auth.signOut();
         router.push(`/verify-email?email=${data.email}`);
       }
