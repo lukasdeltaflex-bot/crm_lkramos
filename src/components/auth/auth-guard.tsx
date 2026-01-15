@@ -1,9 +1,7 @@
-
-
 'use client';
 
 import { useUser } from '@/firebase';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import React, { useEffect } from 'react';
 import { Skeleton } from '../ui/skeleton';
 
@@ -20,37 +18,24 @@ const FullPageLoader = () => (
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
-  const pathname = usePathname();
 
   useEffect(() => {
-    // If user data is still loading, don't do anything.
     if (isUserLoading) {
-      return;
+      return; // Wait for user status to be resolved
     }
-
-    const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/verify-email';
-    
-    // If there is no user, and we're not on an auth page, redirect to login.
-    if (!user && !isAuthPage) {
-      router.replace('/login');
+    if (!user) {
+      router.replace('/login'); // Redirect if not logged in
+    } else if (!user.emailVerified) {
+        // Redirect to verification page if email is not verified
+        router.replace(`/verify-email?email=${user.email}`);
     }
+  }, [user, isUserLoading, router]);
 
-    // If there is a user, and they are on an auth page, redirect to dashboard.
-    if (user && isAuthPage) {
-        if (user.emailVerified) {
-            router.replace('/');
-        }
-    }
-
-  }, [user, isUserLoading, router, pathname]);
-
-  const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/verify-email';
-
-  // While loading, or if redirecting, show a loader.
-  if (isUserLoading || (!user && !isAuthPage) || (user && isAuthPage && user.emailVerified)) {
+  // Show loader while checking auth status or if user is not valid for this route
+  if (isUserLoading || !user || !user.emailVerified) {
     return <FullPageLoader />;
   }
 
-  // If user is loaded and on the correct page, show the children.
+  // If user is authenticated and verified, render the protected content
   return <>{children}</>;
 }

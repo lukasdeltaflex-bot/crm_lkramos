@@ -8,7 +8,6 @@ import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { setDefaultOptions } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ThemeProvider } from '@/components/theme-provider';
-import { AuthGuard } from '@/components/auth/auth-guard';
 
 setDefaultOptions({ locale: ptBR });
 
@@ -42,10 +41,8 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <FirebaseClientProvider>
-            <AuthGuard>
-              <FirebaseErrorListener />
-              {children}
-            </AuthGuard>
+            <FirebaseErrorListener />
+            {children}
           </FirebaseClientProvider>
           <Toaster />
         </ThemeProvider>
