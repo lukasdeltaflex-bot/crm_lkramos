@@ -26,7 +26,7 @@ const LogoSvg = ({ className }: { className?: string }) => (
                         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
                         font-size: 16px;
                         font-weight: 600;
-                        fill: hsl(var(--foreground));
+                        fill: hsl(var(--sidebar-foreground));
                     }
                     .print-logo-text {
                         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -120,9 +120,7 @@ export function Logo({ className, forPrinting = false }: { className?: string; f
         className
       )}
     >
-      <LogoSvg className="h-12 group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:w-full"/>
-      <span className="text-xl font-bold group-data-[collapsible=icon]:hidden -ml-8">
-      </span>
+      <LogoSvg className="h-12 w-full group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:w-full"/>
     </div>
   );
 }
