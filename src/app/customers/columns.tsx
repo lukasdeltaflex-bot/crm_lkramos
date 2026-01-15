@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
@@ -134,6 +135,10 @@ export const getColumns = (
   {
     accessorKey: 'phone',
     header: 'Telefone',
+  },
+  {
+    accessorKey: 'benefitNumber',
+    header: 'Benefício',
   },
   {
     accessorKey: 'city',

@@ -52,14 +52,13 @@ export function CustomerDataTable<TData, TValue>({
   setRowSelection,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
+  const [globalFilter, setGlobalFilter] = React.useState('');
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({
         observations: false,
         city: false,
         state: false,
+        benefitNumber: false,
     });
 
   const table = useReactTable({
@@ -69,13 +68,13 @@ export function CustomerDataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
-    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     state: {
       sorting,
-      columnFilters,
+      globalFilter,
       columnVisibility,
       rowSelection,
     },
@@ -86,10 +85,10 @@ export function CustomerDataTable<TData, TValue>({
       <div className="p-4">
         <div className="flex items-center justify-between py-4">
           <Input
-            placeholder="Filtrar por nome..."
-            value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
+            placeholder="Filtrar por nome, CPF, telefone ou benefício..."
+            value={globalFilter ?? ''}
             onChange={(event) =>
-              table.getColumn('name')?.setFilterValue(event.target.value)
+              setGlobalFilter(event.target.value)
             }
             className="max-w-sm"
           />
