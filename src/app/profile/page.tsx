@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -12,6 +11,7 @@ import type { UserProfile } from '@/lib/types';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { toast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { updateEmail } from 'firebase/auth';
 
 export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
@@ -24,9 +24,32 @@ export default function ProfilePage() {
 
     const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileDocRef);
     
-    const handleProfileUpdate = (data: Partial<UserProfile>) => {
-        if (!userProfileDocRef) return;
+    const handleProfileUpdate = async (data: Partial<UserProfile>) => {
+        if (!user || !userProfileDocRef) return;
 
+        // Check if email is being changed
+        if (data.email && data.email !== user.email) {
+            try {
+                // First, try to update the sensitive auth email
+                await updateEmail(user, data.email);
+            } catch (error: any) {
+                console.error("Error updating email:", error);
+                let description = 'Ocorreu um erro ao tentar atualizar seu e-mail. Nenhuma informação foi salva.';
+                if (error.code === 'auth/requires-recent-login') {
+                    description = 'Para alterar seu e-mail, você precisa fazer login novamente. Por segurança, nenhuma outra informação foi alterada.';
+                } else if (error.code === 'auth/email-already-in-use') {
+                    description = 'Este e-mail já está em uso por outra conta. Nenhuma informação foi alterada.';
+                }
+                toast({
+                    variant: 'destructive',
+                    title: 'Falha na atualização do e-mail',
+                    description: description,
+                });
+                return; // IMPORTANT: Stop execution to prevent partial update
+            }
+        }
+        
+        // If email update was successful (or not needed), update Firestore
         setDocumentNonBlocking(userProfileDocRef, data, { merge: true });
         toast({
             title: 'Perfil Atualizado!',
@@ -68,4 +91,3 @@ export default function ProfilePage() {
         </AppLayout>
     );
 }
-

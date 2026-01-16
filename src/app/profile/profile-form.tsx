@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -183,7 +182,7 @@ export function ProfileForm({ userProfile, onSubmit }: ProfileFormProps) {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="seu@email.com" {...field} disabled />
+                  <Input placeholder="seu@email.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
