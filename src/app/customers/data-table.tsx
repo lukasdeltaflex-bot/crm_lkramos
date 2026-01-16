@@ -17,6 +17,7 @@ import {
   RowSelectionState,
   Header,
   ColumnSizingState,
+  Table as ReactTable,
 } from '@tanstack/react-table';
 import {
     DndContext,
@@ -54,21 +55,25 @@ import type { Customer } from '@/lib/types';
 const STORAGE_KEY_VISIBILITY = 'lk-ramos-customer-columns-visibility';
 const STORAGE_KEY_ORDER = 'lk-ramos-customer-columns-order';
 
-interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
-  data: TData[];
+interface DataTableProps {
+  columns: ColumnDef<Customer, unknown>[];
+  data: Customer[];
   isLoading: boolean;
   rowSelection: RowSelectionState;
   setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>;
 }
 
-export function CustomerDataTable<TData extends {id: string}, TValue>({
+export interface CustomerDataTableHandle {
+  table: ReactTable<Customer>;
+}
+
+export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataTableProps>(({
   columns,
   data,
   isLoading,
   rowSelection,
   setRowSelection,
-}: DataTableProps<TData, TValue>) {
+}, ref) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [globalFilter, setGlobalFilter] = React.useState('');
@@ -177,6 +182,10 @@ export function CustomerDataTable<TData extends {id: string}, TValue>({
       );
     },
   });
+
+  React.useImperativeHandle(ref, () => ({
+    table,
+  }));
 
   const idMap: {[key: string]: string} = {
     numericId: 'ID',
@@ -316,4 +325,6 @@ export function CustomerDataTable<TData extends {id: string}, TValue>({
       </Card>
     </DndContext>
   );
-}
+});
+
+CustomerDataTable.displayName = 'CustomerDataTable';

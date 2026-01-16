@@ -17,6 +17,7 @@ import {
   Header,
   ColumnOrderState,
   ColumnSizingState,
+  Table as ReactTable,
 } from '@tanstack/react-table';
 import {
   DndContext,
@@ -64,22 +65,25 @@ import type { ProposalWithCustomer } from './page';
 const STORAGE_KEY_VISIBILITY = 'lk-ramos-proposal-columns-visibility';
 const STORAGE_KEY_ORDER = 'lk-ramos-proposal-columns-order';
 
-interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
-  data: TData[];
+interface DataTableProps {
+  columns: ColumnDef<ProposalWithCustomer, unknown>[];
+  data: ProposalWithCustomer[];
   rowSelection: RowSelectionState;
   setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>;
   onBulkStatusChange: (newStatus: ProposalStatus) => void;
 }
 
+export interface ProposalsDataTableHandle {
+  table: ReactTable<ProposalWithCustomer>;
+}
 
-export function ProposalsDataTable<TData extends { id: string }, TValue>({
+export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, DataTableProps>(({
   columns,
   data,
   rowSelection,
   setRowSelection,
   onBulkStatusChange,
-}: DataTableProps<TData, TValue>) {
+}, ref) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -197,6 +201,10 @@ export function ProposalsDataTable<TData extends { id: string }, TValue>({
         );
       },
   });
+
+  React.useImperativeHandle(ref, () => ({
+    table,
+  }));
   
   const statusFilter = (table.getColumn('status')?.getFilterValue() as string[])?.[0] ?? 'Todos';
   const selectedRowCount = Object.keys(rowSelection).length;
@@ -372,5 +380,7 @@ export function ProposalsDataTable<TData extends { id: string }, TValue>({
         </Card>
     </DndContext>
   );
-}
+});
+
+ProposalsDataTable.displayName = 'ProposalsDataTable';
     

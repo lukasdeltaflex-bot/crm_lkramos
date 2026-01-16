@@ -1,8 +1,9 @@
+
 'use client';
 import React from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
-import { ProposalsDataTable } from './data-table';
+import { ProposalsDataTable, type ProposalsDataTableHandle } from './data-table';
 import { getColumns } from './columns';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Trash2, FileDown } from 'lucide-react';
@@ -16,9 +17,10 @@ import { ProposalForm } from './proposal-form';
 import type { Proposal, Customer, ProposalStatus } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, query, where, writeBatch, setDoc } from 'firebase/firestore';
+import { collection, doc, query, where, writeBatch, setDoc, deleteDoc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { parse } from 'date-fns';
+import { format, parse } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -51,6 +53,7 @@ export default function ProposalsPage() {
   const [sheetMode, setSheetMode] = React.useState<'new' | 'edit' | 'view'>('new');
   const [rowSelection, setRowSelection] = React.useState({});
   const [defaultValues, setDefaultValues] = React.useState<ProposalFormData | undefined>(undefined);
+  const tableRef = React.useRef<ProposalsDataTableHandle>(null);
   
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -117,11 +120,13 @@ export default function ProposalsPage() {
 }, []);
 
 const handleExportToExcel = async () => {
-    const { utils, writeFile } = await import('xlsx');
-    const selectedIds = Object.keys(rowSelection);
-    const selectedProposals = proposalsWithCustomerData.filter(p => selectedIds.includes(p.id));
+    const table = tableRef.current?.table;
+    if (!table) return;
 
-    if (selectedProposals.length === 0) {
+    const { utils, writeFile } = await import('xlsx');
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+
+    if (selectedRows.length === 0) {
         toast({
             variant: "destructive",
             title: "Nenhuma proposta selecionada",
@@ -130,41 +135,61 @@ const handleExportToExcel = async () => {
         return;
     }
 
-    const dataToExport = selectedProposals.map(p => ({
-        'Nº Proposta': p.proposalNumber,
-        'Cliente': p.customer?.name,
-        'CPF': p.customer?.cpf,
-        'Produto': p.product,
-        'Valor Bruto': p.grossAmount,
-        'Status': p.status,
-        'Data Digitação': p.dateDigitized ? new Date(p.dateDigitized).toLocaleDateString('pt-BR') : '-',
-    }));
+    const visibleColumns = table.getVisibleLeafColumns().filter(
+        c => c.id !== 'select' && c.id !== 'actions'
+    );
 
-    const worksheet = utils.json_to_sheet(dataToExport);
+    const idMap: {[key: string]: string} = {
+        promoter: 'Promotora',
+        proposalNumber: 'Nº Proposta',
+        customerName: 'Cliente',
+        customerCpf: 'CPF',
+        product: 'Produto',
+        operator: 'Operador',
+        grossAmount: 'Valor Bruto',
+        status: 'Status',
+        commissionValue: 'Comissão',
+        dateDigitized: 'Data Digitação',
+        dateApproved: 'Data Averbação',
+        datePaidToClient: 'Data Pgto. Cliente',
+        debtBalanceArrivalDate: 'Chegada Saldo',
+    };
+
+    const headers = visibleColumns.map(c => idMap[c.id] || c.id);
+
+    const dataForSheet = [headers];
+    selectedRows.forEach(row => {
+        const rowData: any[] = [];
+        visibleColumns.forEach(col => {
+            let value = row.getValue(col.id as any);
+            if (['dateDigitized', 'dateApproved', 'datePaidToClient', 'debtBalanceArrivalDate'].includes(col.id)) {
+                if (value) {
+                    try { value = format(new Date(value as string), "dd/MM/yyyy", { locale: ptBR }); } catch(e) {}
+                }
+            }
+            rowData.push(value ?? '');
+        });
+        dataForSheet.push(rowData);
+    });
+
+    const worksheet = utils.aoa_to_sheet(dataForSheet);
+    worksheet['!cols'] = visibleColumns.map(() => ({ wch: 20 }));
+
     const workbook = utils.book_new();
     utils.book_append_sheet(workbook, worksheet, 'Propostas');
-
-    worksheet['!cols'] = [
-        { wch: 20 },
-        { wch: 30 }, 
-        { wch: 15 }, 
-        { wch: 20 }, 
-        { wch: 15 },
-        { wch: 15 },
-        { wch: 15 },
-    ];
-
     writeFile(workbook, 'propostas.xlsx');
   };
 
   const handleExportToPdf = async () => {
+    const table = tableRef.current?.table;
+    if (!table) return;
+
     const { default: jsPDF } = await import('jspdf');
     const { default: autoTable } = await import('jspdf-autotable');
 
-    const selectedIds = Object.keys(rowSelection);
-    const selectedProposals = proposalsWithCustomerData.filter(p => selectedIds.includes(p.id));
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
 
-    if (selectedProposals.length === 0) {
+    if (selectedRows.length === 0) {
         toast({
             variant: "destructive",
             title: "Nenhuma proposta selecionada",
@@ -173,31 +198,58 @@ const handleExportToExcel = async () => {
         return;
     }
 
-    const doc = new jsPDF();
-    const tableColumns = ['Nº Proposta', 'Cliente', 'Produto', 'Valor Bruto', 'Status', 'Data'];
-    const tableRows = selectedProposals.map(p => [
-        p.proposalNumber,
-        p.customer?.name,
-        p.product,
-        formatCurrency(p.grossAmount),
-        p.status,
-        p.dateDigitized ? new Date(p.dateDigitized).toLocaleDateString('pt-BR') : '-',
-    ]);
+    const visibleColumns = table.getVisibleLeafColumns().filter(
+        c => c.id !== 'select' && c.id !== 'actions'
+    );
 
-    doc.text("Relatório de Propostas", 14, 15);
-    autoTable(doc, {
-        head: [tableColumns],
-        body: tableRows,
-        startY: 20,
+    const idMap: {[key: string]: string} = {
+        promoter: 'Promotora',
+        proposalNumber: 'Nº Proposta',
+        customerName: 'Cliente',
+        customerCpf: 'CPF',
+        product: 'Produto',
+        operator: 'Operador',
+        grossAmount: 'Valor Bruto',
+        status: 'Status',
+        commissionValue: 'Comissão',
+        dateDigitized: 'Data Digitação',
+        dateApproved: 'Data Averbação',
+        datePaidToClient: 'Data Pgto. Cliente',
+        debtBalanceArrivalDate: 'Chegada Saldo',
+    };
+
+    const head = [visibleColumns.map(c => idMap[c.id] || c.id)];
+
+    const body = selectedRows.map(row => {
+        const rowData: any[] = [];
+        visibleColumns.forEach(col => {
+            let value = row.getValue(col.id as any);
+             if (['dateDigitized', 'dateApproved', 'datePaidToClient', 'debtBalanceArrivalDate'].includes(col.id)) {
+                if (value) {
+                    try { value = format(new Date(value as string), "dd/MM/yyyy", { locale: ptBR }); } catch(e) {}
+                }
+            }
+            if (['grossAmount', 'commissionValue'].includes(col.id)) {
+                value = formatCurrency(Number(value));
+            }
+            rowData.push(value ?? '');
+        });
+        return rowData;
     });
 
+    const doc = new jsPDF();
+    doc.text("Relatório de Propostas", 14, 15);
+    autoTable(doc, {
+        head: head,
+        body: body,
+        startY: 20,
+    });
     doc.save('propostas.pdf');
   };
 
   const handleDeleteProposal = React.useCallback(async (proposalId: string) => {
     if (!firestore) return;
     try {
-      const { deleteDoc } = await import('firebase/firestore');
       await deleteDoc(doc(firestore, 'loanProposals', proposalId));
       toast({
         title: 'Proposta Cancelada!',
@@ -436,6 +488,7 @@ const handleExportToExcel = async () => {
         </div>
       ) : (
         <ProposalsDataTable 
+            ref={tableRef}
             columns={columns} 
             data={proposalsWithCustomerData}
             rowSelection={rowSelection}
