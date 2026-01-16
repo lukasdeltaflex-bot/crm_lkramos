@@ -21,7 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Info, Copy, Printer } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CalendarIcon, Info, Copy, Printer, Check, ChevronsUpDown } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -43,6 +45,14 @@ import { doc, collection } from 'firebase/firestore'; // Only for ID generation
 import { useFirestore } from '@/firebase';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Logo } from '@/components/logo';
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+  } from "@/components/ui/command";
 
 
 const attachmentSchema = z.object({
@@ -149,6 +159,7 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDupl
     const firestore = useFirestore();
     const [tempProposalId, setTempProposalId] = useState<string | undefined>(undefined);
     const [isClient, setIsClient] = useState(false);
+    const [openCustomerCombobox, setOpenCustomerCombobox] = useState(false);
 
     useEffect(() => {
         setIsClient(true);
@@ -272,28 +283,85 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDupl
             
             {/* Customer and Product */}
             <div className="space-y-4">
-                <FormField
+            <FormField
                     control={form.control}
                     name="customerId"
                     render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Cliente</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value || ''} disabled={isReadOnly}>
-                        <FormControl>
-                            <SelectTrigger>
-                            <SelectValue placeholder="Selecione um cliente" />
-                            </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                            {customers.map((customer) => (
-                            <SelectItem key={customer.id} value={customer.id}>
-                                {customer.name}
-                            </SelectItem>
-                            ))}
-                        </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
+                        <FormItem className="flex flex-col">
+                            <FormLabel>Cliente</FormLabel>
+                            <Popover open={openCustomerCombobox} onOpenChange={setOpenCustomerCombobox}>
+                                <PopoverTrigger asChild>
+                                    <FormControl>
+                                        <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            className={cn(
+                                                "w-full justify-between",
+                                                !field.value && "text-muted-foreground"
+                                            )}
+                                            disabled={isReadOnly}
+                                        >
+                                            {field.value
+                                                ? customers.find(
+                                                    (customer) => customer.id === field.value
+                                                )?.name
+                                                : "Pesquisar e selecionar cliente..."}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                    </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                    <Command
+                                        filter={(value, search) => {
+                                            const customer = customers.find(c => c.id === value);
+                                            if (!customer) return 0;
+                                            const searchLower = search.toLowerCase();
+                                            
+                                            const nameMatch = customer.name.toLowerCase().includes(searchLower);
+                                            const cpfMatch = customer.cpf.replace(/\D/g, '').includes(search.replace(/\D/g, ''));
+                                            const benefitMatch = customer.benefitNumber?.includes(search) ?? false;
+                                            
+                                            if (nameMatch || cpfMatch || benefitMatch) return 1;
+                                            return 0;
+                                        }}
+                                    >
+                                        <CommandInput placeholder="Pesquisar por nome, CPF ou benefício..." />
+                                        <CommandList>
+                                            <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
+                                            <CommandGroup>
+                                                {customers.map((customer) => (
+                                                    <CommandItem
+                                                        value={customer.id}
+                                                        key={customer.id}
+                                                        onSelect={() => {
+                                                            form.setValue("customerId", customer.id);
+                                                            setOpenCustomerCombobox(false);
+                                                        }}
+                                                    >
+                                                        <Check
+                                                            className={cn(
+                                                                "mr-2 h-4 w-4",
+                                                                customer.id === field.value
+                                                                    ? "opacity-100"
+                                                                    : "opacity-0"
+                                                            )}
+                                                        />
+                                                        <div>
+                                                            <p>{customer.name}</p>
+                                                            <p className="text-xs text-muted-foreground">
+                                                                CPF: {customer.cpf}
+                                                                {customer.benefitNumber && ` | Benefício: ${customer.benefitNumber}`}
+                                                            </p>
+                                                        </div>
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                        </FormItem>
                     )}
                 />
                 <FormField
