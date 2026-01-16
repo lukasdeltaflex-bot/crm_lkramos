@@ -83,48 +83,53 @@ export function ProposalsDataTable<TData, TValue>({
     []
   );
   const [globalFilter, setGlobalFilter] = React.useState('');
+  const [isClient, setIsClient] = React.useState(false);
   
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>(() => {
+  const defaultVisibility: VisibilityState = {
+      dateApproved: false,
+      datePaidToClient: false,
+      debtBalanceArrivalDate: false,
+      operator: false,
+      commissionValue: false,
+      customerCpf: false,
+  };
+  const defaultOrder = React.useMemo(() => columns.map(c => c.id!).filter(id => id !== 'select' && id !== 'actions'), [columns]);
+
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(defaultVisibility);
+  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(defaultOrder);
+  
+  React.useEffect(() => {
+    setIsClient(true);
+    const savedVisibility = localStorage.getItem(STORAGE_KEY_VISIBILITY);
+    if (savedVisibility) {
         try {
-            const saved = typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_KEY_VISIBILITY) : null;
-            return saved ? JSON.parse(saved) : {
-                dateApproved: false,
-                datePaidToClient: false,
-                debtBalanceArrivalDate: false,
-                operator: false,
-                commissionValue: false,
-                customerCpf: false,
-            };
-        } catch {
-            return {
-                dateApproved: false,
-                datePaidToClient: false,
-                debtBalanceArrivalDate: false,
-                operator: false,
-                commissionValue: false,
-                customerCpf: false,
-            };
+            setColumnVisibility(JSON.parse(savedVisibility));
+        } catch (e) {
+            // Use default
         }
-    });
-  
-  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(() => {
-    try {
-        const defaultOrder = columns.map(c => c.id!).filter(id => id !== 'select' && id !== 'actions');
-        const saved = typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_KEY_ORDER) : null;
-        return saved ? JSON.parse(saved) : defaultOrder;
-    } catch {
-        return columns.map(c => c.id!).filter(id => id !== 'select' && id !== 'actions');
     }
-  });
+    const savedOrder = localStorage.getItem(STORAGE_KEY_ORDER);
+    if (savedOrder) {
+        try {
+            setColumnOrder(JSON.parse(savedOrder));
+        } catch (e) {
+            // Use default
+        }
+    }
+  }, []);
+
 
   React.useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_VISIBILITY, JSON.stringify(columnVisibility));
-  }, [columnVisibility]);
+    if (isClient) {
+        localStorage.setItem(STORAGE_KEY_VISIBILITY, JSON.stringify(columnVisibility));
+    }
+  }, [columnVisibility, isClient]);
 
   React.useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_ORDER, JSON.stringify(columnOrder));
-  }, [columnOrder]);
+    if (isClient) {
+        localStorage.setItem(STORAGE_KEY_ORDER, JSON.stringify(columnOrder));
+    }
+  }, [columnOrder, isClient]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),

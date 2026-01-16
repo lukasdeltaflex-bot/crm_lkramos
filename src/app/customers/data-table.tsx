@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -70,44 +69,50 @@ export function CustomerDataTable<TData extends {id: string}, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = React.useState('');
+  const [isClient, setIsClient] = React.useState(false);
 
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>(() => {
-        try {
-            const saved = typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_KEY_VISIBILITY) : null;
-            return saved ? JSON.parse(saved) : {
-                observations: false,
-                city: false,
-                state: false,
-                benefitNumber: false,
-            };
-        } catch {
-            return {
-                observations: false,
-                city: false,
-                state: false,
-                benefitNumber: false,
-            };
-        }
-    });
+  const defaultVisibility: VisibilityState = {
+    observations: false,
+    city: false,
+    state: false,
+    benefitNumber: false,
+  };
+  const defaultOrder = React.useMemo(() => columns.map(c => c.id!).filter(id => id !== 'select' && id !== 'actions'), [columns]);
+
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(defaultVisibility);
+  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(defaultOrder);
     
-  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(() => {
-    try {
-        const defaultOrder = columns.map(c => c.id!).filter(id => id !== 'select' && id !== 'actions');
-        const saved = typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_KEY_ORDER) : null;
-        return saved ? JSON.parse(saved) : defaultOrder;
-    } catch {
-        return columns.map(c => c.id!).filter(id => id !== 'select' && id !== 'actions');
+  React.useEffect(() => {
+    setIsClient(true);
+    const savedVisibility = localStorage.getItem(STORAGE_KEY_VISIBILITY);
+    if (savedVisibility) {
+        try {
+            setColumnVisibility(JSON.parse(savedVisibility));
+        } catch (e) {
+            // Use default
+        }
     }
-  });
+    const savedOrder = localStorage.getItem(STORAGE_KEY_ORDER);
+    if (savedOrder) {
+        try {
+            setColumnOrder(JSON.parse(savedOrder));
+        } catch (e) {
+            // Use default
+        }
+    }
+  }, []);
 
   React.useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_VISIBILITY, JSON.stringify(columnVisibility));
-  }, [columnVisibility]);
+    if (isClient) {
+        localStorage.setItem(STORAGE_KEY_VISIBILITY, JSON.stringify(columnVisibility));
+    }
+  }, [columnVisibility, isClient]);
 
   React.useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_ORDER, JSON.stringify(columnOrder));
-  }, [columnOrder]);
+    if (isClient) {
+        localStorage.setItem(STORAGE_KEY_ORDER, JSON.stringify(columnOrder));
+    }
+  }, [columnOrder, isClient]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
