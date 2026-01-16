@@ -43,13 +43,13 @@ export function CommissionStatusCell({ proposal, onStatusUpdate, onEdit }: Commi
             </DropdownMenuTrigger>
             <DropdownMenuContent>
                 <DropdownMenuItem onClick={() => onStatusUpdate(proposal, 'Paga')}>
-                    Marcar como Paga
+                    Paga
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onEdit(proposal)}>
-                    Marcar como Parcial...
+                    Parcial...
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onStatusUpdate(proposal, 'Pendente')}>
-                    Marcar como Pendente
+                    Pendente
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
