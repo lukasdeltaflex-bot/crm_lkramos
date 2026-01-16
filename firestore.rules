@@ -10,12 +10,8 @@ service cloud.firestore {
 
     // Customers can only be managed by the user who created them.
     match /customers/{customerId} {
-      // Allow reading a single document if the user is the owner.
-      allow get: if request.auth != null && request.auth.uid == resource.data.userId;
-
-      // Allow listing the collection for any authenticated user.
-      // The application's queries are responsible for filtering by userId.
-      allow list: if request.auth != null;
+      // Allow authenticated users to read. Client-side queries MUST filter by userId.
+      allow read: if request.auth != null;
 
       // Allow creating a document if the new document's userId matches the user.
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
@@ -26,12 +22,8 @@ service cloud.firestore {
 
     // Loan proposals can only be managed by the user who created them.
     match /loanProposals/{loanProposalId} {
-      // Allow reading a single document if the user is the owner.
-      allow get: if request.auth != null && request.auth.uid == resource.data.userId;
-      
-      // Allow listing the collection for any authenticated user.
-      // The application's queries are responsible for filtering by userId.
-      allow list: if request.auth != null;
+      // Allow authenticated users to read. Client-side queries MUST filter by userId.
+      allow read: if request.auth != null;
 
       // Allow creating a document if the new document's userId matches the user.
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
