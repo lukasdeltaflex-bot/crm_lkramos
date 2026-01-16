@@ -1,4 +1,3 @@
-
 'use client';
 import React from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -16,7 +15,7 @@ import {
 import { CustomerForm } from './customer-form';
 import type { Customer } from '@/lib/types';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, writeBatch, updateDoc, setDoc } from 'firebase/firestore';
+import { collection, doc, writeBatch, updateDoc, setDoc, query, where } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -39,7 +38,6 @@ import {
 } from '@/components/ui/dialog';
 import { CustomerAiForm } from '@/components/customers/customer-ai-form';
 import type { ExtractCustomerDataOutput } from '@/ai/flows/extract-customer-data-flow';
-import { format, parse } from 'date-fns';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -50,7 +48,7 @@ import {
 type CustomerFormData = Partial<Omit<Customer, 'id' | 'userId' | 'numericId'>>;
 
 export default function CustomersPage() {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
@@ -70,7 +68,9 @@ export default function CustomersPage() {
 
   React.useEffect(() => {
     const seedData = async () => {
-      if (firestore && user && customers?.length === 0) {
+      if (!firestore || !user || isLoading || customers === null) return;
+  
+      if (customers.length === 0) {
         console.log("Seeding initial data...");
         const batch = writeBatch(firestore);
         
@@ -114,9 +114,7 @@ export default function CustomersPage() {
         }
       }
     };
-    if (!isLoading && customers) {
-        seedData();
-    }
+    seedData();
   }, [firestore, user, customers, isLoading]);
 
 
@@ -312,12 +310,11 @@ const handleExportToPdf = async () => {
     }
   };
 
-  const handleAnonymizeSelected = () => {
+  const handleAnonymizeSelected = async () => {
+    if (!firestore) return;
     const selectedIds = Object.keys(rowSelection);
-    if (selectedIds.length === 0 || !firestore) return;
-
-    // Clear selection immediately for better UX
-    setRowSelection({});
+    setRowSelection({}); 
+    if (selectedIds.length === 0) return;
     
     const batch = writeBatch(firestore);
     const anonymizedData: Partial<Customer> = {
@@ -344,7 +341,7 @@ const handleExportToPdf = async () => {
     });
 
     try {
-      batch.commit();
+      await batch.commit();
       toast({
         title: 'Clientes Removidos',
         description: `${selectedIds.length} cliente(s) foram anonimizados com sucesso.`,
@@ -400,7 +397,7 @@ const handleExportToPdf = async () => {
     setIsSheetOpen(false);
   };
 
-  const columns = React.useMemo(() => getColumns({ onEdit: handleEditCustomer, onDelete: handleAnonymizeCustomer }), []);
+  const columns = React.useMemo(() => getColumns({ onEdit: handleEditCustomer, onDelete: handleAnonymizeCustomer }), [handleEditCustomer, handleAnonymizeCustomer]);
 
   const getSheetTitle = () => {
     if (sheetMode === 'edit') return 'Editar Cliente';
