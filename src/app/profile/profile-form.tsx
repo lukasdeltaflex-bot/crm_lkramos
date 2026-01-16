@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/popover';
 import { CalendarIcon, Upload, User, X } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import type { UserProfile } from '@/lib/types';
@@ -31,7 +31,9 @@ const profileSchema = z.object({
   displayName: z.string().min(2, 'O apelido deve ter pelo menos 2 caracteres.').optional(),
   fullName: z.string().min(3, 'O nome completo deve ter pelo menos 3 caracteres.').optional(),
   photoURL: z.string().url('URL da foto inválida.').optional(),
-  birthDate: z.date().optional(),
+  birthDate: z.string().optional().refine(val => !val || !isNaN(parse(val, 'dd/MM/yyyy', new Date()).getTime()), {
+    message: "Data inválida. Use o formato dd/mm/aaaa.",
+  }),
   phone: z.string().optional(),
   email: z.string().email('Email inválido.'),
 });
@@ -50,6 +52,7 @@ export function ProfileForm({ userProfile, onSubmit }: ProfileFormProps) {
       displayName: '',
       fullName: '',
       photoURL: '',
+      birthDate: '',
       phone: '',
       email: userProfile?.email || '',
     },
@@ -63,7 +66,11 @@ export function ProfileForm({ userProfile, onSubmit }: ProfileFormProps) {
     if (userProfile) {
       form.reset({
         ...userProfile,
-        birthDate: userProfile.birthDate ? new Date(userProfile.birthDate) : undefined,
+        birthDate: userProfile.birthDate ? format(parse(userProfile.birthDate, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy') : '',
+        phone: userProfile.phone || '',
+        displayName: userProfile.displayName || '',
+        fullName: userProfile.fullName || '',
+        photoURL: userProfile.photoURL || '',
       });
       setPhotoPreview(userProfile.photoURL || null);
     }
@@ -93,10 +100,19 @@ export function ProfileForm({ userProfile, onSubmit }: ProfileFormProps) {
     form.setValue('phone', value, { shouldValidate: true });
   };
 
+  const handleBirthDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 8) value = value.substring(0, 8);
+    value = value.replace(/(\d{2})(\d)/, '$1/$2');
+    value = value.replace(/(\d{2})(\d)/, '$1/$2');
+    e.target.value = value;
+    form.setValue('birthDate', value, { shouldValidate: true });
+  };
+
   const handleFormSubmit = (data: ProfileFormValues) => {
     const dataToSubmit: Partial<UserProfile> = {
       ...data,
-      birthDate: data.birthDate ? format(data.birthDate, 'yyyy-MM-dd') : undefined,
+      birthDate: data.birthDate ? format(parse(data.birthDate, 'dd/MM/yyyy', new Date()), 'yyyy-MM-dd') : undefined,
     };
     onSubmit(dataToSubmit);
   };
@@ -223,28 +239,25 @@ export function ProfileForm({ userProfile, onSubmit }: ProfileFormProps) {
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
-                      <Button
-                        variant={'outline'}
-                        className={cn(
-                          'w-[240px] pl-3 text-left font-normal',
-                          !field.value && 'text-muted-foreground'
-                        )}
-                      >
-                        {field.value ? (
-                          format(field.value, 'dd/MM/yyyy', { locale: ptBR })
-                        ) : (
-                          <span>Escolha uma data</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
+                      <div className="relative">
+                          <Input
+                              placeholder="dd/mm/aaaa"
+                              {...field}
+                              value={field.value || ''}
+                              onChange={handleBirthDateChange}
+                              maxLength={10}
+                              className="w-[240px] pr-8"
+                          />
+                          <CalendarIcon className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50" />
+                      </div>
                     </FormControl>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      defaultMonth={field.value || new Date(new Date().setFullYear(new Date().getFullYear() - 30))}
+                      selected={field.value ? parse(field.value, 'dd/MM/yyyy', new Date()) : undefined}
+                      onSelect={(date) => field.onChange(date ? format(date, "dd/MM/yyyy") : '')}
+                      defaultMonth={field.value ? parse(field.value, 'dd/MM/yyyy', new Date()) : new Date(new Date().setFullYear(new Date().getFullYear() - 30))}
                       locale={ptBR}
                       disabled={(date) =>
                         date > new Date()
