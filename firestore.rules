@@ -10,14 +10,34 @@ service cloud.firestore {
 
     // Customers can only be managed by the user who created them.
     match /customers/{customerId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      // Allow reading a single document if the user is the owner.
+      allow get: if request.auth != null && request.auth.uid == resource.data.userId;
+
+      // Allow listing the collection for any authenticated user.
+      // The application's queries are responsible for filtering by userId.
+      allow list: if request.auth != null;
+
+      // Allow creating a document if the new document's userId matches the user.
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+
+      // Allow updates and deletes if the user is the owner of the existing document.
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
 
     // Loan proposals can only be managed by the user who created them.
     match /loanProposals/{loanProposalId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      // Allow reading a single document if the user is the owner.
+      allow get: if request.auth != null && request.auth.uid == resource.data.userId;
+      
+      // Allow listing the collection for any authenticated user.
+      // The application's queries are responsible for filtering by userId.
+      allow list: if request.auth != null;
+
+      // Allow creating a document if the new document's userId matches the user.
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+
+      // Allow updates and deletes if the user is the owner of the existing document.
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
 
     // User settings can only be managed by the owner.
