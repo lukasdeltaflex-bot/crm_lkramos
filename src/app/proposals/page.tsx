@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/page-header';
 import { ProposalsDataTable } from './data-table';
 import { getColumns } from './columns';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Trash2 } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -22,6 +22,17 @@ import {
 } from '@/firebase/non-blocking-updates';
 import { Skeleton } from '@/components/ui/skeleton';
 import { parse } from 'date-fns';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export type ProposalWithCustomer = Proposal & { customer: Customer | undefined };
 type ProposalFormData = Partial<Omit<Proposal, 'id' | 'userId'>>;
@@ -155,6 +166,34 @@ export default function ProposalsPage() {
     }
   }, [firestore, rowSelection]);
 
+  const handleBulkDelete = async () => {
+    if (!firestore) return;
+    const selectedIds = Object.keys(rowSelection);
+    if (selectedIds.length === 0) return;
+
+    const batch = writeBatch(firestore);
+    selectedIds.forEach((id) => {
+        const docRef = doc(firestore, 'loanProposals', id);
+        batch.delete(docRef);
+    });
+
+    try {
+        await batch.commit();
+        toast({
+            title: 'Propostas Canceladas!',
+            description: `${selectedIds.length} proposta(s) foram canceladas com sucesso.`,
+        });
+        setRowSelection({}); // Clear selection
+    } catch (error) {
+        console.error('Error deleting proposals in bulk:', error);
+        toast({
+            variant: 'destructive',
+            title: 'Erro ao cancelar',
+            description: 'Ocorreu um erro ao cancelar as propostas selecionadas.',
+        });
+    }
+  };
+
 
   const handleFormSubmit = (data: Omit<Proposal, 'id' | 'userId'>) => {
     if (!firestore || !user) return;
@@ -213,15 +252,40 @@ export default function ProposalsPage() {
 
   const columns = React.useMemo(() => getColumns(handleEditProposal, handleViewProposal, handleDeleteProposal, handleStatusChange), [handleEditProposal, handleViewProposal, handleDeleteProposal, handleStatusChange]);
 
+  const selectedCount = Object.keys(rowSelection).length;
 
   return (
     <AppLayout>
       <div className="flex items-center justify-between">
         <PageHeader title="Propostas" />
-        <Button onClick={handleNewProposal}>
-          <PlusCircle />
-          Nova Proposta
-        </Button>
+        <div className="flex items-center gap-2">
+            {selectedCount > 0 && (
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="destructive">
+                            <Trash2 />
+                            Cancelar ({selectedCount})
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Essa ação não pode ser desfeita. Isso irá cancelar permanentemente {selectedCount} proposta(s).
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Voltar</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleBulkDelete}>Cancelar Propostas</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            )}
+            <Button onClick={handleNewProposal}>
+                <PlusCircle />
+                Nova Proposta
+            </Button>
+        </div>
       </div>
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetContent className="w-full max-w-3xl sm:max-w-3xl">
