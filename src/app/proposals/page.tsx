@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/page-header';
 import { ProposalsDataTable, type ProposalsDataTableHandle } from './data-table';
 import { getColumns } from './columns';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Trash2, FileDown } from 'lucide-react';
+import { PlusCircle, Trash2, FileDown, Printer } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -122,6 +122,23 @@ export default function ProposalsPage() {
     setSheetMode('new');
     setIsSheetOpen(true);
 }, []);
+
+const handlePrint = React.useCallback(() => {
+    const hasSelection = Object.keys(rowSelection).length > 0;
+    if (hasSelection) {
+        document.body.classList.add('print-selection-proposals');
+    }
+    
+    const handleAfterPrint = () => {
+        if (hasSelection) {
+            document.body.classList.remove('print-selection-proposals');
+        }
+        window.removeEventListener('afterprint', handleAfterPrint);
+    };
+
+    window.addEventListener('afterprint', handleAfterPrint);
+    window.print();
+  }, [rowSelection]);
 
 const handleExportToExcel = async () => {
     const table = tableRef.current?.table;
@@ -459,6 +476,10 @@ const handleExportToExcel = async () => {
                     </DropdownMenu>
                 </>
             )}
+            <Button variant="outline" onClick={handlePrint}>
+                <Printer />
+                Imprimir Relatório
+            </Button>
             <Button onClick={handleNewProposal}>
                 <PlusCircle />
                 Nova Proposta

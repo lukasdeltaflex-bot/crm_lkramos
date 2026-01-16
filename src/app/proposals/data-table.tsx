@@ -236,7 +236,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
       onDragEnd={handleDragEnd}
       sensors={sensors}
     >
-        <Card>
+        <Card className="proposals-table">
         <div className="p-4">
             <Tabs 
             value={statusFilter} 

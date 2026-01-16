@@ -484,6 +484,9 @@
     body.print-selection .financial-table tbody tr:not([data-state='selected']) {
         display: none !important;
     }
+    body.print-selection-proposals .proposals-table tbody tr:not([data-state='selected']) {
+        display: none !important;
+    }
     
     html, body {
       background-color: white !important;
