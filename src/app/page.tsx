@@ -264,6 +264,10 @@ export default function DashboardPage() {
             />
             <Button size="sm" onClick={handleApplyFilter}><Filter className="h-4 w-4" /> Aplicar</Button>
             {(startDateInput || endDateInput || appliedDateRange) && <Button variant="ghost" size="icon" className="h-9 w-9" onClick={clearDates}><X className="h-4 w-4" /></Button>}
+            <Button variant="ghost" size="icon" onClick={() => setIsPrivacyMode(!isPrivacyMode)}>
+              {isPrivacyMode ? <EyeOff /> : <Eye />}
+              <span className="sr-only">{isPrivacyMode ? 'Mostrar valores' : 'Ocultar valores'}</span>
+            </Button>
         </div>
       </div>
       <div className="space-y-8">
@@ -300,7 +304,6 @@ export default function DashboardPage() {
             <CommissionChart 
               proposals={proposals || []} 
               isPrivacyMode={isPrivacyMode}
-              onTogglePrivacy={() => setIsPrivacyMode(!isPrivacyMode)}
             />
           </div>
           <div className="space-y-8">

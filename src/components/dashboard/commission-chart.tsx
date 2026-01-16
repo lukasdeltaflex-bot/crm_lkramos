@@ -7,16 +7,13 @@ import { formatCurrency } from '@/lib/utils';
 import type { Proposal } from '@/lib/types';
 import { useMemo } from 'react';
 import { Skeleton } from '../ui/skeleton';
-import { Button } from '../ui/button';
-import { Eye, EyeOff } from 'lucide-react';
 
 interface CommissionChartProps {
     proposals: Proposal[];
     isPrivacyMode: boolean;
-    onTogglePrivacy: () => void;
 }
 
-export function CommissionChart({ proposals, isPrivacyMode, onTogglePrivacy }: CommissionChartProps) {
+export function CommissionChart({ proposals, isPrivacyMode }: CommissionChartProps) {
     const data = useMemo(() => {
         const monthlyData: { [key: string]: number } = {};
 
@@ -49,10 +46,6 @@ export function CommissionChart({ proposals, isPrivacyMode, onTogglePrivacy }: C
     <Card>
         <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="font-headline">Visão Geral das Comissões</CardTitle>
-            <Button variant="ghost" size="icon" onClick={onTogglePrivacy}>
-                {isPrivacyMode ? <EyeOff /> : <Eye />}
-                <span className="sr-only">{isPrivacyMode ? 'Mostrar valores' : 'Ocultar valores'}</span>
-            </Button>
         </CardHeader>
         <CardContent>
             <ResponsiveContainer width="100%" height={350}>
