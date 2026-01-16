@@ -62,7 +62,7 @@ const customerSchema = z.object({
 
 type CustomerFormValues = z.infer<typeof customerSchema>;
 
-type FormCustomer = Omit<Customer, 'id' | 'userId'>;
+type FormCustomer = Omit<Customer, 'id' | 'userId' | 'numericId'>;
 
 type CustomerFormData = Partial<Omit<Customer, 'id' | 'userId'>>;
 
@@ -70,9 +70,10 @@ interface CustomerFormProps {
   customer?: Customer;
   defaultValues?: CustomerFormData;
   onSubmit: (data: FormCustomer) => void;
+  isSaving?: boolean;
 }
 
-export function CustomerForm({ customer, defaultValues, onSubmit }: CustomerFormProps) {
+export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = false }: CustomerFormProps) {
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isFetchingCep, setIsFetchingCep] = useState(false);
   const [age, setAge] = useState<number | null>(null);
@@ -580,7 +581,10 @@ export function CustomerForm({ customer, defaultValues, onSubmit }: CustomerForm
           </div>
         </ScrollArea>
         <div className="flex justify-end pt-8">
-          <Button type="submit">Salvar Cliente</Button>
+          <Button type="submit" disabled={isSaving}>
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isSaving ? 'Salvando...' : 'Salvar Cliente'}
+          </Button>
         </div>
       </form>
     </Form>

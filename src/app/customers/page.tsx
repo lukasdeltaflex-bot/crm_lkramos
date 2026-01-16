@@ -57,6 +57,7 @@ export default function CustomersPage() {
   const [defaultValues, setDefaultValues] = React.useState<CustomerFormData | undefined>(undefined);
   const [sheetMode, setSheetMode] = React.useState<'new' | 'edit'>('new');
   const [rowSelection, setRowSelection] = React.useState({});
+  const [isSaving, setIsSaving] = React.useState(false);
   const tableRef = React.useRef<CustomerDataTableHandle>(null);
 
   const customersQuery = useMemoFirebase(() => {
@@ -358,7 +359,7 @@ const handleExportToPdf = async () => {
 
   const handleFormSubmit = async (data: Omit<Customer, 'id' | 'userId' | 'numericId'>) => {
     if (!firestore || !user) return;
-
+    setIsSaving(true);
     try {
       if (sheetMode === 'edit' && selectedCustomer) {
         const customerToUpdate: Customer = {
@@ -385,6 +386,7 @@ const handleExportToPdf = async () => {
           description: `O cliente ${data.name} foi salvo com sucesso.`,
         });
       }
+      setIsSheetOpen(false);
     } catch (error) {
       console.error('Error saving customer:', error);
       toast({
@@ -392,9 +394,9 @@ const handleExportToPdf = async () => {
         title: 'Erro ao Salvar',
         description: 'Não foi possível salvar os dados do cliente.',
       });
+    } finally {
+        setIsSaving(false);
     }
-    
-    setIsSheetOpen(false);
   };
 
   const columns = React.useMemo(() => getColumns({ onEdit: handleEditCustomer, onDelete: handleAnonymizeCustomer }), [handleEditCustomer, handleAnonymizeCustomer]);
@@ -472,7 +474,7 @@ const handleExportToPdf = async () => {
         </div>
       </div>
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent className="w-full max-w-3xl sm:max-w-3xl">
+        <SheetContent className="w-full max-w-4xl sm:max-w-4xl">
           <SheetHeader>
             <SheetTitle>{getSheetTitle()}</SheetTitle>
           </SheetHeader>
@@ -480,6 +482,7 @@ const handleExportToPdf = async () => {
             onSubmit={handleFormSubmit}
             customer={selectedCustomer}
             defaultValues={defaultValues}
+            isSaving={isSaving}
           />
         </SheetContent>
       </Sheet>
