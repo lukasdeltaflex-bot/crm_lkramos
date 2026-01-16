@@ -173,10 +173,13 @@ export default function CustomersPage() {
     setRowSelection({});
   };
 
-  const handleAnonymizeSelected = async () => {
+  const handleAnonymizeSelected = () => {
     if (!firestore) return;
     const selectedIds = Object.keys(rowSelection);
     if (selectedIds.length === 0) return;
+
+    // Clear selection immediately for instant UI feedback
+    setRowSelection({});
 
     const batch = writeBatch(firestore);
     const anonymizedData: Partial<Customer> = {
@@ -202,22 +205,19 @@ export default function CustomersPage() {
       batch.update(docRef, anonymizedData);
     });
 
-    setRowSelection({}); // Clear selection immediately for better UX
-
-    try {
-      await batch.commit();
+    batch.commit().then(() => {
       toast({
         title: 'Clientes Removidos',
         description: `${selectedIds.length} cliente(s) foram anonimizados com sucesso.`,
       });
-    } catch (error) {
+    }).catch((error) => {
       console.error('Error anonymizing customers:', error);
       toast({
         variant: 'destructive',
         title: 'Erro ao remover',
         description: 'Ocorreu um erro ao remover os clientes selecionados.',
       });
-    }
+    });
   };
 
   const handleFormSubmit = (data: Omit<Customer, 'id' | 'userId' | 'numericId'>) => {

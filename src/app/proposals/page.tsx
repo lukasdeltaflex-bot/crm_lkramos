@@ -139,10 +139,13 @@ export default function ProposalsPage() {
     });
   }, [firestore]);
 
-  const handleBulkStatusChange = React.useCallback(async (newStatus: ProposalStatus) => {
+  const handleBulkStatusChange = React.useCallback((newStatus: ProposalStatus) => {
     if (!firestore) return;
     const selectedIds = Object.keys(rowSelection);
     if (selectedIds.length === 0) return;
+
+    // Clear selection immediately for instant UI feedback
+    setRowSelection({});
 
     const batch = writeBatch(firestore);
     selectedIds.forEach((id) => {
@@ -150,28 +153,28 @@ export default function ProposalsPage() {
       batch.update(docRef, { status: newStatus });
     });
 
-    setRowSelection({}); // Clear selection immediately for better UX
-
-    try {
-      await batch.commit();
+    batch.commit().then(() => {
       toast({
         title: 'Status Atualizado em Massa!',
         description: `${selectedIds.length} proposta(s) foram atualizadas para "${newStatus}".`,
       });
-    } catch (error) {
+    }).catch((error) => {
       console.error('Error updating statuses in bulk:', error);
       toast({
         variant: 'destructive',
         title: 'Erro ao atualizar',
         description: 'Ocorreu um erro ao atualizar o status das propostas.',
       });
-    }
+    });
   }, [firestore, rowSelection]);
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
     if (!firestore) return;
     const selectedIds = Object.keys(rowSelection);
     if (selectedIds.length === 0) return;
+
+    // Clear selection immediately for instant UI feedback
+    setRowSelection({});
 
     const batch = writeBatch(firestore);
     selectedIds.forEach((id) => {
@@ -179,22 +182,19 @@ export default function ProposalsPage() {
         batch.delete(docRef);
     });
     
-    setRowSelection({}); // Clear selection immediately for better UX
-
-    try {
-        await batch.commit();
+    batch.commit().then(() => {
         toast({
             title: 'Propostas Canceladas!',
             description: `${selectedIds.length} proposta(s) foram canceladas com sucesso.`,
         });
-    } catch (error) {
+    }).catch((error) => {
         console.error('Error deleting proposals in bulk:', error);
         toast({
             variant: 'destructive',
             title: 'Erro ao cancelar',
             description: 'Ocorreu um erro ao cancelar as propostas selecionadas.',
         });
-    }
+    });
   };
 
 
