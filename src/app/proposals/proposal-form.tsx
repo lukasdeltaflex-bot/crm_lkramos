@@ -289,7 +289,7 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDupl
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Cliente</FormLabel>
-                  <Popover open={openCustomerCombobox} onOpenChange={setOpenCustomerCombobox} modal={false}>
+                  <Popover open={openCustomerCombobox} onOpenChange={setOpenCustomerCombobox}>
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
@@ -319,13 +319,12 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDupl
                           
                           const nameMatch = customer.name.toLowerCase().includes(searchLower);
                           const cpfMatch = customer.cpf.replace(/\D/g, '').includes(search.replace(/\D/g, ''));
-                          const benefitMatch = customer.benefitNumber?.includes(search) ?? false;
                           
-                          if (nameMatch || cpfMatch || benefitMatch) return 1;
+                          if (nameMatch || cpfMatch) return 1;
                           return 0;
                         }}
                       >
-                        <CommandInput placeholder="Pesquisar por nome, CPF ou benefício..." />
+                        <CommandInput placeholder="Pesquisar por nome ou CPF..." />
                         <CommandList>
                           <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
                           <CommandGroup>
@@ -350,7 +349,6 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDupl
                                   <p>{customer.name}</p>
                                   <p className="text-xs text-muted-foreground">
                                     CPF: {customer.cpf}
-                                    {customer.benefitNumber && ` | Benefício: ${customer.benefitNumber}`}
                                   </p>
                                 </div>
                               </CommandItem>
@@ -773,5 +771,3 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDupl
     </Form>
   );
 }
-
-    
