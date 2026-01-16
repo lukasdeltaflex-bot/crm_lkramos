@@ -73,6 +73,7 @@ interface DataTableProps {
   isPrivacyMode: boolean;
   rowSelection: RowSelectionState;
   setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>;
+  onShowDetails: (title: string, proposals: ProposalWithCustomer[]) => void;
 }
 
 export interface FinancialDataTableHandle {
@@ -86,6 +87,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   isPrivacyMode,
   rowSelection,
   setRowSelection,
+  onShowDetails,
 }, ref) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
@@ -274,41 +276,43 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     >
         <Card className="print:shadow-none print:border-none financial-table">
         <div className="p-4 space-y-4 print:p-0">
-            <div className="flex flex-wrap gap-2 items-center print:hidden">
-                <Tabs value={statusFilter} onValueChange={(value) => setStatusFilter(value as CommissionStatus | 'Todos')}>
-                    <TabsList>
-                        <TabsTrigger value="Todos">Todos</TabsTrigger>
-                        <TabsTrigger value="Paga">Pagas</TabsTrigger>
-                        <TabsTrigger value="Pendente">Pendentes</TabsTrigger>
-                        <TabsTrigger value="Parcial">Parciais</TabsTrigger>
-                    </TabsList>
-                </Tabs>
-                <div className="flex items-center gap-2 flex-wrap">
-                    <Input 
-                        placeholder="Data Início" 
-                        value={startDateInput}
-                        onChange={(e) => handleDateInputChange(e.target.value, 'start')}
-                        maxLength={10}
-                        className="h-9 w-32"
-                    />
-                    <Input 
-                        placeholder="Data Fim" 
-                        value={endDateInput}
-                        onChange={(e) => handleDateInputChange(e.target.value, 'end')}
-                        maxLength={10}
-                        className="h-9 w-32"
-                    />
-                    <Button size="sm" onClick={handleApplyFilter}><Filter className="h-4 w-4" /> Aplicar</Button>
-                    {(startDateInput || endDateInput || appliedDateRange) && <Button variant="ghost" size="icon" className="h-9 w-9" onClick={clearDates}><X className="h-4 w-4" /></Button>}
-                </div>
-                <div className="flex-grow" />
-            </div>
-
             <FinancialSummary 
                 rows={isAnyFilterActive ? (table.getFilteredRowModel().rows as Row<ProposalWithCustomer>[]) : (currentMonthData as ProposalWithCustomer[])}
                 isPrivacyMode={isPrivacyMode}
                 isFiltered={isAnyFilterActive}
+                onShowDetails={onShowDetails}
             />
+
+            <div className="flex items-center justify-between py-4 print:hidden">
+                <div className="flex flex-wrap gap-2 items-center">
+                    <Tabs value={statusFilter} onValueChange={(value) => setStatusFilter(value as CommissionStatus | 'Todos')}>
+                        <TabsList>
+                            <TabsTrigger value="Todos">Todos</TabsTrigger>
+                            <TabsTrigger value="Paga">Pagas</TabsTrigger>
+                            <TabsTrigger value="Pendente">Pendentes</TabsTrigger>
+                            <TabsTrigger value="Parcial">Parciais</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <Input 
+                            placeholder="Data Início" 
+                            value={startDateInput}
+                            onChange={(e) => handleDateInputChange(e.target.value, 'start')}
+                            maxLength={10}
+                            className="h-9 w-32"
+                        />
+                        <Input 
+                            placeholder="Data Fim" 
+                            value={endDateInput}
+                            onChange={(e) => handleDateInputChange(e.target.value, 'end')}
+                            maxLength={10}
+                            className="h-9 w-32"
+                        />
+                        <Button size="sm" onClick={handleApplyFilter}><Filter className="h-4 w-4" /> Aplicar</Button>
+                        {(startDateInput || endDateInput || appliedDateRange) && <Button variant="ghost" size="icon" className="h-9 w-9" onClick={clearDates}><X className="h-4 w-4" /></Button>}
+                    </div>
+                </div>
+            </div>
 
             <div className="flex items-center justify-between py-4 print:hidden">
             <Input

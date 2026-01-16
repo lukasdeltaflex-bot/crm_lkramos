@@ -27,7 +27,6 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
   } from '@/components/ui/dialog';
 import { CommissionForm, type CommissionFormValues } from './commission-form';
 import { toast } from '@/hooks/use-toast';
@@ -36,6 +35,9 @@ import { ptBR } from 'date-fns/locale';
 import { Logo } from '@/components/logo';
 import { CommissionReconciliation } from '@/components/financial/commission-reconciliation';
 import { formatCurrency } from '@/lib/utils';
+import { FinancialSummary } from '@/components/financial/financial-summary';
+import { ProposalsStatusTable } from '@/components/dashboard/proposals-status-table';
+
 
 export type ProposalWithCustomer = Proposal & { customer: Customer | undefined };
 
@@ -49,6 +51,7 @@ export default function FinancialPage() {
   const [isClient, setIsClient] = React.useState(false);
   const [rowSelection, setRowSelection] = React.useState({});
   const tableRef = React.useRef<FinancialDataTableHandle>(null);
+  const [dialogData, setDialogData] = React.useState<{ title: string; proposals: ProposalWithCustomer[] } | null>(null);
 
   React.useEffect(() => {
     setIsClient(true);
@@ -91,6 +94,18 @@ export default function FinancialPage() {
   }, [proposals, customers, isClient]);
 
   const isLoading = proposalsLoading || customersLoading || isUserLoading;
+
+  const handleShowDetails = (title: string, proposals: ProposalWithCustomer[]) => {
+    if (!proposals || proposals.length === 0) {
+        toast({
+            title: 'Nenhum dado para exibir',
+            description: `Não há propostas correspondentes para "${title}".`
+        });
+        return;
+    }
+    setDialogData({ title, proposals });
+  };
+
 
   const handleEditCommission = React.useCallback((proposal: ProposalWithCustomer) => {
     setSelectedProposal(proposal);
@@ -405,6 +420,17 @@ export default function FinancialPage() {
         </SheetContent>
       </Sheet>
 
+      <Dialog open={!!dialogData} onOpenChange={(isOpen) => !isOpen && setDialogData(null)}>
+        <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+            <DialogHeader>
+                <DialogTitle>{dialogData?.title}</DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 overflow-y-auto">
+                <ProposalsStatusTable proposals={dialogData?.proposals || []} customers={customers || []} />
+            </div>
+        </DialogContent>
+      </Dialog>
+
       {isLoading ? (
         <div className="rounded-md border p-4">
             <div className="space-y-2">
@@ -423,6 +449,7 @@ export default function FinancialPage() {
             isPrivacyMode={isPrivacyMode} 
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
+            onShowDetails={handleShowDetails}
         />
       )}
     </AppLayout>
