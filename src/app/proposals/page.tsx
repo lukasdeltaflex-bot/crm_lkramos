@@ -16,7 +16,7 @@ import { ProposalForm } from './proposal-form';
 import type { Proposal, Customer, ProposalStatus } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, query, where, writeBatch, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, doc, query, where, writeBatch, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -288,9 +288,19 @@ const handleExportToExcel = async () => {
 
   const handleStatusChange = React.useCallback(async (proposalId: string, newStatus: ProposalStatus) => {
     if (!firestore) return;
+    
+    const dataToUpdate: { status: ProposalStatus; dateApproved?: string; datePaidToClient?: string } = {
+        status: newStatus,
+    };
+
+    if (newStatus === 'Pago' || newStatus === 'Saldo Pago') {
+        const currentDate = new Date().toISOString();
+        dataToUpdate.dateApproved = currentDate;
+        dataToUpdate.datePaidToClient = currentDate;
+    }
+
     try {
-      const { updateDoc } = await import('firebase/firestore');
-      await updateDoc(doc(firestore, 'loanProposals', proposalId), { status: newStatus });
+      await updateDoc(doc(firestore, 'loanProposals', proposalId), dataToUpdate);
       toast({
           title: 'Status Atualizado!',
           description: `O status da proposta foi alterado para "${newStatus}".`,
@@ -312,9 +322,20 @@ const handleExportToExcel = async () => {
     if (selectedIds.length === 0) return;
     
     const batch = writeBatch(firestore);
+    
+    const dataToUpdate: { status: ProposalStatus; dateApproved?: string; datePaidToClient?: string } = {
+        status: newStatus,
+    };
+
+    if (newStatus === 'Pago' || newStatus === 'Saldo Pago') {
+        const currentDate = new Date().toISOString();
+        dataToUpdate.dateApproved = currentDate;
+        dataToUpdate.datePaidToClient = currentDate;
+    }
+
     selectedIds.forEach((id) => {
       const docRef = doc(firestore, 'loanProposals', id);
-      batch.update(docRef, { status: newStatus });
+      batch.update(docRef, dataToUpdate);
     });
 
     try {
