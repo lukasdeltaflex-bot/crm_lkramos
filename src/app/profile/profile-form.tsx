@@ -28,24 +28,16 @@ import { useEffect, useRef, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const profileSchema = z.object({
-  displayName: z.preprocess(
-    (val) => (val === "" ? undefined : val),
-    z.string().min(2, "O apelido deve ter pelo menos 2 caracteres.").optional()
-  ),
-  fullName: z.preprocess(
-    (val) => (val === "" ? undefined : val),
-    z.string().min(3, "O nome completo deve ter pelo menos 3 caracteres.").optional()
-  ),
-  photoURL: z.preprocess(
-    (val) => (val === "" ? undefined : val),
-    z.string().url("URL da foto inválida.").optional()
-  ),
+  displayName: z.string().min(2, "O apelido deve ter pelo menos 2 caracteres.").or(z.literal('')).optional(),
+  fullName: z.string().min(3, "O nome completo deve ter pelo menos 3 caracteres.").or(z.literal('')).optional(),
+  photoURL: z.string().or(z.literal('')).optional(),
   birthDate: z.string().optional().refine(val => !val || !isNaN(parse(val, 'dd/MM/yyyy', new Date()).getTime()), {
     message: "Data inválida. Use o formato dd/mm/aaaa.",
   }),
   phone: z.string().optional(),
   email: z.string().email('Email inválido.'),
 });
+
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
@@ -120,7 +112,12 @@ export function ProfileForm({ userProfile, onSubmit }: ProfileFormProps) {
 
   const handleFormSubmit = (data: ProfileFormValues) => {
     const dataToSubmit: Partial<UserProfile> = {
-      ...data,
+      // Use || undefined to convert empty strings to undefined for optional fields
+      displayName: data.displayName || undefined,
+      fullName: data.fullName || undefined,
+      photoURL: data.photoURL || undefined,
+      phone: data.phone || undefined,
+      email: data.email, // email is required
       birthDate: data.birthDate ? format(parse(data.birthDate, 'dd/MM/yyyy', new Date()), 'yyyy-MM-dd') : undefined,
     };
     onSubmit(dataToSubmit);
