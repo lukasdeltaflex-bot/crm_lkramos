@@ -82,6 +82,17 @@ export function ProfileForm({ userProfile, onSubmit }: ProfileFormProps) {
     }
   };
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 11) value = value.substring(0, 11);
+    value = value.replace(/^(\d{2})(\d)/, "($1) $2");
+    if (value.length > 9) {
+        value = value.replace(/(\d{5})(\d)/, "$1-$2");
+    }
+    e.target.value = value;
+    form.setValue('phone', value, { shouldValidate: true });
+  };
+
   const handleFormSubmit = (data: ProfileFormValues) => {
     const dataToSubmit: Partial<UserProfile> = {
       ...data,
@@ -196,7 +207,7 @@ export function ProfileForm({ userProfile, onSubmit }: ProfileFormProps) {
               <FormItem>
                 <FormLabel>Telefone</FormLabel>
                 <FormControl>
-                  <Input placeholder="(00) 90000-0000" {...field} value={field.value || ''} />
+                  <Input placeholder="(00) 90000-0000" {...field} value={field.value || ''} onChange={handlePhoneChange} maxLength={15} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
