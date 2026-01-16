@@ -46,8 +46,13 @@ export default function DashboardPage() {
   const [endDateInput, setEndDateInput] = React.useState('');
   const [appliedDateRange, setAppliedDateRange] = React.useState<DateRange | undefined>(undefined);
   const [isPrivacyMode, setIsPrivacyMode] = React.useState(false);
+  const [isClient, setIsClient] = React.useState(false);
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -99,7 +104,7 @@ export default function DashboardPage() {
   }
 
   const filteredProposals = React.useMemo(() => {
-    if (!proposals) return [];
+    if (!proposals || !isClient) return [];
     
     // Se o usuário aplicou um filtro de data, use esse filtro.
     if (appliedDateRange?.from) {
@@ -148,9 +153,10 @@ export default function DashboardPage() {
 
     return combinedProposals;
 
-  }, [proposals, appliedDateRange]);
+  }, [proposals, appliedDateRange, isClient]);
 
   const getFilterDescription = () => {
+    if (!isClient) return "Carregando...";
     if (appliedDateRange?.from) {
         const from = format(appliedDateRange.from, 'dd/MM/yyyy', { locale: ptBR });
         const to = appliedDateRange.to ? format(appliedDateRange.to, 'dd/MM/yyyy', { locale: ptBR }) : from;

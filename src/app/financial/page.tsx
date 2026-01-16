@@ -40,6 +40,11 @@ export default function FinancialPage() {
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
   const [isReconciliationOpen, setIsReconciliationOpen] = React.useState(false);
   const [selectedProposal, setSelectedProposal] = React.useState<ProposalWithCustomer | undefined>(undefined);
+  const [isClient, setIsClient] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -55,7 +60,7 @@ export default function FinancialPage() {
   const { data: customers, isLoading: customersLoading } = useCollection<Customer>(customersQuery);
 
   const { proposalsWithCustomerData, currentMonthProposals } = React.useMemo(() => {
-    if (!proposals || !customers) return { proposalsWithCustomerData: [], currentMonthProposals: [] };
+    if (!proposals || !customers || !isClient) return { proposalsWithCustomerData: [], currentMonthProposals: [] };
     
     const customersMap = new Map(customers.map(c => [c.id, c]));
     
@@ -75,7 +80,7 @@ export default function FinancialPage() {
     });
 
     return { proposalsWithCustomerData: proposalsWithCustomer, currentMonthProposals: currentMonthData };
-  }, [proposals, customers]);
+  }, [proposals, customers, isClient]);
 
   const isLoading = proposalsLoading || customersLoading || isUserLoading;
 

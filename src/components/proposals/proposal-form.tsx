@@ -1,0 +1,722 @@
+'use client';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CalendarIcon, Info, Copy } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { format, parse } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import { productTypes, proposalStatuses, approvingBodies, banks } from '@/lib/config-data';
+import type { Proposal, Customer, Attachment } from '@/lib/types';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { useEffect, useMemo, useState } from 'react';
+import { ProposalAttachmentUploader } from '@/components/proposals/proposal-attachment-uploader';
+import { useUser } from '@/firebase';
+import { doc, collection } from 'firebase/firestore'; // Only for ID generation
+import { useFirestore } from '@/firebase';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+
+
+const attachmentSchema = z.object({
+  name: z.string(),
+  url: z.string(),
+  type: z.string(),
+  size: z.number(),
+});
+
+const optionalDateString = z.string().optional().refine(val => !val || !isNaN(parse(val, 'dd/MM/yyyy', new Date()).getTime()), {
+    message: "Data inválida. Use o formato dd/mm/aaaa.",
+});
+
+const proposalSchema = z.object({
+  proposalNumber: z.string().min(1, "O número da proposta é obrigatório."),
+  customerId: z.string({ required_error: 'Selecione um cliente.' }),
+  product: z.string({ required_error: 'Selecione um produto.' }),
+  status: z.string({ required_error: 'Selecione um status.' }),
+
+  table: z.string().min(1, 'A tabela é obrigatória.'),
+  term: z.coerce.number().min(1, 'O prazo é obrigatório.'),
+  interestRate: z.coerce.number().optional(),
+
+  installmentAmount: z.coerce.number().min(0, 'O valor da parcela é obrigatório.'),
+  netAmount: z.coerce.number().min(0, 'O valor líquido é obrigatório.'),
+  grossAmount: z.coerce.number().min(0, 'O valor bruto é obrigatório.'),
+  
+  commissionBase: z.enum(['gross', 'net'], { required_error: 'Selecione a base da comissão.' }),
+  commissionPercentage: z.coerce.number().min(0, 'A porcentagem da comissão é obrigatória.'),
+  commissionValue: z.coerce.number().min(0, 'O valor da comissão é obrigatório.'),
+
+  promoter: z.string().min(1, 'A promotora é obrigatória.'),
+  bank: z.string().min(1, 'O banco é obrigatório.'),
+  bankOrigin: z.string().optional(),
+  approvingBody: z.string().min(1, 'O órgão aprovador é obrigatório.'),
+  operator: z.string().min(1, "O nome do operador é obrigatório."),
+
+  dateDigitized: z.string().refine((date) => {
+    try {
+      const parsedDate = parse(date, 'dd/MM/yyyy', new Date());
+      return !isNaN(parsedDate.getTime());
+    } catch {
+      return false;
+    }
+  }, { message: 'Data inválida. Use o formato dd/mm/aaaa.' }),
+  dateApproved: optionalDateString,
+  datePaidToClient: optionalDateString,
+  debtBalanceArrivalDate: optionalDateString,
+  
+  attachments: z.array(attachmentSchema).optional(),
+});
+
+type ProposalFormValues = z.infer<typeof proposalSchema>;
+
+type ProposalFormData = Partial<Omit<Proposal, 'id' | 'userId'>>;
+
+interface ProposalFormProps {
+  proposal?: Proposal;
+  customers: Customer[];
+  isReadOnly?: boolean;
+  onSubmit: (data: ProposalFormValues) => void;
+  onDuplicate: (proposal: Proposal) => void;
+  defaultValues?: ProposalFormData;
+  sheetMode: 'new' | 'edit' | 'view';
+}
+
+const handleDateMask = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 8) value = value.substring(0, 8);
+    value = value.replace(/(\d{2})(\d)/, '$1/$2');
+    value = value.replace(/(\d{2})(\d)/, '$1/$2');
+    e.target.value = value;
+    return value;
+};
+
+
+const MaskedDatePicker = ({ name, label, control, isReadOnly }: { name: any, label: string, control: any, isReadOnly?: boolean }) => (
+    <FormField
+        control={control}
+        name={name}
+        render={({ field }) => (
+        <FormItem className="flex flex-col pt-2">
+            <FormLabel>{label}</FormLabel>
+            <Popover>
+                <PopoverTrigger asChild disabled={isReadOnly}>
+                    <FormControl>
+                            <div className="relative">
+                                <Input
+                                    placeholder="dd/mm/aaaa"
+                                    {...field}
+                                    onChange={(e) => field.onChange(handleDateMask(e))}
+                                    value={field.value || ''}
+                                    maxLength={10}
+                                    className="w-[240px] pr-8"
+                                    readOnly={isReadOnly}
+                                />
+                                <CalendarIcon className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50" />
+                            </div>
+                    </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                        mode="single"
+                        selected={field.value ? parse(field.value, 'dd/MM/yyyy', new Date()) : undefined}
+                        onSelect={(date) => field.onChange(date ? format(date, 'dd/MM/yyyy') : '')}
+                        defaultMonth={field.value ? parse(field.value, 'dd/MM/yyyy', new Date()) : new Date()}
+                        locale={ptBR}
+                        initialFocus
+                        fromYear={new Date().getFullYear() - 20}
+                        toYear={new Date().getFullYear() + 20}
+                        captionLayout="dropdown-buttons"
+                    />
+                </PopoverContent>
+            </Popover>
+            <FormMessage />
+        </FormItem>
+        )}
+    />
+);
+
+
+export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDuplicate, defaultValues, sheetMode }: ProposalFormProps) {
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const [tempProposalId, setTempProposalId] = useState<string | undefined>(undefined);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    useEffect(() => {
+        if (firestore && !proposal?.id) {
+            setTempProposalId(doc(collection(firestore, 'proposals')).id);
+        }
+    }, [firestore, proposal]);
+    
+    const proposalId = proposal?.id || tempProposalId;
+
+    const form = useForm<ProposalFormValues>({
+        resolver: zodResolver(proposalSchema),
+    });
+
+  const { watch, setValue, trigger } = form;
+  const commissionBase = watch('commissionBase');
+  const commissionPercentage = watch('commissionPercentage');
+  const grossAmount = watch('grossAmount');
+  const netAmount = watch('netAmount');
+  const product = watch('product');
+  const selectedCustomerId = watch('customerId');
+
+  useEffect(() => {
+    if (isReadOnly) return;
+    
+    let baseValue = 0;
+    if (commissionBase === 'gross') {
+        baseValue = grossAmount || 0;
+    } else if (commissionBase === 'net') {
+        baseValue = netAmount || 0;
+    }
+
+    if (baseValue > 0 && commissionPercentage >= 0) {
+        const calculatedCommission = baseValue * (commissionPercentage / 100);
+        if (form.getValues('commissionValue') !== parseFloat(calculatedCommission.toFixed(2))) {
+            setValue('commissionValue', parseFloat(calculatedCommission.toFixed(2)), { shouldValidate: true });
+        }
+    }
+  }, [commissionBase, commissionPercentage, grossAmount, netAmount, setValue, isReadOnly, form]);
+
+  const formatDateForForm = (dateString?: string) => {
+    if (!dateString) return undefined;
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return undefined;
+        return format(date, 'dd/MM/yyyy');
+    } catch {
+        return undefined;
+    }
+  }
+
+
+  useEffect(() => {
+    const initialValues: Partial<ProposalFormValues> = {
+        proposalNumber: '',
+        customerId: '',
+        product: '',
+        status: 'Em Andamento',
+        table: '',
+        term: undefined,
+        interestRate: undefined,
+        grossAmount: undefined,
+        netAmount: undefined,
+        installmentAmount: undefined,
+        commissionBase: 'gross',
+        commissionPercentage: undefined,
+        commissionValue: undefined,
+        promoter: '',
+        bank: '',
+        bankOrigin: '',
+        approvingBody: '',
+        operator: '',
+        dateDigitized: isClient ? format(new Date(), 'dd/MM/yyyy') : '',
+        dateApproved: undefined,
+        datePaidToClient: undefined,
+        debtBalanceArrivalDate: undefined,
+        attachments: [],
+    };
+    
+    const source = proposal || defaultValues;
+
+    if (source) {
+        const sourceData = {
+            ...initialValues,
+            ...source,
+            dateDigitized: source.dateDigitized ? formatDateForForm(source.dateDigitized) : (isClient ? format(new Date(), 'dd/MM/yyyy') : ''),
+            dateApproved: formatDateForForm(source.dateApproved),
+            datePaidToClient: formatDateForForm(source.datePaidToClient),
+            debtBalanceArrivalDate: formatDateForForm(source.debtBalanceArrivalDate),
+        }
+        form.reset(sourceData);
+    } else {
+      form.reset(initialValues);
+    }
+  }, [proposal, defaultValues, form, isClient]);
+
+
+  function handleFormSubmit(data: ProposalFormValues) {
+    onSubmit(data);
+  }
+
+  const handleAttachmentsChange = (attachments: Attachment[]) => {
+    setValue('attachments', attachments, { shouldValidate: true });
+  };
+
+  const isAttachmentSectionDisabled = !user || !selectedCustomerId || !proposalId;
+  
+  const handleDateDigitizedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = handleDateMask(e);
+    form.setValue('dateDigitized', value, { shouldValidate: true });
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="py-4">
+        <ScrollArea className="h-[calc(100vh-12rem)] pr-4">
+          <div className="space-y-6">
+            
+            {/* Customer and Product */}
+            <div className="space-y-4">
+                <FormField
+                    control={form.control}
+                    name="customerId"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Cliente</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isReadOnly}>
+                        <FormControl>
+                            <SelectTrigger>
+                            <SelectValue placeholder="Selecione um cliente" />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            {customers.map((customer) => (
+                            <SelectItem key={customer.id} value={customer.id}>
+                                {customer.name}
+                            </SelectItem>
+                            ))}
+                        </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="product"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Produto</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isReadOnly}>
+                        <FormControl>
+                            <SelectTrigger>
+                            <SelectValue placeholder="Selecione o produto" />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            {productTypes.map((type) => (
+                            <SelectItem key={type} value={type}>
+                                {type}
+                            </SelectItem>
+                            ))}
+                        </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+            </div>
+            
+            <Separator />
+
+            {/* Proposal Details */}
+            <div className="space-y-4">
+                <h3 className="text-lg font-medium">Detalhes da Proposta</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="proposalNumber"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Nº Proposta</FormLabel>
+                            <FormControl>
+                            <Input placeholder="Digite o número da proposta" {...field} readOnly={isReadOnly && sheetMode === 'edit'} value={field.value || ''}/>
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="table"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Tabela</FormLabel>
+                            <FormControl>
+                            <Input placeholder="Tabela A" {...field} readOnly={isReadOnly} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="term"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Prazo (meses)</FormLabel>
+                            <FormControl>
+                            <Input type="number" placeholder="84" {...field} readOnly={isReadOnly} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="interestRate"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Taxa de Juros (%)</FormLabel>
+                            <FormControl>
+                            <Input type="number" step="0.01" placeholder="1.8" {...field} readOnly={isReadOnly} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                </div>
+            </div>
+            
+            <Separator />
+            
+            {/* Amounts */}
+            <div className="space-y-4">
+                <h3 className="text-lg font-medium">Valores</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="installmentAmount"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Valor da Parcela</FormLabel>
+                            <FormControl>
+                            <Input type="number" step="0.01" placeholder="450.50" {...field} readOnly={isReadOnly} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="netAmount"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Valor Líquido</FormLabel>
+                            <FormControl>
+                            <Input type="number" step="0.01" placeholder="25000" {...field} readOnly={isReadOnly} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                     <FormField
+                        control={form.control}
+                        name="grossAmount"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Valor Bruto</FormLabel>
+                            <FormControl>
+                            <Input type="number" step="0.01" placeholder="30000" {...field} readOnly={isReadOnly} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                </div>
+            </div>
+            
+            <Separator />
+            
+            {/* Commission */}
+            <div className="space-y-4">
+                <h3 className="text-lg font-medium">Comissão</h3>
+                 <FormField
+                    control={form.control}
+                    name="commissionBase"
+                    render={({ field }) => (
+                        <FormItem className="space-y-3">
+                        <FormLabel>Base da Comissão</FormLabel>
+                        <FormControl>
+                            <RadioGroup
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            value={field.value}
+                            className="flex items-center space-x-4"
+                            disabled={isReadOnly}
+                            >
+                            <FormItem className="flex items-center space-x-2 space-y-0">
+                                <FormControl>
+                                <RadioGroupItem value="gross" />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                Valor Bruto
+                                </FormLabel>
+                            </FormItem>
+                            <FormItem className="flex items-center space-x-2 space-y-0">
+                                <FormControl>
+                                <RadioGroupItem value="net" />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                Valor Líquido
+                                </FormLabel>
+                            </FormItem>
+                            </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="commissionPercentage"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Comissão (%)</FormLabel>
+                            <FormControl>
+                            <Input type="number" step="0.01" placeholder="5" {...field} readOnly={isReadOnly} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="commissionValue"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Comissão (R$)</FormLabel>
+                            <FormControl>
+                            <Input type="number" step="0.01" placeholder="1500" {...field} readOnly={isReadOnly} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                </div>
+            </div>
+            
+            <Separator />
+
+            {/* Banks and Operator */}
+             <div className="space-y-4">
+                <h3 className="text-lg font-medium">Dados Bancários e Operacionais</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <FormField
+                        control={form.control}
+                        name="bank"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Banco Digitado</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isReadOnly}>
+                                <FormControl>
+                                    <SelectTrigger>
+                                    <SelectValue placeholder="Selecione um banco" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {banks.map((bank) => (
+                                    <SelectItem key={bank} value={bank}>
+                                        {bank}
+                                    </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    {(product === 'Portabilidade' || product === 'Refin Port') && (
+                        <FormField
+                            control={form.control}
+                            name="bankOrigin"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Banco de Origem</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value || ''} value={field.value || ''} disabled={isReadOnly}>
+                                <FormControl>
+                                    <SelectTrigger>
+                                    <SelectValue placeholder="Selecione um banco" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {banks.map((bank) => (
+                                    <SelectItem key={bank} value={bank}>
+                                        {bank}
+                                    </SelectItem>
+                                    ))}
+                                </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                    )}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="promoter"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Promotora</FormLabel>
+                            <FormControl>
+                            <Input placeholder="Promotora X" {...field} readOnly={isReadOnly} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                     <FormField
+                        control={form.control}
+                        name="operator"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Operador</FormLabel>
+                            <FormControl>
+                            <Input placeholder="Nome do Operador" {...field} readOnly={isReadOnly} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                </div>
+             </div>
+
+            <Separator />
+            
+            {/* Status and Finalization */}
+            <div className="space-y-4">
+                <h3 className="text-lg font-medium">Finalização e Datas</h3>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="status"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Status da Proposta</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isReadOnly}>
+                            <FormControl>
+                                <SelectTrigger>
+                                <SelectValue placeholder="Selecione o status" />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {proposalStatuses.map((status) => (
+                                <SelectItem key={status} value={status}>
+                                    {status}
+                                </SelectItem>
+                                ))}
+                            </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="approvingBody"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Órgão Aprovador</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isReadOnly}>
+                                <FormControl>
+                                    <SelectTrigger>
+                                    <SelectValue placeholder="Selecione o órgão" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {approvingBodies.map((body) => (
+                                    <SelectItem key={body} value={body}>
+                                        {body}
+                                    </SelectItem>
+                                    ))}
+                                </SelectContent>
+                                </Select>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                 </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
+                    <MaskedDatePicker name="dateDigitized" label="Data de Digitação" control={form.control} isReadOnly={isReadOnly} />
+                    <MaskedDatePicker name="dateApproved" label="Data de Averbação" control={form.control} isReadOnly={isReadOnly} />
+                    <MaskedDatePicker name="datePaidToClient" label="Data de Pagamento ao Cliente" control={form.control} isReadOnly={isReadOnly} />
+                    {product === 'Portabilidade' && (
+                        <MaskedDatePicker name="debtBalanceArrivalDate" label="Chegada Saldo Devedor" control={form.control} isReadOnly={isReadOnly} />
+                    )}
+                 </div>
+            </div>
+
+            <Separator />
+
+            {/* Attachments */}
+            <div className="space-y-4">
+                <h3 className="text-lg font-medium">Anexos da Proposta</h3>
+                {isAttachmentSectionDisabled ? (
+                    <Alert variant="default" className="bg-secondary">
+                        <Info className="h-4 w-4" />
+                        <AlertTitle>Campo Desabilitado</AlertTitle>
+                        <AlertDescription>
+                            Selecione um cliente para habilitar os anexos.
+                        </AlertDescription>
+                    </Alert>
+                ) : (
+                    <ProposalAttachmentUploader
+                        userId={user!.uid}
+                        proposalId={proposalId!}
+                        initialAttachments={form.getValues('attachments') || []}
+                        onAttachmentsChange={handleAttachmentsChange}
+                        isReadOnly={isReadOnly || isAttachmentSectionDisabled}
+                    />
+                )}
+            </div>
+          </div>
+        </ScrollArea>
+        <div className="flex justify-between items-center pt-8">
+            <div>
+            {sheetMode !== 'new' && proposal && (
+                <Button type="button" variant="outline" onClick={() => onDuplicate(proposal)}>
+                    <Copy />
+                    Duplicar Proposta
+                </Button>
+            )}
+            </div>
+
+            {!isReadOnly && (
+                <Button type="submit">Salvar Proposta</Button>
+            )}
+        </div>
+      </form>
+    </Form>
+  );
+}

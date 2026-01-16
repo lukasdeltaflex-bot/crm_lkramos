@@ -1,4 +1,3 @@
-
 'use client';
 import React, { useMemo } from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -23,16 +22,18 @@ import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
 
 
 const CustomerInfoCard = ({ customer }: { customer: Customer }) => {
-    const getAge = (birthDate: string) => {
+    const [age, setAge] = React.useState<number | null>(null);
+
+    React.useEffect(() => {
         const today = new Date();
-        const birth = new Date(birthDate);
-        let age = today.getFullYear() - birth.getFullYear();
+        const birth = new Date(customer.birthDate);
+        let calculatedAge = today.getFullYear() - birth.getFullYear();
         const m = today.getMonth() - birth.getMonth();
         if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-          age--;
+          calculatedAge--;
         }
-        return age;
-    };
+        setAge(calculatedAge);
+    }, [customer.birthDate]);
 
     const isWhatsAppNumber1 = isWhatsApp(customer.phone);
     const isWhatsAppNumber2 = customer.phone2 ? isWhatsApp(customer.phone2) : false;
@@ -70,7 +71,7 @@ const CustomerInfoCard = ({ customer }: { customer: Customer }) => {
                         </div>
                         <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
-                            <strong>Nascimento:</strong> {format(new Date(customer.birthDate), 'dd/MM/yyyy', { locale: ptBR })} ({getAge(customer.birthDate)} anos)
+                            <strong>Nascimento:</strong> {format(new Date(customer.birthDate), 'dd/MM/yyyy', { locale: ptBR })} ({age !== null ? `${age} anos` : '...'})
                         </div>
                         <div className="flex items-center gap-2">
                             <Phone className="h-4 w-4 text-muted-foreground" />
