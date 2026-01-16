@@ -72,6 +72,10 @@ export default function SettingsPage() {
         };
       try {
         await setDoc(settingsDocRef, { ...currentSettings, ...updatedLists }, { merge: true });
+        toast({
+            title: "Configurações Salvas",
+            description: "Suas alterações foram salvas com sucesso."
+        });
       } catch (error) {
         console.error("Error updating settings:", error);
         toast({

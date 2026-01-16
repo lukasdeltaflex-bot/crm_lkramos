@@ -24,7 +24,14 @@ export default function ProfilePage() {
     const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileDocRef);
     
     const handleProfileUpdate = async (data: Partial<UserProfile>) => {
-        if (!user || !auth || !userProfileDocRef) return;
+        if (!user || !auth || !userProfileDocRef) {
+             toast({
+                variant: 'destructive',
+                title: 'Erro de Autenticação',
+                description: 'Não foi possível identificar o usuário. Por favor, faça login novamente.',
+            });
+            return;
+        }
 
         // Check if email is being changed
         if (data.email && data.email !== user.email) {

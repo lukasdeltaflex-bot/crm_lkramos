@@ -11,8 +11,7 @@ import {
     type ReconcileCommissionsOutput,
 } from '@/ai/flows/reconcile-commissions-flow';
 import type { Proposal, Customer } from '@/lib/types';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { doc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
@@ -115,7 +114,7 @@ export function CommissionReconciliation({ proposals, onFinished }: CommissionRe
     }
   };
 
-  const handleConfirmReconciliation = () => {
+  const handleConfirmReconciliation = async () => {
     if (!firestore) return;
     
     const matchedItems = results.filter(r => r.status === 'matched');
@@ -124,22 +123,33 @@ export function CommissionReconciliation({ proposals, onFinished }: CommissionRe
       return;
     }
 
-    matchedItems.forEach(item => {
+    const updatePromises = matchedItems.map(item => {
         if (item.proposal) {
             const proposalRef = doc(firestore, 'loanProposals', item.proposal.id);
-            setDocumentNonBlocking(proposalRef, {
+            return setDoc(proposalRef, {
                 commissionStatus: 'Paga',
                 amountPaid: item.reportAmount,
                 commissionPaymentDate: new Date().toISOString(),
             }, { merge: true });
         }
+        return Promise.resolve();
     });
 
-    toast({
-        title: 'Comissões Atualizadas!',
-        description: `${matchedItems.length} proposta(s) foram atualizadas para "Paga".`,
-    });
-    onFinished();
+    try {
+        await Promise.all(updatePromises);
+        toast({
+            title: 'Comissões Atualizadas!',
+            description: `${matchedItems.length} proposta(s) foram atualizadas para "Paga".`,
+        });
+        onFinished();
+    } catch (error) {
+        console.error("Error updating commissions:", error);
+        toast({
+            variant: "destructive",
+            title: "Erro ao Atualizar",
+            description: "Não foi possível atualizar as comissões. Tente novamente."
+        });
+    }
   };
 
   const getStatusBadge = (status: ReconciliationResult['status']) => {
