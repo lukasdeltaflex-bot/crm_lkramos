@@ -179,7 +179,13 @@ export default function DashboardPage() {
   };
   
   const getProposalsSum = (proposalsList: Proposal[]): number => {
-    return proposalsList.reduce((sum, p) => sum + p.grossAmount, 0);
+    return proposalsList.reduce((sum, p) => {
+        if (p.commissionBase === 'net') {
+            return sum + p.netAmount;
+        }
+        // Default to gross if 'gross' or undefined
+        return sum + p.grossAmount;
+    }, 0);
   };
 
   const emAndamentoProposals = getProposalsByStatus(filteredProposals, ['Em Andamento']);
