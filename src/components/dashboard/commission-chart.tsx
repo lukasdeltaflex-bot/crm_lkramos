@@ -5,15 +5,17 @@ import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recha
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/utils';
 import type { Proposal } from '@/lib/types';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Skeleton } from '../ui/skeleton';
+import { Button } from '../ui/button';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface CommissionChartProps {
     proposals: Proposal[];
-    isPrivacyMode: boolean;
 }
 
-export function CommissionChart({ proposals, isPrivacyMode }: CommissionChartProps) {
+export function CommissionChart({ proposals }: CommissionChartProps) {
+    const [isPrivacyMode, setIsPrivacyMode] = useState(false);
     const data = useMemo(() => {
         const monthlyData: { [key: string]: number } = {};
 
@@ -46,6 +48,10 @@ export function CommissionChart({ proposals, isPrivacyMode }: CommissionChartPro
     <Card>
         <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="font-headline">Visão Geral das Comissões</CardTitle>
+            <Button variant="ghost" size="icon" onClick={() => setIsPrivacyMode(!isPrivacyMode)}>
+              {isPrivacyMode ? <EyeOff /> : <Eye />}
+              <span className="sr-only">{isPrivacyMode ? 'Mostrar valores' : 'Ocultar valores'}</span>
+            </Button>
         </CardHeader>
         <CardContent>
             <ResponsiveContainer width="100%" height={350}>

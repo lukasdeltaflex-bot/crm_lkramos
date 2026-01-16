@@ -303,7 +303,6 @@ export default function DashboardPage() {
           <div className="lg:col-span-2">
             <CommissionChart 
               proposals={proposals || []} 
-              isPrivacyMode={isPrivacyMode}
             />
           </div>
           <div className="space-y-8">
