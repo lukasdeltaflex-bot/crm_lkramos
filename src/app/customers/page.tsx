@@ -202,13 +202,14 @@ export default function CustomersPage() {
       batch.update(docRef, anonymizedData);
     });
 
+    setRowSelection({}); // Clear selection immediately for better UX
+
     try {
       await batch.commit();
       toast({
         title: 'Clientes Removidos',
         description: `${selectedIds.length} cliente(s) foram anonimizados com sucesso.`,
       });
-      setRowSelection({});
     } catch (error) {
       console.error('Error anonymizing customers:', error);
       toast({

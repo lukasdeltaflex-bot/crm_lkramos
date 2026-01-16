@@ -1,3 +1,4 @@
+
 'use client';
 import React from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -149,13 +150,14 @@ export default function ProposalsPage() {
       batch.update(docRef, { status: newStatus });
     });
 
+    setRowSelection({}); // Clear selection immediately for better UX
+
     try {
       await batch.commit();
       toast({
         title: 'Status Atualizado em Massa!',
         description: `${selectedIds.length} proposta(s) foram atualizadas para "${newStatus}".`,
       });
-      setRowSelection({}); // Limpa a seleção após a atualização
     } catch (error) {
       console.error('Error updating statuses in bulk:', error);
       toast({
@@ -176,6 +178,8 @@ export default function ProposalsPage() {
         const docRef = doc(firestore, 'loanProposals', id);
         batch.delete(docRef);
     });
+    
+    setRowSelection({}); // Clear selection immediately for better UX
 
     try {
         await batch.commit();
@@ -183,7 +187,6 @@ export default function ProposalsPage() {
             title: 'Propostas Canceladas!',
             description: `${selectedIds.length} proposta(s) foram canceladas com sucesso.`,
         });
-        setRowSelection({}); // Clear selection
     } catch (error) {
         console.error('Error deleting proposals in bulk:', error);
         toast({
