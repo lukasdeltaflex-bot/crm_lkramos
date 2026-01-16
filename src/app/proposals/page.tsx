@@ -60,28 +60,28 @@ export default function ProposalsPage() {
     }));
   }, [proposals, customers]);
 
-  const handleNewProposal = () => {
+  const handleNewProposal = React.useCallback(() => {
     setSelectedProposal(undefined);
     setDefaultValues(undefined);
     setSheetMode('new');
     setIsSheetOpen(true);
-  };
+  }, []);
 
-  const handleEditProposal = (proposal: ProposalWithCustomer) => {
+  const handleEditProposal = React.useCallback((proposal: ProposalWithCustomer) => {
     setSelectedProposal(proposal);
     setDefaultValues(undefined);
     setSheetMode('edit');
     setIsSheetOpen(true);
-  };
+  }, []);
 
-  const handleViewProposal = (proposal: ProposalWithCustomer) => {
+  const handleViewProposal = React.useCallback((proposal: ProposalWithCustomer) => {
     setSelectedProposal(proposal);
     setDefaultValues(undefined);
     setSheetMode('view');
     setIsSheetOpen(true);
-  };
+  }, []);
   
-  const handleDuplicateProposal = (proposal: ProposalWithCustomer) => {
+  const handleDuplicateProposal = React.useCallback((proposal: ProposalWithCustomer) => {
     const { id, proposalNumber, status, ...rest } = proposal;
     const duplicatedData: ProposalFormData = {
         ...rest,
@@ -98,9 +98,9 @@ export default function ProposalsPage() {
     setDefaultValues(duplicatedData);
     setSheetMode('new');
     setIsSheetOpen(true);
-};
+}, []);
 
-  const handleDeleteProposal = async (proposalId: string) => {
+  const handleDeleteProposal = React.useCallback(async (proposalId: string) => {
     if (!firestore) return;
     try {
       await deleteDoc(doc(firestore, 'loanProposals', proposalId));
@@ -116,18 +116,18 @@ export default function ProposalsPage() {
         });
         console.error('Error deleting proposal: ', error);
     }
-  }
+  }, [firestore]);
 
-  const handleStatusChange = (proposalId: string, newStatus: ProposalStatus) => {
+  const handleStatusChange = React.useCallback((proposalId: string, newStatus: ProposalStatus) => {
     if (!firestore) return;
     setDocumentNonBlocking(doc(firestore, 'loanProposals', proposalId), { status: newStatus }, { merge: true });
     toast({
         title: 'Status Atualizado!',
         description: `O status da proposta foi alterado para "${newStatus}".`,
     });
-  };
+  }, [firestore]);
 
-  const handleBulkStatusChange = async (newStatus: ProposalStatus) => {
+  const handleBulkStatusChange = React.useCallback(async (newStatus: ProposalStatus) => {
     if (!firestore) return;
     const selectedIds = Object.keys(rowSelection);
     if (selectedIds.length === 0) return;
@@ -153,7 +153,7 @@ export default function ProposalsPage() {
         description: 'Ocorreu um erro ao atualizar o status das propostas.',
       });
     }
-  };
+  }, [firestore, rowSelection]);
 
 
   const handleFormSubmit = (data: Omit<Proposal, 'id' | 'userId'>) => {
@@ -211,7 +211,7 @@ export default function ProposalsPage() {
 
   const isLoading = proposalsLoading || customersLoading || isUserLoading;
 
-  const columns = React.useMemo(() => getColumns(handleEditProposal, handleViewProposal, handleDeleteProposal, handleStatusChange), [customers]);
+  const columns = React.useMemo(() => getColumns(handleEditProposal, handleViewProposal, handleDeleteProposal, handleStatusChange), [handleEditProposal, handleViewProposal, handleDeleteProposal, handleStatusChange]);
 
 
   return (
