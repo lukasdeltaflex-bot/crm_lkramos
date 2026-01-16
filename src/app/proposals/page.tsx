@@ -1,4 +1,3 @@
-
 'use client';
 import React from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -17,10 +16,7 @@ import { ProposalForm } from './proposal-form';
 import type { Proposal, Customer, ProposalStatus } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, query, where, deleteDoc, writeBatch } from 'firebase/firestore';
-import {
-  setDocumentNonBlocking,
-} from '@/firebase/non-blocking-updates';
+import { collection, doc, query, where, deleteDoc, writeBatch, setDoc, updateDoc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { parse } from 'date-fns';
 import {
@@ -130,13 +126,22 @@ export default function ProposalsPage() {
     }
   }, [firestore]);
 
-  const handleStatusChange = React.useCallback((proposalId: string, newStatus: ProposalStatus) => {
+  const handleStatusChange = React.useCallback(async (proposalId: string, newStatus: ProposalStatus) => {
     if (!firestore) return;
-    setDocumentNonBlocking(doc(firestore, 'loanProposals', proposalId), { status: newStatus }, { merge: true });
-    toast({
-        title: 'Status Atualizado!',
-        description: `O status da proposta foi alterado para "${newStatus}".`,
-    });
+    try {
+      await updateDoc(doc(firestore, 'loanProposals', proposalId), { status: newStatus });
+      toast({
+          title: 'Status Atualizado!',
+          description: `O status da proposta foi alterado para "${newStatus}".`,
+      });
+    } catch (error) {
+        console.error('Error updating status:', error);
+        toast({
+            variant: 'destructive',
+            title: 'Erro ao Atualizar',
+            description: 'Não foi possível alterar o status da proposta.',
+        });
+    }
   }, [firestore]);
 
   const handleBulkStatusChange = React.useCallback((newStatus: ProposalStatus) => {
@@ -173,7 +178,6 @@ export default function ProposalsPage() {
     const selectedIds = Object.keys(rowSelection);
     if (selectedIds.length === 0) return;
 
-    // Clear selection immediately for instant UI feedback
     setRowSelection({});
 
     const batch = writeBatch(firestore);
@@ -198,7 +202,7 @@ export default function ProposalsPage() {
   };
 
 
-  const handleFormSubmit = (data: Omit<Proposal, 'id' | 'userId'>) => {
+  const handleFormSubmit = async (data: Omit<Proposal, 'id' | 'userId'>) => {
     if (!firestore || !user) return;
   
     const toISOString = (dateString?: string) => {
@@ -219,11 +223,20 @@ export default function ProposalsPage() {
         datePaidToClient: toISOString(data.datePaidToClient),
         debtBalanceArrivalDate: toISOString(data.debtBalanceArrivalDate),
       };
-      setDocumentNonBlocking(doc(firestore, 'loanProposals', selectedProposal.id), proposalToUpdate, { merge: true });
-      toast({
-        title: 'Proposta Atualizada!',
-        description: `A proposta foi atualizada com sucesso.`,
-      });
+      try {
+        await setDoc(doc(firestore, 'loanProposals', selectedProposal.id), proposalToUpdate, { merge: true });
+        toast({
+          title: 'Proposta Atualizada!',
+          description: `A proposta foi atualizada com sucesso.`,
+        });
+      } catch (error) {
+        console.error('Error updating proposal:', error);
+        toast({
+            variant: 'destructive',
+            title: 'Erro ao Atualizar',
+            description: 'Não foi possível atualizar a proposta.',
+        });
+      }
     } else {
       const newDocRef = doc(collection(firestore, 'loanProposals'));
       const newProposal: Omit<Proposal, 'id'> = {
@@ -236,11 +249,20 @@ export default function ProposalsPage() {
       };
       const newProposalWithId = { ...newProposal, id: newDocRef.id };
   
-      setDocumentNonBlocking(newDocRef, newProposalWithId, {});
-      toast({
-        title: 'Proposta Salva!',
-        description: `A nova proposta foi criada com sucesso.`,
-      });
+      try {
+        await setDoc(newDocRef, newProposalWithId);
+        toast({
+          title: 'Proposta Salva!',
+          description: `A nova proposta foi criada com sucesso.`,
+        });
+      } catch (error) {
+        console.error('Error creating new proposal:', error);
+        toast({
+            variant: 'destructive',
+            title: 'Erro ao Criar',
+            description: 'Não foi possível criar a nova proposta.',
+        });
+      }
     }
     setIsSheetOpen(false);
   };

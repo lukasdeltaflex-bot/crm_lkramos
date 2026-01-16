@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/page-header';
 import { FinancialDataTable } from './data-table';
 import { getColumns } from './columns';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc } from 'firebase/firestore';
+import { collection, query, where, doc, setDoc } from 'firebase/firestore';
 import type { Proposal, Customer } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,6 @@ import {
   } from '@/components/ui/dialog';
 import { CommissionForm } from './commission-form';
 import { toast } from '@/hooks/use-toast';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Logo } from '@/components/logo';
@@ -89,7 +88,7 @@ export default function FinancialPage() {
     setIsSheetOpen(true);
   };
   
-  const handleFormSubmit = (data: Partial<Proposal>) => {
+  const handleFormSubmit = async (data: Partial<Proposal>) => {
     if (!firestore || !selectedProposal) return;
   
     const proposalToUpdate: Partial<Proposal> = {
@@ -98,12 +97,20 @@ export default function FinancialPage() {
       commissionPaymentDate: data.commissionPaymentDate ? new Date(data.commissionPaymentDate).toISOString() : undefined,
     };
   
-    setDocumentNonBlocking(doc(firestore, 'loanProposals', selectedProposal.id), proposalToUpdate, { merge: true });
-    
-    toast({
-      title: 'Comissão Atualizada!',
-      description: `Os dados financeiros da proposta foram atualizados.`,
-    });
+    try {
+      await setDoc(doc(firestore, 'loanProposals', selectedProposal.id), proposalToUpdate, { merge: true });
+      toast({
+        title: 'Comissão Atualizada!',
+        description: `Os dados financeiros da proposta foram atualizados.`,
+      });
+    } catch (error) {
+      console.error('Error updating commission:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao Atualizar',
+        description: 'Não foi possível atualizar os dados da comissão.',
+      });
+    }
   
     setIsSheetOpen(false);
   };

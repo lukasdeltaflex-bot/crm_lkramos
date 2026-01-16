@@ -5,16 +5,15 @@ import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProfileForm } from './profile-form';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useFirebase, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { toast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { updateEmail } from 'firebase/auth';
 
 export default function ProfilePage() {
-    const { user, isUserLoading } = useUser();
+    const { user, auth, isUserLoading } = useFirebase();
     const firestore = useFirestore();
 
     const userProfileDocRef = useMemoFirebase(() => {
@@ -25,7 +24,7 @@ export default function ProfilePage() {
     const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileDocRef);
     
     const handleProfileUpdate = async (data: Partial<UserProfile>) => {
-        if (!user || !userProfileDocRef) return;
+        if (!user || !auth || !userProfileDocRef) return;
 
         // Check if email is being changed
         if (data.email && data.email !== user.email) {
@@ -49,12 +48,20 @@ export default function ProfilePage() {
             }
         }
         
-        // If email update was successful (or not needed), update Firestore
-        setDocumentNonBlocking(userProfileDocRef, data, { merge: true });
-        toast({
-            title: 'Perfil Atualizado!',
-            description: 'Suas informações foram salvas com sucesso.',
-        });
+        try {
+            await setDoc(userProfileDocRef, data, { merge: true });
+            toast({
+                title: 'Perfil Atualizado!',
+                description: 'Suas informações foram salvas com sucesso.',
+            });
+        } catch (error) {
+            console.error("Error saving profile to Firestore:", error);
+            toast({
+                variant: 'destructive',
+                title: 'Erro ao Salvar',
+                description: 'Não foi possível salvar seu perfil. Tente novamente.',
+            });
+        }
     };
 
     const isLoading = isUserLoading || isProfileLoading;

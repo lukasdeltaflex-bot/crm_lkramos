@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -22,10 +21,10 @@ import {
 import { ListChecks, Palette, UserCog } from 'lucide-react';
 import { EditableList } from '@/components/settings/editable-list';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import type { UserSettings } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { toast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -62,7 +61,7 @@ export default function SettingsPage() {
   }, [userSettings]);
 
   // Function to update the entire settings document in Firestore
-  const updateSettings = (updatedLists: Partial<UserSettings>) => {
+  const updateSettings = async (updatedLists: Partial<UserSettings>) => {
     if (settingsDocRef) {
         const currentSettings = {
             productTypes,
@@ -71,7 +70,16 @@ export default function SettingsPage() {
             approvingBodies,
             banks,
         };
-      setDocumentNonBlocking(settingsDocRef, { ...currentSettings, ...updatedLists }, { merge: true });
+      try {
+        await setDoc(settingsDocRef, { ...currentSettings, ...updatedLists }, { merge: true });
+      } catch (error) {
+        console.error("Error updating settings:", error);
+        toast({
+            variant: "destructive",
+            title: "Erro ao Salvar Configurações",
+            description: "Suas alterações podem não ter sido salvas. Tente novamente."
+        });
+      }
     }
   };
   

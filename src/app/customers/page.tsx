@@ -1,4 +1,3 @@
-
 'use client';
 import React from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -16,12 +15,8 @@ import {
 import { CustomerForm } from './customer-form';
 import type { Customer } from '@/lib/types';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, writeBatch, query, where, updateDoc } from 'firebase/firestore';
+import { collection, doc, writeBatch, query, where, updateDoc, setDoc } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
-import {
-  updateDocumentNonBlocking,
-  setDocumentNonBlocking
-} from '@/firebase/non-blocking-updates';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -143,7 +138,7 @@ export default function CustomersPage() {
     setIsSheetOpen(true);
   }
 
-  const handleAnonymizeCustomer = (customerId: string) => {
+  const handleAnonymizeCustomer = async (customerId: string) => {
     if (!firestore) return;
     const customerRef = doc(firestore, 'customers', customerId);
     const anonymizedData: Partial<Customer> = {
@@ -163,14 +158,23 @@ export default function CustomersPage() {
       city: '',
       state: '',
     };
-    // Use non-blocking update here
-    updateDocumentNonBlocking(customerRef, anonymizedData);
-    toast({
-      title: 'Cliente Removido',
-      description: 'Os dados do cliente foram anonimizados com sucesso. O histórico de propostas foi mantido.',
-    });
-    // Optimistically update UI if needed or let real-time listener handle it
+    
     setRowSelection({});
+
+    try {
+        await updateDoc(customerRef, anonymizedData);
+        toast({
+          title: 'Cliente Removido',
+          description: 'Os dados do cliente foram anonimizados com sucesso. O histórico de propostas foi mantido.',
+        });
+    } catch(error) {
+        console.error('Error anonymizing customer:', error);
+        toast({
+            variant: 'destructive',
+            title: 'Erro ao remover',
+            description: 'Não foi possível anonimizar o cliente.',
+        });
+    }
   };
 
   const handleAnonymizeSelected = () => {
@@ -178,7 +182,6 @@ export default function CustomersPage() {
     const selectedIds = Object.keys(rowSelection);
     if (selectedIds.length === 0) return;
 
-    // Clear selection immediately for instant UI feedback
     setRowSelection({});
 
     const batch = writeBatch(firestore);
@@ -220,7 +223,7 @@ export default function CustomersPage() {
     });
   };
 
-  const handleFormSubmit = (data: Omit<Customer, 'id' | 'userId' | 'numericId'>) => {
+  const handleFormSubmit = async (data: Omit<Customer, 'id' | 'userId' | 'numericId'>) => {
     if (!firestore || !user) return;
 
     if (sheetMode === 'edit' && selectedCustomer) {
@@ -228,11 +231,17 @@ export default function CustomersPage() {
         ...selectedCustomer,
         ...data,
       };
-      setDocumentNonBlocking(doc(firestore, 'customers', selectedCustomer.id), customerToUpdate, { merge: true });
-      toast({
-        title: 'Cliente Atualizado!',
-        description: `O cliente ${data.name} foi atualizado com sucesso.`,
-      });
+      try {
+        await setDoc(doc(firestore, 'customers', selectedCustomer.id), customerToUpdate, { merge: true });
+        toast({
+          title: 'Cliente Atualizado!',
+          description: `O cliente ${data.name} foi atualizado com sucesso.`,
+        });
+      } catch (error) {
+        console.error('Error updating customer:', error);
+        toast({ variant: 'destructive', title: 'Erro ao Atualizar', description: 'Não foi possível atualizar o cliente.' });
+      }
+
     } else {
       const newDocRef = doc(collection(firestore, 'customers'));
       const newCustomerWithId: Customer = {
@@ -241,12 +250,16 @@ export default function CustomersPage() {
         numericId: Date.now(),
         userId: user.uid,
       };
-      setDocumentNonBlocking(newDocRef, newCustomerWithId, {});
-      
-      toast({
-        title: 'Cliente Salvo!',
-        description: `O cliente ${data.name} foi salvo com sucesso.`,
-      });
+      try {
+        await setDoc(newDocRef, newCustomerWithId);
+        toast({
+          title: 'Cliente Salvo!',
+          description: `O cliente ${data.name} foi salvo com sucesso.`,
+        });
+      } catch (error) {
+        console.error('Error creating new customer:', error);
+        toast({ variant: 'destructive', title: 'Erro ao Salvar', description: 'Não foi possível salvar o novo cliente.' });
+      }
     }
     setIsSheetOpen(false);
   };
