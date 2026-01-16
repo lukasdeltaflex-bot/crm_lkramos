@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/page-header';
 import { ProposalsDataTable } from './data-table';
 import { getColumns } from './columns';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Trash2, FileDown } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -30,6 +30,17 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { formatCurrency } from '@/lib/utils';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+
 
 export type ProposalWithCustomer = Proposal & { customer: Customer | undefined };
 type ProposalFormData = Partial<Omit<Proposal, 'id' | 'userId'>>;
@@ -108,6 +119,80 @@ export default function ProposalsPage() {
     setIsSheetOpen(true);
 }, []);
 
+const handleExportToExcel = () => {
+    const selectedIds = Object.keys(rowSelection);
+    const selectedProposals = proposalsWithCustomerData.filter(p => selectedIds.includes(p.id));
+
+    if (selectedProposals.length === 0) {
+        toast({
+            variant: "destructive",
+            title: "Nenhuma proposta selecionada",
+            description: "Selecione as propostas que deseja exportar.",
+        });
+        return;
+    }
+
+    const dataToExport = selectedProposals.map(p => ({
+        'Nº Proposta': p.proposalNumber,
+        'Cliente': p.customer?.name,
+        'CPF': p.customer?.cpf,
+        'Produto': p.product,
+        'Valor Bruto': p.grossAmount,
+        'Status': p.status,
+        'Data Digitação': p.dateDigitized ? new Date(p.dateDigitized).toLocaleDateString('pt-BR') : '-',
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Propostas');
+
+    worksheet['!cols'] = [
+        { wch: 20 },
+        { wch: 30 }, 
+        { wch: 15 }, 
+        { wch: 20 }, 
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 15 },
+    ];
+
+    XLSX.writeFile(workbook, 'propostas.xlsx');
+  };
+
+  const handleExportToPdf = () => {
+    const selectedIds = Object.keys(rowSelection);
+    const selectedProposals = proposalsWithCustomerData.filter(p => selectedIds.includes(p.id));
+
+    if (selectedProposals.length === 0) {
+        toast({
+            variant: "destructive",
+            title: "Nenhuma proposta selecionada",
+            description: "Selecione as propostas que deseja exportar.",
+        });
+        return;
+    }
+
+    const doc = new jsPDF();
+    const tableColumns = ['Nº Proposta', 'Cliente', 'Produto', 'Valor Bruto', 'Status', 'Data'];
+    const tableRows = selectedProposals.map(p => [
+        p.proposalNumber,
+        p.customer?.name,
+        p.product,
+        formatCurrency(p.grossAmount),
+        p.status,
+        p.dateDigitized ? new Date(p.dateDigitized).toLocaleDateString('pt-BR') : '-',
+    ]);
+
+    doc.text("Relatório de Propostas", 14, 15);
+    autoTable(doc, {
+        head: [tableColumns],
+        body: tableRows,
+        startY: 20,
+    });
+
+    doc.save('propostas.pdf');
+  };
+
   const handleDeleteProposal = React.useCallback(async (proposalId: string) => {
     if (!firestore) return;
     try {
@@ -149,7 +234,6 @@ export default function ProposalsPage() {
     const selectedIds = Object.keys(rowSelection);
     if (selectedIds.length === 0) return;
 
-    // Clear selection immediately for instant UI feedback
     setRowSelection({});
     
     const batch = writeBatch(firestore);
@@ -287,26 +371,44 @@ export default function ProposalsPage() {
         <PageHeader title="Propostas" />
         <div className="flex items-center gap-2">
             {selectedCount > 0 && (
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button variant="destructive">
-                            <Trash2 />
-                            Cancelar ({selectedCount})
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Essa ação não pode ser desfeita. Isso irá cancelar permanentemente {selectedCount} proposta(s).
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Voltar</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleBulkDelete}>Cancelar Propostas</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+                <>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive">
+                                <Trash2 />
+                                Cancelar ({selectedCount})
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Essa ação não pode ser desfeita. Isso irá cancelar permanentemente {selectedCount} proposta(s).
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Voltar</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleBulkDelete}>Cancelar Propostas</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline">
+                                <FileDown />
+                                Exportar ({selectedCount})
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={handleExportToExcel}>
+                                Exportar para Excel (.xlsx)
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleExportToPdf}>
+                                Exportar para PDF (.pdf)
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </>
             )}
             <Button onClick={handleNewProposal}>
                 <PlusCircle />
