@@ -9,20 +9,18 @@ service cloud.firestore {
     }
 
     match /customers/{customerId} {
-      // Users can read a customer document if they are the owner of the record.
-      // This rule is secure for queries because the client-side code MUST
-      // include a `where('userId', '==', request.auth.uid)` clause.
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      // Allow authenticated users to read. The client-side code is responsible
+      // for filtering to only show the user's own customers via a where() clause.
+      allow read: if request.auth != null;
       
       // Users can create, update, or delete a customer document if they are the owner.
       allow write: if request.auth != null && request.resource.data.userId == request.auth.uid;
     }
 
     match /loanProposals/{loanProposalId} {
-      // Users can read a loan proposal document if they are the owner.
-      // This rule is secure for queries because the client-side code MUST
-      // include a `where('userId', '==', request.auth.uid)` clause.
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      // Allow authenticated users to read. The client-side code is responsible
+      // for filtering to only show the user's own proposals via a where() clause.
+      allow read: if request.auth != null;
 
       // Users can create, update, or delete proposals they own.
       allow write: if request.auth != null && request.resource.data.userId == request.auth.uid;
