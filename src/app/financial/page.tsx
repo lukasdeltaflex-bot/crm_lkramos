@@ -27,6 +27,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogTrigger,
   } from '@/components/ui/dialog';
 import { CommissionForm, type CommissionFormValues } from './commission-form';
 import { toast } from '@/hooks/use-toast';
