@@ -10,7 +10,7 @@ export type Customer = {
   email?: string;
   birthDate: string; // YYYY-MM-DD
   observations?: string;
-  userId: string;
+  ownerId: string;
   // Address fields
   cep?: string;
   street?: string;
@@ -51,7 +51,7 @@ export type Attachment = {
 
 export type Proposal = {
   id: string;
-  userId: string;
+  ownerId: string;
   proposalNumber: string;
   customerId: string;
   product: ProductType;

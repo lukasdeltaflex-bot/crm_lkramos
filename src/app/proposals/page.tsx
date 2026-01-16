@@ -1,4 +1,3 @@
-
 'use client';
 import React from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -42,7 +41,7 @@ import { formatCurrency } from '@/lib/utils';
 
 
 export type ProposalWithCustomer = Proposal & { customer: Customer | undefined };
-type ProposalFormData = Partial<Omit<Proposal, 'id' | 'userId'>>;
+type ProposalFormData = Partial<Omit<Proposal, 'id' | 'ownerId'>>;
 
 export default function ProposalsPage() {
   const { user, isUserLoading } = useUser();
@@ -57,12 +56,12 @@ export default function ProposalsPage() {
   
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'loanProposals'), where('userId', '==', user.uid));
+    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid));
   }, [firestore, user]);
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'customers'), where('userId', '==', user.uid), where('name', '!=', 'Cliente Removido'));
+    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), where('name', '!=', 'Cliente Removido'));
   }, [firestore, user]);
   
   const { data: proposals, isLoading: proposalsLoading } = useCollection<Proposal>(proposalsQuery);
@@ -341,7 +340,7 @@ const handleExportToExcel = async () => {
   }, [firestore, rowSelection]);
 
 
-  const handleFormSubmit = async (data: Omit<Proposal, 'id' | 'userId'>) => {
+  const handleFormSubmit = async (data: Omit<Proposal, 'id' | 'ownerId'>) => {
     if (!firestore || !user) return;
   
     const toISOString = (dateString?: string) => {
@@ -372,7 +371,7 @@ const handleExportToExcel = async () => {
         const newDocRef = doc(collection(firestore, 'loanProposals'));
         const newProposal: Omit<Proposal, 'id'> = {
           ...data,
-          userId: user.uid,
+          ownerId: user.uid,
           dateDigitized: toISOString(data.dateDigitized) || new Date().toISOString(),
           dateApproved: toISOString(data.dateApproved),
           datePaidToClient: toISOString(data.datePaidToClient),

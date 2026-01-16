@@ -62,9 +62,9 @@ const customerSchema = z.object({
 
 type CustomerFormValues = z.infer<typeof customerSchema>;
 
-type FormCustomer = Omit<Customer, 'id' | 'userId' | 'numericId'>;
+type FormCustomer = Omit<Customer, 'id' | 'ownerId' | 'numericId'>;
 
-type CustomerFormData = Partial<Omit<Customer, 'id' | 'userId'>>;
+type CustomerFormData = Partial<Omit<Customer, 'id' | 'ownerId'>>;
 
 interface CustomerFormProps {
   customer?: Customer;

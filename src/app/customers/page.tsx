@@ -45,7 +45,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-type CustomerFormData = Partial<Omit<Customer, 'id' | 'userId' | 'numericId'>>;
+type CustomerFormData = Partial<Omit<Customer, 'id' | 'ownerId' | 'numericId'>>;
 
 export default function CustomersPage() {
   const { user, isUserLoading } = useUser();
@@ -62,7 +62,7 @@ export default function CustomersPage() {
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'customers'), where('userId', '==', user.uid));
+    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid));
   }, [firestore, user]);
 
   const { data: customers, isLoading, error } = useCollection<Customer>(customersQuery);
@@ -80,10 +80,10 @@ export default function CustomersPage() {
         sampleCustomers.forEach((customerData, index) => {
             const docRef = doc(collection(firestore, 'customers'));
             const newCustomer: Customer = {
-              ...customerData,
+              ...(customerData as Omit<Customer, 'id' | 'ownerId'>),
               id: docRef.id,
               numericId: index + 1,
-              userId: user.uid,
+              ownerId: user.uid,
             };
             batch.set(docRef, newCustomer);
             customerRefs.set(`customer_${index}`, docRef.id);
@@ -96,7 +96,7 @@ export default function CustomersPage() {
               const newProposal = {
                   ...proposalData,
                   id: docRef.id,
-                  userId: user.uid,
+                  ownerId: user.uid,
                   proposalNumber: `PRO${Date.now() + index}`,
                   customerId: customerId,
               };
@@ -359,7 +359,7 @@ const handleExportToPdf = async () => {
     }
   };
 
-  const handleFormSubmit = async (data: Omit<Customer, 'id' | 'userId' | 'numericId'>) => {
+  const handleFormSubmit = async (data: Omit<Customer, 'id' | 'ownerId' | 'numericId'>) => {
     if (!firestore || !user) return;
     setIsSaving(true);
     try {
@@ -388,7 +388,7 @@ const handleExportToPdf = async () => {
           ...data,
           id: newDocRef.id,
           numericId: nextNumericId,
-          userId: user.uid,
+          ownerId: user.uid,
         };
         await setDoc(newDocRef, newCustomerWithId);
         toast({

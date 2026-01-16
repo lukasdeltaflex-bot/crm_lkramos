@@ -86,7 +86,7 @@
           "description": "Customer's birth date.",
           "format": "date"
         },
-        "userId": {
+        "ownerId": {
           "type": "string",
           "description": "The ID of the user who owns this customer record."
         },
@@ -125,7 +125,7 @@
         "cpf",
         "phone",
         "birthDate",
-        "userId"
+        "ownerId"
       ]
     },
     "Attachment": {
@@ -167,7 +167,7 @@
           "type": "string",
           "description": "Unique identifier for the LoanProposal entity."
         },
-        "userId": {
+        "ownerId": {
           "type": "string",
           "description": "The ID of the user who owns this proposal."
         },
@@ -231,7 +231,7 @@
         }
       },
       "required": [
-        "userId",
+        "ownerId",
         "customerId",
         "table",
         "term",
@@ -377,7 +377,7 @@
           "schema": {
             "$ref": "#/backend/entities/Customer"
           },
-          "description": "Stores customer profiles. All customer operations will be accessible to the user if `request.auth.uid == resource.data.userId`",
+          "description": "Stores customer profiles. All customer operations will be accessible to the user if `request.auth.uid == resource.data.ownerId`",
           "params": [
             {
               "name": "customerId",
@@ -393,7 +393,7 @@
           "schema": {
             "$ref": "#/backend/entities/LoanProposal"
           },
-          "description": "Stores loan proposals associated with customers. Access is restricted to the user who owns the proposal (`request.auth.uid == resource.data.userId`).",
+          "description": "Stores loan proposals associated with customers. Access is restricted to the user who owns the proposal (`request.auth.uid == resource.data.ownerId`).",
           "params": [
             {
               "name": "loanProposalId",

@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
-import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useDoc, useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { doc, collection, query, where } from 'firebase/firestore';
 import type { Customer, Proposal } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -192,6 +192,7 @@ const CustomerFinancialSummary = ({ proposals }: { proposals: Proposal[] }) => {
 export default function CustomerDetailPage({ params }: { params: { id: string } }) {
   const { id: customerId } = params;
   const firestore = useFirestore();
+  const { user } = useUser();
 
   const customerDocRef = useMemoFirebase(() => {
     if (!firestore || !customerId) return null;
@@ -199,9 +200,9 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
   }, [firestore, customerId]);
 
   const proposalsQuery = useMemoFirebase(() => {
-    if (!firestore || !customerId) return null;
-    return query(collection(firestore, 'loanProposals'), where('customerId', '==', customerId));
-  }, [firestore, customerId]);
+    if (!firestore || !user || !customerId) return null;
+    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), where('customerId', '==', customerId));
+  }, [firestore, user, customerId]);
 
   const { data: customer, isLoading: isCustomerLoading } = useDoc<Customer>(customerDocRef);
   const { data: proposals, isLoading: areProposalsLoading } = useCollection<Proposal>(proposalsQuery);

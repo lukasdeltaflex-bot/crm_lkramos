@@ -1,6 +1,6 @@
 import type { Customer, Proposal, ProposalStatus, CommissionStatus } from './types';
 
-export const customers: Omit<Customer, 'id' | 'userId'>[] = [
+export const customers: Omit<Customer, 'id' | 'ownerId'>[] = [
   {
     name: 'Ana Silva',
     cpf: '123.456.789-01',
@@ -84,7 +84,7 @@ export const customers: Omit<Customer, 'id' | 'userId'>[] = [
 ];
 
 
-export const proposals: Omit<Proposal, 'id' | 'userId' | 'proposalNumber'>[] = [
+export const proposals: Omit<Proposal, 'id' | 'ownerId' | 'proposalNumber'>[] = [
     {
         customerId: '', // Placeholder, will be replaced with real customer ID
         product: 'Margem',
