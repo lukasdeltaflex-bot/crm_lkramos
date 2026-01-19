@@ -55,11 +55,32 @@ export function FinancialSummary({ rows, isPrivacyMode, isFiltered, onShowDetail
         totalContracted += proposal.grossAmount;
       }
     });
-
-    const pendingAmount = totalCommissionValue - totalAmountPaid;
     
     const commissionReceivedProposals = items.filter(p => p.amountPaid && p.amountPaid > 0);
-    const commissionPendingProposals = items.filter(p => (p.commissionValue || 0) > (p.amountPaid || 0));
+    
+    const commissionPendingProposals = items.filter(proposal => {
+        const hasUnpaidCommission = (proposal.commissionValue || 0) > (proposal.amountPaid || 0);
+        if (!hasUnpaidCommission) {
+            return false;
+        }
+
+        const status = proposal.status;
+        const hasDateApproved = !!proposal.dateApproved;
+
+        if (status === 'Pago' || status === 'Saldo Pago') {
+            return true;
+        }
+
+        if ((status === 'Pendente' || status === 'Em Andamento') && hasDateApproved) {
+            return true;
+        }
+
+        return false;
+    });
+
+    const pendingAmount = commissionPendingProposals.reduce((sum, p) => {
+        return sum + ((p.commissionValue || 0) - (p.amountPaid || 0));
+    }, 0);
 
     return {
       totalContracted,
