@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -61,9 +62,9 @@ import type { CommissionStatus, Proposal, Customer } from '@/lib/types';
 import { FinancialSummary } from '@/components/financial/financial-summary';
 import { DraggableHeader } from './columns';
 
-const STORAGE_KEY_VISIBILITY = 'lk-ramos-financial-columns-visibility';
-const STORAGE_KEY_ORDER = 'lk-ramos-financial-columns-order';
-const STORAGE_KEY_SIZING = 'lk-ramos-financial-columns-sizing';
+const STORAGE_KEY_VISIBILITY = 'lk-ramos-financial-columns-visibility-v2';
+const STORAGE_KEY_ORDER = 'lk-ramos-financial-columns-order-v2';
+const STORAGE_KEY_SIZING = 'lk-ramos-financial-columns-sizing-v2';
 
 
 type ProposalWithCustomer = Proposal & { customer: Customer };

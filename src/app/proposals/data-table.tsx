@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -61,9 +62,9 @@ import type { ProposalStatus, Proposal } from '@/lib/types';
 import { DraggableHeader } from './columns';
 import type { ProposalWithCustomer } from './page';
 
-const STORAGE_KEY_VISIBILITY = 'lk-ramos-proposal-columns-visibility';
-const STORAGE_KEY_ORDER = 'lk-ramos-proposal-columns-order';
-const STORAGE_KEY_SIZING = 'lk-ramos-proposal-columns-sizing';
+const STORAGE_KEY_VISIBILITY = 'lk-ramos-proposal-columns-visibility-v2';
+const STORAGE_KEY_ORDER = 'lk-ramos-proposal-columns-order-v2';
+const STORAGE_KEY_SIZING = 'lk-ramos-proposal-columns-sizing-v2';
 
 interface DataTableProps {
   columns: ColumnDef<ProposalWithCustomer, unknown>[];

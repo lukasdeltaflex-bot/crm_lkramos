@@ -52,9 +52,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { DraggableHeader } from './columns';
 import type { Customer } from '@/lib/types';
 
-const STORAGE_KEY_VISIBILITY = 'lk-ramos-customer-columns-visibility';
-const STORAGE_KEY_ORDER = 'lk-ramos-customer-columns-order';
-const STORAGE_KEY_SIZING = 'lk-ramos-customer-columns-sizing';
+const STORAGE_KEY_VISIBILITY = 'lk-ramos-customer-columns-visibility-v2';
+const STORAGE_KEY_ORDER = 'lk-ramos-customer-columns-order-v2';
+const STORAGE_KEY_SIZING = 'lk-ramos-customer-columns-sizing-v2';
 
 
 interface DataTableProps {
