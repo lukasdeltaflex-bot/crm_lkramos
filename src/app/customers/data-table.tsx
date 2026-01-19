@@ -52,9 +52,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { DraggableHeader } from './columns';
 import type { Customer } from '@/lib/types';
 
-const STORAGE_KEY_VISIBILITY = 'lk-ramos-customer-columns-visibility-v2';
-const STORAGE_KEY_ORDER = 'lk-ramos-customer-columns-order-v2';
-const STORAGE_KEY_SIZING = 'lk-ramos-customer-columns-sizing-v2';
+const STORAGE_KEY_VISIBILITY = 'lk-ramos-customer-columns-visibility-v3';
+const STORAGE_KEY_ORDER = 'lk-ramos-customer-columns-order-v3';
+const STORAGE_KEY_SIZING = 'lk-ramos-customer-columns-sizing-v3';
 
 
 interface DataTableProps {
@@ -85,40 +85,34 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     observations: false,
     city: false,
     state: false,
-    benefitNumber: false,
   };
-  const defaultOrder = React.useMemo(() => columns.map(c => c.id!), [columns]);
+  const initialColumns = React.useMemo(() => columns.map(c => c.id!), [columns]);
 
+  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>([...initialColumns]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(defaultVisibility);
-  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(defaultOrder);
     
   React.useEffect(() => {
     setIsClient(true);
-    const savedVisibility = localStorage.getItem(STORAGE_KEY_VISIBILITY);
-    if (savedVisibility) {
-        try {
+    try {
+        const savedVisibility = localStorage.getItem(STORAGE_KEY_VISIBILITY);
+        if (savedVisibility) {
             setColumnVisibility(JSON.parse(savedVisibility));
-        } catch (e) {
-            // Use default
         }
-    }
-    const savedOrder = localStorage.getItem(STORAGE_KEY_ORDER);
-    if (savedOrder) {
-        try {
+        const savedOrder = localStorage.getItem(STORAGE_KEY_ORDER);
+        if (savedOrder) {
             setColumnOrder(JSON.parse(savedOrder));
-        } catch (e) {
-            // Use default
+        } else {
+            setColumnOrder(initialColumns);
         }
-    }
-    const savedSizing = localStorage.getItem(STORAGE_KEY_SIZING);
-    if (savedSizing) {
-        try {
+        const savedSizing = localStorage.getItem(STORAGE_KEY_SIZING);
+        if (savedSizing) {
             setColumnSizing(JSON.parse(savedSizing));
-        } catch (e) {
-            // Use default
         }
+    } catch (e) {
+        console.error("Failed to parse column settings from localStorage", e);
+        setColumnOrder(initialColumns);
     }
-  }, []);
+  }, [initialColumns]);
 
   React.useEffect(() => {
     if (isClient) {
@@ -187,7 +181,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
       const name = safeValue(row.getValue('name'));
       const cpf = safeValue(row.getValue('cpf'));
       const phone = safeValue(row.getValue('phone'));
-      const benefitNumber = safeValue(row.getValue('benefitNumber'));
+      const benefitNumber = safeValue(row.original.benefits?.[0]?.number);
   
       const filter = filterValue.toLowerCase();
   
@@ -195,7 +189,8 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         name.includes(filter) ||
         cpf.includes(filter) ||
         phone.includes(filter) ||
-        benefitNumber.includes(filter)
+        (benefitNumber && benefitNumber.includes(filter)) ||
+        false
       );
     },
   });
@@ -210,7 +205,6 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     cpf: 'CPF',
     phone: 'Telefone',
     phone2: 'Telefone 2',
-    benefitNumber: 'Benefício',
     city: 'Cidade',
     state: 'Estado',
     observations: 'Observações'
@@ -226,7 +220,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         <div className="p-4">
           <div className="flex items-center justify-between py-4">
             <Input
-              placeholder="Filtrar por nome, CPF, telefone ou benefício..."
+              placeholder="Filtrar por nome, CPF, ou telefone..."
               value={globalFilter ?? ''}
               onChange={(event) =>
                 setGlobalFilter(event.target.value)
@@ -345,3 +339,5 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
 });
 
 CustomerDataTable.displayName = 'CustomerDataTable';
+
+    

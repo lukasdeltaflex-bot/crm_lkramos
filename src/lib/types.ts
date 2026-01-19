@@ -1,10 +1,16 @@
 
+
+export type Benefit = {
+  number: string;
+  species?: string;
+};
+
 export type Customer = {
   id: string;
   numericId: number;
   name: string;
   cpf: string;
-  benefitNumber?: string;
+  benefits?: Benefit[];
   phone: string;
   phone2?: string;
   email?: string;
@@ -77,6 +83,7 @@ export type Proposal = {
   interestRate?: number;
   operator?: string;
   commissionBase?: 'gross' | 'net';
+  selectedBenefitNumber?: string;
   attachments?: Attachment[];
 };
 
@@ -97,3 +104,5 @@ export type UserProfile = {
   birthDate?: string; // YYYY-MM-DD
   phone?: string;
 }
+
+    

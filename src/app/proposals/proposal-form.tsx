@@ -38,7 +38,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { ProposalAttachmentUploader } from '@/components/proposals/proposal-attachment-uploader';
 import { useUser } from '@/firebase';
 import { doc, collection } from 'firebase/firestore'; // Only for ID generation
@@ -65,6 +65,7 @@ const proposalSchema = z.object({
   customerId: z.string({ required_error: 'Selecione um cliente.' }),
   product: z.string({ required_error: 'Selecione um produto.' }),
   status: z.string({ required_error: 'Selecione um status.' }),
+  selectedBenefitNumber: z.string().optional(),
 
   table: z.string().min(1, 'A tabela é obrigatória.'),
   term: z.coerce.number().min(1, 'O prazo é obrigatório.'),
@@ -204,6 +205,10 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDupl
   const product = watch('product');
   const selectedCustomerId = watch('customerId');
 
+  const selectedCustomer = useMemo(() => {
+    return customers.find(c => c.id === selectedCustomerId);
+  }, [customers, selectedCustomerId]);
+
   useEffect(() => {
     if (isReadOnly) return;
     
@@ -240,6 +245,7 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDupl
         customerId: '',
         product: '',
         status: 'Em Andamento',
+        selectedBenefitNumber: '',
         table: '',
         term: undefined,
         interestRate: undefined,
@@ -372,6 +378,35 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDupl
                 </FormItem>
               )}
             />
+            {selectedCustomer && selectedCustomer.benefits && selectedCustomer.benefits.length > 0 && (
+                <FormField
+                    control={form.control}
+                    name="selectedBenefitNumber"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Benefício da Proposta</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isReadOnly}>
+                        <FormControl>
+                            <SelectTrigger>
+                            <SelectValue placeholder="Selecione o benefício a ser usado" />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            {selectedCustomer.benefits?.map((benefit, index) => (
+                            <SelectItem key={index} value={benefit.number}>
+                                {benefit.number} {benefit.species && ` - ${benefit.species}`}
+                            </SelectItem>
+                            ))}
+                        </SelectContent>
+                        </Select>
+                        <FormDescription>
+                            Este cliente possui múltiplos benefícios. Selecione qual será usado para esta proposta.
+                        </FormDescription>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+            )}
                 <FormField
                     control={form.control}
                     name="product"
@@ -781,3 +816,5 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDupl
     </Form>
   );
 }
+
+    

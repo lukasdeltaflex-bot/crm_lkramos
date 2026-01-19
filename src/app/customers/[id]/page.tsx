@@ -66,10 +66,6 @@ const CustomerInfoCard = ({ customer }: { customer: Customer }) => {
                             <strong>CPF:</strong> {customer.cpf}
                         </div>
                         <div className="flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-muted-foreground" />
-                            <strong>Benefício:</strong> {customer.benefitNumber || 'N/A'}
-                        </div>
-                        <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
                             <strong>Nascimento:</strong> {format(new Date(customer.birthDate), 'dd/MM/yyyy', { locale: ptBR })} ({age !== null ? `${age} anos` : '...'})
                         </div>
@@ -103,6 +99,19 @@ const CustomerInfoCard = ({ customer }: { customer: Customer }) => {
                             <Mail className="h-4 w-4 text-muted-foreground" />
                             <strong>Email:</strong> {customer.email || 'N/A'}
                         </div>
+                        {customer.benefits && customer.benefits.length > 0 ? (
+                            customer.benefits.map((benefit, index) => (
+                                <div key={index} className="flex items-center gap-2">
+                                    <FileText className="h-4 w-4 text-muted-foreground" />
+                                    <strong>Benefício {customer.benefits!.length > 1 ? index + 1 : ''}:</strong> {benefit.number} {benefit.species && `(${benefit.species})`}
+                                </div>
+                            ))
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <FileText className="h-4 w-4 text-muted-foreground" />
+                                <strong>Benefício:</strong> Nenhum cadastrado
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -253,3 +262,5 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
     </AppLayout>
   );
 }
+
+    

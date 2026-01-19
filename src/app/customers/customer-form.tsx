@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,12 +18,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { CalendarIcon, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
+import { CalendarIcon, Sparkles, AlertCircle, Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import type { Customer } from '@/lib/types';
+import type { Customer, Benefit } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { useEffect, useState } from 'react';
@@ -34,10 +34,15 @@ import { Separator } from '@/components/ui/separator';
 import { isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
 
+const benefitSchema = z.object({
+    number: z.string().min(1, "O número do benefício é obrigatório."),
+    species: z.string().optional(),
+});
+
 const customerSchema = z.object({
   name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres.'),
   cpf: z.string().length(14, 'O CPF deve ter 11 dígitos.'),
-  benefitNumber: z.string().optional(),
+  benefits: z.array(benefitSchema).optional(),
   phone: z.string().min(10, 'O telefone é obrigatório.'),
   phone2: z.string().optional(),
   email: z.string().email('O email é inválido.').or(z.literal('')).optional(),
@@ -83,7 +88,7 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
     defaultValues: {
       name: '',
       cpf: '',
-      benefitNumber: '',
+      benefits: [],
       phone: '',
       phone2: '',
       email: '',
@@ -97,6 +102,11 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
       city: '',
       state: '',
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "benefits"
   });
 
   const birthDateValue = form.watch('birthDate');
@@ -131,7 +141,7 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
         const initial = {
             name: '',
             cpf: '',
-            benefitNumber: '',
+            benefits: [],
             phone: '',
             phone2: '',
             email: '',
@@ -164,6 +174,7 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
           return {
             ...initial,
             ...source,
+            benefits: source.benefits || [],
             birthDate: formattedBirthDate,
           };
         }
@@ -177,6 +188,7 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
     const newCustomerData: FormCustomer = {
       ...data,
       birthDate: format(parsedDate, 'yyyy-MM-dd'),
+      benefits: data.benefits || [],
     };
     onSubmit(newCustomerData);
   }
@@ -324,19 +336,6 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
                         </FormItem>
                     )}
                     />
-                    <FormField
-                    control={form.control}
-                    name="benefitNumber"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Número do Benefício</FormLabel>
-                        <FormControl>
-                            <Input placeholder="123.456.789-0" {...field} value={field.value || ''} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
                 </div>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                     <FormField
@@ -440,6 +439,70 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
 
             <Separator />
             
+            {/* Benefícios */}
+            <div>
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-medium">Benefícios INSS</h3>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => append({ number: "", species: "" })}
+                    >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Adicionar Benefício
+                    </Button>
+                </div>
+                <div className="space-y-4">
+                {fields.map((field, index) => (
+                    <div key={field.id} className="flex items-center gap-2 p-3 border rounded-md bg-secondary/30">
+                        <FormField
+                            control={form.control}
+                            name={`benefits.${index}.number`}
+                            render={({ field }) => (
+                                <FormItem className="flex-1">
+                                    <FormLabel className='text-xs'>Número do Benefício</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder='000.000.000-0' {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name={`benefits.${index}.species`}
+                            render={({ field }) => (
+                                <FormItem className="flex-1">
+                                    <FormLabel className='text-xs'>Espécie (Opcional)</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder='Aposentadoria por Idade' {...field} value={field.value ?? ''} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="self-center mt-5"
+                            onClick={() => remove(index)}
+                        >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                    </div>
+                ))}
+                {fields.length === 0 && (
+                    <div className="text-sm text-muted-foreground text-center py-4 border border-dashed rounded-md">
+                        <p>Nenhum benefício adicionado.</p>
+                    </div>
+                )}
+                </div>
+            </div>
+
+            <Separator />
+
             {/* Endereço */}
             <div className='space-y-4'>
                 <h3 className="text-lg font-medium">Endereço</h3>
@@ -590,3 +653,5 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
     </Form>
   );
 }
+
+    

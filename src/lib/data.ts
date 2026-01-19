@@ -4,7 +4,7 @@ export const customers: Omit<Customer, 'id' | 'ownerId'>[] = [
   {
     name: 'Ana Silva',
     cpf: '123.456.789-01',
-    benefitNumber: '123456789',
+    benefits: [{ number: '123456789', species: 'Aposentadoria por Idade' }],
     phone: '(11) 98765-4321',
     email: 'ana.silva@example.com',
     birthDate: '1965-03-15',
@@ -20,7 +20,7 @@ export const customers: Omit<Customer, 'id' | 'ownerId'>[] = [
   {
     name: 'Bruno Costa',
     cpf: '234.567.890-12',
-    benefitNumber: '234567890',
+    benefits: [{ number: '234567890', species: 'Pensão por Morte' }],
     phone: '(21) 99876-5432',
     email: 'bruno.costa@example.com',
     birthDate: '1958-07-22',
@@ -36,7 +36,7 @@ export const customers: Omit<Customer, 'id' | 'ownerId'>[] = [
   {
     name: 'Carla Dias',
     cpf: '345.678.901-23',
-    benefitNumber: '345678901',
+    benefits: [{ number: '345678901', species: 'Aposentadoria por Invalidez' }],
     phone: '(31) 98765-1234',
     email: 'carla.dias@example.com',
     birthDate: '1970-11-30',
@@ -52,7 +52,7 @@ export const customers: Omit<Customer, 'id' | 'ownerId'>[] = [
   {
     name: 'Daniel Faria',
     cpf: '456.789.012-34',
-    benefitNumber: '456789012',
+    benefits: [{ number: '456789012', species: 'Aposentadoria Especial' }],
     phone: '(41) 99876-4321',
     email: 'daniel.faria@example.com',
     birthDate: '1950-01-30',
@@ -68,7 +68,7 @@ export const customers: Omit<Customer, 'id' | 'ownerId'>[] = [
   {
     name: 'Elisa Gomes',
     cpf: '567.890.123-45',
-    benefitNumber: '567890123',
+    benefits: [{ number: '567890123', species: 'Auxílio-Doença' }, {number: '987654321-0', species: 'Pensão Alimentícia'}],
     phone: '(51) 98765-5678',
     email: 'elisa.gomes@example.com',
     birthDate: '1949-05-10',
@@ -104,6 +104,7 @@ export const proposals: Omit<Proposal, 'id' | 'ownerId' | 'proposalNumber'>[] = 
         dateDigitized: new Date().toISOString(),
         operator: "Fábio",
         commissionBase: 'gross',
+        selectedBenefitNumber: '123456789',
       },
       {
         customerId: '',
@@ -255,3 +256,5 @@ export const proposals: Omit<Proposal, 'id' | 'ownerId' | 'proposalNumber'>[] = 
         commissionBase: 'gross',
       }
 ];
+
+    

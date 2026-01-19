@@ -38,12 +38,9 @@ interface ActionsCellProps {
   onDelete: (customerId: string) => void;
 }
 
-export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => {
-    const isDraggable = header.column.columnDef.enableColumnOrdering !== false;
-
+export const DraggableHeader = ({ header }: { header: Header<Customer, unknown>}) => {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({ 
         id: header.column.id,
-        disabled: !isDraggable,
     });
     
     const style = {
@@ -51,6 +48,8 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
         transform: CSS.Transform.toString(transform),
         opacity: isDragging ? 0.5 : 1,
     };
+    
+    const isDraggable = header.column.getCanSort();
 
     return (
         <TableHead
@@ -62,14 +61,17 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
             <div
                 className={cn(
                     'flex items-center gap-1 h-full px-4',
-                    header.column.getCanSort() && 'cursor-pointer select-none'
+                    isDraggable && 'cursor-pointer select-none'
                 )}
                 onClick={header.column.getToggleSortingHandler()}
             >
                 <button
                     {...attributes}
                     {...listeners}
-                    className="p-1 -ml-2 cursor-grab disabled:cursor-default"
+                    className={cn(
+                        "p-1 -ml-2",
+                        isDraggable ? "cursor-grab" : "cursor-default",
+                    )}
                     onClick={(e) => e.stopPropagation()}
                     disabled={!isDraggable}
                 >
@@ -95,8 +97,8 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
                     onMouseDown={header.getResizeHandler()}
                     onTouchStart={header.getResizeHandler()}
                     className={cn(
-                        'absolute right-0 top-0 z-10 h-full w-2.5 cursor-col-resize select-none touch-none bg-transparent transition-colors hover:bg-primary/50',
-                        header.column.getIsResizing() && 'bg-primary'
+                        'absolute right-0 top-0 z-10 h-full w-2.5 cursor-col-resize select-none touch-none bg-transparent transition-colors',
+                        header.column.getIsResizing() ? 'bg-primary/50' : 'hover:bg-primary/20',
                     )}
                 />
             )}
@@ -243,11 +245,6 @@ export const getColumns = (
       },
   },
   {
-    accessorKey: 'benefitNumber',
-    id: 'benefitNumber',
-    header: 'Benefício',
-  },
-  {
     accessorKey: 'city',
     id: 'city',
     header: 'Cidade',
@@ -273,4 +270,6 @@ export const getColumns = (
     enableHiding: false,
     enableSorting: false,
   },
-].map(column => ({ ...column, id: column.id || column.accessorKey as string}));
+].map(column => ({ ...column, enableSorting: (column as any).enableSorting !== false, id: column.id || column.accessorKey as string}));
+
+    
