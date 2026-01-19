@@ -1,3 +1,4 @@
+
 'use client';
 import React from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -166,6 +167,7 @@ const handleExportToExcel = async () => {
         customerName: 'Cliente',
         customerCpf: 'CPF',
         product: 'Produto',
+        bank_digitado: 'Banco Digitado',
         operator: 'Operador',
         grossAmount: 'Valor Bruto',
         status: 'Status',
@@ -229,6 +231,7 @@ const handleExportToExcel = async () => {
         customerName: 'Cliente',
         customerCpf: 'CPF',
         product: 'Produto',
+        bank_digitado: 'Banco Digitado',
         operator: 'Operador',
         grossAmount: 'Valor Bruto',
         status: 'Status',
