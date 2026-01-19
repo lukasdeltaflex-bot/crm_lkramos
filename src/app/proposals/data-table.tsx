@@ -62,9 +62,9 @@ import type { ProposalStatus, Proposal } from '@/lib/types';
 import { DraggableHeader } from './columns';
 import type { ProposalWithCustomer } from './page';
 
-const STORAGE_KEY_VISIBILITY = 'lk-ramos-proposal-columns-visibility-v4';
-const STORAGE_KEY_ORDER = 'lk-ramos-proposal-columns-order-v4';
-const STORAGE_KEY_SIZING = 'lk-ramos-proposal-columns-sizing-v4';
+const STORAGE_KEY_VISIBILITY = 'lk-ramos-proposal-columns-visibility-v5';
+const STORAGE_KEY_ORDER = 'lk-ramos-proposal-columns-order-v5';
+const STORAGE_KEY_SIZING = 'lk-ramos-proposal-columns-sizing-v5';
 
 interface DataTableProps {
   columns: ColumnDef<ProposalWithCustomer, unknown>[];
@@ -235,7 +235,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     customerName: 'Cliente',
     customerCpf: 'CPF',
     product: 'Produto',
-    banco_digitado_v4: 'Banco Digitado',
+    banco_digitado_v6: 'Banco Digitado',
     operator: 'Operador',
     grossAmount: 'Valor Bruto',
     status: 'Status',

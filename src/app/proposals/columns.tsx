@@ -103,8 +103,12 @@ const ActionsCell: React.FC<ActionsCellProps> = ({ row, onEdit, onView, onDelete
 };
 
 const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => {
-    const sortable = useSortable({ id: header.column.id });
-    const { attributes, listeners, setNodeRef, transform, isDragging } = sortable;
+    const isDraggable = header.column.columnDef.enableColumnOrdering !== false;
+
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({ 
+        id: header.column.id,
+        disabled: !isDraggable,
+    });
     
     const style = {
         width: header.getSize(),
@@ -129,10 +133,11 @@ const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => {
                  <button
                     {...attributes}
                     {...listeners}
-                    className="p-1 -ml-2 cursor-grab"
+                    className="p-1 -ml-2 cursor-grab disabled:cursor-default"
                     onClick={(e) => e.stopPropagation()}
+                    disabled={!isDraggable}
                 >
-                    <GripVertical className="h-4 w-4" />
+                    <GripVertical className={cn("h-4 w-4", !isDraggable && "opacity-30")} />
                 </button>
                 <div className="flex-1">
                     {header.isPlaceholder
@@ -232,9 +237,9 @@ export const getColumns = (
     },
   },
   {
-    accessorKey: 'banco_digitado_v5',
+    accessorKey: 'banco_digitado_v6',
     header: 'Banco Digitado',
-    id: 'banco_digitado_v5',
+    id: 'banco_digitado_v6',
     accessorFn: (row) => row.bank,
   },
   {
