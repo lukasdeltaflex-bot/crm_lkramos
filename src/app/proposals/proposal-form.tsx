@@ -175,27 +175,27 @@ const MaskedDatePicker = ({ name, label, control, isReadOnly }: { name: any, lab
 
 
 export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDuplicate, defaultValues, sheetMode }: ProposalFormProps) {
-    const { user } = useUser();
-    const firestore = useFirestore();
-    const [tempProposalId, setTempProposalId] = useState<string | undefined>(undefined);
-    const [isClient, setIsClient] = useState(false);
-    const [isCustomerSelectorOpen, setIsCustomerSelectorOpen] = useState(false);
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const [tempProposalId, setTempProposalId] = useState<string | undefined>(undefined);
+  const [isClient, setIsClient] = useState(false);
+  const [isCustomerSelectorOpen, setIsCustomerSelectorOpen] = useState(false);
 
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
-    useEffect(() => {
-        if (firestore && !proposal?.id) {
-            setTempProposalId(doc(collection(firestore, 'proposals')).id);
-        }
-    }, [firestore, proposal]);
-    
-    const proposalId = proposal?.id || tempProposalId;
+  useEffect(() => {
+    if (firestore && !proposal?.id) {
+      setTempProposalId(doc(collection(firestore, 'proposals')).id);
+    }
+  }, [firestore, proposal]);
+  
+  const proposalId = proposal?.id || tempProposalId;
 
-    const form = useForm<ProposalFormValues>({
-        resolver: zodResolver(proposalSchema),
-    });
+  const form = useForm<ProposalFormValues>({
+    resolver: zodResolver(proposalSchema),
+  });
 
   const { watch, setValue, trigger } = form;
   const commissionBase = watch('commissionBase');
@@ -212,11 +212,8 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDupl
   useEffect(() => {
     if (selectedCustomer) {
       if (selectedCustomer.benefits && selectedCustomer.benefits.length === 1) {
-        // Auto-select if there is only one benefit
         setValue('selectedBenefitNumber', selectedCustomer.benefits[0].number, { shouldValidate: true });
       } else {
-        // Clear the selection if there are multiple benefits or the customer changes
-        // This forces the user to choose from the list for the new customer
         setValue('selectedBenefitNumber', undefined, { shouldValidate: true });
       }
     }
@@ -450,36 +447,58 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDupl
                         )}
                     />
                 </div>
-
-                {selectedCustomer && selectedCustomer.benefits && selectedCustomer.benefits.length > 1 && (
-                    <FormField
-                        control={form.control}
-                        name="selectedBenefitNumber"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Benefício da Proposta</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value || ''} disabled={isReadOnly}>
-                            <FormControl>
-                                <SelectTrigger>
-                                <SelectValue placeholder="Selecione o benefício a ser usado" />
-                                </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                                {selectedCustomer.benefits?.map((benefit, index) => (
-                                <SelectItem key={index} value={benefit.number}>
-                                    {benefit.number} {benefit.species && ` - ${benefit.species}`}
-                                </SelectItem>
-                                ))}
-                            </SelectContent>
-                            </Select>
-                            <FormDescription>
-                                Este cliente possui múltiplos benefícios. Selecione qual será usado para esta proposta.
-                            </FormDescription>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
+                
+                {selectedCustomer ? (
+                    selectedCustomer.benefits && selectedCustomer.benefits.length > 1 ? (
+                        <FormField
+                            control={form.control}
+                            name="selectedBenefitNumber"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Benefício da Proposta</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value || ''} disabled={isReadOnly}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                        <SelectValue placeholder="Selecione o benefício a ser usado" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        {selectedCustomer.benefits?.map((benefit, index) => (
+                                        <SelectItem key={index} value={benefit.number}>
+                                            {benefit.number} {benefit.species && ` - ${benefit.species}`}
+                                        </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                    </Select>
+                                    <FormDescription>
+                                        Este cliente possui múltiplos benefícios. Selecione qual será usado para esta proposta.
+                                    </FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    ) : (
+                        <Alert variant="default" className="bg-secondary/50">
+                            <Info className="h-4 w-4" />
+                            <AlertTitle>Benefício Único</AlertTitle>
+                            <AlertDescription>
+                                {selectedCustomer.benefits && selectedCustomer.benefits.length === 1
+                                    ? `O benefício nº ${selectedCustomer.benefits[0].number} foi selecionado automaticamente.`
+                                    : `Este cliente não possui benefícios cadastrados. Cadastre-os na tela de clientes.`
+                                }
+                            </AlertDescription>
+                        </Alert>
+                    )
+                ) : (
+                    <Alert variant="default" className="bg-secondary/50">
+                        <Info className="h-4 w-4" />
+                        <AlertTitle>Selecione um Cliente</AlertTitle>
+                        <AlertDescription>
+                            Após selecionar um cliente, os benefícios disponíveis serão exibidos aqui.
+                        </AlertDescription>
+                    </Alert>
                 )}
+
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
