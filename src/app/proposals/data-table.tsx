@@ -234,7 +234,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     customerName: 'Cliente',
     customerCpf: 'CPF',
     product: 'Produto',
-    bank: 'Banco',
+    bank_digitado: 'Banco Digitado',
     operator: 'Operador',
     grossAmount: 'Valor Bruto',
     status: 'Status',

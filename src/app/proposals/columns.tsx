@@ -245,8 +245,8 @@ export const getColumns = (
   },
   {
     accessorKey: 'bank',
-    id: 'bank',
-    header: 'Banco',
+    id: 'bank_digitado',
+    header: 'Banco Digitado',
   },
   {
     accessorKey: 'status',
