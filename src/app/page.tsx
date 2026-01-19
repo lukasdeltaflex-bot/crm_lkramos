@@ -109,54 +109,52 @@ export default function DashboardPage() {
 
   const filteredProposals = React.useMemo(() => {
     if (!proposals || !isClient) return [];
-    
-    // Se o usuário aplicou um filtro de data, use esse filtro.
+
+    // If a date range filter is applied by the user
     if (appliedDateRange?.from) {
       const fromDate = appliedDateRange.from;
       const toDate = appliedDateRange.to ? new Date(appliedDateRange.to) : new Date(appliedDateRange.from);
       toDate.setHours(23, 59, 59, 999);
-  
+
       return proposals.filter(p => {
-          if (!p.dateDigitized) return false;
-          const proposalDate = new Date(p.dateDigitized);
-          return proposalDate >= fromDate && proposalDate <= toDate;
-      })
+        if (!p.dateDigitized) return false;
+        const proposalDate = new Date(p.dateDigitized);
+        return proposalDate >= fromDate && proposalDate <= toDate;
+      });
     }
 
-    // Lógica padrão: mês atual + pendentes do mês anterior.
+    // Default logic: current month's proposals + pending proposals from the previous month
     const today = new Date();
     const startOfCurrentMonth = startOfMonth(today);
     const endOfCurrentMonth = endOfMonth(today);
-
     const startOfPreviousMonth = startOfMonth(subMonths(today, 1));
     const endOfPreviousMonth = endOfMonth(subMonths(today, 1));
 
     const statusesToCarryOver: ProposalStatus[] = ['Pendente', 'Em Andamento', 'Aguardando Saldo', 'Saldo Pago'];
 
-    const proposalsFromCurrentMonth = proposals.filter(p => {
-        if (!p.dateDigitized) return false;
-        const proposalDate = new Date(p.dateDigitized);
-        return proposalDate >= startOfCurrentMonth && proposalDate <= endOfCurrentMonth;
+    // Use a Map to ensure proposal uniqueness, prioritizing the most recent ones.
+    const combinedProposalsMap = new Map<string, Proposal>();
+
+    proposals.forEach(p => {
+      if (!p.dateDigitized) return;
+      
+      const proposalDate = new Date(p.dateDigitized);
+
+      // Check if it's from the current month
+      const isFromCurrentMonth = proposalDate >= startOfCurrentMonth && proposalDate <= endOfCurrentMonth;
+
+      // Check if it's a proposal to carry over from the previous month
+      const isCarriedOver = 
+        proposalDate >= startOfPreviousMonth && 
+        proposalDate <= endOfPreviousMonth && 
+        statusesToCarryOver.includes(p.status);
+
+      if (isFromCurrentMonth || isCarriedOver) {
+        combinedProposalsMap.set(p.id, p);
+      }
     });
 
-    const proposalsToCarryOver = proposals.filter(p => {
-        if (!p.dateDigitized) return false;
-        const proposalDate = new Date(p.dateDigitized);
-        return proposalDate >= startOfPreviousMonth && proposalDate <= endOfPreviousMonth && statusesToCarryOver.includes(p.status);
-    });
-
-    // Combina os dois, evitando duplicatas.
-    const combinedProposals = [...proposalsFromCurrentMonth];
-    const currentMonthIds = new Set(proposalsFromCurrentMonth.map(p => p.id));
-    
-    proposalsToCarryOver.forEach(p => {
-        if (!currentMonthIds.has(p.id)) {
-            combinedProposals.push(p);
-        }
-    });
-
-    return combinedProposals;
-
+    return Array.from(combinedProposalsMap.values());
   }, [proposals, appliedDateRange, isClient]);
 
   const getFilterDescription = () => {
