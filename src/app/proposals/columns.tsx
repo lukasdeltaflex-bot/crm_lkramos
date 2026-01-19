@@ -178,11 +178,6 @@ export const getColumns = (
     onStatusChange: (proposalId: string, newStatus: ProposalStatus) => void
     ): ColumnDef<ProposalWithCustomer>[] => [
   {
-    accessorKey: 'bank',
-    id: 'bank_digitado',
-    header: 'Banco Digitado',
-  },
-  {
     id: 'select',
     header: ({ table }) => (
       <Checkbox
@@ -237,11 +232,6 @@ export const getColumns = (
     header: 'Produto',
   },
   {
-    accessorKey: 'operator',
-    id: 'operator',
-    header: 'Operador',
-  },
-  {
     accessorKey: 'grossAmount',
     id: 'grossAmount',
     header: () => <div className="text-right">Valor Bruto</div>,
@@ -249,6 +239,11 @@ export const getColumns = (
       const amount = parseFloat(row.getValue('grossAmount'));
       return <div className="text-right font-medium">{formatCurrency(amount)}</div>;
     },
+  },
+  {
+    accessorKey: 'bank_digitado',
+    id: 'bank_digitado',
+    header: 'Banco Digitado',
   },
   {
     accessorKey: 'status',
@@ -267,6 +262,11 @@ export const getColumns = (
     filterFn: (row, id, value) => {
         return value.includes(row.getValue(id))
     }
+  },
+  {
+    accessorKey: 'operator',
+    id: 'operator',
+    header: 'Operador',
   },
   {
     accessorKey: 'commissionValue',
