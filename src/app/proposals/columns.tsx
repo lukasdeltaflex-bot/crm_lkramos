@@ -62,7 +62,7 @@ const ActionsCell: React.FC<ActionsCellProps> = ({ row, onEdit, onView, onDelete
     const proposal = row.original;
     return (
       <div className="text-right">
-        <DropdownMenu modal={false}>
+        <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <span className="sr-only">Abrir menu</span>
@@ -229,11 +229,6 @@ export const getColumns = (
     id: 'product',
     header: 'Produto',
   },
-    {
-    accessorKey: 'bank',
-    id: 'bank',
-    header: 'Banco',
-  },
   {
     accessorKey: 'operator',
     id: 'operator',
@@ -247,6 +242,11 @@ export const getColumns = (
       const amount = parseFloat(row.getValue('grossAmount'));
       return <div className="text-right font-medium">{formatCurrency(amount)}</div>;
     },
+  },
+  {
+    accessorKey: 'bank',
+    id: 'bank',
+    header: 'Banco',
   },
   {
     accessorKey: 'status',
