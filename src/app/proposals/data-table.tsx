@@ -100,7 +100,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
       commissionValue: false,
       customerCpf: false,
   };
-  const defaultOrder = React.useMemo(() => columns.map(c => c.id!).filter(id => id !== 'select' && id !== 'actions'), [columns]);
+  const defaultOrder = React.useMemo(() => columns.map(c => c.id!).filter(id => id !== 'actions'), [columns]);
 
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(defaultVisibility);
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(defaultOrder);

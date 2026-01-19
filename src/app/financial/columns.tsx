@@ -54,6 +54,7 @@ const ActionsCell: React.FC<ActionsCellProps> = ({ row, onEdit }) => {
 export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({
         id: header.column.id,
+        disabled: header.column.columnDef.enableColumnOrdering === false,
     });
     
     const style = {
