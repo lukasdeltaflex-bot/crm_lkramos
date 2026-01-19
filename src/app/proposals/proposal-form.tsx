@@ -816,5 +816,3 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDupl
     </Form>
   );
 }
-
-    
