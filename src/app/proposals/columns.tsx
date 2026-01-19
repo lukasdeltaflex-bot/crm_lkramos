@@ -219,6 +219,11 @@ export const getColumns = (
     id: 'product',
     header: 'Produto',
   },
+    {
+    accessorKey: 'bank',
+    id: 'bank',
+    header: 'Banco',
+  },
   {
     accessorKey: 'operator',
     id: 'operator',
