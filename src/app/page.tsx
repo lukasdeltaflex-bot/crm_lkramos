@@ -297,11 +297,13 @@ export default function DashboardPage() {
                   />
                 </div>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl">
+              <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
                 <DialogHeader>
                   <DialogTitle>Propostas com Status: {card.title}</DialogTitle>
                 </DialogHeader>
-                <ProposalsStatusTable proposals={card.proposals} customers={customers || []} />
+                <div className="flex-1 overflow-y-auto">
+                    <ProposalsStatusTable proposals={card.proposals} customers={customers || []} />
+                </div>
               </DialogContent>
             </Dialog>
           ))}
