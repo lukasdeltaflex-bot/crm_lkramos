@@ -110,9 +110,7 @@ const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => {
     });
     
     const style = {
-        ...header.column.getCanResize() && {
-            width: header.getSize(),
-        },
+        width: header.getSize(),
         transform: CSS.Transform.toString(transform),
         opacity: isDragging ? 0.5 : 1,
     };
@@ -241,8 +239,8 @@ export const getColumns = (
     },
   },
   {
-    accessorKey: 'bank_digitado',
-    id: 'bank_digitado',
+    accessorKey: 'bank',
+    id: 'bank',
     header: 'Banco Digitado',
   },
   {
