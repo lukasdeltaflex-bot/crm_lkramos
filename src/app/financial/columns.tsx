@@ -52,12 +52,8 @@ const ActionsCell: React.FC<ActionsCellProps> = ({ row, onEdit }) => {
 };
 
 export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => {
-    const isDraggable = header.column.columnDef.enableColumnOrdering !== false;
-
-    const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({
-        id: header.column.id,
-        disabled: !isDraggable,
-    });
+    const sortable = useSortable({ id: header.column.id });
+    const { attributes, listeners, setNodeRef, transform, isDragging } = sortable;
     
     const style = {
         width: header.getSize(),
@@ -71,7 +67,6 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
             colSpan={header.colSpan}
             style={style}
             className={cn('relative p-0 h-12')}
-            {...attributes} // Attributes for the sortable node
         >
             <div
                 className={cn(
@@ -81,11 +76,12 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
                 onClick={header.column.getToggleSortingHandler()}
             >
                 <button
-                    {...(isDraggable ? listeners : {})} // Listeners for the drag handle
-                    className={cn("p-1 -ml-2", isDraggable ? "cursor-grab" : "cursor-default")}
-                    onClick={e => e.stopPropagation()}
+                    {...attributes}
+                    {...listeners}
+                    className="p-1 -ml-2 cursor-grab"
+                    onClick={(e) => e.stopPropagation()}
                 >
-                    <GripVertical className={cn("h-4 w-4", !isDraggable && "text-muted-foreground/20")} />
+                    <GripVertical className="h-4 w-4" />
                 </button>
                 <div className="flex-1">
                     {header.isPlaceholder
@@ -106,7 +102,7 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
                     onMouseDown={header.getResizeHandler()}
                     onTouchStart={header.getResizeHandler()}
                     className={cn(
-                        'absolute right-0 top-0 h-full w-1.5 cursor-col-resize select-none touch-none bg-transparent transition-colors hover:bg-primary',
+                        'absolute right-0 top-0 z-10 h-full w-2.5 cursor-col-resize select-none touch-none bg-transparent transition-colors hover:bg-primary/50',
                         header.column.getIsResizing() && 'bg-primary'
                     )}
                 />
