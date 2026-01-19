@@ -108,8 +108,8 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
                     onMouseDown={header.getResizeHandler()}
                     onTouchStart={header.getResizeHandler()}
                     className={cn(
-                        'absolute right-0 top-0 h-full w-px cursor-col-resize select-none touch-none bg-border/50 hover:bg-border',
-                        header.column.getIsResizing() && 'bg-primary w-0.5'
+                        'absolute right-0 top-0 h-full w-0.5 cursor-col-resize select-none touch-none bg-muted-foreground/20 transition-colors hover:bg-primary/50',
+                        header.column.getIsResizing() && 'bg-primary'
                     )}
                 />
             )}
