@@ -7,7 +7,7 @@ import { doc, collection, query, where } from 'firebase/firestore';
 import type { Customer, Proposal } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Phone, Mail, Calendar, FileText, CircleDollarSign, BadgePercent, MapPin, Hash } from 'lucide-react';
+import { User, Phone, Mail, Calendar, FileText, CircleDollarSign, BadgePercent, MapPin, Hash, Copy } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,27 @@ import { Separator } from '@/components/ui/separator';
 import { CustomerAiSummary } from '@/components/customers/customer-ai-summary';
 import { isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
+import { toast } from '@/hooks/use-toast';
 
+
+const CopyButton = ({ text, label }: { text: string; label: string }) => {
+    if (!text) return null;
+    const handleCopy = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        navigator.clipboard.writeText(text);
+        toast({
+            title: `${label} copiado!`,
+            description: `O valor "${text}" foi copiado para a área de transferência.`,
+        });
+    };
+    return (
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopy}>
+            <Copy className="h-3 w-3" />
+            <span className="sr-only">Copiar {label}</span>
+        </Button>
+    );
+}
 
 const CustomerInfoCard = ({ customer }: { customer: Customer }) => {
     const [age, setAge] = React.useState<number | null>(null);
@@ -63,7 +83,9 @@ const CustomerInfoCard = ({ customer }: { customer: Customer }) => {
                         </div>
                         <div className="flex items-center gap-2">
                             <FileText className="h-4 w-4 text-muted-foreground" />
-                            <strong>CPF:</strong> {customer.cpf}
+                            <strong>CPF:</strong>
+                            <span>{customer.cpf}</span>
+                            <CopyButton text={customer.cpf} label="CPF" />
                         </div>
                         <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -103,7 +125,10 @@ const CustomerInfoCard = ({ customer }: { customer: Customer }) => {
                             customer.benefits.map((benefit, index) => (
                                 <div key={index} className="flex items-center gap-2">
                                     <FileText className="h-4 w-4 text-muted-foreground" />
-                                    <strong>Benefício {customer.benefits!.length > 1 ? index + 1 : ''}:</strong> {benefit.number} {benefit.species && `(${benefit.species})`}
+                                    <strong>Benefício {customer.benefits!.length > 1 ? index + 1 : ''}:</strong>
+                                    <span>{benefit.number}</span>
+                                    {benefit.species && <span className="text-muted-foreground text-sm">({benefit.species})</span>}
+                                    <CopyButton text={benefit.number} label="Número do Benefício" />
                                 </div>
                             ))
                         ) : (
@@ -262,5 +287,3 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
     </AppLayout>
   );
 }
-
-    

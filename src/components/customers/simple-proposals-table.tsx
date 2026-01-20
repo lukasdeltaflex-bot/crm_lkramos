@@ -23,9 +23,10 @@ import type { Proposal, ProposalStatus } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { ArrowUpDown } from 'lucide-react';
+import { ArrowUpDown, Copy } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { toast } from '@/hooks/use-toast';
 
 const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
@@ -42,6 +43,30 @@ export const columns: ColumnDef<Proposal>[] = [
   {
     accessorKey: 'proposalNumber',
     header: 'Proposta nº',
+    cell: ({ row }) => {
+        const proposalNumber = row.getValue('proposalNumber') as string;
+        if (!proposalNumber) return '-';
+        
+        const handleCopy = (e: React.MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+            navigator.clipboard.writeText(proposalNumber);
+            toast({
+                title: 'Número da Proposta copiado!',
+                description: `O valor "${proposalNumber}" foi copiado para a área de transferência.`,
+            });
+        };
+
+        return (
+            <div className="flex items-center gap-1">
+                <span>{proposalNumber}</span>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopy}>
+                    <Copy className="h-3 w-3" />
+                    <span className="sr-only">Copiar número da proposta</span>
+                </Button>
+            </div>
+        )
+    }
   },
   {
     accessorKey: 'product',
