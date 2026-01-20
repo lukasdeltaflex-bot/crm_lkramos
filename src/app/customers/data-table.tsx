@@ -17,6 +17,7 @@ import {
   Header,
   ColumnSizingState,
   Table as ReactTable,
+  PaginationState,
 } from '@tanstack/react-table';
 import {
     DndContext,
@@ -61,6 +62,7 @@ import type { Customer } from '@/lib/types';
 const STORAGE_KEY_VISIBILITY = 'lk-ramos-customer-columns-visibility-v3';
 const STORAGE_KEY_ORDER = 'lk-ramos-customer-columns-order-v3';
 const STORAGE_KEY_SIZING = 'lk-ramos-customer-columns-sizing-v3';
+const STORAGE_KEY_PAGESIZE = 'lk-ramos-customer-page-size-v1';
 
 
 interface DataTableProps {
@@ -86,6 +88,11 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [isClient, setIsClient] = React.useState(false);
+
+  const [pagination, setPagination] = React.useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
 
   const defaultVisibility: VisibilityState = {
     observations: false,
@@ -114,6 +121,10 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         if (savedSizing) {
             setColumnSizing(JSON.parse(savedSizing));
         }
+        const savedPageSize = localStorage.getItem(STORAGE_KEY_PAGESIZE);
+        if (savedPageSize) {
+            setPagination(prev => ({ ...prev, pageSize: Number(savedPageSize) }));
+        }
     } catch (e) {
         console.error("Failed to parse column settings from localStorage", e);
         setColumnOrder(initialColumns);
@@ -137,6 +148,12 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         localStorage.setItem(STORAGE_KEY_SIZING, JSON.stringify(columnSizing));
     }
   }, [columnSizing, isClient]);
+
+  React.useEffect(() => {
+    if (isClient) {
+        localStorage.setItem(STORAGE_KEY_PAGESIZE, String(pagination.pageSize));
+    }
+  }, [pagination.pageSize, isClient]);
 
 
   const sensors = useSensors(
@@ -170,6 +187,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     onRowSelectionChange: setRowSelection,
     onColumnOrderChange: setColumnOrder,
     onColumnSizingChange: setColumnSizing,
+    onPaginationChange: setPagination,
     enableColumnResizing: true,
     columnResizeMode: 'onChange',
     state: {
@@ -179,6 +197,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
       rowSelection,
       columnOrder,
       columnSizing,
+      pagination,
     },
     globalFilterFn: (row, columnId, filterValue) => {
       const safeValue = (value: any): string =>

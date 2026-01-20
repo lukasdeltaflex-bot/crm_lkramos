@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -19,6 +18,7 @@ import {
   ColumnSizingState,
   RowSelectionState,
   Table as ReactTable,
+  PaginationState,
 } from '@tanstack/react-table';
 import { format, parse, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -72,6 +72,7 @@ import { DraggableHeader } from './columns';
 const STORAGE_KEY_VISIBILITY = 'lk-ramos-financial-columns-visibility-v2';
 const STORAGE_KEY_ORDER = 'lk-ramos-financial-columns-order-v2';
 const STORAGE_KEY_SIZING = 'lk-ramos-financial-columns-sizing-v2';
+const STORAGE_KEY_PAGESIZE = 'lk-ramos-financial-page-size-v1';
 
 
 type ProposalWithCustomer = Proposal & { customer: Customer };
@@ -103,6 +104,10 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
+  const [pagination, setPagination] = React.useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
   const [statusFilter, setStatusFilter] = React.useState<CommissionStatus | 'Todos'>('Todos');
   const [globalFilter, setGlobalFilter] = React.useState('');
 
@@ -143,6 +148,10 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             // Use default
         }
     }
+    const savedPageSize = localStorage.getItem(STORAGE_KEY_PAGESIZE);
+    if (savedPageSize) {
+      setPagination(prev => ({ ...prev, pageSize: Number(savedPageSize) }));
+    }
   }, []);
 
   React.useEffect(() => {
@@ -162,6 +171,12 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         localStorage.setItem(STORAGE_KEY_SIZING, JSON.stringify(columnSizing));
     }
   }, [columnSizing, isClient]);
+  
+  React.useEffect(() => {
+    if (isClient) {
+        localStorage.setItem(STORAGE_KEY_PAGESIZE, String(pagination.pageSize));
+    }
+  }, [pagination.pageSize, isClient]);
 
 
   const sensors = useSensors(
@@ -231,6 +246,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     onRowSelectionChange: setRowSelection,
     onColumnOrderChange: setColumnOrder,
     onColumnSizingChange: setColumnSizing,
+    onPaginationChange: setPagination,
     enableColumnResizing: true,
     columnResizeMode: 'onChange',
     state: {
@@ -241,6 +257,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
       globalFilter,
       columnOrder,
       columnSizing,
+      pagination,
     },
     meta: {
       isPrivacyMode,

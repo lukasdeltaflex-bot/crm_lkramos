@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -18,6 +17,7 @@ import {
   ColumnOrderState,
   ColumnSizingState,
   Table as ReactTable,
+  PaginationState,
 } from '@tanstack/react-table';
 import {
   DndContext,
@@ -72,6 +72,7 @@ import type { ProposalWithCustomer } from './page';
 const STORAGE_KEY_VISIBILITY = 'lk-ramos-proposal-columns-visibility-v5';
 const STORAGE_KEY_ORDER = 'lk-ramos-proposal-columns-order-v5';
 const STORAGE_KEY_SIZING = 'lk-ramos-proposal-columns-sizing-v5';
+const STORAGE_KEY_PAGESIZE = 'lk-ramos-proposal-page-size-v1';
 
 interface DataTableProps {
   columns: ColumnDef<ProposalWithCustomer, unknown>[];
@@ -99,6 +100,10 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   );
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [isClient, setIsClient] = React.useState(false);
+  const [pagination, setPagination] = React.useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
   
   const defaultVisibility: VisibilityState = {
       dateApproved: false,
@@ -139,6 +144,10 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
             localStorage.removeItem(STORAGE_KEY_SIZING);
         }
     }
+    const savedPageSize = localStorage.getItem(STORAGE_KEY_PAGESIZE);
+    if (savedPageSize) {
+      setPagination(prev => ({ ...prev, pageSize: Number(savedPageSize) }));
+    }
   }, []);
 
 
@@ -159,6 +168,12 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         localStorage.setItem(STORAGE_KEY_SIZING, JSON.stringify(columnSizing));
     }
   }, [columnSizing, isClient]);
+
+  React.useEffect(() => {
+    if (isClient) {
+        localStorage.setItem(STORAGE_KEY_PAGESIZE, String(pagination.pageSize));
+    }
+  }, [pagination.pageSize, isClient]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -192,6 +207,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     onRowSelectionChange: setRowSelection,
     onColumnOrderChange: setColumnOrder,
     onColumnSizingChange: setColumnSizing,
+    onPaginationChange: setPagination,
     enableColumnResizing: true,
     columnResizeMode: 'onChange',
     enableColumnOrdering: true,
@@ -203,6 +219,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
       rowSelection,
       columnOrder,
       columnSizing,
+      pagination,
     },
     globalFilterFn: (row, columnId, filterValue) => {
         const safeValue = (value: any): string =>
