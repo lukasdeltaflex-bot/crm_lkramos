@@ -304,7 +304,7 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="py-4">
-        <ScrollArea className="h-[calc(100vh-12rem)] pr-4">
+        <ScrollArea className="h-[70vh] pr-4">
           <div className="space-y-8">
             {/* Dados Pessoais */}
             <div className='space-y-4'>
@@ -653,5 +653,3 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
     </Form>
   );
 }
-
-    

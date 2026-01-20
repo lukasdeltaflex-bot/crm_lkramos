@@ -7,11 +7,11 @@ import { getColumns } from './columns';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Trash2, FileDown, Printer } from 'lucide-react';
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { ProposalForm } from './proposal-form';
 import type { Proposal, Customer, ProposalStatus, UserSettings } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
@@ -517,13 +517,13 @@ const handleExportToExcel = async () => {
             </Button>
         </div>
       </div>
-      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent 
-            className="w-full max-w-3xl sm:max-w-3xl"
+      <Dialog open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <DialogContent 
+            className="max-w-3xl"
         >
-          <SheetHeader className="print:hidden">
-            <SheetTitle>{getSheetTitle()}</SheetTitle>
-          </SheetHeader>
+          <DialogHeader className="print:hidden">
+            <DialogTitle>{getSheetTitle()}</DialogTitle>
+          </DialogHeader>
           <ProposalForm 
             proposal={selectedProposal} 
             customers={nonAnonymizedCustomers}
@@ -534,8 +534,8 @@ const handleExportToExcel = async () => {
             defaultValues={defaultValues}
             sheetMode={sheetMode}
           />
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
       {isLoading ? (
         <div className="rounded-md border p-4">
             <div className="space-y-2">
@@ -558,5 +558,3 @@ const handleExportToExcel = async () => {
     </AppLayout>
   );
 }
-
-    

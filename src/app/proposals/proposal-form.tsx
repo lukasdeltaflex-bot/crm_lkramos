@@ -302,7 +302,7 @@ export function ProposalForm({ proposal, customers, userSettings, isReadOnly, on
           <Logo forPrinting={true} />
           <h1 className="text-2xl font-bold mt-4">Detalhes da Proposta</h1>
         </div>
-        <ScrollArea className="h-[calc(100vh-12rem)] pr-4 print:h-auto print:overflow-visible">
+        <ScrollArea className="h-[70vh] pr-4 print:h-auto print:overflow-visible">
           <div className="space-y-6">
             
             {/* Customer and Product */}

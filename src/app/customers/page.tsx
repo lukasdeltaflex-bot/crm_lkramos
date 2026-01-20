@@ -6,12 +6,6 @@ import { CustomerDataTable, type CustomerDataTableHandle } from './data-table';
 import { getColumns } from './columns';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Sparkles, Trash2, FileDown } from 'lucide-react';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
 import { CustomerForm } from './customer-form';
 import type { Customer } from '@/lib/types';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -483,19 +477,19 @@ const handleExportToPdf = async () => {
             </Button>
         </div>
       </div>
-      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent className="w-full max-w-4xl sm:max-w-4xl">
-          <SheetHeader>
-            <SheetTitle>{getSheetTitle()}</SheetTitle>
-          </SheetHeader>
+      <Dialog open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>{getSheetTitle()}</DialogTitle>
+          </DialogHeader>
           <CustomerForm
             onSubmit={handleFormSubmit}
             customer={selectedCustomer}
             defaultValues={defaultValues}
             isSaving={isSaving}
           />
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
       <CustomerDataTable 
         ref={tableRef}
         columns={columns} 
@@ -507,5 +501,3 @@ const handleExportToPdf = async () => {
     </AppLayout>
   );
 }
-
-    
