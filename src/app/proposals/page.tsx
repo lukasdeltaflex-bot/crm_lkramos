@@ -1,4 +1,3 @@
-
 'use client';
 import React from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -14,9 +13,9 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { ProposalForm } from './proposal-form';
-import type { Proposal, Customer, ProposalStatus } from '@/lib/types';
+import type { Proposal, Customer, ProposalStatus, UserSettings } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, doc, query, where, writeBatch, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, parse } from 'date-fns';
@@ -64,9 +63,15 @@ export default function ProposalsPage() {
     if (!firestore || !user) return null;
     return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid));
   }, [firestore, user]);
+
+  const settingsDocRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'userSettings', user.uid);
+  }, [firestore, user]);
   
   const { data: proposals, isLoading: proposalsLoading } = useCollection<Proposal>(proposalsQuery);
   const { data: customers, isLoading: customersLoading } = useCollection<Customer>(customersQuery);
+  const { data: userSettings, isLoading: settingsLoading } = useDoc<UserSettings>(settingsDocRef);
 
   const nonAnonymizedCustomers = React.useMemo(() => {
     if (!customers) return [];
@@ -451,7 +456,7 @@ const handleExportToExcel = async () => {
     return 'Detalhes da Proposta';
   };
 
-  const isLoading = proposalsLoading || customersLoading || isUserLoading;
+  const isLoading = proposalsLoading || customersLoading || isUserLoading || settingsLoading;
 
   const columns = React.useMemo(() => getColumns(handleEditProposal, handleViewProposal, handleDeleteProposal, handleStatusChange), [handleEditProposal, handleViewProposal, handleDeleteProposal, handleStatusChange]);
 
@@ -523,6 +528,7 @@ const handleExportToExcel = async () => {
           <ProposalForm 
             proposal={selectedProposal} 
             customers={nonAnonymizedCustomers}
+            userSettings={userSettings || null}
             isReadOnly={sheetMode === 'view'}
             onSubmit={handleFormSubmit}
             onDuplicate={handleDuplicateProposal}

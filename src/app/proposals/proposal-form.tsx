@@ -27,8 +27,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { productTypes, proposalStatuses, approvingBodies, banks } from '@/lib/config-data';
-import type { Proposal, Customer, Attachment } from '@/lib/types';
+import * as configData from '@/lib/config-data';
+import type { Proposal, Customer, Attachment, UserSettings } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -65,7 +65,7 @@ const proposalSchema = z.object({
   customerId: z.string({ required_error: 'Selecione um cliente.' }),
   product: z.string({ required_error: 'Selecione um produto.' }),
   status: z.string({ required_error: 'Selecione um status.' }),
-  selectedBenefitNumber: z.string().optional(),
+  selectedBenefitNumber: z.string().min(1, "O benefício é obrigatório."),
 
   table: z.string().min(1, 'A tabela é obrigatória.'),
   term: z.coerce.number().min(1, 'O prazo é obrigatório.'),
@@ -107,6 +107,7 @@ type ProposalFormData = Partial<Omit<Proposal, 'id' | 'userId'>>;
 interface ProposalFormProps {
   proposal?: Proposal;
   customers: Customer[];
+  userSettings: UserSettings | null;
   isReadOnly?: boolean;
   onSubmit: (data: ProposalFormValues) => void;
   onDuplicate: (proposal: Proposal) => void;
@@ -174,12 +175,17 @@ const MaskedDatePicker = ({ name, label, control, isReadOnly }: { name: any, lab
 );
 
 
-export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDuplicate, defaultValues, sheetMode }: ProposalFormProps) {
+export function ProposalForm({ proposal, customers, userSettings, isReadOnly, onSubmit, onDuplicate, defaultValues, sheetMode }: ProposalFormProps) {
   const { user } = useUser();
   const firestore = useFirestore();
   const [tempProposalId, setTempProposalId] = useState<string | undefined>(undefined);
   const [isClient, setIsClient] = useState(false);
   const [isCustomerSelectorOpen, setIsCustomerSelectorOpen] = useState(false);
+
+  const productTypes = userSettings?.productTypes || configData.productTypes;
+  const proposalStatuses = userSettings?.proposalStatuses || configData.proposalStatuses;
+  const approvingBodies = userSettings?.approvingBodies || configData.approvingBodies;
+  const banks = userSettings?.banks || configData.banks;
 
   useEffect(() => {
     setIsClient(true);
@@ -209,6 +215,14 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDupl
     return customers.find(c => c.id === selectedCustomerId);
   }, [customers, selectedCustomerId]);
 
+  useEffect(() => {
+    const currentBenefit = form.getValues('selectedBenefitNumber');
+    const isBenefitValidForCustomer = selectedCustomer?.benefits?.some(b => b.number === currentBenefit);
+
+    if (selectedCustomerId && !isBenefitValidForCustomer) {
+      form.setValue('selectedBenefitNumber', '');
+    }
+  }, [selectedCustomerId, form]);
 
   useEffect(() => {
     if (isReadOnly) return;
@@ -455,17 +469,24 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDupl
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Benefício da Proposta</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Digite o número do benefício"
-                        {...field}
-                        readOnly={isReadOnly}
-                        value={field.value || ''}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Digite o número do benefício a ser usado nesta proposta.
-                    </FormDescription>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        value={field.value}
+                        disabled={isReadOnly || !selectedCustomer || !selectedCustomer.benefits || selectedCustomer.benefits.length === 0}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={!selectedCustomer ? "Selecione um cliente primeiro" : "Selecione um benefício"} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {selectedCustomer?.benefits?.map((benefit, index) => (
+                              <SelectItem key={`${benefit.number}-${index}`} value={benefit.number}>
+                                  {benefit.number} {benefit.species && `(${benefit.species})`}
+                              </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     <FormMessage />
                   </FormItem>
                 )}
