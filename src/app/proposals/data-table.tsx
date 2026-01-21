@@ -295,7 +295,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                 placeholder="Filtrar por cliente, CPF, proposta ou promotora..."
                 value={globalFilter ?? ''}
                 onChange={(event) => setGlobalFilter(event.target.value)}
-                className="max-w-sm"
+                className="max-w-md"
                 />
                 {selectedRowCount > 0 && (
                 <DropdownMenu>
@@ -471,4 +471,3 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
 });
 
 ProposalsDataTable.displayName = 'ProposalsDataTable';
-    
