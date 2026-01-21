@@ -41,11 +41,13 @@ const prompt = ai.definePrompt({
   name: 'extractCustomerDataPrompt',
   input: { schema: z.string() },
   output: { schema: ExtractCustomerDataOutputSchema },
-  prompt: `Você é um assistente de IA especialista em análise e extração de dados para um sistema de CRM de correspondentes bancários. Sua tarefa é analisar o texto fornecido, que pode ser uma transcrição de áudio, uma mensagem de WhatsApp, um e-mail ou qualquer texto não estruturado, e extrair as informações do cliente da forma mais precisa e inteligente possível.
+  prompt: `Você é um assistente de IA especialista e altamente preciso, treinado para analisar texto e extrair dados de clientes para um sistema de CRM.
 
-**Seja especialista em interpretar formatos estruturados copiados de outros sistemas.**
+**Sua Missão Principal:**
+Analisar um bloco de texto que foi copiado de outro sistema. Este texto sempre seguirá uma ESTRUTURA consistente, mas os DADOS do cliente serão diferentes a cada vez. Sua tarefa é extrair os dados e retorná-los em formato JSON, seguindo o schema de saída fornecido.
 
-**Exemplo de formato estruturado comum:**
+**Formato do Texto de Entrada (Exemplo):**
+O texto de entrada terá um formato semelhante a este:
 \`\`\`
 CPF: 796.298.908-44 / Benefício: 1588063230
 
@@ -59,36 +61,42 @@ Cidade: VOTORANTIM - Estado: SP
 CEP: 18113-400
 \`\`\`
 
-**Análise Detalhada do Exemplo Acima:**
-*   **Linha "CPF / Benefício":** Extraia o \`cpf\` e o número do \`benefício\`. O benefício deve ser um item dentro de um array chamado \`benefits\`. O array \`benefits\` deve conter objetos, cada um com a chave \`number\`.
-*   **Linha "Nome":** Extraia o \`name\`.
-*   **Linha "Data de Nascimento":** Extraia a data (25/12/1954) e converta para o formato 'YYYY-MM-DD' para o campo \`birthDate\`. **Sempre ignore a idade**.
-*   **Linha "Endereço":** Extraia o logradouro e o número. "ODETE GORI BICUDO 190" deve ser separado em 'street' ("ODETE GORI BICUDO") e 'number' ("190").
-*   **Linhas "Bairro", "Cidade - Estado", "CEP":** Extraia \`neighborhood\`, \`city\`, \`state\`, e \`cep\` de suas respectivas linhas.
+**Análise Detalhada da Estrutura e Regras de Extração:**
 
-**Inteligência e Regras:**
+1.  **Linha "CPF / Benefício":**
+    *   Identifique o valor após "CPF:". Este é o \`cpf\`.
+    *   Identifique o valor após "Benefício:". Este é o número do benefício.
+    *   Sempre coloque o benefício dentro de um array \`benefits\`, como um objeto com a chave \`number\`. Ex: \` "benefits": [{"number": "1588063230"}] \`. Se houver múltiplos benefícios, adicione todos ao array.
 
-1.  **Interpretação e Inferência:**
-    *   **Endereço:** Entenda que os campos de endereço podem vir em múltiplas linhas, como no exemplo. Se o texto mencionar um CEP e outros campos de endereço não estiverem explícitos, tente inferi-los.
-    *   **Benefícios Múltiplos:** O cliente pode ter mais de um benefício. Se encontrar múltiplos, extraia todos como objetos individuais dentro do array \`benefits\`.
-    *   **Nomes Compostos:** Lide corretamente com nomes completos.
+2.  **Linha "Nome":**
+    *   Extraia o valor após "Nome:". Este é o \`name\`.
 
-2.  **Limpeza e Formatação de Dados:**
-    *   **CPF**: Formate sempre como '000.000.000-00'.
-    *   **Telefones**: Formate como '(00) 90000-0000' ou '(00) 0000-0000'.
-    *   **CEP**: Formate como '00000-000'.
-    *   **Datas**: Converta qualquer formato de data (ex: 30/11/1970, 30 de nov de 70) para o formato padrão **'YYYY-MM-DD'**.
-    *   **Caixa Alta/Baixa:** Padronize nomes e endereços para terem a primeira letra de cada palavra em maiúscula (Title Case), exceto para siglas como 'SP'.
+3.  **Linha "Data de Nascimento":**
+    *   Extraia a data (ex: "25/12/1954"). Ignore tudo o que vier depois, especialmente a idade. Este é o \`birthDate\`.
 
-3.  **Precisão e Campos Vazios:**
-    *   Se uma informação não for encontrada no texto, simplesmente omita a chave do objeto JSON de saída.
-    *   **NÃO INVENTE DADOS.** Se não tiver certeza sobre uma informação, prefira deixá-la de fora.
-    *   Não inclua o valor "undefined" ou "null" como uma string. Apenas omita o campo.
+4.  **Linha "Endereço":**
+    *   Esta linha contém a rua (\`street\`) e o número (\`number\`). Faça o seu melhor para separá-los. Geralmente, o número vem no final. Ex: "ODETE GORI BICUDO 190" -> \`street\`: "ODETE GORI BICUDO", \`number\`: "190".
+
+5.  **Linhas "Bairro", "Cidade - Estado", "CEP":**
+    *   Extraia \`neighborhood\`, \`city\`, \`state\`, e \`cep\` de suas respectivas linhas.
+
+**REGRAS DE FORMATAÇÃO (OBRIGATÓRIO):**
+
+*   **CPF**: Se encontrar, formate como '000.000.000-00'.
+*   **CEP**: Se encontrar, formate como '00000-000'.
+*   **Datas**: Se encontrar, converta **SEMPRE** para o formato **'YYYY-MM-DD'**.
+*   **Caixa Alta/Baixa:** Padronize nomes e endereços para terem a primeira letra de cada palavra em maiúscula (Title Case). Ex: "NATALINA SANTOS PEIXOTO" -> "Natalina Santos Peixoto". Siglas como 'SP' devem ser mantidas em maiúsculo.
+
+**REGRA MAIS IMPORTANTE (PRECISÃO):**
+
+*   **NÃO INVENTE DADOS.** Se uma informação (como 'email' ou 'telefone') não estiver presente no texto de entrada, simplesmente omita o campo correspondente no JSON de saída.
+*   Se não tiver certeza sobre uma informação, prefira deixá-la de fora. É melhor ter menos dados corretos do que dados inventados.
+*   O JSON de saída deve ser estritamente aderente ao schema. Não inclua "undefined" ou "null" como strings. Apenas omita os campos não encontrados.
 
 **Texto para análise:**
 {{{input}}}
 
-Analise o texto e gere a saída JSON estruturada com os dados do cliente.`,
+Analise o texto acima seguindo TODAS as regras e gere a saída JSON estruturada.`,
 });
 
 const extractCustomerDataFlow = ai.defineFlow(
