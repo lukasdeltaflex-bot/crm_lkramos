@@ -108,12 +108,9 @@ const extractCustomerDataFlow = ai.defineFlow(
   },
   async (input) => {
     if (!input || input.trim() === '') {
-        throw new Error('O texto de entrada não pode estar vazio.');
+        return {};
     }
     const { output } = await prompt(input);
-    if (!output || Object.keys(output).length === 0) {
-      throw new Error('A IA não conseguiu extrair dados do texto fornecido.');
-    }
-    return output;
+    return output || {};
   }
 );
