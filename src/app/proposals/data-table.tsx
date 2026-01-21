@@ -290,12 +290,12 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                 </TabsList>
             </Tabs>
             <div className="flex items-center justify-between py-4">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-grow">
                 <Input
                 placeholder="Filtrar por cliente, CPF, proposta ou promotora..."
                 value={globalFilter ?? ''}
                 onChange={(event) => setGlobalFilter(event.target.value)}
-                className="max-w-3xl"
+                className="w-full"
                 />
                 {selectedRowCount > 0 && (
                 <DropdownMenu>
