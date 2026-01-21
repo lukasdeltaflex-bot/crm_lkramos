@@ -19,6 +19,7 @@ import {
   EyeOff,
   X,
   Filter,
+  Banknote,
 } from 'lucide-react';
 import { format, parse, startOfMonth, endOfMonth, isValid, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -169,6 +170,11 @@ export default function DashboardPage() {
     }
     return `Exibindo dados para o mês de ${format(new Date(), 'MMMM', { locale: ptBR })}`;
   }
+  
+  const totalDigitado = React.useMemo(() => {
+    if (!filteredProposals) return 0;
+    return filteredProposals.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
+  }, [filteredProposals]);
 
 
   const getProposalsByStatus = (
@@ -280,6 +286,15 @@ export default function DashboardPage() {
       </div>
       <div className="space-y-8">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <div className="md:col-span-2 lg:col-span-3 xl:col-span-6 cursor-pointer" onClick={() => setDialogData({ title: 'Total Digitado no Mês', proposals: filteredProposals })}>
+             <StatsCard
+                title="Total Digitado no Mês"
+                value={isPrivacyMode ? '•••••' : formatCurrency(totalDigitado)}
+                icon={Banknote}
+                className="border-primary/50"
+                valueClassName="text-primary"
+            />
+          </div>
           {isLoading ? Array.from({length: 6}).map((_, i) => (
              <Card key={i} className="p-6">
                 <Skeleton className="h-5 w-24 mb-4" />
