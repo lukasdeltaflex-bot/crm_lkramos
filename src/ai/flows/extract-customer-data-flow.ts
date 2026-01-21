@@ -43,10 +43,24 @@ const prompt = ai.definePrompt({
   output: { schema: ExtractCustomerDataOutputSchema },
   prompt: `Você é um assistente de IA especialista em análise e extração de dados para um sistema de CRM de correspondentes bancários. Sua tarefa é analisar o texto fornecido, que pode ser uma transcrição de áudio, uma mensagem de WhatsApp, um e-mail ou qualquer texto não estruturado, e extrair as informações do cliente da forma mais precisa e inteligente possível.
 
+O texto pode vir em formatos estruturados, como cópias de outros sistemas. Seja capaz de interpretar esses formatos.
+
+**Exemplo de formato estruturado comum:**
+\`\`\`
+CPF: 796.298.908-44 / Benefício: 1588063230
+Nome: NATALINA SANTOS PEIXOTO
+Data de Nascimento: 25/12/1954 - Idade: 71 anos
+Endereço: ODETE GORI BICUDO 190
+Bairro: NOVA VOTORANTIM
+Cidade: VOTORANTIM - Estado: SP
+CEP: 18113-400
+\`\`\`
+A partir do exemplo acima, você deve extrair o CPF, o número do benefício, o nome, a data de nascimento, e as informações de endereço (logradouro, número, bairro, cidade, estado, cep). Ignore a idade.
+
 **Inteligência e Regras:**
 
 1.  **Interpretação e Inferência:**
-    *   **Endereço:** Se o texto mencionar um CEP, busque e preencha automaticamente os campos de logradouro, bairro, cidade e estado, mesmo que não estejam explícitos.
+    *   **Endereço:** Se o texto mencionar um CEP, busque e preencha automaticamente os campos de logradouro, bairro, cidade e estado, mesmo que não estejam explícitos. No exemplo acima, "ODETE GORI BICUDO 190" deve ser separado em 'street' ("ODETE GORI BICUDO") e 'number' ("190").
     *   **Benefícios Múltiplos:** O cliente pode ter mais de um benefício. Extraia todos os números e suas respectivas espécies (ex: "aposentadoria por idade", "pensão por morte") que encontrar.
     *   **Nomes Compostos:** Lide corretamente com nomes completos, incluindo sobrenomes compostos.
     *   **Dados Implícitos:** Se o texto diz "ele é de São Paulo", infira que o estado é 'SP'.
