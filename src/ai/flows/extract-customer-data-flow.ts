@@ -41,73 +41,43 @@ const prompt = ai.definePrompt({
   name: 'extractCustomerDataPrompt',
   input: { schema: z.string() },
   output: { schema: ExtractCustomerDataOutputSchema },
-  prompt: `
-### TAREFA
-Você é um assistente especialista em extração de dados. Sua tarefa é extrair informações de clientes de um bloco de texto bruto e retorná-las como um objeto JSON estruturado.
+  prompt: `### TAREFA
+Você é um assistente de extração de dados especialista. Sua tarefa é extrair informações de clientes de um bloco de texto bruto e retorná-las como um objeto JSON estruturado. O texto sempre terá a mesma estrutura de campos (CPF, Nome, etc.), mas os dados de cada cliente serão diferentes.
 
-### TEXTO DE ENTRADA
-A entrada é um bloco de texto bruto, geralmente copiado e colado de outro sistema. Geralmente, segue este padrão, mas pode haver pequenas variações.
+### REGRAS DE EXTRAÇÃO E FORMATAÇÃO (OBRIGATÓRIO)
 
-**Exemplo 1 (Endereço Simples):**
-CPF: 796.298.908-44 / Benefício: 1588063230
-Nome: NATALINA SANTOS PEIXOTO
-Data de Nascimento: 25/12/1954 - Idade: 71 anos
-Endereço: ODETE GORI BICUDO 190
-Bairro: NOVA VOTORANTIM
-Cidade: VOTORANTIM - Estado: SP
-CEP: 18113-400
+1.  **Linha \`CPF / Benefício\`**:
+    *   Extraia o CPF do campo \`CPF:\`.
+    *   Extraia o número do benefício do campo \`Benefício:\`. O valor de \`benefits\` DEVE ser um array de objetos. Exemplo: \`[{ "number": "1588063230" }]\`.
 
-**Exemplo 2 (Endereço Complexo):**
-CPF: 986.101.206-00 / Benefício: 545406412
-Nome: JEUSA CRISTINA NERY DE OLIVEIRA
-Data de Nascimento: 31/05/1969 - Idade: 56 anos
-Endereço: AVENIDA PAVAO 700 APTO 83
-Bairro: INDIANOPOLIS
-Cidade: SAO PAULO - Estado: SP
-CEP: 04516-012
+2.  **Linha \`Nome\`**:
+    *   Extraia o nome completo.
+    *   Converta para Title Case (Ex: "Natalina Santos Peixoto").
 
-### REGRAS DE EXTRAÇÃO
+3.  **Linha \`Data de Nascimento\`**:
+    *   Extraia APENAS a data. Ignore o texto sobre a idade (Ex: "- Idade: 71 anos").
+    *   **CRÍTICO**: Converta a data de \`DD/MM/YYYY\` para \`YYYY-MM-DD\`.
 
-1.  **Linha CPF/Benefício**:
-    *   \`cpf\`: Extraia de \`CPF:\`.
-    *   \`benefits\`: Extraia de \`Benefício:\`. O resultado deve ser um array, ex: \`[{ "number": "1588063230" }]\`.
+4.  **Linha \`Endereço\`**: Esta é a parte mais complexa.
+    *   A linha contém a rua, o número e, às vezes, um complemento.
+    *   \`street\`: É todo o texto ANTES do número.
+    *   \`number\`: É o número do imóvel.
+    *   \`complement\`: É todo o texto DEPOIS do número. Se não houver, omita este campo.
+    *   **Exemplo A**: "ODETE GORI BICUDO 190" -> \`street\` é "Odete Gori Bicudo", \`number\` é "190".
+    *   **Exemplo B**: "AVENIDA PAVAO 700 APTO 83" -> \`street\` é "Avenida Pavao", \`number\` é "700", \`complement\` é "Apto 83".
+    *   Converta \`street\` e \`complement\` para Title Case.
 
-2.  **Linha Nome**:
-    *   \`name\`: Extraia o nome completo de \`Nome:\`.
+5.  **Outros Campos de Endereço**:
+    *   Extraia \`Bairro\`, \`Cidade\` e \`CEP\` de seus respectivos campos.
+    *   Converta \`Bairro\` e \`Cidade\` para Title Case.
+    *   Extraia \`Estado\` e mantenha em MAIÚSCULAS (Ex: "SP").
 
-3.  **Linha Data de Nascimento**:
-    *   \`birthDate\`: Extraia APENAS a data (ex: "25/12/1954").
-    *   **CRÍTICO**: IGNORE tudo depois da data, como "- Idade: 71 anos".
-
-4.  **Linha Endereço**: Esta é a parte mais importante.
-    *   O formato é \`[NOME DA RUA] [NÚMERO] [COMPLEMENTO]\`.
-    *   \`street\`: O nome da rua/avenida.
-    *   \`number\`: O número do imóvel.
-    *   \`complement\`: Qualquer informação de apartamento/bloco (ex: "APTO 83"). Se não estiver presente, este campo deve ser omitido.
-    *   **Exemplo 1 "ODETE GORI BICUDO 190"**: \`street\` é "ODETE GORI BICUDO", \`number\` é "190".
-    *   **Exemplo 2 "AVENIDA PAVAO 700 APTO 83"**: \`street\` é "AVENIDA PAVAO", \`number\` é "700", \`complement\` é "APTO 83".
-    *   Você deve ser capaz de distinguir o número do nome da rua e do complemento.
-
-5.  **Linha Bairro**:
-    *   \`neighborhood\`: Extraia de \`Bairro:\`.
-
-6.  **Linha Cidade/Estado**:
-    *   \`city\`: Extraia de \`Cidade:\`.
-    *   \`state\`: Extraia de \`Estado:\`.
-
-7.  **Linha CEP**:
-    *   \`cep\`: Extraia de \`CEP:\`.
-
-### REGRAS DE FORMATAÇÃO DE SAÍDA (OBRIGATÓRIO)
-
-*   **Datas**: SEMPRE converta \`DD/MM/YYYY\` para \`YYYY-MM-DD\`.
-*   **Capitalização**: Converta \`name\` e todas as partes do endereço para Title Case (ex: "Natalina Santos Peixoto", "Avenida Pavao"). Códigos de estado (ex: "SP") devem permanecer em maiúsculas.
-*   **Dados Ausentes**: Se um campo não estiver no texto (ex: \`email\`, \`phone\`), NÃO o inclua no JSON de saída. Omita a chave completamente. Não use \`null\` ou \`undefined\`.
+6.  **Dados Não Presentes**: Se o texto não contiver informações como \`phone\` ou \`email\`, omita completamente essas chaves do JSON final. Não use \`null\` ou \`undefined\`.
 
 ### TEXTO PARA PROCESSAR
 {{{input}}}
 
-Agora, analise o bloco de texto acima e produza a saída JSON estruturada de acordo com todas as regras.`,
+Agora, analise o texto acima e produza o JSON estruturado seguindo TODAS as regras estritamente.`,
 });
 
 const extractCustomerDataFlow = ai.defineFlow(
