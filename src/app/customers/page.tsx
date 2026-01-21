@@ -369,12 +369,24 @@ const handleExportToPdf = async () => {
     const cpfExists = customers?.find(
       (c) => c.cpf === data.cpf && c.id !== selectedCustomer?.id
     );
-
     if (cpfExists) {
         toast({
             variant: 'destructive',
             title: 'CPF já cadastrado',
             description: `O CPF ${data.cpf} já pertence ao cliente "${cpfExists.name}".`,
+        });
+        return; // Stop submission
+    }
+
+    // Phone duplication check
+    const phoneExists = customers?.find(
+        (c) => c.phone === data.phone && c.id !== selectedCustomer?.id
+    );
+    if (phoneExists) {
+        toast({
+            variant: 'destructive',
+            title: 'Telefone já cadastrado',
+            description: `O telefone ${data.phone} já pertence ao cliente "${phoneExists.name}".`,
         });
         return; // Stop submission
     }
@@ -470,7 +482,6 @@ const handleExportToPdf = async () => {
                     <Button variant="outline">
                         <FileDown />
                         Exportar
-                        {selectedCount > 0 && ` (${selectedCount})`}
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
