@@ -343,7 +343,7 @@ export function ProposalForm({ proposal, customers, userSettings, isReadOnly, on
                                             {customers.map((customer) => (
                                             <CommandItem
                                                 key={customer.id}
-                                                value={customer.name + ' ' + customer.cpf}
+                                                value={`${customer.name} ${customer.cpf}`}
                                                 onSelect={() => {
                                                     form.setValue("customerId", customer.id);
                                                     setOpenCustomerSelector(false);
@@ -819,5 +819,3 @@ export function ProposalForm({ proposal, customers, userSettings, isReadOnly, on
     </Form>
   );
 }
-
-    
