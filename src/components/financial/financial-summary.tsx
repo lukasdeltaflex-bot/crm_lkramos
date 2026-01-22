@@ -45,11 +45,10 @@ export function FinancialSummary({ rows, isPrivacyMode, isFiltered, onShowDetail
     }
 
     const totalContracted = proposalsForMonth.reduce((sum, p) => {
-        if (p.commissionBase === 'net') {
-            return sum + (p.netAmount || 0);
-        }
-        // Default to gross amount if not 'net' or if commissionBase is undefined
-        return sum + (p.grossAmount || 0);
+      if (p.commissionBase === 'net') {
+          return sum + (p.netAmount || 0);
+      }
+      return sum + (p.grossAmount || 0);
     }, 0);
     
     const totalAmountPaid = proposalsForMonth.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
@@ -72,7 +71,13 @@ export function FinancialSummary({ rows, isPrivacyMode, isFiltered, onShowDetail
     
     const commissionReceivedProposals = proposalsForMonth.filter(p => p.amountPaid && p.amountPaid > 0);
     
-    const commissionPendingProposals = proposalsForMonth.filter(proposal => proposal.commissionStatus === 'Pendente');
+    const commissionPendingProposals = proposalsForMonth.filter(proposal => {
+        const hasCommissionValue = (proposal.commissionValue ?? 0) > 0;
+        const isPartiallyPaid = (proposal.amountPaid ?? 0) > 0 && (proposal.amountPaid ?? 0) < (proposal.commissionValue ?? 0);
+        const isUnpaid = (proposal.amountPaid ?? 0) === 0;
+
+        return hasCommissionValue && (isUnpaid || isPartiallyPaid) && proposal.status !== 'Reprovado';
+    });
 
     const pendingAmount = commissionPendingProposals.reduce((sum, p) => {
         // For pending, amountPaid should be 0, but we calculate defensively
