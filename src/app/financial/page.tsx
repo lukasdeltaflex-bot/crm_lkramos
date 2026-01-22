@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/page-header';
 import { FinancialDataTable, type FinancialDataTableHandle } from './data-table';
 import { getColumns } from './columns';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc, setDoc } from 'firebase/firestore';
+import { collection, query, where, doc, setDoc, writeBatch } from 'firebase/firestore';
 import type { Proposal, Customer, CommissionStatus } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -53,6 +53,7 @@ export default function FinancialPage() {
   const [rowSelection, setRowSelection] = React.useState({});
   const tableRef = React.useRef<FinancialDataTableHandle>(null);
   const [dialogData, setDialogData] = React.useState<{ title: string; proposals: ProposalWithCustomer[] } | null>(null);
+  const [migrationCompleted, setMigrationCompleted] = React.useState(false);
 
   React.useEffect(() => {
     setIsClient(true);
@@ -70,6 +71,55 @@ export default function FinancialPage() {
 
   const { data: proposals, isLoading: proposalsLoading } = useCollection<Proposal>(proposalsQuery);
   const { data: customers, isLoading: customersLoading } = useCollection<Customer>(customersQuery);
+
+  React.useEffect(() => {
+    if (!firestore || !proposals || proposals.length === 0 || migrationCompleted || proposalsLoading) {
+      return;
+    }
+
+    const runMigration = async () => {
+      const batch = writeBatch(firestore);
+      let updatesMade = 0;
+
+      proposals.forEach(p => {
+        // Only update if commissionStatus is not set (it's null, undefined, or empty string)
+        if (!p.commissionStatus) {
+          const isPago = p.status === 'Pago';
+          const isEmAndamentoAverbado = p.status === 'Em Andamento' && !!p.dateApproved;
+          const isPendenteAverbado = p.status === 'Pendente' && !!p.dateApproved;
+          const isSaldoPago = p.status === 'Saldo Pago';
+
+          const isEligible = isPago || isEmAndamentoAverbado || isPendenteAverbado || isSaldoPago;
+
+          if (isEligible) {
+            const proposalRef = doc(firestore, 'loanProposals', p.id);
+            batch.update(proposalRef, { commissionStatus: 'Pendente' });
+            updatesMade++;
+          }
+        }
+      });
+
+      if (updatesMade > 0) {
+        try {
+          await batch.commit();
+          toast({
+            title: "Sistema Atualizado",
+            description: `${updatesMade} proposta(s) foram atualizadas para ter o status de comissão "Pendente".`
+          });
+        } catch (error) {
+          console.error("Erro ao atualizar propostas existentes:", error);
+          toast({
+            variant: "destructive",
+            title: "Erro na atualização",
+            description: "Não foi possível atualizar os status de comissão das propostas existentes."
+          });
+        }
+      }
+      setMigrationCompleted(true); // Mark migration as done to prevent re-running
+    };
+
+    runMigration();
+  }, [firestore, proposals, proposalsLoading, migrationCompleted]);
 
   const { proposalsWithCustomerData, currentMonthProposals } = React.useMemo(() => {
     if (!proposals || !customers || !isClient) return { proposalsWithCustomerData: [], currentMonthProposals: [] };
