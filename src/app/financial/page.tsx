@@ -76,22 +76,25 @@ export default function FinancialPage() {
     
     const customersMap = new Map(customers.map(c => [c.id, c]));
     
-    const proposalsWithCustomer = proposals.map(p => ({
-      ...p,
-      customer: customersMap.get(p.customerId),
-    })).filter(p => p.customer);
+    const validProposals = proposals
+      .filter(p => p.status !== 'Reprovado')
+      .map(p => ({
+        ...p,
+        customer: customersMap.get(p.customerId),
+      }))
+      .filter(p => p.customer);
 
     const today = new Date();
     const start = startOfMonth(today);
     const end = endOfMonth(today);
 
-    const currentMonthData = proposalsWithCustomer.filter(p => {
+    const currentMonthData = validProposals.filter(p => {
         const proposalDate = p.commissionPaymentDate ? new Date(p.commissionPaymentDate) : (p.dateDigitized ? new Date(p.dateDigitized) : null);
         if (!proposalDate) return false;
         return proposalDate >= start && proposalDate <= end;
     });
 
-    return { proposalsWithCustomerData: proposalsWithCustomer as ProposalWithCustomer[], currentMonthProposals: currentMonthData as ProposalWithCustomer[] };
+    return { proposalsWithCustomerData: validProposals as ProposalWithCustomer[], currentMonthProposals: currentMonthData as ProposalWithCustomer[] };
   }, [proposals, customers, isClient]);
 
   const isLoading = proposalsLoading || customersLoading || isUserLoading;
