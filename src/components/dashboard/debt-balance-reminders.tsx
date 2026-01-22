@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Hourglass, Info } from 'lucide-react';
+import { Hourglass, Info, X } from 'lucide-react';
 import { debtBalanceReminder } from '@/ai/flows/debt-balance-reminder-flow';
 import { useEffect, useState, useMemo } from 'react';
 import { Skeleton } from '../ui/skeleton';
@@ -22,18 +22,26 @@ interface DebtBalanceRemindersProps {
     isLoading: boolean;
 }
 
-function DebtBalanceReminderItem({ reminder }: { reminder: ReminderMessage }) {
+function DebtBalanceReminderItem({ reminder, onDismiss }: { reminder: ReminderMessage; onDismiss: (id: string) => void }) {
   return (
     <Alert variant="destructive">
       <Hourglass className="h-4 w-4" />
       <AlertTitle>{reminder.customerName} (Proposta: {reminder.proposalNumber})</AlertTitle>
       <AlertDescription>{reminder.reminderMessage}</AlertDescription>
+      <button 
+        onClick={() => onDismiss(reminder.proposalId)} 
+        className="absolute top-2 right-2 p-1 text-muted-foreground/80 hover:text-foreground rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        aria-label="Dispensar alerta"
+      >
+        <X className="h-4 w-4" />
+      </button>
     </Alert>
   );
 }
 
 export function DebtBalanceReminders({ proposals, customers, isLoading }: DebtBalanceRemindersProps) {
   const [reminders, setReminders] = useState<ReminderMessage[]>([]);
+  const [dismissedReminders, setDismissedReminders] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(true);
 
   const proposalsAwaitingBalance = useMemo(() => {
@@ -83,6 +91,11 @@ export function DebtBalanceReminders({ proposals, customers, isLoading }: DebtBa
     fetchReminders();
   }, [isLoading, JSON.stringify(proposalsAwaitingBalance)]);
 
+  const handleDismiss = (proposalId: string) => {
+    setDismissedReminders(prev => [...prev, proposalId]);
+  };
+
+  const visibleReminders = reminders.filter(r => !dismissedReminders.includes(r.proposalId));
   const showLoadingState = isLoading || isGenerating;
 
   return (
@@ -98,9 +111,9 @@ export function DebtBalanceReminders({ proposals, customers, isLoading }: DebtBa
                 <Skeleton className="h-4 w-full" />
               </div>
           </div>
-        ) : reminders.length > 0 ? (
-          reminders.map((reminder) => (
-            <DebtBalanceReminderItem key={reminder.proposalId} reminder={reminder} />
+        ) : visibleReminders.length > 0 ? (
+          visibleReminders.map((reminder) => (
+            <DebtBalanceReminderItem key={reminder.proposalId} reminder={reminder} onDismiss={handleDismiss} />
           ))
         ) : (
           <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-4">

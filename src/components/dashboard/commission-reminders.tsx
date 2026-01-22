@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { BadgePercent, Info } from 'lucide-react';
+import { BadgePercent, Info, X } from 'lucide-react';
 import { commissionReminder } from '@/ai/flows/commission-reminder-flow';
 import { useEffect, useState, useMemo } from 'react';
 import { Skeleton } from '../ui/skeleton';
@@ -22,18 +22,26 @@ interface CommissionRemindersProps {
     isLoading: boolean;
 }
 
-function CommissionReminderItem({ reminder }: { reminder: ReminderMessage }) {
+function CommissionReminderItem({ reminder, onDismiss }: { reminder: ReminderMessage; onDismiss: (id: string) => void }) {
   return (
     <Alert variant="destructive">
       <BadgePercent className="h-4 w-4" />
       <AlertTitle>{reminder.customerName} (Proposta: {reminder.proposalNumber})</AlertTitle>
       <AlertDescription>{reminder.reminderMessage}</AlertDescription>
+       <button 
+        onClick={() => onDismiss(reminder.proposalId)} 
+        className="absolute top-2 right-2 p-1 text-muted-foreground/80 hover:text-foreground rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        aria-label="Dispensar alerta"
+      >
+        <X className="h-4 w-4" />
+      </button>
     </Alert>
   );
 }
 
 export function CommissionReminders({ proposals, customers, isLoading }: CommissionRemindersProps) {
   const [reminders, setReminders] = useState<ReminderMessage[]>([]);
+  const [dismissedReminders, setDismissedReminders] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(true);
 
   const pendingCommissions = useMemo(() => {
@@ -83,6 +91,11 @@ export function CommissionReminders({ proposals, customers, isLoading }: Commiss
     fetchReminders();
   }, [isLoading, JSON.stringify(pendingCommissions)]);
 
+  const handleDismiss = (proposalId: string) => {
+    setDismissedReminders(prev => [...prev, proposalId]);
+  };
+  
+  const visibleReminders = reminders.filter(reminder => !dismissedReminders.includes(reminder.proposalId));
   const showLoadingState = isLoading || isGenerating;
 
   return (
@@ -98,9 +111,9 @@ export function CommissionReminders({ proposals, customers, isLoading }: Commiss
                 <Skeleton className="h-4 w-full" />
               </div>
           </div>
-        ) : reminders.length > 0 ? (
-          reminders.map((reminder) => (
-            <CommissionReminderItem key={reminder.proposalId} reminder={reminder} />
+        ) : visibleReminders.length > 0 ? (
+          visibleReminders.map((reminder) => (
+            <CommissionReminderItem key={reminder.proposalId} reminder={reminder} onDismiss={handleDismiss} />
           ))
         ) : (
           <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-4">

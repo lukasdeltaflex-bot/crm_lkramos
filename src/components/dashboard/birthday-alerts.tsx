@@ -2,12 +2,13 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { BellRing, UserCheck } from 'lucide-react';
+import { BellRing, UserCheck, X } from 'lucide-react';
 import { customerBirthdayAlert } from '@/ai/flows/customer-birthday-alert';
 import { useEffect, useState, useMemo } from 'react';
 import { Skeleton } from '../ui/skeleton';
 import type { Customer } from '@/lib/types';
 import { getAge } from '@/lib/utils';
+import { Button } from '../ui/button';
 
 type AlertMessage = {
   customerId: string;
@@ -20,18 +21,26 @@ interface BirthdayAlertsProps {
   isLoading: boolean;
 }
 
-function BirthdayAlertItem({ alert }: { alert: AlertMessage }) {
+function BirthdayAlertItem({ alert, onDismiss }: { alert: AlertMessage; onDismiss: (id: string) => void }) {
   return (
     <Alert variant="warning">
       <BellRing className="h-4 w-4" />
       <AlertTitle>{alert.customerName}</AlertTitle>
       <AlertDescription>{alert.alertMessage}</AlertDescription>
+      <button 
+        onClick={() => onDismiss(alert.customerId)} 
+        className="absolute top-2 right-2 p-1 text-muted-foreground/80 hover:text-foreground rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        aria-label="Dispensar alerta"
+      >
+        <X className="h-4 w-4" />
+      </button>
     </Alert>
   );
 }
 
 export function BirthdayAlerts({ customers, isLoading }: BirthdayAlertsProps) {
   const [alerts, setAlerts] = useState<AlertMessage[]>([]);
+  const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(true);
 
   const upcoming75 = useMemo(() => {
@@ -70,6 +79,11 @@ export function BirthdayAlerts({ customers, isLoading }: BirthdayAlertsProps) {
     fetchAlerts();
   }, [isLoading, upcoming75]);
 
+  const handleDismiss = (customerId: string) => {
+    setDismissedAlerts(prev => [...prev, customerId]);
+  };
+
+  const visibleAlerts = alerts.filter(alert => !dismissedAlerts.includes(alert.customerId));
   const showLoadingState = isLoading || isGenerating;
 
   return (
@@ -85,14 +99,14 @@ export function BirthdayAlerts({ customers, isLoading }: BirthdayAlertsProps) {
                 <Skeleton className="h-4 w-full" />
             </div>
           </div>
-        ) : alerts.length > 0 ? (
-          alerts.map((alert) => (
-            <BirthdayAlertItem key={alert.customerId} alert={alert} />
+        ) : visibleAlerts.length > 0 ? (
+          visibleAlerts.map((alert) => (
+            <BirthdayAlertItem key={alert.customerId} alert={alert} onDismiss={handleDismiss} />
           ))
         ) : (
           <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-4">
              <UserCheck className="h-8 w-8 mb-2" />
-            <p>Nenhum cliente próximo dos 75 anos.</p>
+            <p>Nenhum alerta de aniversário no momento.</p>
           </div>
         )}
       </CardContent>

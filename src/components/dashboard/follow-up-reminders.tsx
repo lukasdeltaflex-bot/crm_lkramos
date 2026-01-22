@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Clock, Info } from 'lucide-react';
+import { Clock, Info, X } from 'lucide-react';
 import { followUpReminder } from '@/ai/flows/follow-up-reminder';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '../ui/skeleton';
@@ -23,18 +23,26 @@ interface FollowUpRemindersProps {
     isLoading: boolean;
 }
 
-function FollowUpReminderItem({ reminder }: { reminder: ReminderMessage }) {
+function FollowUpReminderItem({ reminder, onDismiss }: { reminder: ReminderMessage; onDismiss: (id: string) => void }) {
   return (
     <Alert variant="warning">
       <Clock className="h-4 w-4" />
       <AlertTitle>{reminder.customerName} (Proposta: {reminder.proposalNumber})</AlertTitle>
       <AlertDescription>{reminder.reminderMessage}</AlertDescription>
+      <button 
+        onClick={() => onDismiss(reminder.proposalId)} 
+        className="absolute top-2 right-2 p-1 text-muted-foreground/80 hover:text-foreground rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        aria-label="Dispensar alerta"
+      >
+        <X className="h-4 w-4" />
+      </button>
     </Alert>
   );
 }
 
 export function FollowUpReminders({ proposals, customers, isLoading }: FollowUpRemindersProps) {
   const [reminders, setReminders] = useState<ReminderMessage[]>([]);
+  const [dismissedReminders, setDismissedReminders] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(true);
 
   const longRunningProposals = useMemo(() => {
@@ -78,7 +86,12 @@ export function FollowUpReminders({ proposals, customers, isLoading }: FollowUpR
     }
     fetchReminders();
   }, [isLoading, JSON.stringify(longRunningProposals)]);
+  
+  const handleDismiss = (proposalId: string) => {
+    setDismissedReminders(prev => [...prev, proposalId]);
+  };
 
+  const visibleReminders = reminders.filter(r => !dismissedReminders.includes(r.proposalId));
   const showLoadingState = isLoading || isGenerating;
 
   return (
@@ -94,9 +107,9 @@ export function FollowUpReminders({ proposals, customers, isLoading }: FollowUpR
                 <Skeleton className="h-4 w-full" />
               </div>
           </div>
-        ) : reminders.length > 0 ? (
-          reminders.map((reminder) => (
-            <FollowUpReminderItem key={reminder.proposalId} reminder={reminder} />
+        ) : visibleReminders.length > 0 ? (
+          visibleReminders.map((reminder) => (
+            <FollowUpReminderItem key={reminder.proposalId} reminder={reminder} onDismiss={handleDismiss} />
           ))
         ) : (
           <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-4">
