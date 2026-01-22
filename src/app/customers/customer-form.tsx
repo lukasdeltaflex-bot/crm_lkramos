@@ -69,7 +69,7 @@ type CustomerFormValues = z.infer<typeof customerSchema>;
 
 type FormCustomer = Omit<Customer, 'id' | 'ownerId' | 'numericId'>;
 
-type CustomerFormData = Partial<Omit<Customer, 'id' | 'ownerId'>>;
+type CustomerFormData = Partial<Omit<Customer, 'id' | 'ownerId']>;
 
 interface CustomerFormProps {
   customer?: Customer;
@@ -648,10 +648,10 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
             {isSaving ? (
                 <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Salvando...
+                    <span>Salvando...</span>
                 </>
             ) : (
-                'Salvar Cliente'
+                <span>Salvar Cliente</span>
             )}
           </Button>
         </div>
@@ -659,5 +659,3 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
     </Form>
   );
 }
-
-    

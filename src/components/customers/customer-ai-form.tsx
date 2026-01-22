@@ -77,12 +77,12 @@ export function CustomerAiForm({ onSubmit }: CustomerAiFormProps) {
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Analisando...
+              <span>Analisando...</span>
             </>
           ) : (
             <>
               <Sparkles className="mr-2 h-4 w-4" />
-              Analisar e Preencher Formulário
+              <span>Analisar e Preencher Formulário</span>
             </>
           )}
         </Button>

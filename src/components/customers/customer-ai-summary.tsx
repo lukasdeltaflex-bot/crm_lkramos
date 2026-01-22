@@ -89,9 +89,9 @@ export function CustomerAiSummary({ customer, proposals }: CustomerAiSummaryProp
         </div>
         <Button onClick={handleGenerateSummary} disabled={isSummarizing}>
           {isSummarizing ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Gerando...</>
+            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> <span>Gerando...</span></>
           ) : (
-            <><Sparkles className="mr-2 h-4 w-4" /> Gerar Análise</>
+            <><Sparkles className="mr-2 h-4 w-4" /> <span>Gerar Análise</span></>
           )}
         </Button>
       </CardHeader>

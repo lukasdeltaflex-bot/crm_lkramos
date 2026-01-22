@@ -213,9 +213,9 @@ export function CommissionReconciliation({ proposals, onFinished }: CommissionRe
         <div className="flex items-center justify-end gap-2">
             <Button onClick={handleExtractAndReconcile} disabled={isLoading} variant="secondary">
             {isLoading ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analisando...</>
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> <span>Analisando...</span></>
             ) : (
-                <><Sparkles className="mr-2 h-4 w-4" /> Analisar Relatório</>
+                <><Sparkles className="mr-2 h-4 w-4" /> <span>Analisar Relatório</span></>
             )}
             </Button>
             {results.length > 0 && results.some(r => r.status === 'matched') && (

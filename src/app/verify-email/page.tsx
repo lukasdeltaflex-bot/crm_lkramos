@@ -94,10 +94,10 @@ function VerifyEmailContent() {
                 {isLoading ? (
                     <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Reenviando...
+                        <span>Reenviando...</span>
                     </>
                 ) : (
-                    'Reenviar E-mail de Verificação'
+                    <span>Reenviar E-mail de Verificação</span>
                 )}
             </Button>
             <Link href="/login" className="text-sm text-primary hover:underline">
