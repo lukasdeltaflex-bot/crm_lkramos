@@ -26,7 +26,7 @@ import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import * as configData from '@/lib/config-data';
-import type { Proposal, Customer, Attachment, UserSettings } from '@/lib/types';
+import type { Proposal, Customer, Attachment, UserSettings, CommissionStatus } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -43,7 +43,7 @@ import { doc, collection } from 'firebase/firestore'; // Only for ID generation
 import { useFirestore } from '@/firebase';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Logo } from '@/components/logo';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 
@@ -340,8 +340,8 @@ export function ProposalForm({ proposal, customers, userSettings, isReadOnly, on
                           placeholder="Pesquisar por nome ou CPF..."
                         />
                         <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
-                        <CommandGroup>
-                          <ScrollArea className="h-72">
+                        <CommandList>
+                          <CommandGroup>
                             {customers.map((customer) => (
                               <CommandItem
                                 value={`${customer.name} ${customer.cpf}`}
@@ -365,8 +365,8 @@ export function ProposalForm({ proposal, customers, userSettings, isReadOnly, on
                                 </div>
                               </CommandItem>
                             ))}
-                          </ScrollArea>
-                        </CommandGroup>
+                          </CommandGroup>
+                        </CommandList>
                       </Command>
                     </PopoverContent>
                   </Popover>
