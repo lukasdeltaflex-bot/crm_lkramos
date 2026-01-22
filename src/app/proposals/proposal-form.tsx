@@ -339,15 +339,15 @@ export function ProposalForm({ proposal, customers, userSettings, isReadOnly, on
                         <CommandInput
                           placeholder="Pesquisar por nome ou CPF..."
                         />
-                        <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
                         <CommandList>
+                          <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
                           <CommandGroup>
                             {customers.map((customer) => (
                               <CommandItem
-                                value={`${customer.name} ${customer.cpf}`}
+                                value={customer.id}
                                 key={customer.id}
-                                onSelect={() => {
-                                  field.onChange(customer.id);
+                                onSelect={(currentValue) => {
+                                  field.onChange(currentValue);
                                   setIsCustomerSelectorOpen(false);
                                 }}
                               >
