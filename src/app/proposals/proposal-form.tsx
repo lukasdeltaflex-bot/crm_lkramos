@@ -44,7 +44,7 @@ import { useFirestore } from '@/firebase';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Logo } from '@/components/logo';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 
 const attachmentSchema = z.object({
@@ -313,8 +313,8 @@ export function ProposalForm({ proposal, customers, userSettings, isReadOnly, on
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Cliente</FormLabel>
-                  <Dialog open={isCustomerSelectorOpen} onOpenChange={setIsCustomerSelectorOpen}>
-                    <DialogTrigger asChild>
+                  <Popover open={isCustomerSelectorOpen} onOpenChange={setIsCustomerSelectorOpen}>
+                    <PopoverTrigger asChild>
                       <FormControl>
                         <Button
                           variant="outline"
@@ -333,11 +333,8 @@ export function ProposalForm({ proposal, customers, userSettings, isReadOnly, on
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </FormControl>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-xl p-0" onCloseAutoFocus={(e) => e.preventDefault()}>
-                      <DialogHeader className="p-4 pb-0">
-                        <DialogTitle>Selecione um Cliente</DialogTitle>
-                      </DialogHeader>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                       <Command>
                         <CommandInput
                           placeholder="Pesquisar por nome ou CPF..."
@@ -371,8 +368,8 @@ export function ProposalForm({ proposal, customers, userSettings, isReadOnly, on
                           </ScrollArea>
                         </CommandGroup>
                       </Command>
-                    </DialogContent>
-                  </Dialog>
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
