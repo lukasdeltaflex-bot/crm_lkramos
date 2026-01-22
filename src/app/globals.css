@@ -70,7 +70,7 @@
   }
 
   /* Theme: Zinc */
-  :root.theme-zinc {
+  html:not(.dark).theme-zinc {
     --primary: 240 5.9% 10%;
     --primary-foreground: 240 5.9% 90%;
     --accent: 240 5.9% 20%;
@@ -90,7 +90,7 @@
   }
 
   /* Theme: Blue */
-  :root.theme-blue {
+  html:not(.dark).theme-blue {
     --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 217.2 91.2% 9.8%;
     --accent: 217.2 91.2% 69.8%;
@@ -110,7 +110,7 @@
   }
 
   /* Theme: Green */
-  :root.theme-green {
+  html:not(.dark).theme-green {
     --primary: 142.1 76.2% 36.3%;
     --primary-foreground: 142.1 76.2% 96.3%;
     --accent: 142.1 76.2% 46.3%;
@@ -130,7 +130,7 @@
   }
 
   /* Theme: Violet */
-  :root.theme-violet {
+  html:not(.dark).theme-violet {
     --primary: 262.1 83.3% 57.8%;
     --primary-foreground: 262.1 83.3% 97.8%;
     --accent: 262.1 83.3% 67.8%;
@@ -150,7 +150,7 @@
   }
 
   /* Theme: Orange */
-  :root.theme-orange {
+  html:not(.dark).theme-orange {
     --primary: 24.6 95% 53.1%;
     --primary-foreground: 24.6 95% 93.1%;
     --accent: 24.6 95% 63.1%;
@@ -170,7 +170,7 @@
   }
 
   /* Theme: Red */
-  :root.theme-red {
+  html:not(.dark).theme-red {
     --primary: 0 72.2% 50.6%;
     --primary-foreground: 0 72.2% 90.6%;
     --accent: 0 72.2% 60.6%;
@@ -190,7 +190,7 @@
   }
 
   /* Theme: Rose */
-  :root.theme-rose {
+  html:not(.dark).theme-rose {
     --primary: 346.8 77.2% 49.8%;
     --primary-foreground: 346.8 77.2% 9.8%;
     --accent: 346.8 77.2% 59.8%;
@@ -210,7 +210,7 @@
   }
 
   /* Theme: Gray */
-  :root.theme-gray {
+  html:not(.dark).theme-gray {
     --primary: 220 9% 46%;
     --primary-foreground: 220 9% 96%;
     --accent: 220 9% 56%;
@@ -230,7 +230,7 @@
   }
 
   /* Theme: Yellow */
-  :root.theme-yellow {
+  html:not(.dark).theme-yellow {
     --primary: 45 93% 47%;
     --primary-foreground: 45 93% 7%;
     --accent: 45 93% 57%;
@@ -250,7 +250,7 @@
   }
 
   /* Theme: Cyan */
-  :root.theme-cyan {
+  html:not(.dark).theme-cyan {
     --primary: 184 90% 41%;
     --primary-foreground: 184 90% 91%;
     --accent: 184 90% 51%;
@@ -270,7 +270,7 @@
   }
 
   /* Theme: Purple */
-  :root.theme-purple {
+  html:not(.dark).theme-purple {
     --primary: 282 78% 51%;
     --primary-foreground: 282 78% 91%;
     --accent: 282 78% 61%;
@@ -290,7 +290,7 @@
   }
   
   /* Theme: Magenta */
-  :root.theme-magenta {
+  html:not(.dark).theme-magenta {
     --primary: 322 84% 50%;
     --primary-foreground: 322 84% 90%;
     --accent: 322 84% 60%;
@@ -310,7 +310,7 @@
   }
   
   /* Theme: Emerald */
-  :root.theme-emerald {
+  html:not(.dark).theme-emerald {
     --primary: 158 78% 41%;
     --primary-foreground: 158 78% 91%;
     --accent: 158 78% 51%;
@@ -330,7 +330,7 @@
   }
   
   /* Theme: Burnt Orange */
-  :root.theme-burnt-orange {
+  html:not(.dark).theme-burnt-orange {
     --primary: 16 84% 44%;
     --primary-foreground: 16 84% 94%;
     --accent: 16 84% 54%;
@@ -350,7 +350,7 @@
   }
   
   /* Theme: Sky Blue */
-  :root.theme-sky-blue {
+  html:not(.dark).theme-sky-blue {
     --primary: 199 89% 48%;
     --primary-foreground: 199 89% 98%;
     --accent: 199 89% 58%;
@@ -370,7 +370,7 @@
   }
   
   /* Theme: Pink */
-  :root.theme-pink {
+  html:not(.dark).theme-pink {
     --primary: 336 82% 54%;
     --primary-foreground: 336 82% 94%;
     --accent: 336 82% 64%;
@@ -390,7 +390,7 @@
   }
 
   /* Theme: Mint */
-  :root.theme-mint {
+  html:not(.dark).theme-mint {
     --primary: 168 86% 44%;
     --primary-foreground: 168 86% 94%;
     --accent: 168 86% 54%;
@@ -410,7 +410,7 @@
   }
 
   /* Theme: Lavender */
-  :root.theme-lavender {
+  html:not(.dark).theme-lavender {
     --primary: 250 60% 60%;
     --primary-foreground: 250 60% 10%;
     --accent: 250 60% 70%;
@@ -430,7 +430,7 @@
   }
 
   /* Theme: Peach */
-  :root.theme-peach {
+  html:not(.dark).theme-peach {
     --primary: 29 100% 65%;
     --primary-foreground: 29 100% 15%;
     --accent: 29 100% 75%;
@@ -450,7 +450,7 @@
   }
   
   /* Theme: Slate */
-  :root.theme-slate {
+  html:not(.dark).theme-slate {
     --primary: 215 25% 27%;
     --primary-foreground: 215 25% 97%;
     --accent: 215 25% 37%;
