@@ -26,7 +26,7 @@ import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import * as configData from '@/lib/config-data';
-import type { Proposal, Customer, Attachment, UserSettings, CommissionStatus } from '@/lib/types';
+import type { Proposal, Customer, Attachment, UserSettings } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -345,7 +345,7 @@ export function ProposalForm({ proposal, customers, userSettings, isReadOnly, on
                                         value={`${customer.name} ${customer.cpf}`}
                                         key={customer.id}
                                         onSelect={() => {
-                                            field.onChange(customer.id)
+                                            form.setValue("customerId", customer.id)
                                             setOpenCustomerSelector(false)
                                         }}
                                     >
