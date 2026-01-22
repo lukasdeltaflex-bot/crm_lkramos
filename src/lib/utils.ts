@@ -12,6 +12,19 @@ export function formatCurrency(amount: number) {
   }).format(amount);
 }
 
+export function getAge(birthDate: string): number {
+  if (!birthDate || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) return 0;
+  const [year, month, day] = birthDate.split('-').map(Number);
+  const today = new Date();
+  const birth = new Date(year, month - 1, day);
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age;
+}
+
 /**
  * Checks if a phone number is likely a WhatsApp number.
  * Heuristic: checks if the number (after DDD) has 9 digits.

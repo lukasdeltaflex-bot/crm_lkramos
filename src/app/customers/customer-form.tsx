@@ -22,7 +22,7 @@ import { CalendarIcon, Sparkles, AlertCircle, Loader2, PlusCircle, Trash2 } from
 import { Calendar } from '@/components/ui/calendar';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
+import { cn, getAge } from '@/lib/utils';
 import type { Customer, Benefit } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
@@ -116,17 +116,12 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
   useEffect(() => {
     if (birthDateValue && birthDateValue.length === 10) {
       try {
-        const birth = parse(birthDateValue, 'dd/MM/yyyy', new Date());
-        if (!isNaN(birth.getTime())) {
-          const today = new Date();
-          let calculatedAge = today.getFullYear() - birth.getFullYear();
-          const m = today.getMonth() - birth.getMonth();
-          if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-            calculatedAge--;
-          }
-          setAge(calculatedAge);
+        const parsedDate = parse(birthDateValue, 'dd/MM/yyyy', new Date());
+        if (!isNaN(parsedDate.getTime())) {
+          const formattedForUtil = format(parsedDate, 'yyyy-MM-dd');
+          setAge(getAge(formattedForUtil));
         } else {
-            setAge(null)
+            setAge(null);
         }
       } catch {
         setAge(null);
@@ -644,16 +639,16 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
           </div>
         </ScrollArea>
         <div className="flex justify-end pt-8">
-          <Button type="submit" disabled={isSaving}>
-            {isSaving ? (
-                <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    <span>Salvando...</span>
-                </>
-            ) : (
-                <span>Salvar Cliente</span>
-            )}
-          </Button>
+            <Button type="submit" disabled={isSaving}>
+                {isSaving ? (
+                    <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <span>Salvando...</span>
+                    </>
+                ) : (
+                    <span>Salvar Cliente</span>
+                )}
+            </Button>
         </div>
       </form>
     </Form>

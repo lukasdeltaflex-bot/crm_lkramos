@@ -7,6 +7,7 @@ import { customerBirthdayAlert } from '@/ai/flows/customer-birthday-alert';
 import { useEffect, useState, useMemo } from 'react';
 import { Skeleton } from '../ui/skeleton';
 import type { Customer } from '@/lib/types';
+import { getAge } from '@/lib/utils';
 
 type AlertMessage = {
   customerId: string;
@@ -32,17 +33,6 @@ function BirthdayAlertItem({ alert }: { alert: AlertMessage }) {
 export function BirthdayAlerts({ customers, isLoading }: BirthdayAlertsProps) {
   const [alerts, setAlerts] = useState<AlertMessage[]>([]);
   const [isGenerating, setIsGenerating] = useState(true);
-
-  const getAge = (birthDate: string) => {
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const m = today.getMonth() - birth.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-      age--;
-    }
-    return age;
-  };
 
   const upcoming75 = useMemo(() => {
     if (!customers) return [];
@@ -78,7 +68,7 @@ export function BirthdayAlerts({ customers, isLoading }: BirthdayAlertsProps) {
       setIsGenerating(false);
     }
     fetchAlerts();
-  }, [isLoading, JSON.stringify(upcoming75)]);
+  }, [isLoading, upcoming75]);
 
   const showLoadingState = isLoading || isGenerating;
 

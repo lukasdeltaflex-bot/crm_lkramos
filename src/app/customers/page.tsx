@@ -37,8 +37,11 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getAge } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
-type CustomerFormData = Partial<Omit<Customer, 'id' | 'ownerId' | 'numericId'>>;
+type CustomerFormData = Partial<Omit<Customer, 'id' | 'ownerId'>>;
 
 export default function CustomersPage() {
   const { user, isUserLoading } = useUser();
@@ -52,6 +55,7 @@ export default function CustomersPage() {
   const [rowSelection, setRowSelection] = React.useState({});
   const [isSaving, setIsSaving] = React.useState(false);
   const tableRef = React.useRef<CustomerDataTableHandle>(null);
+  const [filter, setFilter] = React.useState('active');
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -138,6 +142,26 @@ export default function CustomersPage() {
     setIsDialog(true);
   }
   const nonAnonymizedCustomers = customers?.filter(c => c.name !== 'Cliente Removido') || [];
+
+  const { activeCustomers, inactiveCustomers } = React.useMemo(() => {
+    if (!nonAnonymizedCustomers) return { activeCustomers: [], inactiveCustomers: [] };
+
+    const active: Customer[] = [];
+    const inactive: Customer[] = [];
+
+    nonAnonymizedCustomers.forEach(customer => {
+      if (getAge(customer.birthDate) >= 75) {
+        inactive.push(customer);
+      } else {
+        active.push(customer);
+      }
+    });
+
+    return { activeCustomers: active, inactiveCustomers: inactive };
+  }, [nonAnonymizedCustomers]);
+
+  const displayedCustomers = filter === 'active' ? activeCustomers : inactiveCustomers;
+
 
   const handleExportToExcel = async () => {
     const table = tableRef.current?.table;
@@ -513,7 +537,19 @@ const handleExportToPdf = async () => {
             </Button>
         </div>
       </div>
-      <Dialog open={isDialog} onOpenChange={setIsDialog}>
+      <Tabs value={filter} onValueChange={setFilter} className="mb-4">
+        <TabsList>
+          <TabsTrigger value="active">
+            Clientes Ativos
+            <Badge variant="secondary" className="ml-2">{activeCustomers.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="inactive">
+            Clientes com 75+ anos
+            <Badge variant="secondary" className="ml-2">{inactiveCustomers.length}</Badge>
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+      <Dialog open={isDialog} onOpenChange={setIsDialog} onCloseAutoFocus={(e) => e.preventDefault()}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle>{getSheetTitle()}</DialogTitle>
@@ -529,7 +565,7 @@ const handleExportToPdf = async () => {
       <CustomerDataTable 
         ref={tableRef}
         columns={columns} 
-        data={nonAnonymizedCustomers} 
+        data={displayedCustomers} 
         isLoading={isLoading}
         rowSelection={rowSelection}
         setRowSelection={setRowSelection}

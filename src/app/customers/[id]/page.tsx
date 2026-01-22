@@ -1,5 +1,5 @@
 'use client';
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useParams } from 'next/navigation';
 import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
@@ -9,12 +9,12 @@ import type { Customer, Proposal } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { User, Phone, Mail, Calendar, FileText, CircleDollarSign, BadgePercent, MapPin, Hash, Copy } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { StatsCard } from '@/components/dashboard/stats-card';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, getAge } from '@/lib/utils';
 import { SimpleProposalsTable } from '@/components/customers/simple-proposals-table';
 import { Separator } from '@/components/ui/separator';
 import { CustomerAiSummary } from '@/components/customers/customer-ai-summary';
@@ -43,19 +43,7 @@ const CopyButton = ({ text, label }: { text: string; label: string }) => {
 }
 
 const CustomerInfoCard = ({ customer }: { customer: Customer }) => {
-    const [age, setAge] = React.useState<number | null>(null);
-
-    React.useEffect(() => {
-        const today = new Date();
-        const birth = new Date(customer.birthDate);
-        let calculatedAge = today.getFullYear() - birth.getFullYear();
-        const m = today.getMonth() - birth.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-          calculatedAge--;
-        }
-        setAge(calculatedAge);
-    }, [customer.birthDate]);
-
+    const age = getAge(customer.birthDate);
     const isWhatsAppNumber1 = isWhatsApp(customer.phone);
     const isWhatsAppNumber2 = customer.phone2 ? isWhatsApp(customer.phone2) : false;
     
@@ -90,7 +78,7 @@ const CustomerInfoCard = ({ customer }: { customer: Customer }) => {
                         </div>
                         <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
-                            <strong>Nascimento:</strong> {format(new Date(customer.birthDate), 'dd/MM/yyyy', { locale: ptBR })} ({age !== null ? `${age} anos` : '...'})
+                            <strong>Nascimento:</strong> {format(parse(customer.birthDate, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy', { locale: ptBR })} ({age > 0 ? `${age} anos` : '...'})
                         </div>
                         <div className="flex items-center gap-2">
                             <Phone className="h-4 w-4 text-muted-foreground" />
@@ -184,7 +172,7 @@ const CustomerInfoCard = ({ customer }: { customer: Customer }) => {
 }
 
 const CustomerFinancialSummary = ({ proposals }: { proposals: Proposal[] }) => {
-    const summary = useMemo(() => {
+    const summary = React.useMemo(() => {
       let totalContracted = 0;
       let totalCommission = 0;
   
