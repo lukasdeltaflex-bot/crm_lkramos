@@ -353,23 +353,21 @@ export function ProposalForm({ proposal, customers, userSettings, isReadOnly, on
                                                 {customers.map((customer) => (
                                                     <CommandItem
                                                         key={customer.id}
-                                                        onSelect={() => {
-                                                            form.setValue("customerId", customer.id);
+                                                        value={customer.id}
+                                                        onSelect={(currentValue) => {
+                                                            form.setValue("customerId", currentValue);
                                                             setCustomerSearchOpen(false);
                                                         }}
                                                     >
                                                         <Check
                                                             className={cn(
                                                                 "mr-2 h-4 w-4",
-                                                                customer.id === field.value
+                                                                field.value === customer.id
                                                                     ? "opacity-100"
                                                                     : "opacity-0"
                                                             )}
                                                         />
-                                                        <div className="flex flex-col">
-                                                            <span>{customer.name}</span>
-                                                            <span className="text-xs text-muted-foreground">{customer.cpf}</span>
-                                                        </div>
+                                                        {customer.name} - {customer.cpf}
                                                     </CommandItem>
                                                 ))}
                                             </CommandGroup>
