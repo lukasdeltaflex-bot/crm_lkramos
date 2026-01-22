@@ -72,27 +72,10 @@ export function FinancialSummary({ rows, isPrivacyMode, isFiltered, onShowDetail
     
     const commissionReceivedProposals = proposalsForMonth.filter(p => p.amountPaid && p.amountPaid > 0);
     
-    const commissionPendingProposals = proposalsForMonth.filter(proposal => {
-        const hasUnpaidCommission = (proposal.commissionValue || 0) > (proposal.amountPaid || 0);
-        if (!hasUnpaidCommission) {
-            return false;
-        }
-
-        const status = proposal.status;
-        const hasDateApproved = !!proposal.dateApproved;
-
-        if (status === 'Pago' || status === 'Saldo Pago') {
-            return true;
-        }
-
-        if ((status === 'Pendente' || status === 'Em Andamento') && hasDateApproved) {
-            return true;
-        }
-
-        return false;
-    });
+    const commissionPendingProposals = proposalsForMonth.filter(proposal => proposal.commissionStatus === 'Pendente');
 
     const pendingAmount = commissionPendingProposals.reduce((sum, p) => {
+        // For pending, amountPaid should be 0, but we calculate defensively
         return sum + ((p.commissionValue || 0) - (p.amountPaid || 0));
     }, 0);
 
