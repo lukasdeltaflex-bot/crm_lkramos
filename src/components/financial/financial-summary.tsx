@@ -72,11 +72,10 @@ export function FinancialSummary({ rows, isPrivacyMode, isFiltered, onShowDetail
     const commissionReceivedProposals = proposalsForMonth.filter(p => p.amountPaid && p.amountPaid > 0);
     
     const commissionPendingProposals = proposalsForMonth.filter(
-      (p) => p.commissionStatus === 'Pendente'
+      (p) => p.commissionStatus === 'Pendente' || p.commissionStatus === 'Parcial'
     );
 
     const pendingAmount = commissionPendingProposals.reduce((sum, p) => {
-      // For pending, amountPaid should be 0, but we calculate defensively
       return sum + ((p.commissionValue || 0) - (p.amountPaid || 0));
     }, 0);
 
