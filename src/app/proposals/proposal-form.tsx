@@ -345,7 +345,7 @@ export function ProposalForm({ proposal, customers, userSettings, isReadOnly, on
                                         value={customer.id}
                                         key={customer.id}
                                         onSelect={(currentValue) => {
-                                            form.setValue("customerId", currentValue)
+                                            form.setValue("customerId", currentValue === field.value ? "" : currentValue)
                                             setOpenCustomerSelector(false)
                                         }}
                                     >
