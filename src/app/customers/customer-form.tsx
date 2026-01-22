@@ -645,11 +645,19 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
         </ScrollArea>
         <div className="flex justify-end pt-8">
           <Button type="submit" disabled={isSaving}>
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSaving ? 'Salvando...' : 'Salvar Cliente'}
+            {isSaving ? (
+                <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Salvando...
+                </>
+            ) : (
+                'Salvar Cliente'
+            )}
           </Button>
         </div>
       </form>
     </Form>
   );
 }
+
+    
