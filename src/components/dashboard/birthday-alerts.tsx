@@ -21,6 +21,8 @@ interface BirthdayAlertsProps {
   isLoading: boolean;
 }
 
+const DISMISS_STORAGE_KEY = 'dismissed-birthday-alerts-v1';
+
 function BirthdayAlertItem({ alert, onDismiss }: { alert: AlertMessage; onDismiss: (id: string) => void }) {
   return (
     <Alert variant="warning">
@@ -42,6 +44,20 @@ export function BirthdayAlerts({ customers, isLoading }: BirthdayAlertsProps) {
   const [alerts, setAlerts] = useState<AlertMessage[]>([]);
   const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(true);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    try {
+      const storedDismissed = localStorage.getItem(DISMISS_STORAGE_KEY);
+      if (storedDismissed) {
+        setDismissedAlerts(JSON.parse(storedDismissed));
+      }
+    } catch (error) {
+      console.error("Failed to parse dismissed alerts from localStorage", error);
+      localStorage.removeItem(DISMISS_STORAGE_KEY);
+    }
+  }, []);
 
   const upcoming75 = useMemo(() => {
     if (!customers) return [];
@@ -80,10 +96,16 @@ export function BirthdayAlerts({ customers, isLoading }: BirthdayAlertsProps) {
   }, [isLoading, upcoming75]);
 
   const handleDismiss = (customerId: string) => {
-    setDismissedAlerts(prev => [...prev, customerId]);
+    const newDismissed = [...dismissedAlerts, customerId];
+    setDismissedAlerts(newDismissed);
+    try {
+        localStorage.setItem(DISMISS_STORAGE_KEY, JSON.stringify(newDismissed));
+    } catch (error) {
+        console.error("Failed to save dismissed alerts to localStorage", error);
+    }
   };
 
-  const visibleAlerts = alerts.filter(alert => !dismissedAlerts.includes(alert.customerId));
+  const visibleAlerts = isClient ? alerts.filter(alert => !dismissedAlerts.includes(alert.customerId)) : [];
   const showLoadingState = isLoading || isGenerating;
 
   return (
@@ -99,7 +121,7 @@ export function BirthdayAlerts({ customers, isLoading }: BirthdayAlertsProps) {
                 <Skeleton className="h-4 w-full" />
             </div>
           </div>
-        ) : visibleAlerts.length > 0 ? (
+        ) : isClient && visibleAlerts.length > 0 ? (
           visibleAlerts.map((alert) => (
             <BirthdayAlertItem key={alert.customerId} alert={alert} onDismiss={handleDismiss} />
           ))

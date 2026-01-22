@@ -22,6 +22,8 @@ interface PartialCommissionRemindersProps {
     isLoading: boolean;
 }
 
+const DISMISS_STORAGE_KEY = 'dismissed-partial-commission-reminders-v1';
+
 function PartialCommissionReminderItem({ reminder, onDismiss }: { reminder: ReminderMessage; onDismiss: (id: string) => void }) {
   return (
     <Alert variant="destructive">
@@ -43,6 +45,20 @@ export function PartialCommissionReminders({ proposals, customers, isLoading }: 
   const [reminders, setReminders] = useState<ReminderMessage[]>([]);
   const [dismissedReminders, setDismissedReminders] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(true);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    try {
+      const storedDismissed = localStorage.getItem(DISMISS_STORAGE_KEY);
+      if (storedDismissed) {
+        setDismissedReminders(JSON.parse(storedDismissed));
+      }
+    } catch (error) {
+        console.error("Failed to parse dismissed alerts from localStorage", error);
+        localStorage.removeItem(DISMISS_STORAGE_KEY);
+    }
+  }, []);
 
   const partialCommissions = useMemo(() => {
     if (!customers || !proposals) return [];
@@ -93,10 +109,16 @@ export function PartialCommissionReminders({ proposals, customers, isLoading }: 
   }, [isLoading, JSON.stringify(partialCommissions)]);
 
   const handleDismiss = (proposalId: string) => {
-    setDismissedReminders(prev => [...prev, proposalId]);
+    const newDismissed = [...dismissedReminders, proposalId];
+    setDismissedReminders(newDismissed);
+    try {
+        localStorage.setItem(DISMISS_STORAGE_KEY, JSON.stringify(newDismissed));
+    } catch (error) {
+        console.error("Failed to save dismissed alerts to localStorage", error);
+    }
   };
 
-  const visibleReminders = reminders.filter(r => !dismissedReminders.includes(r.proposalId));
+  const visibleReminders = isClient ? reminders.filter(r => !dismissedReminders.includes(r.proposalId)) : [];
   const showLoadingState = isLoading || isGenerating;
 
   return (
@@ -112,7 +134,7 @@ export function PartialCommissionReminders({ proposals, customers, isLoading }: 
                 <Skeleton className="h-4 w-full" />
               </div>
           </div>
-        ) : visibleReminders.length > 0 ? (
+        ) : isClient && visibleReminders.length > 0 ? (
           visibleReminders.map((reminder) => (
             <PartialCommissionReminderItem key={reminder.proposalId} reminder={reminder} onDismiss={handleDismiss} />
           ))
