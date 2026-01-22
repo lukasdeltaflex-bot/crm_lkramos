@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Info, Copy, Printer } from 'lucide-react';
+import { Info, Copy, Printer, Check, ChevronsUpDown } from 'lucide-react';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -43,6 +43,19 @@ import { doc, collection } from 'firebase/firestore'; // Only for ID generation
 import { useFirestore } from '@/firebase';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Logo } from '@/components/logo';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command";
 
 
 const attachmentSchema = z.object({
@@ -154,6 +167,7 @@ export function ProposalForm({ proposal, customers, userSettings, isReadOnly, on
   const firestore = useFirestore();
   const [tempProposalId, setTempProposalId] = useState<string | undefined>(undefined);
   const [isClient, setIsClient] = useState(false);
+  const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
 
   const productTypes = userSettings?.productTypes || configData.productTypes;
   const proposalStatuses = userSettings?.proposalStatuses || configData.proposalStatuses;
@@ -308,24 +322,64 @@ export function ProposalForm({ proposal, customers, userSettings, isReadOnly, on
                     control={form.control}
                     name="customerId"
                     render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Cliente</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isReadOnly}>
-                        <FormControl>
-                            <SelectTrigger>
-                            <SelectValue placeholder="Selecione um cliente" />
-                            </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                            {customers.map((customer) => (
-                            <SelectItem key={customer.id} value={customer.id}>
-                                {customer.name}
-                            </SelectItem>
-                            ))}
-                        </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
+                        <FormItem className="flex flex-col">
+                            <FormLabel>Cliente</FormLabel>
+                            <Popover open={customerSearchOpen} onOpenChange={setCustomerSearchOpen}>
+                                <PopoverTrigger asChild disabled={isReadOnly}>
+                                    <FormControl>
+                                        <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            className={cn(
+                                                "w-full justify-between",
+                                                !field.value && "text-muted-foreground"
+                                            )}
+                                        >
+                                            {field.value
+                                                ? customers.find(
+                                                    (customer) => customer.id === field.value
+                                                )?.name
+                                                : "Selecione um cliente"}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                    </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-full p-0" style={{ minWidth: 'var(--radix-popover-trigger-width)' }}>
+                                    <Command>
+                                        <CommandInput placeholder="Buscar cliente por nome ou CPF..." />
+                                        <CommandList>
+                                            <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
+                                            <CommandGroup>
+                                                {customers.map((customer) => (
+                                                    <CommandItem
+                                                        value={customer.id}
+                                                        key={customer.id}
+                                                        onSelect={(currentValue) => {
+                                                            field.onChange(currentValue)
+                                                            setCustomerSearchOpen(false)
+                                                        }}
+                                                    >
+                                                        <Check
+                                                            className={cn(
+                                                                "mr-2 h-4 w-4",
+                                                                customer.id === field.value
+                                                                    ? "opacity-100"
+                                                                    : "opacity-0"
+                                                            )}
+                                                        />
+                                                        <div>
+                                                            <p className="font-medium">{customer.name}</p>
+                                                            <p className="text-xs text-muted-foreground">{customer.cpf}</p>
+                                                        </div>
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                        </FormItem>
                     )}
                 />
                 <FormField
