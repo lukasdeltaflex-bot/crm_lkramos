@@ -312,7 +312,7 @@ export function ProposalForm({ proposal, customers, userSettings, isReadOnly, on
                     render={({ field }) => (
                         <FormItem className="flex flex-col">
                         <FormLabel>Cliente</FormLabel>
-                        <Popover open={openCustomerSelector} onOpenChange={setOpenCustomerSelector}>
+                        <Popover open={openCustomerSelector} onOpenChange={setOpenCustomerSelector} modal={false}>
                             <PopoverTrigger asChild>
                                 <FormControl>
                                     <Button
@@ -344,7 +344,7 @@ export function ProposalForm({ proposal, customers, userSettings, isReadOnly, on
                                                 key={customer.id}
                                                 value={`${customer.name} ${customer.cpf}`}
                                                 onSelect={() => {
-                                                    form.setValue("customerId", customer.id);
+                                                    form.setValue("customerId", customer.id, { shouldValidate: true });
                                                     setOpenCustomerSelector(false);
                                                 }}
                                             >
