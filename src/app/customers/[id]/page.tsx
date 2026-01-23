@@ -83,8 +83,9 @@ const CustomerInfoCard = ({ customer }: { customer: Customer }) => {
                         <div className="flex items-center gap-2">
                             <Phone className="h-4 w-4 text-muted-foreground" />
                             <strong>Telefone:</strong>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1">
                                 <span>{customer.phone}</span>
+                                <CopyButton text={customer.phone} label="Telefone" />
                                 {isWhatsAppNumber1 && (
                                 <a href={getWhatsAppUrl(customer.phone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600">
                                     <WhatsAppIcon />
@@ -96,8 +97,9 @@ const CustomerInfoCard = ({ customer }: { customer: Customer }) => {
                             <div className="flex items-center gap-2">
                                 <Phone className="h-4 w-4 text-muted-foreground" />
                                 <strong>Telefone 2:</strong>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1">
                                     <span>{customer.phone2}</span>
+                                    <CopyButton text={customer.phone2} label="Telefone 2" />
                                     {isWhatsAppNumber2 && (
                                     <a href={getWhatsAppUrl(customer.phone2)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600">
                                         <WhatsAppIcon />
