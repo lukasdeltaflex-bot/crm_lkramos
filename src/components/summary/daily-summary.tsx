@@ -83,6 +83,7 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
   // Memoize alert calculations
   const alertData = useMemo(() => {
     const getAge = (birthDate: string) => {
+        if (!birthDate) return 0;
         const today = new Date();
         const birth = new Date(birthDate);
         let age = today.getFullYear() - birth.getFullYear();
@@ -104,7 +105,7 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
         }));
 
     const followUpReminders = proposals
-      .filter(p => p.status === 'Em Andamento' && differenceInDays(new Date(), new Date(p.dateDigitized)) > 20)
+      .filter(p => p.status === 'Em Andamento' && p.dateDigitized && differenceInDays(new Date(), new Date(p.dateDigitized)) > 20)
       .map(p => ({
         id: `followup-${p.id}`,
         customerName: customerMap.get(p.customerId)?.name || 'Cliente Desconhecido',
@@ -234,7 +235,11 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
           description: `Um resumo das suas pendências foi enviado para ${userProfile.email}.`,
         });
       } else {
-        throw new Error(result.message);
+        toast({
+            variant: 'destructive',
+            title: 'Falha ao Enviar',
+            description: result.message,
+        });
       }
     } catch (error) {
       console.error('Error sending summary email:', error);
