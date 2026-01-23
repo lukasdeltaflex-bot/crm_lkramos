@@ -175,7 +175,7 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
                 </div>
              </div>
           ) : summary ? (
-            <div className="prose prose-sm max-w-none text-foreground bg-secondary/30 p-6 rounded-md">
+            <div className="prose prose-sm max-w-none text-foreground border bg-card p-6 rounded-lg shadow-sm">
               <ul className='list-disc space-y-2'>
                 {renderFormattedSummary(summary)}
               </ul>
