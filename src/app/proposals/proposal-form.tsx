@@ -43,19 +43,6 @@ import { doc, collection } from 'firebase/firestore'; // Only for ID generation
 import { useFirestore } from '@/firebase';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Logo } from '@/components/logo';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-  } from '@/components/ui/command';
 
 const attachmentSchema = z.object({
   name: z.string(),
@@ -122,6 +109,9 @@ interface ProposalFormProps {
   onDuplicate: (proposal: Proposal) => void;
   defaultValues?: ProposalFormData;
   sheetMode: 'new' | 'edit' | 'view';
+  onOpenCustomerSearch: () => void;
+  selectedCustomerFromSearch: Customer | null;
+  onCustomerSearchSelectionHandled: () => void;
 }
 
 const handleDateMask = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,10 +151,21 @@ const MaskedDatePicker = ({ name, label, control, isReadOnly }: { name: any, lab
 );
 
 
-export function ProposalForm({ proposal, customers, userSettings, isReadOnly, onSubmit, onDuplicate, defaultValues, sheetMode }: ProposalFormProps) {
+export function ProposalForm({ 
+    proposal, 
+    customers, 
+    userSettings, 
+    isReadOnly, 
+    onSubmit, 
+    onDuplicate, 
+    defaultValues, 
+    sheetMode,
+    onOpenCustomerSearch,
+    selectedCustomerFromSearch,
+    onCustomerSearchSelectionHandled
+}: ProposalFormProps) {
   const { user } = useUser();
   const firestore = useFirestore();
-  const [isCustomerPopoverOpen, setIsCustomerPopoverOpen] = useState(false);
   const [tempProposalId, setTempProposalId] = useState<string | undefined>(undefined);
   const [isClient, setIsClient] = useState(false);
 
@@ -200,6 +201,19 @@ export function ProposalForm({ proposal, customers, userSettings, isReadOnly, on
   const selectedCustomer = useMemo(() => {
     return customers.find(c => c.id === selectedCustomerId);
   }, [customers, selectedCustomerId]);
+  
+  const selectedCustomerName = useMemo(() => {
+    if (!selectedCustomerId) return "Nenhum cliente selecionado";
+    return customers.find(c => c.id === selectedCustomerId)?.name || "Cliente não encontrado";
+  }, [customers, selectedCustomerId]);
+
+  useEffect(() => {
+    if (selectedCustomerFromSearch) {
+        setValue('customerId', selectedCustomerFromSearch.id, { shouldValidate: true });
+        trigger('customerId');
+        onCustomerSearchSelectionHandled();
+    }
+  }, [selectedCustomerFromSearch, setValue, trigger, onCustomerSearchSelectionHandled]);
 
 
   useEffect(() => {
@@ -321,67 +335,29 @@ export function ProposalForm({ proposal, customers, userSettings, isReadOnly, on
                 control={form.control}
                 name="customerId"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Cliente</FormLabel>
-                    <Popover open={isCustomerPopoverOpen} onOpenChange={setIsCustomerPopoverOpen}>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className={cn(
-                              "w-full justify-between",
-                              !field.value && "text-muted-foreground"
-                            )}
-                            disabled={isReadOnly}
-                          >
-                            {field.value
-                              ? customers.find(
-                                  (customer) => customer.id === field.value
-                                )?.name
-                              : "Selecione um cliente"}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                        <Command>
-                          <CommandInput placeholder="Pesquisar por nome ou CPF..." />
-                          <CommandList>
-                              <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
-                              <CommandGroup>
-                              {customers.map((customer) => (
-                                  <CommandItem
-                                  value={`${customer.name} ${customer.cpf}`}
-                                  key={customer.id}
-                                  onSelect={() => {
-                                      form.setValue("customerId", customer.id)
-                                      setIsCustomerPopoverOpen(false)
-                                  }}
-                                  >
-                                  <Check
-                                      className={cn(
-                                      "mr-2 h-4 w-4",
-                                      customer.id === field.value
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      )}
-                                  />
-                                  <div>
-                                      <p>{customer.name}</p>
-                                      <p className="text-xs text-muted-foreground">{customer.cpf}</p>
-                                  </div>
-                                  </CommandItem>
-                              ))}
-                              </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
+                    <FormItem>
+                        <FormLabel>Cliente</FormLabel>
+                        <div className="flex items-center gap-2">
+                            <FormControl>
+                                <Input
+                                    readOnly
+                                    value={selectedCustomerName}
+                                    className="flex-1 bg-muted/30"
+                                />
+                            </FormControl>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={onOpenCustomerSearch}
+                                disabled={isReadOnly}
+                            >
+                                {field.value ? 'Trocar' : 'Selecionar'} Cliente
+                            </Button>
+                        </div>
+                        <FormMessage />
+                    </FormItem>
                 )}
-              />
+                />
               <FormField
                 control={form.control}
                 name="product"

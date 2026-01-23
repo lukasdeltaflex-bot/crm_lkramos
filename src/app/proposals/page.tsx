@@ -39,6 +39,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { formatCurrency } from '@/lib/utils';
+import { CustomerSearchDialog } from '@/components/proposals/customer-search-dialog';
 
 
 export type ProposalWithCustomer = Proposal & { customer: Customer | undefined };
@@ -73,6 +74,9 @@ function ProposalsPageContent() {
   const router = useRouter();
 
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [isCustomerSearchOpen, setIsCustomerSearchOpen] = React.useState(false);
+  const [newlySelectedCustomer, setNewlySelectedCustomer] = React.useState<Customer | null>(null);
+
   const [selectedProposal, setSelectedProposal] = React.useState<ProposalWithCustomer | undefined>(undefined);
   const [sheetMode, setSheetMode] = React.useState<'new' | 'edit' | 'view'>('new');
   const [rowSelection, setRowSelection] = React.useState({});
@@ -135,6 +139,11 @@ function ProposalsPageContent() {
     setSheetMode('view');
     setIsDialogOpen(true);
   }, []);
+
+  const handleCustomerSelect = (customer: Customer) => {
+    setNewlySelectedCustomer(customer);
+    setIsCustomerSearchOpen(false);
+  };
   
   const handleDuplicateProposal = React.useCallback((proposal: ProposalWithCustomer) => {
     const { id, proposalNumber, status, ...rest } = proposal;
@@ -577,12 +586,6 @@ const handleExportToExcel = async () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent
           className="max-w-3xl"
-          onInteractOutside={(e) => {
-            const popoverContent = (e.target as HTMLElement).closest('[data-radix-popper-content-wrapper]');
-            if (popoverContent) {
-              e.preventDefault();
-            }
-          }}
         >
           <DialogHeader className="print:hidden">
             <DialogTitle>{getSheetTitle()}</DialogTitle>
@@ -596,9 +599,20 @@ const handleExportToExcel = async () => {
             onDuplicate={handleDuplicateProposal}
             defaultValues={defaultValues}
             sheetMode={sheetMode}
+            onOpenCustomerSearch={() => setIsCustomerSearchOpen(true)}
+            selectedCustomerFromSearch={newlySelectedCustomer}
+            onCustomerSearchSelectionHandled={() => setNewlySelectedCustomer(null)}
           />
         </DialogContent>
       </Dialog>
+
+      <CustomerSearchDialog
+        open={isCustomerSearchOpen}
+        onOpenChange={setIsCustomerSearchOpen}
+        customers={nonAnonymizedCustomers}
+        onSelectCustomer={handleCustomerSelect}
+       />
+
       {isLoading ? (
         <div className="rounded-md border p-4">
             <div className="space-y-2">
