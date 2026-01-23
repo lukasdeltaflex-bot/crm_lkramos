@@ -158,6 +158,19 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
 
     return { birthdayAlerts, followUpReminders, commissionReminders, debtBalanceReminders, partialCommissionReminders };
   }, [proposals, customers]);
+  
+  const visibleBirthdayAlerts = alertData.birthdayAlerts.filter(a => !dismissedItems.includes(a.id));
+  const visibleFollowUpReminders = alertData.followUpReminders.filter(r => !dismissedItems.includes(r.id));
+  const visibleCommissionReminders = alertData.commissionReminders.filter(r => !dismissedItems.includes(r.id));
+  const visibleDebtBalanceReminders = alertData.debtBalanceReminders.filter(r => !dismissedItems.includes(r.id));
+  const visiblePartialCommissionReminders = alertData.partialCommissionReminders.filter(r => !dismissedItems.includes(r.id));
+
+  const hasVisibleAlerts = 
+    visibleBirthdayAlerts.length > 0 ||
+    visibleFollowUpReminders.length > 0 ||
+    visibleCommissionReminders.length > 0 ||
+    visibleDebtBalanceReminders.length > 0 ||
+    visiblePartialCommissionReminders.length > 0;
 
   const handleSendEmail = async () => {
     if (!userProfile || !userProfile.email) {
@@ -171,51 +184,47 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
 
     setIsSending(true);
     try {
-        const { birthdayAlerts, followUpReminders, commissionReminders, debtBalanceReminders, partialCommissionReminders } = alertData;
-        
-        const hasAnyAlert = birthdayAlerts.length > 0 || followUpReminders.length > 0 || commissionReminders.length > 0 || debtBalanceReminders.length > 0 || partialCommissionReminders.length > 0;
-
         let summaryContent = '';
-        if (!hasAnyAlert) {
+        if (!hasVisibleAlerts) {
             summaryContent = `Nenhuma pendência ou alerta importante para hoje. Tenha um ótimo dia!`;
         } else {
             let summary = 'Aqui está o seu resumo de pendências para hoje:\n\n';
             
-            if (birthdayAlerts.length > 0) {
+            if (visibleBirthdayAlerts.length > 0) {
                 summary += '### 🎂 Alertas de Aniversário (Clientes Próximos de 75 Anos)\n';
-                birthdayAlerts.forEach(alert => {
+                visibleBirthdayAlerts.forEach(alert => {
                     summary += `- **${alert.customerName}**: Cliente completará ${alert.age} anos em breve. Verifique as políticas de crédito para esta faixa etária.\n`;
                 });
                 summary += '\n';
             }
             
-            if (followUpReminders.length > 0) {
+            if (visibleFollowUpReminders.length > 0) {
                 summary += '### ⏰ Lembretes de Acompanhamento (Follow-up)\n';
-                followUpReminders.forEach(reminder => {
+                visibleFollowUpReminders.forEach(reminder => {
                     summary += `- **${reminder.customerName} (Prop. nº ${reminder.proposalNumber})**: A proposta está "Em Andamento" há ${reminder.daysOpen} dias. Sugestão: entre em contato para uma atualização.\n`;
                 });
                 summary += '\n';
             }
 
-            if (commissionReminders.length > 0) {
+            if (visibleCommissionReminders.length > 0) {
                 summary += '### 💰 Alertas de Comissão Pendente\n';
-                commissionReminders.forEach(reminder => {
+                visibleCommissionReminders.forEach(reminder => {
                     summary += `- **${reminder.customerName} (Prop. nº ${reminder.proposalNumber})**: A comissão está pendente há ${reminder.daysPending} dias. Sugestão: verifique o pagamento com a promotora/banco.\n`;
                 });
                 summary += '\n';
             }
 
-            if (partialCommissionReminders.length > 0) {
+            if (visiblePartialCommissionReminders.length > 0) {
                 summary += '### 💰 Lembretes de Comissão Parcial\n';
-                partialCommissionReminders.forEach(reminder => {
+                visiblePartialCommissionReminders.forEach(reminder => {
                     summary += `- **${reminder.customerName} (Prop. nº ${reminder.proposalNumber})**: Recebido R$ ${reminder.amountPaid.toFixed(2)} de R$ ${reminder.totalCommission.toFixed(2)} há ${reminder.daysSincePayment} dias. Sugestão: cobrar o valor restante.\n`;
                 });
                 summary += '\n';
             }
             
-            if (debtBalanceReminders.length > 0) {
+            if (visibleDebtBalanceReminders.length > 0) {
                 summary += '### ⏳ Alertas de Saldo Devedor (Portabilidade)\n';
-                debtBalanceReminders.forEach(reminder => {
+                visibleDebtBalanceReminders.forEach(reminder => {
                     summary += `- **${reminder.customerName} (Prop. nº ${reminder.proposalNumber})**: Aguardando saldo há ${reminder.daysWaiting} dias úteis. O prazo está se esgotando, verifique o status.\n`;
                 });
                 summary += '\n';
@@ -277,19 +286,6 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
     );
   }
   
-  const visibleBirthdayAlerts = alertData.birthdayAlerts.filter(a => !dismissedItems.includes(a.id));
-  const visibleFollowUpReminders = alertData.followUpReminders.filter(r => !dismissedItems.includes(r.id));
-  const visibleCommissionReminders = alertData.commissionReminders.filter(r => !dismissedItems.includes(r.id));
-  const visibleDebtBalanceReminders = alertData.debtBalanceReminders.filter(r => !dismissedItems.includes(r.id));
-  const visiblePartialCommissionReminders = alertData.partialCommissionReminders.filter(r => !dismissedItems.includes(r.id));
-
-  const hasVisibleAlerts = 
-    visibleBirthdayAlerts.length > 0 ||
-    visibleFollowUpReminders.length > 0 ||
-    visibleCommissionReminders.length > 0 ||
-    visibleDebtBalanceReminders.length > 0 ||
-    visiblePartialCommissionReminders.length > 0;
-
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
