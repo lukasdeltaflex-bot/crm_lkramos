@@ -115,7 +115,20 @@ Use as informações fornecidas para construir o resumo. Se uma seção não tiv
 {{/if}}
 
 Finalize com uma mensagem positiva.
-`,
+
+É crucial que você sempre gere um resumo. Se por algum motivo as informações acima estiverem vazias ou ausentes, simplesmente informe que não há pendências para cada categoria e finalize com a mensagem positiva. Não retorne uma resposta vazia.`,
+    config: {
+        safetySettings: [
+          {
+            category: 'HARM_CATEGORY_HARASSMENT',
+            threshold: 'BLOCK_NONE',
+          },
+          {
+            category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+            threshold: 'BLOCK_NONE',
+          },
+        ],
+    },
 });
 
 const generateDailySummaryFlow = ai.defineFlow(
