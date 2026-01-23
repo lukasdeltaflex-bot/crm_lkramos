@@ -10,6 +10,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import nodemailer from 'nodemailer';
 
 const SendSummaryEmailInputSchema = z.object({
   recipientName: z.string().describe('O nome do destinatário.'),
@@ -35,28 +36,47 @@ const sendSummaryEmailFlow = ai.defineFlow(
     outputSchema: SendSummaryEmailOutputSchema,
   },
   async (input) => {
-    // Formata o e-mail diretamente no código, sem chamar a IA.
-    const emailBody = `Olá, ${input.recipientName}!
-
-Aqui está o seu resumo diário de pendências:
-
-${input.summaryContent}
-
-Atenciosamente,
-Seu Assistente LK Ramos
-`.trim();
-
-    if (!emailBody) {
-      // Este caso é agora virtualmente impossível, mas mantido por segurança.
-      return { success: false, message: 'Falha ao formatar o corpo do e-mail.' };
+    // Verifica se as credenciais de e-mail estão configuradas no ambiente
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.error('As credenciais de e-mail (EMAIL_USER, EMAIL_PASS) não estão configuradas no arquivo .env');
+      return {
+          success: false,
+          message: 'O serviço de e-mail não está configurado. Verifique as variáveis de ambiente.',
+      };
     }
 
-    // Em uma implementação real, aqui você chamaria um serviço de e-mail (ex: SendGrid, Nodemailer)
-    // com o input.recipientEmail e o emailBody.
-    console.log(`(Simulação) E-mail enviado para: ${input.recipientEmail}`);
-    console.log(`(Simulação) Corpo do E-mail:\n${emailBody}`);
+    // Configura o transportador de e-mail usando Nodemailer com as credenciais do Gmail
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+        },
+    });
 
-    // Como não temos um serviço de e-mail real, vamos apenas simular o sucesso.
-    return { success: true, message: 'E-mail de resumo enviado com sucesso!' };
+    const emailHtmlBody = `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+        <p>Olá, ${input.recipientName}!</p>
+        <p>Aqui está o seu resumo diário de pendências:</p>
+        <div style="background-color: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; white-space: pre-wrap; font-family: monospace;">${input.summaryContent.replace(/### (.*?)\n/g, '<h3 style="margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">$1</h3>').replace(/\- \*\*(.*?)\*\*: (.*?)\n/g, '<div><strong>$1:</strong> $2</div>')}</div>
+        <p>Atenciosamente,<br>Seu Assistente LK Ramos</p>
+      </div>
+    `.trim();
+
+    const mailOptions = {
+        from: `"Assistente LK Ramos" <${process.env.EMAIL_USER}>`,
+        to: input.recipientEmail,
+        subject: 'Seu Resumo Diário de Pendências',
+        html: emailHtmlBody,
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`E-mail de resumo enviado para: ${input.recipientEmail}`);
+        return { success: true, message: 'E-mail de resumo enviado com sucesso!' };
+    } catch (error) {
+        console.error('Erro ao enviar e-mail:', error);
+        return { success: false, message: 'Falha ao enviar e-mail. Verifique as credenciais e a conexão.' };
+    }
   }
 );
