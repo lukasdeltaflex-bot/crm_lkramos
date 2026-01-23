@@ -59,78 +59,6 @@ export async function generateDailySummary(input: GenerateDailySummaryInput): Pr
   return generateDailySummaryFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'generateDailySummaryPrompt',
-  input: { schema: GenerateDailySummaryInputSchema },
-  output: { schema: z.string().nullable() },
-  prompt: `Você é um assistente executivo para um agente de crédito. Sua tarefa é criar um resumo diário (um "briefing matinal") claro, conciso e bem formatado, com as pendências e alertas mais importantes do dia para o agente chamado {{{userName}}}.
-
-Use as informações fornecidas para construir o resumo. Se uma seção não tiver alertas, mencione que não há pendências para aquele tópico. Formate a saída usando markdown, com títulos claros para cada seção. O tom deve ser profissional, mas encorajador. A saída deve ser em português do Brasil.
-
-**Estrutura do Resumo:**
-
-### 🎂 Alertas de Aniversário (Clientes Próximos de 75 Anos)
-{{#if birthdayAlerts}}
-  {{#each birthdayAlerts}}
-  - **{{customerName}}**: Cliente completará {{age}} anos em breve. Verifique as políticas de crédito para esta faixa etária.
-  {{/each}}
-{{else}}
-  - Nenhuma pendência.
-{{/if}}
-
-### ⏰ Lembretes de Acompanhamento (Follow-up)
-{{#if followUpReminders}}
-  {{#each followUpReminders}}
-  - **{{customerName}} (Prop. nº {{proposalNumber}})**: A proposta está "Em Andamento" há {{daysOpen}} dias. Sugestão: entre em contato para uma atualização.
-  {{/each}}
-{{else}}
-  - Nenhuma pendência.
-{{/if}}
-
-### 💰 Alertas de Comissão Pendente
-{{#if commissionReminders}}
-  {{#each commissionReminders}}
-  - **{{customerName}} (Prop. nº {{proposalNumber}})**: A comissão está pendente há {{daysPending}} dias. Sugestão: verifique o pagamento com a promotora/banco.
-  {{/each}}
-{{else}}
-  - Nenhuma pendência.
-{{/if}}
-
-### 💰 Lembretes de Comissão Parcial
-{{#if partialCommissionReminders}}
-    {{#each partialCommissionReminders}}
-    - **{{customerName}} (Prop. nº {{proposalNumber}})**: Recebido R$ {{amountPaid}} de R$ {{totalCommission}} há {{daysSincePayment}} dias. Sugestão: cobrar o valor restante.
-    {{/each}}
-{{else}}
-    - Nenhuma pendência.
-{{/if}}
-
-### ⏳ Alertas de Saldo Devedor (Portabilidade)
-{{#if debtBalanceReminders}}
-  {{#each debtBalanceReminders}}
-  - **{{customerName}} (Prop. nº {{proposalNumber}})**: Aguardando saldo há {{daysWaiting}} dias úteis. O prazo está se esgotando, verifique o status.
-  {{/each}}
-{{else}}
-  - Nenhuma pendência.
-{{/if}}
-
-Finalize com uma mensagem positiva.
-
-É crucial que você sempre gere um resumo. Se por algum motivo as informações acima estiverem vazias ou ausentes, simplesmente informe que não há pendências para cada categoria e finalize com a mensagem positiva. Não retorne uma resposta vazia.`,
-    config: {
-        safetySettings: [
-          {
-            category: 'HARM_CATEGORY_HARASSMENT',
-            threshold: 'BLOCK_NONE',
-          },
-          {
-            category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-            threshold: 'BLOCK_NONE',
-          },
-        ],
-    },
-});
-
 const generateDailySummaryFlow = ai.defineFlow(
   {
     name: 'generateDailySummaryFlow',
@@ -138,7 +66,6 @@ const generateDailySummaryFlow = ai.defineFlow(
     outputSchema: GenerateDailySummaryOutputSchema,
   },
   async (input) => {
-    // Verifica se há pelo menos um alerta para processar
     const hasAnyAlert = 
         (input.birthdayAlerts && input.birthdayAlerts.length > 0) ||
         (input.followUpReminders && input.followUpReminders.length > 0) ||
@@ -149,13 +76,61 @@ const generateDailySummaryFlow = ai.defineFlow(
     if (!hasAnyAlert) {
         return `Olá, ${input.userName}! Nenhuma pendência ou alerta importante para hoje. Tenha um ótimo dia!`;
     }
-    
-    const { output } = await prompt(input);
-    
-    if (!output) {
-      return `Olá, ${input.userName}! Não foi possível gerar o resumo de pendências.`;
-    }
 
-    return `Olá, ${input.userName}! Aqui está o seu resumo de pendências para hoje:\n\n${output}\n\nTenha um dia produtivo!`;
+    let summary = `Olá, ${input.userName}! Aqui está o seu resumo de pendências para hoje:\n\n`;
+
+    summary += '### 🎂 Alertas de Aniversário (Clientes Próximos de 75 Anos)\n';
+    if (input.birthdayAlerts && input.birthdayAlerts.length > 0) {
+      input.birthdayAlerts.forEach(alert => {
+        summary += `- **${alert.customerName}**: Cliente completará ${alert.age} anos em breve. Verifique as políticas de crédito para esta faixa etária.\n`;
+      });
+    } else {
+      summary += '- Nenhuma pendência.\n';
+    }
+    summary += '\n';
+
+    summary += '### ⏰ Lembretes de Acompanhamento (Follow-up)\n';
+    if (input.followUpReminders && input.followUpReminders.length > 0) {
+      input.followUpReminders.forEach(reminder => {
+        summary += `- **${reminder.customerName} (Prop. nº ${reminder.proposalNumber})**: A proposta está "Em Andamento" há ${reminder.daysOpen} dias. Sugestão: entre em contato para uma atualização.\n`;
+      });
+    } else {
+      summary += '- Nenhuma pendência.\n';
+    }
+    summary += '\n';
+
+    summary += '### 💰 Alertas de Comissão Pendente\n';
+    if (input.commissionReminders && input.commissionReminders.length > 0) {
+      input.commissionReminders.forEach(reminder => {
+        summary += `- **${reminder.customerName} (Prop. nº ${reminder.proposalNumber})**: A comissão está pendente há ${reminder.daysPending} dias. Sugestão: verifique o pagamento com a promotora/banco.\n`;
+      });
+    } else {
+      summary += '- Nenhuma pendência.\n';
+    }
+    summary += '\n';
+
+    summary += '### 💰 Lembretes de Comissão Parcial\n';
+    if (input.partialCommissionReminders && input.partialCommissionReminders.length > 0) {
+        input.partialCommissionReminders.forEach(reminder => {
+        summary += `- **${reminder.customerName} (Prop. nº ${reminder.proposalNumber})**: Recebido R$ ${reminder.amountPaid} de R$ ${reminder.totalCommission} há ${reminder.daysSincePayment} dias. Sugestão: cobrar o valor restante.\n`;
+      });
+    } else {
+      summary += '- Nenhuma pendência.\n';
+    }
+    summary += '\n';
+
+    summary += '### ⏳ Alertas de Saldo Devedor (Portabilidade)\n';
+    if (input.debtBalanceReminders && input.debtBalanceReminders.length > 0) {
+      input.debtBalanceReminders.forEach(reminder => {
+        summary += `- **${reminder.customerName} (Prop. nº ${reminder.proposalNumber})**: Aguardando saldo há ${reminder.daysWaiting} dias úteis. O prazo está se esgotando, verifique o status.\n`;
+      });
+    } else {
+      summary += '- Nenhuma pendência.\n';
+    }
+    summary += '\n';
+    
+    summary += 'Tenha um dia produtivo!';
+    
+    return summary;
   }
 );
