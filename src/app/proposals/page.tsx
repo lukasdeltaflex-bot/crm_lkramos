@@ -563,10 +563,10 @@ const handleExportToExcel = async () => {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={handleExportToExcel}>
+                            <DropdownMenuItem onSelect={handleExportToExcel}>
                                 Exportar para Excel (.xlsx)
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={handleExportToPdf}>
+                            <DropdownMenuItem onSelect={handleExportToPdf}>
                                 Exportar para PDF (.pdf)
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -583,7 +583,7 @@ const handleExportToExcel = async () => {
             </Button>
         </div>
       </div>
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} onCloseAutoFocus={(e) => e.preventDefault()}>
         <DialogContent
           className="max-w-3xl"
         >

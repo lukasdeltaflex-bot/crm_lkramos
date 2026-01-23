@@ -509,15 +509,15 @@ const handleExportToPdf = async () => {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={handleExportToExcel}>
+                    <DropdownMenuItem onSelect={handleExportToExcel}>
                         Exportar para Excel (.xlsx)
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleExportToPdf}>
+                    <DropdownMenuItem onSelect={handleExportToPdf}>
                         Exportar para PDF (.pdf)
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
-            <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
+            <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen} onCloseAutoFocus={(e) => e.preventDefault()}>
                 <DialogTrigger asChild>
                     <Button variant="outline">
                         <Sparkles />

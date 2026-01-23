@@ -432,16 +432,16 @@ export default function FinancialPage() {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={handleExportToExcel}>
+                        <DropdownMenuItem onSelect={handleExportToExcel}>
                             Exportar para Excel (.xlsx)
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleExportToPdf}>
+                        <DropdownMenuItem onSelect={handleExportToPdf}>
                             Exportar para PDF (.pdf)
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             )}
-            <Dialog open={isReconciliationOpen} onOpenChange={setIsReconciliationOpen}>
+            <Dialog open={isReconciliationOpen} onOpenChange={setIsReconciliationOpen} onCloseAutoFocus={(e) => e.preventDefault()}>
                 <DialogTrigger asChild>
                     <Button variant="outline">
                         <FileCheck2 />
@@ -484,8 +484,8 @@ export default function FinancialPage() {
         </SheetContent>
       </Sheet>
 
-      <Dialog open={!!dialogData} onOpenChange={(isOpen) => !isOpen && setDialogData(null)}>
-        <DialogContent className="max-w-4xl h-[90vh] flex flex-col" onCloseAutoFocus={(e) => e.preventDefault()}>
+      <Dialog open={!!dialogData} onOpenChange={(isOpen) => !isOpen && setDialogData(null)} onCloseAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent className="max-w-4xl h-[90vh] flex flex-col" >
             <DialogHeader>
                 <DialogTitle>{dialogData?.title}</DialogTitle>
             </DialogHeader>
