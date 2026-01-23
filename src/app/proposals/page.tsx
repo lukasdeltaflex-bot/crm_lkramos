@@ -577,7 +577,7 @@ const handleExportToExcel = async () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent
           className="max-w-3xl"
-          onPointerDownOutside={(e) => {
+          onInteractOutside={(e) => {
             const target = e.target as HTMLElement;
             if (target.closest('[data-radix-popper-content-wrapper]')) {
               e.preventDefault();
