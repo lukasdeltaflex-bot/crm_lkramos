@@ -22,7 +22,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
   } from "@/components/ui/alert-dialog"
-import { MoreHorizontal, ArrowUpDown, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, GripVertical, ArrowUp, ArrowDown, Copy } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { formatCurrency } from '@/lib/utils';
 import React from 'react';
@@ -35,6 +35,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { TableHead, TableCell } from '@/components/ui/table';
 import { flexRender } from '@tanstack/react-table';
+import { toast } from '@/hooks/use-toast';
 
 type ActionsCellProps = {
     row: {
@@ -56,6 +57,25 @@ const formatDate = (dateString?: string) => {
     } catch (e) {
         return '-';
     }
+}
+
+const CopyButton = ({ text, label }: { text: string | undefined; label: string }) => {
+    if (!text) return null;
+    const handleCopy = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        navigator.clipboard.writeText(text);
+        toast({
+            title: `${label} copiado!`,
+            description: `O valor "${text}" foi copiado para a área de transferência.`,
+        });
+    };
+    return (
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopy}>
+            <Copy className="h-3 w-3" />
+            <span className="sr-only">Copiar {label}</span>
+        </Button>
+    );
 }
 
 
@@ -208,6 +228,15 @@ export const getColumns = (
     accessorKey: 'proposalNumber',
     id: 'proposalNumber',
     header: 'Nº Proposta',
+    cell: ({ row }) => {
+        const proposalNumber = row.getValue('proposalNumber') as string;
+        return (
+            <div className="flex items-center gap-1">
+                <span>{proposalNumber}</span>
+                <CopyButton text={proposalNumber} label="Número da Proposta" />
+            </div>
+        )
+    }
   },
   {
     id: 'customerName',
@@ -222,7 +251,13 @@ export const getColumns = (
     accessorFn: (row) => row.customer?.cpf,
     header: 'CPF',
     cell: ({ row }) => {
-        return row.original.customer?.cpf || <span className="text-muted-foreground">-</span>
+        const cpf = row.original.customer?.cpf;
+        return (
+             <div className="flex items-center gap-1">
+                <span>{cpf || '-'}</span>
+                {cpf && <CopyButton text={cpf} label="CPF" />}
+            </div>
+        )
     }
   },
   {
