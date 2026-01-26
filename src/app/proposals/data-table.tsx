@@ -104,6 +104,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     pageIndex: 0,
     pageSize: 10,
   });
+  const [statusFilter, setStatusFilter] = React.useState('Todos');
   
   const defaultVisibility: VisibilityState = {
       dateApproved: false,
@@ -241,18 +242,22 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         );
       },
   });
+  
+  React.useEffect(() => {
+    const statusColumn = table.getColumn('status');
+    if (statusFilter === 'Todos') {
+      statusColumn?.setFilterValue(undefined);
+    } else {
+      statusColumn?.setFilterValue([statusFilter]);
+    }
+  }, [statusFilter, table]);
+
 
   React.useImperativeHandle(ref, () => ({
     table,
   }));
   
-  const statusFilter = (table.getColumn('status')?.getFilterValue() as string[])?.[0] ?? 'Todos';
   const selectedRowCount = Object.keys(rowSelection).length;
-
-  const setStatusFilter = (value: string) => {
-    const newValue = value === 'Todos' ? undefined : [value];
-    table.getColumn('status')?.setFilterValue(newValue);
-  };
   
   const idMap: {[key: string]: string} = {
     promoter: 'Promotora',
