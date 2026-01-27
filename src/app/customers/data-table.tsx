@@ -207,20 +207,22 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         const filter = safeValue(filterValue);
         if (!filter) return true;
 
+        const customer = row.original;
+
         const valuesToSearch = [
-            row.getValue('numericId'),
-            row.getValue('name'),
-            row.getValue('cpf'),
-            row.getValue('phone'),
-            row.getValue('phone2'),
+            customer.numericId,
+            customer.name,
+            customer.cpf,
+            customer.phone,
+            customer.phone2,
         ];
         
-        const benefitNumbers = row.original.benefits?.map(b => b.number) || [];
+        const benefitNumbers = customer.benefits?.map(b => b.number) || [];
         
         const allValues = [...valuesToSearch, ...benefitNumbers];
 
         return allValues.some(value => safeValue(value).includes(filter));
-      },
+    },
   });
 
   React.useImperativeHandle(ref, () => ({

@@ -229,12 +229,16 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
 
         const filter = safeValue(filterValue);
         if (!filter) return true;
+        
+        const proposal = row.original;
+        const customer = proposal.customer;
 
         const valuesToSearch = [
-          row.getValue('customerName'),
-          row.getValue('customerCpf'),
-          row.getValue('proposalNumber'),
-          row.getValue('promoter'),
+          customer?.name,
+          customer?.cpf,
+          customer?.numericId,
+          proposal.proposalNumber,
+          proposal.promoter,
         ];
 
         return valuesToSearch.some(value => safeValue(value).includes(filter));
