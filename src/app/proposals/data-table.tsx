@@ -224,39 +224,38 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
       pagination,
     },
     globalFilterFn: (row, columnId, filterValue) => {
-        const filter = String(filterValue ?? '').toLowerCase().trim();
-        if (!filter) return true;
-        
-        const proposal = row.original;
-        const customer = proposal.customer;
-    
-        // Check proposal fields
-        const proposalNumber = proposal.proposalNumber ?? '';
-        if (proposalNumber.toLowerCase().includes(filter)) {
+      const filter = String(filterValue ?? '').trim();
+      if (!filter) return true;
+      
+      const lowerCaseFilter = filter.toLowerCase();
+      const proposal = row.original;
+      const customer = proposal.customer;
+  
+      // Check proposal fields
+      if ((proposal.proposalNumber ?? '').toLowerCase().includes(lowerCaseFilter)) return true;
+      if ((proposal.promoter ?? '').toLowerCase().includes(lowerCaseFilter)) return true;
+  
+      // Check customer fields
+      if (customer) {
+        // 1. Check Customer ID directly
+        const numericId = String(customer.numericId);
+        if (numericId.includes(filter)) {
             return true;
         }
-        const promoter = proposal.promoter ?? '';
-        if (promoter.toLowerCase().includes(filter)) {
-            return true;
+
+        // 2. Check Customer Name
+        if ((customer.name ?? '').toLowerCase().includes(lowerCaseFilter)) return true;
+
+        // 3. Check Customer CPF (digits only)
+        const filterAsDigits = filter.replace(/\D/g, '');
+        if (filterAsDigits) {
+          if ((customer.cpf ?? '').replace(/\D/g, '').includes(filterAsDigits)) {
+              return true;
+          }
         }
-    
-        // Check customer fields
-        if (customer) {
-            const customerName = customer.name ?? '';
-            if (customerName.toLowerCase().includes(filter)) {
-                return true;
-            }
-            const customerCpf = customer.cpf ?? '';
-            if (customerCpf.toLowerCase().includes(filter)) {
-                return true;
-            }
-            const customerId = String(customer.numericId);
-            if (customerId.toLowerCase().includes(filter)) {
-                return true;
-            }
-        }
-    
-        return false;
+      }
+  
+      return false;
     },
   });
   

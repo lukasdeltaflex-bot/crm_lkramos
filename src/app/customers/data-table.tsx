@@ -201,51 +201,54 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
       pagination,
     },
     globalFilterFn: (row, columnId, filterValue) => {
-        const filter = String(filterValue ?? '').toLowerCase().trim();
-        if (!filter) return true;
+      const filter = String(filterValue ?? '').trim();
+      if (!filter) return true;
 
-        const customer = row.original;
-    
-        // Check name
-        const name = customer.name ?? '';
-        if (name.toLowerCase().includes(filter)) {
+      const customer = row.original;
+  
+      // 1. Check ID directly
+      const numericId = String(customer.numericId);
+      if (numericId.includes(filter)) {
+          return true;
+      }
+
+      const lowerCaseFilter = filter.toLowerCase();
+  
+      // 2. Check name
+      const name = customer.name ?? '';
+      if (name.toLowerCase().includes(lowerCaseFilter)) {
+          return true;
+      }
+  
+      // 3. Check CPF and Phones (digits only for flexible search)
+      const filterAsDigits = filter.replace(/\D/g, '');
+      if (filterAsDigits) {
+        const cpf = (customer.cpf ?? '').replace(/\D/g, '');
+        if (cpf.includes(filterAsDigits)) {
             return true;
         }
-    
-        // Check CPF
-        const cpf = customer.cpf ?? '';
-        if (cpf.toLowerCase().includes(filter)) {
-            return true;
-        }
-        
-        // Check ID
-        const numericId = String(customer.numericId);
-        if (numericId.toLowerCase().includes(filter)) {
-            return true;
-        }
-    
-        // Check Phone 1
-        const phone = customer.phone ?? '';
-        if (phone.toLowerCase().includes(filter)) {
-            return true;
-        }
-    
-        // Check Phone 2
-        const phone2 = customer.phone2 ?? '';
-        if (phone2.toLowerCase().includes(filter)) {
+
+        const phone = (customer.phone ?? '').replace(/\D/g, '');
+        if (phone.includes(filterAsDigits)) {
             return true;
         }
         
-        // Check Benefits
-        const benefits = customer.benefits ?? [];
-        for (const benefit of benefits) {
-            const benefitNumber = benefit.number ?? '';
-            if (benefitNumber.toLowerCase().includes(filter)) {
-                return true;
-            }
+        const phone2 = (customer.phone2 ?? '').replace(/\D/g, '');
+        if (phone2.includes(filterAsDigits)) {
+            return true;
         }
-    
-        return false;
+      }
+      
+      // 4. Check Benefits
+      const benefits = customer.benefits ?? [];
+      for (const benefit of benefits) {
+          const benefitNumber = benefit.number ?? '';
+          if (benefitNumber.toLowerCase().includes(lowerCaseFilter)) {
+              return true;
+          }
+      }
+  
+      return false;
     },
   });
 
