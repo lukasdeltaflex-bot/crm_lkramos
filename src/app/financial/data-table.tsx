@@ -68,7 +68,7 @@ import { cn, formatCurrency } from '@/lib/utils';
 import type { CommissionStatus, Proposal, Customer } from '@/lib/types';
 import { FinancialSummary } from '@/components/financial/financial-summary';
 import { DraggableHeader } from './columns';
-import { Separator } from '../ui/separator';
+import { Separator } from '@/components/ui/separator';
 
 const STORAGE_KEY_VISIBILITY = 'lk-ramos-financial-columns-visibility-v2';
 const STORAGE_KEY_ORDER = 'lk-ramos-financial-columns-order-v2';
