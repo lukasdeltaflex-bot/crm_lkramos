@@ -454,7 +454,7 @@ export default function FinancialPage() {
                         Conciliar Relatórios
                     </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-4xl">
+                <DialogContent className="max-w-4xl" onCloseAutoFocus={(e) => e.preventDefault()}>
                     <DialogHeader>
                         <DialogTitle>Conciliação de Comissões com IA</DialogTitle>
                     </DialogHeader>
