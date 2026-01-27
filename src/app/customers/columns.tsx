@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, ArrowUpDown, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, GripVertical, ArrowUp, ArrowDown, Copy } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   AlertDialog,
@@ -31,6 +31,26 @@ import { cn } from '@/lib/utils';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { TableHead } from '@/components/ui/table';
+import { toast } from '@/hooks/use-toast';
+
+const CopyButton = ({ text, label }: { text: string | undefined; label: string }) => {
+    if (!text) return null;
+    const handleCopy = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        navigator.clipboard.writeText(text);
+        toast({
+            title: `${label} copiado!`,
+            description: `O valor "${text}" foi copiado para a área de transferência.`,
+        });
+    };
+    return (
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopy}>
+            <Copy className="h-3 w-3" />
+            <span className="sr-only">Copiar {label}</span>
+        </Button>
+    );
+};
 
 interface ActionsCellProps {
   row: { original: Customer };
@@ -204,6 +224,15 @@ export const getColumns = (
     accessorKey: 'cpf',
     id: 'cpf',
     header: 'CPF',
+    cell: ({ row }) => {
+        const cpf = row.getValue('cpf') as string;
+        return (
+          <div className="flex items-center gap-1">
+            <span>{cpf}</span>
+            <CopyButton text={cpf} label="CPF" />
+          </div>
+        );
+      },
   },
   {
     accessorKey: 'phone',
