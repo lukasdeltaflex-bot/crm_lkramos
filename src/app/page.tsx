@@ -44,7 +44,6 @@ export default function DashboardPage() {
   const [endDateInput, setEndDateInput] = React.useState('');
   const [appliedDateRange, setAppliedDateRange] = React.useState<DateRange | undefined>(undefined);
   const [isPrivacyMode, setIsPrivacyMode] = React.useState(false);
-  const [showPercentages, setShowPercentages] = React.useState(false);
   const [isClient, setIsClient] = React.useState(false);
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
@@ -259,10 +258,6 @@ export default function DashboardPage() {
                 />
                 <Button size="sm" onClick={handleApplyFilter}><Filter className="h-4 w-4" /> Aplicar</Button>
                 {(startDateInput || endDateInput || appliedDateRange) && <Button variant="ghost" size="icon" className="h-9 w-9" onClick={clearDates}><X className="h-4 w-4" /></Button>}
-                <Button variant="ghost" size="icon" onClick={() => setShowPercentages(!showPercentages)} title={showPercentages ? 'Ocultar porcentagens' : 'Mostrar porcentagens'}>
-                    <Percent className="h-5 w-5" />
-                    <span className="sr-only">{showPercentages ? 'Ocultar porcentagens' : 'Mostrar porcentagens'}</span>
-                </Button>
                 <Button variant="ghost" size="icon" onClick={() => setIsPrivacyMode(!isPrivacyMode)}>
                 {isPrivacyMode ? <EyeOff /> : <Eye />}
                 <span className="sr-only">{isPrivacyMode ? 'Mostrar valores' : 'Ocultar valores'}</span>
@@ -288,7 +283,7 @@ export default function DashboardPage() {
              </Card>
           )) : cardData.map((card) => {
                 const percentage = totalDigitado > 0 ? (card.value / totalDigitado) * 100 : 0;
-                const description = showPercentages && !isPrivacyMode
+                const description = !isPrivacyMode
                   ? `${percentage.toFixed(1).replace('.', ',')}% do total`
                   : undefined;
 
