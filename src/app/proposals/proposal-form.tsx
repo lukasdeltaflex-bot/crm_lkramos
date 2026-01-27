@@ -791,12 +791,10 @@ export function ProposalForm({
                 {sheetMode !== 'new' && proposal && (
                     <>
                         <Button type="button" variant="outline" onClick={() => onDuplicate(proposal)}>
-                            <Copy className="mr-2 h-4 w-4" />
-                            Duplicar Proposta
+                            <Copy /> Duplicar Proposta
                         </Button>
                         <Button type="button" variant="outline" onClick={() => window.print()}>
-                            <Printer className="mr-2 h-4 w-4" />
-                            Imprimir
+                            <Printer /> Imprimir
                         </Button>
                     </>
                 )}
