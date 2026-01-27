@@ -37,7 +37,6 @@ import { Card } from '@/components/ui/card';
 import { DateRange } from 'react-day-picker';
 import { Input } from '@/components/ui/input';
 import { DailySummary } from '@/components/summary/daily-summary';
-import { LiveClock } from '@/components/dashboard/live-clock';
 
 export default function DashboardPage() {
   const [startDateInput, setStartDateInput] = React.useState('');
@@ -264,7 +263,6 @@ export default function DashboardPage() {
                 </Button>
             </div>
         </div>
-        <LiveClock />
       </div>
       <div className="space-y-8">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">

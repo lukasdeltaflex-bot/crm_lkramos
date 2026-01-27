@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import {
@@ -22,6 +20,7 @@ import { cn } from '@/lib/utils';
 import type { UserProfile } from '@/lib/types';
 import { doc } from 'firebase/firestore';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { LiveClock } from './dashboard/live-clock';
 
 export function Header({ className }: { className?: string }) {
   const auth = useAuth();
@@ -67,7 +66,7 @@ export function Header({ className }: { className?: string }) {
     <header className={cn("flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6", className)}>
       <SidebarTrigger />
       <div className="w-full flex-1">
-        {/* Pode ser usado para uma busca global */}
+        <LiveClock />
       </div>
       <ThemeToggle />
       <DropdownMenu>
