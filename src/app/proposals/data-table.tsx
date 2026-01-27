@@ -232,27 +232,29 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     
         const proposal = row.original;
         const customer = proposal.customer;
-        
-        const isNumericSearch = /^\d+$/.test(searchTerm);
-    
-        if (isNumericSearch) {
-            return customer ? String(customer.numericId) === searchTerm : false;
-        }
-    
         const lowerCaseSearchTerm = searchTerm.toLowerCase();
-    
+
+        // Exact match for customer ID if search is purely numeric
+        if (/^\d+$/.test(searchTerm)) {
+            if (customer && String(customer.numericId) === searchTerm) {
+                return true;
+            }
+        }
+
+        // Substring search on various fields
         if (proposal.proposalNumber?.toLowerCase().includes(lowerCaseSearchTerm)) {
             return true;
         }
-    
+
         if (customer && customer.name.toLowerCase().includes(lowerCaseSearchTerm)) {
             return true;
         }
-    
+
         if (proposal.promoter?.toLowerCase().includes(lowerCaseSearchTerm)) {
           return true;
         }
     
+        // Digit-based search for CPF
         const searchDigits = searchTerm.replace(/\D/g, '');
         if (searchDigits && customer && customer.cpf?.replace(/\D/g, '').includes(searchDigits)) {
             return true;
