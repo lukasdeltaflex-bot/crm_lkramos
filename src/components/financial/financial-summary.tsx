@@ -19,11 +19,11 @@ interface FinancialSummaryProps {
 
 export function FinancialSummary({ rows, isPrivacyMode, isFiltered, onShowDetails }: FinancialSummaryProps) {
   const {
-    totalContracted,
+    totalDigitadoNoPeriodo,
     totalCommissionValue,
     totalAmountPaid,
     pendingAmount,
-    totalProposals,
+    allProposalsInPeriod,
     commissionReceivedProposals,
     proposalsForSaldoAReceber,
     expectedCommissionProposals,
@@ -33,15 +33,13 @@ export function FinancialSummary({ rows, isPrivacyMode, isFiltered, onShowDetail
   } = React.useMemo(() => {
     const allProposalsInPeriod = 'original' in (rows?.[0] || {}) ? (rows as Row<ProposalWithCustomer>[]).map(r => r.original) : (rows as ProposalWithCustomer[]);
     
-    const proposalsForMonth = allProposalsInPeriod.filter(p => p.status !== 'Reprovado');
-
-    if (!proposalsForMonth || proposalsForMonth.length === 0) {
+    if (!allProposalsInPeriod || allProposalsInPeriod.length === 0) {
         return {
-            totalContracted: 0,
+            totalDigitadoNoPeriodo: 0,
             totalCommissionValue: 0,
             totalAmountPaid: 0,
             pendingAmount: 0,
-            totalProposals: [],
+            allProposalsInPeriod: [],
             commissionReceivedProposals: [],
             proposalsForSaldoAReceber: [],
             expectedCommissionProposals: [],
@@ -51,18 +49,20 @@ export function FinancialSummary({ rows, isPrivacyMode, isFiltered, onShowDetail
         };
     }
 
-    const totalContracted = proposalsForMonth.reduce((sum, p) => {
+    const totalDigitadoNoPeriodo = allProposalsInPeriod.reduce((sum, p) => {
       if (p.commissionBase === 'net') {
           return sum + (p.netAmount || 0);
       }
       return sum + (p.grossAmount || 0);
     }, 0);
+
+    const validProposals = allProposalsInPeriod.filter(p => p.status !== 'Reprovado');
+
+    const totalPotentialCommission = validProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
     
-    const totalPotentialCommission = proposalsForMonth.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
+    const totalAmountPaid = validProposals.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
     
-    const totalAmountPaid = proposalsForMonth.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
-    
-    const expectedCommissionProposals = proposalsForMonth.filter(p => {
+    const expectedCommissionProposals = validProposals.filter(p => {
         const hasDateApproved = !!p.dateApproved;
         if (p.status === 'Em Andamento' && !hasDateApproved) {
             return true;
@@ -78,9 +78,9 @@ export function FinancialSummary({ rows, isPrivacyMode, isFiltered, onShowDetail
 
     const totalCommissionValue = expectedCommissionProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
     
-    const commissionReceivedProposals = proposalsForMonth.filter(p => p.amountPaid && p.amountPaid > 0);
+    const commissionReceivedProposals = validProposals.filter(p => p.amountPaid && p.amountPaid > 0);
     
-    const proposalsForSaldoAReceber = proposalsForMonth.filter(p => {
+    const proposalsForSaldoAReceber = validProposals.filter(p => {
         if (p.commissionStatus === 'Paga') {
             return false;
         }
@@ -103,11 +103,11 @@ export function FinancialSummary({ rows, isPrivacyMode, isFiltered, onShowDetail
     const pendingAmountPercentage = totalPotentialCommission > 0 ? (pendingAmount / totalPotentialCommission) * 100 : 0;
 
     return {
-      totalContracted,
+      totalDigitadoNoPeriodo,
       totalCommissionValue,
       totalAmountPaid,
       pendingAmount,
-      totalProposals: proposalsForMonth,
+      allProposalsInPeriod,
       commissionReceivedProposals,
       proposalsForSaldoAReceber,
       expectedCommissionProposals,
@@ -122,11 +122,11 @@ export function FinancialSummary({ rows, isPrivacyMode, isFiltered, onShowDetail
 
   const cards = [
     {
-      title: "Total Contratado",
-      value: formatCurrency(totalContracted),
+      title: "Total Digitado no Período",
+      value: formatCurrency(totalDigitadoNoPeriodo),
       icon: FileText,
       valueClassName: "text-purple-500",
-      proposals: totalProposals,
+      proposals: allProposalsInPeriod,
       description: undefined,
     },
     {
