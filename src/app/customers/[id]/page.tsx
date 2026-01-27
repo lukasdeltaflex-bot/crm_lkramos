@@ -8,7 +8,7 @@ import { doc, collection, query, where } from 'firebase/firestore';
 import type { Customer, Proposal } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Phone, Mail, Calendar, FileText, CircleDollarSign, BadgePercent, MapPin, Hash, Copy } from 'lucide-react';
+import { User, Phone, Mail, Calendar, FileText, CircleDollarSign, BadgePercent, MapPin, Hash, Copy, Printer } from 'lucide-react';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -62,9 +62,15 @@ const CustomerInfoCard = ({ customer }: { customer: Customer }) => {
                             <CardTitle>{customer.name}</CardTitle>
                         </div>
                     </div>
-                    <Link href="/customers">
-                        <Button variant="outline">Voltar para Clientes</Button>
-                    </Link>
+                    <div className="flex items-center gap-2 print:hidden">
+                        <Button variant="outline" onClick={() => window.print()}>
+                            <Printer className="mr-2 h-4 w-4" />
+                            Imprimir Ficha
+                        </Button>
+                        <Link href="/customers">
+                            <Button variant="outline">Voltar para Clientes</Button>
+                        </Link>
+                    </div>
                 </div>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -268,8 +274,16 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
   return (
     <AppLayout>
       <div className='space-y-8'>
+        <div className="hidden print:block mb-8">
+            <h1 className="text-2xl font-bold">Ficha do Cliente: {customer.name}</h1>
+            <p className="text-sm text-gray-500">
+                LK RAMOS Gestão de Propostas - Gerado em: {format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+            </p>
+        </div>
         <CustomerInfoCard customer={customer} />
-        <CustomerAiSummary customer={customer} proposals={proposals || []} />
+        <div className="print:hidden">
+            <CustomerAiSummary customer={customer} proposals={proposals || []} />
+        </div>
         <CustomerFinancialSummary proposals={proposals || []} />
         <Card>
             <CardHeader>
