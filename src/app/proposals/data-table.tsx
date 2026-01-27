@@ -232,31 +232,37 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         const proposal = row.original;
         const customer = proposal.customer;
     
-        // Search customer fields first
-        if (customer) {
-            // Exact match for Customer ID
-            if (String(customer.numericId) === searchTerm) {
-                return true;
-            }
-            // Name contains search term
-            if (customer.name.toLowerCase().includes(searchTerm)) {
-                return true;
-            }
-            // CPF contains search digits
-            const searchDigits = searchTerm.replace(/\D/g, '');
-            if (searchDigits && customer.cpf?.replace(/\D/g, '').includes(searchDigits)) {
-                return true;
-            }
-        }
+        // Check if the search term is a candidate for an exact ID match
+        const isNumericSearch = /^\d+$/.test(searchTerm);
     
-        // Search proposal fields
-        if (proposal.proposalNumber?.toLowerCase().includes(searchTerm)) {
-          return true;
+        if (isNumericSearch && customer && String(customer.numericId) === searchTerm) {
+            // If it's a numeric search and it matches the customer ID exactly, we have a definite match.
+            return true;
         }
+
+        // If it's not an exact ID match, continue to check other fields with the original search term.
+        
+        // Check proposal number
+        if (proposal.proposalNumber?.toLowerCase().includes(searchTerm)) {
+            return true;
+        }
+
+        // Check customer name
+        if (customer && customer.name.toLowerCase().includes(searchTerm)) {
+            return true;
+        }
+
+        // Check promoter
         if (proposal.promoter?.toLowerCase().includes(searchTerm)) {
           return true;
         }
-    
+
+        // Check CPF (allowing for partial number search)
+        const searchDigits = searchTerm.replace(/\D/g, '');
+        if (searchDigits && customer && customer.cpf?.replace(/\D/g, '').includes(searchDigits)) {
+            return true;
+        }
+
         return false;
       },
   });

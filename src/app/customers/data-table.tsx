@@ -208,17 +208,25 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     
         const customer = row.original;
         
-        // Check for exact ID match first.
-        if (String(customer.numericId) === searchTerm) {
-            return true;
+        // Check if the search term is purely numeric
+        const isNumericSearch = /^\d+$/.test(searchTerm);
+
+        if (isNumericSearch) {
+            // For the Customers table, if the search is numeric, we ONLY match against the ID.
+            return String(customer.numericId) === searchTerm;
         }
     
-        // Check if name contains the search term
+        // If not a numeric search, check other text-based fields.
         if (customer.name.toLowerCase().includes(searchTerm)) {
           return true;
         }
         
-        // Flexible search for digits in CPF and phones
+        // Check if any benefit number contains the search term
+        if (customer.benefits?.some(benefit => benefit.number.toLowerCase().includes(searchTerm))) {
+            return true;
+        }
+
+        // Check CPF and phones (allowing for partial number search)
         const searchDigits = searchTerm.replace(/\D/g, '');
         if (searchDigits) {
             if (customer.cpf?.replace(/\D/g, '').includes(searchDigits)) {
@@ -230,11 +238,6 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
             if (customer.phone2 && customer.phone2.replace(/\D/g, '').includes(searchDigits)) {
                 return true;
             }
-        }
-        
-        // Check if any benefit number contains the search term
-        if (customer.benefits?.some(benefit => benefit.number.toLowerCase().includes(searchTerm))) {
-            return true;
         }
     
         return false;
