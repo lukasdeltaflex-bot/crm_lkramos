@@ -24,7 +24,7 @@ export function Toaster() {
   }
 
   return (
-    <ToastProvider>
+    <ToastProvider duration={3000}>
       <div className="space-y-2">
       {toasts.map(function ({ id, title, description, action, ...props }) {
         return (
