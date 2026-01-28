@@ -11,6 +11,7 @@ import { calculateBusinessDays } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from '@/hooks/use-toast';
 import { sendSummaryEmail } from '@/ai/flows/send-summary-email-flow';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface DailySummaryProps {
   proposals: Proposal[];
@@ -285,86 +286,96 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
                 {visibleBirthdayAlerts.length > 0 && (
                     <div>
                         <h3 className="font-semibold mb-2">🎂 Alertas de Aniversário (Clientes Próximos de 75 Anos)</h3>
-                        <div className="space-y-2">
-                            {visibleBirthdayAlerts.map(alert => (
-                                <SummaryAlertItem 
-                                    key={alert.id}
-                                    id={alert.id}
-                                    icon={<BellRing className="h-4 w-4" />}
-                                    title={alert.customerName}
-                                    description={`Cliente completará ${alert.age} anos em breve. Verifique as políticas de crédito para esta faixa etária.`}
-                                    onDismiss={handleDismiss}
-                                />
-                            ))}
-                        </div>
+                        <ScrollArea className="max-h-48 w-full">
+                            <div className="space-y-2 pr-4">
+                                {visibleBirthdayAlerts.map(alert => (
+                                    <SummaryAlertItem 
+                                        key={alert.id}
+                                        id={alert.id}
+                                        icon={<BellRing className="h-4 w-4" />}
+                                        title={alert.customerName}
+                                        description={`Cliente completará ${alert.age} anos em breve. Verifique as políticas de crédito para esta faixa etária.`}
+                                        onDismiss={handleDismiss}
+                                    />
+                                ))}
+                            </div>
+                        </ScrollArea>
                     </div>
                 )}
                  {visibleFollowUpReminders.length > 0 && (
                     <div>
                         <h3 className="font-semibold mb-2">⏰ Lembretes de Acompanhamento (Follow-up)</h3>
-                        <div className="space-y-2">
-                            {visibleFollowUpReminders.map(reminder => (
-                                <SummaryAlertItem 
-                                    key={reminder.id}
-                                    id={reminder.id}
-                                    icon={<Clock className="h-4 w-4" />}
-                                    title={`${reminder.customerName} (Prop. nº ${reminder.proposalNumber})`}
-                                    description={`A proposta está "Em Andamento" há ${reminder.daysOpen} dias. Sugestão: entre em contato para uma atualização.`}
-                                    onDismiss={handleDismiss}
-                                />
-                            ))}
-                        </div>
+                        <ScrollArea className="max-h-48 w-full">
+                            <div className="space-y-2 pr-4">
+                                {visibleFollowUpReminders.map(reminder => (
+                                    <SummaryAlertItem 
+                                        key={reminder.id}
+                                        id={reminder.id}
+                                        icon={<Clock className="h-4 w-4" />}
+                                        title={`${reminder.customerName} (Prop. nº ${reminder.proposalNumber})`}
+                                        description={`A proposta está "Em Andamento" há ${reminder.daysOpen} dias. Sugestão: entre em contato para uma atualização.`}
+                                        onDismiss={handleDismiss}
+                                    />
+                                ))}
+                            </div>
+                        </ScrollArea>
                     </div>
                 )}
                  {visibleCommissionReminders.length > 0 && (
                     <div>
                         <h3 className="font-semibold mb-2">💰 Alertas de Comissão Pendente</h3>
-                        <div className="space-y-2">
-                            {visibleCommissionReminders.map(reminder => (
-                                <SummaryAlertItem 
-                                    key={reminder.id}
-                                    id={reminder.id}
-                                    icon={<BadgePercent className="h-4 w-4" />}
-                                    title={`${reminder.customerName} (Prop. nº ${reminder.proposalNumber})`}
-                                    description={`A comissão está pendente há ${reminder.daysPending} dias. Sugestão: verifique o pagamento com a promotora/banco.`}
-                                    onDismiss={handleDismiss}
-                                />
-                            ))}
-                        </div>
+                        <ScrollArea className="max-h-48 w-full">
+                            <div className="space-y-2 pr-4">
+                                {visibleCommissionReminders.map(reminder => (
+                                    <SummaryAlertItem 
+                                        key={reminder.id}
+                                        id={reminder.id}
+                                        icon={<BadgePercent className="h-4 w-4" />}
+                                        title={`${reminder.customerName} (Prop. nº ${reminder.proposalNumber})`}
+                                        description={`A comissão está pendente há ${reminder.daysPending} dias. Sugestão: verifique o pagamento com a promotora/banco.`}
+                                        onDismiss={handleDismiss}
+                                    />
+                                ))}
+                            </div>
+                        </ScrollArea>
                     </div>
                 )}
                  {visiblePartialCommissionReminders.length > 0 && (
                     <div>
                         <h3 className="font-semibold mb-2">💰 Lembretes de Comissão Parcial</h3>
-                        <div className="space-y-2">
-                            {visiblePartialCommissionReminders.map(reminder => (
-                                <SummaryAlertItem 
-                                    key={reminder.id}
-                                    id={reminder.id}
-                                    icon={<Coins className="h-4 w-4" />}
-                                    title={`${reminder.customerName} (Prop. nº ${reminder.proposalNumber})`}
-                                    description={`Recebido R$ ${reminder.amountPaid.toFixed(2)} de R$ ${reminder.totalCommission.toFixed(2)} há ${reminder.daysSincePayment} dias. Sugestão: cobrar o valor restante.`}
-                                    onDismiss={handleDismiss}
-                                />
-                            ))}
-                        </div>
+                        <ScrollArea className="max-h-48 w-full">
+                            <div className="space-y-2 pr-4">
+                                {visiblePartialCommissionReminders.map(reminder => (
+                                    <SummaryAlertItem 
+                                        key={reminder.id}
+                                        id={reminder.id}
+                                        icon={<Coins className="h-4 w-4" />}
+                                        title={`${reminder.customerName} (Prop. nº ${reminder.proposalNumber})`}
+                                        description={`Recebido R$ ${reminder.amountPaid.toFixed(2)} de R$ ${reminder.totalCommission.toFixed(2)} há ${reminder.daysSincePayment} dias. Sugestão: cobrar o valor restante.`}
+                                        onDismiss={handleDismiss}
+                                    />
+                                ))}
+                            </div>
+                        </ScrollArea>
                     </div>
                 )}
                  {visibleDebtBalanceReminders.length > 0 && (
                     <div>
                         <h3 className="font-semibold mb-2">⏳ Alertas de Saldo Devedor (Portabilidade)</h3>
-                        <div className="space-y-2">
-                            {visibleDebtBalanceReminders.map(reminder => (
-                                <SummaryAlertItem 
-                                    key={reminder.id}
-                                    id={reminder.id}
-                                    icon={<Hourglass className="h-4 w-4" />}
-                                    title={`${reminder.customerName} (Prop. nº ${reminder.proposalNumber})`}
-                                    description={`Aguardando saldo há ${reminder.daysWaiting} dias úteis. O prazo está se esgotando, verifique o status.`}
-                                    onDismiss={handleDismiss}
-                                />
-                            ))}
-                        </div>
+                        <ScrollArea className="max-h-48 w-full">
+                            <div className="space-y-2 pr-4">
+                                {visibleDebtBalanceReminders.map(reminder => (
+                                    <SummaryAlertItem 
+                                        key={reminder.id}
+                                        id={reminder.id}
+                                        icon={<Hourglass className="h-4 w-4" />}
+                                        title={`${reminder.customerName} (Prop. nº ${reminder.proposalNumber})`}
+                                        description={`Aguardando saldo há ${reminder.daysWaiting} dias úteis. O prazo está se esgotando, verifique o status.`}
+                                        onDismiss={handleDismiss}
+                                    />
+                                ))}
+                            </div>
+                        </ScrollArea>
                     </div>
                 )}
             </div>
