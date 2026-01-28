@@ -663,7 +663,7 @@ export function ProposalForm({
                         </FormItem>
                         )}
                     />
-                    {(product === 'Portabilidade' || product === 'Refin Port') && (
+                    {product === 'Portabilidade' && (
                         <FormField
                             control={form.control}
                             name="bankOrigin"
@@ -777,7 +777,7 @@ export function ProposalForm({
                  </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
                     <MaskedDatePicker name="dateDigitized" label="Data de Digitação" control={form.control} isReadOnly={isReadOnly} />
-                    {(product === 'Portabilidade' || product === 'Refin Port') ? (
+                    {product === 'Portabilidade' ? (
                         <>
                             <MaskedDatePicker name="debtBalanceArrivalDate" label="Chegada Saldo Devedor" control={form.control} isReadOnly={isReadOnly} />
                             <MaskedDatePicker name="dateApproved" label="Data de Averbação" control={form.control} isReadOnly={isReadOnly} />
