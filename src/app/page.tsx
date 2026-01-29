@@ -15,9 +15,8 @@ import {
   EyeOff,
   X,
   Filter,
-  UsersRound,
 } from 'lucide-react';
-import { format, parse, startOfMonth, endOfMonth, isValid, subMonths } from 'date-fns';
+import { format, parse, startOfMonth, endOfMonth, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatCurrency, cn } from '@/lib/utils';
 import type { Proposal, ProposalStatus, Customer, UserProfile } from '@/lib/types';
@@ -122,34 +121,11 @@ export default function DashboardPage() {
     });
   }, [proposals, appliedDateRange, isClient]);
 
-  const prevMonthProposals = React.useMemo(() => {
-    if (!proposals || !isClient) return [];
-    const today = new Date();
-    const startOfPrev = startOfMonth(subMonths(today, 1));
-    const endOfPrev = endOfMonth(subMonths(today, 1));
-    
-    return proposals.filter(p => {
-      if (!p.dateDigitized) return false;
-      const proposalDate = new Date(p.dateDigitized);
-      return proposalDate >= startOfPrev && proposalDate <= endOfPrev;
-    });
-  }, [proposals, isClient]);
-
   const getProposalsSum = (proposalsList: Proposal[]): number => {
     return proposalsList.reduce((sum, p) => {
         if (p.commissionBase === 'net') return sum + (p.netAmount || 0);
         return sum + (p.grossAmount || 0);
     }, 0);
-  };
-
-  const calculateTrend = (current: number, previous: number) => {
-    if (previous === 0) return { value: 0, isPositive: true, label: 'vs mês ant.' };
-    const diff = ((current - previous) / previous) * 100;
-    return {
-      value: Math.abs(Math.round(diff)),
-      isPositive: diff >= 0,
-      label: 'vs mês ant.'
-    };
   };
 
   const getFilterDescription = () => {
@@ -164,25 +140,16 @@ export default function DashboardPage() {
   }
   
   const currentTotalDigitado = getProposalsSum(filteredProposals);
-  const prevTotalDigitado = getProposalsSum(prevMonthProposals);
 
   const getProposalsByStatus = (list: Proposal[], statuses: ProposalStatus[]) => 
     list.filter((p) => statuses.includes(p.status));
 
   const pagoProposals = getProposalsByStatus(filteredProposals, ['Pago', 'Saldo Pago']);
-  const prevPagoProposals = getProposalsByStatus(prevMonthProposals, ['Pago', 'Saldo Pago']);
-  
   const currentTotalPago = getProposalsSum(pagoProposals);
-  const prevTotalPago = getProposalsSum(prevPagoProposals);
 
   const pendenteProposals = getProposalsByStatus(filteredProposals, ['Pendente']);
-  const prevPendenteProposals = getProposalsByStatus(prevMonthProposals, ['Pendente']);
-
   const emAndamentoProposals = getProposalsByStatus(filteredProposals, ['Em Andamento']);
-  const prevEmAndamentoProposals = getProposalsByStatus(prevMonthProposals, ['Em Andamento']);
-
   const aguardandoSaldoProposals = getProposalsByStatus(filteredProposals, ['Aguardando Saldo']);
-  const prevAguardandoSaldoProposals = getProposalsByStatus(prevMonthProposals, ['Aguardando Saldo']);
 
   const cardData = [
     {
@@ -192,7 +159,6 @@ export default function DashboardPage() {
       className: 'border-muted',
       valueClassName: 'text-foreground',
       proposals: filteredProposals,
-      trend: calculateTrend(currentTotalDigitado, prevTotalDigitado),
     },
     {
       title: 'Pendente',
@@ -201,7 +167,6 @@ export default function DashboardPage() {
       className: 'border-purple-500/50',
       valueClassName: 'text-purple-500',
       proposals: pendenteProposals,
-      trend: calculateTrend(getProposalsSum(pendenteProposals), getProposalsSum(prevPendenteProposals)),
     },
     {
       title: 'Em Andamento',
@@ -210,7 +175,6 @@ export default function DashboardPage() {
       className: 'border-yellow-500/50',
       valueClassName: 'text-yellow-500',
       proposals: emAndamentoProposals,
-      trend: calculateTrend(getProposalsSum(emAndamentoProposals), getProposalsSum(prevEmAndamentoProposals)),
     },
     {
       title: 'Aguardando Saldo',
@@ -219,7 +183,6 @@ export default function DashboardPage() {
       className: 'border-blue-500/50',
       valueClassName: 'text-blue-500',
       proposals: aguardandoSaldoProposals,
-      trend: calculateTrend(getProposalsSum(aguardandoSaldoProposals), getProposalsSum(prevAguardandoSaldoProposals)),
     },
   ];
 
@@ -290,7 +253,6 @@ export default function DashboardPage() {
                         icon={card.icon}
                         className={cn("h-full", card.className)}
                         valueClassName={card.valueClassName}
-                        trend={isPrivacyMode ? undefined : card.trend}
                       />
                   </div>
                 )
