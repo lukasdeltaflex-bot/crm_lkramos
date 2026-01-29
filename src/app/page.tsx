@@ -38,6 +38,7 @@ import { Card } from '@/components/ui/card';
 import { DateRange } from 'react-day-picker';
 import { Input } from '@/components/ui/input';
 import { DailySummary } from '@/components/summary/daily-summary';
+import { GoalCard } from '@/components/dashboard/goal-card';
 
 export default function DashboardPage() {
   const [startDateInput, setStartDateInput] = React.useState('');
@@ -267,13 +268,19 @@ export default function DashboardPage() {
       </div>
       <div className="space-y-8">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          <div className="md:col-span-2 lg:col-span-3 xl:col-span-6 cursor-pointer" onClick={() => setDialogData({ title: 'Total Digitado no Mês', proposals: filteredProposals })}>
+          <div className="md:col-span-2 lg:col-span-2 xl:col-span-4 cursor-pointer" onClick={() => setDialogData({ title: 'Total Digitado no Mês', proposals: filteredProposals })}>
              <StatsCard
                 title="Total Digitado no Mês"
                 value={isPrivacyMode ? '•••••' : formatCurrency(totalDigitado)}
                 icon={Banknote}
                 className="border-primary/50"
                 valueClassName="text-primary"
+            />
+          </div>
+          <div className="md:col-span-2 lg:col-span-1 xl:col-span-2">
+            <GoalCard 
+              currentProduction={totalDigitado} 
+              className={isPrivacyMode ? 'blur-sm select-none' : ''}
             />
           </div>
           {isLoading ? Array.from({length: 6}).map((_, i) => (

@@ -72,6 +72,7 @@ import { Separator } from '@/components/ui/separator';
 import { formatCurrency } from '@/lib/utils';
 import { parse, isValid } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
+import { cn } from '@/lib/utils';
 
 const STORAGE_KEY_VISIBILITY = 'lk-ramos-proposal-columns-visibility-v5';
 const STORAGE_KEY_ORDER = 'lk-ramos-proposal-columns-order-v5';
@@ -358,6 +359,18 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     debtBalanceArrivalDate: 'Chegada Saldo',
   }
 
+  const getRowStatusClass = (status: string) => {
+    switch (status) {
+      case 'Pago': return 'bg-green-50/50 dark:bg-green-950/10 hover:bg-green-50 dark:hover:bg-green-950/20';
+      case 'Saldo Pago': return 'bg-orange-50/50 dark:bg-orange-950/10 hover:bg-orange-50 dark:hover:bg-orange-950/20';
+      case 'Reprovado': return 'bg-red-50/50 dark:bg-red-950/10 hover:bg-red-50 dark:hover:bg-red-950/20';
+      case 'Em Andamento': return 'bg-yellow-50/50 dark:bg-yellow-950/10 hover:bg-yellow-50 dark:hover:bg-yellow-950/20';
+      case 'Aguardando Saldo': return 'bg-blue-50/50 dark:bg-blue-950/10 hover:bg-blue-50 dark:hover:bg-blue-950/20';
+      case 'Pendente': return 'bg-purple-50/50 dark:bg-purple-950/10 hover:bg-purple-50 dark:hover:bg-purple-950/20';
+      default: return '';
+    }
+  };
+
   return (
     <DndContext
       collisionDetection={closestCenter}
@@ -478,6 +491,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                     <TableRow
                         key={row.id}
                         data-state={row.getIsSelected() && 'selected'}
+                        className={cn("transition-colors", getRowStatusClass(row.original.status))}
                     >
                         {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id}>

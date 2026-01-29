@@ -8,6 +8,7 @@ import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { setDefaultOptions } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ThemeProvider } from '@/components/theme-provider';
+import { InteractionFixer } from '@/components/interaction-fixer';
 
 setDefaultOptions({ locale: ptBR });
 
@@ -34,6 +35,7 @@ export default function RootLayout({
           fontSans.variable
         )}
       >
+        <InteractionFixer />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
