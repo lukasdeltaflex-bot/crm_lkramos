@@ -3,13 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Target, TrendingUp, Pencil, Check, X, Banknote, ShieldCheck } from 'lucide-react';
+import { Target, TrendingUp, Pencil, Check, X, ShieldCheck } from 'lucide-react';
 import { formatCurrency, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 interface GoalCardProps {
   currentProduction: number;
+  totalDigitized: number;
   isPrivacyMode?: boolean;
   onValueClick?: () => void;
   className?: string;
@@ -17,7 +18,7 @@ interface GoalCardProps {
 
 const STORAGE_KEY_GOAL = 'lk-ramos-monthly-goal-v1';
 
-export function GoalCard({ currentProduction, isPrivacyMode, onValueClick, className }: GoalCardProps) {
+export function GoalCard({ currentProduction, totalDigitized, isPrivacyMode, onValueClick, className }: GoalCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [monthlyGoal, setMonthlyGoal] = useState(100000);
   const [editValue, setEditValue] = useState('100000');
@@ -47,7 +48,8 @@ export function GoalCard({ currentProduction, isPrivacyMode, onValueClick, class
     setIsEditing(false);
   };
 
-  const percentage = Math.min((currentProduction / monthlyGoal) * 100, 100);
+  const percentageOfGoal = Math.min((currentProduction / monthlyGoal) * 100, 100);
+  const percentageOfTotal = totalDigitized > 0 ? (currentProduction / totalDigitized) * 100 : 0;
   const isGoalReached = currentProduction >= monthlyGoal;
 
   return (
@@ -104,18 +106,23 @@ export function GoalCard({ currentProduction, isPrivacyMode, onValueClick, class
               <div className="text-4xl font-bold text-primary">
                 {isPrivacyMode ? '•••••' : formatCurrency(currentProduction)}
               </div>
+              {!isPrivacyMode && (
+                <p className="text-[11px] text-muted-foreground font-medium">
+                  Representa <span className="text-foreground font-bold">{percentageOfTotal.toFixed(1).replace('.', ',')}%</span> de tudo o que foi digitado.
+                </p>
+              )}
             </div>
             <div className={cn("flex flex-col items-end gap-1 font-bold", isGoalReached ? "text-green-500" : "text-primary")}>
               <div className="flex items-center gap-1 text-lg">
                 <TrendingUp className="h-5 w-5" />
-                {percentage.toFixed(1)}%
+                {percentageOfGoal.toFixed(1)}%
               </div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-tighter">da meta</p>
             </div>
           </div>
           
           <div className="space-y-2">
-            <Progress value={percentage} className="h-3 bg-secondary" />
+            <Progress value={percentageOfGoal} className="h-3 bg-secondary" />
             <div className="flex justify-between items-center text-[11px] font-medium">
               {isGoalReached ? (
                 <p className="text-green-500 animate-pulse flex items-center gap-1 font-bold">

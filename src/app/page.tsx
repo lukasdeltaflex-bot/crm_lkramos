@@ -10,16 +10,12 @@ import {
   FileText,
   Clock,
   CircleDollarSign,
-  CheckCircle,
-  XCircle,
   Hourglass,
   BadgePercent,
   Eye,
   EyeOff,
   X,
   Filter,
-  Banknote,
-  Percent,
 } from 'lucide-react';
 import { format, parse, startOfMonth, endOfMonth, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -176,7 +172,6 @@ export default function DashboardPage() {
   const saldoPagoProposals = getProposalsByStatus(filteredProposals, ['Saldo Pago']);
   const pendenteProposals = getProposalsByStatus(filteredProposals, ['Pendente']);
   const pagoProposals = getProposalsByStatus(filteredProposals, ['Pago']);
-  const rejeitadoProposals = getProposalsByStatus(filteredProposals, ['Reprovado']);
 
   const totalPagoValue = React.useMemo(() => getProposalsSum(pagoProposals), [pagoProposals]);
 
@@ -221,14 +216,6 @@ export default function DashboardPage() {
       valueClassName: 'text-orange-500',
       proposals: saldoPagoProposals,
     },
-    {
-      title: 'Pago',
-      value: totalPagoValue,
-      icon: CheckCircle,
-      className: 'border-green-500/50',
-      valueClassName: 'text-green-500',
-      proposals: pagoProposals,
-    },
   ];
 
   return (
@@ -264,8 +251,8 @@ export default function DashboardPage() {
         </div>
       </div>
       <div className="space-y-8">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
-          <div className="md:col-span-2 lg:col-span-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <div className="md:col-span-2 lg:col-span-5">
             {isLoading ? (
               <Card className="p-6">
                 <Skeleton className="h-5 w-48 mb-4" />
@@ -274,13 +261,14 @@ export default function DashboardPage() {
             ) : (
               <GoalCard 
                 currentProduction={totalPagoValue} 
+                totalDigitized={totalDigitado}
                 isPrivacyMode={isPrivacyMode}
                 onValueClick={() => setDialogData({ title: 'Contratos Pagos no Mês', proposals: pagoProposals })}
               />
             )}
           </div>
           
-          {isLoading ? Array.from({length: 6}).map((_, i) => (
+          {isLoading ? Array.from({length: 5}).map((_, i) => (
              <Card key={i} className="md:col-span-1 lg:col-span-1 p-6">
                 <Skeleton className="h-5 w-24 mb-4" />
                 <Skeleton className="h-8 w-32" />
