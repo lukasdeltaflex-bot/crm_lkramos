@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -53,7 +54,7 @@ export function GoalCard({ currentProduction, totalDigitized, isPrivacyMode, onV
   const isGoalReached = currentProduction >= monthlyGoal;
 
   return (
-    <Card className={cn('hover:border-primary/50 transition-colors group relative overflow-hidden', className)}>
+    <Card className={cn('hover:border-primary/50 transition-colors group relative overflow-hidden bg-primary/5 dark:bg-primary/10 border-primary/20', className)}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex items-center gap-2">
           <CardTitle className="text-sm font-medium">Meta de Contratos Pagos</CardTitle>

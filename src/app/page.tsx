@@ -1,3 +1,4 @@
+
 'use client';
 import React from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -164,7 +165,7 @@ export default function DashboardPage() {
       title: 'Total Digitado',
       value: currentTotalDigitado,
       icon: FileText,
-      className: 'border-muted',
+      className: 'border-muted bg-muted/10',
       valueClassName: 'text-foreground',
       proposals: filteredProposals,
       percentage: 100,
@@ -173,7 +174,7 @@ export default function DashboardPage() {
       title: 'Pendente',
       value: getProposalsSum(pendenteProposals),
       icon: BadgePercent,
-      className: 'border-purple-500/50',
+      className: 'border-purple-500/30 bg-purple-500/5 dark:bg-purple-500/10',
       valueClassName: 'text-purple-500',
       proposals: pendenteProposals,
       percentage: getPercentage(getProposalsSum(pendenteProposals)),
@@ -182,7 +183,7 @@ export default function DashboardPage() {
       title: 'Em Andamento',
       value: getProposalsSum(emAndamentoProposals),
       icon: Hourglass,
-      className: 'border-yellow-500/50',
+      className: 'border-yellow-500/30 bg-yellow-500/5 dark:bg-yellow-500/10',
       valueClassName: 'text-yellow-500',
       proposals: emAndamentoProposals,
       percentage: getPercentage(getProposalsSum(emAndamentoProposals)),
@@ -191,7 +192,7 @@ export default function DashboardPage() {
       title: 'Aguardando Saldo',
       value: getProposalsSum(aguardandoSaldoProposals),
       icon: Clock,
-      className: 'border-blue-500/50',
+      className: 'border-blue-500/30 bg-blue-500/5 dark:bg-blue-500/10',
       valueClassName: 'text-blue-500',
       proposals: aguardandoSaldoProposals,
       percentage: getPercentage(getProposalsSum(aguardandoSaldoProposals)),
@@ -200,7 +201,7 @@ export default function DashboardPage() {
       title: 'Saldo Pago',
       value: getProposalsSum(saldoPagoProposals),
       icon: CheckCircle2,
-      className: 'border-orange-500/50',
+      className: 'border-orange-500/30 bg-orange-500/5 dark:bg-orange-500/10',
       valueClassName: 'text-orange-500',
       proposals: saldoPagoProposals,
       percentage: getPercentage(getProposalsSum(saldoPagoProposals)),
@@ -209,7 +210,7 @@ export default function DashboardPage() {
       title: 'Reprovado',
       value: getProposalsSum(reprovadoProposals),
       icon: XCircle,
-      className: 'border-red-500/50',
+      className: 'border-red-500/30 bg-red-500/5 dark:bg-red-500/10',
       valueClassName: 'text-red-500',
       proposals: reprovadoProposals,
       percentage: getPercentage(getProposalsSum(reprovadoProposals)),
