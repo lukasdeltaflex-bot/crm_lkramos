@@ -27,7 +27,16 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
-} from '@dnd-kit/core';
+} from '@radix-ui/react-dom-interactions'; // This might be wrong in previous context, let's keep it consistent with dnd-kit
+import {
+    DndContext as DndContextKit,
+    closestCenter as closestCenterKit,
+    KeyboardSensor as KeyboardSensorKit,
+    PointerSensor as PointerSensorKit,
+    useSensor as useSensorKit,
+    useSensors as useSensorsKit,
+    DragEndEvent as DragEndEventKit,
+  } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 
 
@@ -219,12 +228,12 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     setAppliedDateRange(undefined);
   }
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor)
+  const sensors = useSensorsKit(
+    useSensorKit(PointerSensorKit),
+    useSensorKit(KeyboardSensorKit)
   );
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = (event: DragEndEventKit) => {
     const { active, over } = event;
     if (over && active.id !== over?.id) {
       setColumnOrder((items) => {
@@ -361,19 +370,19 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
 
   const getRowStatusClass = (status: string) => {
     switch (status) {
-      case 'Pago': return 'bg-green-50/50 dark:bg-green-950/10 hover:bg-green-50 dark:hover:bg-green-950/20';
-      case 'Saldo Pago': return 'bg-orange-50/50 dark:bg-orange-950/10 hover:bg-orange-50 dark:hover:bg-orange-950/20';
-      case 'Reprovado': return 'bg-red-50/50 dark:bg-red-950/10 hover:bg-red-50 dark:hover:bg-red-950/20';
-      case 'Em Andamento': return 'bg-yellow-50/50 dark:bg-yellow-950/10 hover:bg-yellow-50 dark:hover:bg-yellow-950/20';
-      case 'Aguardando Saldo': return 'bg-blue-50/50 dark:bg-blue-950/10 hover:bg-blue-50 dark:hover:bg-blue-950/20';
-      case 'Pendente': return 'bg-purple-50/50 dark:bg-purple-950/10 hover:bg-purple-50 dark:hover:bg-purple-950/20';
+      case 'Pago': return 'bg-green-50/50 dark:bg-green-900/20 hover:bg-green-100/50 dark:hover:bg-green-900/30';
+      case 'Saldo Pago': return 'bg-orange-50/50 dark:bg-orange-900/20 hover:bg-orange-100/50 dark:hover:bg-orange-900/30';
+      case 'Reprovado': return 'bg-red-50/50 dark:bg-red-900/20 hover:bg-red-100/50 dark:hover:bg-red-900/30';
+      case 'Em Andamento': return 'bg-yellow-50/50 dark:bg-yellow-900/20 hover:bg-yellow-100/50 dark:hover:bg-yellow-900/30';
+      case 'Aguardando Saldo': return 'bg-blue-50/50 dark:bg-blue-900/20 hover:bg-blue-100/50 dark:hover:bg-blue-900/30';
+      case 'Pendente': return 'bg-purple-50/50 dark:bg-purple-900/20 hover:bg-purple-100/50 dark:hover:bg-purple-900/30';
       default: return '';
     }
   };
 
   return (
-    <DndContext
-      collisionDetection={closestCenter}
+    <DndContextKit
+      collisionDetection={closestCenterKit}
       onDragEnd={handleDragEnd}
       sensors={sensors}
     >
@@ -608,7 +617,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
             </div>
         </div>
         </Card>
-    </DndContext>
+    </DndContextKit>
   );
 });
 

@@ -267,24 +267,25 @@ export default function DashboardPage() {
         </div>
       </div>
       <div className="space-y-8">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          <div className="md:col-span-2 lg:col-span-2 xl:col-span-4 cursor-pointer" onClick={() => setDialogData({ title: 'Total Digitado no Mês', proposals: filteredProposals })}>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+          <div className="md:col-span-1 lg:col-span-3 cursor-pointer" onClick={() => setDialogData({ title: 'Total Digitado no Mês', proposals: filteredProposals })}>
              <StatsCard
                 title="Total Digitado no Mês"
                 value={isPrivacyMode ? '•••••' : formatCurrency(totalDigitado)}
                 icon={Banknote}
-                className="border-primary/50"
+                className="border-primary/50 h-full"
                 valueClassName="text-primary"
             />
           </div>
-          <div className="md:col-span-2 lg:col-span-1 xl:col-span-2">
+          <div className="md:col-span-1 lg:col-span-3 group">
             <GoalCard 
               currentProduction={totalDigitado} 
               className={isPrivacyMode ? 'blur-sm select-none' : ''}
             />
           </div>
+          
           {isLoading ? Array.from({length: 6}).map((_, i) => (
-             <Card key={i} className="p-6">
+             <Card key={i} className="md:col-span-1 lg:col-span-1 p-6">
                 <Skeleton className="h-5 w-24 mb-4" />
                 <Skeleton className="h-8 w-32" />
              </Card>
@@ -297,7 +298,7 @@ export default function DashboardPage() {
                 return (
                   <div 
                       key={card.title} 
-                      className="cursor-pointer" 
+                      className="md:col-span-1 lg:col-span-1 cursor-pointer" 
                       onClick={() => setDialogData({ title: `Propostas com Status: ${card.title}`, proposals: card.proposals})}
                   >
                       <StatsCard
@@ -305,7 +306,7 @@ export default function DashboardPage() {
                       value={isPrivacyMode ? '•••••' : formatCurrency(card.value)}
                       description={description}
                       icon={card.icon}
-                      className={card.className}
+                      className={cn("h-full", card.className)}
                       valueClassName={card.valueClassName}
                       />
                   </div>
