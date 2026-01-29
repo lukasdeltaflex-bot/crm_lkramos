@@ -78,403 +78,195 @@
     --chart-5: 222.2 47.4% 11.2%;
   }
 
-  /* Theme Padrão (Default) */
-  :root.theme-padrão {
+  /* Temas Globais - Ajustados para funcionar em Modo Claro */
+  .theme-padrão {
     --primary: 217 33% 25%;
-    --primary-foreground: 210 40% 98%;
-    --accent: 45 83% 50%;
-    --accent-foreground: 222.2 47.4% 11.2%;
     --ring: 217 33% 25%;
     --sidebar-primary: 45 83% 50%;
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-ring: 45 83% 50%;
   }
-  html.dark.theme-padrão {
+  .dark.theme-padrão {
     --primary: 217 33% 30%;
-    --primary-foreground: 210 20% 98%;
-    --accent: 45 83% 50%;
-    --accent-foreground: 210 20% 98%;
     --ring: 217 33% 30%;
   }
-  /* Theme Zinc */
-  :root.theme-zinc {
+
+  .theme-zinc {
     --primary: 240 5.9% 10%;
-    --primary-foreground: 240 5.9% 90%;
-    --accent: 240 5.9% 20%;
     --ring: 240 5.9% 10%;
-    --sidebar-primary: 240 5.9% 90%;
-    --sidebar-primary-foreground: 240 5.9% 10%;
-    --sidebar-ring: 240 5.9% 90%;
   }
-  html.dark.theme-zinc {
+  .dark.theme-zinc {
     --primary: 240 5.9% 90%;
-    --primary-foreground: 240 5.9% 10%;
-    --accent: 240 5.9% 20%;
     --ring: 240 5.9% 90%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 240 5.9% 90%;
-    --sidebar-ring: 240 5.9% 10%;
   }
-  /* Theme Blue */
-  :root.theme-blue {
+
+  .theme-blue {
     --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 210 40% 98%;
-    --accent: 217.2 91.2% 69.8%;
     --ring: 217.2 91.2% 59.8%;
-    --sidebar-primary: 217.2 91.2% 59.8%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
-  html.dark.theme-blue {
+  .dark.theme-blue {
     --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 210 40% 98%;
-    --accent: 217.2 91.2% 49.8%;
     --ring: 217.2 91.2% 59.8%;
-    --sidebar-primary: 217.2 91.2% 59.8%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
-  /* Theme Green */
-  :root.theme-green {
+
+  .theme-green {
     --primary: 142.1 76.2% 36.3%;
-    --primary-foreground: 142.1 76.2% 96.3%;
-    --accent: 142.1 76.2% 46.3%;
     --ring: 142.1 76.2% 36.3%;
-    --sidebar-primary: 142.1 76.2% 36.3%;
-    --sidebar-primary-foreground: 142.1 76.2% 96.3%;
-    --sidebar-ring: 142.1 76.2% 36.3%;
   }
-  html.dark.theme-green {
+  .dark.theme-green {
     --primary: 142.1 76.2% 41.3%;
-    --primary-foreground: 142.1 76.2% 96.3%;
-    --accent: 142.1 76.2% 26.3%;
     --ring: 142.1 76.2% 41.3%;
-    --sidebar-primary: 142.1 76.2% 36.3%;
-    --sidebar-primary-foreground: 142.1 76.2% 96.3%;
-    --sidebar-ring: 142.1 76.2% 36.3%;
   }
-  /* Theme Violet */
-  :root.theme-violet {
+
+  .theme-violet {
     --primary: 262.1 83.3% 57.8%;
-    --primary-foreground: 262.1 83.3% 97.8%;
-    --accent: 262.1 83.3% 67.8%;
     --ring: 262.1 83.3% 57.8%;
-    --sidebar-primary: 262.1 83.3% 57.8%;
-    --sidebar-primary-foreground: 262.1 83.3% 97.8%;
-    --sidebar-ring: 262.1 83.3% 57.8%;
   }
-  html.dark.theme-violet {
+  .dark.theme-violet {
     --primary: 262.1 83.3% 62.8%;
-    --primary-foreground: 262.1 83.3% 97.8%;
-    --accent: 262.1 83.3% 47.8%;
     --ring: 262.1 83.3% 62.8%;
-    --sidebar-primary: 262.1 83.3% 57.8%;
-    --sidebar-primary-foreground: 262.1 83.3% 97.8%;
-    --sidebar-ring: 262.1 83.3% 57.8%;
   }
-  /* Theme Orange */
-  :root.theme-orange {
+
+  .theme-orange {
     --primary: 24.6 95% 53.1%;
-    --primary-foreground: 24.6 95% 93.1%;
-    --accent: 24.6 95% 63.1%;
     --ring: 24.6 95% 53.1%;
-    --sidebar-primary: 24.6 95% 53.1%;
-    --sidebar-primary-foreground: 24.6 95% 93.1%;
-    --sidebar-ring: 24.6 95% 53.1%;
   }
-  html.dark.theme-orange {
+  .dark.theme-orange {
     --primary: 24.6 95% 58.1%;
-    --primary-foreground: 24.6 95% 93.1%;
-    --accent: 24.6 95% 43.1%;
     --ring: 24.6 95% 58.1%;
-    --sidebar-primary: 24.6 95% 53.1%;
-    --sidebar-primary-foreground: 24.6 95% 93.1%;
-    --sidebar-ring: 24.6 95% 53.1%;
   }
-  /* Theme Red */
-  :root.theme-red {
+
+  .theme-red {
     --primary: 0 72.2% 50.6%;
-    --primary-foreground: 0 72.2% 90.6%;
-    --accent: 0 72.2% 60.6%;
     --ring: 0 72.2% 50.6%;
-    --sidebar-primary: 0 72.2% 50.6%;
-    --sidebar-primary-foreground: 0 72.2% 90.6%;
-    --sidebar-ring: 0 72.2% 50.6%;
   }
-  html.dark.theme-red {
+  .dark.theme-red {
     --primary: 0 72.2% 55.6%;
-    --primary-foreground: 0 72.2% 90.6%;
-    --accent: 0 72.2% 40.6%;
     --ring: 0 72.2% 55.6%;
-    --sidebar-primary: 0 72.2% 50.6%;
-    --sidebar-primary-foreground: 0 72.2% 90.6%;
-    --sidebar-ring: 0 72.2% 50.6%;
   }
-  /* Theme Rose */
-  :root.theme-rose {
+
+  .theme-rose {
     --primary: 346.8 77.2% 49.8%;
-    --primary-foreground: 346.8 77.2% 95.8%;
-    --accent: 346.8 77.2% 59.8%;
     --ring: 346.8 77.2% 49.8%;
-    --sidebar-primary: 346.8 77.2% 49.8%;
-    --sidebar-primary-foreground: 346.8 77.2% 95.8%;
-    --sidebar-ring: 346.8 77.2% 49.8%;
   }
-  html.dark.theme-rose {
+  .dark.theme-rose {
     --primary: 346.8 77.2% 54.8%;
-    --primary-foreground: 346.8 77.2% 95.8%;
-    --accent: 346.8 77.2% 39.8%;
     --ring: 346.8 77.2% 54.8%;
-    --sidebar-primary: 346.8 77.2% 49.8%;
-    --sidebar-primary-foreground: 346.8 77.2% 95.8%;
-    --sidebar-ring: 346.8 77.2% 49.8%;
   }
-  /* Theme Gray */
-  :root.theme-gray {
+
+  .theme-gray {
     --primary: 220 9% 46%;
-    --primary-foreground: 220 9% 96%;
-    --accent: 220 9% 56%;
     --ring: 220 9% 46%;
-    --sidebar-primary: 220 9% 46%;
-    --sidebar-primary-foreground: 220 9% 96%;
-    --sidebar-ring: 220 9% 46%;
   }
-  html.dark.theme-gray {
+  .dark.theme-gray {
     --primary: 220 9% 51%;
-    --primary-foreground: 220 9% 96%;
-    --accent: 220 9% 36%;
     --ring: 220 9% 51%;
-    --sidebar-primary: 220 9% 46%;
-    --sidebar-primary-foreground: 220 9% 96%;
-    --sidebar-ring: 220 9% 46%;
   }
-  /* Theme Yellow */
-  :root.theme-yellow {
+
+  .theme-yellow {
     --primary: 45 93% 47%;
-    --primary-foreground: 45 93% 7%;
-    --accent: 45 93% 57%;
     --ring: 45 93% 47%;
-    --sidebar-primary: 45 93% 47%;
-    --sidebar-primary-foreground: 45 93% 7%;
-    --sidebar-ring: 45 93% 47%;
   }
-  html.dark.theme-yellow {
+  .dark.theme-yellow {
     --primary: 45 93% 52%;
-    --primary-foreground: 45 93% 7%;
-    --accent: 45 93% 37%;
     --ring: 45 93% 52%;
-    --sidebar-primary: 45 93% 47%;
-    --sidebar-primary-foreground: 45 93% 7%;
-    --sidebar-ring: 45 93% 47%;
   }
-  /* Theme Cyan */
-  :root.theme-cyan {
+
+  .theme-cyan {
     --primary: 184 90% 41%;
-    --primary-foreground: 184 90% 91%;
-    --accent: 184 90% 51%;
     --ring: 184 90% 41%;
-    --sidebar-primary: 184 90% 41%;
-    --sidebar-primary-foreground: 184 90% 91%;
-    --sidebar-ring: 184 90% 41%;
   }
-  html.dark.theme-cyan {
+  .dark.theme-cyan {
     --primary: 184 90% 46%;
-    --primary-foreground: 184 90% 91%;
-    --accent: 184 90% 31%;
     --ring: 184 90% 46%;
-    --sidebar-primary: 184 90% 41%;
-    --sidebar-primary-foreground: 184 90% 91%;
-    --sidebar-ring: 184 90% 41%;
   }
-  /* Theme Purple */
-  :root.theme-purple {
+
+  .theme-purple {
     --primary: 282 78% 51%;
-    --primary-foreground: 282 78% 91%;
-    --accent: 282 78% 61%;
     --ring: 282 78% 51%;
-    --sidebar-primary: 282 78% 51%;
-    --sidebar-primary-foreground: 282 78% 91%;
-    --sidebar-ring: 282 78% 51%;
   }
-  html.dark.theme-purple {
+  .dark.theme-purple {
     --primary: 282 78% 56%;
-    --primary-foreground: 282 78% 91%;
-    --accent: 282 78% 41%;
     --ring: 282 78% 56%;
-    --sidebar-primary: 282 78% 51%;
-    --sidebar-primary-foreground: 282 78% 91%;
-    --sidebar-ring: 282 78% 51%;
   }
-  /* Theme Magenta */
-  :root.theme-magenta {
+
+  .theme-magenta {
     --primary: 322 84% 50%;
-    --primary-foreground: 322 84% 90%;
-    --accent: 322 84% 60%;
     --ring: 322 84% 50%;
-    --sidebar-primary: 322 84% 50%;
-    --sidebar-primary-foreground: 322 84% 90%;
-    --sidebar-ring: 322 84% 50%;
   }
-  html.dark.theme-magenta {
+  .dark.theme-magenta {
     --primary: 322 84% 55%;
-    --primary-foreground: 322 84% 90%;
-    --accent: 322 84% 40%;
     --ring: 322 84% 55%;
-    --sidebar-primary: 322 84% 50%;
-    --sidebar-primary-foreground: 322 84% 90%;
-    --sidebar-ring: 322 84% 50%;
   }
-  /* Theme Emerald */
-  :root.theme-emerald {
+
+  .theme-emerald {
     --primary: 158 78% 41%;
-    --primary-foreground: 158 78% 91%;
-    --accent: 158 78% 51%;
     --ring: 158 78% 41%;
-    --sidebar-primary: 158 78% 41%;
-    --sidebar-primary-foreground: 158 78% 91%;
-    --sidebar-ring: 158 78% 41%;
   }
-  html.dark.theme-emerald {
+  .dark.theme-emerald {
     --primary: 158 78% 46%;
-    --primary-foreground: 158 78% 91%;
-    --accent: 158 78% 31%;
     --ring: 158 78% 46%;
-    --sidebar-primary: 158 78% 41%;
-    --sidebar-primary-foreground: 158 78% 91%;
-    --sidebar-ring: 158 78% 41%;
   }
-  /* Theme Burnt Orange */
-  :root.theme-burnt-orange {
+
+  .theme-burnt-orange {
     --primary: 16 84% 44%;
-    --primary-foreground: 16 84% 94%;
-    --accent: 16 84% 54%;
     --ring: 16 84% 44%;
-    --sidebar-primary: 16 84% 44%;
-    --sidebar-primary-foreground: 16 84% 94%;
-    --sidebar-ring: 16 84% 44%;
   }
-  html.dark.theme-burnt-orange {
+  .dark.theme-burnt-orange {
     --primary: 16 84% 49%;
-    --primary-foreground: 16 84% 94%;
-    --accent: 16 84% 34%;
     --ring: 16 84% 49%;
-    --sidebar-primary: 16 84% 44%;
-    --sidebar-primary-foreground: 16 84% 94%;
-    --sidebar-ring: 16 84% 44%;
   }
-  /* Theme Sky Blue */
-  :root.theme-sky-blue {
+
+  .theme-sky-blue {
     --primary: 199 89% 48%;
-    --primary-foreground: 199 89% 98%;
-    --accent: 199 89% 58%;
     --ring: 199 89% 48%;
-    --sidebar-primary: 199 89% 48%;
-    --sidebar-primary-foreground: 199 89% 98%;
-    --sidebar-ring: 199 89% 48%;
   }
-  html.dark.theme-sky-blue {
+  .dark.theme-sky-blue {
     --primary: 199 89% 53%;
-    --primary-foreground: 199 89% 98%;
-    --accent: 199 89% 38%;
     --ring: 199 89% 53%;
-    --sidebar-primary: 199 89% 48%;
-    --sidebar-primary-foreground: 199 89% 98%;
-    --sidebar-ring: 199 89% 48%;
   }
-  /* Theme Pink */
-  :root.theme-pink {
+
+  .theme-pink {
     --primary: 336 82% 54%;
-    --primary-foreground: 336 82% 94%;
-    --accent: 336 82% 64%;
     --ring: 336 82% 54%;
-    --sidebar-primary: 336 82% 54%;
-    --sidebar-primary-foreground: 336 82% 94%;
-    --sidebar-ring: 336 82% 54%;
   }
-  html.dark.theme-pink {
+  .dark.theme-pink {
     --primary: 336 82% 59%;
-    --primary-foreground: 336 82% 94%;
-    --accent: 336 82% 44%;
     --ring: 336 82% 59%;
-    --sidebar-primary: 336 82% 54%;
-    --sidebar-primary-foreground: 336 82% 94%;
-    --sidebar-ring: 336 82% 54%;
   }
-  /* Theme Mint */
-  :root.theme-mint {
+
+  .theme-mint {
     --primary: 168 86% 44%;
-    --primary-foreground: 168 86% 94%;
-    --accent: 168 86% 54%;
     --ring: 168 86% 44%;
-    --sidebar-primary: 168 86% 44%;
-    --sidebar-primary-foreground: 168 86% 94%;
-    --sidebar-ring: 168 86% 44%;
   }
-  html.dark.theme-mint {
+  .dark.theme-mint {
     --primary: 168 86% 49%;
-    --primary-foreground: 168 86% 94%;
-    --accent: 168 86% 34%;
     --ring: 168 86% 49%;
-    --sidebar-primary: 168 86% 44%;
-    --sidebar-primary-foreground: 168 86% 94%;
-    --sidebar-ring: 168 86% 44%;
   }
-  /* Theme Lavender */
-  :root.theme-lavender {
+
+  .theme-lavender {
     --primary: 250 60% 60%;
-    --primary-foreground: 250 60% 10%;
-    --accent: 250 60% 70%;
     --ring: 250 60% 60%;
-    --sidebar-primary: 250 60% 60%;
-    --sidebar-primary-foreground: 250 60% 10%;
-    --sidebar-ring: 250 60% 60%;
   }
-  html.dark.theme-lavender {
+  .dark.theme-lavender {
     --primary: 250 60% 65%;
-    --primary-foreground: 250 60% 10%;
-    --accent: 250 60% 50%;
     --ring: 250 60% 65%;
-    --sidebar-primary: 250 60% 60%;
-    --sidebar-primary-foreground: 250 60% 10%;
-    --sidebar-ring: 250 60% 60%;
   }
-  /* Theme Peach */
-  :root.theme-peach {
+
+  .theme-peach {
     --primary: 29 100% 65%;
-    --primary-foreground: 29 100% 15%;
-    --accent: 29 100% 75%;
     --ring: 29 100% 65%;
-    --sidebar-primary: 29 100% 65%;
-    --sidebar-primary-foreground: 29 100% 15%;
-    --sidebar-ring: 29 100% 65%;
   }
-  html.dark.theme-peach {
+  .dark.theme-peach {
     --primary: 29 100% 70%;
-    --primary-foreground: 29 100% 15%;
-    --accent: 29 100% 55%;
     --ring: 29 100% 70%;
-    --sidebar-primary: 29 100% 65%;
-    --sidebar-primary-foreground: 29 100% 15%;
-    --sidebar-ring: 29 100% 65%;
   }
-  /* Theme Slate */
-  :root.theme-slate {
+
+  .theme-slate {
     --primary: 215 25% 27%;
-    --primary-foreground: 215 25% 97%;
-    --accent: 215 25% 37%;
     --ring: 215 25% 27%;
-    --sidebar-primary: 215 25% 27%;
-    --sidebar-primary-foreground: 215 25% 97%;
-    --sidebar-ring: 215 25% 27%;
   }
-  html.dark.theme-slate {
+  .dark.theme-slate {
     --primary: 215 25% 67%;
-    --primary-foreground: 215 25% 7%;
-    --accent: 215 25% 37%;
     --ring: 215 25% 67%;
-    --sidebar-primary: 215 25% 67%;
-    --sidebar-primary-foreground: 215 25% 7%;
-    --sidebar-ring: 215 25% 67%;
   }
 
   * {

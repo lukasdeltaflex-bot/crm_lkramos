@@ -268,20 +268,19 @@ export default function DashboardPage() {
       </div>
       <div className="space-y-8">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
-          <div className="md:col-span-1 lg:col-span-3 cursor-pointer" onClick={() => setDialogData({ title: 'Total Digitado no Mês', proposals: filteredProposals })}>
-             <StatsCard
-                title="Total Digitado no Mês"
-                value={isPrivacyMode ? '•••••' : formatCurrency(totalDigitado)}
-                icon={Banknote}
-                className="border-primary/50 h-full"
-                valueClassName="text-primary"
-            />
-          </div>
-          <div className="md:col-span-1 lg:col-span-3 group">
-            <GoalCard 
-              currentProduction={totalDigitado} 
-              className={isPrivacyMode ? 'blur-sm select-none' : ''}
-            />
+          <div className="md:col-span-2 lg:col-span-6">
+            {isLoading ? (
+              <Card className="p-6">
+                <Skeleton className="h-5 w-48 mb-4" />
+                <Skeleton className="h-12 w-full" />
+              </Card>
+            ) : (
+              <GoalCard 
+                currentProduction={totalDigitado} 
+                isPrivacyMode={isPrivacyMode}
+                onValueClick={() => setDialogData({ title: 'Total Digitado no Mês', proposals: filteredProposals })}
+              />
+            )}
           </div>
           
           {isLoading ? Array.from({length: 6}).map((_, i) => (

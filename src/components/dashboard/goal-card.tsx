@@ -3,19 +3,21 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Target, TrendingUp, Pencil, Check, X } from 'lucide-react';
+import { Target, TrendingUp, Pencil, Check, X, Banknote } from 'lucide-react';
 import { formatCurrency, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 interface GoalCardProps {
   currentProduction: number;
+  isPrivacyMode?: boolean;
+  onValueClick?: () => void;
   className?: string;
 }
 
 const STORAGE_KEY_GOAL = 'lk-ramos-monthly-goal-v1';
 
-export function GoalCard({ currentProduction, className }: GoalCardProps) {
+export function GoalCard({ currentProduction, isPrivacyMode, onValueClick, className }: GoalCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [monthlyGoal, setMonthlyGoal] = useState(100000);
   const [editValue, setEditValue] = useState('100000');
@@ -49,10 +51,13 @@ export function GoalCard({ currentProduction, className }: GoalCardProps) {
   const isGoalReached = currentProduction >= monthlyGoal;
 
   return (
-    <Card className={cn('hover:border-primary/50 transition-colors h-full flex flex-col', className)}>
+    <Card className={cn('hover:border-primary/50 transition-colors group relative overflow-hidden', className)}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <div className="space-y-1">
-          <CardTitle className="text-sm font-medium">Meta de Produção Mensal</CardTitle>
+        <div className="flex items-center gap-2">
+          <CardTitle className="text-sm font-medium">Produção e Meta Mensal</CardTitle>
+          <Banknote className="h-4 w-4 text-primary" />
+        </div>
+        <div className="flex items-center gap-2">
           {isEditing ? (
             <div className="flex items-center gap-1">
               <Input
@@ -71,35 +76,61 @@ export function GoalCard({ currentProduction, className }: GoalCardProps) {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <CardDescription className="text-xs">Meta: {formatCurrency(monthlyGoal)}</CardDescription>
+              <CardDescription className="text-xs font-semibold">Meta: {isPrivacyMode ? '•••••' : formatCurrency(monthlyGoal)}</CardDescription>
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" 
-                onClick={() => setIsEditing(true)}
+                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsEditing(true);
+                }}
               >
-                <Pencil className="h-2 w-2" />
+                <Pencil className="h-3 w-3" />
               </Button>
             </div>
           )}
+          <Target className={cn("h-4 w-4", isGoalReached ? "text-green-500" : "text-muted-foreground")} />
         </div>
-        <Target className={cn("h-4 w-4", isGoalReached ? "text-green-500" : "text-muted-foreground")} />
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col justify-center">
-        <div className="flex flex-col gap-3">
-          <div className="flex items-end justify-between gap-2">
-            <div className="text-2xl font-bold">{formatCurrency(currentProduction)}</div>
-            <div className={cn("flex items-center gap-1 text-xs font-medium", isGoalReached ? "text-green-500" : "text-muted-foreground")}>
-              <TrendingUp className="h-3 w-3" />
-              {percentage.toFixed(1)}%
+      <CardContent 
+        className={cn("pt-4 cursor-pointer", isPrivacyMode && "blur-sm select-none")}
+        onClick={onValueClick}
+      >
+        <div className="flex flex-col gap-6">
+          <div className="flex items-end justify-between">
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Total Digitado no Mês</p>
+              <div className="text-4xl font-bold text-primary">
+                {isPrivacyMode ? '•••••' : formatCurrency(currentProduction)}
+              </div>
+            </div>
+            <div className={cn("flex flex-col items-end gap-1 font-bold", isGoalReached ? "text-green-500" : "text-primary")}>
+              <div className="flex items-center gap-1 text-lg">
+                <TrendingUp className="h-5 w-5" />
+                {percentage.toFixed(1)}%
+              </div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-tighter">Concluído</p>
             </div>
           </div>
-          <Progress value={percentage} className="h-2" />
-          {isGoalReached ? (
-            <p className="text-[10px] text-green-500 font-medium animate-pulse">🎉 Meta atingida! Parabéns!</p>
-          ) : (
-            <p className="text-[10px] text-muted-foreground">Faltam {formatCurrency(monthlyGoal - currentProduction)} para a meta.</p>
-          )}
+          
+          <div className="space-y-2">
+            <Progress value={percentage} className="h-3 bg-secondary" />
+            <div className="flex justify-between items-center text-[11px] font-medium">
+              {isGoalReached ? (
+                <p className="text-green-500 animate-pulse flex items-center gap-1 font-bold">
+                  🎉 META ATINGIDA! VOCÊ É INCRÍVEL!
+                </p>
+              ) : (
+                <p className="text-muted-foreground">
+                  Faltam <span className="text-foreground font-bold">{formatCurrency(monthlyGoal - currentProduction)}</span> para atingir o objetivo.
+                </p>
+              )}
+              <p className="text-muted-foreground">
+                Baseado em Valor {currentProduction > 0 ? 'Digitado' : 'Bruto'}
+              </p>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
