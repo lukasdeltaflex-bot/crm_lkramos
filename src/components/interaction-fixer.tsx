@@ -9,32 +9,37 @@ import { useEffect } from 'react';
  */
 export function InteractionFixer() {
   useEffect(() => {
-    const cleanup = () => {
+    const forceCleanup = () => {
       // Verifica se existem elementos de "portal" (modais, menus) ativos no DOM
-      const hasOpenOverlays = !!document.querySelector('[data-radix-portal], .fixed.inset-0');
+      const hasOpenOverlays = !!document.querySelector('[data-radix-portal], .fixed.inset-0, [role="dialog"], [role="menu"]');
       
       if (!hasOpenOverlays) {
-        // Se não houver overlays, mas o body estiver bloqueado, força a liberação
-        if (document.body.style.pointerEvents === 'none' || document.body.classList.contains('pointer-events-none')) {
-          document.body.style.pointerEvents = 'auto';
-          document.body.style.overflow = 'auto';
-          // Remove classes comuns de bloqueio do Tailwind/Radix
-          document.body.classList.remove('pointer-events-none');
+        // Se não houver overlays visíveis, removemos qualquer trava do body
+        const body = document.body;
+        if (
+          body.style.pointerEvents === 'none' || 
+          body.classList.contains('pointer-events-none') ||
+          body.style.overflow === 'hidden'
+        ) {
+          body.style.pointerEvents = 'auto';
+          body.style.overflow = 'auto';
+          body.classList.remove('pointer-events-none');
+          // Remove possíveis atributos do Radix
+          body.removeAttribute('data-radix-scroll-lock');
         }
       }
     };
 
-    // Monitora cliques e fechamentos por 1 segundo após qualquer clique
-    const handleGlobalClick = () => {
-      setTimeout(cleanup, 100);
-      setTimeout(cleanup, 300);
-      setTimeout(cleanup, 500);
+    // Monitora cliques e fechamentos com timers para garantir o fim das animações
+    const handleEvents = () => {
+      setTimeout(forceCleanup, 50);
+      setTimeout(forceCleanup, 150);
+      setTimeout(forceCleanup, 300);
+      setTimeout(forceCleanup, 500);
     };
 
     // Monitora mudanças na estrutura do DOM (abertura/fechamento de modais)
-    const observer = new MutationObserver((mutations) => {
-      cleanup();
-    });
+    const observer = new MutationObserver(forceCleanup);
 
     observer.observe(document.body, {
       attributes: true,
@@ -42,14 +47,20 @@ export function InteractionFixer() {
       subtree: false
     });
 
-    window.addEventListener('click', handleGlobalClick);
+    window.addEventListener('mousedown', handleEvents);
+    window.addEventListener('mouseup', handleEvents);
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') handleGlobalClick();
+      if (e.key === 'Escape') handleEvents();
     });
+
+    // Roda um check periódico curto para segurança extra
+    const interval = setInterval(forceCleanup, 1000);
 
     return () => {
       observer.disconnect();
-      window.removeEventListener('click', handleGlobalClick);
+      clearInterval(interval);
+      window.removeEventListener('mousedown', handleEvents);
+      window.removeEventListener('mouseup', handleEvents);
     };
   }, []);
 

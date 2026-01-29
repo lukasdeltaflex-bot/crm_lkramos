@@ -154,6 +154,11 @@ export default function DashboardPage() {
   const saldoPagoProposals = getProposalsByStatus(filteredProposals, ['Saldo Pago']);
   const reprovadoProposals = getProposalsByStatus(filteredProposals, ['Reprovado']);
 
+  const getPercentage = (value: number) => {
+    if (currentTotalDigitado === 0) return 0;
+    return (value / currentTotalDigitado) * 100;
+  };
+
   const cardData = [
     {
       title: 'Total Digitado',
@@ -162,6 +167,7 @@ export default function DashboardPage() {
       className: 'border-muted',
       valueClassName: 'text-foreground',
       proposals: filteredProposals,
+      percentage: 100,
     },
     {
       title: 'Pendente',
@@ -170,6 +176,7 @@ export default function DashboardPage() {
       className: 'border-purple-500/50',
       valueClassName: 'text-purple-500',
       proposals: pendenteProposals,
+      percentage: getPercentage(getProposalsSum(pendenteProposals)),
     },
     {
       title: 'Em Andamento',
@@ -178,6 +185,7 @@ export default function DashboardPage() {
       className: 'border-yellow-500/50',
       valueClassName: 'text-yellow-500',
       proposals: emAndamentoProposals,
+      percentage: getPercentage(getProposalsSum(emAndamentoProposals)),
     },
     {
       title: 'Aguardando Saldo',
@@ -186,6 +194,7 @@ export default function DashboardPage() {
       className: 'border-blue-500/50',
       valueClassName: 'text-blue-500',
       proposals: aguardandoSaldoProposals,
+      percentage: getPercentage(getProposalsSum(aguardandoSaldoProposals)),
     },
     {
       title: 'Saldo Pago',
@@ -194,6 +203,7 @@ export default function DashboardPage() {
       className: 'border-orange-500/50',
       valueClassName: 'text-orange-500',
       proposals: saldoPagoProposals,
+      percentage: getPercentage(getProposalsSum(saldoPagoProposals)),
     },
     {
       title: 'Reprovado',
@@ -202,6 +212,7 @@ export default function DashboardPage() {
       className: 'border-red-500/50',
       valueClassName: 'text-red-500',
       proposals: reprovadoProposals,
+      percentage: getPercentage(getProposalsSum(reprovadoProposals)),
     },
   ];
 
@@ -270,6 +281,7 @@ export default function DashboardPage() {
                         title={card.title}
                         value={isPrivacyMode ? '•••••' : formatCurrency(card.value)}
                         icon={card.icon}
+                        percentage={card.percentage}
                         className={cn("h-full", card.className)}
                         valueClassName={card.valueClassName}
                       />
