@@ -20,19 +20,19 @@ service cloud.firestore {
     // Clientes
     match /customers/{docId} {
       allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
-      allow get, list, update, delete: if isOwner(resource.data);
+      allow read, update, delete: if isOwner(resource.data);
     }
 
     // Propostas
     match /loanProposals/{docId} {
       allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
-      allow get, list, update, delete: if isOwner(resource.data);
+      allow read, update, delete: if isOwner(resource.data);
     }
     
-    // Lembretes (Agenda) - Simplificado para garantir permissão de listagem
-    match /reminders/{reminderId} {
+    // Lembretes (Agenda)
+    match /reminders/{docId} {
       allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
-      allow get, list, update, delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
+      allow read, update, delete: if isOwner(resource.data);
     }
 
     // Produtos (Apenas leitura para autenticados)
