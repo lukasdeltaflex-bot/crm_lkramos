@@ -29,10 +29,10 @@ service cloud.firestore {
       allow read, update, delete: if isOwner(resource.data);
     }
     
-    // Lembretes (Agenda) - Alinhado com o campo 'userId' e permissões explícitas de listagem
+    // Lembretes (Agenda) - Regra simplificada e explícita para o campo userId
     match /reminders/{docId} {
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow get, list, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
     // Produtos (Apenas leitura para autenticados)
