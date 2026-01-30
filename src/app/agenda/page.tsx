@@ -115,6 +115,7 @@ export default function AgendaPage() {
         ...cleanFields,
         id: reminderId,
         ownerId: user.uid,
+        userId: user.uid, // Compatibilidade com regras de segurança
         createdAt: selectedReminder?.createdAt || new Date().toISOString(),
       };
 
@@ -130,8 +131,8 @@ export default function AgendaPage() {
       console.error("Erro ao salvar lembrete:", err);
       toast({ 
         variant: 'destructive', 
-        title: 'Erro ao Salvar', 
-        description: 'Verifique sua conexão e tente novamente.' 
+        title: 'Erro de Permissão', 
+        description: 'Não foi possível salvar o lembrete. Verifique sua conexão.' 
       });
     } finally {
       setIsSaving(false);
