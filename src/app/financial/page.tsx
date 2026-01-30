@@ -76,11 +76,23 @@ export default function FinancialPage() {
     
     const customersMap = new Map(customers.map(c => [c.id, c]));
     
-    // Regra da Tabela: Exibimos contratos que estão em produção ou já concluídos.
-    // Ocultamos Reprovados da lista principal de pagamento por clareza, 
-    // mas o resumo financeiro receberá a lista completa para calcular o "Total Digitado".
+    // REGRA DE EXIBIÇÃO NA TABELA FINANCEIRA:
+    // Alinhado com o que o usuário definiu como "Recebido" ou "Saldo a Receber".
+    // Isso evita que contratos apenas digitados (sem averbação) poluam o financeiro.
     const tableData = proposals
-      .filter(p => p.status !== 'Reprovado')
+      .filter(p => {
+        // 1. Sempre mostrar se já foi baixada no financeiro
+        if (p.commissionStatus === 'Paga') return true;
+
+        // 2. Mostrar se é "Saldo a Receber" (Garantido)
+        const hasAverbacao = !!p.dateApproved;
+        const status = p.status;
+        
+        const isSaldoAReceber = status === 'Pago' || 
+                               (hasAverbacao && ['Em Andamento', 'Saldo Pago', 'Pendente'].includes(status));
+        
+        return isSaldoAReceber;
+      })
       .map(p => ({
         ...p,
         customer: customersMap.get(p.customerId),
@@ -92,8 +104,7 @@ export default function FinancialPage() {
     const end = endOfMonth(today);
     end.setHours(23, 59, 59, 999);
 
-    // Para o resumo (cards), enviamos TODOS os contratos do mês, sem filtros de status,
-    // pois o componente FinancialSummary agora aplica as regras internas pedidas.
+    // Para o resumo (cards), enviamos TODOS os contratos do mês para cálculo de metas e mix.
     const summaryData = proposals
       .filter(p => {
         if (!p.dateDigitized) return false;
@@ -133,7 +144,8 @@ export default function FinancialPage() {
     const recebido = currentMonthProposals.filter(p => p.commissionStatus === 'Paga').reduce((sum, p) => sum + (p.amountPaid || 0), 0);
     const pendente = currentMonthProposals.filter(p => {
         if (p.commissionStatus === 'Paga') return false;
-        return p.status === 'Pago' || (!!p.dateApproved && ['Em Andamento', 'Saldo Pago', 'Pendente'].includes(p.status));
+        const hasAverbacao = !!p.dateApproved;
+        return p.status === 'Pago' || (hasAverbacao && ['Em Andamento', 'Saldo Pago', 'Pendente'].includes(p.status));
     }).reduce((sum, p) => sum + (p.commissionValue || 0), 0);
 
     doc.setDrawColor(200);
