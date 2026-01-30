@@ -37,7 +37,6 @@ export default function AgendaPage() {
 
   const remindersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    // Buscamos por ownerId para consistência com o restante do sistema
     return query(
       collection(firestore, 'reminders'),
       where('ownerId', '==', user.uid)
@@ -79,7 +78,8 @@ export default function AgendaPage() {
     try {
       await setDoc(doc(firestore, 'reminders', reminder.id), { 
         status: newStatus,
-        ownerId: user.uid 
+        ownerId: user.uid,
+        userId: user.uid 
       }, { merge: true });
     } catch (e) {
       console.warn("Falha ao atualizar status:", e);
@@ -107,7 +107,7 @@ export default function AgendaPage() {
     setIsSaving(true);
     const reminderId = selectedReminder?.id || doc(collection(firestore, 'reminders')).id;
     
-    // Filtramos campos vazios para evitar inconsistências no banco
+    // Filtramos campos vazios para evitar inconsistências
     const cleanFields = Object.fromEntries(
       Object.entries(data).filter(([_, v]) => v !== undefined && v !== "")
     );
@@ -115,7 +115,8 @@ export default function AgendaPage() {
     const reminderData = {
       ...cleanFields,
       id: reminderId,
-      ownerId: user.uid, // Sempre gravamos como ownerId
+      ownerId: user.uid, // Padronizado para regras de segurança
+      userId: user.uid,  // Backup para compatibilidade
       createdAt: selectedReminder?.createdAt || new Date().toISOString(),
     };
 
