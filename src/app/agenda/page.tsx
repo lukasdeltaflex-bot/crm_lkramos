@@ -30,9 +30,9 @@ export default function AgendaPage() {
     setHasMounted(true);
   }, []);
 
+  // Consulta simplificada para evitar problemas de permissão e índices complexos
   const remindersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    // Removido o orderBy para evitar a necessidade de índices compostos que causam erros de permissão
     return query(
       collection(firestore, 'reminders'),
       where('ownerId', '==', user.uid)
@@ -41,13 +41,16 @@ export default function AgendaPage() {
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid));
+    return query(
+      collection(firestore, 'customers'), 
+      where('ownerId', '==', user.uid)
+    );
   }, [firestore, user]);
 
   const { data: rawReminders, isLoading } = useCollection<Reminder>(remindersQuery);
   const { data: customers } = useCollection<Customer>(customersQuery);
 
-  // Ordenação manual no cliente para garantir funcionamento sem índices complexos
+  // Ordenação manual no cliente para garantir funcionamento instantâneo
   const reminders = React.useMemo(() => {
     if (!rawReminders) return null;
     return [...rawReminders].sort((a, b) => a.dueDate.localeCompare(b.dueDate));
@@ -152,7 +155,7 @@ export default function AgendaPage() {
             <Skeleton className="h-24 w-full" />
             <Skeleton className="h-24 w-full" />
           </div>
-        ) : reminders?.length === 0 ? (
+        ) : !reminders || reminders.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center h-40 text-muted-foreground">
               <CalendarIcon className="h-8 w-8 mb-2 opacity-20" />
@@ -160,7 +163,7 @@ export default function AgendaPage() {
             </CardContent>
           </Card>
         ) : (
-          reminders?.map((reminder) => {
+          reminders.map((reminder) => {
             const customer = reminder.customerId ? customerMap.get(reminder.customerId) : null;
             return (
               <Card 

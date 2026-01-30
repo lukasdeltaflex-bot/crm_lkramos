@@ -2,39 +2,34 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Regra para perfis de usuário
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    match /customers/{customerId} {
-      allow create: if request.auth != null
-        && request.resource.data.ownerId == request.auth.uid;
-
-      allow read, update, delete: if request.auth != null
-        && resource.data.ownerId == request.auth.uid;
-    }
-
-    match /loanProposals/{loanProposalId} {
-      allow create: if request.auth != null
-        && request.resource.data.ownerId == request.auth.uid;
-
-      allow read, update, delete: if request.auth != null
-        && resource.data.ownerId == request.auth.uid;
-    }
-    
-    match /reminders/{reminderId} {
-      allow create: if request.auth != null 
-        && request.resource.data.ownerId == request.auth.uid;
-      
-      allow read, update, delete: if request.auth != null 
-        && resource.data.ownerId == request.auth.uid;
-    }
-    
+    // Regra para configurações do usuário
     match /userSettings/{userId} {
-      allow read, write: if request.auth != null 
-        && request.auth.uid == userId;
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
+    // Regra genérica para coleções de dados do usuário (Clientes, Propostas, Lembretes)
+    // Usamos um padrão que verifica o ownerId tanto na criação quanto na leitura/edição
+    match /customers/{docId} {
+      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+      allow get, list, update, delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /loanProposals/{docId} {
+      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+      allow get, list, update, delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
+    }
+    
+    match /reminders/{docId} {
+      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+      allow get, list, update, delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
+    }
+
+    // Regra para produtos (apenas leitura)
     match /products/{productId} {
       allow read: if request.auth != null;
       allow write: if false;

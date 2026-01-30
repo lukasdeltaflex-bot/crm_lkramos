@@ -70,7 +70,7 @@ export function NotificationBell() {
     const now = new Date();
     const todayStr = format(now, 'MM-dd');
 
-    // Birthdays today
+    // Aniversários hoje
     customers?.forEach(c => {
       if (c.birthDate && c.birthDate.substring(5) === todayStr) {
         alerts.push({
@@ -83,7 +83,7 @@ export function NotificationBell() {
       }
     });
 
-    // Late commissions (> 7 days since payment)
+    // Comissões atrasadas (> 7 dias)
     proposals?.forEach(p => {
       if ((p.status === 'Pago' || p.status === 'Saldo Pago') && p.commissionStatus === 'Pendente' && p.datePaidToClient) {
         const days = differenceInDays(now, new Date(p.datePaidToClient));
@@ -99,7 +99,7 @@ export function NotificationBell() {
       }
     });
 
-    // Agenda Reminders
+    // Lembretes da Agenda
     reminders?.forEach(r => {
         const dDate = parseISO(r.dueDate);
         if (isToday(dDate) || isBefore(dDate, now)) {
