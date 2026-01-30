@@ -52,11 +52,8 @@ export function NotificationBell() {
 
   const remindersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    // Ajustado para usar 'userId' em vez de 'ownerId'
-    return query(
-        collection(firestore, 'reminders'), 
-        where('userId', '==', user.uid)
-    );
+    // Query simplificada para validar acesso à collection root /reminders
+    return query(collection(firestore, 'reminders'));
   }, [firestore, user]);
 
   const { data: customers } = useCollection<Customer>(customersQuery);
@@ -99,8 +96,8 @@ export function NotificationBell() {
       }
     });
 
-    // Lembretes da Agenda
-    reminders?.filter(r => r.status === 'pending').forEach(r => {
+    // Lembretes da Agenda (Filtro manual no cliente)
+    reminders?.filter(r => r.status === 'pending' && r.userId === user?.uid).forEach(r => {
         const dDate = parseISO(r.dueDate);
         if (isToday(dDate) || isBefore(dDate, now)) {
             alerts.push({
@@ -114,7 +111,7 @@ export function NotificationBell() {
     });
 
     return alerts;
-  }, [customers, proposals, reminders, isClient]);
+  }, [customers, proposals, reminders, isClient, user]);
 
   const visibleNotifications = React.useMemo(() => {
     return notifications.filter(n => !dismissedIds.includes(n.id));

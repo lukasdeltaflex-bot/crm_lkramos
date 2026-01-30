@@ -32,11 +32,8 @@ export default function AgendaPage() {
 
   const remindersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    // Query filtered exactly by userId to satisfy Firestore Security Rules
-    return query(
-      collection(firestore, 'reminders'),
-      where('userId', '==', user.uid)
-    );
+    // Query simplificada para validar acesso à collection root /reminders
+    return query(collection(firestore, 'reminders'));
   }, [firestore, user]);
 
   const customersQuery = useMemoFirebase(() => {
@@ -52,8 +49,11 @@ export default function AgendaPage() {
 
   const reminders = React.useMemo(() => {
     if (!rawReminders) return null;
-    return [...rawReminders].sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-  }, [rawReminders]);
+    // Filtro manual no cliente enquanto as rules estão abertas para teste
+    return [...rawReminders]
+      .filter(r => r.userId === user?.uid)
+      .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  }, [rawReminders, user]);
 
   const handleAddReminder = () => {
     setSelectedReminder(undefined);
