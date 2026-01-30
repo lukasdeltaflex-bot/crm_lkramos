@@ -13,26 +13,17 @@ service cloud.firestore {
 
     // Regras para Clientes (usam ownerId)
     match /customers/{customerId} {
-      allow list: if isAuthenticated() && (resource == null || resource.data.get('ownerId', '') == request.auth.uid);
-      allow get: if isAuthenticated() && resource.data.get('ownerId', '') == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && resource.data.get('ownerId', '') == request.auth.uid;
+      allow read, write: if isAuthenticated() && (resource == null || resource.data.ownerId == request.auth.uid || request.resource.data.ownerId == request.auth.uid);
     }
 
     // Regras para Propostas (usam ownerId)
     match /loanProposals/{proposalId} {
-      allow list: if isAuthenticated() && (resource == null || resource.data.get('ownerId', '') == request.auth.uid);
-      allow get: if isAuthenticated() && resource.data.get('ownerId', '') == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && resource.data.get('ownerId', '') == request.auth.uid;
+      allow read, write: if isAuthenticated() && (resource == null || resource.data.ownerId == request.auth.uid || request.resource.data.ownerId == request.auth.uid);
     }
 
     // Regras para Lembretes (usam userId)
     match /reminders/{reminderId} {
-      allow list: if isAuthenticated() && (resource == null || resource.data.get('userId', '') == request.auth.uid);
-      allow get: if isAuthenticated() && resource.data.get('userId', '') == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && resource.data.get('userId', '') == request.auth.uid;
+      allow read, write: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid || request.resource.data.userId == request.auth.uid);
     }
 
     // Regras para Configurações do Usuário
@@ -40,6 +31,7 @@ service cloud.firestore {
       allow read, write: if isAuthenticated() && request.auth.uid == userId;
     }
     
+    // Bloqueio de qualquer outro acesso não especificado
     match /{document=**} {
       allow read, write: if false;
     }
