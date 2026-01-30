@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "UserProfile": {
@@ -132,10 +131,10 @@
         "dueDate": { "type": "string", "format": "date", "description": "YYYY-MM-DD" },
         "status": { "type": "string", "enum": ["pending", "completed"] },
         "customerId": { "type": "string", "description": "Optional link to existing Customer." },
-        "ownerId": { "type": "string" },
+        "userId": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["title", "dueDate", "status", "ownerId"]
+      "required": ["title", "dueDate", "status", "userId"]
     },
     "UserSettings": {
       "title": "UserSettings",
