@@ -23,15 +23,21 @@ interface ProductBreakdownChartProps {
   proposals: Proposal[]
 }
 
+// Configuração de cores profissional para cada tipo de produto
 const chartConfig = {
   amount: {
     label: "Volume",
   },
-  "Margem": { label: "Margem", color: "hsl(var(--chart-1))" },
-  "Portabilidade": { label: "Portabilidade", color: "hsl(var(--chart-2))" },
-  "Refin": { label: "Refin", color: "hsl(var(--chart-3))" },
-  "Saque Complementar": { label: "Saque", color: "hsl(var(--chart-4))" },
-  "Cartão com saque": { label: "Cartão", color: "hsl(var(--chart-5))" },
+  "Margem": { label: "Margem", color: "hsl(217, 91%, 60%)" }, // Azul
+  "Portabilidade": { label: "Portabilidade", color: "hsl(142, 76%, 36%)" }, // Verde
+  "Refin": { label: "Refin", color: "hsl(45, 93%, 47%)" }, // Dourado
+  "Saque Complementar": { label: "Saque", color: "hsl(24, 95%, 53%)" }, // Laranja
+  "Cartão com saque": { label: "Cartão", color: "hsl(262, 83%, 58%)" }, // Violeta
+  "Refin Port": { label: "Refin Port", color: "hsl(199, 89%, 48%)" }, // Azul Céu
+  "Saque FGTS": { label: "Saque FGTS", color: "hsl(158, 78%, 41%)" }, // Esmeralda
+  "Margem CLT": { label: "Margem CLT", color: "hsl(322, 84%, 50%)" }, // Magenta
+  "Cartão - Plástico": { label: "Cartão Plástico", color: "hsl(346, 77%, 49%)" }, // Rosa
+  "other": { label: "Outros", color: "hsl(215, 25%, 27%)" } // Slate
 } satisfies ChartConfig
 
 export function ProductBreakdownChart({ proposals }: ProductBreakdownChartProps) {
@@ -42,19 +48,13 @@ export function ProductBreakdownChart({ proposals }: ProductBreakdownChartProps)
       data[p.product] = (data[p.product] || 0) + amount
     })
 
-    const colors = [
-      "var(--color-Margem)",
-      "var(--color-Portabilidade)",
-      "var(--color-Refin)",
-      "var(--color-Saque-Complementar)",
-      "var(--color-Cartão-com-saque)",
-    ]
-
-    return Object.entries(data).map(([name, value], index) => ({
-      product: name,
-      amount: value,
-      fill: colors[index % colors.length] || `hsl(var(--chart-${(index % 5) + 1}))`,
-    })).sort((a, b) => b.amount - a.amount)
+    return Object.entries(data)
+      .map(([name, value]) => ({
+        product: name,
+        amount: value,
+        fill: (chartConfig[name as keyof typeof chartConfig] as any)?.color || chartConfig.other.color,
+      }))
+      .sort((a, b) => b.amount - a.amount)
   }, [proposals])
 
   const totalVolume = React.useMemo(() => {
@@ -64,27 +64,39 @@ export function ProductBreakdownChart({ proposals }: ProductBreakdownChartProps)
   if (proposals.length === 0) return null
 
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col h-full border-none shadow-md hover:shadow-lg transition-all duration-300">
       <CardHeader className="items-center pb-0">
-        <CardTitle>Mix de Produtos</CardTitle>
-        <CardDescription>Volume financeiro por categoria</CardDescription>
+        <CardTitle className="text-xl font-headline font-bold text-primary">Mix de Produtos</CardTitle>
+        <CardDescription className="text-sm font-medium">Volume financeiro por categoria</CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 pb-0">
+      <CardContent className="flex-1 pb-4 pt-6">
         <ChartContainer
           config={chartConfig}
-          className="mx-auto aspect-square max-h-[250px]"
+          className="mx-auto aspect-square max-h-[300px]"
         >
           <PieChart>
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent hideLabel />}
+              content={
+                <ChartTooltipContent 
+                  hideLabel 
+                  formatter={(value, name) => (
+                    <div className="flex flex-col gap-1">
+                      <span className="font-bold text-xs uppercase text-muted-foreground">{name}</span>
+                      <span className="text-primary font-bold">{formatCurrency(Number(value))}</span>
+                    </div>
+                  )}
+                />
+              }
             />
             <Pie
               data={chartData}
               dataKey="amount"
               nameKey="product"
-              innerRadius={60}
-              strokeWidth={5}
+              innerRadius={75}
+              outerRadius={105}
+              paddingAngle={5}
+              strokeWidth={0}
             >
               <Label
                 content={({ viewBox }) => {
@@ -99,14 +111,14 @@ export function ProductBreakdownChart({ proposals }: ProductBreakdownChartProps)
                         <tspan
                           x={viewBox.cx}
                           y={viewBox.cy}
-                          className="fill-foreground text-xl font-bold"
+                          className="fill-primary text-3xl font-extrabold"
                         >
                           {chartData.length}
                         </tspan>
                         <tspan
                           x={viewBox.cx}
                           y={(viewBox.cy || 0) + 24}
-                          className="fill-muted-foreground text-xs"
+                          className="fill-muted-foreground text-[10px] font-bold uppercase tracking-widest"
                         >
                           Produtos
                         </tspan>
@@ -119,8 +131,21 @@ export function ProductBreakdownChart({ proposals }: ProductBreakdownChartProps)
           </PieChart>
         </ChartContainer>
       </CardContent>
-      <div className="p-4 pt-0 text-center text-xs text-muted-foreground">
-        Total: <strong>{formatCurrency(totalVolume)}</strong>
+      <div className="p-6 pt-0 border-t bg-muted/5 flex items-center justify-between rounded-b-lg">
+        <div className="flex flex-col">
+            <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-tighter">Produção Total</span>
+            <span className="text-lg font-bold text-primary">{formatCurrency(totalVolume)}</span>
+        </div>
+        <div className="flex -space-x-2">
+            {chartData.slice(0, 4).map((item, i) => (
+                <div 
+                    key={i} 
+                    className="h-4 w-4 rounded-full border-2 border-background shadow-sm" 
+                    style={{ backgroundColor: item.fill }} 
+                    title={item.product} 
+                />
+            ))}
+        </div>
       </div>
     </Card>
   )
