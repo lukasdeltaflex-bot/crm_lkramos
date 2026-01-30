@@ -141,34 +141,54 @@ export default function DashboardPage() {
   }, [proposals, appliedDateRange, isClient]);
 
   const stats = React.useMemo(() => {
-    const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + (p.commissionBase === 'net' ? (p.netAmount || 0) : (p.grossAmount || 0)), 0);
+    const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
     
     const totalDigitado = getSum(filteredProposals);
-    const pendente = getSum(filteredProposals.filter(p => p.status === 'Pendente'));
-    const emAndamento = getSum(filteredProposals.filter(p => p.status === 'Em Andamento'));
-    const aguardandoSaldo = getSum(filteredProposals.filter(p => p.status === 'Aguardando Saldo'));
-    const saldoPago = getSum(filteredProposals.filter(p => p.status === 'Saldo Pago'));
-    const reprovado = getSum(filteredProposals.filter(p => p.status === 'Reprovado'));
-    const pago = getSum(filteredProposals.filter(p => p.status === 'Pago'));
+    const pendenteProposals = filteredProposals.filter(p => p.status === 'Pendente');
+    const emAndamentoProposals = filteredProposals.filter(p => p.status === 'Em Andamento');
+    const aguardandoSaldoProposals = filteredProposals.filter(p => p.status === 'Aguardando Saldo');
+    const saldoPagoProposals = filteredProposals.filter(p => p.status === 'Saldo Pago');
+    const reprovadoProposals = filteredProposals.filter(p => p.status === 'Reprovado');
+    const pagoProposals = filteredProposals.filter(p => p.status === 'Pago');
+
+    const pendenteValue = getSum(pendenteProposals);
+    const emAndamentoValue = getSum(emAndamentoProposals);
+    const aguardandoSaldoValue = getSum(aguardandoSaldoProposals);
+    const saldoPagoValue = getSum(saldoPagoProposals);
+    const reprovadoValue = getSum(reprovadoProposals);
+    const pagoValue = getSum(pagoProposals);
 
     const getPerc = (val: number) => totalDigitado > 0 ? (val / totalDigitado) * 100 : 0;
 
     return {
         totalDigitado,
-        pendente,
-        emAndamento,
-        aguardandoSaldo,
-        saldoPago,
-        reprovado,
-        pago,
-        totalPagoMeta: pago + saldoPago,
-        percPendente: getPerc(pendente),
-        percEmAndamento: getPerc(emAndamento),
-        percAguardandoSaldo: getPerc(aguardandoSaldo),
-        percSaldoPago: getPerc(saldoPago),
-        percReprovado: getPerc(reprovado)
+        pendente: pendenteValue,
+        emAndamento: emAndamentoValue,
+        aguardandoSaldo: aguardandoSaldoValue,
+        saldoPago: saldoPagoValue,
+        reprovado: reprovadoValue,
+        pago: pagoValue,
+        totalPagoMeta: pagoValue + saldoPagoValue,
+        percPendente: getPerc(pendenteValue),
+        percEmAndamento: getPerc(emAndamentoValue),
+        percAguardandoSaldo: getPerc(aguardandoSaldoValue),
+        percSaldoPago: getPerc(saldoPagoValue),
+        percReprovado: getPerc(reprovadoValue),
+        proposals: {
+            pendente: pendenteProposals,
+            emAndamento: emAndamentoProposals,
+            aguardandoSaldo: aguardandoSaldoProposals,
+            saldoPago: saldoPagoProposals,
+            reprovado: reprovadoProposals,
+            pago: pagoProposals,
+            todos: filteredProposals
+        }
     };
   }, [filteredProposals]);
+
+  const handleShowDetails = (title: string, props: Proposal[]) => {
+    setDialogData({ title, proposals: props });
+  }
 
   const currentMonthName = format(appliedDateRange?.from || new Date(), 'MMMM', { locale: ptBR });
 
@@ -233,55 +253,68 @@ export default function DashboardPage() {
         />
 
         <div className="grid gap-4 md:grid-cols-3">
-            <StatsCard 
-                title="Total Digitado" 
-                value={isPrivacyMode ? '•••••' : formatCurrency(stats.totalDigitado)} 
-                icon={FileText} 
-                percentage={100}
-            />
-            <StatsCard 
-                title="Pendente" 
-                value={isPrivacyMode ? '•••••' : formatCurrency(stats.pendente)} 
-                icon={BadgePercent} 
-                percentage={stats.percPendente}
-                valueClassName="text-purple-500"
-                className="border-purple-100"
-            />
-            <StatsCard 
-                title="Em Andamento" 
-                value={isPrivacyMode ? '•••••' : formatCurrency(stats.emAndamento)} 
-                icon={Hourglass} 
-                percentage={stats.percEmAndamento}
-                valueClassName="text-yellow-500"
-                className="border-yellow-100"
-            />
+            <div className="cursor-pointer" onClick={() => handleShowDetails('Total Digitado', stats.proposals.todos)}>
+                <StatsCard 
+                    title="Total Digitado" 
+                    value={isPrivacyMode ? '•••••' : formatCurrency(stats.totalDigitado)} 
+                    icon={FileText} 
+                    percentage={100}
+                    className="bg-slate-50 border-slate-200"
+                />
+            </div>
+            <div className="cursor-pointer" onClick={() => handleShowDetails('Pendentes', stats.proposals.pendente)}>
+                <StatsCard 
+                    title="Pendente" 
+                    value={isPrivacyMode ? '•••••' : formatCurrency(stats.pendente)} 
+                    icon={BadgePercent} 
+                    percentage={stats.percPendente}
+                    valueClassName="text-purple-700"
+                    className="bg-purple-50 border-purple-200"
+                />
+            </div>
+            <div className="cursor-pointer" onClick={() => handleShowDetails('Em Andamento', stats.proposals.emAndamento)}>
+                <StatsCard 
+                    title="Em Andamento" 
+                    value={isPrivacyMode ? '•••••' : formatCurrency(stats.emAndamento)} 
+                    icon={Hourglass} 
+                    percentage={stats.percEmAndamento}
+                    valueClassName="text-yellow-700"
+                    className="bg-yellow-50 border-yellow-200"
+                />
+            </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-            <StatsCard 
-                title="Aguardando Saldo" 
-                value={isPrivacyMode ? '•••••' : formatCurrency(stats.aguardandoSaldo)} 
-                icon={Clock} 
-                percentage={stats.percAguardandoSaldo}
-                valueClassName="text-blue-500"
-                className="border-blue-100"
-            />
-            <StatsCard 
-                title="Saldo Pago" 
-                value={isPrivacyMode ? '•••••' : formatCurrency(stats.saldoPago)} 
-                icon={CheckCircle2} 
-                percentage={stats.percSaldoPago}
-                valueClassName="text-orange-500"
-                className="border-orange-100"
-            />
-            <StatsCard 
-                title="Reprovado" 
-                value={isPrivacyMode ? '•••••' : formatCurrency(stats.reprovado)} 
-                icon={XCircle} 
-                percentage={stats.percReprovado}
-                valueClassName="text-red-500"
-                className="border-red-100"
-            />
+            <div className="cursor-pointer" onClick={() => handleShowDetails('Aguardando Saldo', stats.proposals.aguardandoSaldo)}>
+                <StatsCard 
+                    title="Aguardando Saldo" 
+                    value={isPrivacyMode ? '•••••' : formatCurrency(stats.aguardandoSaldo)} 
+                    icon={Clock} 
+                    percentage={stats.percAguardandoSaldo}
+                    valueClassName="text-blue-700"
+                    className="bg-blue-50 border-blue-200"
+                />
+            </div>
+            <div className="cursor-pointer" onClick={() => handleShowDetails('Saldo Pago', stats.proposals.saldoPago)}>
+                <StatsCard 
+                    title="Saldo Pago" 
+                    value={isPrivacyMode ? '•••••' : formatCurrency(stats.saldoPago)} 
+                    icon={CheckCircle2} 
+                    percentage={stats.percSaldoPago}
+                    valueClassName="text-orange-700"
+                    className="bg-orange-50 border-orange-200"
+                />
+            </div>
+            <div className="cursor-pointer" onClick={() => handleShowDetails('Reprovado', stats.proposals.reprovado)}>
+                <StatsCard 
+                    title="Reprovado" 
+                    value={isPrivacyMode ? '•••••' : formatCurrency(stats.reprovado)} 
+                    icon={XCircle} 
+                    percentage={stats.percReprovado}
+                    valueClassName="text-red-700"
+                    className="bg-red-50 border-red-200"
+                />
+            </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Calendar as CalendarIcon, CheckCircle2, Circle, Trash2, User, Search } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import type { Reminder, Customer } from '@/lib/types';
 import { format, isBefore, isToday, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -116,11 +116,15 @@ export default function AgendaPage() {
         createdAt: selectedReminder?.createdAt || new Date().toISOString(),
       };
       await setDoc(doc(firestore, 'reminders', reminderId), reminderData);
-      toast({ title: 'Salvo com sucesso!' });
+      toast({ title: 'Lembrete salvo com sucesso!' });
       setIsDialogOpen(false);
     } catch (err) {
       console.error(err);
-      toast({ variant: 'destructive', title: 'Erro ao salvar', description: 'O banco de dados negou a permissão ou ocorreu um erro de conexão.' });
+      toast({ 
+        variant: 'destructive', 
+        title: 'Erro ao salvar', 
+        description: 'Verifique sua conexão ou permissões do sistema.' 
+      });
     } finally {
       setIsSaving(false);
     }
@@ -148,7 +152,7 @@ export default function AgendaPage() {
       <div className="grid gap-6">
         <Card>
             <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <CardTitle>Meus Retornos</CardTitle>
                         <CardDescription>Gerencie seus contatos e tarefas agendadas.</CardDescription>
