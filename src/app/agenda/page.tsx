@@ -8,7 +8,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, where, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import type { Reminder, Customer } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Calendar as CalendarIcon, CheckCircle2, Circle, Trash2, User, Search } from 'lucide-react';
+import { PlusCircle, Calendar as CalendarIcon, CheckCircle2, Circle, Trash2, User } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ReminderForm } from './reminder-form';
 import { format, isBefore, isToday, parseISO, startOfDay } from 'date-fns';
@@ -109,13 +109,22 @@ export default function AgendaPage() {
       const reminderId = selectedReminder?.id || doc(collection(firestore, 'reminders')).id;
       
       const reminderData = {
-        ...data,
+        title: data.title,
+        description: data.description || '',
+        dueDate: data.dueDate,
+        customerId: data.customerId || '',
+        status: data.status,
         id: reminderId,
         ownerId: user.uid,
         createdAt: selectedReminder?.createdAt || new Date().toISOString(),
       };
 
-      await setDoc(doc(firestore, 'reminders', reminderId), reminderData);
+      // Remove undefined values to avoid Firestore errors
+      const cleanData = Object.fromEntries(
+        Object.entries(reminderData).filter(([_, v]) => v !== undefined)
+      );
+
+      await setDoc(doc(firestore, 'reminders', reminderId), cleanData);
       
       toast({ 
         title: 'Agenda LK', 
@@ -128,7 +137,7 @@ export default function AgendaPage() {
       toast({ 
         variant: 'destructive', 
         title: 'Falha ao Salvar', 
-        description: 'Verifique as permissões do sistema ou sua conexão.' 
+        description: 'Verifique suas permissões ou conexão.' 
       });
     } finally {
       setIsSaving(false);
