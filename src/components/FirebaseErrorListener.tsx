@@ -14,12 +14,19 @@ export function FirebaseErrorListener() {
 
   useEffect(() => {
     const handleError = (error: FirestorePermissionError) => {
-      console.error("Firestore Permission Error Detected:", error.request);
+      // Log amigável para depuração se houver detalhes do request
+      if (error.request) {
+        console.warn("Firestore Permission Alert:", {
+          operation: error.request.method,
+          path: error.request.path,
+          authenticated: !!error.request.auth
+        });
+      }
       
       toast({
         variant: 'destructive',
-        title: 'Erro de Permissão',
-        description: 'Você não tem autorização para acessar alguns dados. Verifique se seu login é válido.',
+        title: 'Acesso Restrito',
+        description: 'Não foi possível carregar alguns dados devido a restrições de segurança ou filtros ausentes.',
       });
     };
 
