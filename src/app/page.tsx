@@ -39,6 +39,7 @@ import { Input } from '@/components/ui/input';
 import { DailySummary } from '@/components/summary/daily-summary';
 import { GoalCard } from '@/components/dashboard/goal-card';
 import { ProductBreakdownChart } from '@/components/dashboard/product-breakdown-chart';
+import { PartnerPerformanceCharts } from '@/components/dashboard/partner-performance-charts';
 import { Separator } from '@/components/ui/separator';
 import {
     Select,
@@ -377,7 +378,7 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2">
-                <RecentProposals proposals={proposals || []} customers={customers || []} isLoading={isLoading}/>
+                <PartnerPerformanceCharts proposals={filteredProposals} />
             </div>
             <div className="lg:col-span-1">
                 {isLoading ? (
@@ -394,6 +395,10 @@ export default function DashboardPage() {
                     />
                 )}
             </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-8">
+            <RecentProposals proposals={proposals || []} customers={customers || []} isLoading={isLoading}/>
         </div>
       </div>
     </AppLayout>
