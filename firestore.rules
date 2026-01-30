@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Função auxiliar para verificar propriedade do documento
+    // Função auxiliar para verificar propriedade do documento (usada em get/write)
     function isOwner(userId) {
       return request.auth != null && request.auth.uid == userId;
     }
@@ -14,27 +14,37 @@ service cloud.firestore {
 
     // Regras para Clientes (usam ownerId)
     match /customers/{customerId} {
-      allow read, write: if request.auth != null && (
-        (resource == null && request.resource.data.ownerId == request.auth.uid) ||
-        (resource != null && resource.data.ownerId == request.auth.uid)
-      );
+      allow list: if request.auth != null && request.query.where('ownerId', '==', request.auth.uid);
+      allow get: if request.auth != null && resource.data.ownerId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
     }
 
     // Regras para Propostas (usam ownerId)
     match /loanProposals/{proposalId} {
-      allow read, write: if request.auth != null && (
-        (resource == null && request.resource.data.ownerId == request.auth.uid) ||
-        (resource != null && resource.data.ownerId == request.auth.uid)
-      );
+      allow list: if request.auth != null && request.query.where('ownerId', '==', request.auth.uid);
+      allow get: if request.auth != null && resource.data.ownerId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
     }
 
-    // Regras para Lembretes/Agenda (usam userId conforme backend.json)
-    // IMPORTANTE: Para listagem (query), o filtro 'where' no código é obrigatório
+    // Regras para Lembretes (usam userId)
     match /reminders/{reminderId} {
-      allow read, write: if request.auth != null && (
-        (resource == null && request.resource.data.userId == request.auth.uid) ||
-        (resource != null && resource.data.userId == request.auth.uid)
-      );
+      // ✅ PERMITE QUERY (list) exigindo o filtro userId no código
+      allow list: if request.auth != null 
+        && request.query.where('userId', '==', request.auth.uid);
+
+      // ✅ PERMITE LEITURA DE DOC INDIVIDUAL
+      allow get: if request.auth != null 
+        && resource.data.userId == request.auth.uid;
+
+      // ✅ CRIAÇÃO
+      allow create: if request.auth != null 
+        && request.resource.data.userId == request.auth.uid;
+
+      // ✅ ATUALIZAÇÃO / DELETE
+      allow update, delete: if request.auth != null 
+        && resource.data.userId == request.auth.uid;
     }
 
     // Regras para Configurações do Usuário
