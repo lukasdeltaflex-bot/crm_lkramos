@@ -30,12 +30,12 @@ export default function AgendaPage() {
     setHasMounted(true);
   }, []);
 
-  // Consulta simplificada para evitar problemas de permissão e índices complexos
+  // Consulta ajustada para usar 'userId' em vez de 'ownerId'
   const remindersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(
       collection(firestore, 'reminders'),
-      where('ownerId', '==', user.uid)
+      where('userId', '==', user.uid)
     );
   }, [firestore, user]);
 
@@ -50,7 +50,7 @@ export default function AgendaPage() {
   const { data: rawReminders, isLoading } = useCollection<Reminder>(remindersQuery);
   const { data: customers } = useCollection<Customer>(customersQuery);
 
-  // Ordenação manual no cliente para garantir funcionamento instantâneo
+  // Ordenação manual no cliente
   const reminders = React.useMemo(() => {
     if (!rawReminders) return null;
     return [...rawReminders].sort((a, b) => a.dueDate.localeCompare(b.dueDate));
@@ -96,7 +96,7 @@ export default function AgendaPage() {
     const reminderData: Reminder = {
       ...data,
       id: reminderId,
-      ownerId: user.uid,
+      userId: user.uid, // Alterado de ownerId para userId
       createdAt: selectedReminder?.createdAt || new Date().toISOString(),
     };
 

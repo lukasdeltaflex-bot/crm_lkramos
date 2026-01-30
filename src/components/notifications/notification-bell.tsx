@@ -52,10 +52,10 @@ export function NotificationBell() {
 
   const remindersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    // Consulta simplificada para evitar erro de índice composto e permissão
+    // Ajustado para usar 'userId' em vez de 'ownerId'
     return query(
         collection(firestore, 'reminders'), 
-        where('ownerId', '==', user.uid)
+        where('userId', '==', user.uid)
     );
   }, [firestore, user]);
 
@@ -99,7 +99,7 @@ export function NotificationBell() {
       }
     });
 
-    // Lembretes da Agenda (Filtro 'pending' feito em memória para evitar erro de índice)
+    // Lembretes da Agenda
     reminders?.filter(r => r.status === 'pending').forEach(r => {
         const dDate = parseISO(r.dueDate);
         if (isToday(dDate) || isBefore(dDate, now)) {

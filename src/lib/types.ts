@@ -1,4 +1,3 @@
-
 export type Benefit = {
   number: string;
   species?: string;
@@ -91,7 +90,7 @@ export type ReminderStatus = 'pending' | 'completed';
 
 export type Reminder = {
   id: string;
-  ownerId: string;
+  userId: string; // Alterado de ownerId para userId para alinhar com rules
   title: string;
   description?: string;
   dueDate: string; // YYYY-MM-DD
