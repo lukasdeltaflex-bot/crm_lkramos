@@ -76,9 +76,11 @@ export default function FinancialPage() {
     
     const customersMap = new Map(customers.map(c => [c.id, c]));
     
-    // Regra: No financeiro só entram propostas que saíram do status 'Pendente' ou 'Reprovado'
+    // Regra da Tabela: Exibimos contratos que estão em produção ou já concluídos.
+    // Ocultamos Reprovados da lista principal de pagamento por clareza, 
+    // mas o resumo financeiro receberá a lista completa para calcular o "Total Digitado".
     const tableData = proposals
-      .filter(p => p.status !== 'Reprovado' && p.status !== 'Pendente')
+      .filter(p => p.status !== 'Reprovado')
       .map(p => ({
         ...p,
         customer: customersMap.get(p.customerId),
@@ -90,6 +92,8 @@ export default function FinancialPage() {
     const end = endOfMonth(today);
     end.setHours(23, 59, 59, 999);
 
+    // Para o resumo (cards), enviamos TODOS os contratos do mês, sem filtros de status,
+    // pois o componente FinancialSummary agora aplica as regras internas pedidas.
     const summaryData = proposals
       .filter(p => {
         if (!p.dateDigitized) return false;
@@ -124,11 +128,13 @@ export default function FinancialPage() {
     doc.text(`Período: ${monthYear}`, 14, 28);
     doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 14, 34);
 
-    // Summary logic
-    const totalDigitado = currentMonthProposals.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
+    // Summary logic (matches FinancialSummary logic)
     const totalComissao = currentMonthProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
     const recebido = currentMonthProposals.filter(p => p.commissionStatus === 'Paga').reduce((sum, p) => sum + (p.amountPaid || 0), 0);
-    const pendente = totalComissao - recebido;
+    const pendente = currentMonthProposals.filter(p => {
+        if (p.commissionStatus === 'Paga') return false;
+        return p.status === 'Pago' || (!!p.dateApproved && ['Em Andamento', 'Saldo Pago', 'Pendente'].includes(p.status));
+    }).reduce((sum, p) => sum + (p.commissionValue || 0), 0);
 
     doc.setDrawColor(200);
     doc.line(14, 40, 196, 40);
@@ -142,10 +148,9 @@ export default function FinancialPage() {
         startY: 55,
         head: [['Métrica', 'Valor']],
         body: [
-            ['Volume Total Digitado', formatCurrency(totalDigitado)],
-            ['Comissão Total Potencial', formatCurrency(totalComissao)],
+            ['Total de Comissões (Digitado)', formatCurrency(totalComissao)],
             ['Comissão Recebida', formatCurrency(recebido)],
-            ['Saldo a Receber', formatCurrency(pendente)],
+            ['Saldo a Receber (Averbados)', formatCurrency(pendente)],
         ],
         theme: 'striped',
         headStyles: { fillColor: [40, 74, 127] },

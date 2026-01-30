@@ -52,39 +52,40 @@ export function FinancialSummary({ rows, isPrivacyMode, isFiltered, onShowDetail
         };
     }
 
+    // 1. Volume Total Digitado (Para o descritivo)
     const totalDigitadoNoPeriodo = allProposalsInPeriod.reduce((sum, p) => {
       if (p.commissionBase === 'net') return sum + (p.netAmount || 0);
       return sum + (p.grossAmount || 0);
     }, 0);
 
-    // No resumo financeiro, ignoramos propostas 'Reprovadas' e 'Pendentes' (que ainda não entraram em produção real)
-    const validProposals = allProposalsInPeriod.filter(p => p.status !== 'Reprovado' && p.status !== 'Pendente');
+    // 1.1 Total de Comissões (Base 100%) - Independente de status
+    const totalPotentialCommission = allProposalsInPeriod.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
 
-    // 1. Comissão Total Potencial (Base 100% para os cálculos financeiros)
-    const totalPotentialCommission = validProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
-
-    // 2. Comissão Recebida
-    const commissionReceivedProposals = validProposals.filter(p => p.commissionStatus === 'Paga');
+    // 2. Comissão Recebida - Baseado no status financeiro "Paga"
+    const commissionReceivedProposals = allProposalsInPeriod.filter(p => p.commissionStatus === 'Paga');
     const totalAmountPaid = commissionReceivedProposals.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
     
-    // 3. Saldo a Receber (Contratos averbados ou pagos ao cliente, mas comissão ainda pendente)
-    const proposalsForSaldoAReceber = validProposals.filter(p => {
+    // 3. Saldo a Receber (Já "garantido" por averbação ou pagamento ao cliente, mas financeiro não baixado)
+    const proposalsForSaldoAReceber = allProposalsInPeriod.filter(p => {
         if (p.commissionStatus === 'Paga') return false;
-        const isPago = p.status === 'Pago';
-        const isEmAndamentoAverbado = p.status === 'Em Andamento' && !!p.dateApproved;
-        const isPendenteAverbado = p.status === 'Pendente' && !!p.dateApproved;
-        const isSaldoPago = p.status === 'Saldo Pago';
-        return isPago || isEmAndamentoAverbado || isPendenteAverbado || isSaldoPago;
-    });
-    const pendingAmount = proposalsForSaldoAReceber.reduce((sum, p) => {
-      const remaining = (p.commissionValue || 0) - (p.amountPaid || 0);
-      return sum + (remaining > 0 ? remaining : 0);
-    }, 0);
+        
+        const hasAverbacao = !!p.dateApproved;
+        const status = p.status;
 
-    // 4. Comissão Esperada (Contratos em andamento que ainda não foram averbados)
-    const expectedCommissionProposals = validProposals.filter(p => {
-        const isAverbada = !!p.dateApproved;
-        return !isAverbada && (p.status === 'Em Andamento' || p.status === 'Aguardando Saldo');
+        // Regra: Pago OU (Qualquer status com averbação preenchida)
+        return status === 'Pago' || (hasAverbacao && (status === 'Em Andamento' || status === 'Saldo Pago' || status === 'Pendente'));
+    });
+    const pendingAmount = proposalsForSaldoAReceber.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
+
+    // 4. Comissão Esperada (Funil de entrada - propostas sem averbação e não reprovadas)
+    const expectedCommissionProposals = allProposalsInPeriod.filter(p => {
+        if (p.commissionStatus === 'Paga') return false;
+        
+        const isReprovado = p.status === 'Reprovado';
+        const hasAverbacao = !!p.dateApproved;
+        const isPagoStatus = p.status === 'Pago'; // Se é Pago, já está no card de Saldo a Receber
+
+        return !isReprovado && !hasAverbacao && !isPagoStatus;
     });
     const expectedAmount = expectedCommissionProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
     
@@ -136,7 +137,7 @@ export function FinancialSummary({ rows, isPrivacyMode, isFiltered, onShowDetail
       title: "Saldo a Receber",
       value: formatCurrency(pendingAmount),
       icon: Hourglass,
-      description: "Contratos pagos/averbados",
+      description: "Averbados / Pagos ao Cliente",
       className: "border-orange-500/30 bg-orange-500/5 dark:bg-orange-500/10",
       valueClassName: "text-orange-500",
       proposals: proposalsForSaldoAReceber,
@@ -146,7 +147,7 @@ export function FinancialSummary({ rows, isPrivacyMode, isFiltered, onShowDetail
       title: "Comissão Esperada",
       value: formatCurrency(expectedAmount),
       icon: CircleDollarSign,
-      description: "Contratos em andamento",
+      description: "Contratos s/ Averbação",
       className: "border-blue-500/30 bg-blue-500/5 dark:bg-blue-500/10",
       valueClassName: "text-blue-500",
       proposals: expectedCommissionProposals,
@@ -172,7 +173,7 @@ export function FinancialSummary({ rows, isPrivacyMode, isFiltered, onShowDetail
             <Info className="h-4 w-4" />
             <AlertTitle>Resumo Financeiro do Período</AlertTitle>
             <AlertDescription>
-                As porcentagens abaixo são baseadas no seu **Total de Comissões** (Potencial de Lucro).
+                Os cálculos abaixo seguem as novas regras de Averbação e Status.
                 {isFiltered && (
                     <span className="block mt-1 font-semibold text-primary">Aviso: A tabela abaixo está exibindo resultados filtrados.</span>
                 )}
