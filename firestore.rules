@@ -6,6 +6,17 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isOwner(userIdField) {
+      return isAuthenticated() && (
+        (resource == null) || 
+        (resource.data.get(userIdField, '') == request.auth.uid)
+      );
+    }
+
+    function willBeOwner(userIdField) {
+      return isAuthenticated() && request.resource.data.get(userIdField, '') == request.auth.uid;
+    }
+
     // Regras para Perfis de Usuário
     match /users/{userId} {
       allow read, write: if isAuthenticated() && request.auth.uid == userId;
@@ -13,17 +24,20 @@ service cloud.firestore {
 
     // Regras para Clientes (usam ownerId)
     match /customers/{customerId} {
-      allow read, write: if isAuthenticated() && (resource == null || resource.data.ownerId == request.auth.uid || request.resource.data.ownerId == request.auth.uid);
+      allow read: if isOwner('ownerId');
+      allow write: if willBeOwner('ownerId') || isOwner('ownerId');
     }
 
     // Regras para Propostas (usam ownerId)
     match /loanProposals/{proposalId} {
-      allow read, write: if isAuthenticated() && (resource == null || resource.data.ownerId == request.auth.uid || request.resource.data.ownerId == request.auth.uid);
+      allow read: if isOwner('ownerId');
+      allow write: if willBeOwner('ownerId') || isOwner('ownerId');
     }
 
     // Regras para Lembretes (usam userId)
     match /reminders/{reminderId} {
-      allow read, write: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid || request.resource.data.userId == request.auth.uid);
+      allow read: if isOwner('userId');
+      allow write: if willBeOwner('userId') || isOwner('userId');
     }
 
     // Regras para Configurações do Usuário

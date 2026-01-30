@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -60,9 +59,10 @@ export function ReminderForm({ reminder, customers, onSubmit }: ReminderFormProp
     }
   }, [reminder, form]);
 
-  const handleCustomerSelect = (customerId: string) => {
+  const handleCustomerSelect = (value: string) => {
+    const customerId = value === "__none__" ? "" : value;
     form.setValue('customerId', customerId);
-    if (!form.getValues('title')) {
+    if (customerId && !form.getValues('title')) {
         const customer = customers.find(c => c.id === customerId);
         if (customer) form.setValue('title', `Retorno: ${customer.name}`);
     }
@@ -77,14 +77,14 @@ export function ReminderForm({ reminder, customers, onSubmit }: ReminderFormProp
           render={({ field }) => (
             <FormItem>
               <FormLabel>Vincular a um Cliente (Opcional)</FormLabel>
-              <Select onValueChange={handleCustomerSelect} defaultValue={field.value} value={field.value}>
+              <Select onValueChange={handleCustomerSelect} value={field.value || "__none__"}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um cliente cadastrado" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">Nenhum (Cliente Novo/Prospect)</SelectItem>
+                  <SelectItem value="__none__">Nenhum (Cliente Novo/Prospect)</SelectItem>
                   {customers.map((c) => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}
