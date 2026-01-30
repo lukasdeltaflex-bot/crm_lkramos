@@ -25,7 +25,7 @@ export function FirebaseErrorListener() {
       lastErrorRef.current = errorKey;
       lastLogTimeRef.current = now;
       
-      // Log técnico apenas para depuração
+      // Log técnico apenas para depuração, sem interromper o usuário
       console.warn("Firestore Sync Notice:", {
         method: error.request.method,
         path: error.request.path,

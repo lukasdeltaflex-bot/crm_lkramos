@@ -6,48 +6,30 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Função auxiliar para verificar se o usuário é dono do documento
-    // Suporta tanto 'ownerId' quanto 'userId' para maior compatibilidade
-    function isOwner(data) {
-      return isAuthenticated() && (
-        data.get('ownerId', '') == request.auth.uid || 
-        data.get('userId', '') == request.auth.uid
-      );
-    }
-
-    // Regras para Perfis de Usuário
+    // Regras simplificadas e diretas para máxima compatibilidade com queries de listagem
+    
     match /users/{userId} {
       allow read, write: if isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Regras para Clientes
     match /customers/{customerId} {
-      allow list: if isAuthenticated() && request.query.limit <= 100;
-      allow get: if isAuthenticated();
-      allow write: if isAuthenticated();
-      
-      // Validação rigorosa na escrita para garantir que o ownerId seja sempre o usuário atual
-      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
-      
-      // Permitir listagem apenas se filtrada pelo ownerId
-      match /{allPaths=**} {
-        allow read, write: if isAuthenticated() && (resource == null || resource.data.ownerId == request.auth.uid);
-      }
+      allow read, write: if isAuthenticated() && (
+        (resource == null && request.resource.data.ownerId == request.auth.uid) ||
+        (resource != null && resource.data.ownerId == request.auth.uid)
+      );
     }
 
-    // Regras genéricas para coleções que usam ownerId ou userId
     match /loanProposals/{proposalId} {
       allow read, write: if isAuthenticated() && (
-        (resource == null && (request.resource.data.ownerId == request.auth.uid || request.resource.data.userId == request.auth.uid)) ||
-        (resource != null && isOwner(resource.data))
+        (resource == null && request.resource.data.ownerId == request.auth.uid) ||
+        (resource != null && resource.data.ownerId == request.auth.uid)
       );
     }
 
     match /reminders/{reminderId} {
       allow read, write: if isAuthenticated() && (
         (resource == null && request.resource.data.userId == request.auth.uid) ||
-        (resource != null && isOwner(resource.data))
+        (resource != null && resource.data.userId == request.auth.uid)
       );
     }
 
@@ -55,7 +37,7 @@ service cloud.firestore {
       allow read, write: if isAuthenticated() && request.auth.uid == userId;
     }
     
-    // Bloqueio padrão
+    // Bloqueio padrão para qualquer outra tentativa
     match /{document=**} {
       allow read, write: if false;
     }

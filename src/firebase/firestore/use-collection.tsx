@@ -39,7 +39,7 @@ export interface InternalQuery extends Query<DocumentData> {
 
 /**
  * React hook to subscribe to a Firestore collection or query in real-time.
- * Handles nullable references/queries.
+ * Handles real-time synchronization and security rule reporting.
  */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
@@ -79,7 +79,7 @@ export function useCollection<T = any>(
             ? (memoizedTargetRefOrQuery as CollectionReference).path
             : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString();
 
-        // Emit contextual error for central listener WITHOUT throwing
+        // Emit contextual error for central listener WITHOUT throwing to avoid app crash
         if (err.code === 'permission-denied') {
             const contextualError = new FirestorePermissionError({
                 operation: 'list',
