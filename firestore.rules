@@ -32,7 +32,7 @@ service cloud.firestore {
     // Lembretes (Agenda) - Regra padronizada para o campo userId
     match /reminders/{docId} {
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow get, list, update, delete: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
     }
 
     // Produtos (Apenas leitura para autenticados)
