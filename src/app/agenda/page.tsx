@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AgendaPage() {
   const { user } = useUser();
@@ -113,6 +114,22 @@ export default function AgendaPage() {
 
   const customerMap = React.useMemo(() => new Map(customers?.map(c => [c.id, c])), [customers]);
 
+  if (!hasMounted) {
+    return (
+        <AppLayout>
+            <div className="flex items-center justify-between mb-8">
+                <PageHeader title="Agenda LK (CRM)" />
+                <Skeleton className="h-10 w-32" />
+            </div>
+            <div className="grid gap-4">
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+            </div>
+        </AppLayout>
+    )
+  }
+
   return (
     <AppLayout>
       <div className="flex items-center justify-between mb-8">
@@ -125,7 +142,10 @@ export default function AgendaPage() {
 
       <div className="grid gap-4">
         {isLoading ? (
-          <p>Carregando lembretes...</p>
+          <div className="space-y-4">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </div>
         ) : reminders?.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center h-40 text-muted-foreground">
@@ -163,7 +183,7 @@ export default function AgendaPage() {
                         <h3 className={cn("font-semibold", reminder.status === 'completed' && "line-through")}>
                           {reminder.title}
                         </h3>
-                        {hasMounted && getStatusBadge(reminder.dueDate, reminder.status)}
+                        {getStatusBadge(reminder.dueDate, reminder.status)}
                       </div>
                       {reminder.description && (
                         <p className="text-sm text-muted-foreground">{reminder.description}</p>

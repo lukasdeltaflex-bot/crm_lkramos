@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -65,8 +64,11 @@ export function NotificationBell() {
   const { data: reminders } = useCollection<Reminder>(remindersQuery);
 
   const notifications = React.useMemo(() => {
+    if (!isClient) return [];
+    
     const alerts: { id: string; title: string; type: 'birthday' | 'commission' | 'reminder'; date: string; link: string }[] = [];
-    const todayStr = format(new Date(), 'MM-dd');
+    const now = new Date();
+    const todayStr = format(now, 'MM-dd');
 
     // Birthdays today
     customers?.forEach(c => {
@@ -84,7 +86,7 @@ export function NotificationBell() {
     // Late commissions (> 7 days since payment)
     proposals?.forEach(p => {
       if ((p.status === 'Pago' || p.status === 'Saldo Pago') && p.commissionStatus === 'Pendente' && p.datePaidToClient) {
-        const days = differenceInDays(new Date(), new Date(p.datePaidToClient));
+        const days = differenceInDays(now, new Date(p.datePaidToClient));
         if (days > 7) {
           alerts.push({
             id: `comm-${p.id}`,
@@ -100,7 +102,7 @@ export function NotificationBell() {
     // Agenda Reminders
     reminders?.forEach(r => {
         const dDate = parseISO(r.dueDate);
-        if (isToday(dDate) || isBefore(dDate, new Date())) {
+        if (isToday(dDate) || isBefore(dDate, now)) {
             alerts.push({
                 id: `rem-${r.id}`,
                 title: `Retorno: ${r.title}`,
@@ -112,7 +114,7 @@ export function NotificationBell() {
     });
 
     return alerts;
-  }, [customers, proposals, reminders]);
+  }, [customers, proposals, reminders, isClient]);
 
   const visibleNotifications = React.useMemo(() => {
     return notifications.filter(n => !dismissedIds.includes(n.id));

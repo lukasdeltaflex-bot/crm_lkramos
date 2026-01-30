@@ -7,7 +7,7 @@ import { Bot, Send, BellRing, Clock, BadgePercent, Hourglass, Coins, X, Info, Lo
 import type { Customer, Proposal, UserProfile } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { differenceInDays } from 'date-fns';
-import { calculateBusinessDays } from '@/lib/utils';
+import { calculateBusinessDays, getAge } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from '@/hooks/use-toast';
 import { sendSummaryEmail } from '@/ai/flows/send-summary-email-flow';
@@ -83,18 +83,9 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
 
   // Memoize alert calculations
   const alertData = useMemo(() => {
-    const getAge = (birthDate: string) => {
-        if (!birthDate) return 0;
-        const today = new Date();
-        const birth = new Date(birthDate);
-        let age = today.getFullYear() - birth.getFullYear();
-        const m = today.getMonth() - birth.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-          age--;
-        }
-        return age;
-    };
+    if (!isClient) return { birthdayAlerts: [], followUpReminders: [], commissionReminders: [], debtBalanceReminders: [], partialCommissionReminders: [] };
 
+    const now = new Date();
     const customerMap = new Map(customers.map(c => [c.id, c]));
 
     const birthdayAlerts = customers
@@ -106,12 +97,12 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
         }));
 
     const followUpReminders = proposals
-      .filter(p => p.status === 'Em Andamento' && p.dateDigitized && differenceInDays(new Date(), new Date(p.dateDigitized)) > 20)
+      .filter(p => p.status === 'Em Andamento' && p.dateDigitized && differenceInDays(now, new Date(p.dateDigitized)) > 20)
       .map(p => ({
         id: `followup-${p.id}`,
         customerName: customerMap.get(p.customerId)?.name || 'Cliente Desconhecido',
         proposalNumber: p.proposalNumber,
-        daysOpen: differenceInDays(new Date(), new Date(p.dateDigitized)),
+        daysOpen: differenceInDays(now, new Date(p.dateDigitized)),
       }));
 
     const commissionReminders = proposals
@@ -119,13 +110,13 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
         (p.status === 'Pago' || p.status === 'Saldo Pago') && 
         p.commissionStatus === 'Pendente' &&
         p.datePaidToClient && 
-        differenceInDays(new Date(), new Date(p.datePaidToClient)) > 7
+        differenceInDays(now, new Date(p.datePaidToClient)) > 7
       )
       .map(p => ({
         id: `commission-${p.id}`,
         customerName: customerMap.get(p.customerId)?.name || 'Cliente Desconhecido',
         proposalNumber: p.proposalNumber,
-        daysPending: differenceInDays(new Date(), new Date(p.datePaidToClient!)),
+        daysPending: differenceInDays(now, new Date(p.datePaidToClient!)),
       }));
 
     const debtBalanceReminders = proposals
@@ -146,7 +137,7 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
         .filter(p => 
             p.commissionStatus === 'Parcial' &&
             p.commissionPaymentDate && 
-            differenceInDays(new Date(), new Date(p.commissionPaymentDate)) > 15
+            differenceInDays(now, new Date(p.commissionPaymentDate)) > 15
         )
         .map(p => ({
             id: `partial-${p.id}`,
@@ -154,11 +145,11 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
             proposalNumber: p.proposalNumber,
             amountPaid: p.amountPaid,
             totalCommission: p.commissionValue,
-            daysSincePayment: differenceInDays(new Date(), new Date(p.commissionPaymentDate!)),
+            daysSincePayment: differenceInDays(now, new Date(p.commissionPaymentDate!)),
         }));
 
     return { birthdayAlerts, followUpReminders, commissionReminders, debtBalanceReminders, partialCommissionReminders };
-  }, [proposals, customers]);
+  }, [proposals, customers, isClient]);
   
   const visibleBirthdayAlerts = alertData.birthdayAlerts.filter(a => !dismissedItems.includes(a.id));
   const visibleFollowUpReminders = alertData.followUpReminders.filter(r => !dismissedItems.includes(r.id));
