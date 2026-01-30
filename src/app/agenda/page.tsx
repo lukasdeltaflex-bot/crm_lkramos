@@ -19,8 +19,6 @@ import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 import { CustomerSearchDialog } from '@/components/proposals/customer-search-dialog';
 
 export default function AgendaPage() {
@@ -73,32 +71,28 @@ export default function AgendaPage() {
     setIsDialogOpen(true);
   };
 
-  const handleToggleStatus = (reminder: Reminder) => {
+  const handleToggleStatus = async (reminder: Reminder) => {
     if (!firestore || !user) return;
     const newStatus = reminder.status === 'pending' ? 'completed' : 'pending';
     
-    setDoc(doc(firestore, 'reminders', reminder.id), { 
-      status: newStatus,
-      userId: user.uid 
-    }, { merge: true })
-      .catch(async () => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: `reminders/${reminder.id}`,
-          operation: 'update',
-          requestResourceData: { status: newStatus, userId: user.uid }
-        }));
-      });
+    try {
+      await setDoc(doc(firestore, 'reminders', reminder.id), { 
+        status: newStatus,
+        userId: user.uid 
+      }, { merge: true });
+    } catch (e) {
+      console.warn("Falha ao atualizar status:", e);
+    }
   };
 
-  const handleDeleteReminder = (id: string) => {
+  const handleDeleteReminder = async (id: string) => {
     if (!firestore) return;
-    deleteDoc(doc(firestore, 'reminders', id))
-      .catch(async () => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: `reminders/${id}`,
-          operation: 'delete'
-        }));
-      });
+    try {
+      await deleteDoc(doc(firestore, 'reminders', id));
+      toast({ title: 'Removido', description: 'O lembrete foi excluído.' });
+    } catch (e) {
+      console.warn("Falha ao excluir lembrete:", e);
+    }
   };
 
   const handleCustomerSelect = (customer: Customer) => {
@@ -112,8 +106,13 @@ export default function AgendaPage() {
     setIsSaving(true);
     const reminderId = selectedReminder?.id || doc(collection(firestore, 'reminders')).id;
     
-    const reminderData: Reminder = {
-      ...data,
+    // Limpa campos vazios para evitar erros no Firestore
+    const cleanFields = Object.fromEntries(
+      Object.entries(data).filter(([_, v]) => v !== undefined && v !== "")
+    );
+
+    const reminderData = {
+      ...cleanFields,
       id: reminderId,
       userId: user.uid,
       createdAt: selectedReminder?.createdAt || new Date().toISOString(),
@@ -124,13 +123,12 @@ export default function AgendaPage() {
       toast({ title: 'Agenda Atualizada', description: 'O lembrete foi salvo com sucesso.' });
       setIsDialogOpen(false);
     } catch (err) {
-      console.warn("Falha ao salvar lembrete:", err);
-      errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: `reminders/${reminderId}`,
-        operation: 'write',
-        requestResourceData: reminderData
-      }));
-      toast({ variant: 'destructive', title: 'Erro de Permissão', description: 'Não foi possível salvar o lembrete. Verifique sua conexão.' });
+      console.warn("Erro ao salvar lembrete:", err);
+      toast({ 
+        variant: 'destructive', 
+        title: 'Falha no Salvamento', 
+        description: 'Ocorreu um erro de permissão. Tente novamente em instantes.' 
+      });
     } finally {
       setIsSaving(false);
     }
