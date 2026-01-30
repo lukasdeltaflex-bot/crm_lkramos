@@ -131,6 +131,13 @@
         "state": {
           "type": "string",
           "description": "State (e.g., SP, RJ)."
+        },
+        "documents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/backend/entities/Attachment"
+          },
+          "description": "Fixed documents for the customer (RG, CPF, Proof of Residence) stored permanently."
         }
       },
       "required": [
@@ -145,7 +152,7 @@
     "Attachment": {
       "title": "Attachment",
       "type": "object",
-      "description": "Represents a file attached to a loan proposal.",
+      "description": "Represents a file attached to a loan proposal or customer record.",
       "properties": {
         "name": {
           "type": "string",
@@ -468,9 +475,6 @@
           ]
         }
       }
-    ],
-    "reasoning": "This Firestore structure is designed to manage customer and loan information for a bank correspondent application, prioritizing security, scalability, and ease of debugging.  It focuses on authorization independence by denormalizing customer information into loan proposals, eliminating the need for `get()` calls in security rules. The structure supports secure listing of data and maintains invariants for ownership and timestamps. This approach enhances security rule simplicity and allows for atomic operations.\n\n*   **Users Collection**: Stores public user profiles. Access is restricted to the user who owns the profile.\n*   **Customers Collection:** Stores customer profiles. No security rules are enforced here, as customer data is considered private and only accessible to the authenticated user who owns the data. All customer operations will be accessible to the user if `request.auth.uid == customerId`\n*   **Products Collection:** Contains product information, used for product categorization.\n*   **LoanProposals Collection:** Stores loan proposals associated with customers. Includes denormalized customer data (e.g., customerId) to ensure authorization independence. Access is restricted to the customer who owns the proposal (`request.auth.uid == resource.data.customerId`).\n*   **Commissions Collection:** Holds commission data tied to specific loan proposals. Access is controlled based on the associated loan proposal's ownership. This simplifies commission access management, as the security rules only need to check the loan proposal's ownership.\n*   **UserSettings Collection:** Stores user-specific application settings, like custom lists for dropdowns. This allows for per-user customization of the application experience.\n\nThis design supports the required QAPs (Queryable Access Patterns):\n\n*   **Secure Listing:** The segregation of data into user-specific subcollections (e.g., `/users/{userId}/loanProposals`) enables secure and efficient listing of data because rules can be based on the path.\n*   **Authorization Independence:** Denormalizing authorization context (e.g., copying customerId to loanProposals) removes the need for `get()` calls in security rules, making them simpler, more robust, and facilitating atomic writes.\n*   **No Custom Claims (DBAC):** Authorization relies solely on `request.auth.uid` and data stored in the database.\n*   **Clarity of Intent:** The structure clearly separates different types of data and establishes ownership through explicit user-specific paths and fields."
+    ]
   }
 }
-
-    
