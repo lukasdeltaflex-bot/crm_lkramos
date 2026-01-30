@@ -137,7 +137,7 @@ export function ReminderForm({
                   </Button>
                 )}
               </div>
-              <FormDescription>Pesquise o cliente para vincular automaticamente.</FormDescription>
+              <FormDescription>Pesquise o cliente pelo nome ou CPF para vincular.</FormDescription>
               <FormMessage />
             </FormItem>
           )}

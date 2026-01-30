@@ -12,21 +12,15 @@ service cloud.firestore {
     }
 
     match /customers/{customerId} {
-      allow read, delete: if signedIn() && resource.data.ownerId == request.auth.uid;
-      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update: if signedIn() && resource.data.ownerId == request.auth.uid;
+      allow read, write: if signedIn() && (resource == null || resource.data.ownerId == request.auth.uid) && (request.resource == null || request.resource.data.ownerId == request.auth.uid);
     }
 
     match /loanProposals/{proposalId} {
-      allow read, delete: if signedIn() && resource.data.ownerId == request.auth.uid;
-      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update: if signedIn() && resource.data.ownerId == request.auth.uid;
+      allow read, write: if signedIn() && (resource == null || resource.data.ownerId == request.auth.uid) && (request.resource == null || request.resource.data.ownerId == request.auth.uid);
     }
 
     match /reminders/{reminderId} {
-      allow read, delete: if signedIn() && (resource.data.ownerId == request.auth.uid || resource.data.userId == request.auth.uid);
-      allow create: if signedIn() && (request.resource.data.ownerId == request.auth.uid || request.resource.data.userId == request.auth.uid);
-      allow update: if signedIn() && (resource.data.ownerId == request.auth.uid || resource.data.userId == request.auth.uid);
+      allow read, write: if signedIn() && (resource == null || resource.data.ownerId == request.auth.uid) && (request.resource == null || request.resource.data.ownerId == request.auth.uid);
     }
 
     match /userSettings/{userId} {

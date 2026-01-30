@@ -8,7 +8,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, where, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import type { Reminder, Customer } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Calendar as CalendarIcon, CheckCircle2, Circle, Trash2, User } from 'lucide-react';
+import { PlusCircle, Calendar as CalendarIcon, CheckCircle2, Circle, Trash2, User, Search } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ReminderForm } from './reminder-form';
 import { format, isBefore, isToday, parseISO, startOfDay } from 'date-fns';
@@ -82,6 +82,7 @@ export default function AgendaPage() {
       }, { merge: true });
     } catch (e) {
       console.error("Erro ao atualizar status:", e);
+      toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível atualizar o status.' });
     }
   };
 
@@ -107,20 +108,14 @@ export default function AgendaPage() {
     try {
       const reminderId = selectedReminder?.id || doc(collection(firestore, 'reminders')).id;
       
-      const cleanFields = Object.fromEntries(
-        Object.entries(data).filter(([_, v]) => v !== undefined && v !== "")
-      );
-
       const reminderData = {
-        ...cleanFields,
+        ...data,
         id: reminderId,
         ownerId: user.uid,
-        userId: user.uid, // Compatibilidade com regras legadas
         createdAt: selectedReminder?.createdAt || new Date().toISOString(),
       };
 
-      // Gravação explícita
-      await setDoc(doc(firestore, 'reminders', reminderId), reminderData, { merge: true });
+      await setDoc(doc(firestore, 'reminders', reminderId), reminderData);
       
       toast({ 
         title: 'Agenda LK', 
@@ -133,7 +128,7 @@ export default function AgendaPage() {
       toast({ 
         variant: 'destructive', 
         title: 'Falha ao Salvar', 
-        description: 'Não foi possível gravar o lembrete. Verifique sua conexão e tente novamente.' 
+        description: 'Verifique as permissões do sistema ou sua conexão.' 
       });
     } finally {
       setIsSaving(false);
