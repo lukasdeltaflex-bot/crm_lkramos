@@ -7,38 +7,28 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Função universal de propriedade: verifica se o usuário logado é o dono do dado
-    // Suporta os campos userId (Lembretes/Settings) e ownerId (Clientes/Propostas)
-    function isOwner(data) {
-      return signedIn() && (
-        (data.userId == request.auth.uid) || 
-        (data.ownerId == request.auth.uid) ||
-        (data.uid == request.auth.uid)
-      );
-    }
-
     match /users/{userId} {
       allow read, write: if signedIn() && request.auth.uid == userId;
     }
 
     match /customers/{customerId} {
       allow read, write: if signedIn() && (
-        (resource == null || isOwner(resource.data)) &&
-        (request.resource == null || isOwner(request.resource.data))
+        (resource == null || resource.data.ownerId == request.auth.uid) &&
+        (request.resource == null || request.resource.data.ownerId == request.auth.uid)
       );
     }
 
     match /loanProposals/{proposalId} {
       allow read, write: if signedIn() && (
-        (resource == null || isOwner(resource.data)) &&
-        (request.resource == null || isOwner(request.resource.data))
+        (resource == null || resource.data.ownerId == request.auth.uid) &&
+        (request.resource == null || request.resource.data.ownerId == request.auth.uid)
       );
     }
 
     match /reminders/{reminderId} {
       allow read, write: if signedIn() && (
-        (resource == null || isOwner(resource.data)) &&
-        (request.resource == null || isOwner(request.resource.data))
+        (resource == null || resource.data.userId == request.auth.uid) &&
+        (request.resource == null || request.resource.data.userId == request.auth.uid)
       );
     }
 

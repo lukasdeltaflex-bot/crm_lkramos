@@ -30,7 +30,6 @@ export default function AgendaPage() {
   const [isCustomerSearchOpen, setIsCustomerSearchOpen] = React.useState(false);
   const [newlySelectedCustomer, setNewlySelectedCustomer] = React.useState<Customer | null>(null);
   const [selectedReminder, setSelectedReminder] = React.useState<Reminder | undefined>(undefined);
-  const [isSaving, setIsSaving] = React.useState(false);
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
@@ -109,38 +108,30 @@ export default function AgendaPage() {
   const handleFormSubmit = (data: any) => {
     if (!firestore || !user) return;
     
-    setIsSaving(true);
     const reminderId = selectedReminder?.id || doc(collection(firestore, 'reminders')).id;
     
-    // Preparação dos dados para o Firestore
-    const cleanData = { ...data };
-    if (!cleanData.customerId || cleanData.customerId === '') {
-        delete cleanData.customerId;
-    }
-
     const reminderData: Reminder = {
-      ...cleanData,
+      ...data,
       id: reminderId,
       userId: user.uid,
       createdAt: selectedReminder?.createdAt || new Date().toISOString(),
     };
 
-    // Gravação não-bloqueante para agilidade da interface
+    // Gravação otimizada: fecha o modal imediatamente
+    setIsDialogOpen(false);
+
     setDoc(doc(firestore, 'reminders', reminderId), reminderData, { merge: true })
       .then(() => {
         toast({ title: 'Agenda Atualizada', description: 'O lembrete foi salvo com sucesso.' });
       })
-      .catch(async () => {
+      .catch(async (err) => {
+        console.warn("Permissão negada ao salvar lembrete:", err);
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: `reminders/${reminderId}`,
           operation: 'write',
           requestResourceData: reminderData
         }));
       });
-
-    // Fecha o modal e limpa estado imediatamente
-    setIsDialogOpen(false);
-    setIsSaving(false);
   };
 
   const getStatusBadge = (dueDate: string, status: string) => {
@@ -252,7 +243,7 @@ export default function AgendaPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{selectedReminder ? 'Editar Lembrete' : 'Novo Lembrete de Retorno'}</DialogTitle>
+            <DialogTitle>{selectedReminder ? 'Editar Lembrete' : 'Novo Lembrete'}</DialogTitle>
           </DialogHeader>
           <ReminderForm 
             reminder={selectedReminder} 
@@ -261,7 +252,6 @@ export default function AgendaPage() {
             onOpenCustomerSearch={() => setIsCustomerSearchOpen(true)}
             selectedCustomerFromSearch={newlySelectedCustomer}
             onCustomerSearchSelectionHandled={() => setNewlySelectedCustomer(null)}
-            isSaving={isSaving}
           />
         </DialogContent>
       </Dialog>
