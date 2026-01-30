@@ -7,37 +7,29 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Verifica se o usuário logado é o dono do documento (suporta ownerId ou userId)
-    function isOwner(data) {
-      return signedIn() && (
-        (data.ownerId != null && data.ownerId == request.auth.uid) || 
-        (data.userId != null && data.userId == request.auth.uid)
-      );
-    }
-
     match /users/{userId} {
       allow read, write: if signedIn() && request.auth.uid == userId;
     }
 
     match /customers/{customerId} {
-      allow read: if signedIn() && resource.data.ownerId == request.auth.uid;
-      allow write: if signedIn() && 
+      allow read, write: if signedIn() && (
         (resource == null || resource.data.ownerId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.ownerId == request.auth.uid);
+        (request.resource == null || request.resource.data.ownerId == request.auth.uid)
+      );
     }
 
     match /loanProposals/{proposalId} {
-      allow read: if signedIn() && resource.data.ownerId == request.auth.uid;
-      allow write: if signedIn() && 
+      allow read, write: if signedIn() && (
         (resource == null || resource.data.ownerId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.ownerId == request.auth.uid);
+        (request.resource == null || request.resource.data.ownerId == request.auth.uid)
+      );
     }
 
     match /reminders/{reminderId} {
-      allow read: if signedIn() && (resource.data.ownerId == request.auth.uid || resource.data.userId == request.auth.uid);
-      allow write: if signedIn() && 
-        (resource == null || resource.data.ownerId == request.auth.uid || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.ownerId == request.auth.uid || request.resource.data.userId == request.auth.uid);
+      allow read, write: if signedIn() && (
+        (resource == null || resource.data.ownerId == request.auth.uid) &&
+        (request.resource == null || request.resource.data.ownerId == request.auth.uid)
+      );
     }
 
     match /userSettings/{userId} {

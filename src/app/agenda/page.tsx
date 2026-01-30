@@ -78,8 +78,7 @@ export default function AgendaPage() {
     try {
       await setDoc(doc(firestore, 'reminders', reminder.id), { 
         status: newStatus,
-        ownerId: user.uid,
-        userId: user.uid 
+        ownerId: user.uid
       }, { merge: true });
     } catch (e) {
       console.warn("Falha ao atualizar status:", e);
@@ -105,31 +104,34 @@ export default function AgendaPage() {
     if (!firestore || !user) return;
     
     setIsSaving(true);
-    const reminderId = selectedReminder?.id || doc(collection(firestore, 'reminders')).id;
-    
-    // Filtramos campos vazios para evitar inconsistências
-    const cleanFields = Object.fromEntries(
-      Object.entries(data).filter(([_, v]) => v !== undefined && v !== "")
-    );
-
-    const reminderData = {
-      ...cleanFields,
-      id: reminderId,
-      ownerId: user.uid, // Padronizado para regras de segurança
-      userId: user.uid,  // Backup para compatibilidade
-      createdAt: selectedReminder?.createdAt || new Date().toISOString(),
-    };
-
     try {
+      const reminderId = selectedReminder?.id || doc(collection(firestore, 'reminders')).id;
+      
+      const cleanFields = Object.fromEntries(
+        Object.entries(data).filter(([_, v]) => v !== undefined && v !== "")
+      );
+
+      const reminderData = {
+        ...cleanFields,
+        id: reminderId,
+        ownerId: user.uid,
+        createdAt: selectedReminder?.createdAt || new Date().toISOString(),
+      };
+
       await setDoc(doc(firestore, 'reminders', reminderId), reminderData, { merge: true });
-      toast({ title: 'Agenda LK', description: 'O lembrete foi salvo com sucesso.' });
+      
+      toast({ 
+        title: 'Agenda LK', 
+        description: 'Lembrete salvo com sucesso.' 
+      });
+      
       setIsDialogOpen(false);
     } catch (err) {
-      console.warn("Erro ao salvar no Firestore:", err);
+      console.error("Erro ao salvar lembrete:", err);
       toast({ 
         variant: 'destructive', 
-        title: 'Falha no Salvamento', 
-        description: 'Verifique as permissões e tente novamente em instantes.' 
+        title: 'Erro ao Salvar', 
+        description: 'Verifique sua conexão e tente novamente.' 
       });
     } finally {
       setIsSaving(false);
