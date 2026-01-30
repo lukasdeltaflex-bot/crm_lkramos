@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Bell, Cake, BadgePercent, X } from 'lucide-react';
+import { Bell, Cake, BadgePercent, X, CalendarClock } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,8 +15,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
-import type { Customer, Proposal } from '@/lib/types';
-import { differenceInDays, format } from 'date-fns';
+import type { Customer, Proposal, Reminder } from '@/lib/types';
+import { differenceInDays, format, isBefore, isToday, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -51,19 +51,28 @@ export function NotificationBell() {
     return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid));
   }, [firestore, user]);
 
+  const remindersQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(
+        collection(firestore, 'reminders'), 
+        where('ownerId', '==', user.uid),
+        where('status', '==', 'pending')
+    );
+  }, [firestore, user]);
+
   const { data: customers } = useCollection<Customer>(customersQuery);
   const { data: proposals } = useCollection<Proposal>(proposalsQuery);
+  const { data: reminders } = useCollection<Reminder>(remindersQuery);
 
   const notifications = React.useMemo(() => {
-    if (!customers || !proposals) return [];
-    const alerts: { id: string; title: string; type: 'birthday' | 'commission'; date: string; link: string }[] = [];
-    const today = format(new Date(), 'MM-dd');
+    const alerts: { id: string; title: string; type: 'birthday' | 'commission' | 'reminder'; date: string; link: string }[] = [];
+    const todayStr = format(new Date(), 'MM-dd');
 
     // Birthdays today
-    customers.forEach(c => {
-      if (c.birthDate && c.birthDate.substring(5) === today) {
+    customers?.forEach(c => {
+      if (c.birthDate && c.birthDate.substring(5) === todayStr) {
         alerts.push({
-          id: `bday-${c.id}-${today}`,
+          id: `bday-${c.id}-${todayStr}`,
           title: `Aniversário: ${c.name}`,
           type: 'birthday',
           date: 'Hoje',
@@ -73,7 +82,7 @@ export function NotificationBell() {
     });
 
     // Late commissions (> 7 days since payment)
-    proposals.forEach(p => {
+    proposals?.forEach(p => {
       if ((p.status === 'Pago' || p.status === 'Saldo Pago') && p.commissionStatus === 'Pendente' && p.datePaidToClient) {
         const days = differenceInDays(new Date(), new Date(p.datePaidToClient));
         if (days > 7) {
@@ -88,8 +97,22 @@ export function NotificationBell() {
       }
     });
 
+    // Agenda Reminders
+    reminders?.forEach(r => {
+        const dDate = parseISO(r.dueDate);
+        if (isToday(dDate) || isBefore(dDate, new Date())) {
+            alerts.push({
+                id: `rem-${r.id}`,
+                title: `Retorno: ${r.title}`,
+                type: 'reminder',
+                date: isToday(dDate) ? 'Hoje' : 'Atrasado',
+                link: '/agenda'
+            });
+        }
+    });
+
     return alerts;
-  }, [customers, proposals]);
+  }, [customers, proposals, reminders]);
 
   const visibleNotifications = React.useMemo(() => {
     return notifications.filter(n => !dismissedIds.includes(n.id));
@@ -150,9 +173,11 @@ export function NotificationBell() {
                     <DropdownMenuItem className="cursor-pointer p-3 pr-10">
                     <div className="flex items-start gap-3">
                         {n.type === 'birthday' ? (
-                        <Cake className="h-4 w-4 text-pink-500 mt-1" />
+                          <Cake className="h-4 w-4 text-pink-500 mt-1" />
+                        ) : n.type === 'commission' ? (
+                          <BadgePercent className="h-4 w-4 text-orange-500 mt-1" />
                         ) : (
-                        <BadgePercent className="h-4 w-4 text-orange-500 mt-1" />
+                          <CalendarClock className="h-4 w-4 text-blue-500 mt-1" />
                         )}
                         <div className="space-y-1 overflow-hidden">
                         <p className="text-sm font-medium leading-none truncate">{n.title}</p>

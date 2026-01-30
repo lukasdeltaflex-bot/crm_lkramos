@@ -75,8 +75,8 @@ export type Proposal = {
   promoter: string;
   bank: string;
   dateDigitized: string; // YYYY-MM-DD
-  dateApproved?: string; // YYYY-MM-DD - Data de Averbação
-  datePaidToClient?: string; // YYYY-MM-DD - Data de Pagamento ao Cliente
+  dateApproved?: string; // YYYY-MM-DD
+  datePaidToClient?: string; // YYYY-MM-DD
   commissionPaymentDate?: string; // YYYY-MM-DD
   bankOrigin?: string;
   debtBalanceArrivalDate?: string; // YYYY-MM-DD
@@ -85,6 +85,19 @@ export type Proposal = {
   commissionBase?: 'gross' | 'net';
   selectedBenefitNumber?: string;
   attachments?: Attachment[];
+};
+
+export type ReminderStatus = 'pending' | 'completed';
+
+export type Reminder = {
+  id: string;
+  ownerId: string;
+  title: string;
+  description?: string;
+  dueDate: string; // YYYY-MM-DD
+  status: ReminderStatus;
+  customerId?: string; // Link opcional para cliente existente
+  createdAt: string;
 };
 
 export type UserSettings = {

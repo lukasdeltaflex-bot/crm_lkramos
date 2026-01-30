@@ -43,7 +43,6 @@
       ]
     },
     "Customer": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Customer",
       "type": "object",
       "description": "Represents a customer who is an INSS retiree or pensioner.",
@@ -62,419 +61,104 @@
         },
         "cpf": {
           "type": "string",
-          "description": "Customer's CPF (Brazilian individual taxpayer registry number)."
+          "description": "Customer's CPF."
         },
         "benefits": {
             "type": "array",
-            "description": "A list of the customer's INSS benefit numbers and their species.",
             "items": {
               "type": "object",
               "properties": {
-                "number": {
-                  "type": "string",
-                  "description": "INSS benefit number."
-                },
-                "species": {
-                  "type": "string",
-                  "description": "The species of the benefit (e.g., Aposentadoria por Idade)."
-                }
-              },
-              "required": ["number"]
+                "number": { "type": "string" },
+                "species": { "type": "string" }
+              }
             }
         },
-        "phone": {
-          "type": "string",
-          "description": "Customer's primary phone number."
-        },
-        "phone2": {
-          "type": "string",
-          "description": "Customer's secondary phone number."
-        },
-        "email": {
-          "type": "string",
-          "description": "Customer's email address.",
-          "format": "email"
-        },
-        "birthDate": {
-          "type": "string",
-          "description": "Customer's birth date.",
-          "format": "date"
-        },
-        "ownerId": {
-          "type": "string",
-          "description": "The ID of the user who owns this customer record."
-        },
-        "cep": {
-          "type": "string",
-          "description": "Postal code (CEP)."
-        },
-        "street": {
-          "type": "string",
-          "description": "Street name."
-        },
-        "number": {
-          "type": "string",
-          "description": "Street number."
-        },
-        "complement": {
-          "type": "string",
-          "description": "Address complement (e.g., apartment number)."
-        },
-        "neighborhood": {
-          "type": "string",
-          "description": "Neighborhood."
-        },
-        "city": {
-          "type": "string",
-          "description": "City."
-        },
-        "state": {
-          "type": "string",
-          "description": "State (e.g., SP, RJ)."
-        },
+        "phone": { "type": "string" },
+        "phone2": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "birthDate": { "type": "string", "format": "date" },
+        "ownerId": { "type": "string" },
+        "cep": { "type": "string" },
+        "street": { "type": "string" },
+        "number": { "type": "string" },
+        "complement": { "type": "string" },
+        "neighborhood": { "type": "string" },
+        "city": { "type": "string" },
+        "state": { "type": "string" },
         "documents": {
           "type": "array",
-          "items": {
-            "$ref": "#/backend/entities/Attachment"
-          },
-          "description": "Fixed documents for the customer (RG, CPF, Proof of Residence) stored permanently."
-        }
+          "items": { "$ref": "#/backend/entities/Attachment" }
+        },
+        "observations": { "type": "string" }
       },
-      "required": [
-        "numericId",
-        "name",
-        "cpf",
-        "phone",
-        "birthDate",
-        "ownerId"
-      ]
+      "required": ["numericId", "name", "cpf", "phone", "birthDate", "ownerId"]
     },
     "Attachment": {
       "title": "Attachment",
       "type": "object",
-      "description": "Represents a file attached to a loan proposal or customer record.",
       "properties": {
-        "name": {
-          "type": "string",
-          "description": "The name of the uploaded file."
-        },
-        "url": {
-          "type": "string",
-          "description": "The Firebase Storage URL of the uploaded file."
-        },
-        "type": {
-          "type": "string",
-          "description": "The MIME type of the file."
-        },
-        "size": {
-          "type": "number",
-          "description": "The size of the file in bytes."
-        }
+        "name": { "type": "string" },
+        "url": { "type": "string" },
+        "type": { "type": "string" },
+        "size": { "type": "number" }
       },
-      "required": [
-        "name",
-        "url",
-        "type",
-        "size"
-      ]
+      "required": ["name", "url", "type", "size"]
     },
     "LoanProposal": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "LoanProposal",
       "type": "object",
-      "description": "Represents a loan proposal for a customer.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the LoanProposal entity."
-        },
-        "ownerId": {
-          "type": "string",
-          "description": "The ID of the user who owns this proposal."
-        },
-        "customerId": {
-          "type": "string",
-          "description": "Reference to Customer. (Relationship: Customer 1:N LoanProposal)"
-        },
-        "table": {
-          "type": "string",
-          "description": "Loan table information."
-        },
-        "term": {
-          "type": "number",
-          "description": "Loan term in months."
-        },
-        "installmentAmount": {
-          "type": "number",
-          "description": "Installment amount for the loan."
-        },
-        "netAmount": {
-          "type": "number",
-          "description": "Net amount released to the customer."
-        },
-        "grossAmount": {
-          "type": "number",
-          "description": "Gross amount (contract value) of the loan."
-        },
-        "approvalDate": {
-          "type": "string",
-          "description": "Date the loan proposal was approved.",
-          "format": "date-time"
-        },
-        "bankInputDate": {
-          "type": "string",
-          "description": "Date the loan proposal was entered into the bank's system.",
-          "format": "date-time"
-        },
-        "customerPaymentDate": {
-          "type": "string",
-          "description": "Date the customer received the loan payment.",
-          "format": "date-time"
-        },
-        "proposalNumber": {
-          "type": "string",
-          "description": "Loan proposal number."
-        },
-        "productId": {
-          "type": "string",
-          "description": "Reference to Product. (Relationship: Product 1:N LoanProposal)"
-        },
-        "status": {
-          "type": "string",
-          "description": "Status of the proposal (e.g., Averaged, In Progress, Rejected, Awaiting Debt Balance)."
-        },
-        "selectedBenefitNumber": {
-          "type": "string",
-          "description": "The specific benefit number selected from the customer's list for this proposal."
-        },
-        "attachments": {
-          "type": "array",
-          "items": {
-            "$ref": "#/backend/entities/Attachment"
-          },
-          "description": "A list of files attached to this proposal."
-        }
-      },
-      "required": [
-        "ownerId",
-        "customerId",
-        "table",
-        "term",
-        "installmentAmount",
-        "netAmount",
-        "grossAmount",
-        "proposalNumber",
-        "status"
-      ]
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "customerId": { "type": "string" },
+        "proposalNumber": { "type": "string" },
+        "status": { "type": "string" },
+        "grossAmount": { "type": "number" },
+        "netAmount": { "type": "number" },
+        "commissionValue": { "type": "number" },
+        "commissionStatus": { "type": "string" },
+        "dateDigitized": { "type": "string", "format": "date-time" },
+        "dateApproved": { "type": "string", "format": "date-time" }
+      }
     },
-    "Commission": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Commission",
+    "Reminder": {
+      "title": "Reminder",
       "type": "object",
-      "description": "Represents a commission received for a loan proposal.",
+      "description": "A scheduled task or reminder for a customer or prospect.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Commission entity."
-        },
-        "loanProposalId": {
-          "type": "string",
-          "description": "Reference to LoanProposal. (Relationship: LoanProposal 1:N Commission)"
-        },
-        "amountReceived": {
-          "type": "number",
-          "description": "Amount of commission received."
-        },
-        "paymentDate": {
-          "type": "string",
-          "description": "Date the commission was paid.",
-          "format": "date-time"
-        },
-        "pendingPayment": {
-          "type": "boolean",
-          "description": "Indicates if the commission payment is pending."
-        }
+        "id": { "type": "string" },
+        "title": { "type": "string", "description": "Title or client name." },
+        "description": { "type": "string" },
+        "dueDate": { "type": "string", "format": "date", "description": "YYYY-MM-DD" },
+        "status": { "type": "string", "enum": ["pending", "completed"] },
+        "customerId": { "type": "string", "description": "Optional link to existing Customer." },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "loanProposalId",
-        "amountReceived",
-        "paymentDate",
-        "pendingPayment"
-      ]
-    },
-    "Product": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Product",
-      "type": "object",
-      "description": "Represents a loan product type.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Product entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the loan product (e.g., Margin, CLT Margin, Supplementary Withdrawal)."
-        },
-        "description": {
-          "type": "string",
-          "description": "A description of the product"
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "description"
-      ]
+      "required": ["title", "dueDate", "status", "ownerId"]
     },
     "UserSettings": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserSettings",
       "type": "object",
-      "description": "Stores user-specific settings for dropdowns and other configurations.",
       "properties": {
-        "productTypes": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "List of available product types."
-        },
-        "proposalStatuses": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "List of possible statuses for a proposal."
-        },
-        "commissionStatuses": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "List of possible statuses for a commission."
-        },
-        "approvingBodies": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "List of approving bodies."
-        },
-        "banks": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "List of banks."
-        }
+        "productTypes": { "type": "array", "items": { "type": "string" } },
+        "proposalStatuses": { "type": "array", "items": { "type": "string" } },
+        "commissionStatuses": { "type": "array", "items": { "type": "string" } },
+        "approvingBodies": { "type": "array", "items": { "type": "string" } },
+        "banks": { "type": "array", "items": { "type": "string" } }
       }
     }
   },
   "auth": {
-    "providers": [
-      "password"
-    ]
+    "providers": ["password"]
   },
   "firestore": {
     "structure": [
-      {
-        "path": "/users/{userId}",
-        "definition": {
-          "entityName": "UserProfile",
-          "schema": {
-            "$ref": "#/backend/entities/UserProfile"
-          },
-          "description": "Stores user profile information. Access is restricted to the owner of the profile.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user, matching their auth UID."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/customers/{customerId}",
-        "definition": {
-          "entityName": "Customer",
-          "schema": {
-            "$ref": "#/backend/entities/Customer"
-          },
-          "description": "Stores customer profiles. All customer operations will be accessible to the user if `request.auth.uid == resource.data.ownerId`",
-          "params": [
-            {
-              "name": "customerId",
-              "description": "The unique identifier for the customer."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/loanProposals/{loanProposalId}",
-        "definition": {
-          "entityName": "LoanProposal",
-          "schema": {
-            "$ref": "#/backend/entities/LoanProposal"
-          },
-          "description": "Stores loan proposals associated with customers. Access is restricted to the user who owns the proposal (`request.auth.uid == resource.data.ownerId`).",
-          "params": [
-            {
-              "name": "loanProposalId",
-              "description": "The unique identifier for the loan proposal."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/commissions/{commissionId}",
-        "definition": {
-          "entityName": "Commission",
-          "schema": {
-            "$ref": "#/backend/entities/Commission"
-          },
-          "description": "Holds commission data tied to specific loan proposals. Access is controlled based on the associated loan proposal's ownership.",
-          "params": [
-            {
-              "name": "commissionId",
-              "description": "The unique identifier for the commission."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/products/{productId}",
-        "definition": {
-          "entityName": "Product",
-          "schema": {
-            "$ref": "#/backend/entities/Product"
-          },
-          "description": "Contains product information, used for product categorization.",
-          "params": [
-            {
-              "name": "productId",
-              "description": "The unique identifier for the product."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/userSettings/{userId}",
-        "definition": {
-          "entityName": "UserSettings",
-          "schema": {
-            "$ref": "#/backend/entities/UserSettings"
-          },
-          "description": "Stores user-specific application settings. Access is restricted to the owner of the settings.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user, matching their auth UID."
-            }
-          ]
-        }
-      }
+      { "path": "/users/{userId}", "definition": { "entityName": "UserProfile" } },
+      { "path": "/customers/{customerId}", "definition": { "entityName": "Customer" } },
+      { "path": "/loanProposals/{loanProposalId}", "definition": { "entityName": "LoanProposal" } },
+      { "path": "/reminders/{reminderId}", "definition": { "entityName": "Reminder" } },
+      { "path": "/userSettings/{userId}", "definition": { "entityName": "UserSettings" } }
     ]
   }
 }
