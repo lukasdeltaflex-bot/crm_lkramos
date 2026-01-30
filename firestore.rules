@@ -16,15 +16,21 @@ service cloud.firestore {
     }
 
     match /customers/{customerId} {
-      allow read, write: if signedIn() && (resource == null || isOwner(resource.data)) && (request.resource == null || isOwner(request.resource.data));
+      allow read, delete: if isOwner(resource.data);
+      allow create: if isOwner(request.resource.data);
+      allow update: if isOwner(resource.data) && isOwner(request.resource.data);
     }
 
     match /loanProposals/{proposalId} {
-      allow read, write: if signedIn() && (resource == null || isOwner(resource.data)) && (request.resource == null || isOwner(request.resource.data));
+      allow read, delete: if isOwner(resource.data);
+      allow create: if isOwner(request.resource.data);
+      allow update: if isOwner(resource.data) && isOwner(request.resource.data);
     }
 
     match /reminders/{reminderId} {
-      allow read, write: if signedIn() && (resource == null || isOwner(resource.data)) && (request.resource == null || isOwner(request.resource.data));
+      allow read, delete: if isOwner(resource.data);
+      allow create: if isOwner(request.resource.data);
+      allow update: if isOwner(resource.data) && isOwner(request.resource.data);
     }
 
     match /userSettings/{userId} {

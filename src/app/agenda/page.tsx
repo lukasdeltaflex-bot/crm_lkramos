@@ -81,7 +81,7 @@ export default function AgendaPage() {
         ownerId: user.uid
       }, { merge: true });
     } catch (e) {
-      console.warn("Falha ao atualizar status:", e);
+      console.error("Erro ao atualizar status:", e);
     }
   };
 
@@ -91,7 +91,7 @@ export default function AgendaPage() {
       await deleteDoc(doc(firestore, 'reminders', id));
       toast({ title: 'Removido', description: 'O lembrete foi excluído.' });
     } catch (e) {
-      console.warn("Falha ao excluir lembrete:", e);
+      console.error("Erro ao excluir lembrete:", e);
     }
   };
 
@@ -115,10 +115,10 @@ export default function AgendaPage() {
         ...cleanFields,
         id: reminderId,
         ownerId: user.uid,
-        userId: user.uid, // Compatibilidade com regras de segurança
         createdAt: selectedReminder?.createdAt || new Date().toISOString(),
       };
 
+      // Gravação explícita para garantir permissão
       await setDoc(doc(firestore, 'reminders', reminderId), reminderData, { merge: true });
       
       toast({ 
@@ -132,7 +132,7 @@ export default function AgendaPage() {
       toast({ 
         variant: 'destructive', 
         title: 'Erro de Permissão', 
-        description: 'Não foi possível salvar o lembrete. Verifique sua conexão.' 
+        description: 'Não foi possível salvar. Tente novamente em alguns segundos.' 
       });
     } finally {
       setIsSaving(false);
