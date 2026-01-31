@@ -6,7 +6,7 @@ import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Calendar as CalendarIcon, CheckCircle2, Circle, Trash2, User, Search } from 'lucide-react';
+import { PlusCircle, Calendar as CalendarIcon, CheckCircle2, Circle, Trash2, User, Search, Loader2 } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import type { Reminder, Customer } from '@/lib/types';
@@ -86,7 +86,7 @@ export default function AgendaPage() {
     try {
       await setDoc(doc(firestore, 'reminders', reminder.id), { 
         status: newStatus,
-        ownerId: user.uid // Garante que o ID esteja presente para a regra de segurança
+        ownerId: user.uid
       }, { merge: true });
       toast({ title: newStatus === 'completed' ? 'Lembrete Concluído!' : 'Lembrete Reaberto!' });
     } catch (err) {
@@ -121,7 +121,7 @@ export default function AgendaPage() {
         createdAt: selectedReminder?.createdAt || new Date().toISOString(),
       };
 
-      // Remover campos vazios para consistência
+      // Limpeza de campos para consistência no Firebase
       const cleanData = Object.fromEntries(
         Object.entries(reminderData).filter(([_, v]) => v !== undefined && v !== "")
       );
@@ -135,7 +135,7 @@ export default function AgendaPage() {
       toast({ 
         variant: 'destructive', 
         title: 'Erro de Permissão', 
-        description: 'Verifique se você está logado e tente novamente.' 
+        description: 'Verifique sua conexão e permissões de acesso.' 
       });
     } finally {
       setIsSaving(false);
@@ -146,8 +146,8 @@ export default function AgendaPage() {
     if (status === 'completed') return <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200/50">Concluído</Badge>;
     const date = parseISO(dueDate);
     const now = new Date();
-    if (isToday(date)) return <Badge variant="default" className="bg-yellow-500 text-black">Hoje</Badge>;
-    if (isBefore(date, startOfDay(now))) return <Badge variant="destructive">Atrasado</Badge>;
+    if (isToday(date)) return <Badge variant="default" className="bg-yellow-500 text-black border-none">Hoje</Badge>;
+    if (isBefore(date, startOfDay(now))) return <Badge variant="destructive" className="border-none">Atrasado</Badge>;
     return <Badge variant="outline">Pendente</Badge>;
   };
 

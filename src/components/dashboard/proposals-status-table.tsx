@@ -128,7 +128,7 @@ export function ProposalsStatusTable({ proposals = [], customers = [] }: { propo
                 ...proposal,
                 customer: customer ? { name: customer.name } : undefined
             }
-        })
+        });
     }, [proposals, customers]);
 
   if (!proposals || (Array.isArray(proposals) && proposals.length === 0)) {
