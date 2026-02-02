@@ -4,7 +4,7 @@ import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
 import { FinancialDataTable, type FinancialDataTableHandle } from './data-table';
 import { getColumns } from './columns';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, where, doc, setDoc, deleteField } from 'firebase/firestore';
 import type { Proposal, Customer, CommissionStatus } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';

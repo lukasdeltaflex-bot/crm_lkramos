@@ -135,8 +135,8 @@ export default function DashboardPage() {
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
-    // 🔥 Lógica de Acúmulo: Mês anterior + Selecionado (Para Pipeline Operacional)
-    const startOfAccumulation = startOfMonth(subMonths(fromDate, 1));
+    // 🔥 Lógica de Pipeline: Considera desde o início do mês anterior até o fim do período atual
+    const startOfPrevMonth = startOfMonth(subMonths(fromDate, 1));
 
     const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
 
@@ -149,7 +149,7 @@ export default function DashboardPage() {
     const accumulatedProposals = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
-        return d >= startOfAccumulation && d <= effectiveToDate;
+        return d >= startOfPrevMonth && d <= effectiveToDate;
     });
 
     const totalDigitado = getSum(currentPeriodProposals);
