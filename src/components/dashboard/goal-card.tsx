@@ -53,7 +53,7 @@ export function GoalCard({ currentProduction, totalDigitized, isPrivacyMode, onV
   const isGoalReached = currentProduction >= monthlyGoal;
 
   return (
-    <Card className={cn('hover:border-primary/50 transition-colors group relative overflow-hidden bg-primary/5 dark:bg-primary/10 border-primary/20', className)}>
+    <Card className={cn('hover:border-primary/50 transition-colors group relative overflow-hidden bg-primary/5 dark:bg-primary/10 border border-border/50', className)}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex items-center gap-2">
           <CardTitle className="text-sm font-medium">Meta de Contratos Pagos</CardTitle>
@@ -103,11 +103,11 @@ export function GoalCard({ currentProduction, totalDigitized, isPrivacyMode, onV
           <div className="flex items-end justify-between">
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Total Pago no Mês</p>
-              <div className={cn("text-4xl font-light text-primary", isPrivacyMode && "blur-sm")}>
+              <div className={cn("text-4xl font-normal text-primary", isPrivacyMode && "blur-sm")}>
                 {isPrivacyMode ? '•••••' : formatCurrency(currentProduction)}
               </div>
               <p className="text-[11px] text-muted-foreground font-medium">
-                Representa <span className="text-foreground font-bold">{conversionRate.toFixed(1).replace('.', ',')}%</span> de tudo o que foi digitado.
+                Representa <span className="text-foreground font-bold">{conversionRate.toFixed(1).replace('.', ',')}%</span> de tudo o que foi digitado no período.
               </p>
             </div>
             <div className={cn("flex flex-col items-end gap-1 font-bold", isGoalReached ? "text-green-500" : "text-primary")}>

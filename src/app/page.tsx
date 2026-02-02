@@ -271,7 +271,7 @@ export default function DashboardPage() {
                     icon={FileText} 
                     percentage={100}
                     className="bg-slate-50 dark:bg-slate-900/40 border-border/50 shadow-sm"
-                    valueClassName="font-light"
+                    valueClassName="font-normal"
                     description="Produção Mensal"
                 />
             </div>
@@ -281,7 +281,7 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.pendente)} 
                     icon={BadgePercent} 
                     percentage={stats.percPendente}
-                    valueClassName="text-purple-600 dark:text-purple-400 font-light"
+                    valueClassName="text-purple-600 dark:text-purple-400 font-normal"
                     className="bg-purple-50/50 dark:bg-purple-900/20 border-border/50 shadow-sm"
                     description="Mês Anterior + Atual"
                 />
@@ -292,7 +292,7 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.emAndamento)} 
                     icon={Hourglass} 
                     percentage={stats.percEmAndamento}
-                    valueClassName="text-yellow-600 dark:text-yellow-400 font-light"
+                    valueClassName="text-yellow-600 dark:text-yellow-400 font-normal"
                     className="bg-yellow-50/50 dark:bg-yellow-900/20 border-border/50 shadow-sm"
                     description="Mês Anterior + Atual"
                 />
@@ -306,7 +306,7 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.aguardandoSaldo)} 
                     icon={Clock} 
                     percentage={stats.percAguardandoSaldo}
-                    valueClassName="text-blue-600 dark:text-blue-400 font-light"
+                    valueClassName="text-blue-600 dark:text-blue-400 font-normal"
                     className="bg-blue-50/50 dark:bg-blue-900/20 border-border/50 shadow-sm"
                     description="Mês Anterior + Atual"
                 />
@@ -317,7 +317,7 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.saldoPago)} 
                     icon={CheckCircle2} 
                     percentage={stats.percSaldoPago}
-                    valueClassName="text-orange-600 dark:text-orange-400 font-light"
+                    valueClassName="text-orange-600 dark:text-orange-400 font-normal"
                     className="bg-orange-50/50 dark:bg-orange-900/20 border-border/50 shadow-sm"
                     description="Mês Anterior + Atual"
                 />
@@ -328,7 +328,7 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.reprovado)} 
                     icon={XCircle} 
                     percentage={stats.percReprovado}
-                    valueClassName="text-red-600 dark:text-red-400 font-light"
+                    valueClassName="text-red-600 dark:text-red-400 font-normal"
                     className="bg-red-50/50 dark:bg-red-900/20 border-border/50 shadow-sm"
                     description="Produção Mensal"
                 />
