@@ -510,7 +510,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                     <div>
                         {table.getFilteredSelectedRowModel().rows.length} de{' '}
-                        {table.getFilteredRowModel().rows.length} selecionados
+                        {table.getFilteredRowModel().rows.length} total
                     </div>
                     {selectedRows.length > 0 && !isPrivacyMode && (
                         <>
