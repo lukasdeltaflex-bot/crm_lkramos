@@ -10,7 +10,7 @@ import { getStorage } from "firebase/storage";
  * para que o login e o sistema funcionem corretamente.
  */
 const firebaseConfig = {
-  apiKey: "AIzaSyXXXXXXXXXXXX", // <--- COLE SUA API KEY AQUI
+  apiKey: "AIzaSyXXXXXXXXXXXX", // <--- COLE SUA API KEY REAL AQUI
   authDomain: "seu-projeto.firebaseapp.com",
   projectId: "seu-projeto",
   storageBucket: "seu-projeto.appspot.com",
@@ -18,7 +18,7 @@ const firebaseConfig = {
   appId: "1:123456789:web:abcdef"
 };
 
-// Singleton para garantir inicialização única e evitar erros de hot-reload
+// Singleton para garantir inicialização única
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 export const auth = getAuth(app);
@@ -26,7 +26,7 @@ export const db = getFirestore(app);
 export const storage = getStorage(app);
 
 /**
- * Função de inicialização para o Client Provider.
+ * Função de inicialização exigida pelo Client Provider.
  */
 export function initializeFirebase() {
   if (typeof window !== 'undefined') {
