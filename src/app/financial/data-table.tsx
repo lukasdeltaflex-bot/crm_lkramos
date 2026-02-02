@@ -418,7 +418,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                     </div>
 
                     <div className="flex items-center justify-between py-4 print:hidden">
-                    <div className='relative w-full max-w-sm'>
+                    <div className='relative w-full max-sm:max-w-full max-w-sm'>
                         <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
                         <Input
                         placeholder="Busca inteligente (cliente, CPF, proposta...)"
