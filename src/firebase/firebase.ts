@@ -1,7 +1,7 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { getAuth, Auth } from "firebase/auth";
+import { getFirestore, Firestore } from "firebase/firestore";
+import { getStorage, FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDcdnNBy0TZTsq_cI02KFVU9o7PJopEczM",
@@ -12,9 +12,8 @@ const firebaseConfig = {
   appId: "1:341426752875:web:348f88597e5b9b2057d02e",
 };
 
-// Padrão Singleton robusto para evitar múltiplas instâncias e erros de Assertion no Firestore
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-
+// Padrão Singleton robusto para evitar erros de Assertion Failed no Firestore durante HMR
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);

@@ -11,9 +11,9 @@ import { LayoutDashboard, FileText, Users, CircleDollarSign, Cog, User, Calendar
 
 const links = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/proposals', label: 'Propostas', icon: FileText },
   { href: '/customers', label: 'Clientes', icon: Users },
   { href: '/follow-ups', label: 'Retornos', icon: CalendarClock },
+  { href: '/proposals', label: 'Propostas', icon: FileText },
   { href: '/financial', label: 'Financeiro', icon: CircleDollarSign },
 ];
 
@@ -30,16 +30,16 @@ export function SidebarNav() {
     <SidebarMenu>
       {links.map((link) => (
         <SidebarMenuItem key={link.href}>
-          <Link href={link.href} passHref>
+          <Link href={link.href} passHref legacyBehavior>
             <SidebarMenuButton
               asChild
               isActive={pathname === link.href}
               tooltip={link.label}
             >
-              <span>
+              <a className="flex items-center gap-2">
                 <link.icon />
                 <span>{link.label}</span>
-              </span>
+              </a>
             </SidebarMenuButton>
           </Link>
         </SidebarMenuItem>
@@ -49,16 +49,16 @@ export function SidebarNav() {
      <SidebarMenu>
         {bottomLinks.map((link) => (
             <SidebarMenuItem key={link.href}>
-            <Link href={link.href} passHref>
+            <Link href={link.href} passHref legacyBehavior>
                 <SidebarMenuButton
                 asChild
                 isActive={pathname === link.href}
                 tooltip={link.label}
                 >
-                <span>
+                <a className="flex items-center gap-2">
                     <link.icon />
                     <span>{link.label}</span>
-                </span>
+                </a>
                 </SidebarMenuButton>
             </Link>
             </SidebarMenuItem>
