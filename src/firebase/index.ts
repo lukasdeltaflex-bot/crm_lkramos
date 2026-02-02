@@ -3,14 +3,11 @@
 import app, { auth, db, storage } from './firebase';
 
 /**
- * Exportação centralizada exigida pelo ClientProvider.
- * Retorna as instâncias singleton do Firebase.
+ * Exportação centralizada exigida pelo ClientProvider e hooks.
  */
 export function initializeFirebase() {
   if (typeof window !== 'undefined' && app.options.projectId !== 'seu-projeto') {
     console.log("🚀 LK RAMOS - CONEXÃO FIREBASE ATIVA:", app.options.projectId);
-  } else if (typeof window !== 'undefined') {
-    console.warn("⚠️ LK RAMOS: Firebase detectado com chaves padrão. Por favor, configure seu firebase.ts");
   }
   
   return {

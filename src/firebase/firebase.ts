@@ -4,13 +4,13 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 /**
- * CONFIGURAÇÃO DIRETA DO FIREBASE
+ * CONFIGURAÇÃO DIRETA DO FIREBASE (HARDCODED PARA DEBUG)
  * 
- * ATENÇÃO: Substitua os valores abaixo pelos dados reais do seu projeto.
- * No Console Firebase: Configurações do Projeto -> Geral -> Seus Apps -> App Web.
+ * ATENÇÃO: Substitua os valores abaixo pelos dados reais do seu projeto
+ * obtidos em: Firebase Console -> Configurações do Projeto -> Seus Apps.
  */
 const firebaseConfig = {
-  apiKey: "AIzaSyXXXXXXXXXXXX", // <--- SUBSTITUA POR SUA CHAVE REAL
+  apiKey: "AIzaSyXXXXXXXXXXXX", // <--- SUBSTITUA POR SUA CHAVE REAL AQUI
   authDomain: "seu-projeto.firebaseapp.com",
   projectId: "seu-projeto",
   storageBucket: "seu-projeto.appspot.com",
@@ -18,7 +18,7 @@ const firebaseConfig = {
   appId: "1:123456789:web:abcdef"
 };
 
-// Singleton para garantir inicialização única
+// Singleton para garantir inicialização única no Next.js
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 export const auth = getAuth(app);
