@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -257,23 +256,23 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
   }
   
   return (
-    <Card className="h-full flex flex-col border-border/50 shadow-sm">
-      <CardHeader className="flex flex-row items-start justify-between pb-2">
+    <Card className="h-full flex flex-col border-border/50 shadow-sm overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between pb-4 bg-muted/10">
         <div className='space-y-1'>
             <CardTitle className="text-lg font-headline flex items-center gap-2">
                 <Bot className="text-primary h-5 w-5" />
                 Resumo de Pendências
             </CardTitle>
             <CardDescription className="text-xs">
-                Alertas estratégicos para o seu dia.
+                Alertas estratégicos automatizados.
             </CardDescription>
         </div>
         <Button 
-            variant="outline" 
+            variant="default" 
             size="sm" 
             onClick={handleSendEmail} 
             disabled={isSending}
-            className="h-8 shadow-sm hover:bg-primary hover:text-primary-foreground transition-all duration-200"
+            className="h-8 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200"
         >
             {isSending ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" />
@@ -283,7 +282,7 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
             Enviar E-mail
         </Button>
       </CardHeader>
-      <CardContent className="flex-1 overflow-hidden pt-2">
+      <CardContent className="flex-1 overflow-hidden pt-4">
         {!hasVisibleAlerts ? (
             <div className="flex h-full flex-col items-center justify-center text-center text-muted-foreground p-8 border-2 border-dashed border-border/50 rounded-lg bg-muted/5">
                 <Info className="h-10 w-10 mb-4 opacity-20" />
