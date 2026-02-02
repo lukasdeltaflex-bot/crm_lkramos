@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -273,7 +272,7 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
             size="sm" 
             onClick={handleSendEmail} 
             disabled={isSending}
-            className="h-8 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200 group"
+            className="h-8 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200 group border-none"
         >
             {isSending ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" />

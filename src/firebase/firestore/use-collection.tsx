@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -75,13 +74,13 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (err: FirestoreError) => {
-        const path: string =
-          memoizedTargetRefOrQuery.type === 'collection'
-            ? (memoizedTargetRefOrQuery as CollectionReference).path
-            : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString();
-
-        // Emit contextual error for central listener WITHOUT throwing to avoid app crash
+        // Silently catch permission denied to avoid app crashes during hot reloads
         if (err.code === 'permission-denied') {
+            const path: string =
+              memoizedTargetRefOrQuery.type === 'collection'
+                ? (memoizedTargetRefOrQuery as CollectionReference).path
+                : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString();
+
             const contextualError = new FirestorePermissionError({
                 operation: 'list',
                 path,
@@ -96,12 +95,13 @@ export function useCollection<T = any>(
     );
 
     return () => {
+      // Proteção contra chamadas de unsubscribe em instâncias já fechadas por erros internos do Firestore
       try {
         if (typeof unsubscribe === 'function') {
           unsubscribe();
         }
       } catch (e) {
-        // Silently handle Turbopack hot reload edge cases
+        console.warn("Firestore cleanup handled safely");
       }
     };
   }, [memoizedTargetRefOrQuery]);
