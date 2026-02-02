@@ -18,6 +18,7 @@ export function initializeFirebase() {
 
   const app = getApp();
   const sdks = getSdks(app);
+  // Garante persistência mesmo se o app já estiver inicializado
   setPersistence(sdks.auth, browserLocalPersistence);
   return sdks;
 }

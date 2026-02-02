@@ -103,7 +103,10 @@ export default function AgendaPage() {
   };
 
   const handleFormSubmit = async (data: any) => {
-    if (!firestore || !user) return;
+    if (!firestore || !user) {
+        toast({ variant: 'destructive', title: 'Erro de Autenticação', description: 'Por favor, saia e entre novamente.' });
+        return;
+    }
     setIsSaving(true);
     
     try {
@@ -124,8 +127,8 @@ export default function AgendaPage() {
       console.error("Erro ao salvar lembrete:", err);
       toast({ 
         variant: 'destructive', 
-        title: 'Falha ao Salvar', 
-        description: err.message || 'Verifique sua permissão ou conexão com a internet.' 
+        title: 'Erro de Permissão', 
+        description: 'Não foi possível gravar na agenda. Verifique sua conexão.' 
       });
     } finally {
       setIsSaving(false);
