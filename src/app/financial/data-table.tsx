@@ -359,7 +359,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
       onDragEnd={handleDragEnd}
       sensors={sensors}
     >
-        <div className="space-y-4">
+        <div className="space-y-4 max-w-[1600px] mx-auto">
             <FinancialSummary 
                 rows={currentMonthData}
                 currentMonthRange={appliedDateRange || currentMonthRange}

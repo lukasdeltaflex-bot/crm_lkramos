@@ -22,7 +22,7 @@ const globalForFirebase = globalThis as unknown as {
 
 const app = globalForFirebase.app || (getApps().length === 0 ? initializeApp(firebaseConfig) : getApp());
 
-// Inicializa o Firestore apenas uma vez por ciclo de vida da aplicação global
+// Inicializa o Firestore apenas uma vez por ciclo de vida da aplicação global para evitarAssertion Failed
 const db = globalForFirebase.db || initializeFirestore(app, {
     cacheSizeBytes: CACHE_SIZE_UNLIMITED,
 });
@@ -30,7 +30,7 @@ const db = globalForFirebase.db || initializeFirestore(app, {
 const auth = globalForFirebase.auth || getAuth(app);
 const storage = globalForFirebase.storage || getStorage(app);
 
-// Persiste as instâncias no objeto global (previne erros de assertion no Turbopack)
+// Persiste as instâncias no objeto global
 if (process.env.NODE_ENV !== "production") {
     globalForFirebase.app = app;
     globalForFirebase.auth = auth;

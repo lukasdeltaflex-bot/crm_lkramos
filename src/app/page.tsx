@@ -200,7 +200,7 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-       <div className="space-y-6 animate-in fade-in duration-500">
+       <div className="space-y-6 animate-in fade-in duration-500 max-w-[1600px] mx-auto">
         <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
@@ -260,7 +260,7 @@ export default function DashboardPage() {
             />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
             <div className="cursor-pointer" onClick={() => handleShowDetails('Total Digitado (Mês)', stats.proposals.todos)}>
                 <StatsCard 
                     title="Total Digitado" 
@@ -295,7 +295,7 @@ export default function DashboardPage() {
             </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
             <div className="cursor-pointer" onClick={() => handleShowDetails('Aguardando Saldo (Acumulado)', stats.proposals.aguardandoSaldo)}>
                 <StatsCard 
                     title="Aguardando Saldo" 
