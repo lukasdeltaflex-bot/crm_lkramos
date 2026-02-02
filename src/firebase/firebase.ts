@@ -18,7 +18,7 @@ const firebaseConfig = {
   appId: "1:123456789:web:abcdef"
 };
 
-// Singleton para garantir inicialização única
+// Singleton para garantir inicialização única e evitar erros de hot-reload
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 export const auth = getAuth(app);
@@ -26,10 +26,10 @@ export const db = getFirestore(app);
 export const storage = getStorage(app);
 
 /**
- * Função de inicialização exigida pelo Client Provider.
+ * Função de inicialização exigida pelo Client Provider e Hooks.
  */
 export function initializeFirebase() {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && app.options.apiKey !== "AIzaSyXXXXXXXXXXXX") {
     console.log("🚀 LK RAMOS - CONEXÃO FIREBASE ATIVA:", app.options.projectId);
   }
   
