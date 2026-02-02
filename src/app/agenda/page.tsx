@@ -120,12 +120,12 @@ export default function AgendaPage() {
       
       toast({ title: 'Lembrete salvo com sucesso!' });
       setIsDialogOpen(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erro ao salvar lembrete:", err);
       toast({ 
         variant: 'destructive', 
         title: 'Falha ao Salvar', 
-        description: 'Verifique sua permissão ou conexão com a internet.' 
+        description: err.message || 'Verifique sua permissão ou conexão com a internet.' 
       });
     } finally {
       setIsSaving(false);
