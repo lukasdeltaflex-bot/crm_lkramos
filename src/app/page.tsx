@@ -153,11 +153,12 @@ export default function DashboardPage() {
         return d >= startOfPreviousMonth && d <= effectiveToDate;
     });
 
+    // Cards que mostram APENAS o mês vigente
     const totalDigitado = getSum(currentMonthProposals);
     const reprovadoProposals = currentMonthProposals.filter(p => p.status === 'Reprovado');
     const pagoProposals = currentMonthProposals.filter(p => p.status === 'Pago');
 
-    // Cards acumulativos (Pipeline)
+    // Cards ACUMULADOS (Pipeline operacional)
     const pendenteProposals = accumulatedProposals.filter(p => p.status === 'Pendente');
     const emAndamentoProposals = accumulatedProposals.filter(p => p.status === 'Em Andamento');
     const aguardandoSaldoProposals = accumulatedProposals.filter(p => p.status === 'Aguardando Saldo');

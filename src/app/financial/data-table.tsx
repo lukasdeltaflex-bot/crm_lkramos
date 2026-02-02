@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -81,6 +82,7 @@ interface DataTableProps {
   columns: ColumnDef<ProposalWithCustomer, unknown>[];
   data: ProposalWithCustomer[];
   currentMonthData: ProposalWithCustomer[];
+  currentMonthRange: { from: Date; to: Date };
   isPrivacyMode: boolean;
   rowSelection: RowSelectionState;
   setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>;
@@ -95,6 +97,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   columns,
   data,
   currentMonthData,
+  currentMonthRange,
   isPrivacyMode,
   rowSelection,
   setRowSelection,
@@ -378,6 +381,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         <div className="p-4 space-y-4 print:p-0">
             <FinancialSummary 
                 rows={currentMonthData}
+                currentMonthRange={appliedDateRange || currentMonthRange}
                 isPrivacyMode={isPrivacyMode}
                 isFiltered={isAnyFilterActive}
                 onShowDetails={onShowDetails}

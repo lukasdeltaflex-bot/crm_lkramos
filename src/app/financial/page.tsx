@@ -70,12 +70,17 @@ export default function FinancialPage() {
   const { data: proposals, isLoading: proposalsLoading } = useCollection<Proposal>(proposalsQuery);
   const { data: customers, isLoading: customersLoading } = useCollection<Customer>(customersQuery);
 
-  const { proposalsWithCustomerData, summaryProposals } = React.useMemo(() => {
-    if (!proposals || !customers || !isClient) return { proposalsWithCustomerData: [], summaryProposals: [] };
+  const { proposalsWithCustomerData, summaryProposals, currentMonthRange } = React.useMemo(() => {
+    if (!proposals || !customers || !isClient) return { proposalsWithCustomerData: [], summaryProposals: [], currentMonthRange: { from: new Date(), to: new Date() } };
     
     const customersMap = new Map(customers.map(c => [c.id, c]));
     
-    // TABELA: Regras de exibição do financeiro (Averbados ou Pagos)
+    const today = new Date();
+    const startOfCurrent = startOfMonth(today);
+    const endOfCurrent = endOfMonth(today);
+    const startOfPrev = startOfMonth(subMonths(today, 1));
+
+    // TABELA: Dados visíveis baseados na lógica de exibição financeira
     const tableData = proposals
       .filter(p => {
         if (p.commissionStatus === 'Paga') return true;
@@ -91,12 +96,7 @@ export default function FinancialPage() {
       }))
       .filter(p => p.customer);
 
-    const today = new Date();
-    const startOfPrev = startOfMonth(subMonths(today, 1));
-    const endOfCurrent = endOfMonth(today);
-    endOfCurrent.setHours(23, 59, 59, 999);
-
-    // RESUMO (Cards): Agora inclui produção do mês anterior para acumular Saldo a Receber e Esperada
+    // RESUMO (Cards): Inclui produção do mês anterior para acumular Saldo a Receber e Esperada
     const summaryData = proposals
       .filter(p => {
         if (!p.dateDigitized) return false;
@@ -111,7 +111,8 @@ export default function FinancialPage() {
 
     return { 
       proposalsWithCustomerData: tableData as ProposalWithCustomer[], 
-      summaryProposals: summaryData as ProposalWithCustomer[] 
+      summaryProposals: summaryData as ProposalWithCustomer[],
+      currentMonthRange: { from: startOfCurrent, to: endOfCurrent }
     };
   }, [proposals, customers, isClient]);
 
@@ -345,6 +346,7 @@ export default function FinancialPage() {
             columns={columns} 
             data={proposalsWithCustomerData}
             currentMonthData={summaryProposals}
+            currentMonthRange={currentMonthRange}
             isPrivacyMode={isPrivacyMode} 
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
