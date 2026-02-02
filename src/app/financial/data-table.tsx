@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -70,6 +69,7 @@ import type { CommissionStatus, Proposal, Customer } from '@/lib/types';
 import { FinancialSummary } from '@/components/financial/financial-summary';
 import { DraggableHeader } from './columns';
 import { Separator } from '@/components/ui/separator';
+import { proposalStatuses } from '@/lib/config-data';
 
 const STORAGE_KEY_VISIBILITY = 'lk-ramos-financial-columns-visibility-v2';
 const STORAGE_KEY_ORDER = 'lk-ramos-financial-columns-order-v2';
@@ -120,7 +120,9 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const [appliedDateRange, setAppliedDateRange] = React.useState<DateRange | undefined>(undefined);
   const [isClient, setIsClient] = React.useState(false);
 
-  const defaultVisibility: VisibilityState = {};
+  const defaultVisibility: VisibilityState = {
+    status: false,
+  };
   const defaultOrder = React.useMemo(() => columns.map(c => c.id!), [columns]);
 
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(defaultVisibility);
@@ -355,6 +357,17 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     dateColumn?.setFilterValue(appliedDateRange);
   }, [appliedDateRange, table]);
 
+  // Regra solicitada: Quando "Todos" estiver ativado, ocultar registros "Reprovados"
+  React.useEffect(() => {
+    const mainStatusColumn = table.getColumn('status');
+    if (statusFilter === 'Todos') {
+        const allStatusesExceptReprovado = proposalStatuses.filter(s => s !== 'Reprovado');
+        mainStatusColumn?.setFilterValue(allStatusesExceptReprovado);
+    } else {
+        mainStatusColumn?.setFilterValue(undefined);
+    }
+  }, [statusFilter, table]);
+
   const idToLabelMap: { [key: string]: string } = {
     customerName: 'Cliente',
     customerCpf: 'CPF',
@@ -368,6 +381,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     commissionStatus: 'Status Comissão',
     commissionPaymentDate: 'Data Pagamento',
     proposalNumber: 'Nº Proposta',
+    status: 'Status Proposta'
   };
 
 

@@ -282,6 +282,12 @@ export const getColumns = (
     id: 'commissionPaymentDate',
   },
   {
+    accessorKey: 'status',
+    header: 'Status Proposta',
+    id: 'status',
+    enableHiding: true,
+  },
+  {
     id: 'actions',
     cell: (props) => <ActionsCell {...props} onEdit={onEdit} />,
     enableHiding: false,
