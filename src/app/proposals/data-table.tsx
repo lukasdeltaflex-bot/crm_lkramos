@@ -224,8 +224,8 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
             return;
     }
 
-    setStartDateInput(parse(from.toISOString(), "yyyy-MM-dd", new Date()).toLocaleDateString('pt-BR'));
-    setEndDateInput(parse(to.toISOString(), "yyyy-MM-dd", new Date()).toLocaleDateString('pt-BR'));
+    setStartDateInput(from.toLocaleDateString('pt-BR'));
+    setEndDateInput(to.toLocaleDateString('pt-BR'));
     setAppliedDateRange({ from, to });
   };
 
@@ -413,14 +413,14 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
       onDragEnd={handleDragEnd}
       sensors={sensors}
     >
-        <Card className="proposals-table">
+        <Card className="proposals-table border-border/50 shadow-md rounded-xl overflow-hidden">
         <div className="p-4">
             <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
                 <Tabs 
                 value={statusFilter} 
                 onValueChange={setStatusFilter}
                 >
-                    <TabsList className="h-auto flex-wrap justify-start">
+                    <TabsList className="h-auto flex-wrap justify-start bg-muted/50">
                         <TabsTrigger value="Todos">Todos</TabsTrigger>
                         {proposalStatuses.map(status => (
                             <TabsTrigger key={status} value={status}>{status}</TabsTrigger>
@@ -429,8 +429,8 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                 </Tabs>
                 <div className="flex items-center gap-2 flex-wrap">
                     <Select onValueChange={(val) => applyRange(val as any)}>
-                        <SelectTrigger className='w-[140px] h-9'>
-                            <CalendarIcon className='mr-2 h-4 w-4' />
+                        <SelectTrigger className='w-[140px] h-9 bg-card'>
+                            <CalendarIcon className='mr-2 h-4 w-4 text-primary' />
                             <SelectValue placeholder="Período" />
                         </SelectTrigger>
                         <SelectContent>
@@ -447,7 +447,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                             value={startDateInput}
                             onChange={(e) => handleDateInputChange(e.target.value, 'start')}
                             maxLength={10}
-                            className="h-9 w-28"
+                            className="h-9 w-28 bg-card"
                         />
                         <span className='text-muted-foreground'>-</span>
                         <Input 
@@ -455,7 +455,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                             value={endDateInput}
                             onChange={(e) => handleDateInputChange(e.target.value, 'end')}
                             maxLength={10}
-                            className="h-9 w-28"
+                            className="h-9 w-28 bg-card"
                         />
                     </div>
                     <Button size="sm" onClick={handleApplyFilter}><Filter className="h-4 w-4" /> Aplicar</Button>
@@ -470,13 +470,13 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                     placeholder="Filtrar por cliente, CPF, proposta, promotora ou operador..."
                     value={globalFilter ?? ''}
                     onChange={(event) => setGlobalFilter(event.target.value)}
-                    className="pl-9 w-full"
+                    className="pl-9 w-full bg-card"
                     />
                 </div>
                 {selectedRowCount > 0 && (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                    <Button variant="outline">
+                    <Button variant="outline" className="bg-card">
                         Alterar status ({selectedRowCount})
                         <ChevronsUpDown className="ml-2 h-4 w-4" />
                     </Button>
@@ -498,7 +498,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
             </div>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-auto">
+                <Button variant="outline" className="ml-auto bg-card">
                     Colunas <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
                 </DropdownMenuTrigger>
@@ -524,9 +524,9 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                 </DropdownMenuContent>
             </DropdownMenu>
             </div>
-            <div className="rounded-md border">
+            <div className="rounded-xl border shadow-sm overflow-hidden">
             <Table>
-                <TableHeader>
+                <TableHeader className="bg-muted/20">
                     {table.getHeaderGroups().map(headerGroup => (
                         <TableRow key={headerGroup.id}>
                              <SortableContext
@@ -549,7 +549,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                         className={cn("transition-colors", getRowStatusClass(row.original))}
                     >
                         {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
+                        <TableCell key={cell.id} className="py-4">
                             {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext()
@@ -572,24 +572,24 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
             </Table>
             </div>
             <div className="flex items-center justify-between py-4">
-                <div className="flex-1 text-sm text-muted-foreground flex items-center gap-4">
+                <div className="flex-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-4">
                     <span>
                         {selectedRowCount} de{' '}
-                        {table.getFilteredRowModel().rows.length} linha(s) selecionadas.
+                        {table.getFilteredRowModel().rows.length} selecionados.
                     </span>
                     {selectedRowCount > 0 && (
                         <>
                             <Separator orientation="vertical" className="h-4" />
-                            <div className="font-medium">
-                                Valor Bruto Selecionado:{" "}
-                                <span className="font-bold text-foreground">{formatCurrency(totalSelectedGrossAmount)}</span>
+                            <div className="text-primary">
+                                Valor Bruto:{" "}
+                                <span className="text-foreground">{formatCurrency(totalSelectedGrossAmount)}</span>
                             </div>
                             {isCommissionColumnVisible && (
                                 <>
                                     <Separator orientation="vertical" className="h-4" />
-                                    <div className="font-medium">
-                                        Comissão Selecionada:{" "}
-                                        <span className="font-bold text-foreground">{formatCurrency(totalSelectedCommissionValue)}</span>
+                                    <div className="text-primary">
+                                        Comissão:{" "}
+                                        <span className="text-foreground">{formatCurrency(totalSelectedCommissionValue)}</span>
                                     </div>
                                 </>
                             )}
@@ -598,14 +598,14 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                 </div>
                 <div className="flex items-center space-x-6 lg:space-x-8">
                     <div className="flex items-center space-x-2">
-                        <p className="text-sm font-medium">Linhas por página</p>
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-tighter">Linhas</p>
                         <Select
                             value={`${table.getState().pagination.pageSize}`}
                             onValueChange={(value) => {
                                 table.setPageSize(Number(value))
                             }}
                         >
-                            <SelectTrigger className="h-8 w-[70px]">
+                            <SelectTrigger className="h-8 w-[70px] bg-card">
                                 <SelectValue placeholder={table.getState().pagination.pageSize} />
                             </SelectTrigger>
                             <SelectContent side="top">
@@ -617,14 +617,14 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-                        Página {table.getState().pagination.pageIndex + 1} de{" "}
+                    <div className="flex w-[100px] items-center justify-center text-xs font-bold text-primary uppercase">
+                        Pág {table.getState().pagination.pageIndex + 1} de{" "}
                         {table.getPageCount()}
                     </div>
                     <div className="flex items-center space-x-2">
                         <Button
                             variant="outline"
-                            className="hidden h-8 w-8 p-0 lg:flex"
+                            className="hidden h-8 w-8 p-0 lg:flex bg-card"
                             onClick={() => table.setPageIndex(0)}
                             disabled={!table.getCanPreviousPage()}
                         >
@@ -633,7 +633,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                         </Button>
                         <Button
                             variant="outline"
-                            className="h-8 w-8 p-0"
+                            className="h-8 w-8 p-0 bg-card"
                             onClick={() => table.previousPage()}
                             disabled={!table.getCanPreviousPage()}
                         >
@@ -642,7 +642,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                         </Button>
                         <Button
                             variant="outline"
-                            className="h-8 w-8 p-0"
+                            className="h-8 w-8 p-0 bg-card"
                             onClick={() => table.nextPage()}
                             disabled={!table.getCanNextPage()}
                         >
@@ -651,7 +651,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                         </Button>
                         <Button
                             variant="outline"
-                            className="hidden h-8 w-8 p-0 lg:flex"
+                            className="hidden h-8 w-8 p-0 lg:flex bg-card"
                             onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                             disabled={!table.getCanNextPage()}
                         >

@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
@@ -47,17 +47,17 @@ import { CommissionChart } from '@/components/dashboard/commission-chart';
 import { ProductBreakdownChart } from '@/components/dashboard/product-breakdown-chart';
 
 export default function DashboardPage() {
-  const [startDateInput, setStartDateInput] = React.useState('');
-  const [endDateInput, setEndDateInput] = React.useState('');
-  const [appliedDateRange, setAppliedDateRange] = React.useState<DateRange | undefined>(undefined);
-  const [isPrivacyMode, setIsPrivacyMode] = React.useState(false);
-  const [isClient, setIsClient] = React.useState(false);
+  const [startDateInput, setStartDateInput] = useState('');
+  const [endDateInput, setEndDateInput] = useState('');
+  const [appliedDateRange, setAppliedDateRange] = useState<DateRange | undefined>(undefined);
+  const [isPrivacyMode, setIsPrivacyMode] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const { user } = useUser();
   const firestore = useFirestore();
 
-  const [dialogData, setDialogData] = React.useState<{ title: string; proposals: Proposal[] } | null>(null);
+  const [dialogData, setDialogData] = useState<{ title: string; proposals: Proposal[] } | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setIsClient(true);
   }, []);
 
@@ -126,7 +126,7 @@ export default function DashboardPage() {
     setAppliedDateRange(undefined);
   }
 
-  const stats = React.useMemo(() => {
+  const stats = useMemo(() => {
     if (!proposals || !isClient) return null;
 
     const today = new Date();
@@ -135,6 +135,7 @@ export default function DashboardPage() {
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
+    // Lógica ACUMULADA: Do início do mês anterior até o final do período selecionado
     const startOfPipeline = startOfMonth(subMonths(fromDate, 1));
 
     const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
