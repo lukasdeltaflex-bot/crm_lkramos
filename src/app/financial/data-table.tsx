@@ -329,6 +329,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   React.useEffect(() => {
     const mainStatusColumn = table.getColumn('status');
     if (statusFilter === 'Todos') {
+        // Na visão geral do financeiro, ocultar propostas reprovadas para limpar o fluxo de caixa
         const allStatusesExceptReprovado = proposalStatuses.filter(s => s !== 'Reprovado');
         mainStatusColumn?.setFilterValue(allStatusesExceptReprovado);
     } else {
@@ -368,7 +369,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 onShowDetails={onShowDetails}
             />
 
-            <Card className="print:shadow-none print:border-none financial-table border-border/50 shadow-md rounded-xl">
+            <Card className="print:shadow-none print:border-none financial-table border-border/50 shadow-md rounded-xl overflow-hidden">
                 <div className="p-4 space-y-4 print:p-0">
                     <div className="flex items-center justify-between py-4 print:hidden">
                         <div className="flex flex-wrap gap-2 items-center">

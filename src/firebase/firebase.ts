@@ -12,7 +12,7 @@ const firebaseConfig = {
   appId: "1:341426752875:web:348f88597e5b9b2057d02e",
 };
 
-// Singleton robusto para evitar "Unexpected State" no Firestore
+// Singleton robusto para evitar "Unexpected State" no Firestore e reinicializações indevidas
 const globalForFirebase = globalThis as unknown as {
   app: FirebaseApp | undefined;
   auth: Auth | undefined;
