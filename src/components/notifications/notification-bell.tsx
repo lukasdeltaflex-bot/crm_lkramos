@@ -52,7 +52,6 @@ export function NotificationBell() {
 
   const remindersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    // Usando subcoleção para Agenda
     return collection(firestore, 'users', user.uid, 'reminders');
   }, [firestore, user]);
 

@@ -124,8 +124,8 @@ export default function AgendaPage() {
       console.error("Erro ao salvar lembrete:", err);
       toast({ 
         variant: 'destructive', 
-        title: 'Erro ao Salvar', 
-        description: 'Verifique se você tem permissão para salvar este lembrete.' 
+        title: 'Acesso Negado', 
+        description: 'Você precisa estar logado para salvar lembretes.' 
       });
     } finally {
       setIsSaving(false);

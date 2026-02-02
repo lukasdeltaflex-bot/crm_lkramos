@@ -87,7 +87,7 @@ export function AgendaSection() {
       setIsDialogOpen(false);
     } catch (err) {
       console.error(err);
-      toast({ variant: 'destructive', title: 'Erro ao salvar', description: 'Verifique as permissões do banco de dados.' });
+      toast({ variant: 'destructive', title: 'Acesso Negado', description: 'Você precisa estar logado para salvar lembretes.' });
     } finally {
       setIsSaving(false);
     }
