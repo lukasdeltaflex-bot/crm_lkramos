@@ -119,7 +119,7 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                                 <div className="flex items-center gap-2">
                                     <Badge
                                         variant="outline"
-                                        className={cn('px-3 py-1 text-[10px] font-black uppercase tracking-tighter border-2', {
+                                        className={cn('px-3 py-1 text-[10px] font-medium uppercase tracking-wider border-2', {
                                             'border-green-500/30 text-green-600 bg-green-50/80 dark:bg-green-900/20': proposal.status === 'Pago',
                                             'border-orange-500/30 text-orange-600 bg-orange-50/80 dark:bg-orange-900/20': proposal.status === 'Saldo Pago',
                                             'border-yellow-500/30 text-yellow-600 bg-yellow-50/80 dark:bg-yellow-900/20': proposal.status === 'Em Andamento',
