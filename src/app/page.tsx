@@ -251,15 +251,12 @@ export default function DashboardPage() {
             </div>
         </div>
 
-        <div className="flex justify-center">
-            <GoalCard 
-                currentProduction={stats.totalPagoMeta} 
-                totalDigitized={stats.totalDigitado}
-                isPrivacyMode={isPrivacyMode}
-                className="w-full max-w-5xl"
-                onValueClick={() => handleShowDetails('Contratos Pagos no Período', [...stats.proposals.pago, ...stats.proposals.todos.filter(p => p.status === 'Saldo Pago')])}
-            />
-        </div>
+        <GoalCard 
+            currentProduction={stats.totalPagoMeta} 
+            totalDigitized={stats.totalDigitado}
+            isPrivacyMode={isPrivacyMode}
+            onValueClick={() => handleShowDetails('Contratos Pagos no Período', [...stats.proposals.pago, ...stats.proposals.todos.filter(p => p.status === 'Saldo Pago')])}
+        />
 
         <div className="grid gap-4 md:grid-cols-3">
             <div className="cursor-pointer" onClick={() => handleShowDetails('Total Digitado (Mês)', stats.proposals.todos)}>
