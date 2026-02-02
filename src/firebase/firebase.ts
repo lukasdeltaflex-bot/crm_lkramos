@@ -12,8 +12,9 @@ const firebaseConfig = {
   appId: "1:341426752875:web:348f88597e5b9b2057d02e",
 };
 
-// Padrão Singleton para evitar múltiplas instâncias e erros de Assertion no Firestore
+// Padrão Singleton robusto para evitar múltiplas instâncias e erros de Assertion no Firestore
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
