@@ -308,16 +308,16 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         const proposal = row.original;
         const customer = proposal.customer;
         
-        // BUSCA EXATA POR ID DO CLIENTE: Se o termo for puramente numérico
+        // BUSCA EXATA POR ID DO CLIENTE OU PROPOSTA
         if (/^\d+$/.test(searchTerm)) {
-            // Se bater exatamente com o ID numérico do cliente vinculado
+            // Busca exata pelo ID numérico do cliente vinculado
             if (customer && String(customer.numericId) === searchTerm) return true;
             
-            // Se bater exatamente com o número da proposta
+            // Busca exata pelo número da proposta
             if (proposal.proposalNumber === searchTerm) return true;
 
-            // Se for um número curto (até 6 dígitos) e não bater exatamente com os IDs,
-            // ignoramos os outros campos para garantir precisão no filtro por ID.
+            // Se for um número curto (< 7 dígitos) e não bater com IDs exatos,
+            // barramos a busca parcial para evitar poluição com partes de CPF/Telefone.
             if (searchTerm.length < 7) return false;
         }
 
@@ -343,7 +343,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   React.useEffect(() => {
     const statusColumn = table.getColumn('status');
     if (statusFilter === 'Todos') {
-      // Regra solicitada: Quando estiver em "Todos", mostrar tudo MENOS "Reprovado"
       const allStatusesExceptReprovado = proposalStatuses.filter(s => s !== 'Reprovado');
       statusColumn?.setFilterValue(allStatusesExceptReprovado);
     } else {
@@ -397,11 +396,10 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const getRowStatusClass = (proposal: Proposal) => {
     const { status, product, dateDigitized } = proposal;
     
-    // Regra de Portabilidade: Prazo de 5 dias úteis começando a contar no próximo dia útil
     if (product === 'Portabilidade' && status === 'Aguardando Saldo' && dateDigitized) {
         const days = calculateBusinessDays(new Date(dateDigitized));
         if (days >= 5) return 'bg-red-500/20 hover:bg-red-500/30 animate-pulse border-l-4 border-l-destructive';
-        if (days >= 4) return 'bg-orange-500/20 hover:bg-orange-500/30 border-l-4 border-l-orange-500';
+        if (days === 4) return 'bg-orange-500/20 hover:bg-orange-500/30 border-l-4 border-l-orange-500';
     }
 
     switch (status) {
@@ -475,7 +473,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                 <div className='relative w-full max-w-md'>
                     <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
                     <Input
-                    placeholder="Filtrar por cliente, CPF, proposta, promotora ou operador..."
+                    placeholder="Filtrar por ID, nome, CPF, proposta..."
                     value={globalFilter ?? ''}
                     onChange={(event) => setGlobalFilter(event.target.value)}
                     className="pl-9 w-full bg-card"

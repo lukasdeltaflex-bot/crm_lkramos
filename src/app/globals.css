@@ -101,14 +101,8 @@
   }
 }
 
-html, body {
-    pointer-events: auto !important;
-    overflow: auto !important;
-    user-select: auto !important;
-}
-
-/* Remover efeitos de desfoque excessivos para nitidez total */
-.backdrop-blur-md, .backdrop-blur-sm, .backdrop-blur-lg {
+/* Remover efeitos de desfoque excessivos para nitidez total solicitada */
+.backdrop-blur-md, .backdrop-blur-sm, .backdrop-blur-lg, .backdrop-filter {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
 }

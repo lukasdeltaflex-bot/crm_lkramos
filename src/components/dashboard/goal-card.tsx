@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -61,7 +59,6 @@ export function GoalCard({ currentProduction, totalDigitized, isPrivacyMode, onV
         className
     )}>
       <CardContent className="p-8">
-        {/* Header Row */}
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-full bg-white dark:bg-blue-950 shadow-sm border border-blue-100 dark:border-blue-900">
@@ -108,7 +105,6 @@ export function GoalCard({ currentProduction, totalDigitized, isPrivacyMode, onV
           </div>
         </div>
 
-        {/* Main Content Row */}
         <div className="flex items-end justify-between mb-8" onClick={onValueClick}>
           <div className="space-y-2 cursor-pointer">
             <div className={cn("text-6xl font-normal tracking-tighter text-blue-500 dark:text-blue-400 leading-none")}>
@@ -128,7 +124,6 @@ export function GoalCard({ currentProduction, totalDigitized, isPrivacyMode, onV
           </div>
         </div>
 
-        {/* Progress Section */}
         <div className="space-y-4">
           <Progress value={percentageOfGoal} className="h-2.5 bg-blue-100 dark:bg-blue-900/50" />
           

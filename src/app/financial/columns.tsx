@@ -249,14 +249,15 @@ export const getColumns = (
         const status = row.getValue(id) as string;
         const mainStatus = row.original.status;
         
-        // Regra Ouro: Reprovadas e Canceladas nunca aparecem no financeiro
+        // REGRA DE OURO: Reprovadas nunca aparecem no financeiro
         if (mainStatus === 'Reprovado') return false;
 
+        // REGRA PARA ABA "TODOS"
         if (filterValue === '__CUSTOM_FILTER_TODOS__') {
-            // Sempre mostra: Vazio, Pendente ou Parcial (qualquer período)
+            // Sempre mostra: Sem status, Pendente ou Parcial (de qualquer período)
             if (!status || status === 'Pendente' || status === 'Parcial') return true;
             
-            // Pagas: Somente do mês vigente
+            // Pagas: Filtrar apenas pelo mês vigente para não poluir
             if (status === 'Paga') {
                 const paymentDateStr = row.original.commissionPaymentDate;
                 if (!paymentDateStr) return false;
@@ -267,6 +268,20 @@ export const getColumns = (
             return false;
         }
         
+        // REGRA PARA ABA "PAGAS" (Filtro específico selecionado no Tab)
+        if (filterValue === 'Paga') {
+            const isPaga = status === 'Paga';
+            if (!isPaga) return false;
+            
+            // Se for Paga, por padrão mostra apenas o mês vigente (a menos que tenha range de data aplicado)
+            const paymentDateStr = row.original.commissionPaymentDate;
+            if (!paymentDateStr) return false;
+            const pDate = new Date(paymentDateStr);
+            const now = new Date();
+            // Esta lógica será refinada pelo appliedDateRange no data-table
+            return isSameMonth(pDate, now) && pDate.getFullYear() === now.getFullYear();
+        }
+
         if (Array.isArray(filterValue)) {
             return filterValue.includes(status);
         }
@@ -289,14 +304,10 @@ export const getColumns = (
       }
       
       const cellValue = row.getValue(id) as string;
-      if (!cellValue) {
-        return false;
-      }
+      if (!cellValue) return false;
 
       const cellDate = new Date(cellValue);
-      if (!isValid(cellDate)) {
-        return false;
-      }
+      if (!isValid(cellDate)) return false;
 
       const fromDate = filterValue.from;
       const toDate = filterValue.to ? new Date(filterValue.to) : new Date(filterValue.from);

@@ -210,17 +210,16 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     
         const customer = row.original;
         
-        // BUSCA EXATA POR ID: Se o termo for puramente numérico
+        // BUSCA EXATA POR ID: Regra de ouro para evitar confusão com CPFs/Telefones
         if (/^\d+$/.test(searchTerm)) {
             const isExactId = String(customer.numericId) === searchTerm;
             if (isExactId) return true;
             
-            // Se for um número curto (até 6 dígitos) e NÃO for o ID exato, 
-            // ignoramos os outros campos para garantir que a busca por número seja estritamente por ID.
+            // Se for um número curto (< 7 dígitos) e NÃO for o ID exato, 
+            // ignoramos os outros campos para garantir precisão máxima na busca por ID.
             if (searchTerm.length < 7) return false;
         } 
         
-        // Busca normal para textos ou números longos (como CPFs/Telefones parciais)
         const fieldsToSearch = [
             customer.name,
             customer.cpf,
@@ -267,7 +266,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
             <div className='relative w-full max-w-sm'>
                 <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
                 <Input
-                placeholder="Busca inteligente (nome, CPF, ID, telefone...)"
+                placeholder="Busca (ID exato, nome, CPF...)"
                 value={globalFilter ?? ''}
                 onChange={(event) =>
                     setGlobalFilter(event.target.value)

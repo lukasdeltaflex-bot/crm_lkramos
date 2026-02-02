@@ -19,11 +19,11 @@ interface StatsCardProps {
 
 /**
  * StatsCard Premium LK RAMOS
- * Altura rigorosamente uniforme, alinhamento perfeito e contornos coloridos leves.
+ * Altura rigorosamente uniforme, alinhamento perfeito e contornos coloridos leves para facilitar identificação.
  */
 export function StatsCard({ title, value, icon: Icon, description, percentage, className, valueClassName }: StatsCardProps) {
   
-  // Mapeamento de cores para bordas e ícones baseado no título para manter consistência
+  // Mapeamento de cores para bordas e ícones baseado no título para manter consistência absoluta
   const getThemeColor = () => {
     const t = title.toLowerCase();
     if (t.includes('digitado')) return 'border-slate-300 dark:border-slate-700 text-slate-500';
@@ -41,7 +41,7 @@ export function StatsCard({ title, value, icon: Icon, description, percentage, c
   return (
     <Card className={cn(
         'hover:shadow-xl transition-all group relative overflow-hidden bg-card shadow-md rounded-xl h-full min-h-[160px] flex flex-col border-2', 
-        themeClasses.split(' ')[0], // Pega apenas a classe de borda
+        themeClasses.split(' ')[0], // Injeta a classe de borda colorida
         className
     )}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 print:pb-1">
@@ -62,14 +62,14 @@ export function StatsCard({ title, value, icon: Icon, description, percentage, c
             )}
         </div>
         
-        {/* Rodapé fixo para garantir altura proporcional mesmo sem legenda */}
+        {/* Rodapé fixo para garantir altura proporcional entre todos os cards */}
         <div className="mt-3 border-t pt-2 border-border/30 min-h-[24px]">
             {description ? (
                 <p className="text-[10px] font-bold text-muted-foreground mt-0 uppercase tracking-tighter opacity-60">
                     {description}
                 </p>
             ) : (
-                <div className="h-[14px] w-full" /> // Espaçador fantasma para manter altura
+                <div className="h-[14px] w-full" /> // Espaçador para manter alinhamento
             )}
         </div>
       </CardContent>
