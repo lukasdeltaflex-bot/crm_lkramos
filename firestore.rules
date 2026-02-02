@@ -13,7 +13,6 @@ service cloud.firestore {
       );
     }
 
-    // Regra simplificada e robusta para coleções do usuário
     match /users/{userId} {
       allow read, write: if signedIn() && request.auth.uid == userId;
     }

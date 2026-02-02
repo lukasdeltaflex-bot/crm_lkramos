@@ -1,4 +1,3 @@
-
 'use client';
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -111,9 +110,7 @@ function ProposalsPageContent() {
 
   const proposalsWithCustomerData: ProposalWithCustomer[] = React.useMemo(() => {
     if (!proposals || !customers) return [];
-    
     const customersMap = new Map(customers.map(c => [c.id, c]));
-
     return proposals.map(p => ({
       ...p,
       customer: customersMap.get(p.customerId),
@@ -164,7 +161,6 @@ function ProposalsPageContent() {
     setIsDialogOpen(true);
 }, []);
 
-// Lógica para abrir modal via parâmetros de busca (action=new ou open=id)
 React.useEffect(() => {
     const action = searchParams.get('action');
     const openId = searchParams.get('open');
@@ -265,8 +261,6 @@ const handleExportToExcel = async () => {
     });
 
     const worksheet = utils.aoa_to_sheet(dataForSheet);
-    worksheet['!cols'] = visibleColumns.map(() => ({ wch: 20 }));
-
     const workbook = utils.book_new();
     utils.book_append_sheet(workbook, worksheet, 'Propostas');
     writeFile(workbook, 'propostas.xlsx');
@@ -527,7 +521,7 @@ const handleExportToExcel = async () => {
       toast({
         variant: 'destructive',
         title: 'Erro ao Salvar',
-        description: 'Não foi possível salvar la proposta. Tente novamente.',
+        description: 'Não foi possível salvar a proposta. Tente novamente.',
       });
     }
 

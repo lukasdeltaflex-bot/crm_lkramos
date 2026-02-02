@@ -79,7 +79,6 @@ export default function FinancialPage() {
     const endOfCurrent = endOfMonth(today);
     const startOfPrev = startOfMonth(subMonths(today, 1));
 
-    // TABELA: Dados visíveis baseados na lógica de exibição financeira
     const tableData = proposals
       .filter(p => {
         if (p.commissionStatus === 'Paga') return true;
@@ -95,12 +94,10 @@ export default function FinancialPage() {
       }))
       .filter(p => p.customer);
 
-    // RESUMO (Cards): Inclui produção do mês anterior para acumular Saldo a Receber e Esperada
     const summaryData = proposals
       .filter(p => {
         if (!p.dateDigitized) return false;
         const proposalDate = new Date(p.dateDigitized);
-        // Filtra propostas desde o mês passado para o pipeline
         return proposalDate >= startOfPrev && proposalDate <= endOfCurrent;
       })
       .map(p => ({

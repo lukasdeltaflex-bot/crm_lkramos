@@ -85,7 +85,7 @@ export default function AgendaPage() {
     try {
       await setDoc(doc(firestore, 'reminders', reminder.id), { 
         status: newStatus,
-        ownerId: user.uid // Garante o ownerId para as regras de segurança
+        ownerId: user.uid
       }, { merge: true });
       toast({ title: newStatus === 'completed' ? 'Lembrete Concluído!' : 'Lembrete Reaberto!' });
     } catch (err) {
@@ -116,11 +116,10 @@ export default function AgendaPage() {
       const reminderData = {
         ...data,
         id: reminderId,
-        ownerId: user.uid, // Crítico para firestore.rules
+        ownerId: user.uid,
         createdAt: selectedReminder?.createdAt || new Date().toISOString(),
       };
 
-      // Limpeza de campos e garantia do ownerId
       const cleanData = Object.fromEntries(
         Object.entries(reminderData).filter(([_, v]) => v !== undefined && v !== "")
       );
@@ -133,8 +132,8 @@ export default function AgendaPage() {
       console.error("Erro ao salvar lembrete:", err);
       toast({ 
         variant: 'destructive', 
-        title: 'Erro de Permissão', 
-        description: 'Verifique se você está logado e tente novamente.' 
+        title: 'Erro ao Salvar', 
+        description: 'Verifique sua conexão e tente novamente.' 
       });
     } finally {
       setIsSaving(false);

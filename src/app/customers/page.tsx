@@ -1,4 +1,3 @@
-
 'use client';
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -29,7 +28,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { CustomerAiForm } from '@/components/customers/customer-ai-form';
 import type { ExtractCustomerDataOutput } from '@/ai/flows/extract-customer-data-flow';
@@ -72,67 +70,13 @@ function CustomersPageContent() {
   const [activeCustomers, setActiveCustomers] = React.useState<Customer[]>([]);
   const [inactiveCustomers, setInactiveCustomers] = React.useState<Customer[]>([]);
 
-  // Lógica para abrir modal via atalho URL
   React.useEffect(() => {
     const action = searchParams.get('action');
-    if (action === 'new') {
+    if (action === 'new' && !isDialog && !isLoading) {
       handleNewCustomer();
-      // Limpa o parâmetro da URL para não reabrir ao atualizar
       router.replace('/customers', { scroll: false });
     }
-  }, [searchParams, router]);
-
-  React.useEffect(() => {
-    const seedData = async () => {
-      if (!firestore || !user || isLoading || customers === null) return;
-  
-      if (customers.length === 0) {
-        console.log("Seeding initial data...");
-        const batch = writeBatch(firestore);
-        
-        const customerRefs = new Map<string, string>();
-        
-        sampleCustomers.forEach((customerData, index) => {
-            const docRef = doc(collection(firestore, 'customers'));
-            const newCustomer: Customer = {
-              ...(customerData as Omit<Customer, 'id' | 'ownerId'>),
-              id: docRef.id,
-              numericId: index + 1,
-              ownerId: user.uid,
-            };
-            batch.set(docRef, newCustomer);
-            customerRefs.set(`customer_${index}`, docRef.id);
-        });
-
-        sampleProposals.forEach((proposalData, index) => {
-            const docRef = doc(collection(firestore, 'loanProposals'));
-            const customerId = customerRefs.get(`customer_${index % sampleCustomers.length}`);
-            if (customerId) {
-              const newProposal = {
-                  ...proposalData,
-                  id: docRef.id,
-                  ownerId: user.uid,
-                  proposalNumber: `PRO${Date.now() + index}`,
-                  customerId: customerId,
-              };
-              batch.set(docRef, newProposal);
-            }
-        });
-
-        try {
-          await batch.commit();
-          toast({
-            title: "Dados de exemplo criados!",
-            description: "Clientes e propostas de exemplo foram adicionados.",
-          });
-        } catch (error) {
-          console.error("Error seeding data: ", error);
-        }
-      }
-    };
-    seedData();
-  }, [firestore, user, customers, isLoading]);
-
+  }, [searchParams, router, isLoading]);
 
   const handleNewCustomer = () => {
     setSelectedCustomer(undefined);
@@ -233,21 +177,8 @@ function CustomersPageContent() {
     });
 
     const worksheet = utils.aoa_to_sheet(dataForSheet);
-
-    worksheet['!cols'] = visibleColumns.map(c => {
-        switch(c.id) {
-            case 'name': return { wch: 30 };
-            case 'cpf': return { wch: 15 };
-            case 'phone': return { wch: 15 };
-            case 'phone2': return { wch: 15 };
-            case 'observations': return { wch: 40 };
-            default: return { wch: 12 };
-        }
-    });
-
     const workbook = utils.book_new();
     utils.book_append_sheet(workbook, worksheet, 'Clientes');
-
     writeFile(workbook, 'clientes.xlsx');
 };
 
@@ -343,7 +274,7 @@ const handleExportToPdf = async () => {
         await updateDoc(customerRef, anonymizedData);
         toast({
           title: 'Cliente Removido',
-          description: 'Os dados do cliente foram anonimizados com sucesso. O histórico de propostas foi mantido.',
+          description: 'Os dados do cliente foram anonimizados com sucesso.',
         });
     } catch(error) {
         console.error('Error anonymizing customer:', error);
@@ -412,18 +343,6 @@ const handleExportToPdf = async () => {
             variant: 'destructive',
             title: 'CPF já cadastrado',
             description: `O CPF ${data.cpf} já pertence ao cliente "${cpfExists.name}".`,
-        });
-        return;
-    }
-
-    const phoneExists = customers?.find(
-        (c) => c.phone === data.phone && c.id !== selectedCustomer?.id
-    );
-    if (phoneExists) {
-        toast({
-            variant: 'destructive',
-            title: 'Telefone já cadastrado',
-            description: `O telefone ${data.phone} já pertence ao cliente "${phoneExists.name}".`,
         });
         return;
     }
