@@ -98,7 +98,6 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
 
     const now = new Date();
     const todayIso = format(now, 'yyyy-MM-dd');
-    const todayMMDD = format(now, 'MM-dd');
     const customerMap = new Map(customers.map(c => [c.id, c]));
 
     const birthdayAlerts = customers
