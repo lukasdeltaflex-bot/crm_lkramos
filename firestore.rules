@@ -1,7 +1,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // MODO DEBUG TOTAL: PERMISSÃO LIBERADA PARA TESTES DE CONEXÃO
+    // REGRAS TOTAIS: PERMISSÃO LIBERADA PARA TESTES DE CONEXÃO
     match /{document=**} {
       allow read, write: if true;
     }
