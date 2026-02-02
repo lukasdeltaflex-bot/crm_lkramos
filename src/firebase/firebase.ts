@@ -14,7 +14,7 @@ const firebaseConfig = {
   appId: "1:341426752875:web:348f88597e5b9b2057d02e",
 };
 
-// Singleton pattern robusto para inicialização única no Next.js
+// Padrão Singleton para evitar erros de múltiplas instâncias no Next.js
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
