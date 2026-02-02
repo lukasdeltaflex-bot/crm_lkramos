@@ -135,6 +135,7 @@ export default function DashboardPage() {
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
+    // Início do mês anterior para cards acumulativos
     const startOfAccumulation = startOfMonth(subMonths(fromDate, 1));
 
     const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
@@ -184,7 +185,7 @@ export default function DashboardPage() {
             aguardandoSaldo: aguardandoSaldoProposals,
             saldoPago: saldoPagoProposals,
             reprovado: currentPeriodProposals.filter(p => p.status === 'Reprovado'),
-            pago: pagoProposals,
+            pago: pagoValue > 0 ? pagoProposals : [],
             todos: currentPeriodProposals
         }
     };
@@ -194,8 +195,8 @@ export default function DashboardPage() {
     setDialogData({ title, proposals: props });
   }
 
-  const monthNameRaw = format(appliedDateRange?.from || new Date(), 'MMMM', { locale: ptBR });
-  const currentMonthName = monthNameRaw.charAt(0).toUpperCase() + monthNameRaw.slice(1);
+  const rawMonthName = format(appliedDateRange?.from || new Date(), 'MMMM', { locale: ptBR });
+  const currentMonthName = rawMonthName.charAt(0).toUpperCase() + rawMonthName.slice(1);
 
   if (!stats) return null;
 
