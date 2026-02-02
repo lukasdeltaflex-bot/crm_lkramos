@@ -1,20 +1,19 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bot, Send, BellRing, Clock, BadgePercent, Hourglass, Coins, X, Info, Loader2 } from 'lucide-react';
+import { Bot, Send, BellRing, Clock, BadgePercent, Hourglass, Coins, X, Info, Loader2, CalendarClock } from 'lucide-react';
 import type { Customer, Proposal, UserProfile, FollowUp } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
-import { differenceInDays } from 'date-fns';
-import { calculateBusinessDays, getAge } from '@/lib/utils';
+import { differenceInDays, format } from 'date-fns';
+import { calculateBusinessDays, getAge, cn } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from '@/hooks/use-toast';
 import { sendSummaryEmail } from '@/ai/flows/send-summary-email-flow';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
 
 interface DailySummaryProps {
   proposals: Proposal[];
@@ -24,7 +23,6 @@ interface DailySummaryProps {
 
 const DISMISS_STORAGE_KEY = 'dismissed_daily_summary_items_v1';
 
-// A generic alert item component
 function SummaryAlertItem({
   id,
   icon,
@@ -39,10 +37,14 @@ function SummaryAlertItem({
   onDismiss: (id: string) => void;
 }) {
   return (
-    <Alert className="bg-card shadow-sm border-border/50">
-      {icon}
-      <AlertTitle>{title}</AlertTitle>
-      <AlertDescription>{description}</AlertDescription>
+    <Alert className="bg-card shadow-sm border-border/50 relative">
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5">{icon}</div>
+        <div className="flex-1">
+          <AlertTitle className="text-sm font-semibold">{title}</AlertTitle>
+          <AlertDescription className="text-xs text-muted-foreground">{description}</AlertDescription>
+        </div>
+      </div>
       <button
         onClick={() => onDismiss(id)}
         className="absolute top-2 right-2 p-1 text-muted-foreground/80 hover:text-foreground rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -54,7 +56,6 @@ function SummaryAlertItem({
   );
 }
 
-
 export function DailySummary({ proposals, customers, userProfile }: DailySummaryProps) {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -62,14 +63,12 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
   const [isClient, setIsClient] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
-  // Fetch follow-ups for calculation
   const followUpsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return collection(firestore, 'users', user.uid, 'followUps');
   }, [firestore, user]);
   const { data: followUps } = useCollection<FollowUp>(followUpsQuery);
 
-  // Load dismissed items from localStorage on initial render
   useEffect(() => {
     setIsClient(true);
     try {
@@ -93,12 +92,11 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
     }
   };
 
-  // Memoize alert calculations
   const alertData = useMemo(() => {
     if (!isClient) return { birthdayAlerts: [], followUpReminders: [], commissionReminders: [], debtBalanceReminders: [], partialCommissionReminders: [], manualFollowUps: [] };
 
     const now = new Date();
-    const todayStr = format(now, 'MM-dd');
+    const todayIso = format(now, 'yyyy-MM-dd');
     const customerMap = new Map(customers.map(c => [c.id, c]));
 
     const birthdayAlerts = customers
@@ -161,14 +159,13 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
             daysSincePayment: differenceInDays(now, new Date(p.commissionPaymentDate!)),
         }));
 
-    // Add manual follow-ups for today or delayed
     const manualFollowUps = (followUps || [])
-        .filter(f => f.status === 'pending' && f.dueDate <= format(now, 'yyyy-MM-dd'))
+        .filter(f => f.status === 'pending' && f.dueDate <= todayIso)
         .map(f => ({
             id: `manual-fup-${f.id}`,
             contactName: f.contactName,
             description: f.description,
-            isToday: f.dueDate === format(now, 'yyyy-MM-dd')
+            isToday: f.dueDate === todayIso
         }));
 
     return { birthdayAlerts, followUpReminders, commissionReminders, debtBalanceReminders, partialCommissionReminders, manualFollowUps };
@@ -240,24 +237,17 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
     }
   };
 
-
   if (!isClient) {
     return (
         <Card className="border-border/50 shadow-sm">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Bot /> Resumo Diário de Pendências</CardTitle>
-                <CardDescription>Um resumo de todos os alertas e pendências gerado por IA para facilitar seu dia.</CardDescription>
+                <CardTitle className="flex items-center gap-2"><Bot /> Resumo Diário</CardTitle>
+                <CardDescription>Carregando alertas por IA...</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="space-y-4 rounded-md border border-dashed border-border/50 p-4">
-                    <Skeleton className="h-6 w-1/3" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-full" />
-                    <div className='pt-4'>
-                        <Skeleton className="h-6 w-1/3" />
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-4/5" />
-                    </div>
+                <div className="space-y-4">
+                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-20 w-full" />
                 </div>
             </CardContent>
         </Card>
@@ -266,108 +256,100 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
   
   return (
     <Card className="h-full flex flex-col border-border/50 shadow-sm">
-      <CardHeader className="flex flex-row items-start justify-between">
-        <div className='space-y-1.5'>
-            <CardTitle className="flex items-center gap-2">
-                <Bot className="text-primary" />
-                Resumo Diário de Pendências
+      <CardHeader className="flex flex-row items-start justify-between pb-2">
+        <div className='space-y-1'>
+            <CardTitle className="text-lg font-headline flex items-center gap-2">
+                <Bot className="text-primary h-5 w-5" />
+                Resumo de Pendências
             </CardTitle>
-            <CardDescription>
-                Alertas importantes para o seu dia de trabalho.
+            <CardDescription className="text-xs">
+                Alertas estratégicos para o seu dia.
             </CardDescription>
         </div>
-        <Button onClick={handleSendEmail} disabled={isSending} size="sm">
+        <Button onClick={handleSendEmail} disabled={isSending} size="sm" variant="outline" className="h-8">
             {isSending ? (
-                <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Enviando...
-                </>
+                <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
-                <>
-                    <Send className="mr-2 h-4 w-4" />
-                    Email
-                </>
+                <><Send className="mr-1 h-3 w-3" /> Email</>
             )}
         </Button>
       </CardHeader>
-      <CardContent className="flex-1 overflow-hidden">
+      <CardContent className="flex-1 overflow-hidden pt-2">
         {!hasVisibleAlerts ? (
             <div className="flex h-full flex-col items-center justify-center text-center text-muted-foreground p-8 border-2 border-dashed border-border/50 rounded-lg bg-muted/5">
                 <Info className="h-10 w-10 mb-4 opacity-20" />
-                <p className="font-semibold">Nenhuma pendência para hoje.</p>
-                <p className="text-sm">Tenha um ótimo dia produtivo!</p>
+                <p className="font-semibold text-sm">Nenhuma pendência para hoje.</p>
+                <p className="text-xs">Tenha um dia produtivo!</p>
             </div>
         ) : (
             <ScrollArea className="h-full w-full">
-                <div className="space-y-6 pr-4">
+                <div className="space-y-4 pr-4 pb-4">
                     {visibleManualFollowUps.length > 0 && (
-                        <div>
-                            <h3 className="font-semibold mb-2 flex items-center gap-2 text-primary">
-                                <Clock className="h-4 w-4" /> Compromissos de Retorno
+                        <div className="space-y-2">
+                            <h3 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                                <CalendarClock className="h-3 w-3" /> Retornos Agendados
                             </h3>
-                            <div className="space-y-2">
-                                {visibleManualFollowUps.map(f => (
-                                    <SummaryAlertItem 
-                                        key={f.id}
-                                        id={f.id}
-                                        icon={<CalendarClock className={cn("h-4 w-4", f.isToday ? "text-yellow-500" : "text-destructive")} />}
-                                        title={f.contactName}
-                                        description={f.description}
-                                        onDismiss={handleDismiss}
-                                    />
-                                ))}
-                            </div>
+                            {visibleManualFollowUps.map(f => (
+                                <SummaryAlertItem 
+                                    key={f.id}
+                                    id={f.id}
+                                    icon={<CalendarClock className={cn("h-4 w-4", f.isToday ? "text-yellow-500" : "text-destructive")} />}
+                                    title={f.contactName}
+                                    description={f.description}
+                                    onDismiss={handleDismiss}
+                                />
+                            ))}
                         </div>
                     )}
                     {visibleBirthdayAlerts.length > 0 && (
-                        <div>
-                            <h3 className="font-semibold mb-2">🎂 Alertas de Aniversário (75 Anos)</h3>
-                            <div className="space-y-2">
-                                {visibleBirthdayAlerts.map(alert => (
-                                    <SummaryAlertItem 
-                                        key={alert.id}
-                                        id={alert.id}
-                                        icon={<BellRing className="h-4 w-4 text-pink-500" />}
-                                        title={alert.customerName}
-                                        description={`Cliente completará ${alert.age} anos em breve. Verifique as políticas de crédito.`}
-                                        onDismiss={handleDismiss}
-                                    />
-                                ))}
-                            </div>
+                        <div className="space-y-2">
+                            <h3 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                                <BellRing className="h-3 w-3" /> Alertas de Idade (75+)
+                            </h3>
+                            {visibleBirthdayAlerts.map(alert => (
+                                <SummaryAlertItem 
+                                    key={alert.id}
+                                    id={alert.id}
+                                    icon={<BellRing className="h-4 w-4 text-pink-500" />}
+                                    title={alert.customerName}
+                                    description={`Cliente completará ${alert.age} anos. Verifique as políticas bancárias.`}
+                                    onDismiss={handleDismiss}
+                                />
+                            ))}
                         </div>
                     )}
                     {visibleFollowUpReminders.length > 0 && (
-                        <div>
-                            <h3 className="font-semibold mb-2">⏰ Acompanhamento de Propostas</h3>
-                            <div className="space-y-2">
-                                {visibleFollowUpReminders.map(reminder => (
-                                    <SummaryAlertItem 
-                                        key={reminder.id}
-                                        id={reminder.id}
-                                        icon={<Clock className="h-4 w-4" />}
-                                        title={`${reminder.customerName}`}
-                                        description={`Proposta ${reminder.proposalNumber} aberta há ${reminder.daysOpen} dias.`}
-                                        onDismiss={handleDismiss}
-                                    />
-                                ))}
-                            </div>
+                        <div className="space-y-2">
+                            <h3 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                                <Clock className="h-3 w-3" /> Esteiras em Atraso
+                            </h3>
+                            {visibleFollowUpReminders.map(reminder => (
+                                <SummaryAlertItem 
+                                    key={reminder.id}
+                                    id={reminder.id}
+                                    icon={<Clock className="h-4 w-4 text-orange-500" />}
+                                    title={`${reminder.customerName}`}
+                                    description={`Proposta ${reminder.proposalNumber} sem movimentação há ${reminder.daysOpen} dias.`}
+                                    onDismiss={handleDismiss}
+                                />
+                            ))}
                         </div>
                     )}
                     {visibleCommissionReminders.length > 0 && (
-                        <div>
-                            <h3 className="font-semibold mb-2">💰 Comissões Pendentes</h3>
-                            <div className="space-y-2">
-                                {visibleCommissionReminders.map(reminder => (
-                                    <SummaryAlertItem 
-                                        key={reminder.id}
-                                        id={reminder.id}
-                                        icon={<BadgePercent className="h-4 w-4 text-orange-500" />}
-                                        title={`${reminder.customerName}`}
-                                        description={`Comissão da Prop. ${reminder.proposalNumber} pendente há ${reminder.daysPending} dias.`}
-                                        onDismiss={handleDismiss}
-                                    />
-                                ))}
-                            </div>
+                        <div className="space-y-2">
+                            <h3 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                                <BadgePercent className="h-3 w-3" /> Cobranças Pendentes
+                            </h3>
+                            {visibleCommissionReminders.map(reminder => (
+                                <SummaryAlertItem 
+                                    key={reminder.id}
+                                    id={reminder.id}
+                                    icon={<BadgePercent className="h-4 w-4 text-primary" />}
+                                    title={`${reminder.customerName}`}
+                                    description={`Comissão da Prop. ${reminder.proposalNumber} não identificada há ${reminder.daysPending} dias.`}
+                                    onDismiss={handleDismiss}
+                                />
+                            ))}
                         </div>
                     )}
                 </div>
