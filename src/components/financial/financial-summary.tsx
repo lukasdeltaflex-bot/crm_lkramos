@@ -33,9 +33,11 @@ export function FinancialSummary({ rows, isPrivacyMode, isFiltered, onShowDetail
     pendingPercentage,
     expectedPercentage
   } = React.useMemo(() => {
-    const allProposalsInPeriod = 'original' in (rows?.[0] || {}) ? (rows as Row<ProposalWithCustomer>[]).map(r => r.original) : (rows as ProposalWithCustomer[]);
+    const allProposalsInPeriod = Array.isArray(rows) && rows.length > 0 
+        ? ('original' in rows[0] ? (rows as Row<ProposalWithCustomer>[]).map(r => r.original) : (rows as ProposalWithCustomer[]))
+        : [];
     
-    if (!allProposalsInPeriod || allProposalsInPeriod.length === 0) {
+    if (allProposalsInPeriod.length === 0) {
         return {
             totalDigitadoNoPeriodo: 0,
             totalPotentialCommission: 0,
@@ -52,39 +54,34 @@ export function FinancialSummary({ rows, isPrivacyMode, isFiltered, onShowDetail
         };
     }
 
-    // 1. Volume Total Digitado (Para o descritivo)
+    // 1. Volume Total Digitado (Baseado no período estendido)
     const totalDigitadoNoPeriodo = allProposalsInPeriod.reduce((sum, p) => {
       if (p.commissionBase === 'net') return sum + (p.netAmount || 0);
       return sum + (p.grossAmount || 0);
     }, 0);
 
-    // 1.1 Total de Comissões (Base 100%) - Independente de status
+    // 1.1 Total de Comissões (Base 100%)
     const totalPotentialCommission = allProposalsInPeriod.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
 
-    // 2. Comissão Recebida - Baseado no status financeiro "Paga"
+    // 2. Comissão Recebida - Mantemos o que foi pago efetivamente
     const commissionReceivedProposals = allProposalsInPeriod.filter(p => p.commissionStatus === 'Paga');
     const totalAmountPaid = commissionReceivedProposals.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
     
-    // 3. Saldo a Receber (Já "garantido" por averbação ou pagamento ao cliente, mas financeiro não baixado)
+    // 3. Saldo a Receber (Acumulado: Averbados ou Pagos ao Cliente s/ baixa financeira)
     const proposalsForSaldoAReceber = allProposalsInPeriod.filter(p => {
         if (p.commissionStatus === 'Paga') return false;
-        
         const hasAverbacao = !!p.dateApproved;
         const status = p.status;
-
-        // Regra: Pago OU (Qualquer status com averbação preenchida)
         return status === 'Pago' || (hasAverbacao && (status === 'Em Andamento' || status === 'Saldo Pago' || status === 'Pendente'));
     });
     const pendingAmount = proposalsForSaldoAReceber.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
 
-    // 4. Comissão Esperada (Funil de entrada - propostas sem averbação e não reprovadas)
+    // 4. Comissão Esperada (Acumulado: Funil de entrada s/ averbação e não reprovadas)
     const expectedCommissionProposals = allProposalsInPeriod.filter(p => {
         if (p.commissionStatus === 'Paga') return false;
-        
         const isReprovado = p.status === 'Reprovado';
         const hasAverbacao = !!p.dateApproved;
-        const isPagoStatus = p.status === 'Pago'; // Se é Pago, já está no card de Saldo a Receber
-
+        const isPagoStatus = p.status === 'Pago';
         return !isReprovado && !hasAverbacao && !isPagoStatus;
     });
     const expectedAmount = expectedCommissionProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
@@ -117,7 +114,7 @@ export function FinancialSummary({ rows, isPrivacyMode, isFiltered, onShowDetail
       title: "Total de Comissões",
       value: formatCurrency(totalPotentialCommission),
       icon: Coins,
-      description: `Volume Digitado: ${isPrivacyMode ? privacyPlaceholder : formatCurrency(totalDigitadoNoPeriodo)}`,
+      description: `Volume Acumulado: ${isPrivacyMode ? privacyPlaceholder : formatCurrency(totalDigitadoNoPeriodo)}`,
       className: "border-muted bg-muted/10",
       valueClassName: "text-foreground",
       proposals: allProposalsInPeriod,
@@ -137,7 +134,7 @@ export function FinancialSummary({ rows, isPrivacyMode, isFiltered, onShowDetail
       title: "Saldo a Receber",
       value: formatCurrency(pendingAmount),
       icon: Hourglass,
-      description: "Averbados / Pagos ao Cliente",
+      description: "Averbados (Acumulado)",
       className: "border-orange-500/30 bg-orange-500/5 dark:bg-orange-500/10",
       valueClassName: "text-orange-500",
       proposals: proposalsForSaldoAReceber,
@@ -147,7 +144,7 @@ export function FinancialSummary({ rows, isPrivacyMode, isFiltered, onShowDetail
       title: "Comissão Esperada",
       value: formatCurrency(expectedAmount),
       icon: CircleDollarSign,
-      description: "Contratos s/ Averbação",
+      description: "Digitados (Acumulado)",
       className: "border-blue-500/30 bg-blue-500/5 dark:bg-blue-500/10",
       valueClassName: "text-blue-500",
       proposals: expectedCommissionProposals,
@@ -157,11 +154,11 @@ export function FinancialSummary({ rows, isPrivacyMode, isFiltered, onShowDetail
 
   return (
     <div className='space-y-4'>
-        <Alert variant="default" className="bg-secondary/50 print:hidden">
+        <Alert variant="default" className="bg-secondary/50 print:hidden border-l-primary">
             <Info className="h-4 w-4" />
-            <AlertTitle>Resumo Financeiro do Período</AlertTitle>
+            <AlertTitle>Resumo Financeiro Inteligente</AlertTitle>
             <AlertDescription>
-                Os cálculos abaixo seguem as novas regras de Averbação e Status.
+                Os cards de **Saldo a Receber** e **Comissão Esperada** incluem dados desde o mês anterior.
                 {isFiltered && (
                     <span className="block mt-1 font-semibold text-primary">Aviso: A tabela abaixo está exibindo resultados filtrados.</span>
                 )}

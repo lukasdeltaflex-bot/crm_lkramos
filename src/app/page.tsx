@@ -136,6 +136,7 @@ export default function DashboardPage() {
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
+    // Lógica de Acúmulo: Busca dados operacionais desde o mês anterior
     const startOfPreviousMonth = startOfMonth(subMonths(fromDate, 1));
 
     const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
@@ -146,7 +147,7 @@ export default function DashboardPage() {
         return d >= fromDate && d <= effectiveToDate;
     });
 
-    const backlogProposals = proposals.filter(p => {
+    const accumulatedProposals = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
         return d >= startOfPreviousMonth && d <= effectiveToDate;
@@ -156,10 +157,11 @@ export default function DashboardPage() {
     const reprovadoProposals = currentMonthProposals.filter(p => p.status === 'Reprovado');
     const pagoProposals = currentMonthProposals.filter(p => p.status === 'Pago');
 
-    const pendenteProposals = backlogProposals.filter(p => p.status === 'Pendente');
-    const emAndamentoProposals = backlogProposals.filter(p => p.status === 'Em Andamento');
-    const aguardandoSaldoProposals = backlogProposals.filter(p => p.status === 'Aguardando Saldo');
-    const saldoPagoProposals = backlogProposals.filter(p => p.status === 'Saldo Pago');
+    // Cards acumulativos (Pipeline)
+    const pendenteProposals = accumulatedProposals.filter(p => p.status === 'Pendente');
+    const emAndamentoProposals = accumulatedProposals.filter(p => p.status === 'Em Andamento');
+    const aguardandoSaldoProposals = accumulatedProposals.filter(p => p.status === 'Aguardando Saldo');
+    const saldoPagoProposals = accumulatedProposals.filter(p => p.status === 'Saldo Pago');
 
     const pendenteValue = getSum(pendenteProposals);
     const emAndamentoValue = getSum(emAndamentoProposals);
@@ -209,7 +211,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-center h-[60vh]">
             <CalendarIcon className="h-8 w-8 animate-pulse text-muted-foreground" />
         </div>
-    </AppLayout>
+  </AppLayout>
   );
 
   return (
@@ -280,10 +282,10 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.totalDigitado)} 
                     icon={FileText} 
                     percentage={100}
-                    className="bg-slate-50 dark:bg-slate-900/20 border-slate-200 dark:border-slate-800"
+                    className="bg-slate-100/50 dark:bg-slate-900/20 border-slate-200 dark:border-slate-800"
                 />
             </div>
-            <div className="cursor-pointer" onClick={() => handleShowDetails('Pendentes (Backlog)', stats.proposals.pendente)}>
+            <div className="cursor-pointer" onClick={() => handleShowDetails('Pendentes (Acumulado)', stats.proposals.pendente)}>
                 <StatsCard 
                     title="Pendente" 
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.pendente)} 
@@ -294,7 +296,7 @@ export default function DashboardPage() {
                     description="Desde o mês anterior"
                 />
             </div>
-            <div className="cursor-pointer" onClick={() => handleShowDetails('Em Andamento (Backlog)', stats.proposals.emAndamento)}>
+            <div className="cursor-pointer" onClick={() => handleShowDetails('Em Andamento (Acumulado)', stats.proposals.emAndamento)}>
                 <StatsCard 
                     title="Em Andamento" 
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.emAndamento)} 
@@ -308,7 +310,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-            <div className="cursor-pointer" onClick={() => handleShowDetails('Aguardando Saldo (Backlog)', stats.proposals.aguardandoSaldo)}>
+            <div className="cursor-pointer" onClick={() => handleShowDetails('Aguardando Saldo (Acumulado)', stats.proposals.aguardandoSaldo)}>
                 <StatsCard 
                     title="Aguardando Saldo" 
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.aguardandoSaldo)} 
@@ -319,7 +321,7 @@ export default function DashboardPage() {
                     description="Desde o mês anterior"
                 />
             </div>
-            <div className="cursor-pointer" onClick={() => handleShowDetails('Saldo Pago (Backlog)', stats.proposals.saldoPago)}>
+            <div className="cursor-pointer" onClick={() => handleShowDetails('Saldo Pago (Acumulado)', stats.proposals.saldoPago)}>
                 <StatsCard 
                     title="Saldo Pago" 
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.saldoPago)} 

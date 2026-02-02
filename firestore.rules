@@ -28,7 +28,7 @@ service cloud.firestore {
     match /reminders/{reminderId} {
       allow read, write: if signedIn() && (
         (resource == null && request.resource.data.ownerId == request.auth.uid) ||
-        (resource != null && resource.data.ownerId == request.auth.uid)
+        (resource != null && (resource.data.ownerId == request.auth.uid || resource.data.userId == request.auth.uid))
       );
     }
 

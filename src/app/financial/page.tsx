@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/page-header';
 import { FinancialDataTable, type FinancialDataTableHandle } from './data-table';
 import { getColumns } from './columns';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc, setDoc, writeBatch, deleteField } from 'firebase/firestore';
+import { collection, query, where, doc, setDoc, deleteField } from 'firebase/firestore';
 import type { Proposal, Customer, CommissionStatus } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -28,13 +28,11 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
   } from '@/components/ui/dialog';
 import { CommissionForm, type CommissionFormValues } from './commission-form';
 import { toast } from '@/hooks/use-toast';
-import { format, startOfMonth, endOfMonth, parse } from 'date-fns';
+import { format, startOfMonth, endOfMonth, parse, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Logo } from '@/components/logo';
 import { CommissionReconciliation } from '@/components/financial/commission-reconciliation';
 import { formatCurrency } from '@/lib/utils';
 import { ProposalsStatusTable } from '@/components/dashboard/proposals-status-table';
@@ -71,26 +69,19 @@ export default function FinancialPage() {
   const { data: proposals, isLoading: proposalsLoading } = useCollection<Proposal>(proposalsQuery);
   const { data: customers, isLoading: customersLoading } = useCollection<Customer>(customersQuery);
 
-  const { proposalsWithCustomerData, currentMonthProposals } = React.useMemo(() => {
-    if (!proposals || !customers || !isClient) return { proposalsWithCustomerData: [], currentMonthProposals: [] };
+  const { proposalsWithCustomerData, summaryProposals } = React.useMemo(() => {
+    if (!proposals || !customers || !isClient) return { proposalsWithCustomerData: [], summaryProposals: [] };
     
     const customersMap = new Map(customers.map(c => [c.id, c]));
     
-    // REGRA DE EXIBIÇÃO NA TABELA FINANCEIRA:
-    // Alinhado com o que o usuário definiu como "Recebido" ou "Saldo a Receber".
-    // Isso evita que contratos apenas digitados (sem averbação) poluam o financeiro.
+    // TABELA: Regras de exibição do financeiro (Averbados ou Pagos)
     const tableData = proposals
       .filter(p => {
-        // 1. Sempre mostrar se já foi baixada no financeiro
         if (p.commissionStatus === 'Paga') return true;
-
-        // 2. Mostrar se é "Saldo a Receber" (Garantido)
         const hasAverbacao = !!p.dateApproved;
         const status = p.status;
-        
         const isSaldoAReceber = status === 'Pago' || 
                                (hasAverbacao && ['Em Andamento', 'Saldo Pago', 'Pendente'].includes(status));
-        
         return isSaldoAReceber;
       })
       .map(p => ({
@@ -100,16 +91,17 @@ export default function FinancialPage() {
       .filter(p => p.customer);
 
     const today = new Date();
-    const start = startOfMonth(today);
-    const end = endOfMonth(today);
-    end.setHours(23, 59, 59, 999);
+    const startOfCurrent = startOfMonth(today);
+    const startOfPrev = startOfMonth(subMonths(today, 1));
+    const endOfCurrent = endOfMonth(today);
+    endOfCurrent.setHours(23, 59, 59, 999);
 
-    // Para o resumo (cards), enviamos TODOS os contratos do mês para cálculo de metas e mix.
+    // RESUMO (Cards): Agora inclui produção do mês anterior para acumular Saldo a Receber e Esperada
     const summaryData = proposals
       .filter(p => {
         if (!p.dateDigitized) return false;
         const proposalDate = new Date(p.dateDigitized);
-        return proposalDate >= start && proposalDate <= end;
+        return proposalDate >= startOfPrev && proposalDate <= endOfCurrent;
       })
       .map(p => ({
         ...p,
@@ -119,7 +111,7 @@ export default function FinancialPage() {
 
     return { 
       proposalsWithCustomerData: tableData as ProposalWithCustomer[], 
-      currentMonthProposals: summaryData as ProposalWithCustomer[] 
+      summaryProposals: summaryData as ProposalWithCustomer[] 
     };
   }, [proposals, customers, isClient]);
 
@@ -130,19 +122,17 @@ export default function FinancialPage() {
     const doc = new jsPDF();
     const monthYear = format(new Date(), "MMMM 'de' yyyy", { locale: ptBR });
 
-    // Header
     doc.setFontSize(20);
-    doc.setTextColor(40, 74, 127); // Blue LK Ramos
+    doc.setTextColor(40, 74, 127);
     doc.text("Relatório de Fechamento Mensal", 14, 20);
     doc.setFontSize(12);
     doc.setTextColor(100);
     doc.text(`Período: ${monthYear}`, 14, 28);
     doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 14, 34);
 
-    // Summary logic (matches FinancialSummary logic)
-    const totalComissao = currentMonthProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
-    const recebido = currentMonthProposals.filter(p => p.commissionStatus === 'Paga').reduce((sum, p) => sum + (p.amountPaid || 0), 0);
-    const pendente = currentMonthProposals.filter(p => {
+    const totalComissao = summaryProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
+    const recebido = summaryProposals.filter(p => p.commissionStatus === 'Paga').reduce((sum, p) => sum + (p.amountPaid || 0), 0);
+    const pendente = summaryProposals.filter(p => {
         if (p.commissionStatus === 'Paga') return false;
         const hasAverbacao = !!p.dateApproved;
         return p.status === 'Pago' || (hasAverbacao && ['Em Andamento', 'Saldo Pago', 'Pendente'].includes(p.status));
@@ -151,10 +141,9 @@ export default function FinancialPage() {
     doc.setDrawColor(200);
     doc.line(14, 40, 196, 40);
 
-    // Executive Summary Boxes
     doc.setFontSize(14);
     doc.setTextColor(0);
-    doc.text("Resumo Executivo", 14, 50);
+    doc.text("Resumo Executivo (Acumulado)", 14, 50);
     
     autoTable(doc, {
         startY: 55,
@@ -168,10 +157,9 @@ export default function FinancialPage() {
         headStyles: { fillColor: [40, 74, 127] },
     });
 
-    // Detailed Table
     doc.text("Detalhamento das Propostas", 14, (doc as any).lastAutoTable.finalY + 15);
 
-    const tableData = currentMonthProposals.map(p => [
+    const tableRows = summaryProposals.map(p => [
         p.customer?.name || '-',
         p.proposalNumber,
         p.product,
@@ -183,7 +171,7 @@ export default function FinancialPage() {
     autoTable(doc, {
         startY: (doc as any).lastAutoTable.finalY + 20,
         head: [['Cliente', 'Nº Proposta', 'Produto', 'Vlr. Bruto', 'Comissão', 'Status']],
-        body: tableData,
+        body: tableRows,
         styles: { fontSize: 8 },
         headStyles: { fillColor: [40, 74, 127] },
     });
@@ -198,15 +186,15 @@ export default function FinancialPage() {
 
   const isLoading = proposalsLoading || customersLoading || isUserLoading;
 
-  const handleShowDetails = (title: string, proposals: ProposalWithCustomer[]) => {
-    if (!proposals || proposals.length === 0) {
+  const handleShowDetails = (title: string, props: ProposalWithCustomer[]) => {
+    if (!props || props.length === 0) {
         toast({
             title: 'Nenhum dado para exibir',
             description: `Não há propostas correspondentes para "${title}".`
         });
         return;
     }
-    setDialogData({ title, proposals });
+    setDialogData({ title, proposals: props });
   };
 
   const handleEditCommission = React.useCallback((proposal: ProposalWithCustomer) => {
@@ -356,7 +344,7 @@ export default function FinancialPage() {
             ref={tableRef}
             columns={columns} 
             data={proposalsWithCustomerData}
-            currentMonthData={currentMonthProposals}
+            currentMonthData={summaryProposals}
             isPrivacyMode={isPrivacyMode} 
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
