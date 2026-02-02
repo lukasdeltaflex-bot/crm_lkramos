@@ -67,7 +67,7 @@ function ProposalsPageSkeleton() {
 }
 
 function ProposalsPageContent() {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const searchParams = useSearchParams();
   const router = useRouter();
