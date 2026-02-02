@@ -17,24 +17,22 @@ service cloud.firestore {
       );
     }
 
+    // Perfil do Usuário e Configurações
     match /users/{userId} {
       allow read, write: if isOwner(userId);
       
-      // Subcoleção de lembretes (Agenda LK)
+      // Subcoleção de lembretes (Agenda LK) - Caminho sugerido pelo usuário
       match /reminders/{reminderId} {
         allow read, write: if isOwner(userId);
       }
     }
 
+    // Clientes e Propostas (Baseados em ownerId no documento)
     match /customers/{customerId} {
       allow read, write: if dataOwner();
     }
 
     match /loanProposals/{proposalId} {
-      allow read, write: if dataOwner();
-    }
-
-    match /reminders/{reminderId} {
       allow read, write: if dataOwner();
     }
 
