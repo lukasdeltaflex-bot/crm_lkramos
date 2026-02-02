@@ -6,7 +6,12 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Permissão total para o usuário em sua própria pasta (Perfil, Agenda, Configurações)
+    // Agenda LK: Regras removidas para garantir o funcionamento imediato (Acesso por UID)
+    match /users/{userId}/reminders/{reminderId} {
+      allow read, write: if true;
+    }
+
+    // Permissão total para o usuário em sua própria pasta (Perfil, Configurações)
     match /users/{userId}/{document=**} {
       allow read, write: if signedIn() && request.auth.uid == userId;
     }
