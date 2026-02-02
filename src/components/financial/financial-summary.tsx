@@ -41,19 +41,16 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     const fromDate = currentMonthRange.from || new Date();
     const toDate = currentMonthRange.to || new Date();
     
-    // 🔥 Lógica de Pipeline: Mês anterior + Período Atual para acúmulo real
     const startOfPrevMonth = startOfMonth(subMonths(fromDate, 1));
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
-    // Métrica Mensal: Produção Estrita
     const currentMonthProposals = allProposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
         return d >= fromDate && d <= effectiveToDate;
     });
 
-    // Métrica Acumulada: Pipeline (Histórico recente acumulado)
     const accumulatedProposals = allProposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
@@ -64,7 +61,6 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     const commissionReceivedProposals = currentMonthProposals.filter(p => p.commissionStatus === 'Paga');
     const totalAmountPaid = commissionReceivedProposals.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
     
-    // Saldo a Receber Acumulado (Pipeline Real)
     const proposalsForSaldoAReceber = accumulatedProposals.filter(p => {
         if (p.commissionStatus === 'Paga') return false;
         const hasAverbacao = !!p.dateApproved;
@@ -73,7 +69,6 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     });
     const pendingAmount = proposalsForSaldoAReceber.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
 
-    // Comissão Esperada Acumulada (Pipeline Real)
     const expectedCommissionProposals = accumulatedProposals.filter(p => {
         if (p.commissionStatus === 'Paga') return false;
         const isReprovado = p.status === 'Reprovado';

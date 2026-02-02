@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, User, FileText, Loader2, PlusCircle, ArrowRight, MousePointer2 } from 'lucide-react';
+import { Search, User, FileText, Loader2, PlusCircle, ArrowRight } from 'lucide-react';
 import {
   CommandDialog,
   CommandEmpty,
@@ -24,7 +24,6 @@ export function GlobalSearch() {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  // Queries para buscar os dados do usuário
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid));
@@ -38,7 +37,6 @@ export function GlobalSearch() {
   const { data: customers, isLoading: loadingCustomers } = useCollection<Customer>(customersQuery);
   const { data: proposals, isLoading: loadingProposals } = useCollection<Proposal>(proposalsQuery);
 
-  // Efeito para o atalho de teclado (Cmd+K ou Ctrl+K)
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
@@ -55,7 +53,6 @@ export function GlobalSearch() {
     command();
   }, []);
 
-  // Filtragem de clientes anonimizados
   const validCustomers = React.useMemo(() => {
     return customers?.filter(c => c.name !== 'Cliente Removido') || [];
   }, [customers]);

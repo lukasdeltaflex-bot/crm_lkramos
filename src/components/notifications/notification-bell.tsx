@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Bell, Cake, BadgePercent, X, CalendarClock } from 'lucide-react';
+import { Bell, Cake, BadgePercent, X } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,11 +14,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
-import type { Customer, Proposal, Reminder } from '@/lib/types';
-import { differenceInDays, format, isBefore, isToday, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import type { Customer, Proposal } from '@/lib/types';
+import { differenceInDays, format } from 'date-fns';
 import Link from 'next/link';
-import { cn } from '@/lib/utils';
 
 const STORAGE_KEY = 'lk-ramos-dismissed-notifications-v1';
 
@@ -50,19 +48,13 @@ export function NotificationBell() {
     return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid));
   }, [firestore, user]);
 
-  const remindersQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return collection(firestore, 'users', user.uid, 'reminders');
-  }, [firestore, user]);
-
   const { data: customers } = useCollection<Customer>(customersQuery);
   const { data: proposals } = useCollection<Proposal>(proposalsQuery);
-  const { data: reminders } = useCollection<Reminder>(remindersQuery);
 
   const notifications = React.useMemo(() => {
     if (!isClient) return [];
     
-    const alerts: { id: string; title: string; type: 'birthday' | 'commission' | 'reminder'; date: string; link: string }[] = [];
+    const alerts: { id: string; title: string; type: 'birthday' | 'commission'; date: string; link: string }[] = [];
     const now = new Date();
     const todayStr = format(now, 'MM-dd');
 
@@ -95,24 +87,8 @@ export function NotificationBell() {
       }
     });
 
-    // Lembretes da Agenda
-    reminders?.forEach(r => {
-        if (r.status === 'pending') {
-            const dDate = parseISO(r.dueDate);
-            if (isToday(dDate) || isBefore(dDate, now)) {
-                alerts.push({
-                    id: `rem-${r.id}`,
-                    title: `Retorno: ${r.title}`,
-                    type: 'reminder',
-                    date: isToday(dDate) ? 'Hoje' : 'Atrasado',
-                    link: '/agenda'
-                });
-            }
-        }
-    });
-
     return alerts;
-  }, [customers, proposals, reminders, isClient]);
+  }, [customers, proposals, isClient]);
 
   const visibleNotifications = React.useMemo(() => {
     return notifications.filter(n => !dismissedIds.includes(n.id));
@@ -174,10 +150,8 @@ export function NotificationBell() {
                     <div className="flex items-start gap-3">
                         {n.type === 'birthday' ? (
                           <Cake className="h-4 w-4 text-pink-500 mt-1" />
-                        ) : n.type === 'commission' ? (
-                          <BadgePercent className="h-4 w-4 text-orange-500 mt-1" />
                         ) : (
-                          <CalendarClock className="h-4 w-4 text-blue-500 mt-1" />
+                          <BadgePercent className="h-4 w-4 text-orange-500 mt-1" />
                         )}
                         <div className="space-y-1 overflow-hidden">
                         <p className="text-sm font-medium leading-none truncate">{n.title}</p>

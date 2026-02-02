@@ -135,7 +135,6 @@ export default function DashboardPage() {
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
-    // 🔥 Lógica de Pipeline: Mês Anterior + Período Atual para acúmulo estratégico
     const startOfPrevMonth = startOfMonth(subMonths(fromDate, 1));
 
     const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
@@ -155,7 +154,6 @@ export default function DashboardPage() {
     const totalDigitado = getSum(currentPeriodProposals);
     const reprovadoValue = getSum(currentPeriodProposals.filter(p => p.status === 'Reprovado'));
 
-    // Cards operacionais acumulados (Pipeline - Mês Passado + Mês Atual)
     const pendenteProposals = accumulatedProposals.filter(p => p.status === 'Pendente');
     const emAndamentoProposals = accumulatedProposals.filter(p => p.status === 'Em Andamento');
     const aguardandoSaldoProposals = accumulatedProposals.filter(p => p.status === 'Aguardando Saldo');

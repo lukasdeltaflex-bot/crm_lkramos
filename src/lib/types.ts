@@ -1,4 +1,3 @@
-
 export type Benefit = {
   number: string;
   species?: string;
@@ -85,19 +84,6 @@ export type Proposal = {
   commissionBase?: 'gross' | 'net';
   selectedBenefitNumber?: string;
   attachments?: Attachment[];
-};
-
-export type ReminderStatus = 'pending' | 'completed';
-
-export type Reminder = {
-  id: string;
-  ownerId: string; // Padronizado para ownerId
-  title: string;
-  description?: string;
-  dueDate: string; // YYYY-MM-DD
-  status: ReminderStatus;
-  customerId?: string; // Link opcional para cliente existente
-  createdAt: string;
 };
 
 export type UserSettings = {
