@@ -6,8 +6,8 @@ import { getStorage } from "firebase/storage";
 /**
  * CONFIGURAÇÃO DIRETA FIREBASE - LK RAMOS
  * 
- * ATENÇÃO: Para o sistema funcionar, você DEVE substituir os valores abaixo
- * pelos dados reais do seu projeto obtidos no Firebase Console.
+ * ATENÇÃO: Substitua os valores abaixo pelos dados do seu Firebase Console
+ * para que o login e o sistema funcionem corretamente.
  */
 const firebaseConfig = {
   apiKey: "AIzaSyXXXXXXXXXXXX", // <--- COLE SUA API KEY AQUI
@@ -18,7 +18,7 @@ const firebaseConfig = {
   appId: "1:123456789:web:abcdef"
 };
 
-// Singleton para garantir inicialização única
+// Singleton para garantir inicialização única e evitar erros de hot-reload
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 export const auth = getAuth(app);
@@ -26,11 +26,11 @@ export const db = getFirestore(app);
 export const storage = getStorage(app);
 
 /**
- * Função de inicialização exigida pelo Provider Cliente.
+ * Função de inicialização para o Client Provider.
  */
 export function initializeFirebase() {
   if (typeof window !== 'undefined') {
-    console.log("🚀 LK RAMOS - CONEXÃO FIREBASE INICIALIZADA:", app.options.projectId);
+    console.log("🚀 LK RAMOS - CONEXÃO FIREBASE ATIVA:", app.options.projectId);
   }
   
   return {
