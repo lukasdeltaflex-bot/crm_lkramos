@@ -137,7 +137,6 @@ export default function DashboardPage() {
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
-    // LÓGICA PIPELINE ACUMULADO: Início do mês passado até hoje para pendências
     const startOfPipeline = startOfMonth(subMonths(fromDate, 1));
 
     const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
@@ -154,13 +153,11 @@ export default function DashboardPage() {
         return d >= startOfPipeline && d <= effectiveToDate;
     });
 
-    // MÉTRICAS DE PRODUÇÃO (Focado em Metas Mensais)
     const totalDigitado = getSum(currentPeriodProposals);
     const reprovadoValue = getSum(currentPeriodProposals.filter(p => p.status === 'Reprovado'));
     const pagoProposals = currentPeriodProposals.filter(p => p.status === 'Pago');
     const pagoValue = getSum(pagoProposals);
 
-    // MÉTRICAS OPERACIONAIS (Pipeline Real: Mês Anterior + Atual)
     const pendenteProposals = accumulatedProposals.filter(p => p.status === 'Pendente');
     const emAndamentoProposals = accumulatedProposals.filter(p => p.status === 'Em Andamento');
     const aguardandoSaldoProposals = accumulatedProposals.filter(p => p.status === 'Aguardando Saldo');
@@ -330,7 +327,6 @@ export default function DashboardPage() {
                     percentage={stats.percReprovado}
                     valueClassName="text-red-600 dark:text-red-400 font-normal"
                     className="bg-red-100/10 dark:bg-red-900/20 border-border/50 shadow-sm"
-                    description="Produção Mensal"
                 />
             </div>
         </div>
