@@ -136,8 +136,8 @@ export default function DashboardPage() {
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
-    // Lógica de Pipeline: Mês Anterior + Atual
-    const startOfPrevMonth = startOfMonth(subMonths(fromDate, 1));
+    // LÓGICA PIPELINE ACUMULADO: Início do mês passado até o fim do período selecionado
+    const startOfPipeline = startOfMonth(subMonths(fromDate, 1));
 
     const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
 
@@ -150,20 +150,20 @@ export default function DashboardPage() {
     const accumulatedProposals = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
-        return d >= startOfPrevMonth && d <= effectiveToDate;
+        return d >= startOfPipeline && d <= effectiveToDate;
     });
 
+    // MÉTRICAS DE PRODUÇÃO (Mensais)
     const totalDigitado = getSum(currentPeriodProposals);
     const reprovadoValue = getSum(currentPeriodProposals.filter(p => p.status === 'Reprovado'));
+    const pagoProposals = currentPeriodProposals.filter(p => p.status === 'Pago');
+    const pagoValue = getSum(pagoProposals);
 
-    // Cards operacionais usam a base acumulada (Pipeline)
+    // MÉTRICAS OPERACIONAIS (Pipeline Acumulado)
     const pendenteProposals = accumulatedProposals.filter(p => p.status === 'Pendente');
     const emAndamentoProposals = accumulatedProposals.filter(p => p.status === 'Em Andamento');
     const aguardandoSaldoProposals = accumulatedProposals.filter(p => p.status === 'Aguardando Saldo');
     const saldoPagoProposals = accumulatedProposals.filter(p => p.status === 'Saldo Pago');
-    
-    const pagoProposals = currentPeriodProposals.filter(p => p.status === 'Pago');
-    const pagoValue = getSum(pagoProposals);
 
     const getPerc = (val: number) => totalDigitado > 0 ? (val / totalDigitado) * 100 : 0;
 
@@ -264,7 +264,7 @@ export default function DashboardPage() {
         />
 
         <div className="grid gap-4 md:grid-cols-3">
-            <div className="cursor-pointer" onClick={() => handleShowDetails('Total Digitado (Mensal)', stats.proposals.todos)}>
+            <div className="cursor-pointer" onClick={() => handleShowDetails('Total Digitado (Mês)', stats.proposals.todos)}>
                 <StatsCard 
                     title="Total Digitado" 
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.totalDigitado)} 
@@ -282,7 +282,7 @@ export default function DashboardPage() {
                     percentage={stats.percPendente}
                     valueClassName="text-purple-600 dark:text-purple-400"
                     className="bg-purple-50/50 dark:bg-purple-900/20 border-border/50 shadow-sm"
-                    description="Acumulado (Mês Anterior + Atual)"
+                    description="Pipeline (Mês Ant + Atual)"
                 />
             </div>
             <div className="cursor-pointer" onClick={() => handleShowDetails('Em Andamento (Acumulado)', stats.proposals.emAndamento)}>
@@ -293,7 +293,7 @@ export default function DashboardPage() {
                     percentage={stats.percEmAndamento}
                     valueClassName="text-yellow-600 dark:text-yellow-400"
                     className="bg-yellow-50/50 dark:bg-yellow-900/20 border-border/50 shadow-sm"
-                    description="Acumulado (Mês Anterior + Atual)"
+                    description="Pipeline (Mês Ant + Atual)"
                 />
             </div>
         </div>
@@ -307,7 +307,7 @@ export default function DashboardPage() {
                     percentage={stats.percAguardandoSaldo}
                     valueClassName="text-blue-600 dark:text-blue-400"
                     className="bg-blue-50/50 dark:bg-blue-900/20 border-border/50 shadow-sm"
-                    description="Acumulado (Mês Anterior + Atual)"
+                    description="Pipeline (Mês Ant + Atual)"
                 />
             </div>
             <div className="cursor-pointer" onClick={() => handleShowDetails('Saldo Pago (Acumulado)', stats.proposals.saldoPago)}>
@@ -318,10 +318,10 @@ export default function DashboardPage() {
                     percentage={stats.percSaldoPago}
                     valueClassName="text-orange-600 dark:text-orange-400"
                     className="bg-orange-50/50 dark:bg-orange-900/20 border-border/50 shadow-sm"
-                    description="Acumulado (Mês Anterior + Atual)"
+                    description="Pipeline (Mês Ant + Atual)"
                 />
             </div>
-            <div className="cursor-pointer" onClick={() => handleShowDetails('Reprovado (Mensal)', stats.proposals.reprovado)}>
+            <div className="cursor-pointer" onClick={() => handleShowDetails('Reprovado (Mês)', stats.proposals.reprovado)}>
                 <StatsCard 
                     title="Reprovado" 
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.reprovado)} 

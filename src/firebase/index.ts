@@ -1,16 +1,16 @@
 'use client';
 
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage';
 
 /**
- * CONFIGURAÇÃO DIRETA (DEBUG MODE)
- * Substitua os valores abaixo pelos dados do seu Console Firebase.
+ * CONFIGURAÇÃO DIRETA (MODO DE SEGURANÇA)
+ * Substitua os valores abaixo pelos dados EXATOS do seu Firebase Console.
  */
 const firebaseConfig = {
-  apiKey: "AIzaSyXXXXXXXXXXXX",
+  apiKey: "AIzaSyXXXXXXXXXXXX", // <--- COLE SUA API KEY AQUI
   authDomain: "seu-projeto.firebaseapp.com",
   projectId: "seu-projeto",
   storageBucket: "seu-projeto.appspot.com",
@@ -19,10 +19,9 @@ const firebaseConfig = {
 };
 
 /**
- * Inicializa os serviços do Firebase LK RAMOS.
+ * Inicializa os serviços do Firebase de forma única.
  */
 export function initializeFirebase() {
-  // Inicialização única garantida
   const firebaseApp = !getApps().length 
     ? initializeApp(firebaseConfig) 
     : getApp();
@@ -32,9 +31,8 @@ export function initializeFirebase() {
   const storage = getStorage(firebaseApp);
   
   if (typeof window !== 'undefined') {
-    // DIAGNÓSTICO TÉCNICO LK RAMOS
     console.log("-----------------------------------------");
-    console.log("🚀 LK RAMOS - CONEXÃO FIREBASE (MODO DIRETO)");
+    console.log("🚀 LK RAMOS - CONEXÃO FIREBASE ATIVA");
     console.log("🆔 PROJECT ID:", firebaseApp.options.projectId);
     console.log("-----------------------------------------");
 
@@ -43,13 +41,15 @@ export function initializeFirebase() {
     });
   }
 
-  return {
-    firebaseApp,
-    auth,
-    firestore,
-    storage,
-  };
+  return { firebaseApp, auth, firestore, storage };
 }
+
+// Inicialização imediata para exportação de constantes
+const services = initializeFirebase();
+export const firebaseApp = services.firebaseApp;
+export const auth = services.auth;
+export const firestore = services.firestore;
+export const storage = services.storage;
 
 export * from './provider';
 export * from './client-provider';
