@@ -22,7 +22,6 @@ interface FinancialSummaryProps {
 
 export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFiltered, onShowDetails }: FinancialSummaryProps) {
   const {
-    totalDigitadoNoPeriodo,
     totalPotentialCommission,
     totalAmountPaid,
     pendingAmount,
@@ -41,7 +40,6 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     
     if (allProposals.length === 0) {
         return {
-            totalDigitadoNoPeriodo: 0,
             totalPotentialCommission: 0,
             totalAmountPaid: 0,
             pendingAmount: 0,
@@ -67,20 +65,14 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
         return d >= fromDate && d <= toDate;
     });
 
-    // 2. Volume Total Digitado (Somente Mês Vigente)
-    const totalDigitadoNoPeriodo = currentMonthProposals.reduce((sum, p) => {
-      if (p.commissionBase === 'net') return sum + (p.netAmount || 0);
-      return sum + (p.grossAmount || 0);
-    }, 0);
-
-    // 3. Total de Comissões Digitadas (Somente Mês Vigente)
+    // 2. Total de Comissões Digitadas (Somente Mês Vigente)
     const totalPotentialCommission = currentMonthProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
 
-    // 4. Comissão Recebida (Somente Mês Vigente)
+    // 3. Comissão Recebida (Somente Mês Vigente)
     const commissionReceivedProposals = currentMonthProposals.filter(p => p.commissionStatus === 'Paga');
     const totalAmountPaid = commissionReceivedProposals.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
     
-    // 5. Saldo a Receber (Acumulado: Mês Anterior + Vigente)
+    // 4. Saldo a Receber (Acumulado: Mês Anterior + Vigente)
     const proposalsForSaldoAReceber = allProposals.filter(p => {
         if (p.commissionStatus === 'Paga') return false;
         const hasAverbacao = !!p.dateApproved;
@@ -89,7 +81,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     });
     const pendingAmount = proposalsForSaldoAReceber.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
 
-    // 6. Comissão Esperada (Acumulado: Mês Anterior + Vigente)
+    // 5. Comissão Esperada (Acumulado: Mês Anterior + Vigente)
     const expectedCommissionProposals = allProposals.filter(p => {
         if (p.commissionStatus === 'Paga') return false;
         const isReprovado = p.status === 'Reprovado';
@@ -105,7 +97,6 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     };
 
     return {
-      totalDigitadoNoPeriodo,
       totalPotentialCommission,
       totalAmountPaid,
       pendingAmount,
@@ -127,8 +118,8 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       title: "Total de Comissões",
       value: formatCurrency(totalPotentialCommission),
       icon: Coins,
-      description: `Volume Digitado: ${isPrivacyMode ? privacyPlaceholder : formatCurrency(totalDigitadoNoPeriodo)}`,
-      className: "border-muted bg-muted/10",
+      description: "Produção do Mês",
+      className: "border-border/50 bg-muted/10",
       valueClassName: "text-foreground",
       proposals: allProposalsInPeriod,
       percentage: 100,
@@ -137,8 +128,8 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       title: "Comissão Recebida",
       value: formatCurrency(totalAmountPaid),
       icon: CheckCircle,
-      description: "Status 'Paga' no mês",
-      className: "border-green-500/30 bg-green-500/5 dark:bg-green-500/10",
+      description: "Pago no Mês",
+      className: "border-green-500/20 bg-green-100/50 dark:bg-green-900/20",
       valueClassName: "text-green-500",
       proposals: commissionReceivedProposals,
       percentage: paidPercentage,
@@ -147,8 +138,8 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       title: "Saldo a Receber",
       value: formatCurrency(pendingAmount),
       icon: Hourglass,
-      description: "Averbados (Acumulado)",
-      className: "border-orange-500/30 bg-orange-500/5 dark:bg-orange-500/10",
+      description: "Acumulado (Desde mês anterior)",
+      className: "border-orange-500/20 bg-orange-100/50 dark:bg-orange-900/20",
       valueClassName: "text-orange-500",
       proposals: proposalsForSaldoAReceber,
       percentage: pendingPercentage,
@@ -157,8 +148,8 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       title: "Comissão Esperada",
       value: formatCurrency(expectedAmount),
       icon: CircleDollarSign,
-      description: "Digitados (Acumulado)",
-      className: "border-blue-500/30 bg-blue-500/5 dark:bg-blue-500/10",
+      description: "Acumulado (Desde mês anterior)",
+      className: "border-blue-500/20 bg-blue-100/50 dark:bg-blue-900/20",
       valueClassName: "text-blue-500",
       proposals: expectedCommissionProposals,
       percentage: expectedPercentage,
@@ -171,10 +162,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
             <Info className="h-4 w-4" />
             <AlertTitle>Resumo Financeiro Inteligente</AlertTitle>
             <AlertDescription>
-                Os cards de **Saldo a Receber** e **Comissão Esperada** incluem dados acumulados desde o mês passado.
-                {isFiltered && (
-                    <span className="block mt-1 font-semibold text-primary">Aviso: A tabela abaixo está exibindo resultados filtrados.</span>
-                )}
+                Os cards de **Saldo a Receber** e **Comissão Esperada** incluem dados acumulados desde o mês passado para garantir que nada fique para trás.
             </AlertDescription>
         </Alert>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 print:grid-cols-4 print:gap-2">

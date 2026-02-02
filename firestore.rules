@@ -26,8 +26,10 @@ service cloud.firestore {
     }
 
     match /reminders/{reminderId} {
-      // Regra simplificada para garantir o salvamento sem erros de permissão
-      allow read, write: if signedIn();
+      allow read, write: if signedIn() && (
+        (resource == null && request.resource.data.ownerId == request.auth.uid) ||
+        (resource != null && resource.data.ownerId == request.auth.uid)
+      );
     }
 
     match /userSettings/{userId} {

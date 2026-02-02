@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -67,17 +67,17 @@ export default function AgendaPage() {
     return list;
   }, [rawReminders, searchTerm]);
 
-  const handleAddReminder = () => {
+  const handleAddReminder = useCallback(() => {
     setSelectedReminder(undefined);
     setNewlySelectedCustomer(null);
     setIsDialogOpen(true);
-  };
+  }, []);
 
-  const handleEditReminder = (reminder: Reminder) => {
+  const handleEditReminder = useCallback((reminder: Reminder) => {
     setSelectedReminder(reminder);
     setNewlySelectedCustomer(null);
     setIsDialogOpen(true);
-  };
+  }, []);
 
   const handleToggleStatus = async (e: React.MouseEvent, reminder: Reminder) => {
     e.stopPropagation();
@@ -103,7 +103,7 @@ export default function AgendaPage() {
       toast({ title: 'Lembrete removido com sucesso.' });
     } catch (err) {
       console.error("Erro ao remover lembrete:", err);
-      toast({ variant: 'destructive', title: 'Erro ao remover', description: 'Permissão insuficiente ou erro de conexão.' });
+      toast({ variant: 'destructive', title: 'Erro ao remover', description: 'Não foi possível excluir o lembrete.' });
     }
   };
 
@@ -121,7 +121,7 @@ export default function AgendaPage() {
         createdAt: selectedReminder?.createdAt || new Date().toISOString(),
       };
 
-      // Limpeza de campos para consistência no Firebase
+      // Limpeza de campos e garantia do ownerId
       const cleanData = Object.fromEntries(
         Object.entries(reminderData).filter(([_, v]) => v !== undefined && v !== "")
       );
@@ -135,7 +135,7 @@ export default function AgendaPage() {
       toast({ 
         variant: 'destructive', 
         title: 'Erro de Permissão', 
-        description: 'Verifique sua conexão e permissões de acesso.' 
+        description: 'Verifique se você está logado e tente novamente.' 
       });
     } finally {
       setIsSaving(false);
