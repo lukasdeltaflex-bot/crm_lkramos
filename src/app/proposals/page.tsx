@@ -150,7 +150,6 @@ function ProposalsPageContent() {
     const { id, proposalNumber, status, ...rest } = proposal;
     const duplicatedData: ProposalFormData = {
         ...rest,
-        // Limpe campos que devem ser únicos ou redefinidos
         proposalNumber: '',
         status: 'Em Andamento',
         dateDigitized: new Date().toISOString(),
@@ -164,6 +163,30 @@ function ProposalsPageContent() {
     setSheetMode('new');
     setIsDialogOpen(true);
 }, []);
+
+// Lógica para abrir modal via parâmetros de busca (action=new ou open=id)
+React.useEffect(() => {
+    const action = searchParams.get('action');
+    const openId = searchParams.get('open');
+
+    if (!proposalsLoading && !customersLoading && !hasOpenedFromParam) {
+        if (action === 'new') {
+            handleNewProposal();
+            setHasOpenedFromParam(true);
+            router.replace('/proposals', { scroll: false });
+        } else if (openId && proposalsWithCustomerData.length > 0) {
+            const proposalToOpen = proposalsWithCustomerData.find(p => p.id === openId);
+            if (proposalToOpen) {
+                handleEditProposal(proposalToOpen);
+                setHasOpenedFromParam(true);
+                setTimeout(() => {
+                    router.replace('/proposals', { scroll: false });
+                }, 100);
+            }
+        }
+    }
+}, [searchParams, proposalsLoading, customersLoading, proposalsWithCustomerData, hasOpenedFromParam, handleNewProposal, handleEditProposal, router]);
+
 
 const handlePrint = React.useCallback(() => {
     const hasSelection = Object.keys(rowSelection).length > 0;
@@ -373,7 +396,7 @@ const handleExportToExcel = async () => {
   const handleBulkStatusChange = React.useCallback(async (newStatus: ProposalStatus) => {
     if (!firestore) return;
     const selectedIds = Object.keys(rowSelection);
-    setRowSelection({}); // Immediate UI feedback
+    setRowSelection({});
     if (selectedIds.length === 0) return;
     
     const batch = writeBatch(firestore);
@@ -412,7 +435,7 @@ const handleExportToExcel = async () => {
   const handleBulkDelete = React.useCallback(async () => {
     if (!firestore) return;
     const selectedIds = Object.keys(rowSelection);
-    setRowSelection({}); // Immediate UI feedback
+    setRowSelection({});
     if (selectedIds.length === 0) return;
 
     const batch = writeBatch(firestore);
@@ -441,7 +464,6 @@ const handleExportToExcel = async () => {
   const handleFormSubmit = async (data: Omit<Proposal, 'id' | 'ownerId'>) => {
     if (!firestore || !user) return;
   
-    // Função auxiliar para converter string de data para ISO ou null (para limpar no banco)
     const toValue = (dateString?: string): string | null => {
         if (!dateString || dateString.trim() === '') return null;
         try {
@@ -476,7 +498,6 @@ const handleExportToExcel = async () => {
             commissionStatus: commissionStatus,
         };
         
-        // Remove apenas 'undefined', permitindo 'null' para que campos sejam limpos no Firestore
         const cleanData = Object.fromEntries(
             Object.entries(proposalData).filter(([, v]) => v !== undefined)
         );
@@ -506,29 +527,13 @@ const handleExportToExcel = async () => {
       toast({
         variant: 'destructive',
         title: 'Erro ao Salvar',
-        description: 'Não foi possível salvar a proposta. Tente novamente.',
+        description: 'Não foi possível salvar la proposta. Tente novamente.',
       });
     }
 
     setIsDialogOpen(false);
   };
 
-  const openProposalId = searchParams.get('open');
-
-  React.useEffect(() => {
-    if (openProposalId && !proposalsLoading && !customersLoading && proposalsWithCustomerData.length > 0 && !hasOpenedFromParam) {
-      const proposalToOpen = proposalsWithCustomerData.find(p => p.id === openProposalId);
-      if (proposalToOpen) {
-        handleEditProposal(proposalToOpen);
-        setHasOpenedFromParam(true);
-        // Use a timeout to prevent router update from interfering with dialog opening animation
-        setTimeout(() => {
-            router.replace('/proposals', { scroll: false });
-        }, 100);
-      }
-    }
-  }, [openProposalId, proposalsLoading, customersLoading, proposalsWithCustomerData, hasOpenedFromParam, handleEditProposal, router]);
-  
   const getSheetTitle = () => {
     if (sheetMode === 'new') return 'Nova Proposta';
     if (sheetMode === 'edit') return 'Editar Proposta';

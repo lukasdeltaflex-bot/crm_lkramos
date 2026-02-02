@@ -1,5 +1,7 @@
+
 'use client';
-import React from 'react';
+import React, { Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
 import { CustomerDataTable, type CustomerDataTableHandle } from './data-table';
@@ -9,7 +11,7 @@ import { PlusCircle, Sparkles, Trash2, FileDown } from 'lucide-react';
 import { CustomerForm } from './customer-form';
 import type { Customer } from '@/lib/types';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, writeBatch, updateDoc, setDoc, query, where, orderBy } from 'firebase/firestore';
+import { collection, doc, writeBatch, updateDoc, setDoc, query, where } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -40,12 +42,15 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getAge } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type CustomerFormData = Partial<Omit<Customer, 'id' | 'ownerId'>>;
 
-export default function CustomersPage() {
+function CustomersPageContent() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   const [isDialog, setIsDialog] = React.useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = React.useState(false);
@@ -66,6 +71,16 @@ export default function CustomersPage() {
 
   const [activeCustomers, setActiveCustomers] = React.useState<Customer[]>([]);
   const [inactiveCustomers, setInactiveCustomers] = React.useState<Customer[]>([]);
+
+  // Lógica para abrir modal via atalho URL
+  React.useEffect(() => {
+    const action = searchParams.get('action');
+    if (action === 'new') {
+      handleNewCustomer();
+      // Limpa o parâmetro da URL para não reabrir ao atualizar
+      router.replace('/customers', { scroll: false });
+    }
+  }, [searchParams, router]);
 
   React.useEffect(() => {
     const seedData = async () => {
@@ -136,7 +151,7 @@ export default function CustomersPage() {
   const handleAiFormSubmit = (aiData: ExtractCustomerDataOutput) => {
     const prefilledData: CustomerFormData = {
         ...aiData,
-        birthDate: aiData.birthDate, // Keep as YYYY-MM-DD string
+        birthDate: aiData.birthDate,
     };
     setSelectedCustomer(undefined);
     setDefaultValues(prefilledData);
@@ -209,7 +224,6 @@ export default function CustomersPage() {
         const rowData: any[] = [];
         visibleColumns.forEach(col => {
             let value = row.getValue(col.id as any);
-            // For columns with custom renderers, get raw data from `original`
             if (['name', 'phone', 'phone2'].includes(col.id)) {
                 value = row.original[col.id as keyof Customer];
             }
@@ -282,7 +296,6 @@ const handleExportToPdf = async () => {
         const rowData: any[] = [];
         visibleColumns.forEach(col => {
             let value = row.getValue(col.id as any);
-            // For columns with custom renderers, get raw data from `original`
              if (['name', 'phone', 'phone2'].includes(col.id)) {
                 value = row.original[col.id as keyof Customer];
             }
@@ -391,7 +404,6 @@ const handleExportToPdf = async () => {
   const handleFormSubmit = async (data: Omit<Customer, 'id' | 'ownerId' | 'numericId'>) => {
     if (!firestore || !user) return;
 
-    // CPF duplication check
     const cpfExists = customers?.find(
       (c) => c.cpf === data.cpf && c.id !== selectedCustomer?.id
     );
@@ -401,10 +413,9 @@ const handleExportToPdf = async () => {
             title: 'CPF já cadastrado',
             description: `O CPF ${data.cpf} já pertence ao cliente "${cpfExists.name}".`,
         });
-        return; // Stop submission
+        return;
     }
 
-    // Phone duplication check
     const phoneExists = customers?.find(
         (c) => c.phone === data.phone && c.id !== selectedCustomer?.id
     );
@@ -414,7 +425,7 @@ const handleExportToPdf = async () => {
             title: 'Telefone já cadastrado',
             description: `O telefone ${data.phone} já pertence ao cliente "${phoneExists.name}".`,
         });
-        return; // Stop submission
+        return;
     }
 
     setIsSaving(true);
@@ -433,7 +444,6 @@ const handleExportToPdf = async () => {
       } else {
         const newDocRef = doc(collection(firestore, 'customers'));
         
-        // Calculate the next available numeric ID
         let nextNumericId = 1;
         if (customers && customers.length > 0) {
             const maxId = Math.max(...customers.map(c => c.numericId || 0));
@@ -475,7 +485,7 @@ const handleExportToPdf = async () => {
   const selectedCount = Object.keys(rowSelection).length;
 
   return (
-    <AppLayout>
+    <>
       <div className="flex items-center justify-between">
         <PageHeader title="Clientes" />
         <div className="flex items-center gap-2">
@@ -572,6 +582,21 @@ const handleExportToPdf = async () => {
         rowSelection={rowSelection}
         setRowSelection={setRowSelection}
        />
+    </>
+  );
+}
+
+export default function CustomersPage() {
+  return (
+    <AppLayout>
+      <Suspense fallback={
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      }>
+        <CustomersPageContent />
+      </Suspense>
     </AppLayout>
   );
 }
