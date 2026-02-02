@@ -165,7 +165,7 @@ function ProposalsPageContent() {
     const action = searchParams.get('action');
     const openId = searchParams.get('open');
 
-    if (!proposalsLoading && !customersLoading && !hasOpenedFromParam) {
+    if (!proposalsLoading && !customersLoading && !isUserLoading && !hasOpenedFromParam) {
         if (action === 'new') {
             handleNewProposal();
             setHasOpenedFromParam(true);
@@ -181,7 +181,7 @@ function ProposalsPageContent() {
             }
         }
     }
-  }, [searchParams, proposalsLoading, customersLoading, proposalsWithCustomerData, hasOpenedFromParam, handleNewProposal, handleEditProposal, router]);
+  }, [searchParams, proposalsLoading, customersLoading, isUserLoading, proposalsWithCustomerData, hasOpenedFromParam, handleNewProposal, handleEditProposal, router]);
 
 
   const handlePrint = React.useCallback(() => {

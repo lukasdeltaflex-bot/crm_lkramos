@@ -1,11 +1,9 @@
 
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { getAuth, Auth } from "firebase/auth";
+import { getFirestore, Firestore } from "firebase/firestore";
+import { getStorage, FirebaseStorage } from "firebase/storage";
 
-// Configuração do Firebase LK RAMOS
-// CERTIFIQUE-SE DE QUE ESTAS CHAVES CORRESPONDEM AO SEU CONSOLE FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyDcdnNBy0TZTsq_cI02KFVU9o7PJopEczM",
   authDomain: "studio-248448941-9c1c2.firebaseapp.com",
@@ -15,17 +13,24 @@ const firebaseConfig = {
   appId: "1:341426752875:web:348f88597e5b9b2057d02e",
 };
 
-// Padrão Singleton para evitar erros de múltiplas instâncias no Next.js (Assertion Failed)
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
+// Singleton pattern to prevent multiple initializations in Next.js HMR/Turbopack
+let app: FirebaseApp;
+let auth: Auth;
+let db: Firestore;
+let storage: FirebaseStorage;
+
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApp();
+}
+
+auth = getAuth(app);
+db = getFirestore(app);
+storage = getStorage(app);
 
 export { auth, db, storage, app };
 
-/**
- * Retorna a instância do app inicializada.
- */
 export function initializeFirebase(): FirebaseApp {
   return app;
 }

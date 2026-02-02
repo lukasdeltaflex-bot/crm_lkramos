@@ -36,7 +36,7 @@ export function SidebarNav() {
             isActive={pathname === link.href}
             tooltip={link.label}
           >
-            <Link href={link.href} className="flex items-center gap-2">
+            <Link href={link.href}>
               <link.icon />
               <span>{link.label}</span>
             </Link>
@@ -53,7 +53,7 @@ export function SidebarNav() {
                 isActive={pathname === link.href}
                 tooltip={link.label}
                 >
-                <Link href={link.href} className="flex items-center gap-2">
+                <Link href={link.href}>
                     <link.icon />
                     <span>{link.label}</span>
                 </Link>
