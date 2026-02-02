@@ -40,6 +40,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     
     const fromDate = currentMonthRange.from || new Date();
     const toDate = currentMonthRange.to || new Date();
+    // 🔥 Lógica de Pipeline: Considera desde o início do mês anterior até o fim do período atual
     const startOfPrevMonth = startOfMonth(subMonths(fromDate, 1));
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);

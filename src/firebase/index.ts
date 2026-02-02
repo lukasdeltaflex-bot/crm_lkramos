@@ -11,7 +11,7 @@ export function initializeFirebase() {
   if (!getApps().length) {
     const firebaseApp = initializeApp(firebaseConfig);
     const sdks = getSdks(firebaseApp);
-    // Configura a persistência local para garantir que a sessão de auth permaneça ativa no client
+    // 🔥 OBRIGATÓRIO NO NEXT.JS: Configura a persistência local para garantir que a sessão de auth permaneça ativa
     setPersistence(sdks.auth, browserLocalPersistence);
     return sdks;
   }

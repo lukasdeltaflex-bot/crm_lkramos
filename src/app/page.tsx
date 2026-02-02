@@ -135,7 +135,7 @@ export default function DashboardPage() {
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
-    // Lógica de Acúmulo: Mês anterior + Selecionado (Para Pipeline Operacional)
+    // 🔥 Lógica de Acúmulo: Mês anterior + Selecionado (Para Pipeline Operacional)
     const startOfAccumulation = startOfMonth(subMonths(fromDate, 1));
 
     const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
