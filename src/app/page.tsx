@@ -135,36 +135,30 @@ export default function DashboardPage() {
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
-    // Lógica de Acúmulo: Desde o início do mês anterior
     const startOfAccumulation = startOfMonth(subMonths(fromDate, 1));
 
     const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
 
-    // Dados estritamente do período selecionado
     const currentPeriodProposals = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
         return d >= fromDate && d <= effectiveToDate;
     });
 
-    // Dados acumulados (Mês anterior + selecionado)
     const accumulatedProposals = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
         return d >= startOfAccumulation && d <= effectiveToDate;
     });
 
-    // Métrica puramente mensal
     const totalDigitado = getSum(currentPeriodProposals);
     const reprovadoValue = getSum(currentPeriodProposals.filter(p => p.status === 'Reprovado'));
 
-    // Cards operacionais acumulados (Mês anterior + Vigente)
     const pendenteProposals = accumulatedProposals.filter(p => p.status === 'Pendente');
     const emAndamentoProposals = accumulatedProposals.filter(p => p.status === 'Em Andamento');
     const aguardandoSaldoProposals = accumulatedProposals.filter(p => p.status === 'Aguardando Saldo');
     const saldoPagoProposals = accumulatedProposals.filter(p => p.status === 'Saldo Pago');
     
-    // Produção mensal para a meta (Apenas o mês vigente)
     const pagoProposals = currentPeriodProposals.filter(p => p.status === 'Pago');
     const pagoValue = getSum(pagoProposals);
 
@@ -274,6 +268,7 @@ export default function DashboardPage() {
                     icon={FileText} 
                     percentage={100}
                     className="bg-slate-50 dark:bg-slate-900/40 border-border/50"
+                    valueClassName="font-light"
                 />
             </div>
             <div className="cursor-pointer" onClick={() => handleShowDetails('Pendentes (Acumulado)', stats.proposals.pendente)}>
@@ -282,7 +277,7 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.pendente)} 
                     icon={BadgePercent} 
                     percentage={stats.percPendente}
-                    valueClassName="text-purple-600 dark:text-purple-400"
+                    valueClassName="text-purple-600 dark:text-purple-400 font-light"
                     className="bg-purple-50/50 dark:bg-purple-900/20 border-border/50"
                     description="Acumulado"
                 />
@@ -293,7 +288,7 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.emAndamento)} 
                     icon={Hourglass} 
                     percentage={stats.percEmAndamento}
-                    valueClassName="text-yellow-600 dark:text-yellow-400"
+                    valueClassName="text-yellow-600 dark:text-yellow-400 font-light"
                     className="bg-yellow-50/50 dark:bg-yellow-900/20 border-border/50"
                     description="Acumulado"
                 />
@@ -307,7 +302,7 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.aguardandoSaldo)} 
                     icon={Clock} 
                     percentage={stats.percAguardandoSaldo}
-                    valueClassName="text-blue-600 dark:text-blue-400"
+                    valueClassName="text-blue-600 dark:text-blue-400 font-light"
                     className="bg-blue-50/50 dark:bg-blue-900/20 border-border/50"
                     description="Acumulado"
                 />
@@ -318,7 +313,7 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.saldoPago)} 
                     icon={CheckCircle2} 
                     percentage={stats.percSaldoPago}
-                    valueClassName="text-orange-600 dark:text-orange-400"
+                    valueClassName="text-orange-600 dark:text-orange-400 font-light"
                     className="bg-orange-50/50 dark:bg-orange-900/20 border-border/50"
                     description="Acumulado"
                 />
@@ -329,7 +324,7 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.reprovado)} 
                     icon={XCircle} 
                     percentage={stats.percReprovado}
-                    valueClassName="text-red-600 dark:text-red-400"
+                    valueClassName="text-red-600 dark:text-red-400 font-light"
                     className="bg-red-50/50 dark:bg-red-900/20 border-border/50"
                 />
             </div>

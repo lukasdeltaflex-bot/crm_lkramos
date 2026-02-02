@@ -21,13 +21,13 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if isOwner(userId);
       
-      // Subcoleção de lembretes (Agenda LK) - Caminho sugerido pelo usuário
+      // Subcoleção de lembretes (Agenda LK)
       match /reminders/{reminderId} {
         allow read, write: if isOwner(userId);
       }
     }
 
-    // Clientes e Propostas (Baseados em ownerId no documento)
+    // Clientes e Propostas
     match /customers/{customerId} {
       allow read, write: if dataOwner();
     }

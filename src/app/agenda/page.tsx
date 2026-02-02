@@ -26,14 +26,13 @@ export default function AgendaPage() {
   const firestore = useFirestore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCustomerSearchOpen, setIsCustomerSearchOpen] = useState(false);
-  const [newlySelectedCustomer, setNewlySelectedCustomer] = setNewlySelectedCustomer(null);
+  const [newlySelectedCustomer, setNewlySelectedCustomer] = useState<Customer | null>(null);
   const [selectedReminder, setSelectedReminder] = useState<Reminder | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
   const remindersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    // Usando subcoleção para maior segurança e compatibilidade com snippets do usuário
     return collection(firestore, 'users', user.uid, 'reminders');
   }, [firestore, user]);
 
