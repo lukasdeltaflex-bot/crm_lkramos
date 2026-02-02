@@ -1,3 +1,4 @@
+
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
@@ -12,7 +13,7 @@ const firebaseConfig = {
   appId: "1:341426752875:web:348f88597e5b9b2057d02e",
 };
 
-// Singleton pattern robusto para evitar múltiplas instâncias e erro de Assertion Failed no Next.js
+// Singleton pattern robusto usando global para evitar múltiplas instâncias e erro de Assertion Failed no Next.js
 const globalForFirebase = global as unknown as {
   app: FirebaseApp | undefined;
   auth: Auth | undefined;

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -100,7 +101,7 @@ export function useCollection<T = any>(
           unsubscribe();
         }
       } catch (e) {
-        console.warn("Firestore cleanup safely handled");
+        // Silently handle Turbopack hot reload edge cases
       }
     };
   }, [memoizedTargetRefOrQuery]);

@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -335,7 +336,9 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   React.useEffect(() => {
     const statusColumn = table.getColumn('status');
     if (statusFilter === 'Todos') {
-      statusColumn?.setFilterValue(undefined);
+      // Regra solicitada: Quando estiver em "Todos", mostrar tudo MENOS "Reprovado"
+      const allStatusesExceptReprovado = proposalStatuses.filter(s => s !== 'Reprovado');
+      statusColumn?.setFilterValue(allStatusesExceptReprovado);
     } else {
       statusColumn?.setFilterValue([statusFilter]);
     }
