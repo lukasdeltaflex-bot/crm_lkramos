@@ -94,7 +94,15 @@ export function useCollection<T = any>(
       }
     );
 
-    return () => unsubscribe();
+    return () => {
+      try {
+        if (typeof unsubscribe === 'function') {
+          unsubscribe();
+        }
+      } catch (e) {
+        console.warn("Firestore cleanup safely handled");
+      }
+    };
   }, [memoizedTargetRefOrQuery]);
 
   return { data, isLoading, error };

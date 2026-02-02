@@ -45,33 +45,33 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
   }, [proposals, customers]);
 
   return (
-    <Card className="border-border/50 shadow-sm overflow-hidden">
+    <Card className="border-border/50 shadow-sm overflow-hidden bg-card/50">
       <CardHeader className="flex flex-row items-center justify-between pb-4">
-        <CardTitle className="font-headline text-xl">Últimas Propostas Digitadas</CardTitle>
+        <CardTitle className="font-headline text-xl text-primary">Últimas Propostas Digitadas</CardTitle>
         <Link href="/proposals">
-            <Badge variant="secondary" className="cursor-pointer hover:bg-secondary/80 flex gap-1 items-center px-3 py-1">
+            <Badge variant="secondary" className="cursor-pointer hover:bg-secondary/80 flex gap-1 items-center px-3 py-1 transition-colors">
                 Ver todas <ArrowRight className="h-3 w-3" />
             </Badge>
         </Link>
       </CardHeader>
       <CardContent className="p-0">
         <Table>
-          <TableHeader className="bg-muted/30">
-            <TableRow>
-              <TableHead className="px-6 py-4 font-bold text-xs uppercase tracking-wider">Cliente</TableHead>
-              <TableHead className="px-6 py-4 font-bold text-xs uppercase tracking-wider">Produto</TableHead>
-              <TableHead className="px-6 py-4 font-bold text-xs uppercase tracking-wider">Status</TableHead>
-              <TableHead className="px-6 py-4 font-bold text-xs uppercase tracking-wider text-right">Valor Bruto</TableHead>
+          <TableHeader className="bg-muted/20 border-b border-border/50">
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Cliente</TableHead>
+              <TableHead className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Produto</TableHead>
+              <TableHead className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Status</TableHead>
+              <TableHead className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-muted-foreground text-right">Valor Bruto</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i}>
-                        <TableCell className="px-6 py-4"><Skeleton className="h-5 w-32" /></TableCell>
-                        <TableCell className="px-6 py-4"><Skeleton className="h-5 w-24" /></TableCell>
-                        <TableCell className="px-6 py-4"><Skeleton className="h-5 w-20" /></TableCell>
-                        <TableCell className="px-6 py-4 text-right"><Skeleton className="h-5 w-28 ml-auto" /></TableCell>
+                        <TableCell className="px-6 py-5"><Skeleton className="h-5 w-32" /></TableCell>
+                        <TableCell className="px-6 py-5"><Skeleton className="h-5 w-24" /></TableCell>
+                        <TableCell className="px-6 py-5"><Skeleton className="h-5 w-20" /></TableCell>
+                        <TableCell className="px-6 py-5 text-right"><Skeleton className="h-5 w-28 ml-auto" /></TableCell>
                     </TableRow>
                 ))
             ) : recentProposals.length === 0 ? (
@@ -84,15 +84,15 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                     const businessDays = hasMounted && proposal.dateDigitized ? calculateBusinessDays(new Date(proposal.dateDigitized)) : 0;
 
                     return (
-                        <TableRow key={proposal.id} className="hover:bg-muted/30 transition-colors group">
+                        <TableRow key={proposal.id} className="hover:bg-muted/30 transition-all group">
                             <TableCell className="px-6 py-5">
-                                <div className="font-semibold text-primary/90">{proposal.customer?.name || 'Cliente não encontrado'}</div>
-                                <div className="text-xs text-muted-foreground mt-0.5">
+                                <div className="font-semibold text-primary/90 group-hover:text-primary transition-colors">{proposal.customer?.name || 'Cliente não encontrado'}</div>
+                                <div className="text-[10px] text-muted-foreground mt-0.5">
                                     {proposal.customer?.cpf || 'CPF não informado'}
                                 </div>
                             </TableCell>
                             <TableCell className="px-6 py-5">
-                                <span className="text-sm font-medium">{proposal.product}</span>
+                                <span className="text-sm font-medium opacity-80">{proposal.product}</span>
                             </TableCell>
                             <TableCell className="px-6 py-5">
                                 <div className="flex items-center gap-2">

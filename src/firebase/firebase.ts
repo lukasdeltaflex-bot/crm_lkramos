@@ -12,11 +12,25 @@ const firebaseConfig = {
   appId: "1:341426752875:web:348f88597e5b9b2057d02e",
 };
 
-// Singleton pattern robusto para evitar múltiplas instâncias e erro de Assertion Failed
-const app: FirebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth: Auth = getAuth(app);
-const db: Firestore = getFirestore(app);
-const storage: FirebaseStorage = getStorage(app);
+// Singleton pattern robusto para evitar múltiplas instâncias e erro de Assertion Failed no Next.js
+const globalForFirebase = global as unknown as {
+  app: FirebaseApp | undefined;
+  auth: Auth | undefined;
+  db: Firestore | undefined;
+  storage: FirebaseStorage | undefined;
+};
+
+const app = globalForFirebase.app || (!getApps().length ? initializeApp(firebaseConfig) : getApp());
+const auth = globalForFirebase.auth || getAuth(app);
+const db = globalForFirebase.db || getFirestore(app);
+const storage = globalForFirebase.storage || getStorage(app);
+
+if (process.env.NODE_ENV !== "production") {
+  globalForFirebase.app = app;
+  globalForFirebase.auth = auth;
+  globalForFirebase.db = db;
+  globalForFirebase.storage = storage;
+}
 
 export { auth, db, storage, app };
 

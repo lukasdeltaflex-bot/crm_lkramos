@@ -272,12 +272,12 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
             size="sm" 
             onClick={handleSendEmail} 
             disabled={isSending}
-            className="h-8 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200"
+            className="h-8 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200 group"
         >
             {isSending ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" />
             ) : (
-                <Send className="h-3.5 w-3.5 mr-2" />
+                <Send className="h-3.5 w-3.5 mr-2 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             )}
             Enviar E-mail
         </Button>
