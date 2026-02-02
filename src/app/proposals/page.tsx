@@ -54,7 +54,7 @@ function ProposalsPageSkeleton() {
                     <Skeleton className="h-10 w-32" />
                 </div>
             </div>
-            <div className="rounded-md border p-4">
+            <div className="rounded-md border border-border/50 p-4">
                 <div className="space-y-2">
                     <Skeleton className="h-10 w-full" />
                     {Array.from({ length: 10 }).map((_, i) => (
@@ -520,7 +520,7 @@ function ProposalsPageContent() {
       toast({
         variant: 'destructive',
         title: 'Erro ao Salvar',
-        description: 'Não foi possível salvar la proposta. Tente novamente.',
+        description: 'Não foi possível salvar a proposta. Tente novamente.',
       });
     }
 
@@ -623,7 +623,7 @@ function ProposalsPageContent() {
        />
 
       {isLoading ? (
-        <div className="rounded-md border p-4">
+        <div className="rounded-md border border-border/50 p-4">
             <div className="space-y-2">
               <Skeleton className="h-10 w-full" />
               {Array.from({ length: 10 }).map((_, i) => (
