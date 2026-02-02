@@ -158,7 +158,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     if (savedPageSize) {
       setPagination(prev => ({ ...prev, pageSize: Number(savedPageSize) }));
     }
-  }, []);
+  }, [columns]);
 
   React.useEffect(() => {
     if (isClient) {
@@ -538,7 +538,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                     <div>
                         {table.getFilteredSelectedRowModel().rows.length} de{' '}
-                        {table.getFilteredModel().rows.length} selecionados
+                        {table.getFilteredRowModel().rows.length} selecionados
                     </div>
                     {selectedRows.length > 0 && !isPrivacyMode && (
                         <>
