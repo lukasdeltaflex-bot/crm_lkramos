@@ -56,7 +56,7 @@ export function GoalCard({ currentProduction, totalDigitized, isPrivacyMode, onV
   if (!isClient) return <Card className="h-48 animate-pulse bg-muted rounded-xl w-full" />;
 
   return (
-    <Card className={cn('relative overflow-hidden bg-blue-50/30 dark:bg-blue-900/10 border border-blue-100/50 dark:border-blue-800/20 shadow-sm rounded-2xl w-full', className)}>
+    <Card className={cn('relative overflow-hidden bg-blue-50/40 dark:bg-blue-900/10 border border-blue-100/50 dark:border-blue-800/30 shadow-sm rounded-2xl w-full', className)}>
       <CardContent className="p-8">
         {/* Header Row */}
         <div className="flex items-start justify-between mb-6">
@@ -95,7 +95,7 @@ export function GoalCard({ currentProduction, totalDigitized, isPrivacyMode, onV
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-8 w-8 rounded-full opacity-0 hover:opacity-100 transition-opacity bg-white/50 dark:bg-black/20" 
+                  className="h-8 w-8 rounded-full opacity-40 hover:opacity-100 transition-opacity bg-white/50 dark:bg-black/20" 
                   onClick={() => setIsEditing(true)}
                 >
                   <Pencil className="h-3 w-3 text-muted-foreground" />
