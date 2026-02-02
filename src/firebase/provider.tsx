@@ -37,6 +37,8 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
   });
 
   useEffect(() => {
+    if (!authInstance) return;
+    
     const unsubscribe = onAuthStateChanged(
       authInstance,
       (firebaseUser) => {
@@ -64,7 +66,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
 
   // MODO EMERGÊNCIA: Não trava a UI se o Firebase falhar
   if (!areServicesAvailable) {
-    console.warn("⚠️ LK RAMOS: Firebase indisponível ou em carregamento – modo de segurança ativado.");
+    console.warn("⚠️ LK RAMOS: Firebase indisponível ou em carregamento – modo emergência ativado.");
   }
 
   return (

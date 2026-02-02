@@ -11,6 +11,7 @@ interface FirebaseClientProviderProps {
 
 /**
  * Provedor que garante a inicialização do Firebase no lado do cliente.
+ * Importação direta do ./firebase para evitar dependência circular com o index.ts.
  */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
   const [isInitializing, setIsInitializing] = useState(true);

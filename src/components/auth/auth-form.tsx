@@ -73,15 +73,18 @@ export function AuthForm({ type }: AuthFormProps) {
   });
 
   async function handleFormSubmit(data: FormValues) {
-    // MODO EMERGÊNCIA: Avisa que o login está travado até a API Key ser corrigida
+    // MODO EMERGÊNCIA: Login desativado até configuração de chave real no firebase.ts
     toast({
         variant: 'destructive',
-        title: 'Sistema em Manutenção',
-        description: 'Por favor, configure sua API KEY no arquivo src/firebase/firebase.ts para habilitar o login.',
+        title: 'Sistema em Modo de Segurança',
+        description: 'Configure sua API KEY real no arquivo src/firebase/firebase.ts e descomente as funções de login no código.',
     });
     
+    console.warn("⚠️ Tentativa de login interceptada pelo modo de segurança.");
+    console.log("Dados do formulário:", data.email);
+
     /* 
-    TEMPORARIAMENTE COMENTADO PARA EVITAR TELA PRETA POR ERRO DE API KEY
+    COMENTADO PARA EVITAR CRASH POR API KEY INVÁLIDA (CONFORME SOLICITADO)
     try {
       if (type === 'login') {
         const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
@@ -123,16 +126,10 @@ export function AuthForm({ type }: AuthFormProps) {
       }
     } catch (error: any) {
       console.error(error);
-      let message = 'Ocorreu um erro. Tente novamente.';
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        message = 'Email ou senha inválidos.';
-      } else if (error.code === 'auth/email-already-in-use') {
-        message = 'Este email já está em uso.';
-      }
       toast({
         variant: 'destructive',
         title: 'Erro',
-        description: message,
+        description: 'Falha na autenticação. Verifique os logs do console.',
       });
     }
     */
