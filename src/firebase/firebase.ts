@@ -10,7 +10,7 @@ import { getStorage } from "firebase/storage";
  * obtidos em: Firebase Console -> Configurações do Projeto -> Geral -> App Web.
  */
 const firebaseConfig = {
-  apiKey: "AIzaSyXXXXXXXXXXXX", // <--- COLE SUA API KEY REAL AQUI
+  apiKey: "AIzaSyXXXXXXXXXXXX", // <--- SUBSTITUA POR SUA API KEY REAL AQUI
   authDomain: "seu-projeto.firebaseapp.com",
   projectId: "seu-projeto",
   storageBucket: "seu-projeto.appspot.com",
@@ -26,7 +26,7 @@ export const db = getFirestore(app);
 export const storage = getStorage(app);
 
 /**
- * Exportação exigida pelo ClientProvider e diagnósticos.
+ * Função de inicialização exigida pelo Provider.
  */
 export function initializeFirebase() {
   if (typeof window !== 'undefined') {
