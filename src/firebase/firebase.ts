@@ -4,12 +4,13 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 /**
- * CONFIGURAÇÃO DIRETA (MODO DE SEGURANÇA)
- * Substitua os valores abaixo pelos dados EXATOS do seu Firebase Console.
- * Vá em: Configurações do Projeto -> Geral -> Seus Apps -> App Web
+ * CONFIGURAÇÃO DIRETA DO FIREBASE
+ * 
+ * ATENÇÃO: Substitua os valores abaixo pelos dados reais do seu projeto.
+ * No Console Firebase: Configurações do Projeto -> Geral -> Seus Apps -> App Web.
  */
 const firebaseConfig = {
-  apiKey: "AIzaSyXXXXXXXXXXXX",
+  apiKey: "AIzaSyXXXXXXXXXXXX", // <--- SUBSTITUA POR SUA CHAVE REAL
   authDomain: "seu-projeto.firebaseapp.com",
   projectId: "seu-projeto",
   storageBucket: "seu-projeto.appspot.com",
@@ -17,7 +18,7 @@ const firebaseConfig = {
   appId: "1:123456789:web:abcdef"
 };
 
-// Singleton para garantir inicialização única e evitar erros de estado interno
+// Singleton para garantir inicialização única
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 export const auth = getAuth(app);
