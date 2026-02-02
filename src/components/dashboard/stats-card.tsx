@@ -18,12 +18,14 @@ interface StatsCardProps {
 }
 
 /**
- * StatsCard com visual premium LK RAMOS e altura padronizada.
- * Garante que todos os cards na grade mantenham a mesma altura.
+ * StatsCard com visual premium LK RAMOS, altura padronizada e borda leve colorida.
  */
 export function StatsCard({ title, value, icon: Icon, description, percentage, className, valueClassName }: StatsCardProps) {
   return (
-    <Card className={cn('hover:shadow-xl hover:border-primary/20 transition-all group relative overflow-hidden border border-border/50 bg-card shadow-md rounded-xl h-full flex flex-col', className)}>
+    <Card className={cn(
+        'hover:shadow-xl hover:border-primary/40 transition-all group relative overflow-hidden bg-card shadow-md rounded-xl h-full flex flex-col border-2', 
+        className
+    )}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 print:pb-1">
         <CardTitle className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground group-hover:text-primary transition-colors print:text-[8px]">{title}</CardTitle>
         <div className="p-2 rounded-lg bg-primary/5 group-hover:bg-primary/10 transition-colors">
@@ -45,7 +47,7 @@ export function StatsCard({ title, value, icon: Icon, description, percentage, c
                     {description}
                 </p>
             ) : (
-                <div className="h-[14px]" /> /* Espaçador para manter proporção */
+                <div className="h-[14px]" />
             )}
         </div>
       </CardContent>

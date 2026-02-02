@@ -12,7 +12,7 @@ const firebaseConfig = {
   appId: "1:341426752875:web:348f88597e5b9b2057d02e",
 };
 
-// Padrão Singleton Blindado para evitar múltiplas instâncias no Next.js durante HMR
+// Padrão Singleton Blindado para evitar múltiplas instâncias no Next.js (corrige Assertion Failed)
 const globalForFirebase = globalThis as unknown as {
   app: FirebaseApp | undefined;
   auth: Auth | undefined;
@@ -22,7 +22,7 @@ const globalForFirebase = globalThis as unknown as {
 
 const app = globalForFirebase.app || (getApps().length === 0 ? initializeApp(firebaseConfig) : getApp());
 
-// Inicializa o Firestore apenas uma vez por ciclo de vida da aplicação global para evitarAssertion Failed
+// Inicializa o Firestore com proteção de Singleton
 const db = globalForFirebase.db || initializeFirestore(app, {
     cacheSizeBytes: CACHE_SIZE_UNLIMITED,
 });
@@ -30,7 +30,6 @@ const db = globalForFirebase.db || initializeFirestore(app, {
 const auth = globalForFirebase.auth || getAuth(app);
 const storage = globalForFirebase.storage || getStorage(app);
 
-// Persiste as instâncias no objeto global
 if (process.env.NODE_ENV !== "production") {
     globalForFirebase.app = app;
     globalForFirebase.auth = auth;

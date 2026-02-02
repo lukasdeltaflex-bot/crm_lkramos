@@ -56,7 +56,10 @@ export function GoalCard({ currentProduction, totalDigitized, isPrivacyMode, onV
   if (!isClient) return <Card className="h-48 animate-pulse bg-muted rounded-xl w-full" />;
 
   return (
-    <Card className={cn('relative overflow-hidden bg-blue-50/40 dark:bg-blue-900/10 border border-blue-100/50 dark:border-blue-800/30 shadow-sm rounded-2xl w-full', className)}>
+    <Card className={cn(
+        'relative overflow-hidden bg-blue-50/40 dark:bg-blue-900/10 border-2 border-blue-200/60 dark:border-blue-800/60 shadow-sm rounded-2xl w-full', 
+        className
+    )}>
       <CardContent className="p-8">
         {/* Header Row */}
         <div className="flex items-start justify-between mb-6">
