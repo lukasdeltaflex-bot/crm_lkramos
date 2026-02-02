@@ -86,7 +86,7 @@ export function useDoc<T = any>(
         try {
             unsubscribe();
         } catch (e) {
-            // Silently fail cleanup if instance was already closed
+            console.debug("Firestore unsubscribe silent fail (likely normal in dev)");
         }
       }
     };

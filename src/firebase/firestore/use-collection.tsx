@@ -107,7 +107,8 @@ export function useCollection<T = any>(
         try {
             unsubscribe();
         } catch (e) {
-            // Silently fail cleanup if instance was already closed
+            // Silently fail cleanup if instance was already closed or state is unexpected
+            console.debug("Firestore unsubscribe silent fail (likely normal in dev)");
         }
       }
     };

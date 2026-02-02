@@ -25,7 +25,8 @@ export const app = globalForFirebase.app || (getApps().length === 0 ? initialize
 
 // Inicialização única do Firestore com cache ilimitado e proteção de instância
 export const db = globalForFirebase.db || initializeFirestore(app, {
-    cacheSizeBytes: CACHE_SIZE_UNLIMITED
+    cacheSizeBytes: CACHE_SIZE_UNLIMITED,
+    localCache: undefined // Força comportamento padrão se houver erro de persistência
 });
 
 // Inicialização única do Auth e Storage
