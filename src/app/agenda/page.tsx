@@ -120,14 +120,8 @@ export default function AgendaPage() {
         createdAt: selectedReminder?.createdAt || new Date().toISOString(),
       };
 
-      const cleanData = Object.fromEntries(
-        Object.entries(reminderData).filter(([_, v]) => v !== undefined && v !== "")
-      );
-
-      // Garante que o ownerId esteja no objeto limpo para as regras de segurança
-      cleanData.ownerId = user.uid;
-
-      await setDoc(doc(firestore, 'reminders', reminderId), cleanData);
+      // Garante que o ownerId esteja presente para satisfazer as regras de segurança
+      await setDoc(doc(firestore, 'reminders', reminderId), reminderData);
       
       toast({ title: 'Lembrete salvo com sucesso!' });
       setIsDialogOpen(false);
@@ -136,7 +130,7 @@ export default function AgendaPage() {
       toast({ 
         variant: 'destructive', 
         title: 'Erro ao Salvar', 
-        description: 'Verifique sua conexão e permissões.' 
+        description: 'Verifique se você tem permissão para salvar este lembrete.' 
       });
     } finally {
       setIsSaving(false);

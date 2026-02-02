@@ -44,24 +44,24 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
-    // Métrica Mensal: Apenas período selecionado
+    // Métrica Mensal: Apenas período selecionado (Para Produção)
     const currentMonthProposals = allProposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
         return d >= fromDate && d <= effectiveToDate;
     });
 
-    // Métrica Acumulada: Mês anterior + Selecionado
+    // Métrica Acumulada: Mês anterior + Selecionado (Para Pipeline)
     const accumulatedProposals = allProposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
         return d >= startOfPrevMonth && d <= effectiveToDate;
     });
 
-    // 1. Total do Mês (Somente período selecionado)
+    // 1. Total do Mês (Puramente mensal)
     const totalPotentialCommission = currentMonthProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
 
-    // 2. Recebido no Mês (Somente período selecionado)
+    // 2. Recebido no Mês (Puramente mensal)
     const commissionReceivedProposals = currentMonthProposals.filter(p => p.commissionStatus === 'Paga');
     const totalAmountPaid = commissionReceivedProposals.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
     
@@ -111,7 +111,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       title: "Total de Comissões",
       value: formatCurrency(totalPotentialCommission),
       icon: Coins,
-      description: "Produção do Período",
+      description: "Produção do Mês",
       className: "border-border/50 bg-muted/10",
       valueClassName: "text-foreground font-light",
       proposals: allProposalsInPeriod,
@@ -121,7 +121,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       title: "Comissão Recebida",
       value: formatCurrency(totalAmountPaid),
       icon: CheckCircle,
-      description: "Pago no Período",
+      description: "Pago no Mês",
       className: "border-border/50 bg-green-100/10 dark:bg-green-900/20",
       valueClassName: "text-green-500 font-light",
       proposals: commissionReceivedProposals,
@@ -131,7 +131,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       title: "Saldo a Receber",
       value: formatCurrency(pendingAmount),
       icon: Hourglass,
-      description: "Acumulado (Mês Anterior + Vigente)",
+      description: "Acumulado (Mês Anterior + Atual)",
       className: "border-border/50 bg-orange-100/10 dark:bg-orange-900/20",
       valueClassName: "text-orange-500 font-light",
       proposals: proposalsForSaldoAReceber,
@@ -141,7 +141,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       title: "Comissão Esperada",
       value: formatCurrency(expectedAmount),
       icon: CircleDollarSign,
-      description: "Acumulado (Mês Anterior + Vigente)",
+      description: "Acumulado (Mês Anterior + Atual)",
       className: "border-border/50 bg-blue-100/10 dark:bg-blue-900/20",
       valueClassName: "text-blue-500 font-light",
       proposals: expectedCommissionProposals,
@@ -155,7 +155,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
             <Info className="h-4 w-4" />
             <AlertTitle>Inteligência de Fluxo</AlertTitle>
             <AlertDescription>
-                Os cartões **Total** e **Recebido** focam na produção estrita do mês. **Saldo a Receber** e **Esperada** trazem o histórico acumulado desde o mês anterior.
+                Os cartões **Total** e **Recebido** focam na produção estrita do mês selecionado. **Saldo a Receber** e **Comissão Esperada** trazem o histórico acumulado desde o mês anterior.
             </AlertDescription>
         </Alert>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 print:grid-cols-4 print:gap-2">

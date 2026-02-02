@@ -195,10 +195,11 @@ export default function FinancialPage() {
   }, []);
   
   const handleCommissionStatusUpdate = React.useCallback(async (proposal: ProposalWithCustomer, newStatus: CommissionStatus) => {
-    if (!firestore || !proposal.customer) return;
+    if (!firestore || !proposal.customer || !user) return;
   
     const proposalToUpdate: Partial<Proposal> = {
       commissionStatus: newStatus,
+      ownerId: user.uid
     };
 
     if (newStatus === 'Paga') {
@@ -219,10 +220,10 @@ export default function FinancialPage() {
       console.error('Error updating commission status:', error);
       toast({ variant: 'destructive', title: 'Erro ao Atualizar', description: 'Não foi possível atualizar o status da comissão.' });
     }
-  }, [firestore])
+  }, [firestore, user])
 
   const handleFormSubmit = async (data: CommissionFormValues) => {
-    if (!firestore || !selectedProposal) return;
+    if (!firestore || !selectedProposal || !user) return;
   
     const proposalToUpdate: Partial<Proposal> = {
       commissionStatus: data.commissionStatus as CommissionStatus,
@@ -230,6 +231,7 @@ export default function FinancialPage() {
       commissionPaymentDate: data.commissionPaymentDate
         ? parse(data.commissionPaymentDate, 'dd/MM/yyyy', new Date()).toISOString()
         : undefined,
+      ownerId: user.uid
     };
   
     try {

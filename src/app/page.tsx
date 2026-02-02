@@ -154,16 +154,17 @@ export default function DashboardPage() {
         return d >= startOfAccumulation && d <= effectiveToDate;
     });
 
+    // Métrica puramente mensal
     const totalDigitado = getSum(currentPeriodProposals);
     const reprovadoValue = getSum(currentPeriodProposals.filter(p => p.status === 'Reprovado'));
 
-    // Cards operacionais acumulados (exceto Reprovado e Total Digitado que são mensais)
+    // Cards operacionais acumulados (Mês anterior + Vigente)
     const pendenteProposals = accumulatedProposals.filter(p => p.status === 'Pendente');
     const emAndamentoProposals = accumulatedProposals.filter(p => p.status === 'Em Andamento');
     const aguardandoSaldoProposals = accumulatedProposals.filter(p => p.status === 'Aguardando Saldo');
     const saldoPagoProposals = accumulatedProposals.filter(p => p.status === 'Saldo Pago');
     
-    // Produção mensal para a meta
+    // Produção mensal para a meta (Apenas o mês vigente)
     const pagoProposals = currentPeriodProposals.filter(p => p.status === 'Pago');
     const pagoValue = getSum(pagoProposals);
 
