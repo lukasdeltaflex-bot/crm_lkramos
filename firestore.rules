@@ -6,13 +6,9 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Perfil do Usuário e Lembretes (Isolamento Total por UID)
-    match /users/{userId} {
+    // Perfil do Usuário e tudo dentro da pasta do usuário (Lembretes, etc)
+    match /users/{userId}/{document=**} {
       allow read, write: if signedIn() && request.auth.uid == userId;
-      
-      match /reminders/{reminderId} {
-        allow read, write: if signedIn() && request.auth.uid == userId;
-      }
     }
 
     // Regra para Clientes e Propostas baseada no ownerId
