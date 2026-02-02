@@ -14,7 +14,7 @@ service cloud.firestore {
       );
     }
 
-    // Perfil do Usuário e Lembretes (Subcoleção)
+    // Perfil do Usuário e Lembretes (Subcoleção Isolada)
     match /users/{userId} {
       allow read, write: if signedIn() && request.auth.uid == userId;
       
@@ -23,7 +23,7 @@ service cloud.firestore {
       }
     }
 
-    // Clientes e Propostas
+    // Clientes e Propostas vinculados ao dono
     match /customers/{customerId} {
       allow read, write: if isOwner();
     }

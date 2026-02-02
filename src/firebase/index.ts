@@ -16,7 +16,10 @@ export function initializeFirebase() {
     return sdks;
   }
 
-  return getSdks(getApp());
+  const app = getApp();
+  const sdks = getSdks(app);
+  setPersistence(sdks.auth, browserLocalPersistence);
+  return sdks;
 }
 
 export function getSdks(firebaseApp: FirebaseApp) {
