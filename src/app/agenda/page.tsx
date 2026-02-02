@@ -125,7 +125,7 @@ export default function AgendaPage() {
       toast({ 
         variant: 'destructive', 
         title: 'Falha ao Salvar', 
-        description: 'Verifique se você está conectado e tente novamente.' 
+        description: 'Verifique se você está conectado e tem permissão.' 
       });
     } finally {
       setIsSaving(false);
