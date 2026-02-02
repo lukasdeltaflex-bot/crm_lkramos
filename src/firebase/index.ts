@@ -15,7 +15,7 @@ export function initializeFirebase() {
 
   // Verifica se as chaves básicas estão presentes para evitar o erro auth/invalid-api-key
   if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "xxxxxxxx" || firebaseConfig.apiKey.trim() === "") {
-    console.error("❌ LK RAMOS: NEXT_PUBLIC_FIREBASE_API_KEY não configurada no arquivo .env");
+    console.error("❌ LK RAMOS: NEXT_PUBLIC_FIREBASE_API_KEY não configurada no arquivo .env.local");
     // Não inicializamos se a chave for inválida para evitar crash do Auth
     return null;
   }

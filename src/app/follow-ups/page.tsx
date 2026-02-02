@@ -33,6 +33,7 @@ export default function FollowUpsPage() {
   const [tab, setTab] = useState('pending');
   const [isSaving, setIsSaving] = useState(false);
 
+  // LOG DE DIAGNÓSTICO
   useEffect(() => {
     if (user) {
         console.log("📂 CRM DEBUG: Acessando Retornos em users/" + user.uid + "/followUps");
@@ -98,7 +99,7 @@ export default function FollowUpsPage() {
       setIsActionDialogOpen(false);
     } catch (e: any) {
       console.error("❌ CRM FIRESTORE ERROR:", e);
-      toast({ variant: 'destructive', title: 'Erro de Permissão', description: 'Verifique se o Project ID está correto.' });
+      toast({ variant: 'destructive', title: 'Erro de Permissão', description: 'Verifique se o Project ID está correto no Console.' });
     } finally {
       setIsSaving(false);
     }

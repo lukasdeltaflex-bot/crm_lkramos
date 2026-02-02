@@ -17,7 +17,7 @@ import {
   CheckCircle2,
   Calendar as CalendarIcon
 } from 'lucide-react';
-import { format, parse, startOfMonth, endOfMonth, isValid, startOfDay, subDays, endOfDay, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, isValid, startOfDay, subDays, endOfDay, subMonths, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatCurrency, cn } from '@/lib/utils';
 import type { Proposal, Customer, UserProfile } from '@/lib/types';
@@ -136,7 +136,7 @@ export default function DashboardPage() {
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
-    // Lógica de Pipeline: Do início do mês anterior até o fim do período selecionado
+    // Lógica de Pipeline: Mês Anterior + Atual
     const startOfPrevMonth = startOfMonth(subMonths(fromDate, 1));
 
     const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
@@ -156,7 +156,7 @@ export default function DashboardPage() {
     const totalDigitado = getSum(currentPeriodProposals);
     const reprovadoValue = getSum(currentPeriodProposals.filter(p => p.status === 'Reprovado'));
 
-    // Cards operacionais usam a base acumulada (Mês Anterior + Atual)
+    // Cards operacionais usam a base acumulada (Pipeline)
     const pendenteProposals = accumulatedProposals.filter(p => p.status === 'Pendente');
     const emAndamentoProposals = accumulatedProposals.filter(p => p.status === 'Em Andamento');
     const aguardandoSaldoProposals = accumulatedProposals.filter(p => p.status === 'Aguardando Saldo');
@@ -328,7 +328,7 @@ export default function DashboardPage() {
                     icon={XCircle} 
                     percentage={stats.percReprovado}
                     valueClassName="text-red-600 dark:text-red-400"
-                    className="bg-red-50/50 dark:bg-red-900/20 border-border/50 shadow-sm"
+                    className="bg-red-100/10 dark:bg-red-900/20 border-border/50 shadow-sm"
                     description="Produção Mensal"
                 />
             </div>
