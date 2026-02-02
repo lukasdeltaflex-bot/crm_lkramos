@@ -6,7 +6,7 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Perfil do Usuário e tudo dentro da pasta do usuário (Lembretes, etc)
+    // Acesso total a qualquer documento dentro da pasta do próprio usuário (perfil, lembretes, etc)
     match /users/{userId}/{document=**} {
       allow read, write: if signedIn() && request.auth.uid == userId;
     }
