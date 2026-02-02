@@ -281,6 +281,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         const proposal = row.original;
         const customer = proposal.customer;
         
+        // Busca exata por ID
         if (/^\d+$/.test(searchTerm)) {
             const isExactId = customer && String(customer.numericId) === searchTerm;
             if (isExactId) return true;
@@ -318,13 +319,11 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     const statusColumn = table.getColumn('commissionStatus');
     const dateColumn = table.getColumn('commissionPaymentDate');
     
-    // Regra Avançada solicitada pelo usuário
     if (statusFilter === 'Todos') {
         statusColumn?.setFilterValue('__CUSTOM_FILTER_TODOS__');
         dateColumn?.setFilterValue(appliedDateRange);
     } else if (statusFilter === 'Paga') {
         statusColumn?.setFilterValue('Paga');
-        // Se clicar em Pagas e não tiver filtro manual de data, mostra apenas o mês vigente
         if (!appliedDateRange) {
             const now = new Date();
             dateColumn?.setFilterValue({ from: startOfMonth(now), to: endOfMonth(now) });
@@ -336,16 +335,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         dateColumn?.setFilterValue(appliedDateRange);
     }
   }, [statusFilter, appliedDateRange, table]);
-
-  React.useEffect(() => {
-    const mainStatusColumn = table.getColumn('status');
-    if (statusFilter === 'Todos') {
-        const allStatusesExceptReprovado = proposalStatuses.filter(s => s !== 'Reprovado');
-        mainStatusColumn?.setFilterValue(allStatusesExceptReprovado);
-    } else {
-        mainStatusColumn?.setFilterValue(undefined);
-    }
-  }, [statusFilter, table]);
 
   const idToLabelMap: { [key: string]: string } = {
     customerName: 'Cliente',

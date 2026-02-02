@@ -12,7 +12,7 @@ const firebaseConfig = {
   appId: "1:341426752875:web:348f88597e5b9b2057d02e",
 };
 
-// Singleton blindado para evitar "Unexpected State" no Firestore durante HMR ou múltiplas inicializações
+// Singleton blindado para evitar "Unexpected State" no Firestore durante HMR
 const globalForFirebase = globalThis as unknown as {
   app: FirebaseApp | undefined;
   auth: Auth | undefined;
@@ -22,7 +22,7 @@ const globalForFirebase = globalThis as unknown as {
 
 const app = globalForFirebase.app || (getApps().length === 0 ? initializeApp(firebaseConfig) : getApp());
 
-// Inicializa o Firestore apenas uma vez com configurações de cache e singleton protegido
+// Inicializa o Firestore apenas uma vez com singleton protegido
 const db = globalForFirebase.db || initializeFirestore(app, {
     cacheSizeBytes: CACHE_SIZE_UNLIMITED,
 });

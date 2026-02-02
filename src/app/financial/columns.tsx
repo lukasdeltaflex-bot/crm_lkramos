@@ -247,17 +247,21 @@ export const getColumns = (
     },
     filterFn: (row, id, filterValue) => {
         const status = row.getValue(id) as string;
-        const paymentDateStr = row.original.commissionPaymentDate;
-        const now = new Date();
+        const mainStatus = row.original.status;
+        
+        // Regra Ouro: Reprovadas e Canceladas nunca aparecem no financeiro
+        if (mainStatus === 'Reprovado') return false;
 
         if (filterValue === '__CUSTOM_FILTER_TODOS__') {
-            // Regra: Pendente, Parcial ou Vazio: Sempre mostra
+            // Sempre mostra: Vazio, Pendente ou Parcial (qualquer período)
             if (!status || status === 'Pendente' || status === 'Parcial') return true;
             
-            // Regra: Pagas: Somente do mês vigente
+            // Pagas: Somente do mês vigente
             if (status === 'Paga') {
+                const paymentDateStr = row.original.commissionPaymentDate;
                 if (!paymentDateStr) return false;
                 const pDate = new Date(paymentDateStr);
+                const now = new Date();
                 return isSameMonth(pDate, now) && pDate.getFullYear() === now.getFullYear();
             }
             return false;
@@ -307,13 +311,6 @@ export const getColumns = (
     header: 'Status Proposta',
     id: 'status',
     enableHiding: true,
-    filterFn: (row, id, filterValue) => {
-        const status = row.getValue(id) as string;
-        if (Array.isArray(filterValue)) {
-            return filterValue.includes(status);
-        }
-        return true;
-    }
   },
   {
     id: 'actions',
