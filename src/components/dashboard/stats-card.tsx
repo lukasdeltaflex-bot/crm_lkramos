@@ -17,6 +17,11 @@ interface StatsCardProps {
   valueClassName?: string;
 }
 
+/**
+ * StatsCard com visual premium LK RAMOS.
+ * - Bordas sutis: border-border/50
+ * - Valores monetários font-normal
+ */
 export function StatsCard({ title, value, icon: Icon, description, percentage, className, valueClassName }: StatsCardProps) {
   return (
     <Card className={cn('hover:shadow-md transition-all group relative overflow-hidden border border-border/50 bg-card shadow-sm', className)}>

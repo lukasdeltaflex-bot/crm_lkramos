@@ -4,7 +4,7 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 /**
- * CONFIGURAÇÃO DIRETA DO FIREBASE (HARDCODED PARA DEBUG)
+ * RESET TOTAL FIREBASE - CONFIGURAÇÃO DIRETA
  * 
  * ATENÇÃO: Substitua os valores abaixo pelos dados reais do seu projeto
  * obtidos em: Firebase Console -> Configurações do Projeto -> Seus Apps.
@@ -24,4 +24,21 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+
+/**
+ * Exportação centralizada exigida pelo ClientProvider.
+ */
+export function initializeFirebase() {
+  if (typeof window !== 'undefined' && app.options.projectId !== 'seu-projeto') {
+    console.log("🚀 LK RAMOS - CONEXÃO FIREBASE ATIVA:", app.options.projectId);
+  }
+  
+  return {
+    firebaseApp: app,
+    auth,
+    firestore: db,
+    storage
+  };
+}
+
 export default app;

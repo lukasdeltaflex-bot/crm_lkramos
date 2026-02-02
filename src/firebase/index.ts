@@ -1,22 +1,9 @@
 'use client';
 
-import app, { auth, db, storage } from './firebase';
-
 /**
- * Exportação centralizada exigida pelo ClientProvider e hooks.
+ * Hub central de exportações do Firebase.
+ * Redireciona para os módulos específicos para evitar dependências circulares.
  */
-export function initializeFirebase() {
-  if (typeof window !== 'undefined' && app.options.projectId !== 'seu-projeto') {
-    console.log("🚀 LK RAMOS - CONEXÃO FIREBASE ATIVA:", app.options.projectId);
-  }
-  
-  return {
-    firebaseApp: app,
-    auth,
-    firestore: db,
-    storage
-  };
-}
 
 export * from './firebase';
 export { db as firestore } from './firebase'; 

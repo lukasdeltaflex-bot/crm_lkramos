@@ -20,7 +20,6 @@ interface UserAuthState {
 
 export interface FirebaseContextState {
   areServicesAvailable: boolean;
-  firebaseApp: FirebaseApp | null;
   firestore: Firestore | null;
   auth: Auth | null;
   storage: Storage | null;
@@ -54,7 +53,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
 
   const contextValue = useMemo((): FirebaseContextState => ({
     areServicesAvailable: true,
-    firebaseApp: null, // Not directly exposed here to simplify
     firestore: db,
     auth: authInstance,
     storage: storageInstance,

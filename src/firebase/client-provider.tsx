@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, type ReactNode } from 'react';
 import { FirebaseProvider } from '@/firebase/provider';
-import { initializeFirebase } from '@/firebase';
+import { initializeFirebase } from './firebase'; // Importação direta para evitar ciclo
 import { Loader2 } from 'lucide-react';
 
 interface FirebaseClientProviderProps {
@@ -11,7 +11,6 @@ interface FirebaseClientProviderProps {
 
 /**
  * Provedor que garante a inicialização do Firebase apenas no lado do cliente.
- * Isso evita erros de SSR (Server Side Rendering) com variáveis de ambiente.
  */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
   const [firebaseServices, setFirebaseServices] = useState<any>(null);
@@ -37,15 +36,8 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
     );
   }
 
-  // Se os serviços falharem ao carregar (ex: config vazia), o app não deve quebrar aqui, 
-  // mas o FirebaseProvider/AuthGuard lidará com a falta de 'user'.
   return (
-    <FirebaseProvider
-      firebaseApp={firebaseServices?.firebaseApp}
-      auth={firebaseServices?.auth}
-      firestore={firebaseServices?.firestore}
-      storage={firebaseServices?.storage}
-    >
+    <FirebaseProvider>
       {children}
     </FirebaseProvider>
   );
