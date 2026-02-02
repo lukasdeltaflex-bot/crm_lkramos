@@ -38,36 +38,20 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
         ? ('original' in rows[0] ? (rows as Row<ProposalWithCustomer>[]).map(r => r.original) : (rows as ProposalWithCustomer[]))
         : [];
     
-    if (allProposals.length === 0) {
-        return {
-            totalPotentialCommission: 0,
-            totalAmountPaid: 0,
-            pendingAmount: 0,
-            expectedAmount: 0,
-            allProposalsInPeriod: [],
-            commissionReceivedProposals: [],
-            proposalsForSaldoAReceber: [],
-            expectedCommissionProposals: [],
-            paidPercentage: 0,
-            pendingPercentage: 0,
-            expectedPercentage: 0,
-        };
-    }
-
     const fromDate = currentMonthRange.from || new Date();
     const toDate = currentMonthRange.to || new Date();
     const startOfPrevMonth = startOfMonth(subMonths(fromDate, 1));
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
-    // Métrica Mensal (Apenas mês atual para produção real)
+    // Métrica Mensal (Total e Recebido)
     const currentMonthProposals = allProposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
         return d >= fromDate && d <= effectiveToDate;
     });
 
-    // Métrica Acumulada (Desde mês passado para saldo a receber e esperado)
+    // Métrica Acumulada (Saldo a Receber e Esperada)
     const accumulatedProposals = allProposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
@@ -167,7 +151,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
             <Info className="h-4 w-4" />
             <AlertTitle>Inteligência de Fluxo</AlertTitle>
             <AlertDescription>
-                Os cartões **Total** e **Recebido** focam no mês atual. **Saldo a Receber** e **Esperada** trazem o histórico desde o mês anterior.
+                Os cartões **Total** e **Recebido** focam no mês atual. **Saldo a Receber** e **Esperada** trazem o histórico acumulado desde o mês anterior.
             </AlertDescription>
         </Alert>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 print:grid-cols-4 print:gap-2">
