@@ -6,15 +6,7 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Regra genérica para documentos vinculados ao proprietário via ownerId
-    function isOwner() {
-      return signedIn() && (
-        (resource == null && request.resource.data.ownerId == request.auth.uid) ||
-        (resource != null && resource.data.ownerId == request.auth.uid)
-      );
-    }
-
-    // Perfil do Usuário e Lembretes (Subcoleção Isolada por UID)
+    // Perfil do Usuário e Lembretes (Isolamento Total por UID)
     match /users/{userId} {
       allow read, write: if signedIn() && request.auth.uid == userId;
       
@@ -23,7 +15,14 @@ service cloud.firestore {
       }
     }
 
-    // Clientes e Propostas vinculados ao dono (ownerId)
+    // Regra para Clientes e Propostas baseada no ownerId
+    function isOwner() {
+      return signedIn() && (
+        (resource == null && request.resource.data.ownerId == request.auth.uid) ||
+        (resource != null && resource.data.ownerId == request.auth.uid)
+      );
+    }
+
     match /customers/{customerId} {
       allow read, write: if isOwner();
     }

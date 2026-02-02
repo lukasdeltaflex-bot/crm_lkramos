@@ -135,7 +135,7 @@ export default function DashboardPage() {
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
-    // Início do mês anterior para cards acumulativos
+    // Lógica de Acúmulo: Mês anterior + Selecionado
     const startOfAccumulation = startOfMonth(subMonths(fromDate, 1));
 
     const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
@@ -155,11 +155,13 @@ export default function DashboardPage() {
     const totalDigitado = getSum(currentPeriodProposals);
     const reprovadoValue = getSum(currentPeriodProposals.filter(p => p.status === 'Reprovado'));
 
+    // Cards de Pipeline Operacional (Acumulado)
     const pendenteProposals = accumulatedProposals.filter(p => p.status === 'Pendente');
     const emAndamentoProposals = accumulatedProposals.filter(p => p.status === 'Em Andamento');
     const aguardandoSaldoProposals = accumulatedProposals.filter(p => p.status === 'Aguardando Saldo');
     const saldoPagoProposals = accumulatedProposals.filter(p => p.status === 'Saldo Pago');
     
+    // Cards de Produção (Apenas Mensal)
     const pagoProposals = currentPeriodProposals.filter(p => p.status === 'Pago');
     const pagoValue = getSum(pagoProposals);
 
@@ -257,7 +259,7 @@ export default function DashboardPage() {
             currentProduction={stats.totalPagoMeta} 
             totalDigitized={stats.totalDigitado}
             isPrivacyMode={isPrivacyMode}
-            className="w-full"
+            className="w-full border-border/50"
             onValueClick={() => handleShowDetails('Contratos Pagos no Período', [...stats.proposals.pago, ...stats.proposals.todos.filter(p => p.status === 'Saldo Pago')])}
         />
 

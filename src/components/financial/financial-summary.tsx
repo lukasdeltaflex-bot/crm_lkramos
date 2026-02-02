@@ -151,7 +151,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
 
   return (
     <div className='space-y-4'>
-        <Alert variant="default" className="bg-secondary/50 print:hidden border-l-primary">
+        <Alert variant="default" className="bg-secondary/50 print:hidden border-l-primary border border-border/50">
             <Info className="h-4 w-4" />
             <AlertTitle>Visão de Pipeline</AlertTitle>
             <AlertDescription>
