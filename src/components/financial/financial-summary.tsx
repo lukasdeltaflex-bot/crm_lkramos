@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -128,7 +129,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       title: "Saldo a Receber",
       value: formatCurrency(pendingAmount),
       icon: Hourglass,
-      description: "Pipeline (Mês Ant + Atual)",
+      description: "Volume Geral Acumulado",
       className: "border-border/50 bg-orange-100/10 dark:bg-orange-900/20 shadow-sm",
       valueClassName: "text-orange-500 font-normal",
       proposals: proposalsForSaldoAReceber,
@@ -138,7 +139,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       title: "Comissão Esperada",
       value: formatCurrency(expectedAmount),
       icon: CircleDollarSign,
-      description: "Pipeline (Mês Ant + Atual)",
+      description: "Volume Geral Acumulado",
       className: "border-border/50 bg-blue-100/10 dark:bg-blue-900/20 shadow-sm",
       valueClassName: "text-blue-500 font-normal",
       proposals: expectedCommissionProposals,

@@ -1,3 +1,4 @@
+
 'use client';
 import React from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -282,7 +283,7 @@ export default function DashboardPage() {
                     percentage={stats.percPendente}
                     valueClassName="text-purple-600 dark:text-purple-400 font-normal"
                     className="bg-purple-50/50 dark:bg-purple-900/20 border-border/50 shadow-sm"
-                    description="Pipeline (Mês Ant + Atual)"
+                    description="Volume Geral Acumulado"
                 />
             </div>
             <div className="cursor-pointer" onClick={() => handleShowDetails('Em Andamento (Acumulado)', stats.proposals.emAndamento)}>
@@ -293,7 +294,7 @@ export default function DashboardPage() {
                     percentage={stats.percEmAndamento}
                     valueClassName="text-yellow-600 dark:text-yellow-400 font-normal"
                     className="bg-yellow-50/50 dark:bg-yellow-900/20 border-border/50 shadow-sm"
-                    description="Pipeline (Mês Ant + Atual)"
+                    description="Volume Geral Acumulado"
                 />
             </div>
         </div>
@@ -307,7 +308,7 @@ export default function DashboardPage() {
                     percentage={stats.percAguardandoSaldo}
                     valueClassName="text-blue-600 dark:text-blue-400 font-normal"
                     className="bg-blue-50/50 dark:bg-blue-900/20 border-border/50 shadow-sm"
-                    description="Pipeline (Mês Ant + Atual)"
+                    description="Volume Geral Acumulado"
                 />
             </div>
             <div className="cursor-pointer" onClick={() => handleShowDetails('Saldo Pago (Acumulado)', stats.proposals.saldoPago)}>
@@ -318,7 +319,7 @@ export default function DashboardPage() {
                     percentage={stats.percSaldoPago}
                     valueClassName="text-orange-600 dark:text-orange-400 font-normal"
                     className="bg-orange-50/50 dark:bg-orange-900/20 border-border/50 shadow-sm"
-                    description="Pipeline (Mês Ant + Atual)"
+                    description="Volume Geral Acumulado"
                 />
             </div>
             <div className="cursor-pointer" onClick={() => handleShowDetails('Reprovado (Mês)', stats.proposals.reprovado)}>
