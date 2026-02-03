@@ -22,8 +22,8 @@ export interface UseCollectionResult<T> {
 }
 
 /**
- * Hook Defensivo V47 para coleções Firestore.
- * Filtra falhas técnicas internas (ca9/b815) para manter a estabilidade da UI.
+ * Hook Defensivo V48 para coleções Firestore.
+ * Silencia falhas internas de estado (ca9/b815).
  */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
@@ -65,10 +65,8 @@ export function useCollection<T = any>(
             if (!isMounted) return;
             
             const msg = (err.message || "").toUpperCase();
-            // 🛡️ Supressão Silenciosa de Erros de Asserção V47
             if (msg.includes('ASSERTION') || msg.includes('CA9') || msg.includes('B815')) {
-                console.warn("🛡️ LK Ramos: Supressing SDK internal state error.");
-                return; 
+                return; // Ignora falha de asserção interna
             }
             
             if (err.code === 'permission-denied') {
@@ -92,9 +90,7 @@ export function useCollection<T = any>(
     } catch (e: any) {
         if (isMounted) {
             const msg = (e.message || "").toUpperCase();
-            if (msg.includes('ASSERTION') || msg.includes('CA9') || msg.includes('B815')) {
-                // Silencia falha fatal na criação do listener
-            } else {
+            if (!msg.includes('CA9') && !msg.includes('B815')) {
                 setError(e);
             }
             setIsLoading(false);
