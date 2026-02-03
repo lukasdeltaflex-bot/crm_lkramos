@@ -12,7 +12,7 @@ const firebaseConfig = {
   appId: "1:341426752875:web:348f88597e5b9b2057d02e",
 };
 
-// 🛡️ SINGLETON ABSOLUTO V28: Bloqueio de Re-inicialização no globalThis
+// 🛡️ SINGLETON ABSOLUTO V29: Bloqueio imutável no globalThis
 const g = globalThis as any;
 
 if (!g._firebaseApp) {
@@ -20,12 +20,11 @@ if (!g._firebaseApp) {
 }
 const app: FirebaseApp = g._firebaseApp;
 
-// Firestore Singleton Blindado com Long Polling Forçado
 if (!g._firebaseDb) {
     try {
         g._firebaseDb = initializeFirestore(app, {
             cacheSizeBytes: CACHE_SIZE_UNLIMITED,
-            experimentalForceLongPolling: true, // Crucial para evitar erro ca9 em nuvem
+            experimentalForceLongPolling: true, // Crucial para estabilidade em nuvem
         });
     } catch (e) {
         g._firebaseDb = getFirestore(app);

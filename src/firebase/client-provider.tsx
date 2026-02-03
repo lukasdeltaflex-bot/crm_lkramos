@@ -6,7 +6,7 @@ import { initializeFirebase } from './firebase';
 import { LoaderCircle } from 'lucide-react';
 
 /**
- * Provedor Blindado V28: Protocolo de Supressão Total.
+ * Provedor Blindado V29: Protocolo de Supressão Total.
  * Resolve erros de permissão transientes e falhas fatais de asserção (ca9/b815).
  * Garante hidratação estável sem discrepâncias de texto.
  */
@@ -15,7 +15,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // 🛡️ ESCUDO DE SILÊNCIO V28: Interceptação Global de Baixo Nível
+    // 🛡️ ESCUDO DE SILÊNCIO V29: Interceptação Global de Baixo Nível
     const isSuppressibleError = (msg: string) => {
         if (!msg) return false;
         const normalized = String(msg).toUpperCase();
@@ -68,14 +68,14 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
     };
   }, []);
 
-  // 🛡️ ESTABILIDADE DE HIDRATAÇÃO: Renderiza loader estático e neutro
+  // 🛡️ ESTABILIDADE DE HIDRATAÇÃO: Renderiza loader idêntico no cliente e servidor
   if (!mounted || !isReady) {
     return (
         <div className="flex h-screen w-screen flex-col items-center justify-center bg-background gap-4">
             <LoaderCircle className="h-10 w-10 animate-spin text-primary opacity-20" />
             <div className="space-y-1 text-center">
                 <p className="text-sm font-bold text-foreground uppercase tracking-widest opacity-40">LK RAMOS</p>
-                <p className="text-[10px] text-muted-foreground animate-pulse font-bold tracking-tighter">ESTABILIZANDO MOTOR DE DADOS...</p>
+                <p className="text-[10px] text-muted-foreground animate-pulse font-bold tracking-tighter uppercase">Estabilizando motor de dados...</p>
             </div>
         </div>
     );

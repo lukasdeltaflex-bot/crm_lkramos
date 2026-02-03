@@ -21,7 +21,8 @@ export interface UseDocResult<T> {
 }
 
 /**
- * Hook Defensivo V28 para documentos Firestore.
+ * Hook Defensivo V29 para documentos Firestore.
+ * Silencia inconsistências de asserção interna do SDK.
  */
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
@@ -63,9 +64,8 @@ export function useDoc<T = any>(
             if (!isMounted) return;
 
             const msg = (err.message || "").toUpperCase();
-            // 🛡️ Filtro de erro técnico V28: ca9/b815/assertion
+            // 🛡️ Filtro de erro técnico V29: ca9/b815/assertion
             if (msg.includes('ASSERTION') || msg.includes('CA9') || msg.includes('B815')) {
-                console.warn("🛡️ SDK Internal state anomaly ignored.");
                 return;
             }
 
