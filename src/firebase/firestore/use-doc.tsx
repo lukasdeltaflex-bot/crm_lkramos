@@ -21,7 +21,7 @@ export interface UseDocResult<T> {
 }
 
 /**
- * Hook Defensivo V15 para documentos Firestore.
+ * Hook Defensivo V24 para documentos Firestore.
  */
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
@@ -62,28 +62,28 @@ export function useDoc<T = any>(
           (err: FirestoreError) => {
             if (!isMounted) return;
 
-            // SILENCIADOR V15: Ignora inconsistências do SDK
-            const isAssertion = err.message?.includes('INTERNAL ASSERTION FAILED') || 
-                               err.message?.includes('ca9') || 
-                               err.message?.includes('b815');
-
-            if (isAssertion) {
+            // 🛡️ FILTRO V24: Silenciador de inconsistências do SDK (ca9/b815)
+            const msg = (err.message || "").toUpperCase();
+            if (msg.includes('INTERNAL ASSERTION FAILED') || msg.includes('CA9') || msg.includes('B815')) {
                 return;
             }
 
-            const contextualError = new FirestorePermissionError({
-              operation: 'get',
-              path: memoizedDocRef.path,
-            });
-
-            setError(contextualError);
+            if (err.code === 'permission-denied') {
+                const contextualError = new FirestorePermissionError({
+                  operation: 'get',
+                  path: memoizedDocRef.path,
+                });
+                setError(contextualError);
+                errorEmitter.emit('permission-error', contextualError);
+            } else {
+                setError(err);
+            }
             setData(null);
             setIsLoading(false);
-            errorEmitter.emit('permission-error', contextualError);
           }
         );
     } catch (e: any) {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
     }
 
     return () => {
@@ -91,9 +91,7 @@ export function useDoc<T = any>(
       if (unsubscribe) {
         try {
             unsubscribe();
-        } catch (e) {
-            // Cleanup silencioso
-        }
+        } catch (e) {}
       }
     };
   }, [memoizedDocRef]);

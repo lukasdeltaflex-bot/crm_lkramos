@@ -6,17 +6,14 @@ import { initializeFirebase } from './firebase';
 import { Loader2 } from 'lucide-react';
 
 /**
- * Provedor Blindado V23: Protocolo de Supressão Total.
- * Intercepta e silencia erros fatais do Firebase (ca9/b815) e resolve erros de hidratação.
+ * Provedor Blindado V24: Protocolo de Supressão Total.
+ * Intercepta erros fatais do Firebase (ca9/b815) e resolve erros de hidratação.
  */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
   const [mounted, setMounted] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    setMounted(true);
-    
-    // 🛡️ ESCUDO DE SILÊNCIO V23: Interceptação Global para evitar o Overlay do Next.js
+    // 🛡️ ESCUDO DE SILÊNCIO V24: Interceptação Global para evitar o Overlay do Next.js
     const isSuppressibleError = (msg: string) => {
         if (!msg) return false;
         const normalized = String(msg).toUpperCase();
@@ -52,9 +49,9 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
         initializeFirebase();
     } catch (error) {
         // Silencioso
-    } finally {
-        setIsInitializing(false);
     }
+
+    setMounted(true);
 
     return () => {
       window.removeEventListener('error', handleGlobalError, true);
@@ -63,21 +60,9 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
     };
   }, []);
 
-  // 🛡️ PROTOCOLO ANTI-HIDRATAÇÃO: Retorna null ou loader apenas após o mount no cliente
+  // 🛡️ PROTOCOLO ANTI-HIDRATAÇÃO: Renderiza apenas no cliente após mount
   if (!mounted) {
     return null; 
-  }
-
-  if (isInitializing) {
-    return (
-        <div className="flex h-screen w-screen flex-col items-center justify-center bg-background gap-4 text-center p-6">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <div className="space-y-1">
-                <p className="text-sm font-bold text-foreground uppercase tracking-widest">LK RAMOS</p>
-                <p className="text-[10px] text-muted-foreground animate-pulse font-bold">ESTABILIZANDO MOTOR DE DADOS V23...</p>
-            </div>
-        </div>
-    );
   }
 
   return (

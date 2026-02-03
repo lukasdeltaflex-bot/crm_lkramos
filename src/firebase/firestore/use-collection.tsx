@@ -31,8 +31,8 @@ export interface InternalQuery extends Query<DocumentData> {
 }
 
 /**
- * Hook Defensivo V23 para coleções Firestore.
- * Ignora erros de estado interno (ca9/b815) para manter a interface estável.
+ * Hook Defensivo V24 para coleções Firestore.
+ * Silencia erros de estado interno (ca9/b815) para manter a interface estável.
  */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
@@ -73,9 +73,10 @@ export function useCollection<T = any>(
           (err: FirestoreError) => {
             if (!isMounted) return;
             
-            // 🛡️ FILTRO V23: Silenciamento de inconsistências técnicas
+            // 🛡️ FILTRO V24: Silenciamento de inconsistências internas do Firebase (ca9/b815)
             const msg = (err.message || "").toUpperCase();
             if (msg.includes('INTERNAL ASSERTION FAILED') || msg.includes('CA9') || msg.includes('B815')) {
+                console.warn("Firebase Shield: Silenced internal assertion error to prevent crash.");
                 return; 
             }
             
