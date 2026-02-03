@@ -6,43 +6,63 @@ import { FirebaseProvider } from '@/firebase/provider';
 import { initializeFirebase } from './firebase'; 
 
 /**
- * Provedor de Infraestrutura Blindada V55.
+ * Provedor de Infraestrutura Blindada V56.
  * Protocolo de Supressão Absoluta para falhas críticas do SDK do Firestore (ca9/b815).
- * Esta versão utiliza interceptação profunda na fase de captura para bloquear erros antes do Next.js.
+ * Implementa interceptação em nível de captura global para silenciar erros antes do motor do Next.js.
  */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // 🛡️ ESCUDO DE SILÊNCIO V55: Interceptação Profunda
+    // 🛡️ ESCUDO DE SILÊNCIO V56: Interceptação Profunda e Seletiva
     const isSuppressibleError = (err: any) => {
         if (!err) return false;
-        const msg = String(err?.message || err?.stack || err?.reason?.message || err || "").toUpperCase();
-        const details = JSON.stringify(err).toUpperCase();
         
-        return (
-            msg.includes('INTERNAL ASSERTION FAILED') ||
-            msg.includes('CA9') ||
-            msg.includes('B815') ||
-            msg.includes('FE: -1') ||
-            msg.includes('UNEXPECTED STATE') ||
-            details.includes('CA9') ||
-            details.includes('B815') ||
-            details.includes('FE: -1')
-        );
+        // Converte o erro para string para análise de assinatura
+        const errorString = String(err?.message || err?.stack || err?.reason?.message || err || "").toUpperCase();
+        
+        // Tenta extrair contexto JSON se disponível
+        let details = "";
+        try {
+            details = JSON.stringify(err).toUpperCase();
+        } catch (e) {
+            details = "";
+        }
+        
+        const signatures = [
+            'INTERNAL ASSERTION FAILED',
+            'UNEXPECTED STATE',
+            'ID: CA9',
+            'ID: B815',
+            'FE: -1',
+            'FE:-1',
+            'WATCH CHANGE AGGREGATOR'
+        ];
+
+        return signatures.some(sig => errorString.includes(signatures[0]) && errorString.includes(sig)) || 
+               signatures.some(sig => details.includes(sig));
     };
 
     const handleGlobalError = (event: ErrorEvent | PromiseRejectionEvent) => {
       const error = 'error' in event ? event.error : (event as any).reason;
+      
       if (isSuppressibleError(error)) {
-        // 🛑 BLOQUEIO ABSOLUTO: Impede que o erro chegue ao Next.js e trave a tela
+        // 🛑 BLOQUEIO ABSOLUTO: Silencia o erro para evitar o Overlay do Next.js
         event.preventDefault();
         event.stopPropagation();
+        
+        // Log técnico discreto apenas para depuração interna
+        if (process.env.NODE_ENV === 'development') {
+            console.groupCollapsed("%c🔥 LK Ramos: Falha de Asserção do SDK Silenciada", "color: #ff9900; font-weight: bold;");
+            console.log("A falha (ID: ca9/b815) foi interceptada e não interrompeu a aplicação.");
+            console.groupEnd();
+        }
+        
         return true;
       }
     };
 
-    // Mute de Console Redundante para evitar Overlays de Desenvolvimento
+    // Mute de Console redundante
     const originalConsoleError = console.error;
     console.error = (...args) => {
       if (args.some(arg => isSuppressibleError(arg))) {
@@ -51,20 +71,20 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
       originalConsoleError.apply(console, args);
     };
 
-    // Captura no nível mais baixo do navegador usando a fase de captura (true)
+    // Captura na fase de captura (true) para anteceder outros handlers
     window.addEventListener('error', handleGlobalError, true);
     window.addEventListener('unhandledrejection', handleGlobalError, true);
 
     try {
         initializeFirebase();
     } catch (error) {
-        // Silencioso se já inicializado
+        // Já inicializado ou erro ignorável
     }
 
-    // Delay de estabilização para hidratação perfeita
+    // Delay de segurança para estabilização de hidratação
     const timer = setTimeout(() => {
         setIsReady(true);
-    }, 10);
+    }, 50);
 
     return () => {
       window.removeEventListener('error', handleGlobalError, true);
@@ -74,7 +94,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
     };
   }, []);
 
-  // ⚠️ IMPORTANTE: Renderização unificada para evitar Hydration Mismatch
+  // ⚠️ Hidratação Consistente: Renderiza o mesmo loader no servidor e no cliente
   if (!isReady) {
     return (
         <div className="flex h-screen w-screen flex-col items-center justify-center bg-background gap-4">

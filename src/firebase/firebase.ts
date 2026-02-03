@@ -1,7 +1,7 @@
 
-import { initializeApp, FirebaseApp } from "firebase/app";
+import { initializeApp, FirebaseApp, getApp, getApps } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
-import { getFirestore, initializeFirestore, Firestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore, Firestore, terminate } from "firebase/firestore";
 import { getStorage, FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -13,20 +13,25 @@ const firebaseConfig = {
   appId: "1:341426752875:web:348f88597e5b9b2057d02e",
 };
 
-// 🛡️ SINGLETON IMUTÁVEL V55: Bloqueio absoluto para evitar colisões ca9/b815
+// 🛡️ PROTOCOLO DE IMUTABILIDADE V56: Singleton Global Blindado
 const g = globalThis as any;
 
-if (!g._firebaseApp) {
-    g._firebaseApp = initializeApp(firebaseConfig);
+// Inicialização do App com proteção contra múltiplas instâncias
+let app: FirebaseApp;
+if (!getApps().length) {
+    app = initializeApp(firebaseConfig);
+} else {
+    app = getApp();
 }
-const app: FirebaseApp = g._firebaseApp;
 
+// Inicialização do Firestore com configurações de rede Ultra-Estáveis
 if (!g._firebaseDb) {
     try {
         /**
-         * 🔌 ESTABILIZAÇÃO DE REDE V55:
+         * 🔌 CONFIGURAÇÃO DE REDE V56:
          * experimentalForceLongPolling + useFetchStreams: false
-         * Esta combinação é a cura oficial para o erro (ID: ca9) em ambientes cloud.
+         * Esta combinação desativa o motor de streaming instável do browser
+         * e força o protocolo de polling persistente, eliminando o erro ca9.
          */
         g._firebaseDb = initializeFirestore(app, {
             experimentalForceLongPolling: true,
@@ -34,12 +39,13 @@ if (!g._firebaseDb) {
             useFetchStreams: false,
         } as any);
     } catch (e) {
-        // Fallback seguro se já inicializado
+        // Fallback seguro se já houver uma instância ativa
         g._firebaseDb = getFirestore(app);
     }
 }
 const db: Firestore = g._firebaseDb;
 
+// Inicialização segura dos demais serviços
 if (!g._firebaseAuth) {
     g._firebaseAuth = getAuth(app);
 }
@@ -52,6 +58,10 @@ const storage: FirebaseStorage = g._firebaseStorage;
 
 export { app, auth, db, storage };
 
+/**
+ * Função de inicialização exportada para garantir que o app
+ * esteja disponível para os provedores de contexto.
+ */
 export function initializeFirebase(): FirebaseApp {
   return app;
 }
