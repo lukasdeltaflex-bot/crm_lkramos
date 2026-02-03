@@ -147,8 +147,7 @@ export default function DashboardPage() {
         return d >= fromDate && d <= effectiveToDate;
     });
 
-    // 2. Propostas PAGAS no período (Foco Financeiro Real)
-    // REGRA SOLICITADA: Conta se pagou ao cliente neste mês, vindo do mês passado ou não.
+    // 2. Propostas PAGAS no período (Lógica solicitada: Data de Pagamento ao Cliente)
     const paidInPeriod = proposals.filter(p => {
         if (p.status !== 'Pago' && p.status !== 'Saldo Pago') return false;
         if (!p.datePaidToClient) return false;
@@ -156,7 +155,7 @@ export default function DashboardPage() {
         return d >= fromDate && d <= effectiveToDate;
     });
 
-    // 3. Propostas acumuladas para cards de pipeline (Pendente, Em Andamento, etc.)
+    // 3. Propostas acumuladas para cards de pipeline
     const accumulatedProposals = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
