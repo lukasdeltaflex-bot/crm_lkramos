@@ -22,7 +22,7 @@ export interface UseCollectionResult<T> {
 }
 
 /**
- * Hook Defensivo V51 para coleções Firestore.
+ * Hook Defensivo V52 para coleções Firestore.
  * Silencia falhas internas de estado (ca9/b815) tratadas pelo Escudo de Infraestrutura.
  */
 export function useCollection<T = any>(

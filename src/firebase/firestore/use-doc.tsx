@@ -21,7 +21,7 @@ export interface UseDocResult<T> {
 }
 
 /**
- * Hook Defensivo V51 para documentos Firestore.
+ * Hook Defensivo V52 para documentos Firestore.
  * Silencia falhas internas de estado (ca9/b815) tratadas pelo Escudo de Infraestrutura.
  */
 export function useDoc<T = any>(
