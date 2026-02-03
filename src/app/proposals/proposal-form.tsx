@@ -36,7 +36,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { ProposalAttachmentUploader } from '@/components/proposals/proposal-attachment-uploader';
 import { useUser } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
@@ -182,7 +182,6 @@ export function ProposalForm({
 
   useEffect(() => {
     if (firestore && !proposal?.id) {
-      // Usando 'loanProposals' para consistência com as regras de segurança
       setTempProposalId(doc(collection(firestore, 'loanProposals')).id);
     }
   }, [firestore, proposal]);
@@ -684,7 +683,7 @@ export function ProposalForm({
                         </FormItem>
                         )}
                     />
-                    {product === 'Portabilidade' && (
+                    {(product === 'Portabilidade' || product === 'Refin Port') && (
                         <FormField
                             control={form.control}
                             name="bankOrigin"

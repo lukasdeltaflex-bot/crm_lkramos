@@ -135,20 +135,20 @@ export default function DashboardPage() {
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
-    // Pipeline acumulado: propostas digitadas desde o mês passado que ainda não foram resolvidas (ou pagas agora)
+    // Pipeline acumulado: propostas digitadas desde o mês passado que ainda não foram resolvidas
     const startOfPipeline = startOfMonth(subMonths(fromDate, 1));
 
     const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
 
-    // 1. Propostas DIGITADAS no período (Foco em Produção)
+    // 1. Propostas DIGITADAS no período
     const digitizedInPeriod = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
         return d >= fromDate && d <= effectiveToDate;
     });
 
-    // 2. Propostas PAGAS no período (Foco em Financeiro/Meta)
-    // Regra: Contar se o status é Pago/Saldo Pago e a DATA DE PAGAMENTO está no período selecionado
+    // 2. Propostas PAGAS no período (Foco Financeiro Real)
+    // REGRA SOLICITADA: Conta se pagou ao cliente neste mês, vindo do mês passado ou não.
     const paidInPeriod = proposals.filter(p => {
         if (p.status !== 'Pago' && p.status !== 'Saldo Pago') return false;
         if (!p.datePaidToClient) return false;
@@ -156,7 +156,7 @@ export default function DashboardPage() {
         return d >= fromDate && d <= effectiveToDate;
     });
 
-    // 3. Propostas acumuladas para os outros cards (Pendente, Em Andamento, etc.)
+    // 3. Propostas acumuladas para cards de pipeline (Pendente, Em Andamento, etc.)
     const accumulatedProposals = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
@@ -182,7 +182,7 @@ export default function DashboardPage() {
         saldoPago: getSum(saldoPagoProposals),
         reprovado: reprovadoValue,
         pago: pagoValue,
-        totalPagoMeta: pagoValue, // Agora usa exclusivamente o volume pago no período
+        totalPagoMeta: pagoValue, 
         percPendente: getPerc(getSum(pendenteProposals)),
         percEmAndamento: getPerc(getSum(emAndamentoProposals)),
         percAguardandoSaldo: getPerc(getSum(aguardandoSaldoProposals)),

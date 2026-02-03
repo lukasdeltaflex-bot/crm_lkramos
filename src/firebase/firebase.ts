@@ -12,7 +12,7 @@ const firebaseConfig = {
   appId: "1:341426752875:web:348f88597e5b9b2057d02e",
 };
 
-// Singleton Blindado V3: Impede reinicializações que causam o erro ca9
+// Singleton Blindado V4: Previne reinicializações e resolve erro ca9
 const globalForFirebase = globalThis as unknown as {
   app: FirebaseApp | undefined;
   auth: Auth | undefined;
@@ -22,7 +22,7 @@ const globalForFirebase = globalThis as unknown as {
 
 const app = globalForFirebase.app || (getApps().length === 0 ? initializeApp(firebaseConfig) : getApp());
 
-// Ativação Forçada do Long Polling: Resolve o erro INTERNAL ASSERTION FAILED em ambientes de nuvem/workstation
+// Long Polling ativado para estabilidade absoluta em ambientes de nuvem (Workstations)
 const db = globalForFirebase.db || initializeFirestore(app, {
     cacheSizeBytes: CACHE_SIZE_UNLIMITED,
     experimentalForceLongPolling: true, 
