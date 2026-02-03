@@ -6,16 +6,14 @@ import { initializeFirebase } from './firebase';
 import { LoaderCircle } from 'lucide-react';
 
 /**
- * Provedor Blindado V31: Protocolo de Supressão Total Absoluta.
+ * Provedor Blindado V32: Protocolo de Estabilização de Hidratação e Supressão Total.
  * Resolve erros de permissão transientes e falhas fatais de asserção (ca9/b815).
- * Garante hidratação estável removendo textos dinâmicos do loader.
  */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
-  const [mounted, setMounted] = useState(false);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // 🛡️ ESCUDO DE SILÊNCIO V31: Interceptação Global de Baixo Nível (Captura Agressiva)
+    // 🛡️ ESCUDO DE SILÊNCIO V32: Interceptação Global de Baixo Nível
     const isSuppressibleError = (msg: string) => {
         if (!msg) return false;
         const normalized = String(msg).toUpperCase();
@@ -38,12 +36,12 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
       }
     };
 
-    // Mute de Console para evitar disparos do Overlay do Next.js durante Hot Reload
+    // Mute de Console para evitar disparos do Overlay do Next.js
     const originalConsoleError = console.error;
     console.error = (...args) => {
       const msg = args.join(' ');
       if (isSuppressibleError(msg)) {
-        return; // Silencia logs técnicos que causam o travamento visual (Overlay)
+        return; 
       }
       originalConsoleError.apply(console, args);
     };
@@ -55,9 +53,8 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
         initializeFirebase();
     } catch (error) {}
 
-    setMounted(true);
-    // Delay estratégico para estabilizar a conexão inicial
-    const timer = setTimeout(() => setIsReady(true), 150);
+    // Delay estratégico para estabilizar a hidratação do React
+    const timer = setTimeout(() => setIsReady(true), 50);
 
     return () => {
       window.removeEventListener('error', handleGlobalError, true);
@@ -67,14 +64,14 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
     };
   }, []);
 
-  // 🛡️ ESTABILIDADE DE HIDRATAÇÃO: Loader estático sem strings dinâmicas de versão
-  if (!mounted || !isReady) {
+  // 🛡️ ESTABILIDADE DE HIDRATAÇÃO: Render idêntico no Server e Client inicial
+  if (!isReady) {
     return (
         <div className="flex h-screen w-screen flex-col items-center justify-center bg-background gap-4">
             <LoaderCircle className="h-10 w-10 animate-spin text-primary opacity-20" />
             <div className="space-y-1 text-center">
                 <p className="text-sm font-bold text-foreground uppercase tracking-widest opacity-40">LK RAMOS</p>
-                <p className="text-[10px] text-muted-foreground animate-pulse font-bold uppercase tracking-tighter">Sincronizando banco de dados...</p>
+                <p className="text-[10px] text-muted-foreground animate-pulse font-bold">Sincronizando banco de dados...</p>
             </div>
         </div>
     );
