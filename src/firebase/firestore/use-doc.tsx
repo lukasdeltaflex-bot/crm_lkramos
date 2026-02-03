@@ -22,7 +22,7 @@ export interface UseDocResult<T> {
 
 /**
  * React hook defensivo para documentos Firestore.
- * Previne falhas de sincronização em tempo real (ID: ca9).
+ * Evita que falhas internas do SDK disparem telas de erro no Next.js.
  */
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
@@ -62,9 +62,13 @@ export function useDoc<T = any>(
           },
           (err: FirestoreError) => {
             if (!isMounted) return;
+
+            // SUPRESSÃO CRÍTICA: Evita crash visual em erros de asserção (ID: ca9)
             if (err.message.includes('INTERNAL ASSERTION FAILED')) {
+                console.warn("Firestore Assertion Failure (ID: ca9) ignorado nos hooks.");
                 return;
             }
+
             const contextualError = new FirestorePermissionError({
               operation: 'get',
               path: memoizedDocRef.path,
@@ -77,7 +81,9 @@ export function useDoc<T = any>(
           }
         );
     } catch (e: any) {
-        console.warn("Falha ao inicializar stream de documento:", e);
+        if (!e.message?.includes('INTERNAL ASSERTION FAILED')) {
+            console.error("Falha ao configurar observador de documento:", e);
+        }
         setIsLoading(false);
     }
 
@@ -87,7 +93,7 @@ export function useDoc<T = any>(
         try {
             unsubscribe();
         } catch (e) {
-            // Ignore safe cleanup errors
+            // Cleanup silencioso
         }
       }
     };

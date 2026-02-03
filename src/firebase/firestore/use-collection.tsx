@@ -32,7 +32,7 @@ export interface InternalQuery extends Query<DocumentData> {
 
 /**
  * React hook defensivo para coleções Firestore.
- * Proteção extra contra erro ca9 detectando falhas de fluxo.
+ * Bloqueia a propagação de erros de asserção interna (ca9/b815) para a UI.
  */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
@@ -72,9 +72,10 @@ export function useCollection<T = any>(
           },
           (err: FirestoreError) => {
             if (!isMounted) return;
-            // Monitoramento discreto de erro ca9/b815
+            
+            // SUPRESSÃO CRÍTICA: Ignora erros de asserção interna que travam a UI
             if (err.message.includes('INTERNAL ASSERTION FAILED')) {
-                console.warn("Recuperação automática de falha interna do Firestore (b815/ca9).");
+                console.warn("Firestore Internal Assertion Error (ca9/b815) suprimido para estabilidade.");
                 return;
             }
             
@@ -97,7 +98,9 @@ export function useCollection<T = any>(
           }
         );
     } catch (e: any) {
-        console.warn("Falha ao inicializar stream Firestore:", e);
+        if (!e.message?.includes('INTERNAL ASSERTION FAILED')) {
+            console.error("Erro ao inicializar stream Firestore:", e);
+        }
         setIsLoading(false);
     }
 
@@ -107,7 +110,7 @@ export function useCollection<T = any>(
         try {
             unsubscribe();
         } catch (e) {
-            // Ignore safe cleanup errors
+            // Cleanup silencioso
         }
       }
     };

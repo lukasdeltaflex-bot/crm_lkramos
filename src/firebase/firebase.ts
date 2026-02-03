@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
-import { getFirestore, Firestore, initializeFirestore, CACHE_SIZE_UNLIMITED } from "firebase/firestore";
+import { getFirestore, Firestore, initializeFirestore, CACHE_SIZE_UNLIMITED, getFirestore as getExistingFirestore } from "firebase/firestore";
 import { getStorage, FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -12,7 +12,7 @@ const firebaseConfig = {
   appId: "1:341426752875:web:348f88597e5b9b2057d02e",
 };
 
-// Singleton Blindado V10: Persistência absoluta das instâncias para evitar erro ca9/b815
+// Singleton Blindado V11: Prevenção absoluta contra reinicialização de instâncias
 const globalForFirebase = globalThis as unknown as {
   app: FirebaseApp | undefined;
   auth: Auth | undefined;
@@ -20,19 +20,22 @@ const globalForFirebase = globalThis as unknown as {
   storage: FirebaseStorage | undefined;
 };
 
-// Inicializa o App apenas se não existir
 const app = globalForFirebase.app || (getApps().length === 0 ? initializeApp(firebaseConfig) : getApp());
 
-// Inicializa o Firestore com Long Polling forçado e travamento de Singleton
 let db: Firestore;
 if (globalForFirebase.db) {
     db = globalForFirebase.db;
 } else {
-    // initializeFirestore deve ser chamado apenas UMA vez por ciclo de vida da página
-    db = initializeFirestore(app, {
-        cacheSizeBytes: CACHE_SIZE_UNLIMITED,
-        experimentalForceLongPolling: true, // Crucial para resolver erro ca9/b815 em ambientes Cloud
-    });
+    try {
+        // Tenta inicializar com configurações otimizadas para ambientes Cloud
+        db = initializeFirestore(app, {
+            cacheSizeBytes: CACHE_SIZE_UNLIMITED,
+            experimentalForceLongPolling: true, // Evita instabilidade de WebSockets (Erro ca9)
+        });
+    } catch (e) {
+        // Se já estiver inicializado, recupera a instância existente para evitar b815
+        db = getExistingFirestore(app);
+    }
     globalForFirebase.db = db;
 }
 
