@@ -22,7 +22,7 @@ const globalForFirebase = globalThis as unknown as {
 
 const app = globalForFirebase.app || (getApps().length === 0 ? initializeApp(firebaseConfig) : getApp());
 
-// Inicializa o Firestore apenas uma vez com singleton protegido para garantir estabilidade
+// Inicializa o Firestore apenas uma vez com singleton protegido para garantir estabilidade absoluta
 const db = globalForFirebase.db || initializeFirestore(app, {
     cacheSizeBytes: CACHE_SIZE_UNLIMITED,
 });

@@ -41,7 +41,7 @@ export function StatsCard({ title, value, icon: Icon, description, percentage, c
   return (
     <Card className={cn(
         'hover:shadow-xl transition-all group relative overflow-hidden bg-card shadow-md rounded-xl h-full min-h-[160px] flex flex-col border-2', 
-        themeClasses.split(' ')[0], // Injeta a classe de borda colorida
+        themeClasses.split(' ')[0],
         className
     )}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 print:pb-1">
@@ -69,7 +69,7 @@ export function StatsCard({ title, value, icon: Icon, description, percentage, c
                     {description}
                 </p>
             ) : (
-                <div className="h-[14px] w-full" /> // Espaçador para manter alinhamento
+                <div className="h-[14px] w-full" />
             )}
         </div>
       </CardContent>

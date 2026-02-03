@@ -67,31 +67,6 @@
   }
 }
 
-.theme-padrão { --primary: 217 33% 25% !important; --ring: 217 33% 25% !important; }
-.theme-zinc { --primary: 240 5.9% 10% !important; --ring: 240 5.9% 10% !important; }
-.theme-blue { --primary: 217.2 91.2% 59.8% !important; --ring: 217.2 91.2% 59.8% !important; }
-.theme-green { --primary: 142.1 76.2% 36.3% !important; --ring: 142.1 76.2% 36.3% !important; }
-.theme-violet { --primary: 262.1 83.3% 57.8% !important; --ring: 262.1 83.3% 57.8% !important; }
-.theme-orange { --primary: 24.6 95% 53.1% !important; --ring: 24.6 95% 53.1% !important; }
-.theme-red { --primary: 0 72.2% 50.6% !important; --ring: 0 72.2% 50.6% !important; }
-.theme-rose { --primary: 346.8 77.2% 49.8% !important; --ring: 346.8 77.2% 49.8% !important; }
-.theme-gray { --primary: 220 9% 46% !important; --ring: 220 9% 46% !important; }
-.theme-yellow { --primary: 45 93% 47% !important; --ring: 45 93% 47% !important; }
-.theme-cyan { --primary: 184 90% 41% !important; --ring: 184 90% 41% !important; }
-.theme-purple { --primary: 282 78% 51% !important; --ring: 282 78% 51% !important; }
-.theme-magenta { --primary: 322 84% 50% !important; --ring: 322 84% 50% !important; }
-.theme-emerald { --primary: 158 78% 41% !important; --ring: 158 78% 41% !important; }
-.theme-burnt-orange { --primary: 16 84% 44% !important; --ring: 16 84% 44% !important; }
-.theme-sky-blue { --primary: 199 89% 48% !important; --ring: 199 89% 48% !important; }
-.theme-pink { --primary: 336 82% 54% !important; --ring: 336 82% 54% !important; }
-.theme-mint { --primary: 168 86% 44% !important; --ring: 168 86% 44% !important; }
-.theme-lavender { --primary: 250 60% 60% !important; --ring: 250 60% 60% !important; }
-.theme-peach { --primary: 29 100% 65% !important; --ring: 29 100% 65% !important; }
-.theme-slate { --primary: 215 25% 27% !important; --ring: 215 25% 27% !important; }
-
-.dark .theme-padrão { --primary: 217 33% 30% !important; --ring: 217 33% 30% !important; }
-.dark .theme-zinc { --primary: 240 5.9% 90% !important; --ring: 240 5.9% 90% !important; }
-
 @layer base {
   * { @apply border-border; }
   body { 
@@ -101,7 +76,7 @@
   }
 }
 
-/* Remover efeitos de desfoque excessivos para nitidez total solicitada */
+/* Remoção de efeitos de desfoque excessivos para nitidez total no modo escuro */
 .backdrop-blur-md, .backdrop-blur-sm, .backdrop-blur-lg, .backdrop-filter {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
