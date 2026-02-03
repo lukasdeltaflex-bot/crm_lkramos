@@ -19,11 +19,11 @@ interface StatsCardProps {
 
 /**
  * StatsCard Premium LK RAMOS
- * Altura rigorosamente uniforme, alinhamento perfeito e contornos coloridos leves para facilitar identificação.
+ * Altura rigorosamente uniforme, alinhamento perfeito e contornos coloridos leves para identificar o status.
  */
 export function StatsCard({ title, value, icon: Icon, description, percentage, className, valueClassName }: StatsCardProps) {
   
-  // Mapeamento de cores para bordas e ícones baseado no título para manter consistência absoluta
+  // Mapeamento de cores para bordas e ícones baseado no título
   const getThemeColor = () => {
     const t = title.toLowerCase();
     if (t.includes('digitado')) return 'border-slate-300 dark:border-slate-700 text-slate-500';
@@ -32,7 +32,8 @@ export function StatsCard({ title, value, icon: Icon, description, percentage, c
     if (t.includes('aguardando')) return 'border-blue-300 dark:border-blue-700 text-blue-500';
     if (t.includes('saldo pago')) return 'border-orange-300 dark:border-orange-700 text-orange-500';
     if (t.includes('reprovado')) return 'border-red-300 dark:border-red-700 text-red-500';
-    if (t.includes('comissão') || t.includes('paga')) return 'border-green-300 dark:border-green-700 text-green-500';
+    if (t.includes('comissão') || t.includes('paga') || t.includes('recebida')) return 'border-green-300 dark:border-green-700 text-green-500';
+    if (t.includes('esperada')) return 'border-blue-300 dark:border-blue-700 text-blue-500';
     return 'border-border text-primary';
   };
 
@@ -62,7 +63,6 @@ export function StatsCard({ title, value, icon: Icon, description, percentage, c
             )}
         </div>
         
-        {/* Rodapé fixo para garantir altura proporcional entre todos os cards */}
         <div className="mt-3 border-t pt-2 border-border/30 min-h-[24px]">
             {description ? (
                 <p className="text-[10px] font-bold text-muted-foreground mt-0 uppercase tracking-tighter opacity-60">
