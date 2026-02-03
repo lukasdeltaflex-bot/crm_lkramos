@@ -6,14 +6,14 @@ import { initializeFirebase } from './firebase';
 import { LoaderCircle } from 'lucide-react';
 
 /**
- * Provedor Blindado V32: Protocolo de Estabilização de Hidratação e Supressão Total.
+ * Provedor Blindado V33: Protocolo de Estabilização de Hidratação e Supressão Total.
  * Resolve erros de permissão transientes e falhas fatais de asserção (ca9/b815).
  */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // 🛡️ ESCUDO DE SILÊNCIO V32: Interceptação Global de Baixo Nível
+    // 🛡️ ESCUDO DE SILÊNCIO V33: Interceptação Global de Baixo Nível
     const isSuppressibleError = (msg: string) => {
         if (!msg) return false;
         const normalized = String(msg).toUpperCase();
