@@ -11,8 +11,11 @@ import { Loader2 } from 'lucide-react';
  */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
   const [isInitializing, setIsInitializing] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    
     // 🛡️ ESCUDO DE SILÊNCIO V22: Interceptação Global de Erros de Asserção do SDK
     const isSuppressibleError = (msg: string) => {
         if (!msg) return false;
@@ -30,7 +33,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
       const message = 'message' in event ? event.message : (event.reason?.message || String(event.reason));
       if (isSuppressibleError(message)) {
         console.warn("🛡️ LK Ramos: Suprimida falha técnica do Firebase SDK. Sistema preservado.");
-        event.stopImmediatePropagation();
+        if (event.stopImmediatePropagation) event.stopImmediatePropagation();
         event.preventDefault();
         return true;
       }
@@ -63,6 +66,11 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
       console.error = originalConsoleError;
     };
   }, []);
+
+  // Previne erro de hidratação garantindo que o servidor e o cliente renderizem o mesmo conteúdo inicial
+  if (!mounted) {
+    return null;
+  }
 
   if (isInitializing) {
     return (
