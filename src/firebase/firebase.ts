@@ -12,7 +12,7 @@ const firebaseConfig = {
   appId: "1:341426752875:web:348f88597e5b9b2057d02e",
 };
 
-// Singleton Blindado V9: Persistência absoluta das instâncias para evitar erro ca9/b815
+// Singleton Blindado V10: Persistência absoluta das instâncias para evitar erro ca9/b815
 const globalForFirebase = globalThis as unknown as {
   app: FirebaseApp | undefined;
   auth: Auth | undefined;
@@ -31,7 +31,7 @@ if (globalForFirebase.db) {
     // initializeFirestore deve ser chamado apenas UMA vez por ciclo de vida da página
     db = initializeFirestore(app, {
         cacheSizeBytes: CACHE_SIZE_UNLIMITED,
-        experimentalForceLongPolling: true, // Crucial para resolver erro ca9
+        experimentalForceLongPolling: true, // Crucial para resolver erro ca9/b815 em ambientes Cloud
     });
     globalForFirebase.db = db;
 }

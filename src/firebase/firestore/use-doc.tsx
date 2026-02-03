@@ -27,17 +27,18 @@ export interface UseDocResult<T> {
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
 ): UseDocResult<T> {
-  type StateDataType = WithId<T> | null;
-
-  const [data, setData] = useState<StateDataType>(null);
+  const [data, setData] = useState<WithId<T> | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(!!memoizedDocRef);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
     if (!memoizedDocRef) {
-      setData(null);
-      setIsLoading(false);
-      setError(null);
+      if (isMounted) {
+        setData(null);
+        setIsLoading(false);
+        setError(null);
+      }
       return;
     }
 
@@ -50,6 +51,7 @@ export function useDoc<T = any>(
         unsubscribe = onSnapshot(
           memoizedDocRef,
           (snapshot: DocumentSnapshot<DocumentData>) => {
+            if (!isMounted) return;
             if (snapshot.exists()) {
               setData({ ...(snapshot.data() as T), id: snapshot.id });
             } else {
@@ -59,7 +61,10 @@ export function useDoc<T = any>(
             setIsLoading(false);
           },
           (err: FirestoreError) => {
-            console.warn("Firestore document stream interrupted:", err.message);
+            if (!isMounted) return;
+            if (err.message.includes('INTERNAL ASSERTION FAILED')) {
+                return;
+            }
             const contextualError = new FirestorePermissionError({
               operation: 'get',
               path: memoizedDocRef.path,
@@ -72,11 +77,12 @@ export function useDoc<T = any>(
           }
         );
     } catch (e: any) {
-        console.warn("Firestore document snapshot failed to initialize:", e);
+        console.warn("Falha ao inicializar stream de documento:", e);
         setIsLoading(false);
     }
 
     return () => {
+      isMounted = false;
       if (unsubscribe) {
         try {
             unsubscribe();

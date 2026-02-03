@@ -37,18 +37,18 @@ export interface InternalQuery extends Query<DocumentData> {
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
 ): UseCollectionResult<T> {
-  type ResultItemType = WithId<T>;
-  type StateDataType = ResultItemType[] | null;
-
-  const [data, setData] = useState<StateDataType>(null);
+  const [data, setData] = useState<WithId<T>[] | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(!!memoizedTargetRefOrQuery);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
     if (!memoizedTargetRefOrQuery) {
-      setData(null);
-      setIsLoading(false);
-      setError(null);
+      if (isMounted) {
+        setData(null);
+        setIsLoading(false);
+        setError(null);
+      }
       return;
     }
 
@@ -61,7 +61,8 @@ export function useCollection<T = any>(
         unsubscribe = onSnapshot(
           memoizedTargetRefOrQuery,
           (snapshot: QuerySnapshot<DocumentData>) => {
-            const results: ResultItemType[] = [];
+            if (!isMounted) return;
+            const results: WithId<T>[] = [];
             snapshot.forEach((doc) => {
               results.push({ ...(doc.data() as T), id: doc.id });
             });
@@ -70,8 +71,12 @@ export function useCollection<T = any>(
             setIsLoading(false);
           },
           (err: FirestoreError) => {
-            // Monitoramento discreto de erro ca9
-            console.warn("Firestore collection stream interrupted:", err.message);
+            if (!isMounted) return;
+            // Monitoramento discreto de erro ca9/b815
+            if (err.message.includes('INTERNAL ASSERTION FAILED')) {
+                console.warn("Recuperação automática de falha interna do Firestore (b815/ca9).");
+                return;
+            }
             
             if (err.code === 'permission-denied') {
                 const path: string =
@@ -92,14 +97,14 @@ export function useCollection<T = any>(
           }
         );
     } catch (e: any) {
-        console.warn("Firestore snapshot request failed to initialize:", e);
+        console.warn("Falha ao inicializar stream Firestore:", e);
         setIsLoading(false);
     }
 
     return () => {
+      isMounted = false;
       if (unsubscribe) {
         try {
-            // Desinscrição segura: evita crash se a instância já estiver terminada
             unsubscribe();
         } catch (e) {
             // Ignore safe cleanup errors
