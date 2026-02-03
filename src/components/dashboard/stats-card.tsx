@@ -26,6 +26,13 @@ export function StatsCard({ title, value, icon: Icon, description, percentage, c
   const getThemeStyles = () => {
     const t = title.toLowerCase();
     
+    // AMBER/YELLOW: Em Andamento
+    if (t.includes('andamento')) 
+        return {
+            card: 'border-yellow-200 dark:border-yellow-800 bg-yellow-50/30 dark:bg-yellow-900/10',
+            text: 'text-yellow-600 dark:text-yellow-500'
+        };
+
     // ORANGE: Saldo Pago / Saldo a Receber
     if (t.includes('saldo pago') || t.includes('saldo a receber')) 
         return {
@@ -40,8 +47,8 @@ export function StatsCard({ title, value, icon: Icon, description, percentage, c
             text: 'text-green-600 dark:text-green-400'
         };
     
-    // BLUE: Aguardando / Em Andamento / Esperada
-    if (t.includes('comissão esperada') || t.includes('aguardando') || t.includes('andamento')) 
+    // BLUE: Aguardando / Esperada
+    if (t.includes('comissão esperada') || t.includes('aguardando')) 
         return {
             card: 'border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-900/10',
             text: 'text-blue-600 dark:text-blue-400'
