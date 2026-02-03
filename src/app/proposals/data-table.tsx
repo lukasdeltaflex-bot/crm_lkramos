@@ -343,8 +343,8 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   React.useEffect(() => {
     const statusColumn = table.getColumn('status');
     if (statusFilter === 'Todos') {
-      const allStatusesExceptReprovado = proposalStatuses.filter(s => s !== 'Reprovado');
-      statusColumn?.setFilterValue(allStatusesExceptReprovado);
+      // Agora a aba 'Todos' remove o filtro de coluna, mostrando inclusive reprovadas e permitindo a busca global nelas
+      statusColumn?.setFilterValue(undefined);
     } else {
       statusColumn?.setFilterValue([statusFilter]);
     }
