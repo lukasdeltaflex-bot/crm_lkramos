@@ -6,7 +6,7 @@ import { initializeFirebase } from './firebase';
 import { LoaderCircle } from 'lucide-react';
 
 /**
- * Provedor Blindado V30: Protocolo de Supressão Total Absoluta.
+ * Provedor Blindado V31: Protocolo de Supressão Total Absoluta.
  * Resolve erros de permissão transientes e falhas fatais de asserção (ca9/b815).
  * Garante hidratação estável removendo textos dinâmicos do loader.
  */
@@ -15,7 +15,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // 🛡️ ESCUDO DE SILÊNCIO V30: Interceptação Global de Baixo Nível (Captura Agressiva)
+    // 🛡️ ESCUDO DE SILÊNCIO V31: Interceptação Global de Baixo Nível (Captura Agressiva)
     const isSuppressibleError = (msg: string) => {
         if (!msg) return false;
         const normalized = String(msg).toUpperCase();
