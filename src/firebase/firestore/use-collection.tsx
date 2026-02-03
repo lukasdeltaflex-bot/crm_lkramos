@@ -22,7 +22,7 @@ export interface UseCollectionResult<T> {
 }
 
 /**
- * Hook Defensivo V45 para coleções Firestore.
+ * Hook Defensivo V46 para coleções Firestore.
  * Filtra falhas técnicas internas (ca9/b815) para manter a estabilidade da UI.
  */
 export function useCollection<T = any>(
@@ -65,8 +65,9 @@ export function useCollection<T = any>(
             if (!isMounted) return;
             
             const msg = (err.message || "").toUpperCase();
-            // 🛡️ Supressão Silenciosa de Erros de Asserção V45
+            // 🛡️ Supressão Silenciosa de Erros de Asserção V46
             if (msg.includes('ASSERTION') || msg.includes('CA9') || msg.includes('B815')) {
+                console.warn("🛡️ LK Ramos: Supressed internal SDK state error.");
                 return; 
             }
             
