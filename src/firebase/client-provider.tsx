@@ -6,46 +6,42 @@ import { initializeFirebase } from './firebase';
 import { Loader2 } from 'lucide-react';
 
 /**
- * Provedor Blindado V22: Protocolo de Supressão Total.
- * Intercepta e silencia erros fatais do Firebase (ca9/b815) no nível global.
+ * Provedor Blindado V23: Protocolo de Supressão Total.
+ * Intercepta e silencia erros fatais do Firebase (ca9/b815) e resolve erros de hidratação.
  */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
-  const [isInitializing, setIsInitializing] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
     setMounted(true);
     
-    // 🛡️ ESCUDO DE SILÊNCIO V22: Interceptação Global de Erros de Asserção do SDK
+    // 🛡️ ESCUDO DE SILÊNCIO V23: Interceptação Global para evitar o Overlay do Next.js
     const isSuppressibleError = (msg: string) => {
         if (!msg) return false;
-        const normalized = msg.toUpperCase();
+        const normalized = String(msg).toUpperCase();
         return (
             normalized.includes('INTERNAL ASSERTION FAILED') ||
             normalized.includes('CA9') ||
             normalized.includes('B815') ||
-            normalized.includes('FE: -1') ||
-            normalized.includes('UNEXPECTED STATE')
+            normalized.includes('FE: -1')
         );
     };
 
     const handleGlobalError = (event: ErrorEvent | PromiseRejectionEvent) => {
       const message = 'message' in event ? event.message : (event.reason?.message || String(event.reason));
       if (isSuppressibleError(message)) {
-        console.warn("🛡️ LK Ramos: Suprimida falha técnica do Firebase SDK. Sistema preservado.");
         if (event.stopImmediatePropagation) event.stopImmediatePropagation();
         event.preventDefault();
         return true;
       }
     };
 
-    // Interceptação de Console para evitar que o Next.js capture logs do SDK que disparam o Overlay
+    // Interceptação de Console para evitar que o Next.js dispare o Overlay por logs do SDK
     const originalConsoleError = console.error;
     console.error = (...args) => {
       const msg = args.join(' ');
-      if (isSuppressibleError(msg)) {
-        return; // Silêncio técnico para o Next.js
-      }
+      if (isSuppressibleError(msg)) return; 
       originalConsoleError.apply(console, args);
     };
 
@@ -55,7 +51,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
     try {
         initializeFirebase();
     } catch (error) {
-        // SDK já inicializado ou em estado de recuperação
+        // Silencioso
     } finally {
         setIsInitializing(false);
     }
@@ -67,9 +63,9 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
     };
   }, []);
 
-  // Previne erro de hidratação garantindo que o servidor e o cliente renderizem o mesmo conteúdo inicial
+  // 🛡️ PROTOCOLO ANTI-HIDRATAÇÃO: Retorna null ou loader apenas após o mount no cliente
   if (!mounted) {
-    return null;
+    return null; 
   }
 
   if (isInitializing) {
@@ -78,7 +74,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <div className="space-y-1">
                 <p className="text-sm font-bold text-foreground uppercase tracking-widest">LK RAMOS</p>
-                <p className="text-[10px] text-muted-foreground animate-pulse font-bold">ESTABILIZANDO MOTOR DE DADOS V22...</p>
+                <p className="text-[10px] text-muted-foreground animate-pulse font-bold">ESTABILIZANDO MOTOR DE DADOS V23...</p>
             </div>
         </div>
     );

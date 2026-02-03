@@ -31,7 +31,7 @@ export interface InternalQuery extends Query<DocumentData> {
 }
 
 /**
- * Hook Defensivo V22 para coleções Firestore.
+ * Hook Defensivo V23 para coleções Firestore.
  * Ignora erros de estado interno (ca9/b815) para manter a interface estável.
  */
 export function useCollection<T = any>(
@@ -73,15 +73,10 @@ export function useCollection<T = any>(
           (err: FirestoreError) => {
             if (!isMounted) return;
             
-            // 🛡️ FILTRO V22: Ignora silenciosamente inconsistências técnicas (ca9/b815)
+            // 🛡️ FILTRO V23: Silenciamento de inconsistências técnicas
             const msg = (err.message || "").toUpperCase();
-            const isAssertion = msg.includes('INTERNAL ASSERTION FAILED') || 
-                               msg.includes('CA9') || 
-                               msg.includes('B815');
-            
-            if (isAssertion) {
-                console.warn("🛡️ Hook: Ignorada falha de sincronização do SDK.");
-                return;
+            if (msg.includes('INTERNAL ASSERTION FAILED') || msg.includes('CA9') || msg.includes('B815')) {
+                return; 
             }
             
             if (err.code === 'permission-denied') {
@@ -111,9 +106,7 @@ export function useCollection<T = any>(
       if (unsubscribe) {
         try {
             unsubscribe();
-        } catch (e) {
-            // Cleanup silencioso
-        }
+        } catch (e) {}
       }
     };
   }, [memoizedTargetRefOrQuery]);

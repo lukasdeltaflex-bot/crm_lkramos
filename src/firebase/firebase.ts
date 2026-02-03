@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore, initializeFirestore, CACHE_SIZE_UNLIMITED } from "firebase/firestore";
+import { getFirestore, initializeFirestore, CACHE_SIZE_UNLIMITED, terminate } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -12,16 +12,15 @@ const firebaseConfig = {
   appId: "1:341426752875:web:348f88597e5b9b2057d02e",
 };
 
-// 🛡️ SINGLETON BLINDADO V22: Proteção absoluta contra erros de estado b815/ca9
+// 🛡️ SINGLETON BLINDADO V23: Proteção absoluta contra erros de estado b815/ca9
 const g = globalThis as any;
 
-// App Singleton
 if (!g._firebaseApp) {
     g._firebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 }
 const app = g._firebaseApp;
 
-// Firestore Singleton - Configurado uma única vez com Long Polling forçado
+// Firestore Singleton - Configuração única e imutável
 if (!g._firebaseDb) {
     try {
         g._firebaseDb = initializeFirestore(app, {
@@ -35,13 +34,11 @@ if (!g._firebaseDb) {
 }
 const db = g._firebaseDb;
 
-// Auth Singleton
 if (!g._firebaseAuth) {
     g._firebaseAuth = getAuth(app);
 }
 const auth = g._firebaseAuth;
 
-// Storage Singleton
 if (!g._firebaseStorage) {
     g._firebaseStorage = getStorage(app);
 }
