@@ -21,8 +21,8 @@ export interface UseDocResult<T> {
 }
 
 /**
- * React hook defensivo para documentos Firestore V12.
- * Evita que falhas internas do SDK disparem telas de erro no Next.js.
+ * React hook defensivo V13 para documentos Firestore.
+ * Previne que inconsistências internas do SDK disparem Overlays visuais.
  */
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
@@ -63,9 +63,9 @@ export function useDoc<T = any>(
           (err: FirestoreError) => {
             if (!isMounted) return;
 
-            // SUPRESSÃO V12: Evita crash visual em erros de asserção
+            // SILENCIADOR V13: Ignora erros ca9/b815
             if (err.message?.includes('INTERNAL ASSERTION FAILED')) {
-                console.warn("Firestore Doc Assertion Failure capturado no listener.");
+                console.warn("LK RAMOS: Firestore Doc Listener ignorou falha de estado interno.");
                 return;
             }
 
