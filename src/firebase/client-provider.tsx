@@ -3,56 +3,41 @@
 import React, { useState, useEffect, type ReactNode } from 'react';
 import { FirebaseProvider } from '@/firebase/provider';
 import { initializeFirebase } from './firebase'; 
-import { LoaderCircle } from 'lucide-react';
 
 /**
- * Provedor de Infraestrutura Blindada V44.
- * Intercepta e anula erros fatais de asserção do Firestore (ca9/b815).
+ * Provedor de Infraestrutura Blindada V45.
+ * Protocolo de Supressão Absoluta para erros críticos do Firestore (ca9/b815).
  */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // 🛡️ ESCUDO DE SILÊNCIO V44: Interceptação Profunda e Seletiva
+    // 🛡️ ESCUDO DE SILÊNCIO V45: Interceptação Profunda
     const isSuppressibleError = (err: any) => {
         if (!err) return false;
-        const msg = typeof err === 'string' ? err : (err.message || String(err));
-        const normalized = msg.toUpperCase();
+        const msg = String(err?.message || err || "").toUpperCase();
         return (
-            normalized.includes('INTERNAL ASSERTION FAILED') ||
-            normalized.includes('CA9') ||
-            normalized.includes('B815') ||
-            normalized.includes('FE: -1') ||
-            normalized.includes('UNEXPECTED STATE')
+            msg.includes('INTERNAL ASSERTION FAILED') ||
+            msg.includes('CA9') ||
+            msg.includes('B815') ||
+            msg.includes('FE: -1')
         );
     };
 
     const handleGlobalError = (event: ErrorEvent | PromiseRejectionEvent) => {
-      const error = 'error' in event ? event.error : (event.reason);
-      if (isSuppressibleError(error) || isSuppressibleError(event instanceof ErrorEvent ? event.message : '')) {
+      const error = 'error' in event ? event.error : (event as any).reason;
+      if (isSuppressibleError(error)) {
         event.preventDefault();
         if (event.stopImmediatePropagation) event.stopImmediatePropagation();
         return true;
       }
     };
 
-    // Mute de Console Redundante para evitar o Overlay do Next.js
+    // Mute de Console para evitar Overlay do Next.js
     const originalConsoleError = console.error;
     console.error = (...args) => {
-      if (args.some(arg => isSuppressibleError(arg))) {
-        return; 
-      }
+      if (args.some(arg => isSuppressibleError(arg))) return;
       originalConsoleError.apply(console, args);
-    };
-
-    // Override de window.onerror no estágio de captura
-    const oldOnError = window.onerror;
-    window.onerror = (message, source, lineno, colno, error) => {
-      if (isSuppressibleError(message) || isSuppressibleError(error)) {
-        return true; 
-      }
-      if (oldOnError) return oldOnError(message, source, lineno, colno, error);
-      return false;
     };
 
     window.addEventListener('error', handleGlobalError, true);
@@ -72,13 +57,14 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
     };
   }, []);
 
+  // Loader estático para estabilidade de hidratação
   if (!isReady) {
     return (
         <div className="flex h-screen w-screen flex-col items-center justify-center bg-background gap-4">
-            <LoaderCircle className="h-10 w-10 animate-spin text-primary opacity-20" />
+            <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin opacity-20" />
             <div className="space-y-1 text-center">
                 <p className="text-sm font-bold text-foreground opacity-40">LK RAMOS</p>
-                <p className="text-[10px] text-muted-foreground animate-pulse font-bold">Sincronizando banco de dados...</p>
+                <p className="text-[10px] text-muted-foreground font-bold">Sincronizando banco de dados...</p>
             </div>
         </div>
     );

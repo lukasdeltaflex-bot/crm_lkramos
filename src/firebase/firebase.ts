@@ -12,7 +12,7 @@ const firebaseConfig = {
   appId: "1:341426752875:web:348f88597e5b9b2057d02e",
 };
 
-// 🛡️ SINGLETON IMUTÁVEL V44: Bloqueio absoluto no globalThis para evitar colisões de estado b815
+// 🛡️ SINGLETON IMUTÁVEL V45: Bloqueio absoluto para evitar colisões ca9/b815
 const g = globalThis as any;
 
 if (!g._firebaseApp) {
@@ -22,9 +22,10 @@ const app: FirebaseApp = g._firebaseApp;
 
 if (!g._firebaseDb) {
     try {
-        // experimentalForceLongPolling é CRÍTICO para evitar erros ca9 em ambientes cloud/proxy
+        // Long Polling forçado é CRÍTICO para estabilidade em ambientes proxied
         g._firebaseDb = initializeFirestore(app, {
             experimentalForceLongPolling: true,
+            experimentalAutoDetectLongPolling: false,
         });
     } catch (e) {
         g._firebaseDb = getFirestore(app);
