@@ -146,8 +146,8 @@ export default function DashboardPage() {
         return d >= fromDate && d <= effectiveToDate;
     });
 
-    // 2. Propostas PAGAS no período (Lógica solicitada: Data de Pagamento ao Cliente)
-    // Filtramos apenas pelo status e data de pagamento, ignorando a data de digitação
+    // 2. Propostas PAGAS no período (Lógica Real: Data de Pagamento ao Cliente)
+    // Isso garante que contratos que vieram do mês passado mas pagaram agora entrem na meta.
     const paidInPeriod = proposals.filter(p => {
         if (p.status !== 'Pago' && p.status !== 'Saldo Pago') return false;
         if (!p.datePaidToClient) return false;
@@ -155,11 +155,10 @@ export default function DashboardPage() {
         return d >= fromDate && d <= effectiveToDate;
     });
 
-    // 3. Propostas acumuladas para cards de pipeline (Desde o mês passado para visibilidade de esteira)
+    // 3. Propostas acumuladas para cards de pipeline (Desde o mês passado para visibilidade de esteira ativa)
     const accumulatedProposals = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
-        // Mantemos visibilidade de esteira acumulada (digitados desde o mês anterior que ainda não resolveram)
         return d >= startOfPipeline && d <= effectiveToDate;
     });
 

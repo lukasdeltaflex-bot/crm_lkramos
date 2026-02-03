@@ -12,7 +12,7 @@ const firebaseConfig = {
   appId: "1:341426752875:web:348f88597e5b9b2057d02e",
 };
 
-// Singleton Blindado V6: Previne múltiplas inicializações e erros de estado inesperado (ca9)
+// Singleton Blindado V6: Previne múltiplas inicializações e erros de estado inesperado (ca9/b815)
 const globalForFirebase = globalThis as unknown as {
   app: FirebaseApp | undefined;
   auth: Auth | undefined;
@@ -24,13 +24,13 @@ const app = globalForFirebase.app || (getApps().length === 0 ? initializeApp(fir
 
 let db: Firestore;
 try {
-    // Tenta obter a instância já inicializada para evitar o erro de assertion ca9
+    // Tenta obter a instância já inicializada para evitar conflitos de HMR no NextJS
     db = getFsInstance(app);
 } catch (e) {
-    // Se falhar, inicializa com configurações de estabilidade para ambiente de nuvem
+    // Se não houver instância, inicializa com configurações de estabilidade máxima
     db = initializeFirestore(app, {
         cacheSizeBytes: CACHE_SIZE_UNLIMITED,
-        experimentalForceLongPolling: true, 
+        experimentalForceLongPolling: true, // Essencial para evitar erros ca9 em ambientes de nuvem
     });
 }
 
