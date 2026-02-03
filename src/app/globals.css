@@ -67,31 +67,31 @@
   }
 }
 
-/* Theme Color Overrides - Prioridade total para garantir fidelidade no Modo Claro e Escuro */
-.theme-zinc { --primary: 240 5.9% 10%; --ring: 240 5.9% 10%; }
-.dark .theme-zinc { --primary: 240 5.9% 90%; --ring: 240 5.9% 90%; }
+/* Theme Color Overrides - Reforçados para Modo Claro e Escuro */
+:root.theme-zinc { --primary: 240 5.9% 10%; --ring: 240 5.9% 10%; }
+.dark.theme-zinc { --primary: 240 5.9% 90%; --ring: 240 5.9% 90%; }
 
-.theme-slate { --primary: 215 25% 27%; --ring: 215 25% 27%; }
-.dark .theme-slate { --primary: 215 25% 67%; --ring: 215 25% 67%; }
+:root.theme-slate { --primary: 215 25% 27%; --ring: 215 25% 27%; }
+.dark.theme-slate { --primary: 215 25% 67%; --ring: 215 25% 67%; }
 
-.theme-blue { --primary: 217.2 91.2% 59.8%; --ring: 217.2 91.2% 59.8%; }
-.theme-sky-blue { --primary: 199 89% 48%; --ring: 199 89% 48%; }
-.theme-green { --primary: 142.1 76.2% 36.3%; --ring: 142.1 76.2% 36.3%; }
-.theme-emerald { --primary: 158 78% 41%; --ring: 158 78% 41%; }
-.theme-mint { --primary: 168 86% 44%; --ring: 168 86% 44%; }
-.theme-cyan { --primary: 184 90% 41%; --ring: 184 90% 41%; }
-.theme-yellow { --primary: 45 93% 47%; --ring: 45 93% 47%; }
-.theme-orange { --primary: 24.6 95% 53.1%; --ring: 24.6 95% 53.1%; }
-.theme-burnt-orange { --primary: 16 84% 44%; --ring: 16 84% 44%; }
-.theme-peach { --primary: 29 100% 65%; --ring: 29 100% 65%; }
-.theme-red { --primary: 0 72.2% 50.6%; --ring: 0 72.2% 50.6%; }
-.theme-rose { --primary: 346.8 77.2% 49.8%; --ring: 346.8 77.2% 49.8%; }
-.theme-pink { --primary: 336 82% 54%; --ring: 336 82% 54%; }
-.theme-magenta { --primary: 322 84% 50%; --ring: 322 84% 50%; }
-.theme-purple { --primary: 282 78% 51%; --ring: 282 78% 51%; }
-.theme-violet { --primary: 262.1 83.3% 57.8%; --ring: 262.1 83.3% 57.8%; }
-.theme-lavender { --primary: 250 60% 60%; --ring: 250 60% 60%; }
-.theme-gray { --primary: 220 9% 46%; --ring: 220 9% 46%; }
+:root.theme-blue { --primary: 217.2 91.2% 59.8%; --ring: 217.2 91.2% 59.8%; }
+:root.theme-sky-blue { --primary: 199 89% 48%; --ring: 199 89% 48%; }
+:root.theme-green { --primary: 142.1 76.2% 36.3%; --ring: 142.1 76.2% 36.3%; }
+:root.theme-emerald { --primary: 158 78% 41%; --ring: 158 78% 41%; }
+:root.theme-mint { --primary: 168 86% 44%; --ring: 168 86% 44%; }
+:root.theme-cyan { --primary: 184 90% 41%; --ring: 184 90% 41%; }
+:root.theme-yellow { --primary: 45 93% 47%; --ring: 45 93% 47%; }
+:root.theme-orange { --primary: 24.6 95% 53.1%; --ring: 24.6 95% 53.1%; }
+:root.theme-burnt-orange { --primary: 16 84% 44%; --ring: 16 84% 44%; }
+:root.theme-peach { --primary: 29 100% 65%; --ring: 29 100% 65%; }
+:root.theme-red { --primary: 0 72.2% 50.6%; --ring: 0 72.2% 50.6%; }
+:root.theme-rose { --primary: 346.8 77.2% 49.8%; --ring: 346.8 77.2% 49.8%; }
+:root.theme-pink { --primary: 336 82% 54%; --ring: 336 82% 54%; }
+:root.theme-magenta { --primary: 322 84% 50%; --ring: 322 84% 50%; }
+:root.theme-purple { --primary: 282 78% 51%; --ring: 282 78% 51%; }
+:root.theme-violet { --primary: 262.1 83.3% 57.8%; --ring: 262.1 83.3% 57.8%; }
+:root.theme-lavender { --primary: 250 60% 60%; --ring: 250 60% 60%; }
+:root.theme-gray { --primary: 220 9% 46%; --ring: 220 9% 46%; }
 
 @layer base {
   * { @apply border-border; }
@@ -102,7 +102,7 @@
   }
 }
 
-/* Nitidez Total: Remoção de blurs que causam aspecto embaçado */
+/* Nitidez Total: Remoção de blurs para visual Executivo */
 .backdrop-blur-md, .backdrop-blur-sm, .backdrop-blur-lg, .backdrop-filter {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
