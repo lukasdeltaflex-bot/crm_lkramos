@@ -1,8 +1,7 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Bell, Cake, BadgePercent, X, CalendarClock } from 'lucide-react';
+import { Bell, Cake, BadgePercent, X, CalendarClock, Bot, Loader2, MessageSquareText } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +16,11 @@ import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebas
 import { collection, query, where } from 'firebase/firestore';
 import type { Customer, Proposal, FollowUp } from '@/lib/types';
 import { differenceInDays, format } from 'date-fns';
+import { getWhatsAppUrl } from '@/lib/utils';
 import Link from 'next/link';
+import { generateBirthdayMessage } from '@/ai/flows/generate-birthday-message-flow';
+import { toast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 const STORAGE_KEY = 'lk-ramos-dismissed-notifications-v1';
 
@@ -26,6 +29,12 @@ export function NotificationBell() {
   const firestore = useFirestore();
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
   const [isClient, setIsClient] = useState(false);
+
+  // AI State
+  const [isGeneratingBday, setIsGeneratingBday] = useState(false);
+  const [generatedBdayMessage, setGeneratedBdayMessage] = useState('');
+  const [selectedBdayCustomer, setSelectedBdayCustomer] = useState<Customer | null>(null);
+  const [isBdayModalOpen, setIsBdayModalOpen] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -64,7 +73,7 @@ export function NotificationBell() {
   const notifications = React.useMemo(() => {
     if (!isClient) return [];
     
-    const alerts: { id: string; title: string; type: 'birthday' | 'commission' | 'followup'; date: string; link: string }[] = [];
+    const alerts: { id: string; title: string; type: 'birthday' | 'commission' | 'followup'; date: string; link: string; customerId?: string }[] = [];
     const now = new Date();
     const todayStr = format(now, 'MM-dd');
     const todayIso = format(now, 'yyyy-MM-dd');
@@ -77,7 +86,8 @@ export function NotificationBell() {
           title: `Aniversário: ${c.name}`,
           type: 'birthday',
           date: 'Hoje',
-          link: `/customers/${c.id}`
+          link: `/customers/${c.id}`,
+          customerId: c.id
         });
       }
     });
@@ -126,11 +136,44 @@ export function NotificationBell() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newDismissed));
   };
 
+  const handleBdayClick = async (e: React.MouseEvent, customerId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const customer = customers?.find(c => c.id === customerId);
+    if (!customer) return;
+
+    setSelectedBdayCustomer(customer);
+    setIsGeneratingBday(true);
+    setGeneratedBdayMessage('');
+    setIsBdayModalOpen(true);
+
+    try {
+        const { message } = await generateBirthdayMessage({ customerName: customer.name });
+        setGeneratedBdayMessage(message);
+    } catch (error) {
+        console.error("Error generating bday message:", error);
+        toast({ variant: 'destructive', title: 'Erro na IA', description: 'Falha ao gerar mensagem.' });
+        setIsBdayModalOpen(false);
+    } finally {
+        setIsGeneratingBday(false);
+    }
+  };
+
+  const handleSendToWhatsApp = () => {
+    if (!selectedBdayCustomer || !generatedBdayMessage) return;
+    const url = getWhatsAppUrl(selectedBdayCustomer.phone);
+    const encodedMsg = encodeURIComponent(generatedBdayMessage);
+    window.open(`${url}&text=${encodedMsg}`, '_blank');
+    setIsBdayModalOpen(false);
+  };
+
   const count = visibleNotifications.length;
 
   if (!isClient) return <Button variant="ghost" size="icon"><Bell className="h-5 w-5" /></Button>;
 
   return (
+    <>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
@@ -169,19 +212,32 @@ export function NotificationBell() {
           <div className="max-h-96 overflow-y-auto">
             {visibleNotifications.map((n) => (
               <div key={n.id} className="relative group">
-                <Link href={n.link} passHref>
-                    <DropdownMenuItem className="cursor-pointer p-3 pr-10">
-                    <div className="flex items-start gap-3">
-                        {n.type === 'birthday' && <Cake className="h-4 w-4 text-pink-500 mt-1" />}
-                        {n.type === 'commission' && <BadgePercent className="h-4 w-4 text-orange-500 mt-1" />}
-                        {n.type === 'followup' && <CalendarClock className="h-4 w-4 text-blue-500 mt-1" />}
-                        <div className="space-y-1 overflow-hidden">
-                        <p className="text-sm font-medium leading-none truncate">{n.title}</p>
-                        <p className="text-xs text-muted-foreground">{n.date}</p>
+                <div className="flex items-center pr-10">
+                    <Link href={n.link} passHref className="flex-1">
+                        <DropdownMenuItem className="cursor-pointer p-3">
+                        <div className="flex items-start gap-3">
+                            {n.type === 'birthday' && <Cake className="h-4 w-4 text-pink-500 mt-1" />}
+                            {n.type === 'commission' && <BadgePercent className="h-4 w-4 text-orange-500 mt-1" />}
+                            {n.type === 'followup' && <CalendarClock className="h-4 w-4 text-blue-500 mt-1" />}
+                            <div className="space-y-1 overflow-hidden">
+                            <p className="text-sm font-medium leading-none truncate">{n.title}</p>
+                            <p className="text-xs text-muted-foreground">{n.date}</p>
+                            </div>
                         </div>
-                    </div>
-                    </DropdownMenuItem>
-                </Link>
+                        </DropdownMenuItem>
+                    </Link>
+                    {n.type === 'birthday' && n.customerId && (
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="absolute right-10 top-1/2 -translate-y-1/2 h-8 w-8 text-pink-500 hover:bg-pink-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => handleBdayClick(e, n.customerId!)}
+                            title="Gerar Mensagem WhatsApp"
+                        >
+                            <Bot className="h-4 w-4" />
+                        </Button>
+                    )}
+                </div>
                 <button
                     onClick={(e) => handleDismiss(e, n.id)}
                     className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted rounded-md"
@@ -195,5 +251,37 @@ export function NotificationBell() {
         )}
       </DropdownMenuContent>
     </DropdownMenu>
+
+    <Dialog open={isBdayModalOpen} onOpenChange={setIsBdayModalOpen}>
+        <DialogContent className="max-w-md">
+            <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                    <MessageSquareText className="h-5 w-5 text-pink-500" />
+                    Mensagem IA: {selectedBdayCustomer?.name}
+                </DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+                {isGeneratingBday ? (
+                    <div className="flex flex-col items-center justify-center py-10 gap-4">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <p className="text-sm text-muted-foreground animate-pulse">Criando parabéns personalizado...</p>
+                    </div>
+                ) : (
+                    <textarea 
+                        className="w-full min-h-[150px] p-4 rounded-lg border bg-muted/30 text-sm focus:ring-2 focus:ring-primary outline-none"
+                        value={generatedBdayMessage}
+                        onChange={(e) => setGeneratedBdayMessage(e.target.value)}
+                    />
+                )}
+            </div>
+            <DialogFooter>
+                <Button variant="ghost" onClick={() => setIsBdayModalOpen(false)}>Cancelar</Button>
+                <Button onClick={handleSendToWhatsApp} disabled={isGeneratingBday || !generatedBdayMessage}>
+                    Enviar para WhatsApp
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+    </>
   );
 }

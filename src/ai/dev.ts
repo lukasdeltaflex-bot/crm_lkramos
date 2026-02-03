@@ -14,3 +14,4 @@ import '@/ai/flows/debt-balance-reminder-flow.ts';
 import '@/ai/flows/generate-daily-summary-flow.ts';
 import '@/ai/flows/partial-commission-reminder-flow.ts';
 import '@/ai/flows/send-summary-email-flow.ts';
+import '@/ai/flows/generate-birthday-message-flow.ts';
