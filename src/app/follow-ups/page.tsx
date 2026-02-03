@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Calendar as CalendarIcon, History, Search, User, CheckCircle2, RefreshCw, XCircle, Loader2 } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -12,7 +12,6 @@ import type { FollowUp, Customer } from '@/lib/types';
 import { format, isBefore, isToday, parseISO, startOfDay, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
@@ -90,7 +89,7 @@ export default function FollowUpsPage() {
       setIsActionDialogOpen(false);
     } catch (e: any) {
       console.error("❌ CRM ERROR:", e);
-      toast({ variant: 'destructive', title: 'Erro de Permissão', description: 'Ocorreu um erro ao salvar.' });
+      toast({ variant: 'destructive', title: 'Erro ao salvar', description: 'Não foi possível atualizar o status.' });
     } finally {
       setIsSaving(false);
     }
@@ -125,7 +124,7 @@ export default function FollowUpsPage() {
       setIsActionDialogOpen(false);
     } catch (e: any) {
       console.error("❌ CRM ERROR:", e);
-      toast({ variant: 'destructive', title: 'Falha Técnica', description: 'Ocorreu um erro ao salvar.' });
+      toast({ variant: 'destructive', title: 'Falha no reagendamento', description: 'Ocorreu um erro ao salvar.' });
     } finally {
       setIsSaving(false);
     }
@@ -136,8 +135,13 @@ export default function FollowUpsPage() {
     setIsSaving(true);
     try {
         const id = selectedFollowUp?.id || doc(collection(firestore, 'users', user.uid, 'followUps')).id;
+        
+        // Sanitiza o customerId caso seja string vazia ou "none"
+        const customerId = data.customerId === 'none' || !data.customerId ? null : data.customerId;
+
         await setDoc(doc(firestore, 'users', user.uid, 'followUps', id), {
             ...data,
+            customerId,
             id,
             ownerId: user.uid,
             createdAt: selectedFollowUp?.createdAt || new Date().toISOString(),
@@ -148,7 +152,7 @@ export default function FollowUpsPage() {
         setIsFormOpen(false);
     } catch (e: any) {
         console.error("❌ CRM ERROR:", e);
-        toast({ variant: 'destructive', title: 'Falha ao Salvar', description: 'Verifique sua conexão.' });
+        toast({ variant: 'destructive', title: 'Falha ao Salvar', description: 'Verifique sua conexão ou permissões.' });
     } finally {
         setIsSaving(false);
     }
@@ -349,6 +353,7 @@ export default function FollowUpsPage() {
             customers={customers || []} 
             initialData={selectedFollowUp}
             onSubmit={handleFormSubmit}
+            isSaving={isSaving}
           />
         </DialogContent>
       </Dialog>

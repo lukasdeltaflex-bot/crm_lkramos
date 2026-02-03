@@ -15,10 +15,10 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import type { FollowUp, Customer } from '@/lib/types';
-import { useEffect, useMemo } from 'react';
-import { Search, X, User } from 'lucide-react';
+import { useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -42,9 +42,10 @@ interface Props {
   customers: Customer[];
   initialData?: FollowUp;
   onSubmit: (data: FormValues) => void;
+  isSaving?: boolean;
 }
 
-export function FollowUpForm({ customers, initialData, onSubmit }: Props) {
+export function FollowUpForm({ customers, initialData, onSubmit, isSaving = false }: Props) {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -73,7 +74,7 @@ export function FollowUpForm({ customers, initialData, onSubmit }: Props) {
   const selectedCustomerId = form.watch('customerId');
 
   useEffect(() => {
-    if (selectedCustomerId) {
+    if (selectedCustomerId && selectedCustomerId !== 'none') {
         const customer = customers.find(c => c.id === selectedCustomerId);
         if (customer) {
             form.setValue('contactName', customer.name);
@@ -91,7 +92,11 @@ export function FollowUpForm({ customers, initialData, onSubmit }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Vincular a um Cliente Existente (Opcional)</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+              <Select 
+                onValueChange={(val) => field.onChange(val === 'none' ? '' : val)} 
+                value={field.value || 'none'}
+                disabled={isSaving}
+              >
                 <FormControl>
                   <SelectTrigger className="bg-muted/30">
                     <SelectValue placeholder="Selecione um cliente cadastrado..." />
@@ -117,7 +122,7 @@ export function FollowUpForm({ customers, initialData, onSubmit }: Props) {
                     <FormItem>
                     <FormLabel>Nome do Contato</FormLabel>
                     <FormControl>
-                        <Input placeholder="Ex: João da Silva (Esposo da Ana)" {...field} />
+                        <Input placeholder="Ex: João da Silva (Esposo da Ana)" {...field} disabled={isSaving} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -130,7 +135,7 @@ export function FollowUpForm({ customers, initialData, onSubmit }: Props) {
                     <FormItem>
                     <FormLabel>Telefone (Opcional)</FormLabel>
                     <FormControl>
-                        <Input placeholder="(00) 00000-0000" {...field} />
+                        <Input placeholder="(00) 00000-0000" {...field} disabled={isSaving} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -145,7 +150,7 @@ export function FollowUpForm({ customers, initialData, onSubmit }: Props) {
             <FormItem>
               <FormLabel>Vínculo / Origem</FormLabel>
               <FormControl>
-                <Input placeholder="Ex: Indicação da cliente Maria Oliveira" {...field} />
+                <Input placeholder="Ex: Indicação da cliente Maria Oliveira" {...field} disabled={isSaving} />
               </FormControl>
               <FormDescription>Explique como chegou a este contato ou qual o vínculo.</FormDescription>
               <FormMessage />
@@ -161,7 +166,7 @@ export function FollowUpForm({ customers, initialData, onSubmit }: Props) {
                     <FormItem>
                     <FormLabel>Data do Retorno</FormLabel>
                     <FormControl>
-                        <Input type="date" {...field} />
+                        <Input type="date" {...field} disabled={isSaving} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -176,7 +181,7 @@ export function FollowUpForm({ customers, initialData, onSubmit }: Props) {
             <FormItem>
               <FormLabel>Motivo do Retorno / O que tratar</FormLabel>
               <FormControl>
-                <Textarea placeholder="Descreva detalhadamente o que deve ser feito..." {...field} />
+                <Textarea placeholder="Descreva detalhadamente o que deve ser feito..." {...field} disabled={isSaving} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -184,7 +189,16 @@ export function FollowUpForm({ customers, initialData, onSubmit }: Props) {
         />
 
         <div className="flex justify-end pt-4">
-          <Button type="submit">Salvar Agendamento</Button>
+          <Button type="submit" disabled={isSaving}>
+            {isSaving ? (
+                <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Salvando...
+                </>
+            ) : (
+                'Salvar Agendamento'
+            )}
+          </Button>
         </div>
       </form>
     </Form>
