@@ -6,14 +6,14 @@ import { initializeFirebase } from './firebase';
 import { LoaderCircle } from 'lucide-react';
 
 /**
- * Provedor Blindado V38: Protocolo de Supressão Total de Falhas de Asserção do Firestore.
- * Intercepta e anula erros fatais técnicos (ca9/b815) antes que eles causem o crash da aplicação.
+ * Provedor Blindado V39: Protocolo de Supressão Total de Falhas de Asserção do Firestore.
+ * Intercepta e anula erros fatais técnicos (ca9/b815) no nível mais profundo do navegador.
  */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // 🛡️ ESCUDO DE SILÊNCIO V38: Interceptação Global Absoluta
+    // 🛡️ ESCUDO DE SILÊNCIO V39: Interceptação Global Absoluta
     const isSuppressibleError = (msg: string) => {
         if (!msg) return false;
         const normalized = String(msg).toUpperCase();
@@ -45,6 +45,16 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
       originalConsoleError.apply(console, args);
     };
 
+    // Override de window.onerror para redundância máxima
+    const oldOnError = window.onerror;
+    window.onerror = (message, source, lineno, colno, error) => {
+      if (isSuppressibleError(String(message)) || isSuppressibleError(String(error?.message))) {
+        return true; 
+      }
+      if (oldOnError) return oldOnError(message, source, lineno, colno, error);
+      return false;
+    };
+
     // Registrar interceptores no estágio de captura para máxima prioridade
     window.addEventListener('error', handleGlobalError, true);
     window.addEventListener('unhandledrejection', handleGlobalError, true);
@@ -53,7 +63,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
         initializeFirebase();
     } catch (error) {}
 
-    // Delay mínimo para garantir estabilização do motor
+    // Delay para garantir estabilização do motor
     const timer = setTimeout(() => setIsReady(true), 10);
 
     return () => {

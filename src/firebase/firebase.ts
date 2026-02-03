@@ -12,7 +12,7 @@ const firebaseConfig = {
   appId: "1:341426752875:web:348f88597e5b9b2057d02e",
 };
 
-// 🛡️ SINGLETON ABSOLUTO V37: Bloqueio imutável no globalThis para evitar conflitos de HMR
+// 🛡️ SINGLETON ABSOLUTO V39: Bloqueio imutável no globalThis para evitar conflitos de HMR
 const g = globalThis as any;
 
 if (!g._firebaseApp) {
