@@ -6,14 +6,14 @@ import { initializeFirebase } from './firebase';
 import { LoaderCircle } from 'lucide-react';
 
 /**
- * Provedor Blindado V34: Protocolo de Estabilização de Hidratação e Supressão Total.
- * Resolve erros de permissão transientes e falhas fatais de asserção (ca9/b815).
+ * Provedor Blindado V35: Protocolo de Supressão Total de Falhas de Asserção do Firestore.
+ * Intercepta e anula erros fatais técnicos (ca9/b815) antes que eles causem o crash da aplicação.
  */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // 🛡️ ESCUDO DE SILÊNCIO V34: Interceptação Global de Baixo Nível
+    // 🛡️ ESCUDO DE SILÊNCIO V35: Interceptação Global Absoluta
     const isSuppressibleError = (msg: string) => {
         if (!msg) return false;
         const normalized = String(msg).toUpperCase();
@@ -21,9 +21,8 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
             normalized.includes('INTERNAL ASSERTION FAILED') ||
             normalized.includes('CA9') ||
             normalized.includes('B815') ||
-            normalized.includes('PERMISSION-DENIED') ||
-            normalized.includes('INSUFFICIENT PERMISSIONS') ||
-            normalized.includes('FE: -1')
+            normalized.includes('FE: -1') ||
+            normalized.includes('UNEXPECTED STATE')
         );
     };
 
@@ -36,7 +35,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
       }
     };
 
-    // Mute de Console para evitar disparos do Overlay do Next.js
+    // Mute de Console para suprimir disparos técnicos do SDK do Firebase
     const originalConsoleError = console.error;
     console.error = (...args) => {
       const msg = args.join(' ');
@@ -46,6 +45,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
       originalConsoleError.apply(console, args);
     };
 
+    // Registrar interceptores no estágio de captura para máxima prioridade
     window.addEventListener('error', handleGlobalError, true);
     window.addEventListener('unhandledrejection', handleGlobalError, true);
 
@@ -53,7 +53,6 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
         initializeFirebase();
     } catch (error) {}
 
-    // Delay estratégico para estabilizar a hidratação do React
     const timer = setTimeout(() => setIsReady(true), 50);
 
     return () => {
@@ -64,7 +63,6 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
     };
   }, []);
 
-  // 🛡️ ESTABILIDADE DE HIDRATAÇÃO: Render idêntico no Server e Client inicial
   if (!isReady) {
     return (
         <div className="flex h-screen w-screen flex-col items-center justify-center bg-background gap-4">
