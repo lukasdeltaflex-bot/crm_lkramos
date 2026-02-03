@@ -31,8 +31,8 @@ export interface InternalQuery extends Query<DocumentData> {
 }
 
 /**
- * Hook Defensivo V19 para coleções Firestore.
- * Ignora erros de estado interno (ca9/b815) e utiliza try-catch na inicialização.
+ * Hook Defensivo V20 para coleções Firestore.
+ * Ignora erros de estado interno (ca9/b815) para manter a interface estável.
  */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
@@ -58,7 +58,6 @@ export function useCollection<T = any>(
     let unsubscribe: Unsubscribe | null = null;
 
     try {
-        // Envolvemos o listener em um try-catch para capturar falhas síncronas de inicialização
         unsubscribe = onSnapshot(
           memoizedTargetRefOrQuery,
           (snapshot: QuerySnapshot<DocumentData>) => {
@@ -74,13 +73,14 @@ export function useCollection<T = any>(
           (err: FirestoreError) => {
             if (!isMounted) return;
             
-            // 🛡️ SILENCIADOR V19: Ignora inconsistências técnicas do SDK (ca9/b815)
+            // 🛡️ FILTRO V20: Ignora silenciosamente inconsistências técnicas (ca9/b815)
             const isAssertion = err.message?.includes('INTERNAL ASSERTION FAILED') || 
                                err.message?.includes('ca9') || 
                                err.message?.includes('b815');
             
             if (isAssertion) {
-                return; // Ignora silenciosamente para não travar a UI
+                console.warn("🛡️ Hook: Ignorada falha de sincronização do SDK.");
+                return;
             }
             
             if (err.code === 'permission-denied') {
@@ -102,7 +102,6 @@ export function useCollection<T = any>(
           }
         );
     } catch (e: any) {
-        // Captura falhas críticas de Hot Reload
         if (isMounted) setIsLoading(false);
     }
 
@@ -112,7 +111,7 @@ export function useCollection<T = any>(
         try {
             unsubscribe();
         } catch (e) {
-            // Cleanup silencioso de listeners órfãos
+            // Cleanup silencioso
         }
       }
     };

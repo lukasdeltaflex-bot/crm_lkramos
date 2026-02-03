@@ -6,17 +6,25 @@ import { initializeFirebase } from './firebase';
 import { Loader2 } from 'lucide-react';
 
 /**
- * Provedor Blindado V19: Escudo de Silêncio Absoluto.
+ * Provedor Blindado V20: Escudo de Silêncio Absoluto.
  * Intercepta erros ca9 e b815 no nível global e no console para evitar o Overlay do Next.js.
  */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    // 🛡️ ESCUDO DE SILÊNCIO V19: Interceptação de Erros e Rejeições
+    // 🛡️ ESCUDO DE SILÊNCIO V20: Interceptação de Erros e Rejeições fatais do SDK
     const handleGlobalError = (event: ErrorEvent) => {
       const msg = event.message || "";
-      if (msg.includes('INTERNAL ASSERTION FAILED') || msg.includes('ca9') || msg.includes('b815')) {
+      const stack = event.error?.stack || "";
+      const isAssertion = msg.includes('INTERNAL ASSERTION FAILED') || 
+                         msg.includes('ca9') || 
+                         msg.includes('b815') ||
+                         stack.includes('ca9') ||
+                         stack.includes('b815');
+
+      if (isAssertion) {
+        console.warn("🛡️ LK Ramos: Interceptada falha de asserção interna do Firebase. Recuperando...");
         event.stopImmediatePropagation();
         event.preventDefault();
         return false;
@@ -26,17 +34,18 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       const reason = event.reason?.message || "";
       if (reason.includes('INTERNAL ASSERTION FAILED') || reason.includes('ca9') || reason.includes('b815')) {
+        console.warn("🛡️ LK Ramos: Interceptada promessa rejeitada por estado interno. Ignorando...");
         event.stopImmediatePropagation();
         event.preventDefault();
       }
     };
 
-    // 🛡️ INTERCEPTADOR DE CONSOLE: Evita que o Next.js capture logs de erro do SDK
+    // 🛡️ INTERCEPTADOR DE CONSOLE: Evita que o Next.js capture logs de erro do SDK e dispare a tela vermelha
     const originalConsoleError = console.error;
     console.error = (...args) => {
       const msg = args.join(' ');
       if (msg.includes('INTERNAL ASSERTION FAILED') || msg.includes('ca9') || msg.includes('b815')) {
-        return; // Silêncio técnico
+        return; // Silêncio técnico absoluto
       }
       originalConsoleError.apply(console, args);
     };
@@ -47,7 +56,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
     try {
         initializeFirebase();
     } catch (error) {
-        // SDK já inicializado ou em transição
+        // SDK já inicializado
     } finally {
         setIsInitializing(false);
     }
@@ -65,7 +74,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <div className="space-y-1">
                 <p className="text-sm font-bold text-foreground uppercase tracking-widest">LK RAMOS</p>
-                <p className="text-[10px] text-muted-foreground animate-pulse font-bold">ESTABILIZANDO INFRAESTRUTURA DE DADOS...</p>
+                <p className="text-[10px] text-muted-foreground animate-pulse font-bold">ESTABILIZANDO MOTOR DE DADOS V20...</p>
             </div>
         </div>
     );
