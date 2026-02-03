@@ -18,8 +18,8 @@ interface StatsCardProps {
 }
 
 /**
- * StatsCard Premium Executivo V15
- * Tipografia font-light elegante, cores dinâmicas e dimensões compactas.
+ * StatsCard Premium Executivo V16
+ * Design com fonte font-light ultra-fina e cores harmonizadas.
  */
 export function StatsCard({ title, value, icon: Icon, description, percentage, className, valueClassName }: StatsCardProps) {
   
@@ -33,21 +33,14 @@ export function StatsCard({ title, value, icon: Icon, description, percentage, c
             text: 'text-orange-600 dark:text-orange-400'
         };
 
-    // SLATE: Produção / Total Digitado
-    if (t.includes('total') || t.includes('digitado') || t.includes('comissões')) 
-        return {
-            card: 'border-slate-200 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-900/10',
-            text: 'text-slate-600 dark:text-slate-300'
-        };
-    
-    // GREEN: Recebida / Paga / Pago
-    if (t.includes('recebida') || t.includes('paga') || t.includes('pago')) 
+    // GREEN: Performance / Produção / Recebida / Paga / Pago
+    if (t.includes('performance') || t.includes('recebida') || t.includes('paga') || t.includes('pago')) 
         return {
             card: 'border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-900/10',
             text: 'text-green-600 dark:text-green-400'
         };
     
-    // BLUE: Aguardando / Em Andamento
+    // BLUE: Aguardando / Em Andamento / Esperada
     if (t.includes('comissão esperada') || t.includes('aguardando') || t.includes('andamento')) 
         return {
             card: 'border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-900/10',
@@ -68,38 +61,42 @@ export function StatsCard({ title, value, icon: Icon, description, percentage, c
             text: 'text-red-600 dark:text-red-400'
         };
 
-    return { card: 'border-border bg-card', text: 'text-foreground' };
+    // SLATE: Default (Total Digitado etc)
+    return { 
+        card: 'border-slate-200 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-900/10', 
+        text: 'text-slate-600 dark:text-slate-300' 
+    };
   };
 
   const theme = getThemeStyles();
 
   return (
     <Card className={cn(
-        'hover:shadow-md transition-all group relative overflow-hidden rounded-xl h-full flex flex-col border-2 py-3 px-4', 
+        'hover:shadow-md transition-all group relative overflow-hidden rounded-xl h-full flex flex-col border-2 py-2.5 px-3.5', 
         theme.card,
         className
     )}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-2">
-        <CardTitle className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground/70 group-hover:text-primary transition-colors">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-1.5">
+        <CardTitle className="text-[9px] font-black uppercase tracking-[0.15em] text-muted-foreground/70 group-hover:text-primary transition-colors">
             {title}
         </CardTitle>
-        <Icon className={cn("h-3.5 w-3.5 opacity-60", theme.text)} />
+        <Icon className={cn("h-3 w-3 opacity-60", theme.text)} />
       </CardHeader>
       <CardContent className="flex-1 flex flex-col justify-between p-0">
         <div className="flex items-baseline justify-between gap-2">
-            <div className={cn("text-2xl font-light tracking-tighter", theme.text, valueClassName)}>
+            <div className={cn("text-xl sm:text-2xl font-light tracking-tighter", theme.text, valueClassName)}>
                 {value}
             </div>
             {percentage !== undefined && (
-                <div className="text-[9px] font-bold bg-background/60 px-1.5 py-0.5 rounded border border-border/30 text-primary">
+                <div className="text-[8px] font-bold bg-background/60 px-1.5 py-0.5 rounded border border-border/30 text-primary">
                     {percentage.toFixed(1).replace('.', ',')}%
                 </div>
             )}
         </div>
         
         {description && (
-            <div className="mt-2 border-t pt-1.5 border-border/20">
-                <p className="text-[8px] font-bold text-muted-foreground/50 uppercase tracking-tighter">
+            <div className="mt-1.5 border-t pt-1 border-border/20">
+                <p className="text-[7px] font-bold text-muted-foreground/50 uppercase tracking-tighter">
                     {description}
                 </p>
             </div>

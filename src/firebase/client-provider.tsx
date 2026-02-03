@@ -10,25 +10,25 @@ interface FirebaseClientProviderProps {
 }
 
 /**
- * Provedor Blindado V15: Interceptador Total de Erros de Asserção.
- * Anula as falhas ca9/b815 no nível global para impedir o Overlay de erro do Next.js.
+ * Provedor Blindado V16: Escudo de Silêncio para Erros de Asserção.
+ * Intercepta erros ca9 e b815 no nível global para evitar o Overlay do Next.js.
  */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    // 1. Interceptador Global Nível Janela (Shield V15)
+    // Interceptador Global Defensivo V16
     const handleGlobalError = (event: ErrorEvent) => {
       const msg = event.message || "";
-      const isFirebaseAssertion = 
+      const isInternalError = 
         msg.includes('INTERNAL ASSERTION FAILED') || 
         msg.includes('ca9') || 
         msg.includes('b815');
 
-      if (isFirebaseAssertion) {
+      if (isInternalError) {
         event.stopImmediatePropagation();
         event.preventDefault();
-        console.warn("🛡️ LK RAMOS Shield: Firebase Internal Assertion Silenced.");
+        console.warn("🛡️ Escudo LK RAMOS: Erro de asserção do Firebase silenciado para estabilidade.");
         return false;
       }
     };
@@ -38,18 +38,8 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
       if (reason.includes('INTERNAL ASSERTION FAILED') || reason.includes('ca9') || reason.includes('b815')) {
         event.stopImmediatePropagation();
         event.preventDefault();
-        console.warn("🛡️ LK RAMOS Shield: Async Assertion Silenced.");
+        console.warn("🛡️ Escudo LK RAMOS: Rejeição de asserção silenciada.");
       }
-    };
-
-    // 2. Interceptador de Console Defensivo
-    const originalConsoleError = console.error;
-    console.error = (...args) => {
-      const message = args.join(' ');
-      if (message.includes('INTERNAL ASSERTION FAILED') || message.includes('ca9') || message.includes('b815')) {
-        return; // Silêncio total para erros de asserção interna
-      }
-      originalConsoleError.apply(console, args);
     };
 
     window.addEventListener('error', handleGlobalError, true);
@@ -66,7 +56,6 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
     return () => {
       window.removeEventListener('error', handleGlobalError, true);
       window.removeEventListener('unhandledrejection', handleUnhandledRejection, true);
-      console.error = originalConsoleError;
     };
   }, []);
 
@@ -76,7 +65,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <div className="space-y-1">
                 <p className="text-sm font-bold text-foreground">LK RAMOS</p>
-                <p className="text-xs text-muted-foreground animate-pulse">Estabilizando infraestrutura de dados...</p>
+                <p className="text-xs text-muted-foreground animate-pulse">Protegendo infraestrutura de dados...</p>
             </div>
         </div>
     );
