@@ -135,26 +135,37 @@ export default function DashboardPage() {
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
+    // Pipeline acumulado: propostas digitadas desde o mês passado que ainda não foram resolvidas (ou pagas agora)
     const startOfPipeline = startOfMonth(subMonths(fromDate, 1));
 
     const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
 
-    const currentPeriodProposals = proposals.filter(p => {
+    // 1. Propostas DIGITADAS no período (Foco em Produção)
+    const digitizedInPeriod = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
         return d >= fromDate && d <= effectiveToDate;
     });
 
+    // 2. Propostas PAGAS no período (Foco em Financeiro/Meta)
+    // Regra: Contar se o status é Pago/Saldo Pago e a DATA DE PAGAMENTO está no período selecionado
+    const paidInPeriod = proposals.filter(p => {
+        if (p.status !== 'Pago' && p.status !== 'Saldo Pago') return false;
+        if (!p.datePaidToClient) return false;
+        const d = new Date(p.datePaidToClient);
+        return d >= fromDate && d <= effectiveToDate;
+    });
+
+    // 3. Propostas acumuladas para os outros cards (Pendente, Em Andamento, etc.)
     const accumulatedProposals = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
         return d >= startOfPipeline && d <= effectiveToDate;
     });
 
-    const totalDigitado = getSum(currentPeriodProposals);
-    const reprovadoValue = getSum(currentPeriodProposals.filter(p => p.status === 'Reprovado'));
-    const pagoProposals = currentPeriodProposals.filter(p => p.status === 'Pago');
-    const pagoValue = getSum(pagoProposals);
+    const totalDigitado = getSum(digitizedInPeriod);
+    const reprovadoValue = getSum(digitizedInPeriod.filter(p => p.status === 'Reprovado'));
+    const pagoValue = getSum(paidInPeriod);
 
     const pendenteProposals = accumulatedProposals.filter(p => p.status === 'Pendente');
     const emAndamentoProposals = accumulatedProposals.filter(p => p.status === 'Em Andamento');
@@ -171,7 +182,7 @@ export default function DashboardPage() {
         saldoPago: getSum(saldoPagoProposals),
         reprovado: reprovadoValue,
         pago: pagoValue,
-        totalPagoMeta: pagoValue + (getSum(currentPeriodProposals.filter(p => p.status === 'Saldo Pago'))),
+        totalPagoMeta: pagoValue, // Agora usa exclusivamente o volume pago no período
         percPendente: getPerc(getSum(pendenteProposals)),
         percEmAndamento: getPerc(getSum(emAndamentoProposals)),
         percAguardandoSaldo: getPerc(getSum(aguardandoSaldoProposals)),
@@ -182,9 +193,9 @@ export default function DashboardPage() {
             emAndamento: emAndamentoProposals,
             aguardandoSaldo: aguardandoSaldoProposals,
             saldoPago: saldoPagoProposals,
-            reprovado: currentPeriodProposals.filter(p => p.status === 'Reprovado'),
-            pago: pagoProposals,
-            todos: currentPeriodProposals
+            reprovado: digitizedInPeriod.filter(p => p.status === 'Reprovado'),
+            pago: paidInPeriod,
+            todos: digitizedInPeriod
         }
     };
   }, [proposals, appliedDateRange, isClient]);
@@ -256,7 +267,7 @@ export default function DashboardPage() {
                 currentProduction={stats.totalPagoMeta} 
                 totalDigitized={stats.totalDigitado}
                 isPrivacyMode={isPrivacyMode}
-                onValueClick={() => handleShowDetails('Contratos Pagos no Período', [...stats.proposals.pago, ...stats.proposals.todos.filter(p => p.status === 'Saldo Pago')])}
+                onValueClick={() => handleShowDetails('Contratos Pagos no Período', stats.proposals.pago)}
             />
         </div>
 
