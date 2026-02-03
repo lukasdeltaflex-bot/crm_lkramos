@@ -139,15 +139,14 @@ export default function DashboardPage() {
 
     const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
 
-    // 1. Propostas DIGITADAS no período
+    // 1. Propostas DIGITADAS no período (BASE para %)
     const digitizedInPeriod = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
         return d >= fromDate && d <= effectiveToDate;
     });
 
-    // 2. Lógica Real de Contratos PAGOS: Considera a data de pagamento ao cliente
-    // Isso inclui propostas que vieram do mês passado mas pagaram neste mês.
+    // 2. Contratos PAGOS: Considera data de pagamento (pode vir de meses passados)
     const paidInPeriod = proposals.filter(p => {
         if (p.status !== 'Pago' && p.status !== 'Saldo Pago') return false;
         if (!p.datePaidToClient) return false;
@@ -155,43 +154,37 @@ export default function DashboardPage() {
         return d >= fromDate && d <= effectiveToDate;
     });
 
-    // 3. Propostas acumuladas para cards de pipeline (Esteira ativa)
+    // 3. Propostas acumuladas para esteira ativa (Pipeline completa)
     const accumulatedProposals = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
         return d >= startOfPipeline && d <= effectiveToDate;
     });
 
-    const totalDigitado = getSum(digitizedInPeriod);
-    const reprovadoValue = getSum(digitizedInPeriod.filter(p => p.status === 'Reprovado'));
-    const pagoValue = getSum(paidInPeriod);
-
-    const pendenteProposals = accumulatedProposals.filter(p => p.status === 'Pendente');
-    const emAndamentoProposals = accumulatedProposals.filter(p => p.status === 'Em Andamento');
-    const aguardandoSaldoProposals = accumulatedProposals.filter(p => p.status === 'Aguardando Saldo');
-    const saldoPagoProposals = accumulatedProposals.filter(p => p.status === 'Saldo Pago');
-
-    const getPerc = (val: number) => totalDigitado > 0 ? (val / totalDigitado) * 100 : 0;
+    const totalDigitadoMonth = getSum(digitizedInPeriod);
+    
+    // Funçao para calcular % baseada no Total Digitado do Mês
+    const getPerc = (val: number) => totalDigitadoMonth > 0 ? (val / totalDigitadoMonth) * 100 : 0;
 
     return {
-        totalDigitado,
-        pendente: getSum(pendenteProposals),
-        emAndamento: getSum(emAndamentoProposals),
-        aguardandoSaldo: getSum(aguardandoSaldoProposals),
-        saldoPago: getSum(saldoPagoProposals),
-        reprovado: reprovadoValue,
-        pago: pagoValue,
-        totalPagoMeta: pagoValue, 
-        percPendente: getPerc(getSum(pendenteProposals)),
-        percEmAndamento: getPerc(getSum(emAndamentoProposals)),
-        percAguardandoSaldo: getPerc(getSum(aguardandoSaldoProposals)),
-        percSaldoPago: getPerc(getSum(saldoPagoProposals)),
-        percReprovado: getPerc(reprovadoValue),
+        totalDigitado: totalDigitadoMonth,
+        pendente: getSum(accumulatedProposals.filter(p => p.status === 'Pendente')),
+        emAndamento: getSum(accumulatedProposals.filter(p => p.status === 'Em Andamento')),
+        aguardandoSaldo: getSum(accumulatedProposals.filter(p => p.status === 'Aguardando Saldo')),
+        saldoPago: getSum(accumulatedProposals.filter(p => p.status === 'Saldo Pago')),
+        reprovado: getSum(digitizedInPeriod.filter(p => p.status === 'Reprovado')),
+        pago: getSum(paidInPeriod),
+        totalPagoMeta: getSum(paidInPeriod), 
+        percPendente: getPerc(getSum(accumulatedProposals.filter(p => p.status === 'Pendente'))),
+        percEmAndamento: getPerc(getSum(accumulatedProposals.filter(p => p.status === 'Em Andamento'))),
+        percAguardandoSaldo: getPerc(getSum(accumulatedProposals.filter(p => p.status === 'Aguardando Saldo'))),
+        percSaldoPago: getPerc(getSum(accumulatedProposals.filter(p => p.status === 'Saldo Pago'))),
+        percReprovado: getPerc(getSum(digitizedInPeriod.filter(p => p.status === 'Reprovado'))),
         proposals: {
-            pendente: pendenteProposals,
-            emAndamento: emAndamentoProposals,
-            aguardandoSaldo: aguardandoSaldoProposals,
-            saldoPago: saldoPagoProposals,
+            pendente: accumulatedProposals.filter(p => p.status === 'Pendente'),
+            emAndamento: accumulatedProposals.filter(p => p.status === 'Em Andamento'),
+            aguardandoSaldo: accumulatedProposals.filter(p => p.status === 'Aguardando Saldo'),
+            saldoPago: accumulatedProposals.filter(p => p.status === 'Saldo Pago'),
             reprovado: digitizedInPeriod.filter(p => p.status === 'Reprovado'),
             pago: paidInPeriod,
             todos: digitizedInPeriod
@@ -277,7 +270,6 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.totalDigitado)} 
                     icon={FileText} 
                     percentage={100}
-                    className="bg-slate-50/50 dark:bg-slate-900/40 border-slate-300 dark:border-slate-700"
                     description="PRODUÇÃO MENSAL"
                 />
             </div>
@@ -287,9 +279,7 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.pendente)} 
                     icon={BadgePercent} 
                     percentage={stats.percPendente}
-                    valueClassName="text-purple-600 dark:text-purple-400 font-normal"
-                    className="bg-purple-50/50 dark:bg-purple-900/20 border-purple-300 dark:border-purple-700"
-                    description="ACUMULADO"
+                    description="VS PRODUÇÃO ATUAL"
                 />
             </div>
             <div className="cursor-pointer" onClick={() => handleShowDetails('Em Andamento (Acumulado)', stats.proposals.emAndamento)}>
@@ -298,9 +288,7 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.emAndamento)} 
                     icon={Hourglass} 
                     percentage={stats.percEmAndamento}
-                    valueClassName="text-yellow-600 dark:text-yellow-400 font-normal"
-                    className="bg-yellow-50/50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700"
-                    description="ACUMULADO"
+                    description="VS PRODUÇÃO ATUAL"
                 />
             </div>
         </div>
@@ -312,9 +300,7 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.aguardandoSaldo)} 
                     icon={Clock} 
                     percentage={stats.percAguardandoSaldo}
-                    valueClassName="text-blue-600 dark:text-blue-400 font-normal"
-                    className="bg-blue-50/50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700"
-                    description="ACUMULADO"
+                    description="VS PRODUÇÃO ATUAL"
                 />
             </div>
             <div className="cursor-pointer" onClick={() => handleShowDetails('Saldo Pago (Acumulado)', stats.proposals.saldoPago)}>
@@ -323,9 +309,7 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.saldoPago)} 
                     icon={CheckCircle2} 
                     percentage={stats.percSaldoPago}
-                    valueClassName="text-orange-600 dark:text-orange-400 font-normal"
-                    className="bg-orange-50/50 dark:bg-orange-900/20 border-orange-300 dark:border-orange-700"
-                    description="ACUMULADO"
+                    description="VS PRODUÇÃO ATUAL"
                 />
             </div>
             <div className="cursor-pointer" onClick={() => handleShowDetails('Reprovado (Mês)', stats.proposals.reprovado)}>
@@ -334,8 +318,7 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.reprovado)} 
                     icon={XCircle} 
                     percentage={stats.percReprovado}
-                    valueClassName="text-red-600 dark:text-red-400 font-normal"
-                    className="bg-red-50/50 dark:bg-red-900/20 border-red-300 dark:border-red-700"
+                    description="DO TOTAL DIGITADO"
                 />
             </div>
         </div>

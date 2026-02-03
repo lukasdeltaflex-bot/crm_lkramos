@@ -20,6 +20,7 @@ interface StatsCardProps {
 /**
  * StatsCard Premium LK RAMOS
  * Contornos coloridos e preenchimento suave para identificação visual rápida.
+ * Fonte padronizada conforme preferência do usuário (estilo Dashboard).
  */
 export function StatsCard({ title, value, icon: Icon, description, percentage, className, valueClassName }: StatsCardProps) {
   
@@ -27,24 +28,23 @@ export function StatsCard({ title, value, icon: Icon, description, percentage, c
   const getThemeStyles = () => {
     const t = title.toLowerCase();
     
-    // Status Financeiros
-    if (t.includes('total de comissões') || t.includes('digitado')) 
-        return 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-900/20';
+    if (t.includes('total') || t.includes('digitado')) 
+        return 'border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-900/20';
     
-    if (t.includes('recebida') || t.includes('paga')) 
-        return 'border-green-200 dark:border-green-900/50 text-green-600 dark:text-green-400 bg-green-50/50 dark:bg-green-900/20';
+    if (t.includes('recebida') || t.includes('paga') || t.includes('pago')) 
+        return 'border-green-300 dark:border-green-800 text-green-600 dark:text-green-400 bg-green-50/50 dark:bg-green-900/20';
     
     if (t.includes('saldo a receber') || t.includes('saldo pago')) 
-        return 'border-orange-200 dark:border-orange-900/50 text-orange-600 dark:text-orange-400 bg-orange-50/50 dark:bg-orange-900/20';
+        return 'border-orange-300 dark:border-orange-800 text-orange-600 dark:text-orange-400 bg-orange-50/50 dark:bg-orange-900/20';
     
     if (t.includes('comissão esperada') || t.includes('aguardando') || t.includes('andamento')) 
-        return 'border-blue-200 dark:border-blue-900/50 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20';
+        return 'border-blue-300 dark:border-blue-800 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20';
     
     if (t.includes('pendente')) 
-        return 'border-purple-200 dark:border-purple-900/50 text-purple-600 dark:text-purple-400 bg-purple-50/50 dark:bg-purple-900/20';
+        return 'border-purple-300 dark:border-purple-800 text-purple-600 dark:text-purple-400 bg-purple-50/50 dark:bg-purple-900/20';
     
     if (t.includes('reprovado')) 
-        return 'border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 bg-red-50/50 dark:bg-red-900/20';
+        return 'border-red-300 dark:border-red-800 text-red-600 dark:text-red-400 bg-red-50/50 dark:bg-red-900/20';
 
     return 'border-border text-primary bg-card';
   };
@@ -67,7 +67,9 @@ export function StatsCard({ title, value, icon: Icon, description, percentage, c
       </CardHeader>
       <CardContent className="flex-1 flex flex-col justify-between print:pt-1">
         <div className="flex items-baseline justify-between gap-2">
-            <div className={cn("text-2xl font-bold tracking-tight print:text-lg", valueClassName || "text-foreground")}>{value}</div>
+            <div className={cn("text-2xl font-bold tracking-tight print:text-lg", valueClassName || "text-foreground")}>
+                {value}
+            </div>
             {percentage !== undefined && (
                 <div className="text-[10px] font-bold bg-background/80 dark:bg-black/40 px-2.5 py-1 rounded-full border border-border/50 shadow-sm text-primary">
                     {percentage.toFixed(1).replace('.', ',')}%

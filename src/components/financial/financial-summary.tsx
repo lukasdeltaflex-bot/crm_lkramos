@@ -4,7 +4,7 @@ import * as React from 'react';
 import type { Row } from '@tanstack/react-table';
 import type { Proposal, Customer } from '@/lib/types';
 import { StatsCard } from '@/components/dashboard/stats-card';
-import { formatCurrency, cn } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 import { CheckCircle, Hourglass, Coins, CircleDollarSign } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 import { subMonths, startOfMonth } from 'date-fns';
@@ -29,7 +29,9 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     commissionReceivedProposals,
     proposalsForSaldoAReceber,
     expectedCommissionProposals,
-    paidPercentage
+    percRecebida,
+    percSaldo,
+    percEsperada
   } = React.useMemo(() => {
     const allProposals = Array.isArray(rows) && rows.length > 0 
         ? ('original' in rows[0] ? (rows as Row<ProposalWithCustomer>[]).map(r => r.original) : (rows as ProposalWithCustomer[]))
@@ -56,14 +58,14 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
         return d >= startOfPipeline && d <= effectiveToDate;
     });
 
-    // 1. Total de Comissões (O que foi digitado no mês)
+    // 1. Total de Comissões do Mês (BASE para porcentagens)
     const totalPotentialCommission = currentMonthProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
     
     // 2. Comissões Recebidas (O que foi digitado no mês e já pagou)
     const commissionReceivedProposals = currentMonthProposals.filter(p => p.commissionStatus === 'Paga');
     const totalAmountPaid = commissionReceivedProposals.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
     
-    // 3. Saldo a Receber (ACUMULADO: Propostas averbadas ou pagas ao cliente que faltam comissão)
+    // 3. Saldo a Receber (ACUMULADO)
     const proposalsForSaldoAReceber = accumulatedProposals.filter(p => {
         if (p.commissionStatus === 'Paga') return false;
         const hasAverbacao = !!p.dateApproved;
@@ -72,7 +74,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     });
     const pendingAmount = proposalsForSaldoAReceber.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
 
-    // 4. Comissão Esperada (ACUMULADO: Tudo o que está digitado mas não averbado/pago)
+    // 4. Comissão Esperada (ACUMULADO)
     const expectedCommissionProposals = accumulatedProposals.filter(p => {
         if (p.commissionStatus === 'Paga') return false;
         const isReprovado = p.status === 'Reprovado';
@@ -96,7 +98,9 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       commissionReceivedProposals,
       proposalsForSaldoAReceber,
       expectedCommissionProposals,
-      paidPercentage: getPercentage(totalAmountPaid),
+      percRecebida: getPercentage(totalAmountPaid),
+      percSaldo: getPercentage(pendingAmount),
+      percEsperada: getPercentage(expectedAmount),
     };
   }, [rows, currentMonthRange]);
   
@@ -109,34 +113,34 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       icon: Coins,
       description: "PRODUÇÃO MENSAL",
       proposals: allProposalsInPeriod,
-      percentage: 100, // Sempre 100% pois é a base do período
+      percentage: 100,
     },
     {
       title: "Comissão Recebida",
       value: formatCurrency(totalAmountPaid),
       icon: CheckCircle,
-      description: "DIGITADO NO MÊS",
+      description: "DA PRODUÇÃO ATUAL",
       valueClassName: "text-green-600 dark:text-green-400",
       proposals: commissionReceivedProposals,
-      percentage: paidPercentage, // Mostra quanto da produção do mês já foi pago
+      percentage: percRecebida,
     },
     {
       title: "Saldo a Receber",
       value: formatCurrency(pendingAmount),
       icon: Hourglass,
-      description: "ACUMULADO",
+      description: "VS PRODUÇÃO ATUAL",
       valueClassName: "text-orange-600 dark:text-orange-400",
       proposals: proposalsForSaldoAReceber,
-      percentage: undefined, // Removido para evitar confusão (Acumulado != Mensal)
+      percentage: percSaldo,
     },
     {
       title: "Comissão Esperada",
       value: formatCurrency(expectedAmount),
       icon: CircleDollarSign,
-      description: "ACUMULADO",
+      description: "VS PRODUÇÃO ATUAL",
       valueClassName: "text-blue-600 dark:text-blue-400",
       proposals: expectedCommissionProposals,
-      percentage: undefined, // Removido para evitar confusão (Acumulado != Mensal)
+      percentage: percEsperada,
     },
   ];
 
