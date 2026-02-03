@@ -12,7 +12,7 @@ const firebaseConfig = {
   appId: "1:341426752875:web:348f88597e5b9b2057d02e",
 };
 
-// Singleton Blindado V16: Proteção absoluta contra reinicialização ca9/b815
+// Singleton Blindado V17: Proteção absoluta contra reinicialização ca9/b815
 const globalForFirebase = globalThis as unknown as {
   app: FirebaseApp | undefined;
   auth: Auth | undefined;
@@ -30,7 +30,7 @@ if (globalForFirebase.db) {
         // Tenta recuperar instância existente
         db = getExistingFirestore(app);
     } catch (e) {
-        // Inicialização com protocolo Long Polling forçado para evitar erro ca9
+        // Inicialização com protocolo Long Polling forçado para evitar erro ca9 em nuvem
         db = initializeFirestore(app, {
             cacheSizeBytes: CACHE_SIZE_UNLIMITED,
             experimentalForceLongPolling: true,

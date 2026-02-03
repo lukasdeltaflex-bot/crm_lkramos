@@ -46,20 +46,20 @@ export function GoalCard({ currentProduction, totalDigitized, isPrivacyMode, onV
   const percentageOfGoal = Math.min((currentProduction / monthlyGoal) * 100, 100);
   const conversionRate = totalDigitized > 0 ? (currentProduction / totalDigitized) * 100 : 0;
 
-  if (!isClient) return <Card className="h-40 animate-pulse bg-muted rounded-xl w-full" />;
+  if (!isClient) return <Card className="h-32 animate-pulse bg-muted rounded-xl w-full" />;
 
   return (
     <Card className={cn(
-        'relative overflow-hidden bg-green-50/50 dark:bg-green-900/10 border-2 border-green-200 dark:border-green-800 shadow-md rounded-2xl w-full py-4', 
+        'relative overflow-hidden bg-green-50/50 dark:bg-green-900/10 border-2 border-green-200 dark:border-green-800 shadow-md rounded-2xl w-full', 
         className
     )}>
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
+      <CardContent className="p-4 sm:p-6">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2">
             <Trophy className="h-4 w-4 text-green-500" />
             <div>
-              <h3 className="text-sm font-bold text-green-700 dark:text-green-400">Performance do Mês</h3>
-              <p className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest">Contratos Pagos vs Meta</p>
+              <h3 className="text-xs sm:text-sm font-bold text-green-700 dark:text-green-400 uppercase tracking-tight">Performance do Mês</h3>
+              <p className="text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest">Contratos Pagos vs Meta</p>
             </div>
           </div>
 
@@ -77,7 +77,7 @@ export function GoalCard({ currentProduction, totalDigitized, isPrivacyMode, onV
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <div className="text-[10px] font-bold text-green-700 bg-white/80 px-2 py-0.5 rounded border border-green-100 shadow-sm">
+              <div className="text-[9px] font-bold text-green-700 bg-white/80 px-2 py-0.5 rounded border border-green-100 shadow-sm">
                 Meta: {isPrivacyMode ? '•••••' : formatCurrency(monthlyGoal)}
               </div>
               <Button variant="ghost" size="icon" className="h-6 w-6 opacity-40 hover:opacity-100" onClick={() => setIsEditing(true)}>
@@ -87,9 +87,9 @@ export function GoalCard({ currentProduction, totalDigitized, isPrivacyMode, onV
           )}
         </div>
 
-        <div className="flex items-end justify-between mb-4" onClick={onValueClick}>
-          <div className="space-y-0.5 cursor-pointer">
-            <div className="text-4xl font-light tracking-tighter text-green-600 dark:text-green-400">
+        <div className="flex items-end justify-between mb-3" onClick={onValueClick}>
+          <div className="space-y-0 cursor-pointer">
+            <div className="text-3xl sm:text-4xl font-light tracking-tighter text-green-600 dark:text-green-400">
               {isPrivacyMode ? '•••••' : formatCurrency(currentProduction)}
             </div>
             <div className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground uppercase">
@@ -99,10 +99,10 @@ export function GoalCard({ currentProduction, totalDigitized, isPrivacyMode, onV
           </div>
 
           <div className="text-right">
-            <div className="text-3xl font-light text-green-600 dark:text-green-400 tracking-tighter">
+            <div className="text-2xl sm:text-3xl font-light text-green-600 dark:text-green-400 tracking-tighter">
               {percentageOfGoal.toFixed(1)}%
             </div>
-            <p className="text-[8px] font-bold text-muted-foreground/60 uppercase tracking-widest">Objetivo</p>
+            <p className="text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest">Objetivo</p>
           </div>
         </div>
 

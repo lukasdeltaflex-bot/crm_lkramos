@@ -7,7 +7,7 @@ import { StatsCard } from '@/components/dashboard/stats-card';
 import { formatCurrency } from '@/lib/utils';
 import { CheckCircle, Hourglass, Coins, CircleDollarSign } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
-import { subMonths, startOfMonth } from 'date-fns';
+import { subMonths, startOfMonth, endOfMonth } from 'date-fns';
 
 type ProposalWithCustomer = Proposal & { customer: Customer };
 
@@ -37,8 +37,9 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
         ? ('original' in rows[0] ? (rows as Row<ProposalWithCustomer>[]).map(r => r.original) : (rows as ProposalWithCustomer[]))
         : [];
     
-    const fromDate = currentMonthRange.from || new Date();
-    const toDate = currentMonthRange.to || new Date();
+    const today = new Date();
+    const fromDate = currentMonthRange?.from || startOfMonth(today);
+    const toDate = currentMonthRange?.to || endOfMonth(today);
     
     const startOfPipeline = startOfMonth(subMonths(fromDate, 1));
     const effectiveToDate = new Date(toDate);
@@ -57,14 +58,14 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     const commissionReceivedProposals = currentMonthProposals.filter(p => p.commissionStatus === 'Paga');
     const totalAmountPaid = commissionReceivedProposals.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
 
-    // 3. ACUMULADOS: Buscamos dados de 1 mês atrás até hoje
+    // 3. ACUMULADOS: Buscamos dados de 1 mês atrás até hoje para Pipeline
     const accumulatedProposals = allProposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
         return d >= startOfPipeline && d <= effectiveToDate;
     });
 
-    // Saldo a Receber (ACUMULADO)
+    // Saldo a Receber (ACUMULADO - Averbados ou Pagos sem comissão)
     const proposalsForSaldoAReceber = accumulatedProposals.filter(p => {
         if (p.commissionStatus === 'Paga') return false;
         const hasAverbacao = !!p.dateApproved;
@@ -73,19 +74,19 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     });
     const pendingAmount = proposalsForSaldoAReceber.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
 
-    // Comissão Esperada (ACUMULADO)
+    // Comissão Esperada (ACUMULADO - Digitados sem averbação ainda)
     const expectedCommissionProposals = accumulatedProposals.filter(p => {
         if (p.commissionStatus === 'Paga') return false;
         const isReprovado = p.status === 'Reprovado';
         const hasAverbacao = !!p.dateApproved;
-        const isPagoStatus = p.status === 'Pago';
+        const isPagoStatus = p.status === 'Pago' || p.status === 'Saldo Pago';
         return !isReprovado && !hasAverbacao && !isPagoStatus;
     });
     const expectedAmount = expectedCommissionProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
     
-    // REGRA DE OURO: Todas as porcentagens baseadas no Total de Comissões (Digitado no Mês Vigente)
+    // REGRA DE OURO: Todas as porcentagens baseadas no Total de Comissões do Mês Vigente
     const getPercentage = (value: number) => {
-        if (totalPotentialCommission === 0) return 0;
+        if (totalPotentialCommission <= 0) return 0;
         return (value / totalPotentialCommission) * 100;
     };
 
