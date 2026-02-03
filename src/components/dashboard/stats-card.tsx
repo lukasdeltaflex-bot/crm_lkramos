@@ -19,46 +19,57 @@ interface StatsCardProps {
 
 /**
  * StatsCard Premium LK RAMOS
- * Altura rigorosamente uniforme e contornos coloridos leves para identificação do status.
+ * Contornos coloridos e preenchimento suave para identificação visual rápida.
  */
 export function StatsCard({ title, value, icon: Icon, description, percentage, className, valueClassName }: StatsCardProps) {
   
-  // Mapeamento de cores para bordas e ícones baseado no título para o efeito de contorno leve
-  const getThemeColor = () => {
+  // Mapeamento de cores para bordas, fundos e ícones baseado no título
+  const getThemeStyles = () => {
     const t = title.toLowerCase();
-    if (t.includes('digitado')) return 'border-slate-200 dark:border-slate-800 text-slate-500';
-    if (t.includes('pendente')) return 'border-purple-200 dark:border-purple-900/50 text-purple-500';
-    if (t.includes('andamento')) return 'border-yellow-200 dark:border-yellow-900/50 text-yellow-500';
-    if (t.includes('aguardando')) return 'border-blue-200 dark:border-blue-900/50 text-blue-500';
-    if (t.includes('saldo pago')) return 'border-orange-200 dark:border-orange-900/50 text-orange-500';
-    if (t.includes('reprovado')) return 'border-red-200 dark:border-red-900/50 text-red-500';
-    if (t.includes('comissão') || t.includes('paga') || t.includes('recebida')) return 'border-green-200 dark:border-green-900/50 text-green-500';
-    if (t.includes('esperada')) return 'border-blue-200 dark:border-blue-900/50 text-blue-500';
-    if (t.includes('saldo a receber')) return 'border-orange-200 dark:border-orange-900/50 text-orange-500';
-    return 'border-border text-primary';
+    
+    // Status Financeiros
+    if (t.includes('total de comissões') || t.includes('digitado')) 
+        return 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-900/20';
+    
+    if (t.includes('recebida') || t.includes('paga')) 
+        return 'border-green-200 dark:border-green-900/50 text-green-600 dark:text-green-400 bg-green-50/50 dark:bg-green-900/20';
+    
+    if (t.includes('saldo a receber') || t.includes('saldo pago')) 
+        return 'border-orange-200 dark:border-orange-900/50 text-orange-600 dark:text-orange-400 bg-orange-50/50 dark:bg-orange-900/20';
+    
+    if (t.includes('comissão esperada') || t.includes('aguardando') || t.includes('andamento')) 
+        return 'border-blue-200 dark:border-blue-900/50 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20';
+    
+    if (t.includes('pendente')) 
+        return 'border-purple-200 dark:border-purple-900/50 text-purple-600 dark:text-purple-400 bg-purple-50/50 dark:bg-purple-900/20';
+    
+    if (t.includes('reprovado')) 
+        return 'border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 bg-red-50/50 dark:bg-red-900/20';
+
+    return 'border-border text-primary bg-card';
   };
 
-  const themeClasses = getThemeColor();
+  const themeClasses = getThemeStyles();
 
   return (
     <Card className={cn(
-        'hover:shadow-xl transition-all group relative overflow-hidden bg-card shadow-md rounded-xl h-full min-h-[160px] flex flex-col border-2', 
-        themeClasses.split(' ')[0],
+        'hover:shadow-lg transition-all group relative overflow-hidden shadow-md rounded-xl h-full min-h-[160px] flex flex-col border-2', 
+        themeClasses,
         className
     )}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 print:pb-1">
-        <CardTitle className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground group-hover:text-primary transition-colors print:text-[8px]">
+        <CardTitle className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground/80 group-hover:text-primary transition-colors print:text-[8px]">
             {title}
         </CardTitle>
-        <div className={cn("p-2 rounded-lg bg-current/5 transition-colors", themeClasses.split(' ')[2])}>
-            <Icon className="h-4 w-4 opacity-70 group-hover:opacity-100 transition-opacity" />
+        <div className="p-2 rounded-lg bg-background/50 dark:bg-black/20 shadow-sm border border-border/10">
+            <Icon className="h-4 w-4 opacity-80 group-hover:opacity-100 transition-opacity" />
         </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col justify-between print:pt-1">
         <div className="flex items-baseline justify-between gap-2">
-            <div className={cn("text-2xl font-normal tracking-tight text-foreground print:text-lg", valueClassName)}>{value}</div>
+            <div className={cn("text-2xl font-bold tracking-tight print:text-lg", valueClassName || "text-foreground")}>{value}</div>
             {percentage !== undefined && (
-                <div className="text-[10px] font-bold bg-background dark:bg-black/40 px-2.5 py-1 rounded-full border border-border/50 shadow-sm text-primary">
+                <div className="text-[10px] font-bold bg-background/80 dark:bg-black/40 px-2.5 py-1 rounded-full border border-border/50 shadow-sm text-primary">
                     {percentage.toFixed(1).replace('.', ',')}%
                 </div>
             )}
@@ -66,7 +77,7 @@ export function StatsCard({ title, value, icon: Icon, description, percentage, c
         
         <div className="mt-3 border-t pt-2 border-border/30 min-h-[24px]">
             {description ? (
-                <p className="text-[10px] font-bold text-muted-foreground mt-0 uppercase tracking-tighter opacity-60">
+                <p className="text-[10px] font-bold text-muted-foreground/60 mt-0 uppercase tracking-tighter">
                     {description}
                 </p>
             ) : (

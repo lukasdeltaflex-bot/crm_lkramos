@@ -29,9 +29,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     commissionReceivedProposals,
     proposalsForSaldoAReceber,
     expectedCommissionProposals,
-    paidPercentage,
-    pendingPercentage,
-    expectedPercentage
+    paidPercentage
   } = React.useMemo(() => {
     const allProposals = Array.isArray(rows) && rows.length > 0 
         ? ('original' in rows[0] ? (rows as Row<ProposalWithCustomer>[]).map(r => r.original) : (rows as ProposalWithCustomer[]))
@@ -44,22 +42,28 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
+    // Filtragem para Produção Mensal (Digitado no período)
     const currentMonthProposals = allProposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
         return d >= fromDate && d <= effectiveToDate;
     });
 
+    // Filtragem para Acumulado (Pipeline completa)
     const accumulatedProposals = allProposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
         return d >= startOfPipeline && d <= effectiveToDate;
     });
 
+    // 1. Total de Comissões (O que foi digitado no mês)
     const totalPotentialCommission = currentMonthProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
+    
+    // 2. Comissões Recebidas (O que foi digitado no mês e já pagou)
     const commissionReceivedProposals = currentMonthProposals.filter(p => p.commissionStatus === 'Paga');
     const totalAmountPaid = commissionReceivedProposals.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
     
+    // 3. Saldo a Receber (ACUMULADO: Propostas averbadas ou pagas ao cliente que faltam comissão)
     const proposalsForSaldoAReceber = accumulatedProposals.filter(p => {
         if (p.commissionStatus === 'Paga') return false;
         const hasAverbacao = !!p.dateApproved;
@@ -68,6 +72,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     });
     const pendingAmount = proposalsForSaldoAReceber.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
 
+    // 4. Comissão Esperada (ACUMULADO: Tudo o que está digitado mas não averbado/pago)
     const expectedCommissionProposals = accumulatedProposals.filter(p => {
         if (p.commissionStatus === 'Paga') return false;
         const isReprovado = p.status === 'Reprovado';
@@ -92,8 +97,6 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       proposalsForSaldoAReceber,
       expectedCommissionProposals,
       paidPercentage: getPercentage(totalAmountPaid),
-      pendingPercentage: totalPotentialCommission > 0 ? (pendingAmount / totalPotentialCommission) * 100 : 0,
-      expectedPercentage: totalPotentialCommission > 0 ? (expectedAmount / totalPotentialCommission) * 100 : 0,
     };
   }, [rows, currentMonthRange]);
   
@@ -105,39 +108,35 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       value: formatCurrency(totalPotentialCommission),
       icon: Coins,
       description: "PRODUÇÃO MENSAL",
-      className: "border-border/50 bg-muted/10 shadow-sm",
       proposals: allProposalsInPeriod,
-      percentage: 100,
+      percentage: 100, // Sempre 100% pois é a base do período
     },
     {
       title: "Comissão Recebida",
       value: formatCurrency(totalAmountPaid),
       icon: CheckCircle,
-      description: "PAGO NO MÊS",
-      className: "border-border/50 bg-green-100/10 dark:bg-green-900/20 shadow-sm",
-      valueClassName: "text-green-500 font-normal",
+      description: "DIGITADO NO MÊS",
+      valueClassName: "text-green-600 dark:text-green-400",
       proposals: commissionReceivedProposals,
-      percentage: paidPercentage,
+      percentage: paidPercentage, // Mostra quanto da produção do mês já foi pago
     },
     {
       title: "Saldo a Receber",
       value: formatCurrency(pendingAmount),
       icon: Hourglass,
       description: "ACUMULADO",
-      className: "border-border/50 bg-orange-100/10 dark:bg-orange-900/20 shadow-sm",
-      valueClassName: "text-orange-500 font-normal",
+      valueClassName: "text-orange-600 dark:text-orange-400",
       proposals: proposalsForSaldoAReceber,
-      percentage: pendingPercentage,
+      percentage: undefined, // Removido para evitar confusão (Acumulado != Mensal)
     },
     {
       title: "Comissão Esperada",
       value: formatCurrency(expectedAmount),
       icon: CircleDollarSign,
       description: "ACUMULADO",
-      className: "border-border/50 bg-blue-100/10 dark:bg-blue-900/20 shadow-sm",
-      valueClassName: "text-blue-500 font-normal",
+      valueClassName: "text-blue-600 dark:text-blue-400",
       proposals: expectedCommissionProposals,
-      percentage: expectedPercentage,
+      percentage: undefined, // Removido para evitar confusão (Acumulado != Mensal)
     },
   ];
 
@@ -152,7 +151,6 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
                         icon={card.icon}
                         description={card.description}
                         percentage={card.percentage}
-                        className={cn("h-full", card.className)}
                         valueClassName={card.valueClassName}
                     />
                 </div>
