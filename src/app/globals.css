@@ -67,7 +67,7 @@
   }
 }
 
-/* Theme Color Overrides - Garantindo que o Modo Claro respeite as cores escolhidas */
+/* Theme Color Overrides - Respeitando a cor escolhida no Modo Claro e Escuro */
 .theme-zinc { --primary: 240 5.9% 10%; --ring: 240 5.9% 10%; }
 .dark .theme-zinc { --primary: 240 5.9% 90%; --ring: 240 5.9% 90%; }
 
