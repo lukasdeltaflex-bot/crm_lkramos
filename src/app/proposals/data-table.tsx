@@ -310,14 +310,8 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         
         // BUSCA EXATA POR ID DO CLIENTE OU PROPOSTA
         if (/^\d+$/.test(searchTerm)) {
-            // Busca exata pelo ID numérico do cliente vinculado
             if (customer && String(customer.numericId) === searchTerm) return true;
-            
-            // Busca exata pelo número da proposta
             if (proposal.proposalNumber === searchTerm) return true;
-
-            // Se for um número curto (< 7 dígitos) e não bater com IDs exatos,
-            // barramos a busca parcial para evitar poluição com partes de CPF/Telefone.
             if (searchTerm.length < 7) return false;
         }
 
@@ -343,7 +337,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   React.useEffect(() => {
     const statusColumn = table.getColumn('status');
     if (statusFilter === 'Todos') {
-      // Agora a aba 'Todos' remove o filtro de coluna, mostrando inclusive reprovadas e permitindo a busca global nelas
+      // PERMITE BUSCAR EM TUDO (INCLUINDO REPROVADAS) NA ABA TODOS
       statusColumn?.setFilterValue(undefined);
     } else {
       statusColumn?.setFilterValue([statusFilter]);
@@ -470,10 +464,10 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
             </div>
             <div className="flex items-center justify-between py-4">
             <div className="flex items-center gap-2 flex-grow">
-                <div className='relative w-full max-w-md'>
+                <div className='relative w-full max-md:max-w-full max-w-md'>
                     <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
                     <Input
-                    placeholder="Filtrar por ID, nome, CPF, proposta..."
+                    placeholder="Busca Inteligente (Nome, CPF, ID, Proposta...)"
                     value={globalFilter ?? ''}
                     onChange={(event) => setGlobalFilter(event.target.value)}
                     className="pl-9 w-full bg-card"

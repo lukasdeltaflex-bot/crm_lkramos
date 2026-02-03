@@ -18,7 +18,7 @@ import {
   banks as initialBanks,
   commissionStatuses as initialCommissionStatuses,
 } from '@/lib/config-data';
-import { ListChecks, Palette, UserCog, Database, FileDown, Loader2, CloudUpload } from 'lucide-react';
+import { ListChecks, Palette, UserCog, Database, FileDown, Loader2, CloudUpload, CheckCircle2, XCircle } from 'lucide-react';
 import { EditableList } from '@/components/settings/editable-list';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { doc, setDoc, collection, query, where } from 'firebase/firestore';
@@ -30,12 +30,21 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ThemeColors } from '@/components/settings/theme-colors';
 import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
+
+const DRIVE_LINKED_KEY = 'lk-ramos-google-drive-linked-v1';
 
 export default function SettingsPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const [isExporting, setIsExporting] = useState(false);
   const [isLinkingDrive, setIsLinkingDrive] = useState(false);
+  const [isDriveLinked, setIsDriveLinked] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(DRIVE_LINKED_KEY);
+    if (saved === 'true') setIsDriveLinked(true);
+  }, []);
 
   const settingsDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -44,7 +53,6 @@ export default function SettingsPage() {
 
   const { data: userSettings, isLoading: isSettingsLoading } = useDoc<UserSettings>(settingsDocRef);
 
-  // Queries for Backup
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid));
@@ -125,14 +133,22 @@ export default function SettingsPage() {
 
   const handleLinkGoogleDrive = () => {
     setIsLinkingDrive(true);
-    // Simulação de autenticação com Google Drive
+    // Simulação de autenticação com Google Drive (Em produção abriria o Login Google)
     setTimeout(() => {
         setIsLinkingDrive(false);
+        setIsDriveLinked(true);
+        localStorage.setItem(DRIVE_LINKED_KEY, 'true');
         toast({
-            title: "Conta Google Vinculada!",
-            description: "O backup automático para o Google Drive foi ativado com sucesso.",
+            title: "Simulação: Conta Google Vinculada!",
+            description: "O sistema agora simula o backup automático semanal.",
         });
-    }, 2000);
+    }, 1500);
+  };
+
+  const handleUnlinkDrive = () => {
+    setIsDriveLinked(false);
+    localStorage.removeItem(DRIVE_LINKED_KEY);
+    toast({ title: "Google Drive Desvinculado" });
   };
   
   const isLoading = isUserLoading || isSettingsLoading;
@@ -186,17 +202,35 @@ export default function SettingsPage() {
                             </Button>
                         </div>
 
-                        <div className="flex items-center justify-between p-4 border rounded-lg bg-blue-50/20 dark:bg-blue-950/10 border-blue-200 dark:border-blue-900">
-                            <div className="space-y-1">
-                                <div className="flex items-center gap-2">
-                                    <CloudUpload className="h-4 w-4 text-blue-500" />
-                                    <p className="text-sm font-medium">Backup para Google Drive</p>
+                        <div className={cn(
+                            "flex flex-col gap-4 p-4 border rounded-lg transition-colors",
+                            isDriveLinked ? "bg-green-50/20 border-green-200" : "bg-blue-50/20 border-blue-200"
+                        )}>
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                        <CloudUpload className={cn("h-4 w-4", isDriveLinked ? "text-green-500" : "text-blue-500")} />
+                                        <p className="text-sm font-medium">Backup para Google Drive</p>
+                                        {isDriveLinked && <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100">ATIVO (Simulação)</Badge>}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">Cria uma cópia de segurança semanalmente no seu Drive.</p>
                                 </div>
-                                <p className="text-xs text-muted-foreground">Salva automaticamente uma cópia semanalmente.</p>
+                                {isDriveLinked ? (
+                                    <Button onClick={handleUnlinkDrive} variant="outline" className="text-destructive hover:bg-destructive/10">
+                                        <XCircle className="mr-2 h-4 w-4" /> Desvincular Conta
+                                    </Button>
+                                ) : (
+                                    <Button onClick={handleLinkGoogleDrive} disabled={isLinkingDrive || isLoading} variant="outline" className="min-w-[200px] border-blue-300 text-blue-600 hover:bg-blue-50">
+                                        {isLinkingDrive ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Conectando...</> : "Vincular Conta Google"}
+                                    </Button>
+                                )}
                             </div>
-                            <Button onClick={handleLinkGoogleDrive} disabled={isLinkingDrive || isLoading} variant="outline" className="min-w-[200px] border-blue-300 text-blue-600 hover:bg-blue-50">
-                                {isLinkingDrive ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Vinculando...</> : "Vincular Google Drive"}
-                            </Button>
+                            {isDriveLinked && (
+                                <div className="flex items-center gap-2 text-[11px] text-green-600 font-medium bg-green-50 p-2 rounded border border-green-100">
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    <span>Vínculo simulado ativo com: {user?.email || 'sua-conta@gmail.com'}</span>
+                                </div>
+                            )}
                         </div>
                     </CardContent>
                 </Card>

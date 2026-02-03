@@ -146,8 +146,8 @@ export default function DashboardPage() {
         return d >= fromDate && d <= effectiveToDate;
     });
 
-    // 2. Propostas PAGAS no período (Lógica Real: Data de Pagamento ao Cliente)
-    // Isso garante que contratos que vieram do mês passado mas pagaram agora entrem na meta.
+    // 2. Lógica Real de Contratos PAGOS: Considera a data de pagamento ao cliente
+    // Isso inclui propostas que vieram do mês passado mas pagaram neste mês.
     const paidInPeriod = proposals.filter(p => {
         if (p.status !== 'Pago' && p.status !== 'Saldo Pago') return false;
         if (!p.datePaidToClient) return false;
@@ -155,7 +155,7 @@ export default function DashboardPage() {
         return d >= fromDate && d <= effectiveToDate;
     });
 
-    // 3. Propostas acumuladas para cards de pipeline (Desde o mês passado para visibilidade de esteira ativa)
+    // 3. Propostas acumuladas para cards de pipeline (Esteira ativa)
     const accumulatedProposals = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);

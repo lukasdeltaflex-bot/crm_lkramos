@@ -67,7 +67,7 @@
   }
 }
 
-/* Theme Color Overrides - Alta Especificidade para garantir funcionamento no Modo Claro */
+/* Theme Color Overrides - Alta Especificidade para Garantir o Modo Claro */
 :root.theme-zinc, [class*="theme-zinc"] { --primary: 240 5.9% 10%; --ring: 240 5.9% 10%; }
 :root.theme-slate, [class*="theme-slate"] { --primary: 215 25% 27%; --ring: 215 25% 27%; }
 :root.theme-blue, [class*="theme-blue"] { --primary: 217.2 91.2% 59.8%; --ring: 217.2 91.2% 59.8%; }
