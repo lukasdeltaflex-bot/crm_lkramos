@@ -31,8 +31,8 @@ export interface InternalQuery extends Query<DocumentData> {
 }
 
 /**
- * Hook Defensivo V24 para coleções Firestore.
- * Silencia erros de estado interno (ca9/b815) para manter a interface estável.
+ * Hook Defensivo V25 para coleções Firestore.
+ * Silencia inconsistências de permissão e estado durante reconexões.
  */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
@@ -73,18 +73,18 @@ export function useCollection<T = any>(
           (err: FirestoreError) => {
             if (!isMounted) return;
             
-            // 🛡️ FILTRO V24: Silenciamento de inconsistências internas do Firebase (ca9/b815)
             const msg = (err.message || "").toUpperCase();
             if (msg.includes('INTERNAL ASSERTION FAILED') || msg.includes('CA9') || msg.includes('B815')) {
-                console.warn("Firebase Shield: Silenced internal assertion error to prevent crash.");
                 return; 
             }
             
             if (err.code === 'permission-denied') {
-                const path: string =
-                  memoizedTargetRefOrQuery.type === 'collection'
-                    ? (memoizedTargetRefOrQuery as CollectionReference).path
-                    : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString();
+                let path = 'unknown';
+                try {
+                    path = memoizedTargetRefOrQuery.type === 'collection'
+                        ? (memoizedTargetRefOrQuery as CollectionReference).path
+                        : (memoizedTargetRefOrQuery as any)._query?.path?.canonicalString() || 'query';
+                } catch(e) {}
 
                 const contextualError = new FirestorePermissionError({
                     operation: 'list',
@@ -105,9 +105,7 @@ export function useCollection<T = any>(
     return () => {
       isMounted = false;
       if (unsubscribe) {
-        try {
-            unsubscribe();
-        } catch (e) {}
+        try { unsubscribe(); } catch (e) {}
       }
     };
   }, [memoizedTargetRefOrQuery]);

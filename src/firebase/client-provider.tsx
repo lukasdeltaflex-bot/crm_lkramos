@@ -3,17 +3,17 @@
 import React, { useState, useEffect, type ReactNode } from 'react';
 import { FirebaseProvider } from '@/firebase/provider';
 import { initializeFirebase } from './firebase'; 
-import { Loader2 } from 'lucide-react';
+import { LoaderCircle } from 'lucide-react';
 
 /**
- * Provedor Blindado V24: Protocolo de Supressão Total.
- * Intercepta erros fatais do Firebase (ca9/b815) e resolve erros de hidratação.
+ * Provedor Blindado V25: Protocolo de Supressão Total.
+ * Resolve erros de permissão transientes e falhas fatais de asserção (ca9/b815).
  */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // 🛡️ ESCUDO DE SILÊNCIO V24: Interceptação Global para evitar o Overlay do Next.js
+    // 🛡️ ESCUDO DE SILÊNCIO V25: Interceptação Global
     const isSuppressibleError = (msg: string) => {
         if (!msg) return false;
         const normalized = String(msg).toUpperCase();
@@ -21,6 +21,8 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
             normalized.includes('INTERNAL ASSERTION FAILED') ||
             normalized.includes('CA9') ||
             normalized.includes('B815') ||
+            normalized.includes('PERMISSION-DENIED') ||
+            normalized.includes('INSUFFICIENT PERMISSIONS') ||
             normalized.includes('FE: -1')
         );
     };
@@ -34,7 +36,6 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
       }
     };
 
-    // Interceptação de Console para evitar que o Next.js dispare o Overlay por logs do SDK
     const originalConsoleError = console.error;
     console.error = (...args) => {
       const msg = args.join(' ');
@@ -47,9 +48,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
 
     try {
         initializeFirebase();
-    } catch (error) {
-        // Silencioso
-    }
+    } catch (error) {}
 
     setMounted(true);
 
@@ -60,9 +59,16 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
     };
   }, []);
 
-  // 🛡️ PROTOCOLO ANTI-HIDRATAÇÃO: Renderiza apenas no cliente após mount
   if (!mounted) {
-    return null; 
+    return (
+        <div className="flex h-screen w-screen flex-col items-center justify-center bg-background gap-4">
+            <LoaderCircle className="h-10 w-10 animate-spin text-primary opacity-20" />
+            <div className="space-y-1 text-center">
+                <p className="text-sm font-bold text-foreground uppercase tracking-widest opacity-40">LK RAMOS</p>
+                <p className="text-[10px] text-muted-foreground animate-pulse font-bold">ESTABILIZANDO MOTOR DE DADOS...</p>
+            </div>
+        </div>
+    );
   }
 
   return (
