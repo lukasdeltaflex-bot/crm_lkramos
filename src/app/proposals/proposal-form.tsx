@@ -180,6 +180,7 @@ export function ProposalForm({
 
   useEffect(() => {
     if (firestore && !proposal?.id) {
+      // Use 'loanProposals' here to match rules
       setTempProposalId(doc(collection(firestore, 'loanProposals')).id);
     }
   }, [firestore, proposal]);
@@ -558,7 +559,7 @@ export function ProposalForm({
                         name="netAmount"
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Valor Líquido</CardLabel>
+                            <FormLabel>Valor Líquido</FormLabel>
                             <FormControl>
                             <Input type="number" step="0.01" placeholder="25000" {...field} readOnly={isReadOnly} value={field.value || ''} />
                             </FormControl>
