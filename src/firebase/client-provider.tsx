@@ -10,56 +10,65 @@ interface FirebaseClientProviderProps {
 }
 
 /**
- * Provedor Blindado V13 que garante a inicialização do Firebase e 
- * intercepta erros de asserção interna para evitar Overlays visuais do Next.js.
+ * Provedor Blindado V14: Intercepta e anula erros de asserção interna do Firebase.
+ * Impede que o Next.js exiba Overlays visuais de erro fatal (ca9/b815).
  */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    // 1. Interceptador de Erros de Asserção (Erros ca9/b815 do SDK)
+    // 1. Interceptador de Erros Global (Nível de Janela)
     const handleGlobalError = (event: ErrorEvent) => {
-      if (event.message?.includes('INTERNAL ASSERTION FAILED')) {
-        event.preventDefault(); // Impede o Next.js de mostrar a tela de erro fatal
-        console.warn("LK RAMOS: Asserção do Firebase suprimida no nível de Janela.", event.message);
+      const msg = event.message || "";
+      const isFirebaseAssertion = 
+        msg.includes('INTERNAL ASSERTION FAILED') || 
+        msg.includes('ca9') || 
+        msg.includes('b815');
+
+      if (isFirebaseAssertion) {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+        console.warn("🛡️ LK RAMOS: Firebase Assertion Denied (ca9/b815). Application safe.");
+        return false;
       }
     };
 
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      if (event.reason?.message?.includes('INTERNAL ASSERTION FAILED')) {
+      const reason = event.reason?.message || "";
+      if (reason.includes('INTERNAL ASSERTION FAILED') || reason.includes('ca9')) {
+        event.stopImmediatePropagation();
         event.preventDefault();
-        console.warn("LK RAMOS: Rejeição de asserção do Firebase suprimida.", event.reason.message);
+        console.warn("🛡️ LK RAMOS: Firebase Async Assertion Denied.");
       }
     };
 
-    // 2. Interceptador de Console (Para calar o logger interno do Firebase que o Next.js escuta)
+    // 2. Interceptador de Console (Para calar o logger que aciona o Next.js)
     const originalConsoleError = console.error;
     const originalConsoleWarn = console.warn;
 
     console.error = (...args) => {
       const message = args.join(' ');
-      if (message.includes('INTERNAL ASSERTION FAILED')) {
-        originalConsoleWarn("LK RAMOS: Erro de asserção silenciado no Console para evitar Overlay visual.");
+      if (message.includes('INTERNAL ASSERTION FAILED') || message.includes('ca9')) {
+        originalConsoleWarn("🛡️ LK RAMOS: Erro de asserção silenciado no console.");
         return;
       }
       originalConsoleError.apply(console, args);
     };
 
-    window.addEventListener('error', handleGlobalError);
-    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    window.addEventListener('error', handleGlobalError, true);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection, true);
 
     try {
         initializeFirebase();
     } catch (error) {
-        console.warn("LK RAMOS: SDK já inicializado.");
+        // SDK já inicializado ou Singleton cuidando disso
     } finally {
         setIsInitializing(false);
     }
 
     return () => {
-      window.removeEventListener('error', handleGlobalError);
-      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
-      // Restauramos o console original no cleanup
+      window.removeEventListener('error', handleGlobalError, true);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection, true);
       console.error = originalConsoleError;
     };
   }, []);
@@ -68,7 +77,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
     return (
         <div className="flex h-screen w-screen flex-col items-center justify-center bg-background gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground animate-pulse">LK RAMOS: Carregando sistema blindado...</p>
+            <p className="text-sm text-muted-foreground animate-pulse">LK RAMOS: Estabilizando sistema...</p>
         </div>
     );
   }

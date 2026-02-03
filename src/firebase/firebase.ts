@@ -12,8 +12,7 @@ const firebaseConfig = {
   appId: "1:341426752875:web:348f88597e5b9b2057d02e",
 };
 
-// Singleton Blindado V13: Garantia absoluta de instância única e estável
-// O uso de globalThis impede que o Next.js re-inicialize o SDK durante o Hot Reload
+// Singleton Blindado V14: Garantia absoluta de instância única e estável
 const globalForFirebase = globalThis as unknown as {
   app: FirebaseApp | undefined;
   auth: Auth | undefined;
@@ -28,14 +27,14 @@ if (globalForFirebase.db) {
     db = globalForFirebase.db;
 } else {
     try {
-        // Forçamos Long Polling e desabilitamos persistência multi-tab para evitar Erro ca9/b815
+        // Tenta recuperar instância existente para evitar conflito de inicialização (ca9/b815)
+        db = getExistingFirestore(app);
+    } catch (e) {
+        // Se não houver, inicializa com Long Polling forçado para estabilidade em Cloud
         db = initializeFirestore(app, {
             cacheSizeBytes: CACHE_SIZE_UNLIMITED,
             experimentalForceLongPolling: true,
         });
-    } catch (e) {
-        // Se já houver uma instância, recuperamos para evitar falha de asserção
-        db = getExistingFirestore(app);
     }
     globalForFirebase.db = db;
 }

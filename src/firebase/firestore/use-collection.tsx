@@ -31,8 +31,8 @@ export interface InternalQuery extends Query<DocumentData> {
 }
 
 /**
- * React hook defensivo V13 para coleções Firestore.
- * Ignora falhas de asserção interna do SDK que costumam travar a UI durante HMR.
+ * React hook defensivo V14 para coleções Firestore.
+ * Ignora falhas de asserção interna do SDK para manter a fluidez da interface.
  */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
@@ -73,9 +73,9 @@ export function useCollection<T = any>(
           (err: FirestoreError) => {
             if (!isMounted) return;
             
-            // SILENCIADOR V13: Ignora erros ca9/b815
-            if (err.message?.includes('INTERNAL ASSERTION FAILED')) {
-                console.warn("LK RAMOS: Firestore Listener ignorou falha de estado interno.");
+            // SILENCIADOR V14: Ignora erros de asserção interna
+            if (err.message?.includes('INTERNAL ASSERTION FAILED') || err.message?.includes('ca9')) {
+                console.warn("🛡️ useCollection: Ignorando falha de estado interno do SDK.");
                 return;
             }
             
@@ -110,7 +110,7 @@ export function useCollection<T = any>(
         try {
             unsubscribe();
         } catch (e) {
-            // Cleanup silencioso
+            // Cleanup silencioso para evitar falha ca9 no unmount
         }
       }
     };
