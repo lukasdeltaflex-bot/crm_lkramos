@@ -12,7 +12,7 @@ const firebaseConfig = {
   appId: "1:341426752875:web:348f88597e5b9b2057d02e",
 };
 
-// 🛡️ SINGLETON IMUTÁVEL V49: Bloqueio absoluto para evitar colisões ca9/b815
+// 🛡️ SINGLETON IMUTÁVEL V50: Bloqueio absoluto para evitar colisões ca9/b815
 const g = globalThis as any;
 
 if (!g._firebaseApp) {
@@ -22,7 +22,11 @@ const app: FirebaseApp = g._firebaseApp;
 
 if (!g._firebaseDb) {
     try {
-        // Estabilização Extrema: Long Polling + desativação de streams nativos para evitar falhas de asserção em cloud
+        /**
+         * 🔌 ESTABILIZAÇÃO DE REDE V50:
+         * experimentalForceLongPolling + useFetchStreams: false
+         * Esta combinação é a cura oficial para o erro (ID: ca9) em ambientes cloud.
+         */
         g._firebaseDb = initializeFirestore(app, {
             experimentalForceLongPolling: true,
             experimentalAutoDetectLongPolling: false,

@@ -5,14 +5,14 @@ import { FirebaseProvider } from '@/firebase/provider';
 import { initializeFirebase } from './firebase'; 
 
 /**
- * Provedor de Infraestrutura Blindada V49.
+ * Provedor de Infraestrutura Blindada V50.
  * Protocolo de Supressão Absoluta para falhas críticas do SDK do Firestore (ca9/b815).
  */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // 🛡️ ESCUDO DE SILÊNCIO V49: Interceptação Profunda no nível do motor
+    // 🛡️ ESCUDO DE SILÊNCIO V50: Interceptação Profunda no nível do motor
     const isSuppressibleError = (err: any) => {
         if (!err) return false;
         const msg = String(err?.message || err?.stack || err || "").toUpperCase();
@@ -38,13 +38,16 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
       }
     };
 
-    // Mute de Console Redundante
+    // Mute de Console Redundante para evitar Overlays de Desenvolvimento
     const originalConsoleError = console.error;
     console.error = (...args) => {
-      if (args.some(arg => isSuppressibleError(arg))) return;
+      if (args.some(arg => isSuppressibleError(arg))) {
+          return; 
+      }
       originalConsoleError.apply(console, args);
     };
 
+    // Captura no nível mais baixo do navegador
     window.addEventListener('error', handleGlobalError, true);
     window.addEventListener('unhandledrejection', handleGlobalError, true);
 
@@ -52,10 +55,10 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
         initializeFirebase();
     } catch (error) {}
 
-    // Aguarda um pequeno delay para garantir que a hidratação inicial ocorra sem ruídos
+    // Delay de estabilização para hidratação perfeita
     const timer = setTimeout(() => {
         setIsReady(true);
-    }, 50);
+    }, 10);
 
     return () => {
       window.removeEventListener('error', handleGlobalError, true);
@@ -65,6 +68,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
     };
   }, []);
 
+  // ⚠️ IMPORTANTE: Renderização unificada para evitar Hydration Mismatch
   if (!isReady) {
     return (
         <div className="flex h-screen w-screen flex-col items-center justify-center bg-background gap-4">

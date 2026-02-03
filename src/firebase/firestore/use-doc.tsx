@@ -21,8 +21,8 @@ export interface UseDocResult<T> {
 }
 
 /**
- * Hook Defensivo V49 para documentos Firestore.
- * Silencia falhas internas de estado (ca9/b815).
+ * Hook Defensivo V50 para documentos Firestore.
+ * Silencia falhas internas de estado (ca9/b815) tratadas pelo Escudo de Infraestrutura.
  */
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
@@ -64,8 +64,9 @@ export function useDoc<T = any>(
             if (!isMounted) return;
 
             const msg = (err.message || "").toUpperCase();
+            // 🛡️ Filtro de supressão para erros de Watch Stream
             if (msg.includes('ASSERTION') || msg.includes('CA9') || msg.includes('B815') || msg.includes('STATE')) {
-                return; // Ignora falha de asserção interna
+                return; 
             }
 
             if (err.code === 'permission-denied') {
