@@ -21,7 +21,7 @@ export interface UseDocResult<T> {
 }
 
 /**
- * Hook Defensivo V33 para documentos Firestore.
+ * Hook Defensivo V34 para documentos Firestore.
  * Silencia inconsistências de asserção interna do SDK (ca9/b815).
  */
 export function useDoc<T = any>(
@@ -64,7 +64,7 @@ export function useDoc<T = any>(
             if (!isMounted) return;
 
             const msg = (err.message || "").toUpperCase();
-            // 🛡️ Filtro de erro técnico V33: ca9/b815/assertion/Fe: -1
+            // 🛡️ Filtro de erro técnico V34: ca9/b815/assertion/Fe: -1
             if (msg.includes('ASSERTION') || msg.includes('CA9') || msg.includes('B815') || msg.includes('FE: -1')) {
                 return;
             }
