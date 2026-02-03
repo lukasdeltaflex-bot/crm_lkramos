@@ -1,3 +1,4 @@
+
 'use client';
     
 import { useState, useEffect } from 'react';
@@ -21,7 +22,7 @@ export interface UseDocResult<T> {
 }
 
 /**
- * Hook Defensivo V53 para documentos Firestore.
+ * Hook Defensivo V54 para documentos Firestore.
  * Silencia falhas internas de estado (ca9/b815) tratadas pelo Escudo de Infraestrutura.
  */
 export function useDoc<T = any>(
