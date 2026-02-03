@@ -4,7 +4,6 @@ import * as React from 'react';
 import {
   ColumnDef,
   ColumnOrderState,
-  ColumnFiltersState,
   SortingState,
   VisibilityState,
   flexRender,
@@ -34,7 +33,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
