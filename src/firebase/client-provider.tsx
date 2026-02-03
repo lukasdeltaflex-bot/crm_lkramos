@@ -6,14 +6,14 @@ import { initializeFirebase } from './firebase';
 import { LoaderCircle } from 'lucide-react';
 
 /**
- * Provedor Blindado V39: Protocolo de Supressão Total de Falhas de Asserção do Firestore.
+ * Provedor Blindado V40: Protocolo de Supressão Total de Falhas de Asserção do Firestore.
  * Intercepta e anula erros fatais técnicos (ca9/b815) no nível mais profundo do navegador.
  */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // 🛡️ ESCUDO DE SILÊNCIO V39: Interceptação Global Absoluta
+    // 🛡️ ESCUDO DE SILÊNCIO V40: Interceptação Global Absoluta
     const isSuppressibleError = (msg: string) => {
         if (!msg) return false;
         const normalized = String(msg).toUpperCase();
