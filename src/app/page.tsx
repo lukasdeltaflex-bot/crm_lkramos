@@ -135,6 +135,7 @@ export default function DashboardPage() {
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
+    // Regra de Pipeline: Buscamos dados de 1 mês atrás até o filtro selecionado para compor os cards de andamento
     const startOfPipeline = startOfMonth(subMonths(fromDate, 1));
 
     const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
@@ -146,7 +147,7 @@ export default function DashboardPage() {
         return d >= fromDate && d <= effectiveToDate;
     });
 
-    // 2. Contratos PAGOS: Considera data de pagamento (pode vir de meses passados)
+    // 2. Contratos PAGOS: Baseado na data de pagamento ao cliente (Pode vir de meses anteriores)
     const paidInPeriod = proposals.filter(p => {
         if (p.status !== 'Pago' && p.status !== 'Saldo Pago') return false;
         if (!p.datePaidToClient) return false;
@@ -154,7 +155,7 @@ export default function DashboardPage() {
         return d >= fromDate && d <= effectiveToDate;
     });
 
-    // 3. Propostas acumuladas para esteira ativa (Pipeline completa)
+    // 3. Pipeline Acumulada (Contando do mês passado pra cá)
     const accumulatedProposals = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
@@ -163,7 +164,7 @@ export default function DashboardPage() {
 
     const totalDigitadoMonth = getSum(digitizedInPeriod);
     
-    // Funçao para calcular % baseada no Total Digitado do Mês
+    // LÓGICA DE PORCENTAGEM: SEMPRE BASEADA NO TOTAL DIGITADO DO MÊS VIGENTE
     const getPerc = (val: number) => totalDigitadoMonth > 0 ? (val / totalDigitadoMonth) * 100 : 0;
 
     return {

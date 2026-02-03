@@ -44,28 +44,27 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
-    // Filtragem para Produção Mensal (Digitado no período)
+    // 1. BASE DE CÁLCULO: Produção Mensal (Digitado no período selecionado)
     const currentMonthProposals = allProposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
         return d >= fromDate && d <= effectiveToDate;
     });
 
-    // Filtragem para Acumulado (Pipeline completa)
+    const totalPotentialCommission = currentMonthProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
+
+    // 2. Comissões Recebidas (O que foi digitado no mês e já pagou)
+    const commissionReceivedProposals = currentMonthProposals.filter(p => p.commissionStatus === 'Paga');
+    const totalAmountPaid = commissionReceivedProposals.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
+
+    // 3. ACUMULADOS: Buscamos dados de 1 mês atrás até hoje
     const accumulatedProposals = allProposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
         return d >= startOfPipeline && d <= effectiveToDate;
     });
 
-    // 1. Total de Comissões do Mês (BASE para porcentagens)
-    const totalPotentialCommission = currentMonthProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
-    
-    // 2. Comissões Recebidas (O que foi digitado no mês e já pagou)
-    const commissionReceivedProposals = currentMonthProposals.filter(p => p.commissionStatus === 'Paga');
-    const totalAmountPaid = commissionReceivedProposals.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
-    
-    // 3. Saldo a Receber (ACUMULADO)
+    // Saldo a Receber (ACUMULADO)
     const proposalsForSaldoAReceber = accumulatedProposals.filter(p => {
         if (p.commissionStatus === 'Paga') return false;
         const hasAverbacao = !!p.dateApproved;
@@ -74,7 +73,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     });
     const pendingAmount = proposalsForSaldoAReceber.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
 
-    // 4. Comissão Esperada (ACUMULADO)
+    // Comissão Esperada (ACUMULADO)
     const expectedCommissionProposals = accumulatedProposals.filter(p => {
         if (p.commissionStatus === 'Paga') return false;
         const isReprovado = p.status === 'Reprovado';
@@ -84,6 +83,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     });
     const expectedAmount = expectedCommissionProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
     
+    // Função de porcentagem baseada SEMPRE no Total do Mês Vigente
     const getPercentage = (value: number) => {
         if (totalPotentialCommission === 0) return 0;
         return (value / totalPotentialCommission) * 100;
@@ -120,7 +120,6 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       value: formatCurrency(totalAmountPaid),
       icon: CheckCircle,
       description: "DA PRODUÇÃO ATUAL",
-      valueClassName: "text-green-600 dark:text-green-400",
       proposals: commissionReceivedProposals,
       percentage: percRecebida,
     },
@@ -129,7 +128,6 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       value: formatCurrency(pendingAmount),
       icon: Hourglass,
       description: "VS PRODUÇÃO ATUAL",
-      valueClassName: "text-orange-600 dark:text-orange-400",
       proposals: proposalsForSaldoAReceber,
       percentage: percSaldo,
     },
@@ -138,7 +136,6 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       value: formatCurrency(expectedAmount),
       icon: CircleDollarSign,
       description: "VS PRODUÇÃO ATUAL",
-      valueClassName: "text-blue-600 dark:text-blue-400",
       proposals: expectedCommissionProposals,
       percentage: percEsperada,
     },
@@ -155,7 +152,6 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
                         icon={card.icon}
                         description={card.description}
                         percentage={card.percentage}
-                        valueClassName={card.valueClassName}
                     />
                 </div>
             ))}
