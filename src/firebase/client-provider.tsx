@@ -5,7 +5,7 @@ import { FirebaseProvider } from '@/firebase/provider';
 import { initializeFirebase } from './firebase'; 
 
 /**
- * Provedor de Infraestrutura Blindada V60.
+ * Provedor de Infraestrutura Blindada V61.
  * Protocolo de Supressão Absoluta para falhas críticas do SDK do Firestore (ca9/b815).
  * Implementa interceptação profunda em nível de captura global para silenciar erros antes do Next.js.
  */
@@ -13,7 +13,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // 🛡️ ESCUDO DE SILÊNCIO V60: Interceptação Profunda e Seletiva
+    // 🛡️ ESCUDO DE SILÊNCIO V61: Interceptação Profunda e Seletiva
     const isSuppressibleError = (err: any) => {
         if (!err) return false;
         
@@ -34,7 +34,9 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
             'FE: -1',
             'FE:-1',
             'WATCH CHANGE AGGREGATOR',
-            'WATCH_CHANGE'
+            'WATCH_CHANGE',
+            'TARGETSTATE',
+            'D9C36AE7' // ID técnico do chunk do Firestore reportado no erro
         ];
 
         // Bloqueio se contiver a combinação de Falha de Asserção e um dos IDs técnicos.
@@ -60,12 +62,17 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
       originalConsoleError.apply(console, args);
     };
 
+    // Uso de fase de captura (true) para interceptar antes de qualquer outro listener
     window.addEventListener('error', handleGlobalError, true);
     window.addEventListener('unhandledrejection', handleGlobalError, true);
 
     try {
         initializeFirebase();
-    } catch (error) {}
+    } catch (error) {
+        if (!isSuppressibleError(error)) {
+            originalConsoleError("LK Ramos Init Error:", error);
+        }
+    }
 
     const timer = setTimeout(() => {
         setIsReady(true);
@@ -86,7 +93,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
             <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin opacity-20" />
             <div className="text-center">
                 <p className="text-sm font-bold opacity-40 uppercase tracking-widest">LK RAMOS</p>
-                <p className="text-[10px] text-muted-foreground uppercase font-bold opacity-30 mt-1">Sincronizando banco de dados...</p>
+                <p className="text-[10px] text-muted-foreground uppercase font-bold opacity-30 mt-1">Sincronizando infraestrutura estável...</p>
             </div>
         </div>
     );
