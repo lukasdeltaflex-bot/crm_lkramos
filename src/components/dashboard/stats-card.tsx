@@ -23,8 +23,8 @@ interface StatsCardProps {
 }
 
 /**
- * StatsCard Premium Executivo Compacto V25
- * Ajustado para ser levemente menor e mais equilibrado.
+ * StatsCard Premium Executivo Compacto V26
+ * Ajustado para ser mais compacto e com cores diferenciadas para Totais.
  */
 export function StatsCard({ 
     title, 
@@ -42,6 +42,8 @@ export function StatsCard({
 }: StatsCardProps) {
   
   const getThemeStyles = () => {
+    const t = title.toLowerCase();
+
     if (isCritical) 
         return {
             card: 'border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-900/20 animate-pulse shadow-[0_0_15px_rgba(220,38,38,0.1)]',
@@ -49,7 +51,13 @@ export function StatsCard({
             stroke: '#dc2626'
         };
 
-    const t = title.toLowerCase();
+    // Cores específicas para Totais (Azul)
+    if (t === 'total digitado' || t === 'total de comissões')
+        return {
+            card: 'border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-900/10',
+            text: 'text-blue-600 dark:text-blue-400',
+            stroke: '#2563eb'
+        };
     
     if (t.includes('andamento') || t.includes('esperada')) 
         return {
@@ -65,7 +73,7 @@ export function StatsCard({
             stroke: '#ea580c'
         };
 
-    if (t.includes('performance') || t.includes('recebida') || t.includes('paga') || t.includes('pago') || t.includes('total')) 
+    if (t.includes('performance') || t.includes('recebida') || t.includes('paga') || t.includes('pago')) 
         return {
             card: 'border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-900/10',
             text: 'text-green-600 dark:text-green-400',
@@ -129,14 +137,14 @@ export function StatsCard({
 
   return (
     <Card className={cn(
-        'hover:shadow-md transition-all group relative overflow-hidden rounded-xl h-full flex flex-col border-2 py-3 px-4 sm:py-4 sm:px-5', 
+        'hover:shadow-md transition-all group relative overflow-hidden rounded-xl h-full flex flex-col border-2 py-3 px-4 sm:py-3.5 sm:px-4', 
         theme.card,
         isHot && 'ring-2 ring-orange-500 ring-offset-2',
         className
     )}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-2">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-1">
         <div className="flex flex-col gap-0.5">
-            <CardTitle className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground/70 group-hover:text-primary transition-colors">
+            <CardTitle className="text-[9px] font-black uppercase tracking-[0.1em] text-muted-foreground/70 group-hover:text-primary transition-colors">
                 {title}
             </CardTitle>
             {isCritical ? (
@@ -151,11 +159,11 @@ export function StatsCard({
         </div>
         <div className="flex items-center gap-2">
             {renderSparkline()}
-            <Icon className={cn("h-3.5 w-3.5 opacity-60", theme.text)} />
+            <Icon className={cn("h-3 w-3 opacity-60", theme.text)} />
         </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col justify-between p-0">
-        <div className="flex items-baseline justify-between gap-2 mb-1">
+        <div className="flex items-baseline justify-between gap-2">
             <div className={cn("text-xl sm:text-2xl font-light tracking-tighter", theme.text, valueClassName)}>
                 {value}
             </div>
@@ -166,7 +174,7 @@ export function StatsCard({
             )}
         </div>
         
-        <div className="mt-2 pt-2 border-t border-border/20 flex items-center justify-between">
+        <div className="mt-1.5 pt-1.5 border-t border-border/10 flex items-center justify-between">
             <div className="flex flex-col">
                 <p className="text-[8px] font-bold text-muted-foreground/50 uppercase tracking-tighter">
                     {description}

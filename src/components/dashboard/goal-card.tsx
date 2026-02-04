@@ -83,7 +83,7 @@ export function GoalCard({
     );
   };
 
-  if (!isClient) return <Card className="h-28 animate-pulse bg-muted rounded-xl w-full" />;
+  if (!isClient) return <Card className="h-24 animate-pulse bg-muted rounded-xl w-full" />;
 
   return (
     <Card className={cn(
@@ -91,8 +91,8 @@ export function GoalCard({
         isHot && 'ring-2 ring-orange-500 ring-offset-2 scale-[1.01]',
         className
     )}>
-      <CardContent className="p-4 sm:p-5">
-        <div className="flex items-start justify-between mb-3">
+      <CardContent className="p-4 sm:p-4">
+        <div className="flex items-start justify-between mb-2">
           <div className="flex items-center gap-3">
             <div className={cn(
                 "p-1.5 rounded-lg bg-green-100 dark:bg-green-900/40",
@@ -131,9 +131,9 @@ export function GoalCard({
           )}
         </div>
 
-        <div className="flex items-end justify-between mb-3" onClick={onValueClick}>
+        <div className="flex items-end justify-between mb-2" onClick={onValueClick}>
           <div className="space-y-0.5 cursor-pointer group">
-            <div className="text-2xl sm:text-3xl font-light tracking-tighter text-green-600 dark:text-green-400 group-hover:translate-x-1 transition-transform">
+            <div className="text-xl sm:text-2xl font-light tracking-tighter text-green-600 dark:text-green-400 group-hover:translate-x-1 transition-transform">
               {isPrivacyMode ? '•••••' : formatCurrency(currentProduction)}
             </div>
             <div className="flex items-center gap-2 text-[8px] font-black text-muted-foreground uppercase tracking-widest">
@@ -143,7 +143,7 @@ export function GoalCard({
           </div>
 
           <div className="text-right">
-            <div className="text-xl sm:text-2xl font-light text-green-600 dark:text-green-400 tracking-tighter">
+            <div className="text-lg sm:text-xl font-light text-green-600 dark:text-green-400 tracking-tighter">
               {percentageOfGoal.toFixed(1)}%
             </div>
             <p className="text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest">Atingido</p>
@@ -151,13 +151,13 @@ export function GoalCard({
         </div>
 
         <div className="relative pt-1">
-            <Progress value={percentageOfGoal} className="h-1.5 bg-green-100 dark:bg-green-900/30" />
+            <Progress value={percentageOfGoal} className="h-1 bg-green-100 dark:bg-green-900/30" />
         </div>
 
         {topContributor && (
-            <div className="mt-3 pt-2 border-t border-green-200/50 flex items-center justify-between">
+            <div className="mt-2 pt-2 border-t border-green-200/50 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                    <div className="h-1 w-1 rounded-full bg-green-500 animate-pulse" />
                     <span className="text-[8px] font-bold text-muted-foreground uppercase">Líder:</span>
                     <span className="text-[8px] font-black text-primary uppercase">{topContributor}</span>
                 </div>
