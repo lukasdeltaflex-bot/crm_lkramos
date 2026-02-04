@@ -1,6 +1,7 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
+  // ❗ DESATIVADO: Strict Mode duplica listeners e causa erro ca9 no Firebase
   reactStrictMode: false,
   typescript: {
     ignoreBuildErrors: true,

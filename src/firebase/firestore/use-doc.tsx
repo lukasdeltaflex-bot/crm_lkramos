@@ -19,9 +19,6 @@ export interface UseDocResult<T> {
   error: FirestoreError | Error | null;
 }
 
-// Controle de concorrência V66
-let docListenerActive = false;
-
 /**
  * Hook de Documento Blindado V66.
  */
@@ -37,38 +34,23 @@ export function useDoc<T = any>(
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    let isMounted = true;
-
-    const cleanup = () => {
-        if (unsubRef.current) {
-            unsubRef.current();
-            unsubRef.current = null;
-            docListenerActive = false;
-        }
-    };
-
     if (!memoizedDocRef) {
-      if (isMounted) {
-        setData(null);
-        setIsLoading(false);
-        setError(null);
-      }
+      setData(null);
+      setIsLoading(false);
       return;
     }
 
-    if (docListenerActive) {
-        cleanup();
+    if (unsubRef.current) {
+        unsubRef.current();
+        unsubRef.current = null;
     }
 
     setIsLoading(true);
-    setError(null);
 
     try {
-        docListenerActive = true;
         unsubRef.current = onSnapshot(
           memoizedDocRef,
           (snapshot: DocumentSnapshot<DocumentData>) => {
-            if (!isMounted) return;
             if (snapshot.exists()) {
               setData({ ...(snapshot.data() as T), id: snapshot.id });
             } else {
@@ -78,8 +60,6 @@ export function useDoc<T = any>(
             setIsLoading(false);
           },
           (err: FirestoreError) => {
-            if (!isMounted) return;
-
             if (err.code === 'permission-denied') {
                 const contextualError = new FirestorePermissionError({
                   operation: 'get',
@@ -95,13 +75,14 @@ export function useDoc<T = any>(
           }
         );
     } catch (e: any) {
-        docListenerActive = false;
-        if (isMounted) setIsLoading(false);
+        setIsLoading(false);
     }
 
     return () => {
-      isMounted = false;
-      cleanup();
+      if (unsubRef.current) {
+          unsubRef.current();
+          unsubRef.current = null;
+      }
     };
   }, [memoizedDocRef]);
 

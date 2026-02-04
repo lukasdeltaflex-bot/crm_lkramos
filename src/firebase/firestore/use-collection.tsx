@@ -20,12 +20,9 @@ export interface UseCollectionResult<T> {
   error: FirestoreError | Error | null;
 }
 
-// Controle de concorrência V66
-let listenerActive = false;
-
 /**
  * Hook de Coleção Blindado V66.
- * Impede execução no servidor e bloqueia duplicidade de listeners.
+ * Gerenciamento estrito de ciclo de vida para evitar erro ca9.
  */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: (CollectionReference<DocumentData> | Query<DocumentData>) | null | undefined,
@@ -37,40 +34,27 @@ export function useCollection<T = any>(
   const unsubRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
+    // 🛡️ Segurança de Browser
     if (typeof window === "undefined") return;
 
-    let isMounted = true;
-
-    const cleanup = () => {
-        if (unsubRef.current) {
-            unsubRef.current();
-            unsubRef.current = null;
-            listenerActive = false;
-        }
-    };
-
     if (!memoizedTargetRefOrQuery) {
-      if (isMounted) {
-        setData(null);
-        setIsLoading(false);
-        setError(null);
-      }
+      setData(null);
+      setIsLoading(false);
       return;
     }
 
-    if (listenerActive) {
-        cleanup();
+    // Limpa listener anterior antes de criar novo
+    if (unsubRef.current) {
+        unsubRef.current();
+        unsubRef.current = null;
     }
 
     setIsLoading(true);
-    setError(null);
 
     try {
-        listenerActive = true;
         unsubRef.current = onSnapshot(
           memoizedTargetRefOrQuery,
           (snapshot: QuerySnapshot<DocumentData>) => {
-            if (!isMounted) return;
             const results: WithId<T>[] = [];
             snapshot.forEach((doc) => {
               results.push({ ...(doc.data() as T), id: doc.id });
@@ -80,8 +64,6 @@ export function useCollection<T = any>(
             setIsLoading(false);
           },
           (err: FirestoreError) => {
-            if (!isMounted) return;
-            
             if (err.code === 'permission-denied') {
                 let path = 'unknown';
                 try { path = (memoizedTargetRefOrQuery as any).path || 'query'; } catch(e) {}
@@ -95,13 +77,14 @@ export function useCollection<T = any>(
           }
         );
     } catch (e: any) {
-        listenerActive = false;
-        if (isMounted) setIsLoading(false);
+        setIsLoading(false);
     }
 
     return () => {
-      isMounted = false;
-      cleanup();
+      if (unsubRef.current) {
+          unsubRef.current();
+          unsubRef.current = null;
+      }
     };
   }, [memoizedTargetRefOrQuery]);
 

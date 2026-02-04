@@ -7,31 +7,36 @@ import { getStorage } from "firebase/storage";
 import { firebaseConfig } from "./config";
 
 /**
- * 🛠️ FIREBASE ESTRUTURAL V66 (FINAL)
- * Proibição de execução no servidor e motor de sincronização Long Polling.
+ * 🛠️ INFRAESTRUTURA V66 (FINAL - DEPLOY READY)
+ * Isolamento total de SSR e inicialização garantida apenas no Browser.
  */
 
-if (typeof window === "undefined") {
-    // 🛑 CRÍTICO: Firestore não pode rodar no servidor.
-    // Lançar erro aqui impede que o Next.js gere estados inconsistentes.
-    throw new Error("Firestore não pode rodar no server");
+let app;
+let db: any = null;
+let auth: any = null;
+let storage: any = null;
+
+if (typeof window !== "undefined") {
+    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+    
+    // Singleton Firestore Estabilizado
+    const g = globalThis as any;
+    if (!g._firebaseDb) {
+        g._firebaseDb = initializeFirestore(app, {
+            experimentalForceLongPolling: true,
+            useFetchStreams: false,
+        });
+    }
+    db = g._firebaseDb;
+    auth = getAuth(app);
+    storage = getStorage(app);
 }
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-
-// Singleton Firestore Blindado V66
-const g = globalThis as any;
-if (!g._firebaseDb) {
-    g._firebaseDb = initializeFirestore(app, {
-        experimentalForceLongPolling: true,
-        useFetchStreams: false,
-    });
-}
-
-export const db = g._firebaseDb;
-export const auth = getAuth(app);
-export const storage = getStorage(app);
+export { db, auth, storage };
 
 export function initializeFirebase() {
-  return app;
+  if (typeof window !== "undefined") {
+    return getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+  }
+  return null;
 }
