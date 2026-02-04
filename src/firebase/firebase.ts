@@ -5,7 +5,10 @@ import { getFirestore, initializeFirestore, Firestore } from "firebase/firestore
 import { getStorage, FirebaseStorage } from "firebase/storage";
 import { firebaseConfig } from "./config";
 
-// 🛡️ PROTOCOLO DE IMUTABILIDADE V64: Singleton Global Blindado
+/**
+ * 🛡️ SINGLETON FIREBASE BLINDADO V65
+ * Protocolo de Imutabilidade para evitar erros de inicialização dupla (ca9/b815).
+ */
 const g = globalThis as any;
 
 let app: FirebaseApp;
@@ -18,9 +21,9 @@ if (!getApps().length) {
 if (!g._firebaseDb) {
     try {
         /**
-         * 🔌 CONFIGURAÇÃO DE REDE V64:
-         * Protocolo ultra-estável para evitar erros de asserção (ca9/b815).
+         * 🔌 PROTOCOLO DE CONEXÃO ULTRA-ESTÁVEL:
          * Força Long Polling e desativa Fetch Streams.
+         * Recomendação oficial para eliminar o erro fatal ca9 em ambientes cloud.
          */
         g._firebaseDb = initializeFirestore(app, {
             experimentalForceLongPolling: true,

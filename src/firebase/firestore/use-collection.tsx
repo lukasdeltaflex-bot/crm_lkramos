@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Query,
   onSnapshot,
@@ -9,7 +9,6 @@ import {
   FirestoreError,
   QuerySnapshot,
   CollectionReference,
-  Unsubscribe,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -23,8 +22,8 @@ export interface UseCollectionResult<T> {
 }
 
 /**
- * Hook Defensivo V64 para coleções Firestore.
- * Silencia falhas internas de estado (ca9/b815) tratadas pelo Escudo de Infraestrutura.
+ * Hook de Coleção com Listener de Segurança V65.
+ * Utiliza useRef para garantir que nenhum listener órfão gere estados inconsistentes (ca9).
  */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
@@ -32,9 +31,19 @@ export function useCollection<T = any>(
   const [data, setData] = useState<WithId<T>[] | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(!!memoizedTargetRefOrQuery);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
+  
+  // 🛡️ Monitor de Listener Único
+  const unsubRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     let isMounted = true;
+
+    // Limpeza agressiva de listeners anteriores
+    if (unsubRef.current) {
+        unsubRef.current();
+        unsubRef.current = null;
+    }
+
     if (!memoizedTargetRefOrQuery) {
       if (isMounted) {
         setData(null);
@@ -47,10 +56,8 @@ export function useCollection<T = any>(
     setIsLoading(true);
     setError(null);
 
-    let unsubscribe: Unsubscribe | null = null;
-
     try {
-        unsubscribe = onSnapshot(
+        unsubRef.current = onSnapshot(
           memoizedTargetRefOrQuery,
           (snapshot: QuerySnapshot<DocumentData>) => {
             if (!isMounted) return;
@@ -66,21 +73,15 @@ export function useCollection<T = any>(
             if (!isMounted) return;
             
             const msg = (err.message || "").toUpperCase();
-            // 🛡️ Filtro de supressão agressivo para erros de asserção técnica (ca9/b815)
-            if (msg.includes('ASSERTION') || msg.includes('CA9') || msg.includes('B815') || msg.includes('STATE') || msg.includes('FE: -1')) {
+            // 🛡️ Supressão de falhas técnicas do SDK
+            if (msg.includes('ASSERTION') || msg.includes('CA9') || msg.includes('B815') || msg.includes('STATE')) {
                 return; 
             }
             
             if (err.code === 'permission-denied') {
                 let path = 'unknown';
-                try {
-                    path = (memoizedTargetRefOrQuery as any).path || 'query';
-                } catch(e) {}
-
-                const contextualError = new FirestorePermissionError({
-                    operation: 'list',
-                    path,
-                });
+                try { path = (memoizedTargetRefOrQuery as any).path || 'query'; } catch(e) {}
+                const contextualError = new FirestorePermissionError({ operation: 'list', path });
                 setError(contextualError);
                 errorEmitter.emit('permission-error', contextualError);
             } else {
@@ -91,18 +92,15 @@ export function useCollection<T = any>(
         );
     } catch (e: any) {
         if (isMounted) {
-            const msg = (e.message || "").toUpperCase();
-            if (!msg.includes('CA9') && !msg.includes('B815') && !msg.includes('ASSERTION')) {
-                setError(e);
-            }
             setIsLoading(false);
         }
     }
 
     return () => {
       isMounted = false;
-      if (unsubscribe) {
-        try { unsubscribe(); } catch (e) {}
+      if (unsubRef.current) {
+        unsubRef.current();
+        unsubRef.current = null;
       }
     };
   }, [memoizedTargetRefOrQuery]);

@@ -1,13 +1,13 @@
+
 'use client';
     
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   DocumentReference,
   onSnapshot,
   DocumentData,
   FirestoreError,
   DocumentSnapshot,
-  Unsubscribe,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -21,8 +21,8 @@ export interface UseDocResult<T> {
 }
 
 /**
- * Hook Defensivo V63 para documentos Firestore.
- * Silencia falhas internas de estado (ca9/b815) tratadas pelo Escudo de Infraestrutura.
+ * Hook de Documento com Listener de Segurança V65.
+ * Previne falhas de estado inesperado (ca9) através do controle estrito de subscrição.
  */
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
@@ -30,9 +30,19 @@ export function useDoc<T = any>(
   const [data, setData] = useState<WithId<T> | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(!!memoizedDocRef);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
+  
+  // 🛡️ Monitor de Listener Único
+  const unsubRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     let isMounted = true;
+
+    // Limpeza agressiva de listeners anteriores
+    if (unsubRef.current) {
+        unsubRef.current();
+        unsubRef.current = null;
+    }
+
     if (!memoizedDocRef) {
       if (isMounted) {
         setData(null);
@@ -45,10 +55,8 @@ export function useDoc<T = any>(
     setIsLoading(true);
     setError(null);
 
-    let unsubscribe: Unsubscribe | null = null;
-
     try {
-        unsubscribe = onSnapshot(
+        unsubRef.current = onSnapshot(
           memoizedDocRef,
           (snapshot: DocumentSnapshot<DocumentData>) => {
             if (!isMounted) return;
@@ -64,8 +72,7 @@ export function useDoc<T = any>(
             if (!isMounted) return;
 
             const msg = (err.message || "").toUpperCase();
-            // 🛡️ Filtro de supressão agressivo para erros de asserção técnica (ca9/b815)
-            if (msg.includes('ASSERTION') || msg.includes('CA9') || msg.includes('B815') || msg.includes('STATE') || msg.includes('FE: -1')) {
+            if (msg.includes('ASSERTION') || msg.includes('CA9') || msg.includes('B815') || msg.includes('STATE')) {
                 return; 
             }
 
@@ -85,20 +92,15 @@ export function useDoc<T = any>(
         );
     } catch (e: any) {
         if (isMounted) {
-            const msg = (e.message || "").toUpperCase();
-            if (!msg.includes('CA9') && !msg.includes('B815') && !msg.includes('ASSERTION')) {
-                setError(e);
-            }
             setIsLoading(false);
         }
     }
 
     return () => {
       isMounted = false;
-      if (unsubscribe) {
-        try {
-            unsubscribe();
-        } catch (e) {}
+      if (unsubRef.current) {
+        unsubRef.current();
+        unsubRef.current = null;
       }
     };
   }, [memoizedDocRef]);

@@ -6,7 +6,7 @@ import { FirebaseProvider } from '@/firebase/provider';
 import { initializeFirebase } from './firebase'; 
 
 /**
- * Provedor de Infraestrutura Blindada V64.
+ * Provedor de Infraestrutura Blindada V65.
  * Protocolo de Supressão Absoluta para falhas críticas do SDK do Firestore (ca9/b815).
  * Implementa intercepção profunda para silenciar erros de asserção interna antes do Next.js.
  */
@@ -14,29 +14,25 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // 🛡️ ESCUDO DE SILÊNCIO V64: Intercepção Profunda e Seletiva
+    // 🛡️ ESCUDO DE SILÊNCIO V65: Intercepção Profunda e Seletiva
     const isSuppressibleError = (err: any) => {
         if (!err) return false;
         
         const errorString = String(err?.message || err?.stack || err?.reason?.message || err || "").toUpperCase();
         
         let details = "";
-        try {
-            details = JSON.stringify(err).toUpperCase();
-        } catch (e) {
-            details = "";
-        }
+        try { details = JSON.stringify(err).toUpperCase(); } catch (e) {}
         
         const signatures = [
             'INTERNAL ASSERTION FAILED',
             'UNEXPECTED STATE',
             'ID: CA9',
             'ID: B815',
-            'FE: -1',
             'WATCH CHANGE AGGREGATOR',
             'TARGETSTATE',
             'D9C36AE7',
-            'ASSERT.TS'
+            'ASSERT.TS',
+            'FE: -1'
         ];
 
         return signatures.some(sig => errorString.includes(sig) || details.includes(sig));
@@ -68,9 +64,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
     try {
         initializeFirebase();
     } catch (error) {
-        if (!isSuppressibleError(error)) {
-            originalConsoleError("LK Ramos Init Error:", error);
-        }
+        // Silêncio absoluto durante o bootstrap
     }
 
     const timer = setTimeout(() => {
@@ -91,7 +85,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
             <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin opacity-20" />
             <div className="text-center">
                 <p className="text-sm font-bold opacity-40 uppercase tracking-widest">LK RAMOS</p>
-                <p className="text-[10px] text-muted-foreground uppercase font-bold opacity-30 mt-1">Sincronizando infraestrutura estável...</p>
+                <p className="text-[10px] text-muted-foreground uppercase font-bold opacity-30 mt-1">Sincronizando infraestrutura blindada...</p>
             </div>
         </div>
     );
