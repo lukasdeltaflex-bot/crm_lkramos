@@ -29,9 +29,6 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     commissionReceivedProposals,
     proposalsForSaldoAReceber,
     expectedCommissionProposals,
-    percRecebida,
-    percSaldo,
-    percEsperada
   } = React.useMemo(() => {
     const allProposals = Array.isArray(rows) && rows.length > 0 
         ? ('original' in rows[0] ? (rows as Row<ProposalWithCustomer>[]).map(r => r.original) : (rows as ProposalWithCustomer[]))
@@ -84,12 +81,6 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     });
     const expectedAmount = expectedCommissionProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
     
-    // REGRA DE OURO: Todas as porcentagens baseadas no Total de Comissões do Mês Vigente
-    const getPercentage = (value: number) => {
-        if (totalPotentialCommission <= 0) return 0;
-        return (value / totalPotentialCommission) * 100;
-    };
-
     return {
       totalPotentialCommission,
       totalAmountPaid,
@@ -99,9 +90,6 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       commissionReceivedProposals,
       proposalsForSaldoAReceber,
       expectedCommissionProposals,
-      percRecebida: getPercentage(totalAmountPaid),
-      percSaldo: getPercentage(pendingAmount),
-      percEsperada: getPercentage(expectedAmount),
     };
   }, [rows, currentMonthRange]);
   
@@ -114,7 +102,6 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       icon: Coins,
       description: "PRODUÇÃO MENSAL",
       proposals: allProposalsInPeriod,
-      percentage: 100,
     },
     {
       title: "Comissão Recebida",
@@ -122,7 +109,6 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       icon: CheckCircle,
       description: "DA PRODUÇÃO ATUAL",
       proposals: commissionReceivedProposals,
-      percentage: percRecebida,
     },
     {
       title: "Saldo a Receber",
@@ -130,7 +116,6 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       icon: Hourglass,
       description: "VS PRODUÇÃO ATUAL",
       proposals: proposalsForSaldoAReceber,
-      percentage: percSaldo,
     },
     {
       title: "Comissão Esperada",
@@ -138,7 +123,6 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       icon: CircleDollarSign,
       description: "VS PRODUÇÃO ATUAL",
       proposals: expectedCommissionProposals,
-      percentage: percEsperada,
     },
   ];
 
@@ -151,7 +135,6 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
                     value={isPrivacyMode ? privacyPlaceholder : card.value}
                     icon={card.icon}
                     description={card.description}
-                    percentage={card.percentage}
                 />
             </div>
         ))}
