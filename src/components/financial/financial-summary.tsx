@@ -88,9 +88,9 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     });
     const expectedAmount = expectedCommissionProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
 
-    // Sparklines (Fluxo de Caixa dos últimos 15 dias)
+    // Sparklines (Fluxo de Caixa dos últimos 30 dias)
     const getSparkline = (list: Proposal[], dateField: keyof Proposal) => {
-        const days = Array.from({length: 10}, (_, i) => subDays(today, 9 - i));
+        const days = Array.from({length: 15}, (_, i) => subDays(today, 14 - i));
         return days.map(day => {
             return list.filter(p => {
                 const d = p[dateField];
@@ -168,7 +168,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
   ];
 
   return (
-    <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4 print:grid-cols-4 mb-6'>
+    <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4 print:grid-cols-4 mb-8'>
         {cards.map(card => (
             <div key={card.title} className="cursor-pointer" onClick={() => onShowDetails(card.title, card.proposals)}>
                 <StatsCard
