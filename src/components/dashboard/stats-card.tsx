@@ -23,8 +23,8 @@ interface StatsCardProps {
 }
 
 /**
- * StatsCard Premium Executivo Compacto V21
- * Agora com suporte a Alerta Crítico, Sub-valores (Ticket Médio) e Sparklines dinâmicos.
+ * StatsCard Premium Executivo Compacto V22
+ * Ajustado para ser levemente maior e com tipografia mais legível.
  */
 export function StatsCard({ 
     title, 
@@ -105,8 +105,8 @@ export function StatsCard({
   const renderSparkline = () => {
     if (!sparklineData || sparklineData.length < 2) return null;
     const max = Math.max(...sparklineData, 1);
-    const width = 60;
-    const height = 20;
+    const width = 70;
+    const height = 24;
     const points = sparklineData.map((v, i) => {
         const x = (i / (sparklineData.length - 1)) * width;
         const y = height - (v / max) * height;
@@ -118,7 +118,7 @@ export function StatsCard({
             <polyline
                 fill="none"
                 stroke={theme.stroke}
-                strokeWidth="2"
+                strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 points={points}
@@ -129,56 +129,56 @@ export function StatsCard({
 
   return (
     <Card className={cn(
-        'hover:shadow-md transition-all group relative overflow-hidden rounded-xl h-full flex flex-col border-2 py-2 px-3 sm:py-2.5 sm:px-3.5', 
+        'hover:shadow-md transition-all group relative overflow-hidden rounded-xl h-full flex flex-col border-2 py-4 px-5 sm:py-5 sm:px-6', 
         theme.card,
         isHot && 'ring-2 ring-orange-500 ring-offset-2',
         className
     )}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-1">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-2">
         <div className="flex flex-col gap-0.5">
-            <CardTitle className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.15em] text-muted-foreground/70 group-hover:text-primary transition-colors">
+            <CardTitle className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/70 group-hover:text-primary transition-colors">
                 {title}
             </CardTitle>
             {isCritical ? (
-                <div className="flex items-center gap-1 text-[7px] font-bold text-red-600 animate-bounce">
-                    <AlertTriangle className="h-2 w-2 fill-current" /> PENDÊNCIA CRÍTICA
+                <div className="flex items-center gap-1 text-[8px] font-bold text-red-600 animate-bounce">
+                    <AlertTriangle className="h-2.5 w-2.5 fill-current" /> PENDÊNCIA CRÍTICA
                 </div>
             ) : isHot && (
-                <div className="flex items-center gap-1 text-[7px] font-bold text-orange-600 animate-pulse">
-                    <Zap className="h-2 w-2 fill-current" /> EM ALTA
+                <div className="flex items-center gap-1 text-[8px] font-bold text-orange-600 animate-pulse">
+                    <Zap className="h-2.5 w-2.5 fill-current" /> EM ALTA
                 </div>
             )}
         </div>
         <div className="flex items-center gap-2">
             {renderSparkline()}
-            <Icon className={cn("h-3 w-3 opacity-60", theme.text)} />
+            <Icon className={cn("h-4 w-4 opacity-60", theme.text)} />
         </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col justify-between p-0">
-        <div className="flex items-baseline justify-between gap-2">
-            <div className={cn("text-lg sm:text-2xl font-light tracking-tighter", theme.text, valueClassName)}>
+        <div className="flex items-baseline justify-between gap-2 mb-2">
+            <div className={cn("text-2xl sm:text-3xl font-light tracking-tighter", theme.text, valueClassName)}>
                 {value}
             </div>
             {percentage !== undefined && (
-                <div className="text-[8px] font-bold bg-background/60 px-1.5 py-0.5 rounded border border-border/30 text-primary">
+                <div className="text-[9px] font-bold bg-background/60 px-2 py-0.5 rounded border border-border/30 text-primary">
                     {percentage.toFixed(1).replace('.', ',')}%
                 </div>
             )}
         </div>
         
-        <div className="mt-1 border-t pt-1 border-border/20 flex items-center justify-between">
+        <div className="mt-2 border-t pt-2 border-border/20 flex items-center justify-between">
             <div className="flex flex-col">
-                <p className="text-[7px] font-bold text-muted-foreground/50 uppercase tracking-tighter">
+                <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-tighter">
                     {description}
                 </p>
                 {subValue && (
-                    <p className="text-[7px] font-black text-primary/70 uppercase tracking-tighter">
+                    <p className="text-[9px] font-black text-primary/70 uppercase tracking-tighter">
                         {subValue}
                     </p>
                 )}
             </div>
             {topContributor && (
-                <p className="text-[7px] font-bold text-primary/60 truncate max-w-[60px]">
+                <p className="text-[9px] font-bold text-primary/60 truncate max-w-[80px]">
                     Líder: {topContributor.split(' ')[0]}
                 </p>
             )}

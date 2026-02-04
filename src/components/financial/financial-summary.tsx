@@ -168,7 +168,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
   ];
 
   return (
-    <div className='grid gap-3 md:grid-cols-2 lg:grid-cols-4 print:grid-cols-4'>
+    <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4 print:grid-cols-4 mb-6'>
         {cards.map(card => (
             <div key={card.title} className="cursor-pointer" onClick={() => onShowDetails(card.title, card.proposals)}>
                 <StatsCard
