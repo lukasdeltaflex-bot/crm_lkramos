@@ -31,6 +31,7 @@ import Link from 'next/link';
 import { ThemeColors } from '@/components/settings/theme-colors';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 const DRIVE_LINKED_KEY = 'lk-ramos-google-drive-linked-v1';
 
