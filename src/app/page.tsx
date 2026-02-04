@@ -17,7 +17,7 @@ import {
   CheckCircle2,
   Calendar as CalendarIcon
 } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, isValid, startOfDay, subDays, endOfDay, subMonths, parse } from 'date-fns';
+import { format, startOfMonth, endOfMonth, isValid, startOfDay, subDays, endOfDay, subMonths, parse, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatCurrency, cn } from '@/lib/utils';
 import type { Proposal, Customer, UserProfile } from '@/lib/types';
@@ -135,9 +135,34 @@ export default function DashboardPage() {
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
-    const startOfPipeline = startOfMonth(subMonths(fromDate, 1));
+    const prevMonthFrom = startOfMonth(subMonths(fromDate, 1));
+    const prevMonthTo = endOfMonth(subMonths(fromDate, 1));
 
     const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
+
+    const getTopOperator = (list: Proposal[]) => {
+        const ops: Record<string, number> = {};
+        list.forEach(p => {
+            if (p.operator) ops[p.operator] = (ops[p.operator] || 0) + p.grossAmount;
+        });
+        return Object.entries(ops).sort((a,b) => b[1] - a[1])[0]?.[0] || '---';
+    };
+
+    const getSparkline = (list: Proposal[]) => {
+        const days = Array.from({length: 7}, (_, i) => subDays(effectiveToDate, 6 - i));
+        return days.map(day => {
+            return list.filter(p => p.dateDigitized && isSameDay(new Date(p.dateDigitized), day))
+                       .reduce((sum, p) => sum + p.grossAmount, 0);
+        });
+    };
+
+    const isHot = (current: number, status: string) => {
+        const prev = proposals.filter(p => {
+            const d = new Date(p.dateDigitized);
+            return d >= prevMonthFrom && d <= prevMonthTo && p.status === status;
+        }).reduce((sum, p) => sum + p.grossAmount, 0);
+        return prev > 0 && current > prev * 1.2;
+    };
 
     const digitizedInPeriod = proposals.filter(p => {
         if (!p.dateDigitized) return false;
@@ -153,22 +178,45 @@ export default function DashboardPage() {
     });
 
     const accumulatedProposals = proposals.filter(p => {
-        if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
-        return d >= startOfPipeline && d <= effectiveToDate;
+        // Para pipeline, consideramos o que foi digitado recentemente
+        return d >= subMonths(fromDate, 1) && d <= effectiveToDate;
     });
 
-    const totalDigitadoMonth = getSum(digitizedInPeriod);
-    
+    const totalDigitado = getSum(digitizedInPeriod);
+    const pendente = getSum(accumulatedProposals.filter(p => p.status === 'Pendente'));
+    const emAndamento = getSum(accumulatedProposals.filter(p => p.status === 'Em Andamento'));
+    const aguardandoSaldo = getSum(accumulatedProposals.filter(p => p.status === 'Aguardando Saldo'));
+    const saldoPago = getSum(accumulatedProposals.filter(p => p.status === 'Saldo Pago'));
+    const reprovado = getSum(digitizedInPeriod.filter(p => p.status === 'Reprovado'));
+
     return {
-        totalDigitado: totalDigitadoMonth,
-        pendente: getSum(accumulatedProposals.filter(p => p.status === 'Pendente')),
-        emAndamento: getSum(accumulatedProposals.filter(p => p.status === 'Em Andamento')),
-        aguardandoSaldo: getSum(accumulatedProposals.filter(p => p.status === 'Aguardando Saldo')),
-        saldoPago: getSum(accumulatedProposals.filter(p => p.status === 'Saldo Pago')),
-        reprovado: getSum(digitizedInPeriod.filter(p => p.status === 'Reprovado')),
+        totalDigitado,
+        pendente,
+        emAndamento,
+        aguardandoSaldo,
+        saldoPago,
+        reprovado,
         pago: getSum(paidInPeriod),
-        totalPagoMeta: getSum(paidInPeriod), 
+        metaInfo: {
+            totalDigitadoSpark: getSparkline(digitizedInPeriod),
+            pendenteSpark: getSparkline(accumulatedProposals.filter(p => p.status === 'Pendente')),
+            emAndamentoSpark: getSparkline(accumulatedProposals.filter(p => p.status === 'Em Andamento')),
+            aguardandoSpark: getSparkline(accumulatedProposals.filter(p => p.status === 'Aguardando Saldo')),
+            saldoSpark: getSparkline(accumulatedProposals.filter(p => p.status === 'Saldo Pago')),
+            reprovadoSpark: getSparkline(digitizedInPeriod.filter(p => p.status === 'Reprovado')),
+            
+            totalDigitadoHot: isHot(totalDigitado, 'Digitado'),
+            pendenteHot: isHot(pendente, 'Pendente'),
+            emAndamentoHot: isHot(emAndamento, 'Em Andamento'),
+            
+            topTotal: getTopOperator(digitizedInPeriod),
+            topPendente: getTopOperator(accumulatedProposals.filter(p => p.status === 'Pendente')),
+            topAndamento: getTopOperator(accumulatedProposals.filter(p => p.status === 'Em Andamento')),
+            topAguardando: getTopOperator(accumulatedProposals.filter(p => p.status === 'Aguardando Saldo')),
+            topSaldo: getTopOperator(accumulatedProposals.filter(p => p.status === 'Saldo Pago')),
+            topReprovado: getTopOperator(digitizedInPeriod.filter(p => p.status === 'Reprovado'))
+        },
         proposals: {
             pendente: accumulatedProposals.filter(p => p.status === 'Pendente'),
             emAndamento: accumulatedProposals.filter(p => p.status === 'Em Andamento'),
@@ -245,7 +293,7 @@ export default function DashboardPage() {
 
         <div className="w-full">
             <GoalCard 
-                currentProduction={stats.totalPagoMeta} 
+                currentProduction={stats.pago} 
                 totalDigitized={stats.totalDigitado}
                 isPrivacyMode={isPrivacyMode}
                 onValueClick={() => handleShowDetails('Contratos Pagos no Período', stats.proposals.pago)}
@@ -259,6 +307,9 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.totalDigitado)} 
                     icon={FileText} 
                     description="PRODUÇÃO MENSAL"
+                    sparklineData={stats.metaInfo.totalDigitadoSpark}
+                    isHot={stats.metaInfo.totalDigitadoHot}
+                    topContributor={stats.metaInfo.topTotal}
                 />
             </div>
             <div className="cursor-pointer" onClick={() => handleShowDetails('Pendentes (Acumulado)', stats.proposals.pendente)}>
@@ -267,6 +318,9 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.pendente)} 
                     icon={BadgePercent} 
                     description="VS PRODUÇÃO ATUAL"
+                    sparklineData={stats.metaInfo.pendenteSpark}
+                    isHot={stats.metaInfo.pendenteHot}
+                    topContributor={stats.metaInfo.topPendente}
                 />
             </div>
             <div className="cursor-pointer" onClick={() => handleShowDetails('Em Andamento (Acumulado)', stats.proposals.emAndamento)}>
@@ -275,6 +329,9 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.emAndamento)} 
                     icon={Hourglass} 
                     description="VS PRODUÇÃO ATUAL"
+                    sparklineData={stats.metaInfo.emAndamentoSpark}
+                    isHot={stats.metaInfo.emAndamentoHot}
+                    topContributor={stats.metaInfo.topAndamento}
                 />
             </div>
         </div>
@@ -286,6 +343,8 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.aguardandoSaldo)} 
                     icon={Clock} 
                     description="VS PRODUÇÃO ATUAL"
+                    sparklineData={stats.metaInfo.aguardandoSpark}
+                    topContributor={stats.metaInfo.topAguardando}
                 />
             </div>
             <div className="cursor-pointer" onClick={() => handleShowDetails('Saldo Pago (Acumulado)', stats.proposals.saldoPago)}>
@@ -294,6 +353,8 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.saldoPago)} 
                     icon={CheckCircle2} 
                     description="VS PRODUÇÃO ATUAL"
+                    sparklineData={stats.metaInfo.saldoSpark}
+                    topContributor={stats.metaInfo.topSaldo}
                 />
             </div>
             <div className="cursor-pointer" onClick={() => handleShowDetails('Reprovado (Mês)', stats.proposals.reprovado)}>
@@ -302,6 +363,8 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.reprovado)} 
                     icon={XCircle} 
                     description="DO TOTAL DIGITADO"
+                    sparklineData={stats.metaInfo.reprovadoSpark}
+                    topContributor={stats.metaInfo.topReprovado}
                 />
             </div>
         </div>
