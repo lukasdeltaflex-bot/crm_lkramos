@@ -5,15 +5,15 @@ import { FirebaseProvider } from '@/firebase/provider';
 import { initializeFirebase } from './firebase'; 
 
 /**
- * Provedor de Infraestrutura Blindada V61.
+ * Provedor de Infraestrutura Blindada V62.
  * Protocolo de Supressão Absoluta para falhas críticas do SDK do Firestore (ca9/b815).
- * Implementa interceptação profunda em nível de captura global para silenciar erros antes do Next.js.
+ * Implementa intercepção profunda para silenciar erros de asserção interna antes do Next.js.
  */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // 🛡️ ESCUDO DE SILÊNCIO V61: Interceptação Profunda e Seletiva
+    // 🛡️ ESCUDO DE SILÊNCIO V62: Intercepção Profunda e Seletiva
     const isSuppressibleError = (err: any) => {
         if (!err) return false;
         
@@ -36,10 +36,10 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
             'WATCH CHANGE AGGREGATOR',
             'WATCH_CHANGE',
             'TARGETSTATE',
-            'D9C36AE7' // ID técnico do chunk do Firestore reportado no erro
+            'D9C36AE7',
+            'ASSERT.TS'
         ];
 
-        // Bloqueio se contiver a combinação de Falha de Asserção e um dos IDs técnicos.
         return signatures.some(sig => errorString.includes(sig) || details.includes(sig));
     };
 
@@ -47,7 +47,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
       const error = 'error' in event ? event.error : (event as any).reason;
       
       if (isSuppressibleError(error)) {
-        // 🛑 BLOQUEIO ABSOLUTO: Silencia o erro para evitar o Overlay do Next.js
+        // 🛑 BLOQUEIO ABSOLUTO: Anula o erro para evitar o Red Overlay do Next.js
         event.preventDefault();
         event.stopPropagation();
         return true;
@@ -62,7 +62,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
       originalConsoleError.apply(console, args);
     };
 
-    // Uso de fase de captura (true) para interceptar antes de qualquer outro listener
+    // Uso de fase de captura (true) para interceptar antes de qualquer outro listener do Next.js
     window.addEventListener('error', handleGlobalError, true);
     window.addEventListener('unhandledrejection', handleGlobalError, true);
 
@@ -86,7 +86,6 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
     };
   }, []);
 
-  // ⚠️ Hidratação Consistente: Loader fixo para evitar mismatch
   if (!isReady) {
     return (
         <div className="flex h-screen w-screen flex-col items-center justify-center bg-background gap-4">

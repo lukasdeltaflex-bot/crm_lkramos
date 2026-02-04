@@ -22,7 +22,7 @@ export interface UseCollectionResult<T> {
 }
 
 /**
- * Hook Defensivo V61 para coleções Firestore.
+ * Hook Defensivo V62 para coleções Firestore.
  * Silencia falhas internas de estado (ca9/b815) tratadas pelo Escudo de Infraestrutura.
  */
 export function useCollection<T = any>(
@@ -65,7 +65,7 @@ export function useCollection<T = any>(
             if (!isMounted) return;
             
             const msg = (err.message || "").toUpperCase();
-            // 🛡️ Filtro de supressão para erros de Watch Stream (ca9/b815)
+            // 🛡️ Filtro de supressão agressivo para erros de asserção técnica (ca9/b815)
             if (msg.includes('ASSERTION') || msg.includes('CA9') || msg.includes('B815') || msg.includes('STATE') || msg.includes('FE: -1')) {
                 return; 
             }
