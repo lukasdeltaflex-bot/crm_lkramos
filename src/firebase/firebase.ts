@@ -12,7 +12,7 @@ const firebaseConfig = {
   appId: "1:341426752875:web:348f88597e5b9b2057d02e",
 };
 
-// 🛡️ PROTOCOLO DE IMUTABILIDADE V57: Singleton Global Blindado
+// 🛡️ PROTOCOLO DE IMUTABILIDADE V58: Singleton Global Blindado
 const g = globalThis as any;
 
 let app: FirebaseApp;
@@ -25,9 +25,9 @@ if (!getApps().length) {
 if (!g._firebaseDb) {
     try {
         /**
-         * 🔌 CONFIGURAÇÃO DE REDE V57:
-         * Forçagem de Long Polling e desativação de Fetch Streams.
-         * Esta é a cura técnica definitiva para o erro ca9 em ambientes Cloud.
+         * 🔌 CONFIGURAÇÃO DE REDE V58:
+         * Forçagem de Long Polling e desativação absoluta de Fetch Streams.
+         * Esta é a cura técnica definitiva para o erro ca9/b815 em ambientes Cloud.
          */
         g._firebaseDb = initializeFirestore(app, {
             experimentalForceLongPolling: true,

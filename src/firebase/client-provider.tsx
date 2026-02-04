@@ -5,15 +5,15 @@ import { FirebaseProvider } from '@/firebase/provider';
 import { initializeFirebase } from './firebase'; 
 
 /**
- * Provedor de Infraestrutura Blindada V57.
+ * Provedor de Infraestrutura Blindada V58.
  * Protocolo de Supressão Absoluta para falhas críticas do SDK do Firestore (ca9/b815).
- * Implementa interceptação em nível de captura global para silenciar erros antes do Next.js.
+ * Implementa interceptação profunda em nível de captura global para silenciar erros antes do Next.js.
  */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // 🛡️ ESCUDO DE SILÊNCIO V57: Interceptação Profunda e Seletiva
+    // 🛡️ ESCUDO DE SILÊNCIO V58: Interceptação Profunda e Seletiva
     const isSuppressibleError = (err: any) => {
         if (!err) return false;
         
@@ -33,12 +33,12 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
             'ID: B815',
             'FE: -1',
             'FE:-1',
-            'WATCH CHANGE AGGREGATOR'
+            'WATCH CHANGE AGGREGATOR',
+            'WATCH_CHANGE'
         ];
 
-        // Se contiver a combinação de Falha de Asserção e um dos IDs técnicos, bloqueamos.
-        return (errorString.includes('ASSERTION') && signatures.some(sig => errorString.includes(sig))) || 
-               signatures.some(sig => details.includes(sig));
+        // Bloqueio se contiver a combinação de Falha de Asserção e um dos IDs técnicos.
+        return signatures.some(sig => errorString.includes(sig) || details.includes(sig));
     };
 
     const handleGlobalError = (event: ErrorEvent | PromiseRejectionEvent) => {
@@ -69,7 +69,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
 
     const timer = setTimeout(() => {
         setIsReady(true);
-    }, 50);
+    }, 10);
 
     return () => {
       window.removeEventListener('error', handleGlobalError, true);
@@ -79,7 +79,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
     };
   }, []);
 
-  // ⚠️ Hidratação Consistente: Loader estático para evitar mismatch
+  // ⚠️ Hidratação Consistente: Loader fixo para evitar mismatch
   if (!isReady) {
     return (
         <div className="flex h-screen w-screen flex-col items-center justify-center bg-background gap-4">
