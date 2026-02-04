@@ -1,3 +1,4 @@
+
 'use client';
 import React from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -173,6 +174,29 @@ export default function FinancialPage() {
         ],
         theme: 'striped',
         headStyles: { fillColor: [40, 74, 127] },
+    });
+
+    // Ranking de Operadores
+    const operatorRanking: Record<string, { count: number; volume: number }> = {};
+    reportProposals.forEach(p => {
+        const op = p.operator || 'Sem Operador';
+        if (!operatorRanking[op]) operatorRanking[op] = { count: 0, volume: 0 };
+        operatorRanking[op].count++;
+        operatorRanking[op].volume += p.grossAmount || 0;
+    });
+
+    const rankingRows = Object.entries(operatorRanking)
+        .sort((a, b) => b[1].volume - a[1].volume)
+        .map(([name, stats]) => [name, stats.count, formatCurrency(stats.volume)]);
+
+    doc.text("Ranking de Performance (Mês)", 14, (doc as any).lastAutoTable.finalY + 15);
+    autoTable(doc, {
+        startY: (doc as any).lastAutoTable.finalY + 20,
+        head: [['Operador', 'Qtd. Contratos', 'Volume Bruto']],
+        body: rankingRows,
+        theme: 'grid',
+        headStyles: { fillColor: [70, 70, 70] }, // Zinc
+        styles: { fontSize: 9 }
     });
 
     doc.text("Detalhamento das Propostas Digitadas", 14, (doc as any).lastAutoTable.finalY + 15);
