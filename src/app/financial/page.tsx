@@ -242,6 +242,23 @@ export default function FinancialPage() {
     setIsSheetOpen(false);
   };
 
+  const handlePrint = React.useCallback(() => {
+    const hasSelection = Object.keys(rowSelection).length > 0;
+    if (hasSelection) {
+        document.body.classList.add('print-selection');
+    }
+    
+    const handleAfterPrint = () => {
+        if (hasSelection) {
+            document.body.classList.remove('print-selection');
+        }
+        window.removeEventListener('afterprint', handleAfterPrint);
+    };
+
+    window.addEventListener('afterprint', handleAfterPrint);
+    window.print();
+  }, [rowSelection]);
+
   const columns = React.useMemo(() => getColumns({ onEdit: handleEditCommission, onStatusUpdate: handleCommissionStatusUpdate }), [handleEditCommission, handleCommissionStatusUpdate]);
 
   return (
@@ -314,7 +331,7 @@ export default function FinancialPage() {
             <Button variant="ghost" size="icon" onClick={() => setIsPrivacyMode(!isPrivacyMode)}>
                 {isPrivacyMode ? <EyeOff /> : <Eye />}
             </Button>
-            <Button onClick={() => window.print()}><Printer /> Imprimir</Button>
+            <Button onClick={handlePrint}><Printer /> Imprimir</Button>
         </div>
       </div>
 
