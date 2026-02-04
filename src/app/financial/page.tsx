@@ -9,7 +9,7 @@ import { collection, query, where, doc, setDoc, deleteField } from 'firebase/fir
 import type { Proposal, Customer, CommissionStatus } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Eye, EyeOff, Printer, FileCheck2, FileDown, FileBadge } from 'lucide-react';
+import { Eye, EyeOff, Printer, FileCheck2, FileDown, FileBadge, BarChart3 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +36,7 @@ import { ptBR } from 'date-fns/locale';
 import { CommissionReconciliation } from '@/components/financial/commission-reconciliation';
 import { formatCurrency } from '@/lib/utils';
 import { ProposalsStatusTable } from '@/components/dashboard/proposals-status-table';
+import { PromoterEfficiencyReport } from '@/components/financial/promoter-efficiency-report';
 
 
 export type ProposalWithCustomer = Proposal & { customer: Customer | undefined };
@@ -46,6 +47,7 @@ export default function FinancialPage() {
   const [isPrivacyMode, setIsPrivacyMode] = React.useState(false);
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
   const [isReconciliationOpen, setIsReconciliationOpen] = React.useState(false);
+  const [isEfficiencyOpen, setIsEfficiencyOpen] = React.useState(false);
   const [selectedProposal, setSelectedProposal] = React.useState<ProposalWithCustomer | undefined>(undefined);
   const [isClient, setIsClient] = React.useState(false);
   const [rowSelection, setRowSelection] = React.useState({});
@@ -247,6 +249,22 @@ export default function FinancialPage() {
       <div className="flex items-center justify-between print:hidden">
         <PageHeader title="Controle Financeiro" />
         <div className="flex items-center gap-2">
+            <Dialog open={isEfficiencyOpen} onOpenChange={setIsEfficiencyOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="outline">
+                        <BarChart3 className="mr-2 h-4 w-4" />
+                        Relatório de Eficiência
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-5xl h-[90vh] flex flex-col">
+                    <DialogHeader>
+                        <DialogTitle>Análise de Eficiência por Parceiro</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex-1 overflow-y-auto">
+                        <PromoterEfficiencyReport proposals={summaryProposals} />
+                    </div>
+                </DialogContent>
+            </Dialog>
             <Button variant="outline" onClick={handleGenerateMonthlyReport}>
                 <FileBadge className="mr-2 h-4 w-4" />
                 Fechamento Mensal (PDF)
