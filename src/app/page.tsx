@@ -139,14 +139,12 @@ export default function DashboardPage() {
 
     const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
 
-    // 1. Propostas DIGITADAS no período (BASE para %)
     const digitizedInPeriod = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
         return d >= fromDate && d <= effectiveToDate;
     });
 
-    // 2. Contratos PAGOS: Baseado na data de pagamento ao cliente (Pode vir de meses anteriores)
     const paidInPeriod = proposals.filter(p => {
         if (p.status !== 'Pago' && p.status !== 'Saldo Pago') return false;
         if (!p.datePaidToClient) return false;
@@ -154,7 +152,6 @@ export default function DashboardPage() {
         return d >= fromDate && d <= effectiveToDate;
     });
 
-    // 3. Pipeline Acumulada (Contando do mês passado pra cá)
     const accumulatedProposals = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
@@ -163,9 +160,6 @@ export default function DashboardPage() {
 
     const totalDigitadoMonth = getSum(digitizedInPeriod);
     
-    // LÓGICA DE PORCENTAGEM: SEMPRE BASEADA NO TOTAL DIGITADO DO MÊS VIGENTE
-    const getPerc = (val: number) => totalDigitadoMonth > 0 ? (val / totalDigitadoMonth) * 100 : 0;
-
     return {
         totalDigitado: totalDigitadoMonth,
         pendente: getSum(accumulatedProposals.filter(p => p.status === 'Pendente')),
@@ -175,11 +169,6 @@ export default function DashboardPage() {
         reprovado: getSum(digitizedInPeriod.filter(p => p.status === 'Reprovado')),
         pago: getSum(paidInPeriod),
         totalPagoMeta: getSum(paidInPeriod), 
-        percPendente: getPerc(getSum(accumulatedProposals.filter(p => p.status === 'Pendente'))),
-        percEmAndamento: getPerc(getSum(accumulatedProposals.filter(p => p.status === 'Em Andamento'))),
-        percAguardandoSaldo: getPerc(getSum(accumulatedProposals.filter(p => p.status === 'Aguardando Saldo'))),
-        percSaldoPago: getPerc(getSum(accumulatedProposals.filter(p => p.status === 'Saldo Pago'))),
-        percReprovado: getPerc(getSum(digitizedInPeriod.filter(p => p.status === 'Reprovado'))),
         proposals: {
             pendente: accumulatedProposals.filter(p => p.status === 'Pendente'),
             emAndamento: accumulatedProposals.filter(p => p.status === 'Em Andamento'),
