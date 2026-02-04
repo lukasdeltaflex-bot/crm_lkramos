@@ -9,7 +9,7 @@ import { collection, query, where, doc, setDoc, deleteField } from 'firebase/fir
 import type { Proposal, Customer, CommissionStatus } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Eye, EyeOff, Printer, FileCheck2, FileDown, FileBadge, BarChart3 } from 'lucide-react';
+import { Eye, EyeOff, Printer, FileCheck2, FileDown, FileBadge, BarChart3, Calendar } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,19 +27,37 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogFooter,
+    DialogDescription,
     DialogTrigger,
   } from '@/components/ui/dialog';
 import { CommissionForm, type CommissionFormValues } from './commission-form';
 import { toast } from '@/hooks/use-toast';
-import { format, startOfMonth, endOfMonth, parse, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, parse, subMonths, getYear, getMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CommissionReconciliation } from '@/components/financial/commission-reconciliation';
 import { formatCurrency } from '@/lib/utils';
 import { ProposalsStatusTable } from '@/components/dashboard/proposals-status-table';
 import { PromoterEfficiencyReport } from '@/components/financial/promoter-efficiency-report';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 export type ProposalWithCustomer = Proposal & { customer: Customer | undefined };
+
+const MONTHS = [
+    { value: "0", label: "Janeiro" },
+    { value: "1", label: "Fevereiro" },
+    { value: "2", label: "Março" },
+    { value: "3", label: "Abril" },
+    { value: "4", label: "Maio" },
+    { value: "5", label: "Junho" },
+    { value: "6", label: "Julho" },
+    { value: "7", label: "Agosto" },
+    { value: "8", label: "Setembro" },
+    { value: "9", label: "Outubro" },
+    { value: "10", label: "Novembro" },
+    { value: "11", label: "Dezembro" },
+];
 
 export default function FinancialPage() {
   const { user, isUserLoading } = useUser();
@@ -48,6 +66,11 @@ export default function FinancialPage() {
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
   const [isReconciliationOpen, setIsReconciliationOpen] = React.useState(false);
   const [isEfficiencyOpen, setIsEfficiencyOpen] = React.useState(false);
+  const [isReportDialogOpen, setIsReportDialogOpen] = React.useState(false);
+  
+  const [reportMonth, setReportMonth] = React.useState(getMonth(new Date()).toString());
+  const [reportYear, setReportYear] = React.useState(getYear(new Date()).toString());
+
   const [selectedProposal, setSelectedProposal] = React.useState<ProposalWithCustomer | undefined>(undefined);
   const [isClient, setIsClient] = React.useState(false);
   const [rowSelection, setRowSelection] = React.useState({});
@@ -80,7 +103,6 @@ export default function FinancialPage() {
     const startOfCurrent = startOfMonth(today);
     const endOfCurrent = endOfMonth(today);
 
-    // Oculta propostas reprovadas em todo o financeiro (não geram comissão)
     const filteredProposals = proposals.filter(p => p.status !== 'Reprovado');
 
     const tableData = filteredProposals
@@ -90,87 +112,95 @@ export default function FinancialPage() {
       }))
       .filter(p => p.customer);
 
-    const summaryData = filteredProposals
-      .map(p => ({
-        ...p,
-        customer: customersMap.get(p.customerId),
-      }))
-      .filter(p => p.customer);
-
     return { 
       proposalsWithCustomerData: tableData as ProposalWithCustomer[], 
-      summaryProposals: summaryData as ProposalWithCustomer[],
+      summaryProposals: tableData as ProposalWithCustomer[],
       currentMonthRange: { from: startOfCurrent, to: endOfCurrent }
     };
   }, [proposals, customers, isClient]);
 
   const handleGenerateMonthlyReport = async () => {
+    const targetMonth = parseInt(reportMonth);
+    const targetYear = parseInt(reportYear);
+
+    const reportProposals = summaryProposals.filter(p => {
+        const d = new Date(p.dateDigitized);
+        return d.getMonth() === targetMonth && d.getFullYear() === targetYear;
+    });
+
+    if (reportProposals.length === 0) {
+        toast({
+            variant: "destructive",
+            title: "Sem dados para o período",
+            description: "Nenhuma proposta encontrada para o mês selecionado."
+        });
+        return;
+    }
+
     const { default: jsPDF } = await import('jspdf');
     const { default: autoTable } = await import('jspdf-autotable');
 
     const doc = new jsPDF();
-    const monthYear = format(new Date(), "MMMM 'de' yyyy", { locale: ptBR });
+    const targetDate = new Date(targetYear, targetMonth, 1);
+    const monthYear = format(targetDate, "MMMM 'de' yyyy", { locale: ptBR });
 
     doc.setFontSize(20);
     doc.setTextColor(40, 74, 127);
     doc.text("Relatório de Fechamento Mensal", 14, 20);
     doc.setFontSize(12);
     doc.setTextColor(100);
-    doc.text(`Período: ${monthYear}`, 14, 28);
+    doc.text(`Período de Competência: ${monthYear}`, 14, 28);
     doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 14, 34);
 
-    const totalComissao = summaryProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
-    const recebido = summaryProposals.filter(p => p.commissionStatus === 'Paga').reduce((sum, p) => sum + (p.amountPaid || 0), 0);
-    const pendente = summaryProposals.filter(p => {
-        if (p.commissionStatus === 'Paga') return false;
-        const hasAverbacao = !!p.dateApproved;
-        return p.status === 'Pago' || (hasAverbacao && ['Em Andamento', 'Saldo Pago', 'Pendente'].includes(p.status));
-    }).reduce((sum, p) => sum + (p.commissionValue || 0), 0);
+    const totalComissao = reportProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
+    const recebido = reportProposals.filter(p => p.commissionStatus === 'Paga').reduce((sum, p) => sum + (p.amountPaid || 0), 0);
+    const pendente = reportProposals.filter(p => p.commissionStatus !== 'Paga').reduce((sum, p) => sum + (p.commissionValue || 0), 0);
 
     doc.setDrawColor(200);
     doc.line(14, 40, 196, 40);
 
     doc.setFontSize(14);
     doc.setTextColor(0);
-    doc.text("Resumo Executivo (Acumulado)", 14, 50);
+    doc.text("Resumo Financeiro do Período", 14, 50);
     
     autoTable(doc, {
         startY: 55,
         head: [['Métrica', 'Valor']],
         body: [
-            ['Total de Comissões (Digitado)', formatCurrency(totalComissao)],
-            ['Comissão Recebida', formatCurrency(recebido)],
-            ['Saldo a Receber (Averbados)', formatCurrency(pendente)],
+            ['Comissões Digitadas no Mês', formatCurrency(totalComissao)],
+            ['Comissões Já Recebidas', formatCurrency(recebido)],
+            ['Saldo Pendente/Esperado', formatCurrency(pendente)],
         ],
         theme: 'striped',
         headStyles: { fillColor: [40, 74, 127] },
     });
 
-    doc.text("Detalhamento das Propostas", 14, (doc as any).lastAutoTable.finalY + 15);
+    doc.text("Detalhamento das Propostas Digitadas", 14, (doc as any).lastAutoTable.finalY + 15);
 
-    const tableRows = summaryProposals.map(p => [
+    const tableRows = reportProposals.map(p => [
         p.customer?.name || '-',
         p.proposalNumber,
         p.product,
         formatCurrency(p.grossAmount),
         formatCurrency(p.commissionValue),
-        p.commissionStatus
+        p.status
     ]);
 
     autoTable(doc, {
         startY: (doc as any).lastAutoTable.finalY + 20,
-        head: [['Cliente', 'Nº Proposta', 'Produto', 'Vlr. Bruto', 'Comissão', 'Status']],
+        head: [['Cliente', 'Nº Proposta', 'Produto', 'Vlr. Bruto', 'Comissão', 'Status Prop.']],
         body: tableRows,
         styles: { fontSize: 8 },
         headStyles: { fillColor: [40, 74, 127] },
     });
 
-    doc.save(`Fechamento_Mensal_${format(new Date(), 'MM_yyyy')}.pdf`);
+    doc.save(`Fechamento_${monthYear.replace(/\s+/g, '_')}.pdf`);
     
     toast({
         title: "Relatório Gerado!",
-        description: "O PDF do fechamento mensal foi baixado com sucesso."
+        description: `O fechamento de ${monthYear} foi baixado com sucesso.`
     });
+    setIsReportDialogOpen(false);
   };
 
   const isLoading = proposalsLoading || customersLoading || isUserLoading;
@@ -261,6 +291,11 @@ export default function FinancialPage() {
 
   const columns = React.useMemo(() => getColumns({ onEdit: handleEditCommission, onStatusUpdate: handleCommissionStatusUpdate }), [handleEditCommission, handleCommissionStatusUpdate]);
 
+  const reportYears = React.useMemo(() => {
+      const current = getYear(new Date());
+      return [current - 1, current, current + 1].map(String);
+  }, []);
+
   return (
     <AppLayout>
       <div className="flex items-center justify-between print:hidden">
@@ -282,10 +317,53 @@ export default function FinancialPage() {
                     </div>
                 </DialogContent>
             </Dialog>
-            <Button variant="outline" onClick={handleGenerateMonthlyReport}>
-                <FileBadge className="mr-2 h-4 w-4" />
-                Fechamento Mensal (PDF)
-            </Button>
+
+            <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="outline">
+                        <FileBadge className="mr-2 h-4 w-4" />
+                        Fechamento Mensal (PDF)
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle>Configurar Fechamento</DialogTitle>
+                        <DialogDescription>Escolha o período do relatório de competência.</DialogDescription>
+                    </DialogHeader>
+                    <div className="grid grid-cols-2 gap-4 py-4">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase text-muted-foreground">Mês</label>
+                            <Select value={reportMonth} onValueChange={setReportMonth}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Mês" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {MONTHS.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase text-muted-foreground">Ano</label>
+                            <Select value={reportYear} onValueChange={setReportYear}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Ano" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {reportYears.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsReportDialogOpen(false)}>Cancelar</Button>
+                        <Button onClick={handleGenerateMonthlyReport}>
+                            <FileDown className="mr-2 h-4 w-4" />
+                            Gerar Relatório
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline">
