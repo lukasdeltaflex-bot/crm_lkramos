@@ -249,35 +249,39 @@ export const getColumns = (
       );
     },
     filterFn: (row, id, filterValue) => {
-        const status = row.getValue(id) as string;
+        const commissionStatus = row.getValue(id) as string;
         const mainStatus = row.original.status;
-        const hasAverbacao = !!row.original.dateApproved;
         
         // REGRA DE OURO: Reprovadas nunca aparecem no financeiro
         if (mainStatus === 'Reprovado') return false;
 
+        // Extraímos metadados do filtro se for um objeto
+        const filterId = typeof filterValue === 'object' ? filterValue?.id : filterValue;
+        const hasDateFilter = typeof filterValue === 'object' ? !!filterValue?.hasDateFilter : false;
+
         // REGRA PARA ABA "TODOS"
-        if (filterValue === '__CUSTOM_FILTER_TODOS__') {
-            // Se já foi paga, mostramos apenas se for deste mês para não poluir
-            if (status === 'Paga') {
-                const paymentDateStr = row.original.commissionPaymentDate;
-                if (!paymentDateStr) return false;
-                const pDate = new Date(paymentDateStr);
+        if (filterId === '__CUSTOM_FILTER_TODOS__') {
+            // Se for "Pago", mostramos apenas se for do mês vigente ou se houver busca por data
+            if (mainStatus === 'Pago') {
+                if (hasDateFilter) return true; // Deixa o filtro de data decidir
+
+                const checkDateStr = row.original.datePaidToClient || row.original.dateDigitized;
+                if (!checkDateStr) return false;
+                const dDate = new Date(checkDateStr);
                 const now = new Date();
-                return isSameMonth(pDate, now) && pDate.getFullYear() === now.getFullYear();
+                return isSameMonth(dDate, now) && dDate.getFullYear() === now.getFullYear();
             }
             
-            // Se for Pendente ou Parcial, mostramos apenas se for "Saldo a Receber" (Averbado ou Pago)
-            if (status === 'Pendente' || status === 'Parcial') {
-                return mainStatus === 'Pago' || mainStatus === 'Saldo Pago' || hasAverbacao;
-            }
-
-            return false;
+            // Pipeline visível permanentemente na aba Todos
+            const visibleInTodos = ['Em Andamento', 'Aguardando Saldo', 'Saldo Pago', 'Pendente'];
+            return visibleInTodos.includes(mainStatus);
         }
         
-        // REGRA PARA ABA "PAGAS" (Filtro específico selecionado no Tab)
-        if (filterValue === 'Paga') {
-            if (status !== 'Paga') return false;
+        // REGRA PARA ABA "PAGAS"
+        if (filterId === 'Paga') {
+            if (commissionStatus !== 'Paga') return false;
+            if (hasDateFilter) return true;
+
             const paymentDateStr = row.original.commissionPaymentDate;
             if (!paymentDateStr) return false;
             const pDate = new Date(paymentDateStr);
@@ -285,11 +289,16 @@ export const getColumns = (
             return isSameMonth(pDate, now) && pDate.getFullYear() === now.getFullYear();
         }
 
+        // Filtros específicos por comissão (Pendente / Parcial)
+        if (filterId === 'Pendente') return commissionStatus === 'Pendente';
+        if (filterId === 'Parcial') return commissionStatus === 'Parcial';
+
+        // Suporte para arrays (uso interno tanstack)
         if (Array.isArray(filterValue)) {
-            return filterValue.includes(status);
+            return filterValue.includes(commissionStatus);
         }
         
-        return status === filterValue;
+        return commissionStatus === filterId;
     },
     id: 'commissionStatus',
   },

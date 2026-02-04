@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -319,11 +320,16 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     const statusColumn = table.getColumn('commissionStatus');
     const dateColumn = table.getColumn('commissionPaymentDate');
     
+    // Objeto de contexto do filtro para passar metadados ao filterFn das colunas
+    const filterContext = {
+        hasDateFilter: !!appliedDateRange
+    };
+
     if (statusFilter === 'Todos') {
-        statusColumn?.setFilterValue('__CUSTOM_FILTER_TODOS__');
+        statusColumn?.setFilterValue({ id: '__CUSTOM_FILTER_TODOS__', ...filterContext });
         dateColumn?.setFilterValue(appliedDateRange);
     } else if (statusFilter === 'Paga') {
-        statusColumn?.setFilterValue('Paga');
+        statusColumn?.setFilterValue({ id: 'Paga', ...filterContext });
         if (!appliedDateRange) {
             const now = new Date();
             dateColumn?.setFilterValue({ from: startOfMonth(now), to: endOfMonth(now) });
@@ -331,7 +337,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             dateColumn?.setFilterValue(appliedDateRange);
         }
     } else {
-        statusColumn?.setFilterValue(statusFilter);
+        statusColumn?.setFilterValue({ id: statusFilter, ...filterContext });
         dateColumn?.setFilterValue(appliedDateRange);
     }
   }, [statusFilter, appliedDateRange, table]);
