@@ -10,23 +10,10 @@ import { Button } from '../ui/button';
 import { Eye, EyeOff, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from '@/components/ui/chart';
 
 interface CommissionChartProps {
     proposals: Proposal[];
 }
-
-const chartConfig = {
-  total: {
-    label: 'Comissão',
-    color: 'hsl(var(--primary))',
-  },
-} satisfies ChartConfig;
 
 export function CommissionChart({ proposals }: CommissionChartProps) {
     const [isPrivacyMode, setIsPrivacyMode] = useState(false);

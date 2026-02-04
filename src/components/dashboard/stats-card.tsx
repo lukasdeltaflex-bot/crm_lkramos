@@ -144,7 +144,7 @@ export function StatsCard({
     )}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-1.5">
         <div className="flex flex-col gap-0.5">
-            <CardTitle className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground/70 group-hover:text-primary transition-colors">
+            <CardTitle className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground group-hover:text-primary transition-colors">
                 {title}
             </CardTitle>
             {isCritical ? (
@@ -176,7 +176,7 @@ export function StatsCard({
         
         <div className="mt-2 pt-2 border-t border-border/10 flex items-center justify-between">
             <div className="flex flex-col">
-                <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-tighter">
+                <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-tighter">
                     {description}
                 </p>
                 {subValue && (

@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from "react"
@@ -23,28 +22,26 @@ interface ProductBreakdownChartProps {
   proposals: Proposal[]
 }
 
-// Configuração de cores profissional para cada tipo de produto
 const chartConfig = {
   amount: {
     label: "Volume",
   },
-  "Margem": { label: "Margem", color: "hsl(217, 91%, 60%)" }, // Azul
-  "Portabilidade": { label: "Portabilidade", color: "hsl(142, 76%, 36%)" }, // Verde
-  "Refin": { label: "Refin", color: "hsl(45, 93%, 47%)" }, // Dourado
-  "Saque Complementar": { label: "Saque", color: "hsl(24, 95%, 53%)" }, // Laranja
-  "Cartão com saque": { label: "Cartão", color: "hsl(262, 83%, 58%)" }, // Violeta
-  "Refin Port": { label: "Refin Port", color: "hsl(199, 89%, 48%)" }, // Azul Céu
-  "Saque FGTS": { label: "Saque FGTS", color: "hsl(158, 78%, 41%)" }, // Esmeralda
-  "Margem CLT": { label: "Margem CLT", color: "hsl(322, 84%, 50%)" }, // Magenta
-  "Cartão - Plástico": { label: "Cartão Plástico", color: "hsl(346, 77%, 49%)" }, // Rosa
-  "other": { label: "Outros", color: "hsl(215, 25%, 27%)" } // Slate
+  "Margem": { label: "Margem", color: "hsl(217, 91%, 60%)" },
+  "Portabilidade": { label: "Portabilidade", color: "hsl(142, 76%, 36%)" },
+  "Refin": { label: "Refin", color: "hsl(45, 93%, 47%)" },
+  "Saque Complementar": { label: "Saque", color: "hsl(24, 95%, 53%)" },
+  "Cartão com saque": { label: "Cartão", color: "hsl(262, 83%, 58%)" },
+  "Refin Port": { label: "Refin Port", color: "hsl(199, 89%, 48%)" },
+  "Saque FGTS": { label: "Saque FGTS", color: "hsl(158, 78%, 41%)" },
+  "Margem CLT": { label: "Margem CLT", color: "hsl(322, 84%, 50%)" },
+  "Cartão - Plástico": { label: "Cartão Plástico", color: "hsl(346, 77%, 49%)" },
+  "other": { label: "Outros", color: "hsl(215, 25%, 27%)" }
 } satisfies ChartConfig
 
 export function ProductBreakdownChart({ proposals }: ProductBreakdownChartProps) {
   const chartData = React.useMemo(() => {
     const data: Record<string, number> = {}
     proposals.forEach((p) => {
-      // Sincroniza com a lógica do Dashboard: Bruto ou Líquido dependendo da base configurada
       const amount = p.commissionBase === 'net' ? (p.netAmount || 0) : (p.grossAmount || 0)
       data[p.product] = (data[p.product] || 0) + amount
     })
@@ -112,7 +109,7 @@ export function ProductBreakdownChart({ proposals }: ProductBreakdownChartProps)
                         <tspan
                           x={viewBox.cx}
                           y={viewBox.cy}
-                          className="fill-primary text-3xl font-extrabold"
+                          className="fill-foreground text-3xl font-extrabold"
                         >
                           {chartData.length}
                         </tspan>

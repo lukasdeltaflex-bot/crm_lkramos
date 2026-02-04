@@ -35,7 +35,7 @@ export function StatusBreakdownChart({ proposals }: StatusBreakdownChartProps) {
     <div className="h-[400px] w-full pt-4">
         <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} layout="vertical" margin={{ left: 0, right: 30 }}>
-            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--muted-foreground)/0.1)" />
             <XAxis
                 type="number"
                 stroke="hsl(var(--muted-foreground))"
@@ -49,17 +49,19 @@ export function StatusBreakdownChart({ proposals }: StatusBreakdownChartProps) {
                 dataKey="name"
                 stroke="hsl(var(--muted-foreground))"
                 fontSize={12}
+                fontWeight="bold"
                 tickLine={false}
                 axisLine={false}
                 width={80}
                 interval={0}
             />
              <Tooltip
-                cursor={{ fill: 'hsl(var(--background))' }}
+                cursor={{ fill: 'hsl(var(--muted)/0.1)' }}
                 contentStyle={{ 
                     background: 'hsl(var(--background))',
                     border: '1px solid hsl(var(--border))',
-                    borderRadius: 'var(--radius)'
+                    borderRadius: 'var(--radius)',
+                    color: 'hsl(var(--foreground))'
                 }}
                 formatter={(value: number) => [formatCurrency(value), 'Total']}
             />

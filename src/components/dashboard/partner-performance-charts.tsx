@@ -43,7 +43,6 @@ export function PartnerPerformanceCharts({ proposals }: PartnerPerformanceCharts
   const operatorData = useMemo(() => {
     const dataMap: Record<string, number> = {};
     proposals.forEach(p => {
-      // Apenas propostas pagas contam para o ranking de performance real
       if (p.status === 'Pago' || p.status === 'Saldo Pago') {
         const operator = p.operator || 'Sem Operador';
         const amount = p.commissionBase === 'net' ? (p.netAmount || 0) : (p.grossAmount || 0);
@@ -61,15 +60,17 @@ export function PartnerPerformanceCharts({ proposals }: PartnerPerformanceCharts
     <div className="h-[300px] w-full pt-4">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} layout="vertical" margin={{ left: 0, right: 30 }}>
-          <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--muted-foreground)/0.1)" />
           <XAxis type="number" hide />
           <YAxis 
             dataKey="name" 
             type="category" 
             width={100} 
             fontSize={11}
+            fontWeight="bold"
             tickLine={false}
             axisLine={false}
+            stroke="hsl(var(--muted-foreground))"
             tickFormatter={(value) => value.length > 15 ? `${value.substring(0, 15)}...` : value}
           />
           <Tooltip 
@@ -78,7 +79,8 @@ export function PartnerPerformanceCharts({ proposals }: PartnerPerformanceCharts
             contentStyle={{ 
               borderRadius: 'var(--radius)',
               border: '1px solid hsl(var(--border))',
-              backgroundColor: 'hsl(var(--background))' 
+              backgroundColor: 'hsl(var(--background))',
+              color: 'hsl(var(--foreground))'
             }}
           />
           <Bar 
