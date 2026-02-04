@@ -4,7 +4,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { LucideIcon, Zap, TrendingUp } from 'lucide-react';
+import { LucideIcon, Zap, TrendingUp, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface StatsCardProps {
@@ -12,35 +12,46 @@ interface StatsCardProps {
   value: string;
   icon: LucideIcon;
   description?: string;
+  subValue?: string;
   percentage?: number;
   className?: string;
   valueClassName?: string;
   sparklineData?: number[];
   isHot?: boolean;
+  isCritical?: boolean;
   topContributor?: string;
 }
 
 /**
- * StatsCard Premium Executivo Compacto V20
- * Agora com Sparklines SVG, Indicador de Calor e Operador Líder.
+ * StatsCard Premium Executivo Compacto V21
+ * Agora com suporte a Alerta Crítico, Sub-valores (Ticket Médio) e Sparklines dinâmicos.
  */
 export function StatsCard({ 
     title, 
     value, 
     icon: Icon, 
     description, 
+    subValue,
     percentage, 
     className, 
     valueClassName,
     sparklineData = [],
     isHot = false,
+    isCritical = false,
     topContributor
 }: StatsCardProps) {
   
   const getThemeStyles = () => {
+    if (isCritical) 
+        return {
+            card: 'border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-900/20 animate-pulse shadow-[0_0_15px_rgba(220,38,38,0.1)]',
+            text: 'text-red-600 dark:text-red-400',
+            stroke: '#dc2626'
+        };
+
     const t = title.toLowerCase();
     
-    if (t.includes('andamento')) 
+    if (t.includes('andamento') || t.includes('esperada')) 
         return {
             card: 'border-yellow-200 dark:border-yellow-800 bg-yellow-50/30 dark:bg-yellow-900/10',
             text: 'text-yellow-600 dark:text-yellow-500',
@@ -54,14 +65,14 @@ export function StatsCard({
             stroke: '#ea580c'
         };
 
-    if (t.includes('performance') || t.includes('recebida') || t.includes('paga') || t.includes('pago')) 
+    if (t.includes('performance') || t.includes('recebida') || t.includes('paga') || t.includes('pago') || t.includes('total')) 
         return {
             card: 'border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-900/10',
             text: 'text-green-600 dark:text-green-400',
             stroke: '#16a34a'
         };
     
-    if (t.includes('comissão esperada') || t.includes('aguardando')) 
+    if (t.includes('aguardando')) 
         return {
             card: 'border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-900/10',
             text: 'text-blue-600 dark:text-blue-400',
@@ -91,7 +102,6 @@ export function StatsCard({
 
   const theme = getThemeStyles();
 
-  // Renderizador de Sparkline Simples em SVG
   const renderSparkline = () => {
     if (!sparklineData || sparklineData.length < 2) return null;
     const max = Math.max(...sparklineData, 1);
@@ -121,7 +131,7 @@ export function StatsCard({
     <Card className={cn(
         'hover:shadow-md transition-all group relative overflow-hidden rounded-xl h-full flex flex-col border-2 py-2 px-3 sm:py-2.5 sm:px-3.5', 
         theme.card,
-        isHot && 'ring-2 ring-orange-500 ring-offset-2 animate-in fade-in zoom-in duration-500',
+        isHot && 'ring-2 ring-orange-500 ring-offset-2',
         className
     )}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-1">
@@ -129,7 +139,11 @@ export function StatsCard({
             <CardTitle className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.15em] text-muted-foreground/70 group-hover:text-primary transition-colors">
                 {title}
             </CardTitle>
-            {isHot && (
+            {isCritical ? (
+                <div className="flex items-center gap-1 text-[7px] font-bold text-red-600 animate-bounce">
+                    <AlertTriangle className="h-2 w-2 fill-current" /> PENDÊNCIA CRÍTICA
+                </div>
+            ) : isHot && (
                 <div className="flex items-center gap-1 text-[7px] font-bold text-orange-600 animate-pulse">
                     <Zap className="h-2 w-2 fill-current" /> EM ALTA
                 </div>
@@ -153,9 +167,16 @@ export function StatsCard({
         </div>
         
         <div className="mt-1 border-t pt-1 border-border/20 flex items-center justify-between">
-            <p className="text-[7px] font-bold text-muted-foreground/50 uppercase tracking-tighter">
-                {description}
-            </p>
+            <div className="flex flex-col">
+                <p className="text-[7px] font-bold text-muted-foreground/50 uppercase tracking-tighter">
+                    {description}
+                </p>
+                {subValue && (
+                    <p className="text-[7px] font-black text-primary/70 uppercase tracking-tighter">
+                        {subValue}
+                    </p>
+                )}
+            </div>
             {topContributor && (
                 <p className="text-[7px] font-bold text-primary/60 truncate max-w-[60px]">
                     Líder: {topContributor.split(' ')[0]}

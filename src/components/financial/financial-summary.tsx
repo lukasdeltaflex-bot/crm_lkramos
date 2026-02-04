@@ -7,7 +7,7 @@ import { StatsCard } from '@/components/dashboard/stats-card';
 import { formatCurrency } from '@/lib/utils';
 import { CheckCircle, Hourglass, Coins, CircleDollarSign } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
-import { subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { subMonths, startOfMonth, endOfMonth, differenceInDays, subDays, isSameDay } from 'date-fns';
 
 type ProposalWithCustomer = Proposal & { customer: Customer };
 
@@ -29,6 +29,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     commissionReceivedProposals,
     proposalsForSaldoAReceber,
     expectedCommissionProposals,
+    metrics,
   } = React.useMemo(() => {
     const allProposals = Array.isArray(rows) && rows.length > 0 
         ? ('original' in rows[0] ? (rows as Row<ProposalWithCustomer>[]).map(r => r.original) : (rows as ProposalWithCustomer[]))
@@ -71,6 +72,12 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     });
     const pendingAmount = proposalsForSaldoAReceber.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
 
+    // Alerta Crítico: Averbado há mais de 15 dias sem pagar comissão
+    const isCriticalSaldo = proposalsForSaldoAReceber.some(p => {
+        if (!p.dateApproved) return false;
+        return differenceInDays(today, new Date(p.dateApproved)) > 15;
+    });
+
     // Comissão Esperada (ACUMULADO - Digitados sem averbação ainda)
     const expectedCommissionProposals = accumulatedProposals.filter(p => {
         if (p.commissionStatus === 'Paga') return false;
@@ -80,6 +87,20 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
         return !isReprovado && !hasAverbacao && !isPagoStatus;
     });
     const expectedAmount = expectedCommissionProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
+
+    // Sparklines (Fluxo de Caixa dos últimos 15 dias)
+    const getSparkline = (list: Proposal[], dateField: keyof Proposal) => {
+        const days = Array.from({length: 10}, (_, i) => subDays(today, 9 - i));
+        return days.map(day => {
+            return list.filter(p => {
+                const d = p[dateField];
+                return d && isSameDay(new Date(d as string), day);
+            }).reduce((sum, p) => sum + (p.commissionValue || 0), 0);
+        });
+    };
+
+    // Ticket Médio
+    const getAvg = (val: number, list: any[]) => list.length > 0 ? val / list.length : 0;
     
     return {
       totalPotentialCommission,
@@ -90,6 +111,17 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       commissionReceivedProposals,
       proposalsForSaldoAReceber,
       expectedCommissionProposals,
+      metrics: {
+          isCriticalSaldo,
+          avgTotal: getAvg(totalPotentialCommission, currentMonthProposals),
+          avgPaid: getAvg(totalAmountPaid, commissionReceivedProposals),
+          avgPending: getAvg(pendingAmount, proposalsForSaldoAReceber),
+          avgExpected: getAvg(expectedAmount, expectedCommissionProposals),
+          sparkTotal: getSparkline(currentMonthProposals, 'dateDigitized'),
+          sparkPaid: getSparkline(commissionReceivedProposals, 'commissionPaymentDate'),
+          sparkPending: getSparkline(proposalsForSaldoAReceber, 'dateApproved'),
+          sparkExpected: getSparkline(expectedCommissionProposals, 'dateDigitized')
+      }
     };
   }, [rows, currentMonthRange]);
   
@@ -101,28 +133,37 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       value: formatCurrency(totalPotentialCommission),
       icon: Coins,
       description: "PRODUÇÃO MENSAL",
+      subValue: `Ticket Médio: ${formatCurrency(metrics.avgTotal)}`,
       proposals: allProposalsInPeriod,
+      spark: metrics.sparkTotal
     },
     {
       title: "Comissão Recebida",
       value: formatCurrency(totalAmountPaid),
       icon: CheckCircle,
-      description: "DA PRODUÇÃO ATUAL",
+      description: "FLUXO DE CAIXA",
+      subValue: `Média Recebida: ${formatCurrency(metrics.avgPaid)}`,
       proposals: commissionReceivedProposals,
+      spark: metrics.sparkPaid
     },
     {
       title: "Saldo a Receber",
       value: formatCurrency(pendingAmount),
       icon: Hourglass,
-      description: "VS PRODUÇÃO ATUAL",
+      description: "PROPOSTAS AVERBADAS",
+      subValue: `Pendência Média: ${formatCurrency(metrics.avgPending)}`,
       proposals: proposalsForSaldoAReceber,
+      spark: metrics.sparkPending,
+      critical: metrics.isCriticalSaldo
     },
     {
       title: "Comissão Esperada",
       value: formatCurrency(expectedAmount),
       icon: CircleDollarSign,
-      description: "VS PRODUÇÃO ATUAL",
+      description: "PROPOSTAS DIGITADAS",
+      subValue: `Ticket Esperado: ${formatCurrency(metrics.avgExpected)}`,
       proposals: expectedCommissionProposals,
+      spark: metrics.sparkExpected
     },
   ];
 
@@ -135,6 +176,9 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
                     value={isPrivacyMode ? privacyPlaceholder : card.value}
                     icon={card.icon}
                     description={card.description}
+                    subValue={isPrivacyMode ? undefined : card.subValue}
+                    sparklineData={card.spark}
+                    isCritical={card.critical}
                 />
             </div>
         ))}
