@@ -5,7 +5,7 @@ import { FirebaseProvider } from '@/firebase/provider';
 import { initializeFirebase } from './firebase'; 
 
 /**
- * Provedor de Infraestrutura Blindada V62.
+ * Provedor de Infraestrutura Blindada V63.
  * Protocolo de Supressão Absoluta para falhas críticas do SDK do Firestore (ca9/b815).
  * Implementa intercepção profunda para silenciar erros de asserção interna antes do Next.js.
  */
@@ -13,7 +13,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // 🛡️ ESCUDO DE SILÊNCIO V62: Intercepção Profunda e Seletiva
+    // 🛡️ ESCUDO DE SILÊNCIO V63: Intercepção Profunda e Seletiva
     const isSuppressibleError = (err: any) => {
         if (!err) return false;
         
@@ -32,9 +32,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
             'ID: CA9',
             'ID: B815',
             'FE: -1',
-            'FE:-1',
             'WATCH CHANGE AGGREGATOR',
-            'WATCH_CHANGE',
             'TARGETSTATE',
             'D9C36AE7',
             'ASSERT.TS'

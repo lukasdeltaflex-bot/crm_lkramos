@@ -2,17 +2,9 @@ import { initializeApp, FirebaseApp, getApp, getApps } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
 import { getFirestore, initializeFirestore, Firestore } from "firebase/firestore";
 import { getStorage, FirebaseStorage } from "firebase/storage";
+import { firebaseConfig } from "./config";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDcdnNBy0TZTsq_cI02KFVU9o7PJopEczM",
-  authDomain: "studio-248448941-9c1c2.firebaseapp.com",
-  projectId: "studio-248448941-9c1c2",
-  storageBucket: "studio-248448941-9c1c2.firebasestorage.app",
-  messagingSenderId: "341426752875",
-  appId: "1:341426752875:web:348f88597e5b9b2057d02e",
-};
-
-// 🛡️ PROTOCOLO DE IMUTABILIDADE V62: Singleton Global Blindado
+// 🛡️ PROTOCOLO DE IMUTABILIDADE V63: Singleton Global Blindado
 const g = globalThis as any;
 
 let app: FirebaseApp;
@@ -25,7 +17,7 @@ if (!getApps().length) {
 if (!g._firebaseDb) {
     try {
         /**
-         * 🔌 CONFIGURAÇÃO DE REDE V62:
+         * 🔌 CONFIGURAÇÃO DE REDE V63:
          * Protocolo ultra-estável para evitar erros de asserção (ca9/b815).
          * Força Long Polling e desativa Fetch Streams.
          */
