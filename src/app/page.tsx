@@ -151,6 +151,7 @@ export default function DashboardPage() {
     const getSparkline = (list: Proposal[]) => {
         const days = Array.from({length: 7}, (_, i) => subDays(effectiveToDate, 6 - i));
         return days.map(day => {
+            // Para Sparklines, pegamos o que foi digitado (totalDigitado) ou pago (no caso do main card)
             return list.filter(p => p.dateDigitized && isSameDay(new Date(p.dateDigitized), day))
                        .reduce((sum, p) => sum + p.grossAmount, 0);
         });
@@ -179,7 +180,6 @@ export default function DashboardPage() {
 
     const accumulatedProposals = proposals.filter(p => {
         const d = new Date(p.dateDigitized);
-        // Para pipeline, consideramos o que foi digitado recentemente
         return d >= subMonths(fromDate, 1) && d <= effectiveToDate;
     });
 
@@ -189,6 +189,7 @@ export default function DashboardPage() {
     const aguardandoSaldo = getSum(accumulatedProposals.filter(p => p.status === 'Aguardando Saldo'));
     const saldoPago = getSum(accumulatedProposals.filter(p => p.status === 'Saldo Pago'));
     const reprovado = getSum(digitizedInPeriod.filter(p => p.status === 'Reprovado'));
+    const pago = getSum(paidInPeriod);
 
     return {
         totalDigitado,
@@ -197,9 +198,10 @@ export default function DashboardPage() {
         aguardandoSaldo,
         saldoPago,
         reprovado,
-        pago: getSum(paidInPeriod),
+        pago,
         metaInfo: {
             totalDigitadoSpark: getSparkline(digitizedInPeriod),
+            pagoSpark: getSparkline(paidInPeriod), // Tendência de contratos pagos para o card principal
             pendenteSpark: getSparkline(accumulatedProposals.filter(p => p.status === 'Pendente')),
             emAndamentoSpark: getSparkline(accumulatedProposals.filter(p => p.status === 'Em Andamento')),
             aguardandoSpark: getSparkline(accumulatedProposals.filter(p => p.status === 'Aguardando Saldo')),
@@ -207,10 +209,12 @@ export default function DashboardPage() {
             reprovadoSpark: getSparkline(digitizedInPeriod.filter(p => p.status === 'Reprovado')),
             
             totalDigitadoHot: isHot(totalDigitado, 'Digitado'),
+            pagoHot: isHot(pago, 'Pago'), // Calor da produção real
             pendenteHot: isHot(pendente, 'Pendente'),
             emAndamentoHot: isHot(emAndamento, 'Em Andamento'),
             
             topTotal: getTopOperator(digitizedInPeriod),
+            topPaid: getTopOperator(paidInPeriod), // Líder de produção real
             topPendente: getTopOperator(accumulatedProposals.filter(p => p.status === 'Pendente')),
             topAndamento: getTopOperator(accumulatedProposals.filter(p => p.status === 'Em Andamento')),
             topAguardando: getTopOperator(accumulatedProposals.filter(p => p.status === 'Aguardando Saldo')),
@@ -297,6 +301,9 @@ export default function DashboardPage() {
                 totalDigitized={stats.totalDigitado}
                 isPrivacyMode={isPrivacyMode}
                 onValueClick={() => handleShowDetails('Contratos Pagos no Período', stats.proposals.pago)}
+                sparklineData={stats.metaInfo.pagoSpark}
+                isHot={stats.metaInfo.pagoHot}
+                topContributor={stats.metaInfo.topPaid}
             />
         </div>
 
