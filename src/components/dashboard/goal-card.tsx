@@ -88,22 +88,22 @@ export function GoalCard({
 
   return (
     <Card className={cn(
-        'relative overflow-hidden bg-green-50/50 dark:bg-green-900/10 border-2 border-green-200 dark:border-green-800 shadow-md rounded-2xl w-full transition-all duration-500 py-1', 
+        'relative overflow-hidden bg-green-50/50 dark:bg-green-900/10 border-2 border-green-200 dark:border-green-800 shadow-md rounded-2xl w-full transition-all duration-500 py-0.5', 
         isHot && 'ring-2 ring-orange-500 ring-offset-2 scale-[1.01]',
         className
     )}>
-      <CardContent className="p-5 sm:p-7">
-        <div className="flex items-start justify-between mb-5">
-          <div className="flex items-center gap-4">
+      <CardContent className="p-4 sm:p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
             <div className={cn(
-                "p-2.5 rounded-xl bg-green-100 dark:bg-green-900/40",
+                "p-2 rounded-xl bg-green-100 dark:bg-green-900/40",
                 isHot && "bg-orange-100 dark:bg-orange-900/40 animate-pulse"
             )}>
-                {isHot ? <Zap className="h-5 w-5 text-orange-600" /> : <Trophy className="h-5 w-5 text-green-600" />}
+                {isHot ? <Zap className="h-4 w-4 text-orange-600" /> : <Trophy className="h-4 w-4 text-green-600" />}
             </div>
             <div>
-              <h3 className="text-sm font-black text-green-800 dark:text-green-400 uppercase tracking-widest">Meta de Produção Mensal</h3>
-              <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tighter">Performance real de contratos pagos vs objetivo</p>
+              <h3 className="text-xs font-black text-green-800 dark:text-green-400 uppercase tracking-widest">Meta de Produção Mensal</h3>
+              <p className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-tighter">Performance real de contratos pagos vs objetivo</p>
             </div>
           </div>
 
@@ -120,56 +120,56 @@ export function GoalCard({
               <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setIsEditing(false)}><X className="h-4 w-4 text-destructive" /></Button>
             </div>
           ) : (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <div className="hidden sm:block">{renderSparkline()}</div>
-              <div className="text-[10px] font-black text-green-700 bg-white/90 px-2.5 py-1 rounded-full border border-green-100 shadow-sm">
+              <div className="text-[9px] font-black text-green-700 bg-white/90 px-2.5 py-1 rounded-full border border-green-100 shadow-sm">
                 META: {isPrivacyMode ? '•••••' : formatCurrency(monthlyGoal)}
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8 opacity-40 hover:opacity-100 transition-opacity" onClick={() => setIsEditing(true)}>
-                <Pencil className="h-3.5 w-3.5" />
+              <Button variant="ghost" size="icon" className="h-7 w-7 opacity-40 hover:opacity-100 transition-opacity" onClick={() => setIsEditing(true)}>
+                <Pencil className="h-3 w-3" />
               </Button>
             </div>
           )}
         </div>
 
-        <div className="flex items-end justify-between mb-5" onClick={onValueClick}>
+        <div className="flex items-end justify-between mb-4" onClick={onValueClick}>
           <div className="space-y-1 cursor-pointer group">
-            <div className="text-4xl sm:text-5xl font-light tracking-tighter text-green-600 dark:text-green-400 group-hover:translate-x-1 transition-transform">
+            <div className="text-3xl sm:text-4xl font-light tracking-tighter text-green-600 dark:text-green-400 group-hover:translate-x-1 transition-transform">
               {isPrivacyMode ? '•••••' : formatCurrency(currentProduction)}
             </div>
-            <div className="flex items-center gap-3 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-              <TrendingUp className="h-4 w-4 text-green-500" />
+            <div className="flex items-center gap-3 text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+              <TrendingUp className="h-3.5 w-3.5 text-green-500" />
               Taxa de Conversão: <span className="text-foreground">{conversionRate.toFixed(1)}%</span>
             </div>
           </div>
 
           <div className="text-right">
-            <div className="text-3xl sm:text-4xl font-light text-green-600 dark:text-green-400 tracking-tighter">
+            <div className="text-2xl sm:text-3xl font-light text-green-600 dark:text-green-400 tracking-tighter">
               {percentageOfGoal.toFixed(1)}%
             </div>
-            <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">Atingido</p>
+            <p className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest">Atingido</p>
           </div>
         </div>
 
         <div className="relative pt-1">
-            <Progress value={percentageOfGoal} className="h-2.5 bg-green-100 dark:bg-green-900/30" />
+            <Progress value={percentageOfGoal} className="h-2 bg-green-100 dark:bg-green-900/30" />
             {isHot && (
-                <div className="absolute -top-7 right-0 text-[9px] font-black text-orange-600 uppercase animate-bounce">
+                <div className="absolute -top-6 right-0 text-[8px] font-black text-orange-600 uppercase animate-bounce">
                     Ritmo Acelerado!
                 </div>
             )}
         </div>
 
         {topContributor && (
-            <div className="mt-5 pt-3 border-t border-green-200/50 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Líder:</span>
-                    <span className="text-[10px] font-black text-primary uppercase">{topContributor}</span>
+            <div className="mt-4 pt-2 border-t border-green-200/50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="text-[9px] font-bold text-muted-foreground uppercase">Líder:</span>
+                    <span className="text-[9px] font-black text-primary uppercase">{topContributor}</span>
                 </div>
                 {isHot && (
-                    <div className="flex items-center gap-2 text-[9px] font-black text-orange-600">
-                        <Zap className="h-3 w-3 fill-current" /> PERFORMANCE ALTA
+                    <div className="flex items-center gap-2 text-[8px] font-black text-orange-600">
+                        <Zap className="h-2.5 w-2.5 fill-current" /> PERFORMANCE ALTA
                     </div>
                 )}
             </div>

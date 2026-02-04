@@ -129,14 +129,14 @@ export function StatsCard({
 
   return (
     <Card className={cn(
-        'hover:shadow-md transition-all group relative overflow-hidden rounded-xl h-full flex flex-col border-2 py-5 px-6 sm:py-6 sm:px-7', 
+        'hover:shadow-md transition-all group relative overflow-hidden rounded-xl h-full flex flex-col border-2 py-4 px-5 sm:py-5 sm:px-6', 
         theme.card,
         isHot && 'ring-2 ring-orange-500 ring-offset-2',
         className
     )}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-3">
         <div className="flex flex-col gap-0.5">
-            <CardTitle className="text-[11px] sm:text-[12px] font-black uppercase tracking-[0.15em] text-muted-foreground/70 group-hover:text-primary transition-colors">
+            <CardTitle className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/70 group-hover:text-primary transition-colors">
                 {title}
             </CardTitle>
             {isCritical ? (
@@ -151,16 +151,16 @@ export function StatsCard({
         </div>
         <div className="flex items-center gap-3">
             {renderSparkline()}
-            <Icon className={cn("h-5 w-5 opacity-60", theme.text)} />
+            <Icon className={cn("h-4 w-4 opacity-60", theme.text)} />
         </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col justify-between p-0">
         <div className="flex items-baseline justify-between gap-2 mb-2">
-            <div className={cn("text-3xl sm:text-4xl font-light tracking-tighter", theme.text, valueClassName)}>
+            <div className={cn("text-2xl sm:text-3xl font-light tracking-tighter", theme.text, valueClassName)}>
                 {value}
             </div>
             {percentage !== undefined && (
-                <div className="text-[10px] font-bold bg-background/60 px-2 py-0.5 rounded border border-border/30 text-primary">
+                <div className="text-[9px] font-bold bg-background/60 px-2 py-0.5 rounded border border-border/30 text-primary">
                     {percentage.toFixed(1).replace('.', ',')}%
                 </div>
             )}
@@ -168,17 +168,17 @@ export function StatsCard({
         
         <div className="mt-3 pt-3 border-t border-border/20 flex items-center justify-between">
             <div className="flex flex-col">
-                <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-tighter">
+                <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-tighter">
                     {description}
                 </p>
                 {subValue && (
-                    <p className="text-[10px] font-black text-primary/70 uppercase tracking-tighter">
+                    <p className="text-[9px] font-black text-primary/70 uppercase tracking-tighter">
                         {subValue}
                     </p>
                 )}
             </div>
             {topContributor && (
-                <p className="text-[10px] font-bold text-primary/60 truncate max-w-[100px]">
+                <p className="text-[9px] font-bold text-primary/60 truncate max-w-[100px]">
                     Líder: {topContributor.split(' ')[0]}
                 </p>
             )}
