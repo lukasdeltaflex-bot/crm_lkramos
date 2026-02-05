@@ -7,7 +7,7 @@ import { getStorage } from "firebase/storage";
 import { firebaseConfig } from "./config";
 
 /**
- * 🛠️ INFRAESTRUTURA V66 (FINAL - DEPLOY READY)
+ * 🛠️ INFRAESTRUTURA V67 (FINAL - STORAGE FIXED)
  * Isolamento total de SSR e inicialização garantida apenas no Browser.
  */
 
@@ -29,7 +29,12 @@ if (typeof window !== "undefined") {
     }
     db = g._firebaseDb;
     auth = getAuth(app);
-    storage = getStorage(app);
+    
+    // Singleton Storage Estabilizado
+    if (!g._firebaseStorage) {
+        g._firebaseStorage = getStorage(app);
+    }
+    storage = g._firebaseStorage;
 }
 
 export { db, auth, storage };

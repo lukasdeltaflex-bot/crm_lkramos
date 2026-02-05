@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -183,6 +182,7 @@ export function ProposalForm({
     setIsClient(true);
   }, []);
 
+  // Gera um ID temporário instantaneamente para permitir uploads em propostas novas
   useEffect(() => {
     if (firestore && !proposal?.id) {
       setTempProposalId(doc(collection(firestore, 'loanProposals')).id);
@@ -863,9 +863,9 @@ export function ProposalForm({
                 {isAttachmentSectionDisabled ? (
                     <Alert variant="default" className="bg-secondary">
                         <Info className="h-4 w-4" />
-                        <AlertTitle>Campo Desabilitado</AlertTitle>
+                        <AlertTitle>Upload Bloqueado</AlertTitle>
                         <AlertDescription>
-                            Selecione um cliente para habilitar os anexos.
+                            Selecione um cliente para habilitar o envio de documentos.
                         </AlertDescription>
                     </Alert>
                 ) : (

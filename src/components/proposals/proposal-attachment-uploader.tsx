@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFirebase } from '@/firebase';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
-import { UploadCloud, File, Trash2, Download } from 'lucide-react';
+import { UploadCloud, File, Trash2, Download, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import type { Attachment } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -27,9 +27,14 @@ export function ProposalAttachmentUploader({
   onAttachmentsChange,
   isReadOnly,
 }: ProposalAttachmentUploaderProps) {
-  const [attachments, setAttachments] = useState<Attachment[]>(initialAttachments);
+  const [attachments, setAttachments] = useState<Attachment[]>(initialAttachments || []);
   const [uploadingFiles, setUploadingFiles] = useState<Record<string, number>>({});
   const { storage } = useFirebase();
+
+  // Garante sincronia quando o formulário é resetado ou carregado
+  useEffect(() => {
+    setAttachments(initialAttachments || []);
+  }, [initialAttachments]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -38,8 +43,13 @@ export function ProposalAttachmentUploader({
   };
 
   const handleUpload = (file: File) => {
-    if (isReadOnly) return;
-    const filePath = `proposals/${userId}/${proposalId}/${file.name}`;
+    if (isReadOnly || !proposalId || !userId || !storage) {
+        if (!storage) toast({ variant: "destructive", title: "Erro de Configuração", description: "O módulo de Storage não pôde ser carregado." });
+        return;
+    }
+
+    // Usamos um prefixo de timestamp para evitar colisões de nomes
+    const filePath = `proposals/${userId}/${proposalId}/${Date.now()}_${file.name}`;
     const storageRef = ref(storage, filePath);
     const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -53,7 +63,11 @@ export function ProposalAttachmentUploader({
       },
       (error) => {
         console.error('Upload failed:', error);
-        toast({ variant: 'destructive', title: 'Falha no Upload', description: `Não foi possível enviar o arquivo ${file.name}. Verifique as permissões de armazenamento.` });
+        toast({ 
+            variant: 'destructive', 
+            title: 'Falha no Upload', 
+            description: `Não foi possível enviar ${file.name}. Verifique se o tamanho do arquivo é permitido.` 
+        });
         setUploadingFiles(prev => {
             const newUploading = { ...prev };
             delete newUploading[file.name];
@@ -71,19 +85,26 @@ export function ProposalAttachmentUploader({
           const updatedAttachments = [...attachments, newAttachment];
           setAttachments(updatedAttachments);
           onAttachmentsChange(updatedAttachments);
-          toast({ title: 'Upload Concluído', description: `O arquivo ${file.name} foi enviado.` });
+          
+          toast({ title: 'Upload Concluído', description: `O arquivo ${file.name} foi anexado.` });
+          
           setUploadingFiles(prev => {
             const newUploading = { ...prev };
             delete newUploading[file.name];
             return newUploading;
-        });
+          });
+        }).catch(err => {
+            console.error("Error getting download URL", err);
+            toast({ variant: "destructive", title: "Erro no Link", description: "Falha ao gerar link do anexo." });
         });
       }
     );
   };
 
   const handleDelete = (attachmentToDelete: Attachment) => {
-    if (isReadOnly) return;
+    if (isReadOnly || !storage) return;
+    
+    // O ref pode aceitar a URL diretamente para localização do objeto
     const storageRef = ref(storage, attachmentToDelete.url);
     deleteObject(storageRef)
       .then(() => {
@@ -93,15 +114,13 @@ export function ProposalAttachmentUploader({
         toast({ title: 'Anexo Removido', description: `O arquivo ${attachmentToDelete.name} foi removido.` });
       })
       .catch((error) => {
-        // If the object does not exist, we can still remove it from the list
         if (error.code === 'storage/object-not-found') {
             const updatedAttachments = attachments.filter(att => att.url !== attachmentToDelete.url);
             setAttachments(updatedAttachments);
             onAttachmentsChange(updatedAttachments);
-            toast({ title: 'Anexo Removido', description: `O arquivo ${attachmentToDelete.name} foi removido da lista.` });
         } else {
             console.error('Delete failed:', error);
-            toast({ variant: 'destructive', title: 'Falha ao Remover', description: `Não foi possível remover o anexo ${attachmentToDelete.name}.` });
+            toast({ variant: 'destructive', title: 'Falha ao Remover', description: `Erro ao excluir o arquivo.` });
         }
       });
   };
@@ -119,7 +138,7 @@ export function ProposalAttachmentUploader({
       <CardContent className="p-4 space-y-4">
         {!isReadOnly && (
           <div className={cn(
-            "relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-8 flex flex-col items-center justify-center text-center",
+            "relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:border-primary transition-colors cursor-pointer",
             isReadOnly && "cursor-not-allowed opacity-50"
             )}>
             <UploadCloud className="h-12 w-12 text-muted-foreground" />
@@ -138,40 +157,45 @@ export function ProposalAttachmentUploader({
             {Object.entries(uploadingFiles).map(([name, progress]) => (
                  <div key={name} className="space-y-1">
                     <div className='flex justify-between items-center text-sm'>
-                        <span className='truncate max-w-[200px]'>{name}</span>
-                        <span>{Math.round(progress)}%</span>
+                        <span className='truncate max-w-[200px] flex items-center gap-2'>
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                            {name}
+                        </span>
+                        <span className="font-mono">{Math.round(progress)}%</span>
                     </div>
-                    <Progress value={progress} />
+                    <Progress value={progress} className="h-2" />
                 </div>
             ))}
         </div>
 
         <div className="space-y-2">
           {attachments.map((attachment, index) => (
-            <div key={index} className="flex items-center justify-between p-2 bg-secondary rounded-md">
-              <div className="flex items-center gap-3">
-                <File className="h-5 w-5 text-muted-foreground" />
-                <div className="flex flex-col">
-                  <span className="font-medium text-sm">{attachment.name}</span>
-                  <span className="text-xs text-muted-foreground">{formatFileSize(attachment.size)}</span>
+            <div key={index} className="flex items-center justify-between p-2 bg-secondary rounded-md group">
+              <div className="flex items-center gap-3 overflow-hidden">
+                <File className="h-5 w-5 text-muted-foreground shrink-0" />
+                <div className="flex flex-col overflow-hidden">
+                  <span className="font-medium text-sm truncate" title={attachment.name}>{attachment.name}</span>
+                  <span className="text-[10px] text-muted-foreground uppercase">{formatFileSize(attachment.size)}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                  <a href={attachment.url} target="_blank" rel="noopener noreferrer">
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
                         <Download className="h-4 w-4" />
                     </Button>
                 </a>
                 {!isReadOnly && (
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(attachment)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDelete(attachment)}>
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 )}
               </div>
             </div>
           ))}
           {attachments.length === 0 && Object.keys(uploadingFiles).length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">Nenhum anexo adicionado a esta proposta.</p>
+            <div className="py-8 text-center border border-dashed rounded-lg">
+                <p className="text-sm text-muted-foreground">Nenhum anexo nesta proposta.</p>
+            </div>
           )}
         </div>
       </CardContent>
