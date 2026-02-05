@@ -39,9 +39,8 @@ import {
 } from '@/components/ui/tooltip';
 import { useEffect, useState, useMemo } from 'react';
 import { ProposalAttachmentUploader } from '@/components/proposals/proposal-attachment-uploader';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Logo } from '@/components/logo';
 
@@ -182,14 +181,14 @@ export function ProposalForm({
     setIsClient(true);
   }, []);
 
-  // Gera um ID temporário instantaneamente para permitir uploads em propostas novas
+  // Gera um ID temporário imediatamente para novas propostas, permitindo uploads antes de salvar
   useEffect(() => {
-    if (firestore && !proposal?.id) {
+    if (firestore && !proposal?.id && !tempProposalId) {
       setTempProposalId(doc(collection(firestore, 'loanProposals')).id);
     }
-  }, [firestore, proposal]);
+  }, [firestore, proposal, tempProposalId]);
   
-  const proposalId = proposal?.id || tempProposalId;
+  const currentProposalId = proposal?.id || tempProposalId;
 
   const form = useForm<ProposalFormValues>({
     resolver: zodResolver(proposalSchema),
@@ -347,7 +346,7 @@ export function ProposalForm({
     setValue('attachments', attachments, { shouldValidate: true });
   };
 
-  const isAttachmentSectionDisabled = !user || !selectedCustomerId || !proposalId;
+  const isAttachmentSectionDisabled = !user || !selectedCustomerId || !currentProposalId;
 
   return (
     <Form {...form}>
@@ -897,7 +896,7 @@ export function ProposalForm({
                 ) : (
                     <ProposalAttachmentUploader
                         userId={user!.uid}
-                        proposalId={proposalId!}
+                        proposalId={currentProposalId!}
                         initialAttachments={form.getValues('attachments') || []}
                         onAttachmentsChange={handleAttachmentsChange}
                         isReadOnly={isReadOnly || isAttachmentSectionDisabled || isSaving}

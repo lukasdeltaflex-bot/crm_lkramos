@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
-import { UploadCloud, File, Trash2, Download, Loader2 } from 'lucide-react';
+import { UploadCloud, File, Trash2, Download, Loader2, FolderLock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import type { Attachment } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -31,7 +31,6 @@ export function CustomerAttachmentUploader({
   const [uploadingFiles, setUploadingFiles] = useState<Record<string, number>>({});
   const { storage } = useFirebase();
 
-  // Sincroniza estado interno quando os dados do pai mudarem (ex: após save)
   useEffect(() => {
     setAttachments(initialAttachments || []);
   }, [initialAttachments]);
@@ -43,8 +42,14 @@ export function CustomerAttachmentUploader({
   };
 
   const handleUpload = (file: File) => {
-    if (isReadOnly || !customerId || !userId || !storage) {
-        if (!storage) toast({ variant: "destructive", title: "Erro de Configuração", description: "Firebase Storage não inicializado." });
+    if (isReadOnly || !customerId || !userId) return;
+
+    if (!storage) {
+        toast({ 
+            variant: "destructive", 
+            title: "Configuração Pendente", 
+            description: "O Storage não foi detectado. Certifique-se de habilitá-lo no Console do Firebase." 
+        });
         return;
     }
 
@@ -60,12 +65,12 @@ export function CustomerAttachmentUploader({
         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         setUploadingFiles(prev => ({ ...prev, [file.name]: progress }));
       },
-      (error) => {
-        console.error('Upload failed:', error);
+      (error: any) => {
+        console.error('Upload Error:', error);
         toast({ 
             variant: 'destructive', 
-            title: 'Falha no Upload', 
-            description: `Erro ao enviar ${file.name}. Verifique sua conexão ou as permissões de armazenamento.` 
+            title: 'Falha no Armazenamento', 
+            description: `Erro ao enviar ${file.name}. Verifique as permissões de acesso.` 
         });
         setUploadingFiles(prev => {
             const newUploading = { ...prev };
@@ -85,16 +90,13 @@ export function CustomerAttachmentUploader({
           setAttachments(updatedAttachments);
           onAttachmentsChange(updatedAttachments);
           
-          toast({ title: 'Documento Adicionado', description: `O arquivo ${file.name} foi salvo.` });
+          toast({ title: 'Documento Permanente Salvo', description: `O arquivo ${file.name} foi arquivado na central do cliente.` });
           
           setUploadingFiles(prev => {
             const newUploading = { ...prev };
             delete newUploading[file.name];
             return newUploading;
           });
-        }).catch(err => {
-            console.error("Error getting download URL", err);
-            toast({ variant: "destructive", title: "Erro ao gerar link", description: "O arquivo subiu, mas não conseguimos gerar o link de acesso." });
         });
       }
     );
@@ -109,7 +111,7 @@ export function CustomerAttachmentUploader({
         const updatedAttachments = attachments.filter(att => att.url !== attachmentToDelete.url);
         setAttachments(updatedAttachments);
         onAttachmentsChange(updatedAttachments);
-        toast({ title: 'Documento Removido', description: `O arquivo ${attachmentToDelete.name} foi excluído.` });
+        toast({ title: 'Documento Excluído' });
       })
       .catch((error) => {
         if (error.code === 'storage/object-not-found') {
@@ -117,8 +119,7 @@ export function CustomerAttachmentUploader({
             setAttachments(updatedAttachments);
             onAttachmentsChange(updatedAttachments);
         } else {
-            console.error('Delete failed:', error);
-            toast({ variant: 'destructive', title: 'Falha ao Remover', description: `Não foi possível remover o arquivo.` });
+            toast({ variant: 'destructive', title: 'Erro ao remover do servidor' });
         }
       });
   };
@@ -132,16 +133,16 @@ export function CustomerAttachmentUploader({
   };
 
   return (
-    <Card className={cn(isReadOnly && "bg-muted/50")}>
+    <Card className={cn("border-dashed", isReadOnly && "bg-muted/50")}>
       <CardContent className="p-4 space-y-4">
         {!isReadOnly && (
           <div className={cn(
-            "relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-6 flex flex-col items-center justify-center text-center hover:border-primary transition-colors cursor-pointer",
-            (isReadOnly || !customerId) && "cursor-not-allowed opacity-50"
+            "relative border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 flex flex-col items-center justify-center text-center hover:border-primary transition-all cursor-pointer",
+            !customerId && "cursor-not-allowed opacity-50"
             )}>
             <UploadCloud className="h-8 w-8 text-muted-foreground" />
-            <p className="mt-2 text-sm text-muted-foreground font-medium">Documentos Fixos (RG, CPF, CNH, Residência...)</p>
-            <p className="text-xs text-muted-foreground/70">Clique ou arraste arquivos aqui</p>
+            <p className="mt-2 text-sm font-bold">Documentos Fixos (RG, CPF, CNH...)</p>
+            <p className="text-[10px] text-muted-foreground">Arraste para cá ou clique para escolher</p>
             <Input
               type="file"
               multiple
@@ -155,9 +156,9 @@ export function CustomerAttachmentUploader({
         <div className="space-y-2">
             {Object.entries(uploadingFiles).map(([name, progress]) => (
                  <div key={name} className="space-y-1">
-                    <div className='flex justify-between items-center text-xs'>
-                        <span className='truncate max-w-[200px] flex items-center gap-2'>
-                            <Loader2 className="h-3 w-3 animate-spin" />
+                    <div className='flex justify-between items-center text-[10px]'>
+                        <span className='truncate max-w-[180px] flex items-center gap-2 font-bold'>
+                            <Loader2 className="h-2.5 w-2.5 animate-spin" />
                             {name}
                         </span>
                         <span className="font-mono">{Math.round(progress)}%</span>
@@ -167,33 +168,34 @@ export function CustomerAttachmentUploader({
             ))}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2">
           {attachments.map((attachment, index) => (
-            <div key={index} className="flex items-center justify-between p-2 bg-secondary/50 rounded-md border border-border/50 group">
+            <div key={index} className="flex items-center justify-between p-2.5 bg-secondary/40 rounded-md border group">
               <div className="flex items-center gap-2 overflow-hidden">
-                <File className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <File className="h-4 w-4 shrink-0 text-primary/60" />
                 <div className="flex flex-col overflow-hidden">
-                  <span className="font-medium text-xs truncate" title={attachment.name}>{attachment.name}</span>
-                  <span className="text-[10px] text-muted-foreground">{formatFileSize(attachment.size)}</span>
+                  <span className="font-bold text-[11px] truncate" title={attachment.name}>{attachment.name}</span>
+                  <span className="text-[9px] text-muted-foreground uppercase">{formatFileSize(attachment.size)}</span>
                 </div>
               </div>
               <div className="flex items-center gap-1">
                  <a href={attachment.url} target="_blank" rel="noopener noreferrer">
-                    <Button variant="ghost" size="icon" className="h-7 w-7">
-                        <Download className="h-3 w-3" />
+                    <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-primary">
+                        <Download className="h-3.5 w-3.5" />
                     </Button>
                 </a>
                 {!isReadOnly && (
                   <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDelete(attachment)}>
-                    <Trash2 className="h-3 w-3" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 )}
               </div>
             </div>
           ))}
           {attachments.length === 0 && Object.keys(uploadingFiles).length === 0 && (
-            <div className="col-span-full py-6 text-center border border-dashed rounded-md">
-                <p className="text-xs text-muted-foreground">Nenhum documento permanente arquivado.</p>
+            <div className="py-6 text-center border border-dashed rounded-md bg-muted/5">
+                <FolderLock className="h-6 w-6 mx-auto mb-2 opacity-20" />
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">Nenhum documento arquivado.</p>
             </div>
           )}
         </div>
