@@ -42,6 +42,7 @@ import { ProposalAttachmentUploader } from '@/components/proposals/proposal-atta
 import { useUser, useFirestore } from '@/firebase';
 import { doc, collection, updateDoc, arrayUnion } from 'firebase/firestore';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { Logo } from '@/components/logo';
 import { toast } from '@/hooks/use-toast';
 
@@ -868,7 +869,6 @@ export function ProposalForm({
 
             <Separator />
 
-            {/* NOVA SEÇÃO: Histórico de Trâmites */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <h3 className="text-lg font-medium flex items-center gap-2">
