@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Info, Copy, Printer, ChevronsUpDown, Check, Download, FolderLock, Loader2 } from 'lucide-react';
+import { Info, Copy, Printer, ChevronsUpDown, Check, Download, FolderLock, Loader2, MessageSquareWarning } from 'lucide-react';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -30,6 +31,7 @@ import type { Proposal, Customer, Attachment, UserSettings } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Tooltip,
   TooltipContent,
@@ -76,7 +78,7 @@ const proposalSchema = z.object({
   commissionValue: z.coerce.number().min(0, 'O valor da comissão é obrigatório.'),
 
   promoter: z.string().min(1, 'A promotora é obrigatória.'),
-  bank: z.string().min(1, 'O banco é obrigatório.'),
+  bank: z.string().min(1, 'O banco é obrigatória.'),
   bankOrigin: z.string().optional(),
   approvingBody: z.string().min(1, 'O órgão aprovador é obrigatório.'),
   operator: z.string().min(1, "O nome do operador é obrigatório."),
@@ -94,6 +96,7 @@ const proposalSchema = z.object({
   debtBalanceArrivalDate: optionalDateString,
   
   attachments: z.array(attachmentSchema).optional(),
+  observations: z.string().optional(),
 });
 
 type ProposalFormValues = z.infer<typeof proposalSchema>;
@@ -290,6 +293,7 @@ export function ProposalForm({
         datePaidToClient: undefined,
         debtBalanceArrivalDate: undefined,
         attachments: [],
+        observations: '',
     };
     
     const source = proposal || defaultValues;
@@ -813,6 +817,43 @@ export function ProposalForm({
                         </>
                     )}
                  </div>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium">{product === 'Portabilidade' ? 'Motivo da Reprova / Observações' : 'Observações'}</h3>
+                    {product === 'Portabilidade' && (
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded border border-orange-100 uppercase tracking-tight">
+                            <MessageSquareWarning className="h-3 w-3" />
+                            Campo Essencial para Cancelamentos
+                        </div>
+                    )}
+                </div>
+                <FormField
+                    control={form.control}
+                    name="observations"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormControl>
+                                <Textarea
+                                    placeholder={product === 'Portabilidade' ? "Descreva o motivo do cancelamento ou da reprova da portabilidade..." : "Observações gerais sobre a proposta..."}
+                                    className="min-h-[100px] resize-none"
+                                    {...field}
+                                    value={field.value || ''}
+                                    readOnly={isReadOnly || isSaving}
+                                />
+                            </FormControl>
+                            <FormDescription>
+                                {product === 'Portabilidade' 
+                                    ? "Importante: Em caso de cancelamento, detalhe aqui o motivo fornecido pelo banco ou promotora."
+                                    : "Informações adicionais relevantes para o acompanhamento desta proposta."}
+                            </FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
             </div>
 
             <Separator />

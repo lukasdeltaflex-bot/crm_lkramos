@@ -1,3 +1,4 @@
+
 export type Benefit = {
   number: string;
   species?: string;
@@ -84,6 +85,7 @@ export type Proposal = {
   commissionBase?: 'gross' | 'net';
   selectedBenefitNumber?: string;
   attachments?: Attachment[];
+  observations?: string;
 };
 
 export type UserSettings = {

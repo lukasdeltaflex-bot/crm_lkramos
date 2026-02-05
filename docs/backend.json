@@ -37,7 +37,8 @@
         "ownerId": { "type": "string" },
         "customerId": { "type": "string" },
         "proposalNumber": { "type": "string" },
-        "status": { "type": "string" }
+        "status": { "type": "string" },
+        "observations": { "type": "string", "description": "Observações gerais ou motivo de reprova, especialmente para portabilidade." }
       }
     },
     "FollowUp": {
