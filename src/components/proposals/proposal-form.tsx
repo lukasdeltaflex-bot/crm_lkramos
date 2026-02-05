@@ -555,7 +555,7 @@ export function ProposalForm({ proposal, customers, isReadOnly, onSubmit, onDupl
                         </FormItem>
                         )}
                     />
-                    {(product === 'Portabilidade' || product === 'Refin Port') && (
+                    {product === 'Portabilidade' && (
                         <FormField
                             control={form.control}
                             name="bankOrigin"

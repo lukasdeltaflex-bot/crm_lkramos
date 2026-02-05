@@ -708,7 +708,7 @@ export function ProposalForm({
                         </FormItem>
                         )}
                     />
-                    {(product === 'Portabilidade' || product === 'Refin Port') && (
+                    {product === 'Portabilidade' && (
                         <FormField
                             control={form.control}
                             name="bankOrigin"
