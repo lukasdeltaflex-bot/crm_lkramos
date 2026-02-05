@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Bell, Cake, BadgePercent, X, CalendarClock, Bot, Loader2, MessageSquareText } from 'lucide-react';
+import { Bell, Cake, BadgePercent, X, CalendarClock, Bot, Loader2, MessageSquareText, Hourglass, Coins } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +16,7 @@ import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebas
 import { collection, query, where } from 'firebase/firestore';
 import type { Customer, Proposal, FollowUp } from '@/lib/types';
 import { differenceInDays, format } from 'date-fns';
-import { getWhatsAppUrl } from '@/lib/utils';
+import { getWhatsAppUrl, calculateBusinessDays } from '@/lib/utils';
 import Link from 'next/link';
 import { generateBirthdayMessage } from '@/ai/flows/generate-birthday-message-flow';
 import { toast } from '@/hooks/use-toast';
@@ -73,7 +73,7 @@ export function NotificationBell() {
   const notifications = React.useMemo(() => {
     if (!isClient) return [];
     
-    const alerts: { id: string; title: string; type: 'birthday' | 'commission' | 'followup'; date: string; link: string; customerId?: string }[] = [];
+    const alerts: { id: string; title: string; type: 'birthday' | 'commission' | 'followup' | 'debt' | 'partial'; date: string; link: string; customerId?: string }[] = [];
     const now = new Date();
     const todayStr = format(now, 'MM-dd');
     const todayIso = format(now, 'yyyy-MM-dd');
@@ -118,6 +118,34 @@ export function NotificationBell() {
             link: `/proposals?open=${p.id}`
           });
         }
+      }
+
+      // Saldo devedor (>= 5 dias úteis)
+      if (p.product === 'Portabilidade' && p.status === 'Aguardando Saldo' && p.dateDigitized) {
+          const bizDays = calculateBusinessDays(new Date(p.dateDigitized));
+          if (bizDays >= 5) {
+              alerts.push({
+                  id: `debt-notif-${p.id}`,
+                  title: `Saldo Atrasado: ${p.proposalNumber}`,
+                  type: 'debt',
+                  date: `${bizDays} dias úteis`,
+                  link: `/proposals?open=${p.id}`
+              });
+          }
+      }
+
+      // Comissões parciais atrasadas (> 15 dias)
+      if (p.commissionStatus === 'Parcial' && p.commissionPaymentDate) {
+          const daysSince = differenceInDays(now, new Date(p.commissionPaymentDate));
+          if (daysSince > 15) {
+              alerts.push({
+                  id: `partial-notif-${p.id}`,
+                  title: `Cobrar Saldo: ${p.proposalNumber}`,
+                  type: 'partial',
+                  date: `${daysSince} dias`,
+                  link: `/proposals?open=${p.id}`
+              });
+          }
       }
     });
 
@@ -219,6 +247,8 @@ export function NotificationBell() {
                             {n.type === 'birthday' && <Cake className="h-4 w-4 text-pink-500 mt-1" />}
                             {n.type === 'commission' && <BadgePercent className="h-4 w-4 text-orange-500 mt-1" />}
                             {n.type === 'followup' && <CalendarClock className="h-4 w-4 text-blue-500 mt-1" />}
+                            {n.type === 'debt' && <Hourglass className="h-4 w-4 text-destructive mt-1" />}
+                            {n.type === 'partial' && <Coins className="h-4 w-4 text-orange-500 mt-1" />}
                             <div className="space-y-1 overflow-hidden">
                             <p className="text-sm font-medium leading-none truncate">{n.title}</p>
                             <p className="text-xs text-muted-foreground">{n.date}</p>

@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bot, Send, BellRing, Clock, BadgePercent, X, Info, Loader2, CalendarClock, Cake, MessageSquareText } from 'lucide-react';
+import { Bot, Send, BellRing, Clock, BadgePercent, X, Info, Loader2, CalendarClock, Cake, MessageSquareText, Hourglass, Coins } from 'lucide-react';
 import type { Customer, Proposal, UserProfile, FollowUp } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { differenceInDays, format } from 'date-fns';
@@ -383,6 +383,25 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
                             </div>
                         </div>
                     )}
+                    {visibleDebtBalanceReminders.length > 0 && (
+                        <div className="space-y-2">
+                            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/80 flex items-center gap-2">
+                                <Hourglass className="h-3 w-3 text-destructive" /> Alertas de Saldo Devedor
+                            </h3>
+                            <div className="grid gap-2">
+                                {visibleDebtBalanceReminders.map(reminder => (
+                                    <SummaryAlertItem 
+                                        key={reminder.id}
+                                        id={reminder.id}
+                                        icon={<Hourglass className="h-4 w-4 text-destructive" />}
+                                        title={`${reminder.customerName}`}
+                                        description={`Proposta ${reminder.proposalNumber} aguardando saldo há ${reminder.daysWaiting} dias úteis. Prazo de 5 dias atingido.`}
+                                        onDismiss={handleDismiss}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
                     {visibleFollowUpReminders.length > 0 && (
                         <div className="space-y-2">
                             <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/80 flex items-center gap-2">
@@ -415,6 +434,25 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
                                         icon={<BadgePercent className="h-4 w-4 text-primary" />}
                                         title={`${reminder.customerName}`}
                                         description={`Comissão da Prop. ${reminder.proposalNumber} não identificada há ${reminder.daysPending} dias.`}
+                                        onDismiss={handleDismiss}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    {visiblePartialCommissionReminders.length > 0 && (
+                        <div className="space-y-2">
+                            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/80 flex items-center gap-2">
+                                <Coins className="h-3 w-3 text-orange-500" /> Comissões Parciais
+                            </h3>
+                            <div className="grid gap-2">
+                                {visiblePartialCommissionReminders.map(reminder => (
+                                    <SummaryAlertItem 
+                                        key={reminder.id}
+                                        id={reminder.id}
+                                        icon={<Coins className="h-4 w-4 text-orange-500" />}
+                                        title={`${reminder.customerName}`}
+                                        description={`Recebido R$ ${reminder.amountPaid.toFixed(2)} de R$ ${reminder.totalCommission.toFixed(2)} há ${reminder.daysSincePayment} dias. Cobrar saldo.`}
                                         onDismiss={handleDismiss}
                                     />
                                 ))}
