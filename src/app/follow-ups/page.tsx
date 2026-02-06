@@ -5,11 +5,11 @@ import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Calendar as CalendarIcon, History, Search, User, CheckCircle2, RefreshCw, XCircle, Loader2 } from 'lucide-react';
+import { PlusCircle, Calendar as CalendarIcon, History, Search, User, CheckCircle2, RefreshCw, XCircle, Loader2, FilterX } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc, setDoc, orderBy } from 'firebase/firestore';
 import type { FollowUp, Customer } from '@/lib/types';
-import { format, isBefore, isToday, parseISO, startOfDay, addDays } from 'date-fns';
+import { format, isBefore, isToday, parseISO, startOfDay, addDays, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
@@ -19,6 +19,7 @@ import { FollowUpForm } from './follow-up-form';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { FollowUpsWidget } from '@/components/dashboard/follow-ups-widget';
+import { FollowUpCalendar } from '@/components/follow-ups/follow-up-calendar';
 
 export default function FollowUpsPage() {
   const { user } = useUser();
@@ -30,6 +31,7 @@ export default function FollowUpsPage() {
   const [actionNotes, setActionNotes] = useState('');
   const [newDueDate, setNewDueDate] = useState(format(addDays(new Date(), 7), 'yyyy-MM-dd'));
   const [searchTerm, setSearchTerm] = useState('');
+  const [dateFilter, setDateFilter] = useState<Date | null>(null);
   const [tab, setTab] = useState('pending');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -53,6 +55,10 @@ export default function FollowUpsPage() {
     if (!followUps) return [];
     let list = followUps.filter(f => tab === 'history' ? f.status !== 'pending' : f.status === 'pending');
     
+    if (dateFilter && tab === 'pending') {
+        list = list.filter(f => isSameDay(parseISO(f.dueDate), dateFilter));
+    }
+
     if (searchTerm) {
       const lower = searchTerm.toLowerCase();
       list = list.filter(f => 
@@ -66,7 +72,7 @@ export default function FollowUpsPage() {
         return list.sort((a, b) => (b.completedAt || '').localeCompare(a.completedAt || ''));
     }
     return list;
-  }, [followUps, searchTerm, tab]);
+  }, [followUps, searchTerm, tab, dateFilter]);
 
   const handleOpenAction = (followUp: FollowUp) => {
     setSelectedFollowUp(followUp);
@@ -135,8 +141,6 @@ export default function FollowUpsPage() {
     setIsSaving(true);
     try {
         const id = selectedFollowUp?.id || doc(collection(firestore, 'users', user.uid, 'followUps')).id;
-        
-        // Sanitiza o customerId caso seja string vazia ou "none"
         const customerId = data.customerId === 'none' || !data.customerId ? null : data.customerId;
 
         await setDoc(doc(firestore, 'users', user.uid, 'followUps', id), {
@@ -156,6 +160,11 @@ export default function FollowUpsPage() {
     } finally {
         setIsSaving(false);
     }
+  };
+
+  const handleCalendarDateSelect = (date: Date) => {
+    setDateFilter(date);
+    setTab('pending');
   };
 
   const getStatusBadge = (followUp: FollowUp) => {
@@ -188,30 +197,50 @@ export default function FollowUpsPage() {
                             <CalendarIcon className="mr-2 h-4 w-4" />
                             Pendentes
                         </TabsTrigger>
+                        <TabsTrigger value="calendar">
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            Calendário
+                        </TabsTrigger>
                         <TabsTrigger value="history">
                             <History className="mr-2 h-4 w-4" />
                             Histórico
                         </TabsTrigger>
                     </TabsList>
-                    <div className="relative w-full max-w-sm">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input 
-                            placeholder="Pesquisar contatos ou motivos..." 
-                            className="pl-9"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+                    <div className="flex items-center gap-2 w-full max-w-sm">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input 
+                                placeholder="Pesquisar contatos..." 
+                                className="pl-9"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        {dateFilter && tab === 'pending' && (
+                            <Button variant="ghost" size="icon" onClick={() => setDateFilter(null)} title="Limpar filtro de data">
+                                <FilterX className="h-4 w-4 text-destructive" />
+                            </Button>
+                        )}
                     </div>
                 </div>
 
                 <TabsContent value="pending" className="mt-0">
+                    {dateFilter && (
+                        <div className="mb-4 flex items-center justify-between bg-primary/5 p-3 rounded-lg border border-primary/20">
+                            <div className="flex items-center gap-2">
+                                <CalendarIcon className="h-4 w-4 text-primary" />
+                                <span className="text-sm font-bold">Mostrando apenas: {format(dateFilter, "dd 'de' MMMM", { locale: ptBR })}</span>
+                            </div>
+                            <Button variant="ghost" size="sm" onClick={() => setDateFilter(null)} className="h-7 text-xs">Ver Todos</Button>
+                        </div>
+                    )}
                     <div className="grid gap-4">
                         {isLoading ? (
                             Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)
                         ) : filteredFollowUps.length === 0 ? (
                             <div className="py-20 text-center border-2 border-dashed rounded-xl bg-muted/10 border-border/50">
                                 <CalendarIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-20" />
-                                <p className="text-muted-foreground">Nenhum retorno pendente.</p>
+                                <p className="text-muted-foreground">Nenhum retorno pendente{dateFilter ? ' para esta data' : ''}.</p>
                             </div>
                         ) : (
                             filteredFollowUps.map((f) => (
@@ -252,6 +281,13 @@ export default function FollowUpsPage() {
                             ))
                         )}
                     </div>
+                </TabsContent>
+
+                <TabsContent value="calendar" className="mt-0">
+                    <FollowUpCalendar 
+                        followUps={followUps || []} 
+                        onSelectDate={handleCalendarDateSelect} 
+                    />
                 </TabsContent>
 
                 <TabsContent value="history" className="mt-0">
