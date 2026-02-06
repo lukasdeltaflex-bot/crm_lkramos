@@ -4,7 +4,7 @@
 import { Landmark } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Mapeamento padrão para bancos conhecidos (Fallback)
+// Mapeamento padrão para bancos conhecidos (Fallback abrangente)
 const domainMap: Record<string, string> = {
   'Banco do Brasil S.A.': 'bb.com.br',
   'Caixa Econômica Federal': 'caixa.gov.br',
@@ -14,18 +14,32 @@ const domainMap: Record<string, string> = {
   'Nu Pagamentos S.A. - Nubank': 'nubank.com.br',
   'Inter S.A.': 'bancointer.com.br',
   'C6 S.A.': 'c6bank.com.br',
+  'Original S.A.': 'original.com.br',
+  'BTG Pactual S.A.': 'btgpactual.com',
+  'Safra S.A.': 'safra.com.br',
+  'Votorantim S.A.': 'bv.com.br',
+  'Citibank N.A.': 'citibank.com.br',
   'PAN S.A.': 'bancopan.com.br',
+  'Neon S.A.': 'neon.com.br',
   'BMG S.A.': 'bancobmg.com.br',
   'Daycoval S.A.': 'daycoval.com.br',
+  'Alfa S.A.': 'bancoalfa.com.br',
+  'Sofisa S.A.': 'sofisa.com.br',
+  'Pine S.A.': 'pine.com',
+  'Indusval S.A.': 'indusval.com.br',
   'Agibank S.A.': 'agibank.com.br',
+  'Modal S.A.': 'modal.com.br',
+  'da Amazônia S.A.': 'bancoamazonia.com.br',
+  'do Nordeste do Brasil S.A.': 'bnb.gov.br',
   'Banrisul - do Estado do Rio Grande do Sul S.A.': 'banrisul.com.br',
   'BRB - de Brasília S.A.': 'brb.com.br',
+  'ABC Brasil S.A.': 'abcbrasil.com.br',
+  'Fibra S.A.': 'bancofibra.com.br',
+  'Luso Brasileiro S.A.': 'lusobrasileiro.com.br',
+  'Rendimento S.A.': 'rendimento.com.br',
+  'Triângulo S.A. (Tribanco)': 'tribanco.com.br',
   'Mercantil do Brasil S.A.': 'mercantil.com.br',
   'Paraná S.A.': 'bancoparana.com.br',
-  'Votorantim S.A.': 'bv.com.br',
-  'Safra S.A.': 'safra.com.br',
-  'Citibank N.A.': 'citibank.com.br',
-  'Neon S.A.': 'neon.com.br',
 };
 
 interface BankIconProps {
@@ -41,8 +55,7 @@ export function BankIcon({ bankName, domain, className, showLogo = true }: BankI
   }
   
   // 1. Usa o domínio manual das configurações se existir
-  // 2. Senão usa o mapeamento interno
-  // 3. Senão tenta deduzir
+  // 2. Senão usa o mapeamento interno (fallback)
   const finalDomain = domain || domainMap[bankName] || null;
 
   if (!finalDomain) {
