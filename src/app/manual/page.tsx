@@ -15,9 +15,10 @@ import {
     Zap, 
     TrendingUp, 
     ShieldCheck, 
-    BadgePercent
+    Landmark,
+    FileBadge,
+    History
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 export default function ManualPage() {
@@ -79,8 +80,8 @@ export default function ManualPage() {
                                 <p className="text-xs">Cole o texto do WhatsApp e a IA extrai Nome, CPF e Endereço automaticamente.</p>
                             </div>
                             <div className="p-3 bg-muted/30 rounded-lg border">
-                                <p className="font-bold flex items-center gap-2 mb-2"><FileText className="h-4 w-4 text-primary" /> Documentos Permanentes</p>
-                                <p className="text-xs">Salve RG e CPF uma única vez na central do cliente; eles estarão em todas as propostas futuras.</p>
+                                <p className="font-bold flex items-center gap-2 mb-2"><FileText className="h-4 w-4 text-primary" /> Dossiê PDF</p>
+                                <p className="text-xs">Dentro da ficha do cliente, gere um PDF completo com histórico e dados pessoais com um clique.</p>
                             </div>
                         </div>
                     </AccordionContent>
@@ -92,16 +93,16 @@ export default function ManualPage() {
                             <div className="p-2 rounded-lg bg-purple-100 text-purple-600"><CalendarClock className="h-5 w-5" /></div>
                             <div className="text-left">
                                 <p className="font-bold">3. Mecanismo de Retornos (CRM)</p>
-                                <p className="text-xs text-muted-foreground">Nunca mais esqueça de ligar para um cliente</p>
+                                <p className="text-xs text-muted-foreground">Calendário mensal e agendamentos</p>
                             </div>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
-                        <p>Organize seu dia de vendas.</p>
+                        <p>Organize seu dia de vendas com precisão.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Agendamento</strong>: Vincule retornos a clientes ou crie novos leads.</li>
-                            <li><strong>Notificações</strong>: O sino avisa sobre retornos atrasados ou para hoje.</li>
-                            <li><strong>Ações Rápidas</strong>: Marque como concluído ou reagende com um clique.</li>
+                            <li><strong>Calendário Mensal</strong>: Use a nova aba "Calendário" para visualizar picos de agendamento e organizar seu mês.</li>
+                            <li><strong>Filtro de Data</strong>: Ao clicar em um dia no calendário, você vê apenas os retornos daquela data.</li>
+                            <li><strong>Notificações</strong>: O sino avisa sobre retornos atrasados, aniversários e comissões pendentes.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -111,17 +112,17 @@ export default function ManualPage() {
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-orange-100 text-orange-600"><TrendingUp className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold">4. Esteira de Propostas</p>
-                                <p className="text-xs text-muted-foreground">Gestão visual do fluxo de caixa</p>
+                                <p className="font-bold">4. Esteira de Propostas & Trâmites</p>
+                                <p className="text-xs text-muted-foreground">Linha do tempo e Capa de Proposta</p>
                             </div>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
-                        <p>Acompanhe o dinheiro em movimento.</p>
+                        <p>Controle total sobre o dinheiro em movimento.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Status Interativo</strong>: Mude o status diretamente na tabela clicando no badge.</li>
-                            <li><strong>Monitoramento de Saldo</strong>: Portabilidades sem saldo há 5 dias brilham em vermelho.</li>
-                            <li><strong>Duplicação</strong>: Use "Duplicar Proposta" para clientes com múltiplos produtos.</li>
+                            <li><strong>Linha do Tempo (<History className="inline h-3 w-3" />)</strong>: Todas as mudanças de status são registradas automaticamente. Você também pode registrar "Trâmites" manuais para documentar ligações ou pendências.</li>
+                            <li><strong>Capa de Proposta (<FileBadge className="inline h-3 w-3" />)</strong>: Gere o documento oficial da operação em PDF para impressão ou arquivo.</li>
+                            <li><strong>Monitoramento de Saldo</strong>: Portabilidades aguardando saldo há mais de 5 dias brilham em vermelho na tabela.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -131,8 +132,8 @@ export default function ManualPage() {
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-yellow-100 text-yellow-600"><CircleDollarSign className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold">5. Controle Financeiro</p>
-                                <p className="text-xs text-muted-foreground">Baixas e análise de parceiros</p>
+                                <p className="font-bold">5. Controle Financeiro & Conciliação</p>
+                                <p className="text-xs text-muted-foreground">Baixas rápidas e análise de parceiros</p>
                             </div>
                         </div>
                     </AccordionTrigger>
@@ -141,13 +142,33 @@ export default function ManualPage() {
                         <div className="space-y-4">
                             <div className="p-3 bg-muted/30 rounded-lg border-l-4 border-l-primary">
                                 <p className="font-bold flex items-center gap-2"><Bot className="h-4 w-4" /> Conciliação com IA</p>
-                                <p className="text-xs mt-1">Cole o texto do relatório de pagamento e a IA identifica divergências de valor automaticamente.</p>
+                                <p className="text-xs mt-1">Cole o texto do relatório de pagamento. A IA identifica quais propostas foram pagas e aponta divergências de centavos automaticamente.</p>
                             </div>
                             <div className="p-3 bg-muted/30 rounded-lg border-l-4 border-l-green-500">
-                                <p className="font-bold flex items-center gap-2"><BadgePercent className="h-4 w-4" /> Eficiência por Parceiro</p>
-                                <p className="text-xs mt-1">Descubra qual promotora paga mais rápido e qual tem o melhor ticket médio.</p>
+                                <p className="font-bold flex items-center gap-2"><Zap className="h-4 w-4" /> Eficiência por Parceiro</p>
+                                <p className="text-xs mt-1">Descubra qual promotora é a "Mais Ágil" no pagamento e qual tem o maior Ticket Médio.</p>
                             </div>
                         </div>
+                    </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="visual" className="border rounded-xl bg-card px-4 shadow-sm">
+                    <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-zinc-100 text-zinc-600"><Landmark className="h-5 w-5" /></div>
+                            <div className="text-left">
+                                <p className="font-bold">6. Identidade Visual & IA de Bancos</p>
+                                <p className="text-xs text-muted-foreground">Logotipos oficiais e limpeza de nomes</p>
+                            </div>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
+                        <p>Um ambiente profissional para o seu negócio.</p>
+                        <ul className="list-disc pl-5 space-y-2">
+                            <li><strong>Logotipos Inteligentes</strong>: O sistema exibe o ícone oficial do banco automaticamente. Se você adicionar um banco novo, a IA pesquisa o site dele para encontrar o logo.</li>
+                            <li><strong>Limpeza de Nomes</strong>: Esqueça os códigos chatos (001, 104). O sistema limpa os nomes dos bancos para deixar apenas o texto comercial.</li>
+                            <li><strong>Temas de Cor</strong>: Em <strong>Configurações > Aparência</strong>, você pode trocar a cor principal do sistema para combinar com sua marca.</li>
+                        </ul>
                     </AccordionContent>
                 </AccordionItem>
             </Accordion>
