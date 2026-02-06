@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -10,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Trash2, Edit, Save, X, Globe, Sparkles, Loader2 } from 'lucide-react';
+import { PlusCircle, Trash2, Edit, Save, X, Globe, Sparkles, Loader2, Bot } from 'lucide-react';
 import {
     AlertDialog,
     AlertDialogAction,
