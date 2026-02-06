@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -13,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '../ui/badge';
 import { Skeleton } from '../ui/skeleton';
 import { formatCurrency, cn, calculateBusinessDays } from '@/lib/utils';
-import type { Proposal, Customer } from '@/lib/types';
+import type { Proposal, Customer, UserSettings } from '@/lib/types';
 import { useMemo, useState, useEffect } from 'react';
 import { AlertCircle, ArrowRight, User } from 'lucide-react';
 import {
@@ -24,6 +25,9 @@ import {
 } from "@/components/ui/tooltip"
 import Link from 'next/link';
 import { Avatar, AvatarFallback } from '../ui/avatar';
+import { BankIcon } from '../bank-icon';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 interface RecentProposalsProps {
     proposals: Proposal[];
@@ -33,10 +37,20 @@ interface RecentProposalsProps {
 
 export function RecentProposals({ proposals, customers, isLoading }: RecentProposalsProps) {
   const [hasMounted, setHasMounted] = useState(false);
+  const { user } = useUser();
+  const firestore = useFirestore();
 
   useEffect(() => {
     setHasMounted(true);
   }, []);
+
+  const settingsDocRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'userSettings', user.uid);
+  }, [firestore, user]);
+
+  const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
+  const showLogos = userSettings?.showBankLogos ?? true;
 
   const recentProposals = useMemo(() => {
     const customerMap = new Map(customers.map(c => [c.id, c]));
@@ -69,7 +83,7 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
           <TableHeader className="bg-muted/20 border-b border-border/50">
             <TableRow className="hover:bg-transparent">
               <TableHead className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-muted-foreground/80">Cliente</TableHead>
-              <TableHead className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-muted-foreground/80">Produto</TableHead>
+              <TableHead className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-muted-foreground/80">Banco / Produto</TableHead>
               <TableHead className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-muted-foreground/80">Status</TableHead>
               <TableHead className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-muted-foreground/80 text-right">Valor Bruto</TableHead>
             </TableRow>
@@ -111,9 +125,15 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                                 </div>
                             </TableCell>
                             <TableCell className="px-6 py-5">
-                                <Badge variant="secondary" className="bg-muted/50 text-muted-foreground font-bold text-[10px] border-none px-2 py-0.5">
-                                    {proposal.product}
-                                </Badge>
+                                <div className="flex flex-col gap-1.5">
+                                    <div className="flex items-center gap-2">
+                                        <BankIcon bankName={proposal.bank} showLogo={showLogos} className="h-4 w-4" />
+                                        <span className="text-[10px] font-bold text-muted-foreground truncate max-w-[120px]">{proposal.bank.split(' - ')[1] || proposal.bank}</span>
+                                    </div>
+                                    <Badge variant="secondary" className="bg-muted/50 text-muted-foreground font-bold text-[9px] border-none px-2 py-0 w-fit">
+                                        {proposal.product}
+                                    </Badge>
+                                </div>
                             </TableCell>
                             <TableCell className="px-6 py-5">
                                 <div className="flex items-center gap-2">

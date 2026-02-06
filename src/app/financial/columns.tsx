@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ColumnDef, flexRender, Header } from '@tanstack/react-table';
@@ -24,6 +25,7 @@ import { StatusCell } from '@/app/proposals/status-cell';
 import Link from 'next/link';
 import type { DateRange } from 'react-day-picker';
 import { toast } from '@/hooks/use-toast';
+import { BankIcon } from '@/components/bank-icon';
 
 
 type ProposalWithCustomer = Proposal & { customer: Customer };
@@ -218,7 +220,17 @@ export const getColumns = (
   {
     accessorKey: 'bank',
     header: 'Banco',
-    id: 'banco'
+    id: 'banco',
+    cell: ({ row, table }) => {
+        const bank = row.original.bank;
+        const showLogos = (table.options.meta as any)?.showBankLogos ?? true;
+        return (
+            <div className="flex items-center gap-2">
+                <BankIcon bankName={bank} showLogo={showLogos} />
+                <span className="truncate">{bank}</span>
+            </div>
+        )
+    }
   },
   {
     accessorKey: 'grossAmount',

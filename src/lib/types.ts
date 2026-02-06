@@ -102,6 +102,7 @@ export type UserSettings = {
   commissionStatuses: string[];
   approvingBodies: string[];
   banks: string[];
+  showBankLogos?: boolean;
 };
 
 export type UserProfile = {

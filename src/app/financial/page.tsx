@@ -7,7 +7,7 @@ import { FinancialDataTable, type FinancialDataTableHandle } from './data-table'
 import { getColumns } from './columns';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, where, doc, setDoc, deleteField } from 'firebase/firestore';
-import type { Proposal, Customer, CommissionStatus } from '@/lib/types';
+import type { Proposal, Customer, CommissionStatus, UserSettings } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Eye, EyeOff, Printer, FileCheck2, FileDown, FileBadge, BarChart3, Calendar, Users2, TrendingUp, CircleDollarSign } from 'lucide-react';
@@ -96,8 +96,14 @@ export default function FinancialPage() {
     return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid));
   }, [firestore, user]);
 
+  const settingsDocRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'userSettings', user.uid);
+  }, [firestore, user]);
+
   const { data: proposals, isLoading: proposalsLoading } = useCollection<Proposal>(proposalsQuery);
   const { data: customers, isLoading: customersLoading } = useCollection<Customer>(customersQuery);
+  const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
 
   const { proposalsWithCustomerData, summaryProposals, currentMonthRange, operatorStats } = React.useMemo(() => {
     if (!proposals || !customers || !isClient) return { proposalsWithCustomerData: [], summaryProposals: [], currentMonthRange: { from: new Date(), to: new Date() }, operatorStats: [] };
@@ -547,6 +553,7 @@ export default function FinancialPage() {
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
             onShowDetails={handleShowDetails}
+            showBankLogos={userSettings?.showBankLogos ?? true}
         />
       )}
     </AppLayout>

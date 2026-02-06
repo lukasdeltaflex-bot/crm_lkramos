@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -85,6 +86,7 @@ interface DataTableProps {
   rowSelection: RowSelectionState;
   setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>;
   onShowDetails: (title: string, proposals: ProposalWithCustomer[]) => void;
+  showBankLogos?: boolean;
 }
 
 export interface FinancialDataTableHandle {
@@ -100,6 +102,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   rowSelection,
   setRowSelection,
   onShowDetails,
+  showBankLogos = true,
 }, ref) => {
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'commissionPaymentDate', desc: true }]);
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
@@ -274,6 +277,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     },
     meta: {
       isPrivacyMode,
+      showBankLogos,
     },
     globalFilterFn: (row, columnId, filterValue) => {
         const searchTerm = normalizeString(String(filterValue ?? ''));

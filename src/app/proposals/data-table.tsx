@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -85,6 +86,7 @@ interface DataTableProps {
   rowSelection: RowSelectionState;
   setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>;
   onBulkStatusChange: (newStatus: ProposalStatus) => void;
+  showBankLogos?: boolean;
 }
 
 export interface ProposalsDataTableHandle {
@@ -97,6 +99,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   rowSelection,
   setRowSelection,
   onBulkStatusChange,
+  showBankLogos = true,
 }, ref) => {
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'dateDigitized', desc: true }]);
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
@@ -297,6 +300,9 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
       columnOrder,
       columnSizing,
       pagination,
+    },
+    meta: {
+      showBankLogos,
     },
     globalFilterFn: (row, columnId, filterValue) => {
         const searchTerm = normalizeString(String(filterValue ?? ''));

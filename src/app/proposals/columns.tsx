@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ColumnDef, Header, Table } from '@tanstack/react-table';
@@ -37,6 +38,7 @@ import { TableHead, TableCell } from '@/components/ui/table';
 import { flexRender } from '@tanstack/react-table';
 import { toast } from '@/hooks/use-toast';
 import type { DateRange } from 'react-day-picker';
+import { BankIcon } from '@/components/bank-icon';
 
 type ActionsCellProps = {
     row: {
@@ -280,6 +282,16 @@ export const getColumns = (
     header: 'Banco Digitado',
     id: 'banco_digitado_v6',
     accessorFn: (row) => row.bank,
+    cell: ({ row, table }) => {
+        const bank = row.original.bank;
+        const showLogos = (table.options.meta as any)?.showBankLogos ?? true;
+        return (
+            <div className="flex items-center gap-2">
+                <BankIcon bankName={bank} showLogo={showLogos} />
+                <span className="truncate">{bank}</span>
+            </div>
+        )
+    }
   },
   {
     accessorKey: 'status',

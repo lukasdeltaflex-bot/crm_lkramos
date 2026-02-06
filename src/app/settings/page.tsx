@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -32,6 +33,7 @@ import { ThemeColors } from '@/components/settings/theme-colors';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { Switch } from '@/components/ui/switch';
 
 const DRIVE_LINKED_KEY = 'lk-ramos-google-drive-linked-v1';
 
@@ -72,6 +74,7 @@ export default function SettingsPage() {
   const [commissionStatuses, setCommissionStatuses] = useState([...initialCommissionStatuses]);
   const [approvingBodies, setApprovingBodies] = useState([...initialApprovingBodies]);
   const [banks, setBanks] = useState([...initialBanks]);
+  const [showBankLogos, setShowBankLogos] = useState(true);
 
   useEffect(() => {
     if (userSettings) {
@@ -80,6 +83,7 @@ export default function SettingsPage() {
       setCommissionStatuses(userSettings.commissionStatuses || [...initialCommissionStatuses]);
       setApprovingBodies(userSettings.approvingBodies || [...initialApprovingBodies]);
       setBanks(userSettings.banks || [...initialBanks]);
+      setShowBankLogos(userSettings.showBankLogos ?? true);
     }
   }, [userSettings]);
 
@@ -91,6 +95,7 @@ export default function SettingsPage() {
             commissionStatuses,
             approvingBodies,
             banks,
+            showBankLogos,
         };
       try {
         await setDoc(settingsDocRef, { ...currentSettings, ...updatedLists }, { merge: true });
@@ -183,7 +188,31 @@ export default function SettingsPage() {
                 </Card>
             </TabsContent>
             <TabsContent value="appearance">
-                 <Card><CardHeader><CardTitle>Aparência</CardTitle></CardHeader><CardContent className="space-y-8"><ThemeColors /></CardContent></Card>
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Aparência</CardTitle>
+                        <CardDescription>Personalize o visual do seu ambiente de trabalho.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-8">
+                        <ThemeColors />
+                        
+                        <Separator />
+
+                        <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
+                            <div className="space-y-1">
+                                <p className="text-sm font-medium">Logotipos dos Bancos</p>
+                                <p className="text-xs text-muted-foreground">Exibe o ícone visual de cada banco nas tabelas e formulários.</p>
+                            </div>
+                            <Switch 
+                                checked={showBankLogos} 
+                                onCheckedChange={(val) => { 
+                                    setShowBankLogos(val); 
+                                    updateSettings({ showBankLogos: val }); 
+                                }} 
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
             </TabsContent>
             <TabsContent value="data">
                 <Card>

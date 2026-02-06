@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -60,6 +61,7 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Logo } from '@/components/logo';
 import { toast } from '@/hooks/use-toast';
+import { BankIcon } from '@/components/bank-icon';
 
 const attachmentSchema = z.object({
   name: z.string(),
@@ -152,13 +154,14 @@ const MaskedDatePicker = ({ name, label, control, isReadOnly }: { name: any, lab
                 <FormLabel>{label}</FormLabel>
                 <FormControl>
                     <div className="relative">
-                        <Input
+                        <input
+                            type="text"
                             placeholder="dd/mm/aaaa"
                             {...field}
                             onChange={(e) => field.onChange(handleDateMask(e))}
                             value={field.value || ''}
                             maxLength={10}
-                            className="w-[240px]"
+                            className="flex h-10 w-[240px] rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                             readOnly={isReadOnly}
                         />
                     </div>
@@ -195,6 +198,7 @@ export function ProposalForm({
   const proposalStatuses = userSettings?.proposalStatuses || configData.proposalStatuses;
   const approvingBodies = userSettings?.approvingBodies || configData.approvingBodies;
   const banks = userSettings?.banks || configData.banks;
+  const showLogos = userSettings?.showBankLogos ?? true;
 
   useEffect(() => {
     setIsClient(true);
@@ -847,13 +851,19 @@ export function ProposalForm({
                             <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isReadOnly || isSaving}>
                                 <FormControl>
                                     <SelectTrigger>
-                                    <SelectValue placeholder="Selecione um banco" />
+                                        <div className="flex items-center gap-2 overflow-hidden">
+                                            <BankIcon bankName={field.value} showLogo={showLogos} />
+                                            <SelectValue placeholder="Selecione um banco" />
+                                        </div>
                                     </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
                                     {banks.map((bank) => (
                                     <SelectItem key={bank} value={bank}>
-                                        {bank}
+                                        <div className="flex items-center gap-2">
+                                            <BankIcon bankName={bank} showLogo={showLogos} />
+                                            <span>{bank}</span>
+                                        </div>
                                     </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -872,13 +882,19 @@ export function ProposalForm({
                                 <Select onValueChange={field.onChange} defaultValue={field.value || ''} value={field.value || ''} disabled={isReadOnly || isSaving}>
                                 <FormControl>
                                     <SelectTrigger>
-                                    <SelectValue placeholder="Selecione um banco" />
+                                        <div className="flex items-center gap-2 overflow-hidden">
+                                            <BankIcon bankName={field.value} showLogo={showLogos} />
+                                            <SelectValue placeholder="Selecione um banco" />
+                                        </div>
                                     </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
                                     {banks.map((bank) => (
                                     <SelectItem key={bank} value={bank}>
-                                        {bank}
+                                        <div className="flex items-center gap-2">
+                                            <BankIcon bankName={bank} showLogo={showLogos} />
+                                            <span>{bank}</span>
+                                        </div>
                                     </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -953,7 +969,7 @@ export function ProposalForm({
                         name="approvingBody"
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Órgão Aprovador</FormLabel>
+                            <FormLabel>Órgão Aprovador</CardLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isReadOnly || isSaving}>
                                 <FormControl>
                                     <SelectTrigger>
