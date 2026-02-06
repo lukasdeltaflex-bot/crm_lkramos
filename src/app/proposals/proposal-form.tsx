@@ -40,7 +40,7 @@ import {
 } from 'lucide-react';
 import { format, parse, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { cn, formatCurrency } from '@/lib/utils';
+import { cn, formatCurrency, cleanBankName } from '@/lib/utils';
 import * as configData from '@/lib/config-data';
 import type { Proposal, Customer, Attachment, UserSettings, ProposalHistoryEntry } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -347,6 +347,8 @@ export function ProposalForm({
             dateApproved: formatDateForForm(source.dateApproved),
             datePaidToClient: formatDateForForm(source.datePaidToClient),
             debtBalanceArrivalDate: formatDateForForm(source.debtBalanceArrivalDate),
+            bank: source.bank ? cleanBankName(source.bank) : '',
+            bankOrigin: source.bankOrigin ? cleanBankName(source.bankOrigin) : '',
         }
         form.reset(sourceData);
     } else {
@@ -861,7 +863,7 @@ export function ProposalForm({
                                     <SelectItem key={bank} value={bank}>
                                         <div className="flex items-center gap-2">
                                             <BankIcon bankName={bank} showLogo={showLogos} />
-                                            <span>{bank}</span>
+                                            <span>{cleanBankName(bank)}</span>
                                         </div>
                                     </SelectItem>
                                     ))}
@@ -892,7 +894,7 @@ export function ProposalForm({
                                     <SelectItem key={bank} value={bank}>
                                         <div className="flex items-center gap-2">
                                             <BankIcon bankName={bank} showLogo={showLogos} />
-                                            <span>{bank}</span>
+                                            <span>{cleanBankName(bank)}</span>
                                         </div>
                                     </SelectItem>
                                     ))}

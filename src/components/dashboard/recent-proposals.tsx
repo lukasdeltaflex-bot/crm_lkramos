@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -13,7 +12,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '../ui/badge';
 import { Skeleton } from '../ui/skeleton';
-import { formatCurrency, cn, calculateBusinessDays } from '@/lib/utils';
+import { formatCurrency, cn, calculateBusinessDays, cleanBankName } from '@/lib/utils';
 import type { Proposal, Customer, UserSettings } from '@/lib/types';
 import { useMemo, useState, useEffect } from 'react';
 import { AlertCircle, ArrowRight, User } from 'lucide-react';
@@ -107,8 +106,8 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                     const isPortAwaitingBalance = proposal.product === 'Portabilidade' && proposal.status === 'Aguardando Saldo';
                     const businessDays = hasMounted && proposal.dateDigitized ? calculateBusinessDays(new Date(proposal.dateDigitized)) : 0;
 
-                    // Limpa o nome do banco para exibição (remove código legado se existir)
-                    const cleanBankName = proposal.bank.includes(' - ') ? proposal.bank.split(' - ')[1] : proposal.bank;
+                    // Limpa o nome do banco para exibição
+                    const cleanBank = cleanBankName(proposal.bank);
 
                     return (
                         <TableRow key={proposal.id} className="hover:bg-primary/[0.02] border-b border-border/30 transition-all group">
@@ -131,7 +130,7 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                                 <div className="flex flex-col gap-1.5">
                                     <div className="flex items-center gap-2">
                                         <BankIcon bankName={proposal.bank} showLogo={showLogos} className="h-4 w-4" />
-                                        <span className="text-[10px] font-bold text-muted-foreground truncate max-w-[120px]">{cleanBankName}</span>
+                                        <span className="text-[10px] font-bold text-muted-foreground truncate max-w-[120px]">{cleanBank}</span>
                                     </div>
                                     <Badge variant="secondary" className="bg-muted/50 text-muted-foreground font-bold text-[9px] border-none px-2 py-0 w-fit">
                                         {proposal.product}

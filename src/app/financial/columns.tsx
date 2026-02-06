@@ -1,4 +1,3 @@
-
 'use client';
 
 import { ColumnDef, flexRender, Header } from '@tanstack/react-table';
@@ -6,7 +5,7 @@ import type { Proposal, Customer, CommissionStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { ArrowUpDown, MoreHorizontal, GripVertical, ArrowUp, ArrowDown, Copy } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cleanBankName } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -222,11 +221,12 @@ export const getColumns = (
     header: 'Banco',
     id: 'banco',
     cell: ({ row, table }) => {
-        const bank = row.original.bank;
+        const bankRaw = row.original.bank;
+        const bank = cleanBankName(bankRaw);
         const showLogos = (table.options.meta as any)?.showBankLogos ?? true;
         return (
             <div className="flex items-center gap-2">
-                <BankIcon bankName={bank} showLogo={showLogos} />
+                <BankIcon bankName={bankRaw} showLogo={showLogos} />
                 <span className="truncate">{bank}</span>
             </div>
         )
