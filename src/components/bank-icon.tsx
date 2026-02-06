@@ -4,7 +4,9 @@
 import { Landmark } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+// Mapeamento por Código ou por Nome para garantir compatibilidade
 const domainMap: Record<string, string> = {
+  // Códigos (Legado)
   '001': 'bb.com.br',
   '104': 'caixa.gov.br',
   '237': 'bradesco.com.br',
@@ -23,9 +25,29 @@ const domainMap: Record<string, string> = {
   '751': 'bancoparana.com.br',
   '655': 'bv.com.br',
   '422': 'safra.com.br',
-  '655': 'votorantim.com.br',
   '745': 'citibank.com.br',
   '739': 'neon.com.br',
+  // Nomes (Novo Formato)
+  'Banco do Brasil S.A.': 'bb.com.br',
+  'Caixa Econômica Federal': 'caixa.gov.br',
+  'Bradesco S.A.': 'bradesco.com.br',
+  'Itaú Unibanco S.A.': 'itau.com.br',
+  'Santander (Brasil) S.A.': 'santander.com.br',
+  'Nu Pagamentos S.A. - Nubank': 'nubank.com.br',
+  'Inter S.A.': 'bancointer.com.br',
+  'C6 S.A.': 'c6bank.com.br',
+  'PAN S.A.': 'bancopan.com.br',
+  'BMG S.A.': 'bancobmg.com.br',
+  'Daycoval S.A.': 'daycoval.com.br',
+  'Agibank S.A.': 'agibank.com.br',
+  'Banrisul - do Estado do Rio Grande do Sul S.A.': 'banrisul.com.br',
+  'BRB - de Brasília S.A.': 'brb.com.br',
+  'Mercantil do Brasil S.A.': 'mercantil.com.br',
+  'Paraná S.A.': 'bancoparana.com.br',
+  'Votorantim S.A.': 'bv.com.br',
+  'Safra S.A.': 'safra.com.br',
+  'Citibank N.A.': 'citibank.com.br',
+  'Neon S.A.': 'neon.com.br',
 };
 
 interface BankIconProps {
@@ -39,8 +61,13 @@ export function BankIcon({ bankName, className, showLogo = true }: BankIconProps
     return <Landmark className={cn("h-4 w-4 text-muted-foreground/40", className)} />;
   }
   
-  const code = bankName.split(' - ')[0];
-  const domain = domainMap[code];
+  // Tenta extrair código se houver " - " (formato antigo)
+  const parts = bankName.split(' - ');
+  const code = parts.length > 1 ? parts[0] : null;
+  const nameOnly = parts.length > 1 ? parts[1] : bankName;
+
+  // Busca domínio por código ou pelo nome limpo
+  const domain = (code && domainMap[code]) || domainMap[nameOnly] || null;
 
   if (!domain) {
     return <Landmark className={cn("h-4 w-4 text-muted-foreground/40", className)} />;

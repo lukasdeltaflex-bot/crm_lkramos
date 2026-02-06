@@ -107,6 +107,9 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                     const isPortAwaitingBalance = proposal.product === 'Portabilidade' && proposal.status === 'Aguardando Saldo';
                     const businessDays = hasMounted && proposal.dateDigitized ? calculateBusinessDays(new Date(proposal.dateDigitized)) : 0;
 
+                    // Limpa o nome do banco para exibição (remove código legado se existir)
+                    const cleanBankName = proposal.bank.includes(' - ') ? proposal.bank.split(' - ')[1] : proposal.bank;
+
                     return (
                         <TableRow key={proposal.id} className="hover:bg-primary/[0.02] border-b border-border/30 transition-all group">
                             <TableCell className="px-6 py-5">
@@ -128,7 +131,7 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                                 <div className="flex flex-col gap-1.5">
                                     <div className="flex items-center gap-2">
                                         <BankIcon bankName={proposal.bank} showLogo={showLogos} className="h-4 w-4" />
-                                        <span className="text-[10px] font-bold text-muted-foreground truncate max-w-[120px]">{proposal.bank.split(' - ')[1] || proposal.bank}</span>
+                                        <span className="text-[10px] font-bold text-muted-foreground truncate max-w-[120px]">{cleanBankName}</span>
                                     </div>
                                     <Badge variant="secondary" className="bg-muted/50 text-muted-foreground font-bold text-[9px] border-none px-2 py-0 w-fit">
                                         {proposal.product}
@@ -145,7 +148,7 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                                             'border-yellow-500/30 text-yellow-600 bg-yellow-50/80 dark:bg-yellow-900/40': proposal.status === 'Em Andamento',
                                             'border-blue-500/30 text-blue-600 bg-blue-50/80 dark:bg-blue-900/40': proposal.status === 'Aguardando Saldo',
                                             'border-red-500/30 text-red-600 bg-red-50/80 dark:bg-red-900/40': proposal.status === 'Reprovado',
-                                            'border-purple-500/30 text-purple-600 bg-purple-50/80 dark:bg-purple-900/40': proposal.status === 'Pendente',
+                                            'border-purple-500/30 text-purple-600 bg-purple-50/80 dark:bg-green-900/40': proposal.status === 'Pendente',
                                         })}
                                     >
                                         {proposal.status}
