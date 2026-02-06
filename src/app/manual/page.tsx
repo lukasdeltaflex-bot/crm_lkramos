@@ -167,7 +167,7 @@ export default function ManualPage() {
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Logotipos Inteligentes</strong>: O sistema exibe o ícone oficial do banco automaticamente. Se você adicionar um banco novo, a IA pesquisa o site dele para encontrar o logo.</li>
                             <li><strong>Limpeza de Nomes</strong>: Esqueça os códigos chatos (001, 104). O sistema limpa os nomes dos bancos para deixar apenas o texto comercial.</li>
-                            <li><strong>Temas de Cor</strong>: Em <strong>Configurações > Aparência</strong>, você pode trocar a cor principal do sistema para combinar com sua marca.</li>
+                            <li><strong>Temas de Cor</strong>: Em <strong>Configurações &gt; Aparência</strong>, você pode trocar a cor principal do sistema para combinar com sua marca.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
