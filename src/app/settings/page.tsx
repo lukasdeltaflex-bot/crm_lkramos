@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -64,68 +63,6 @@ import { Progress } from '@/components/ui/progress';
 
 const DRIVE_LINKED_KEY = 'lk-ramos-google-drive-linked-v1';
 
-/**
- * Componente de Pré-visualização em Tempo Real
- */
-function DesignPreview() {
-    return (
-        <div className="space-y-4">
-            <div className="flex items-center gap-2">
-                <Eye className="h-4 w-4 text-primary" />
-                <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Laboratório de Visualização</h4>
-            </div>
-            
-            <div className="relative p-8 rounded-2xl border bg-background overflow-hidden min-h-[300px] flex items-center justify-center texture-preview">
-                {/* O fundo herda a textura global por causa da classe texture-preview se configurarmos o CSS para isso, 
-                    mas aqui o div pai já está sob o efeito do seletor global do html. 
-                    Mostramos elementos reais para o usuário ver o impacto. */}
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl relative z-10">
-                    <Card className="shadow-lg">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-bold flex items-center gap-2">
-                                <Zap className="h-4 w-4 text-primary" /> Exemplo de Card
-                            </CardTitle>
-                            <CardDescription className="text-[10px] uppercase">Demonstração de Aura</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <p className="text-xs text-muted-foreground">Este é um exemplo de como os textos e elementos aparecerão no seu sistema.</p>
-                            <div className="flex flex-wrap gap-2">
-                                <Badge>Badge Padrão</Badge>
-                                <Badge variant="outline" className="border-primary text-primary">Destaque</Badge>
-                            </div>
-                            <Progress value={65} className="h-1.5" />
-                        </CardContent>
-                    </Card>
-
-                    <div className="space-y-4 flex flex-col justify-center">
-                        <div className="space-y-2">
-                            <Label className="text-[10px] uppercase font-black">Botões e Interação</Label>
-                            <div className="flex gap-2">
-                                <Button size="sm">Primário</Button>
-                                <Button size="sm" variant="outline">Contorno</Button>
-                            </div>
-                        </div>
-                        <div className="p-4 bg-primary/5 border border-primary/10 rounded-lg">
-                            <div className="flex items-center gap-3">
-                                <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xs">A</div>
-                                <div>
-                                    <p className="text-xs font-bold">Avatar e Lista</p>
-                                    <p className="text-[9px] text-muted-foreground uppercase">Subtexto de exemplo</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                {/* Marca d'água de textura para o simulador se quiser ser redundante */}
-                <div className="absolute inset-0 opacity-20 pointer-events-none bg-[inherit] texture-preview-bg" />
-            </div>
-            <p className="text-[10px] text-center text-muted-foreground italic">O simulador acima reflete instantaneamente suas mudanças de Cor, Aura, Intensidade e Arredondamento.</p>
-        </div>
-    );
-}
-
 export default function SettingsPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
@@ -134,7 +71,8 @@ export default function SettingsPage() {
     sidebarStyle, setSidebarStyle,
     containerStyle, setContainerStyle,
     backgroundTexture, setBackgroundTexture,
-    colorIntensity, setColorIntensity
+    colorIntensity, setColorIntensity,
+    colorTheme
   } = useTheme();
   
   const [isExporting, setIsExporting] = useState(false);
@@ -342,11 +280,11 @@ export default function SettingsPage() {
                                     <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Intensidade das Cores</h4>
                                 </div>
                                 <RadioGroup value={colorIntensity} onValueChange={setColorIntensity} className="grid grid-cols-2 gap-2 max-w-sm">
-                                    <Label htmlFor="i-sobrio" className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer", colorIntensity === 'sobrio' ? "border-primary bg-primary/5" : "border-muted")}>
+                                    <Label htmlFor="i-sobrio" className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer transition-all", colorIntensity === 'sobrio' ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30")}>
                                         <RadioGroupItem value="sobrio" id="i-sobrio" className="sr-only" />
                                         <span className="text-xs font-bold">Sóbria (Executiva)</span>
                                     </Label>
-                                    <Label htmlFor="i-vibrante" className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer", colorIntensity === 'vibrante' ? "border-primary bg-primary/5" : "border-muted")}>
+                                    <Label htmlFor="i-vibrante" className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer transition-all", colorIntensity === 'vibrante' ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30")}>
                                         <RadioGroupItem value="vibrante" id="i-vibrante" className="sr-only" />
                                         <span className="text-xs font-bold">Vibrante (Moderna)</span>
                                     </Label>
@@ -356,8 +294,60 @@ export default function SettingsPage() {
                         
                         <Separator />
 
-                        {/* NOVO: SIMULADOR DE DESIGN */}
-                        <DesignPreview />
+                        {/* NOVO: SIMULADOR DE DESIGN REATIVO */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <Eye className="h-4 w-4 text-primary" />
+                                <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Laboratório de Visualização</h4>
+                            </div>
+                            
+                            <div className={cn(
+                                "relative p-8 rounded-2xl border bg-background overflow-hidden min-h-[300px] flex items-center justify-center transition-all duration-500",
+                                `texture-${backgroundTexture} texture-preview-bg`
+                            )}>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl relative z-10">
+                                    <Card className={cn(
+                                        "shadow-lg transition-all duration-500 texture-preview-box",
+                                        `style-${containerStyle}`
+                                    )}>
+                                        <CardHeader className="pb-2">
+                                            <CardTitle className="text-sm font-bold flex items-center gap-2">
+                                                <Zap className="h-4 w-4 text-primary" /> Exemplo de Card
+                                            </CardTitle>
+                                            <CardDescription className="text-[10px] uppercase">Demonstração de Aura</CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4">
+                                            <p className="text-xs text-muted-foreground">Este exemplo reflete suas mudanças de Cor, Aura e Arredondamento.</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                <Badge className="font-bold">Badge Ativo</Badge>
+                                                <Badge variant="outline" className="border-primary text-primary font-bold">Destaque</Badge>
+                                            </div>
+                                            <Progress value={65} className="h-1.5" />
+                                        </CardContent>
+                                    </Card>
+
+                                    <div className="space-y-4 flex flex-col justify-center">
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Botões e Interação</Label>
+                                            <div className="flex gap-2">
+                                                <Button size="sm" className="font-bold">Primário</Button>
+                                                <Button size="sm" variant="outline" className="font-bold">Contorno</Button>
+                                            </div>
+                                        </div>
+                                        <div className="p-4 bg-primary/5 border border-primary/10 rounded-xl">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xs shadow-sm">LK</div>
+                                                <div>
+                                                    <p className="text-xs font-bold">Interface Premium</p>
+                                                    <p className="text-[9px] text-muted-foreground uppercase font-black">Performance Máxima</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p className="text-[10px] text-center text-muted-foreground italic">O simulador acima reflete instantaneamente suas mudanças. O estilo "Glassmorphism" exige que você esteja em uma página com conteúdo para ver o desfoque completo.</p>
+                        </div>
 
                         <Separator />
 
@@ -369,10 +359,15 @@ export default function SettingsPage() {
                                     <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Aura Visual (Containers)</h4>
                                 </div>
                                 <RadioGroup value={containerStyle} onValueChange={setContainerStyle} className="grid grid-cols-2 gap-2">
-                                    {['moderno', 'glass', 'deep', 'flat'].map((s) => (
-                                        <Label key={s} htmlFor={`s-${s}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold", containerStyle === s ? "border-primary bg-primary/5" : "border-muted")}>
-                                            <RadioGroupItem value={s} id={`s-${s}`} className="sr-only" />
-                                            {s === 'moderno' ? 'Padrão' : s}
+                                    {[
+                                        { id: 'moderno', label: 'Padrão' },
+                                        { id: 'glass', label: 'Glassmorphism' },
+                                        { id: 'deep', label: 'Profundo' },
+                                        { id: 'flat', label: 'Minimalista' }
+                                    ].map((s) => (
+                                        <Label key={s.id} htmlFor={`s-${s.id}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold transition-all", containerStyle === s.id ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30")}>
+                                            <RadioGroupItem value={s.id} id={`s-${s.id}`} className="sr-only" />
+                                            {s.label}
                                         </Label>
                                     ))}
                                 </RadioGroup>
@@ -385,7 +380,7 @@ export default function SettingsPage() {
                                 </div>
                                 <RadioGroup value={radius} onValueChange={setRadius} className="grid grid-cols-3 gap-2">
                                     {['executivo', 'moderno', 'suave'].map((r) => (
-                                        <Label key={r} htmlFor={`r-${r}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold", radius === r ? "border-primary bg-primary/5" : "border-muted")}>
+                                        <Label key={r} htmlFor={`r-${r}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold transition-all", radius === r ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30")}>
                                             <RadioGroupItem value={r} id={`r-${r}`} className="sr-only" />
                                             {r}
                                         </Label>
@@ -404,10 +399,15 @@ export default function SettingsPage() {
                                     <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Textura de Fundo</h4>
                                 </div>
                                 <RadioGroup value={backgroundTexture} onValueChange={setBackgroundTexture} className="grid grid-cols-2 gap-2">
-                                    {['none', 'dots', 'grid', 'lines'].map((t) => (
-                                        <Label key={t} htmlFor={`t-${t}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold", backgroundTexture === t ? "border-primary bg-primary/5" : "border-muted")}>
-                                            <RadioGroupItem value={t} id={`t-${t}`} className="sr-only" />
-                                            {t === 'none' ? 'Liso' : t}
+                                    {[
+                                        { id: 'none', label: 'Liso' },
+                                        { id: 'dots', label: 'Pontos' },
+                                        { id: 'grid', label: 'Grelha' },
+                                        { id: 'lines', label: 'Linhas' }
+                                    ].map((t) => (
+                                        <Label key={t.id} htmlFor={`t-${t.id}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold transition-all", backgroundTexture === t.id ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30")}>
+                                            <RadioGroupItem value={t.id} id={`t-${t.id}`} className="sr-only" />
+                                            {t.label}
                                         </Label>
                                     ))}
                                 </RadioGroup>
@@ -420,7 +420,7 @@ export default function SettingsPage() {
                                 </div>
                                 <RadioGroup value={sidebarStyle} onValueChange={setSidebarStyle} className="grid grid-cols-3 gap-2">
                                     {['default', 'dark', 'light'].map((s) => (
-                                        <Label key={s} htmlFor={`sid-${s}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold", sidebarStyle === s ? "border-primary bg-primary/5" : "border-muted")}>
+                                        <Label key={s} htmlFor={`sid-${s}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold transition-all", sidebarStyle === s ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30")}>
                                             <RadioGroupItem value={s} id={`sid-${s}`} className="sr-only" />
                                             {s === 'default' ? 'Padrão' : s}
                                         </Label>
@@ -441,7 +441,6 @@ export default function SettingsPage() {
                     </CardContent>
                 </Card>
             </TabsContent>
-            {/* Outras Abas Mantidas */}
             <TabsContent value="data">
                 <Card>
                     <CardHeader><CardTitle>Dados & Segurança</CardTitle></CardHeader>
@@ -465,5 +464,3 @@ export default function SettingsPage() {
     </AppLayout>
   );
 }
-
-    

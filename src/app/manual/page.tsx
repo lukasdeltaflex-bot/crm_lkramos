@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -25,7 +24,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export default function ManualPage() {
+export function ManualPage() {
   return (
     <AppLayout>
       <PageHeader title="Manual de Operação LK RAMOS" />
@@ -51,19 +50,19 @@ export default function ManualPage() {
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-purple-100 text-purple-600"><Palette className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold">1. Estúdio de Branding & Aura Visual</p>
-                                <p className="text-xs text-muted-foreground">Logo próprio, estilos de container e texturas</p>
+                                <p className="font-bold">1. Estúdio de Branding & Laboratório Visual</p>
+                                <p className="text-xs text-muted-foreground">Logo próprio, estilos de aura e simulador em tempo real</p>
                             </div>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
                         <p>Personalize o sistema para que ele tenha a cara da sua marca.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Branding Próprio</strong>: Em Configurações, suba sua logomarca. Ela substituirá o logo padrão no menu e aparecerá em todos os relatórios PDF oficiais.</li>
-                            <li><strong>Aura Visual</strong>: Escolha o estilo dos containers entre <strong>Glassmorphism</strong> (vidro fosco), <strong>Profundo</strong> (sombras de luxo) ou <strong>Flat</strong> (minimalista).</li>
-                            <li><strong>Laboratório de Design</strong>: Use o novo simulador em tempo real na aba Aparência para testar como os botões e cards ficam com cada combinação de estilo.</li>
-                            <li><strong>Texturas de Fundo</strong>: Adicione padrões como <strong>Dots</strong> (pontos) ou <strong>Grid</strong> (grelha) para dar uma sensação de acabamento profissional às páginas.</li>
-                            <li><strong>Controle de Intensidade</strong>: Escolha entre tons <strong>Sóbrios</strong> (pastéis executivos) ou <strong>Vibrantes</strong> (cores vivas).</li>
+                            <li><strong>Branding Próprio</strong>: Em Configurações, suba sua logomarca. Ela aparecerá no menu e em todos os relatórios PDF oficiais.</li>
+                            <li><strong>Laboratório de Visualização</strong>: Use o simulador interativo na aba Aparência. Ele mostra exatamente como os botões e cards ficam com cada combinação de estilo antes de você decidir.</li>
+                            <li><strong>Aura Visual</strong>: Escolha entre <strong>Glassmorphism</strong> (vidro fosco), <strong>Profundo</strong> (sombras luxuosas) ou <strong>Minimalista</strong>.</li>
+                            <li><strong>Texturas de Fundo</strong>: Adicione padrões como <strong>Pontos</strong> ou <strong>Grelhas</strong> para um acabamento profissional.</li>
+                            <li><strong>Controle de Intensidade</strong>: Alterne entre tons <strong>Sóbrios</strong> (pastéis executivos) ou <strong>Vibrantes</strong>.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -73,17 +72,17 @@ export default function ManualPage() {
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-blue-100 text-blue-600"><LayoutDashboard className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold">2. Radar de Vendas & Inteligência</p>
-                                <p className="text-xs text-muted-foreground">Retenção de clientes e avisos da IA</p>
+                                <p className="font-bold">2. Radar de Vendas & Inteligência Diária</p>
+                                <p className="text-xs text-muted-foreground">Retenção de clientes e avisos estratégicos</p>
                             </div>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
                         <p>O Dashboard monitora oportunidades ocultas na sua base de dados.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Radar de Vendas</strong>: Identifica automaticamente clientes com contratos pagos há mais de 12 meses. É o momento de oferecer refinanciamento.</li>
-                            <li><strong>Inteligência Diária</strong>: Consolida retornos agendados e alertas de clientes próximos de 75 anos.</li>
-                            <li><strong>Relatório Diário via IA</strong>: O botão "Resumo E-mail" gera um relatório estratégico e envia para o seu e-mail cadastrado.</li>
+                            <li><strong>Radar de Vendas</strong>: Identifica automaticamente clientes com contratos pagos há mais de 12 meses (momento ideal para refinanciamento).</li>
+                            <li><strong>Inteligência Diária</strong>: Consolida retornos agendados, alertas de comissões atrasadas e clientes próximos de 75 anos.</li>
+                            <li><strong>Resumo Estratégico</strong>: Use o botão "Resumo E-mail" para enviar um relatório completo das pendências para sua caixa de entrada.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -93,8 +92,8 @@ export default function ManualPage() {
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-red-100 text-red-600"><Wallet className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold">3. Controle Financeiro & Fluxo de Caixa</p>
-                                <p className="text-xs text-muted-foreground">Gestão de gastos e conciliação bancária</p>
+                                <p className="font-bold">3. Gestão Financeira & DRE</p>
+                                <p className="text-xs text-muted-foreground">Controle de gastos, categorias e conciliação bancária</p>
                             </div>
                         </div>
                     </AccordionTrigger>
@@ -102,8 +101,8 @@ export default function ManualPage() {
                         <p>Mantenha a saúde financeira da sua operação sob controle total.</p>
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Lançamento de Despesas</strong>: Registre custos operacionais e gerencie a situação (Pago/Pendente).</li>
-                            <li><strong>Categorias Customizadas</strong>: Crie categorias próprias (Ex: Marketing, Salários) em Configurações.</li>
-                            <li><strong>Conciliação com IA</strong>: Use a ferramenta "Conciliar IA" no Financeiro para processar relatórios de pagamento colando apenas o texto do banco/promotora.</li>
+                            <li><strong>Categorias de Elite</strong>: Crie categorias próprias (Ex: Marketing, Salários) em Configurações > Opções.</li>
+                            <li><strong>Conciliação com IA</strong>: Processe relatórios de pagamento colando apenas o texto do banco para baixar comissões automaticamente.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -113,16 +112,16 @@ export default function ManualPage() {
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-zinc-100 text-zinc-600"><Eye className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold">4. Visualizador de Documentos Instantâneo</p>
-                                <p className="text-xs text-muted-foreground">Conferência sem necessidade de downloads</p>
+                                <p className="font-bold">4. Visualizador de Documentos & Central Fixa</p>
+                                <p className="text-xs text-muted-foreground">Conferência instantânea e documentos permanentes</p>
                             </div>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
                         <p>Agilize sua conferência de propostas e mantenha a conformidade com a LGPD.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Ícone do Olho</strong>: Presente em todos os anexos. Permite ver imagens e PDFs em um modal flutuante seguro.</li>
-                            <li><strong>Documentos Fixos</strong>: Na ficha do cliente, você pode salvar o RG/CPF permanentemente. Eles aparecerão em todas as futuras propostas desse cliente automaticamente.</li>
+                            <li><strong>Visualização Segura</strong>: Use o ícone do Olho em qualquer anexo para ver imagens e PDFs sem precisar baixar arquivos.</li>
+                            <li><strong>Documentos Permanentes</strong>: Salve o RG/CPF na ficha do cliente. Eles ficarão disponíveis automaticamente em todas as futuras propostas deste cliente.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -132,14 +131,11 @@ export default function ManualPage() {
         <div className="lg:col-span-1 space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">Ações de Elite</CardTitle>
+                    <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">Atalhos de Elite</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                     <Button variant="outline" className="w-full justify-start text-xs h-8" asChild>
-                        <a href="/settings?tab=appearance"><Monitor className="mr-2 h-3 w-3 text-blue-500" /> Branding Próprio</a>
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start text-xs h-8" asChild>
-                        <a href="/settings?tab=appearance"><MousePointer2 className="mr-2 h-3 w-3 text-orange-500" /> Testar Simulador</a>
+                        <a href="/settings?tab=appearance"><Monitor className="mr-2 h-3 w-3 text-blue-500" /> Testar Simulador</a>
                     </Button>
                     <Button variant="outline" className="w-full justify-start text-xs h-8" asChild>
                         <a href="/settings?tab=appearance"><Sparkles className="mr-2 h-3 w-3 text-purple-500" /> Aura Glassmorphism</a>
@@ -157,5 +153,3 @@ export default function ManualPage() {
     </AppLayout>
   );
 }
-
-    
