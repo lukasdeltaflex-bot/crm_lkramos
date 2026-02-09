@@ -75,29 +75,25 @@
 :root.radius-moderno { --radius: 0.5rem; }
 :root.radius-suave { --radius: 1.25rem; }
 
-/* ✍️ TYPOGRAPHY STUDIO - Universal Force Logic */
-.font-moderno { --font-sans: 'Inter', system-ui, -apple-system, sans-serif !important; }
-.font-classico { --font-sans: 'Georgia', 'Cambria', serif !important; }
-.font-mono { --font-sans: 'ui-monospace', 'SFMono-Regular', 'Menlo', monospace !important; }
-.font-arredondado { --font-sans: 'Quicksand', 'Segoe UI', system-ui, rounded, sans-serif !important; }
-.font-condensado { --font-sans: 'Roboto Condensed', 'Arial Narrow', sans-serif !important; }
-.font-business { --font-sans: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif !important; }
-.font-elegante { --font-sans: 'Optima', 'Candara', 'Calibri', sans-serif !important; }
-.font-geometrico { --font-sans: 'Futura', 'Trebuchet MS', sans-serif !important; }
-.font-tecnico { --font-sans: 'Helvetica Neue', Arial, sans-serif !important; }
-.font-minimalista { --font-sans: 'Avenir', 'Inter', sans-serif !important; }
-.font-futurista { --font-sans: 'Orbitron', sans-serif !important; }
-.font-robusto { --font-sans: 'Arial Black', sans-serif !important; }
+/* ✍️ TYPOGRAPHY STUDIO - UNIVERSAL FORCE LOGIC */
+/* Define as fontes e as aplica FORÇADAMENTE em todos os elementos */
 
-/* Universal Selector for Font Application - NO EXCEPTIONS */
-html[class*="font-"], 
-html[class*="font-"] body, 
-html[class*="font-"] *,
-html[class*="font-"] button,
-html[class*="font-"] input,
-html[class*="font-"] select,
-html[class*="font-"] textarea {
-    font-family: var(--font-sans) !important;
+.font-moderno, .font-moderno * { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; }
+.font-classico, .font-classico * { font-family: 'Georgia', 'Cambria', 'Times New Roman', serif !important; }
+.font-mono, .font-mono * { font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace !important; }
+.font-arredondado, .font-arredondado * { font-family: 'Quicksand', 'Segoe UI Rounded', 'Arial Rounded MT Bold', system-ui, sans-serif !important; }
+.font-condensado, .font-condensado * { font-family: 'Roboto Condensed', 'Arial Narrow', sans-serif !important; }
+.font-business, .font-business * { font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif !important; }
+.font-elegante, .font-elegante * { font-family: 'Optima', 'Candara', 'Calibri', 'Source Sans Pro', sans-serif !important; }
+.font-geometrico, .font-geometrico * { font-family: 'Futura', 'Trebuchet MS', 'Arial', sans-serif !important; }
+.font-tecnico, .font-tecnico * { font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif !important; }
+.font-minimalista, .font-minimalista * { font-family: 'Avenir', 'Inter', 'Segoe UI', sans-serif !important; }
+.font-futurista, .font-futurista * { font-family: 'Orbitron', 'Syncopate', sans-serif !important; }
+.font-robusto, .font-robusto * { font-family: 'Arial Black', 'Impact', sans-serif !important; }
+
+/* Global Override for consistency */
+html[class*="font-"] body {
+    font-family: inherit !important;
 }
 
 /* 🎬 MOTION DESIGN */
@@ -247,7 +243,7 @@ html[class*="font-"] textarea {
   * { @apply border-border; }
   body { 
     @apply bg-background text-foreground;
-    font-family: var(--font-sans);
+    font-family: inherit;
     pointer-events: auto !important;
     overflow: auto !important;
   }
