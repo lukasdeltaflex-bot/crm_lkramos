@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, isValid, startOfDay, subDays, endOfDay, subMonths, parse, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { formatCurrency, cn } from '@/lib/utils';
+import { formatCurrency, cn, getAge } from '@/lib/utils';
 import type { Proposal, Customer, UserProfile } from '@/lib/types';
 import {
   Dialog,
@@ -245,7 +245,8 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-       <div className="space-y-6 animate-in fade-in duration-500 w-full max-w-full">
+       <div className="space-y-8 animate-in fade-in duration-500 w-full max-w-full pb-10">
+        {/* HEADER & FILTROS */}
         <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
@@ -296,6 +297,7 @@ export default function DashboardPage() {
             </div>
         </div>
 
+        {/* META & KPI PRINCIPAL */}
         <div className="w-full">
             <GoalCard 
                 currentProduction={stats.pago} 
@@ -308,6 +310,7 @@ export default function DashboardPage() {
             />
         </div>
 
+        {/* GRIDS DE STATUS */}
         <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
             <div className="cursor-pointer" onClick={() => handleShowDetails('Total Digitado (Mês)', stats.proposals.todos)}>
                 <StatsCard 
@@ -377,6 +380,7 @@ export default function DashboardPage() {
             </div>
         </div>
 
+        {/* HISTÓRICO FINANCEIRO E MIX DE PRODUTOS */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
                 <CommissionChart proposals={proposals || []} />
@@ -386,34 +390,32 @@ export default function DashboardPage() {
             </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-                <PartnerPerformanceCharts proposals={stats.proposals.todos} />
-            </div>
-            <div className="lg:col-span-1">
-                <RadarWidget 
-                    proposals={proposals || []}
-                    customers={customers || []}
-                    isLoading={proposalsLoading || customersLoading}
-                />
-            </div>
+        {/* RANKINGS DE PRODUÇÃO (ÁREA NOBRE) */}
+        <div className="w-full">
+            <PartnerPerformanceCharts proposals={stats.proposals.todos} />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-                <RecentProposals 
-                    proposals={proposals || []}
-                    customers={customers || []}
-                    isLoading={proposalsLoading || customersLoading}
-                />
-            </div>
-            <div className="lg:col-span-1">
-                <DailySummary 
-                    proposals={proposals || []}
-                    customers={customers || []}
-                    userProfile={userProfile || null}
-                />
-            </div>
+        {/* CENTRAL DE AÇÃO IMEDIATA: RADAR + INTELIGÊNCIA */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <RadarWidget 
+                proposals={proposals || []}
+                customers={customers || []}
+                isLoading={proposalsLoading || customersLoading}
+            />
+            <DailySummary 
+                proposals={proposals || []}
+                customers={customers || []}
+                userProfile={userProfile || null}
+            />
+        </div>
+
+        {/* MONITORAMENTO DE ESTEIRA (LARGURA TOTAL) */}
+        <div className="w-full">
+            <RecentProposals 
+                proposals={proposals || []}
+                customers={customers || []}
+                isLoading={proposalsLoading || customersLoading}
+            />
         </div>
       </div>
 

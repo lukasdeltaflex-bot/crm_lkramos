@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -53,11 +54,12 @@ export default function ManualPage() {
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
-                        <p>O Dashboard é sua ferramenta de decisão rápida.</p>
+                        <p>O Dashboard é sua ferramenta de decisão rápida, agora com layout otimizado.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Radar de Vendas (<Zap className="inline h-3 w-3 text-orange-500" />)</strong>: Localizado agora no Dashboard, mostra clientes com contratos pagos há mais de 12 meses. É sua principal lista de prospecção diária de Refinanciamento.</li>
-                            <li><strong>Metas Mensais</strong>: O progresso é atualizado em tempo real com contratos "Pagos".</li>
-                            <li><strong>Inteligência Diária</strong>: O resumo à direita avisa sobre aniversários, retornos e oportunidades de retenção identificadas no dia.</li>
+                            <li><strong>Radar de Vendas (<Zap className="inline h-3 w-3 text-orange-500" />)</strong>: Localizado em destaque no Dashboard, mostra clientes com contratos pagos há mais de 12 meses. É sua principal lista de prospecção diária de Refinanciamento.</li>
+                            <li><strong>Inteligência Diária</strong>: Localizada ao lado do Radar, avisa sobre aniversários, retornos e pendências estratégicas do dia.</li>
+                            <li><strong>Rankings de Performance</strong>: Agora em área expandida para facilitar a análise de quais bancos, promotoras e operadores trazem mais rentabilidade.</li>
+                            <li><strong>Esteira de Propostas</strong>: Tabela em largura total no final da página para um monitoramento confortável dos últimos registros.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -166,16 +168,16 @@ export default function ManualPage() {
                             <div className="p-2 rounded-lg bg-orange-100 text-orange-600"><Cloud className="h-5 w-5" /></div>
                             <div className="text-left">
                                 <p className="font-bold">7. Limites Técnicos & Escalabilidade</p>
-                                <p className="text-xs text-muted-foreground">Firebase Spark Plan</p>
+                                <p className="text-xs text-muted-foreground">Infraestrutura Profissional</p>
                             </div>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
-                        <p>O seu sistema utiliza infraestrutura de nuvem profissional do Google.</p>
+                        <p>O seu sistema utiliza infraestrutura de nuvem profissional do Google (Firebase).</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Banco de Dados (Firestore)</strong>: Suporta até 50.000 leituras diárias gratuitamente.</li>
-                            <li><strong>Anexos (Storage)</strong>: Você possui 5 GB de armazenamento gratuito para documentos de clientes.</li>
-                            <li><strong>Disponibilidade</strong>: O sistema fica online 24h por dia com backup automático nos servidores do Google.</li>
+                            <li><strong>Publicação</strong>: Não há limite de atualizações do sistema.</li>
+                            <li><strong>Banco de Dados</strong>: Suporta até 50.000 leituras diárias gratuitamente.</li>
+                            <li><strong>Anexos</strong>: Você possui 5 GB de armazenamento gratuito para documentos de clientes.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
