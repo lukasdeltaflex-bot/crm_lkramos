@@ -24,7 +24,6 @@ import {
     MousePointer2,
     Type,
     MoveHorizontal,
-    Crown,
     Filter
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -56,7 +55,7 @@ export default function ManualPage() {
                             <div className="p-2 rounded-lg bg-purple-100 text-purple-600"><Palette className="h-5 w-5" /></div>
                             <div className="text-left">
                                 <p className="font-bold">1. Estúdio de Branding & Laboratório Visual</p>
-                                <p className="text-xs text-muted-foreground">Logo próprio, estilos de aura, tipografia de elite e presets</p>
+                                <p className="text-xs text-muted-foreground">Logo próprio, estilos de aura, tipografia de elite e movimento</p>
                             </div>
                         </div>
                     </AccordionTrigger>
@@ -64,10 +63,9 @@ export default function ManualPage() {
                         <p>Personalize o sistema para que ele tenha a cara da sua marca.</p>
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Branding Próprio</strong>: Em Configurações, suba sua logomarca. Ela aparecerá no menu e em todos os relatórios PDF oficiais com Identidade Total.</li>
-                            <li><strong>Presets de Grife</strong>: Use os botões de "Um Clique" para aplicar estilos como **Apple** (Clean), **Bloomberg** (Financeiro) ou **Gold** (Premium) instantaneamente.</li>
                             <li><strong>Identidade Total</strong>: Ao escolher uma fonte ou cor, ela é aplicada forçadamente em 100% do sistema, garantindo consistência absoluta.</li>
                             <li><strong>Laboratório de Visualização</strong>: O simulador interativo mostra como os botões e cards ficam com cada combinação. Use o botão <strong>"Testar Interação"</strong> para ver o ritmo das animações.</li>
-                            <li><strong>Estúdio de Tipografia</strong>: Escolha entre 12 estilos de fontes, desde as Modernas e Arredondadas até a nova <strong>Business Pro</strong>.</li>
+                            <li><strong>Estúdio de Tipografia</strong>: Escolha entre 20 estilos de fontes profissionais para encontrar a voz da sua marca.</li>
                             <li><strong>Motion Design</strong>: Ajuste o ritmo do sistema entre Estático (sem transições), Sutil ou Cinematográfico (luxo com efeito elástico).</li>
                         </ul>
                     </AccordionContent>
@@ -86,9 +84,9 @@ export default function ManualPage() {
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
                         <p>Agilize sua produtividade com a sinalização visual do sistema.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Abas Coloridas</strong>: Os botões de filtro nas telas de Propostas e Financeiro agora possuem cores representativas (Verde = Pago, Vermelho = Reprovado, etc.). Isso permite identificar instantaneamente qual "gaveta" você está visualizando.</li>
-                            <li><strong>Busca de Precisão</strong>: O campo de busca em todas as tabelas prioriza o **ID exato** do cliente ou da proposta. Se você digitar apenas números curtos, o sistema buscará apenas pelo ID, evitando confusão com telefones ou partes de CPF.</li>
-                            <li><strong>Status em Massa</strong>: Selecione várias propostas e mude o status de todas simultaneamente usando o botão de ação que aparece ao marcar os itens.</li>
+                            <li><strong>Abas Coloridas</strong>: Os botões de filtro agora possuem cores representativas suaves que casam com o status da proposta.</li>
+                            <li><strong>Busca de Precisão</strong>: O campo de busca prioriza o **ID exato** do cliente ou da proposta para evitar confusões.</li>
+                            <li><strong>Status em Massa</strong>: Selecione várias propostas e mude o status de todas simultaneamente.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -106,9 +104,9 @@ export default function ManualPage() {
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
                         <p>O Dashboard monitora oportunidades ocultas na sua base de dados.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Radar de Vendas</strong>: Identifica automaticamente clientes com contratos pagos há mais de 12 meses (momento ideal para refinanciamento).</li>
-                            <li><strong>Inteligência Diária</strong>: Consolida retornos agendados, alertas de comissões atrasadas e clientes próximos de 75 anos.</li>
-                            <li><strong>Resumo Estratégico</strong>: Use o botão "Resumo E-mail" para enviar um relatório completo das pendências para sua caixa de entrada.</li>
+                            <li><strong>Radar de Vendas</strong>: Identifica automaticamente clientes com contratos pagos há mais de 12 meses.</li>
+                            <li><strong>Inteligência Diária</strong>: Consolida retornos, alertas de comissões e clientes próximos de 75 anos.</li>
+                            <li><strong>Resumo Estratégico</strong>: Envie um relatório completo das pendências para seu e-mail em um clique.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -127,8 +125,8 @@ export default function ManualPage() {
                         <p>Mantenha a saúde financeira da sua operação sob controle total.</p>
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Lançamento de Despesas</strong>: Registre custos operacionais e gerencie a situação (Pago/Pendente).</li>
-                            <li><strong>Categorias de Elite</strong>: Crie categorias próprias (Ex: Marketing, Salários) em Configurações &gt; Opções.</li>
-                            <li><strong>Conciliação com IA</strong>: Processe relatórios de pagamento colando apenas o texto do banco para baixar comissões automaticamente.</li>
+                            <li><strong>Categorias de Elite</strong>: Crie categorias próprias em Configurações &gt; Opções.</li>
+                            <li><strong>Conciliação com IA</strong>: Processe relatórios de pagamento colando apenas o texto do banco para baixar comissões.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -146,8 +144,8 @@ export default function ManualPage() {
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
                         <p>Agilize sua conferência de propostas e mantenha a conformidade com a LGPD.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Visualização Segura</strong>: Use o ícone do Olho em qualquer anexo para ver imagens e PDFs sem precisar baixar arquivos.</li>
-                            <li><strong>Documentos Permanentes</strong>: Salve o RG/CPF na ficha do cliente. Eles ficarão disponíveis automaticamente em todas as futuras propostas deste cliente.</li>
+                            <li><strong>Visualização Segura</strong>: Veja imagens e PDFs sem precisar baixar arquivos usando o ícone do Olho.</li>
+                            <li><strong>Documentos Permanentes</strong>: Salve o RG/CPF na ficha do cliente para acesso em todas as propostas futuras.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -160,9 +158,6 @@ export default function ManualPage() {
                     <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">Atalhos de Elite</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                    <Button variant="outline" className="w-full justify-start text-xs h-8" asChild>
-                        <a href="/settings?tab=appearance"><Crown className="mr-2 h-3 w-3 text-amber-500" /> Presets de Grife</a>
-                    </Button>
                     <Button variant="outline" className="w-full justify-start text-xs h-8" asChild>
                         <a href="/settings?tab=appearance"><Type className="mr-2 h-3 w-3 text-blue-500" /> Estúdio de Fontes</a>
                     </Button>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -36,9 +37,6 @@ import {
     Layout,
     Type,
     MoveHorizontal,
-    Apple,
-    Briefcase,
-    Crown,
     MousePointer2,
     Shapes
 } from 'lucide-react';
@@ -168,35 +166,6 @@ export default function SettingsPage() {
     setTimeout(() => setIsMotionTestActive(false), 1500);
   };
 
-  const applyPreset = (presetName: 'apple' | 'bloomberg' | 'gold') => {
-    if (presetName === 'apple') {
-        setColorTheme('zinc');
-        setContainerStyle('glass');
-        setRadius('suave');
-        setBackgroundTexture('none');
-        setAnimationStyle('cinematografico');
-        setFontStyle('moderno');
-        setSidebarStyle('light');
-    } else if (presetName === 'bloomberg') {
-        setColorTheme('green');
-        setContainerStyle('flat');
-        setRadius('executivo');
-        setBackgroundTexture('grid');
-        setAnimationStyle('estatico');
-        setFontStyle('mono');
-        setSidebarStyle('dark');
-    } else if (presetName === 'gold') {
-        setColorTheme('royal-gold');
-        setContainerStyle('deep');
-        setRadius('moderno');
-        setBackgroundTexture('dots');
-        setAnimationStyle('sutil');
-        setFontStyle('classico');
-        setSidebarStyle('dark');
-    }
-    toast({ title: `Preset ${presetName.toUpperCase()} aplicado!`, description: "Aproveite seu novo visual exclusivo." });
-  };
-
   const handleGlobalBackup = async () => {
     if (!allCustomers || !allProposals) return;
     setIsExporting(true);
@@ -301,38 +270,6 @@ export default function SettingsPage() {
                         <CardDescription>Personalize cada detalhe visual do seu ambiente de trabalho.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-10">
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-2">
-                                <Crown className="h-4 w-4 text-primary" />
-                                <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Presets de Grife</h4>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <Button variant="outline" className="h-auto p-4 flex flex-col items-center gap-2 border-2 hover:border-zinc-400 transition-all" onClick={() => applyPreset('apple')}>
-                                    <Apple className="h-6 w-6" />
-                                    <div className="text-center">
-                                        <p className="font-bold text-xs uppercase">Estilo Apple</p>
-                                        <p className="text-[9px] text-muted-foreground">Glass + Zinc + Suave</p>
-                                    </div>
-                                </Button>
-                                <Button variant="outline" className="h-auto p-4 flex flex-col items-center gap-2 border-2 hover:border-green-400 transition-all" onClick={() => applyPreset('bloomberg')}>
-                                    <Briefcase className="h-6 w-6" />
-                                    <div className="text-center">
-                                        <p className="font-bold text-xs uppercase">Bloomberg Terminal</p>
-                                        <p className="text-[9px] text-muted-foreground">Flat + Green + Mono</p>
-                                    </div>
-                                </Button>
-                                <Button variant="outline" className="h-auto p-4 flex flex-col items-center gap-2 border-2 hover:border-amber-400 transition-all" onClick={() => applyPreset('gold')}>
-                                    <Sparkles className="h-6 w-6 text-amber-500" />
-                                    <div className="text-center">
-                                        <p className="font-bold text-xs uppercase">Gold Edition</p>
-                                        <p className="text-[9px] text-muted-foreground">Deep + Gold + Clássico</p>
-                                    </div>
-                                </Button>
-                            </div>
-                        </div>
-
-                        <Separator />
-
                         <div className="space-y-4">
                             <div className="flex items-center gap-2">
                                 <Monitor className="h-4 w-4 text-primary" />
