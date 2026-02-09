@@ -34,7 +34,7 @@ import {
   } from '@/components/ui/dialog';
 import { CommissionForm, type CommissionFormValues } from './commission-form';
 import { toast } from '@/hooks/use-toast';
-import { format, startOfMonth, endOfMonth, parse, subMonths, getYear, getMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth, parse, subMonths, getYear, getMonth, isSameMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CommissionReconciliation } from '@/components/financial/commission-reconciliation';
 import { formatCurrency, cn } from '@/lib/utils';
@@ -48,6 +48,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ExpenseForm } from '@/components/financial/expense-form';
 import { ExpenseTable } from '@/components/financial/expense-table';
 import { expenseCategories as initialExpenseCategories } from '@/lib/config-data';
+import { StatsCard } from '@/components/dashboard/stats-card';
 
 
 export type ProposalWithCustomer = Proposal & { customer: Customer | undefined };
@@ -156,6 +157,17 @@ export default function FinancialPage() {
       operatorStats: stats
     };
   }, [proposals, customers, isClient]);
+
+  const totalExpensesAmount = React.useMemo(() => {
+    if (!expenses) return 0;
+    const now = new Date();
+    return expenses
+      .filter(e => {
+          const d = new Date(e.date);
+          return isSameMonth(d, now) && d.getFullYear() === now.getFullYear();
+      })
+      .reduce((sum, e) => sum + e.amount, 0);
+  }, [expenses]);
 
   const handleGenerateMonthlyReport = async () => {
     const targetMonth = parseInt(reportMonth);
@@ -342,7 +354,7 @@ export default function FinancialPage() {
             id: expenseId,
             ownerId: user.uid,
         }, { merge: true });
-        toast({ title: "Despesa Salva", description: "O gasto foi registrado no DRE." });
+        toast({ title: "Despesa Salva", description: "O gasto foi registrado com sucesso." });
         setIsExpenseFormOpen(false);
     } catch (e) {
         toast({ variant: "destructive", title: "Erro ao salvar despesa" });
@@ -386,7 +398,7 @@ export default function FinancialPage() {
   return (
     <AppLayout>
       <div className="flex items-center justify-between print:hidden">
-        <PageHeader title="Controle Financeiro & DRE" />
+        <PageHeader title="Controle Financeiro & Fluxo" />
         <div className="flex items-center gap-2">
             <Dialog open={isOperatorsDialogOpen} onOpenChange={setIsOperatorsDialogOpen}>
                 <DialogTrigger asChild>
@@ -606,23 +618,32 @@ export default function FinancialPage() {
                         setRowSelection={setRowSelection}
                         onShowDetails={handleShowDetails}
                         userSettings={userSettings || null}
-                        expenses={expenses || []}
                     />
                 </TabsContent>
 
                 <TabsContent value="expenses" className="space-y-6">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                         <div className="space-y-1">
                             <h2 className="text-xl font-bold flex items-center gap-2">
                                 <ReceiptText className="text-primary" />
                                 Livro de Despesas
                             </h2>
-                            <p className="text-sm text-muted-foreground">Registre seus custos fixos e variáveis para apurar o lucro real.</p>
+                            <p className="text-sm text-muted-foreground">Registre seus custos fixos e variáveis para controle financeiro.</p>
                         </div>
-                        <Button onClick={() => { setSelectedExpense(undefined); setIsExpenseFormOpen(true); }}>
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Lançar Despesa
-                        </Button>
+                        <div className="flex items-center gap-4">
+                            <StatsCard
+                                title="Total de Despesas"
+                                value={isPrivacyMode ? '•••••' : formatCurrency(totalExpensesAmount)}
+                                icon={Wallet}
+                                description="GASTOS TOTAIS DO MÊS ATUAL"
+                                className="border-red-200 bg-red-50/10 min-w-[250px]"
+                                valueClassName="text-red-600"
+                            />
+                            <Button onClick={() => { setSelectedExpense(undefined); setIsExpenseFormOpen(true); }}>
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Lançar Despesa
+                            </Button>
+                        </div>
                     </div>
 
                     <ExpenseTable 

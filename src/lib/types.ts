@@ -150,4 +150,5 @@ export type Expense = {
   amount: number;
   date: string; // YYYY-MM-DD
   category: string;
+  paid: boolean;
 };

@@ -1,11 +1,12 @@
+
 'use client';
 
 import * as React from 'react';
 import type { Row } from '@tanstack/react-table';
-import type { Proposal, Customer, Expense } from '@/lib/types';
+import type { Proposal, Customer } from '@/lib/types';
 import { StatsCard } from '@/components/dashboard/stats-card';
-import { formatCurrency, cn } from '@/lib/utils';
-import { CheckCircle, Hourglass, Coins, CircleDollarSign, TrendingUp, Wallet } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
+import { CheckCircle, Hourglass, Coins, CircleDollarSign } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 import { subMonths, startOfMonth, endOfMonth, differenceInDays, subDays, isSameDay } from 'date-fns';
 
@@ -13,21 +14,18 @@ type ProposalWithCustomer = Proposal & { customer: Customer };
 
 interface FinancialSummaryProps {
   rows: Row<ProposalWithCustomer>[] | ProposalWithCustomer[];
-  expenses?: Expense[];
   currentMonthRange: DateRange;
   isPrivacyMode: boolean;
   isFiltered: boolean;
   onShowDetails: (title: string, proposals: ProposalWithCustomer[]) => void;
 }
 
-export function FinancialSummary({ rows, expenses = [], currentMonthRange, isPrivacyMode, isFiltered, onShowDetails }: FinancialSummaryProps) {
+export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFiltered, onShowDetails }: FinancialSummaryProps) {
   const {
     totalPotentialCommission,
     totalAmountPaid,
     pendingAmount,
     expectedAmount,
-    totalExpenses,
-    netProfit,
     allProposalsInPeriod,
     commissionReceivedProposals,
     proposalsForSaldoAReceber,
@@ -42,7 +40,6 @@ export function FinancialSummary({ rows, expenses = [], currentMonthRange, isPri
     const fromDate = currentMonthRange?.from || startOfMonth(today);
     const toDate = currentMonthRange?.to || endOfMonth(today);
     
-    const startOfPipeline = startOfMonth(subMonths(fromDate, 1));
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
@@ -63,15 +60,7 @@ export function FinancialSummary({ rows, expenses = [], currentMonthRange, isPri
     });
     const totalAmountPaid = commissionReceivedProposals.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
 
-    // 3. DESPESAS E LUCRO REAL
-    const periodExpenses = expenses.filter(e => {
-        const d = new Date(e.date);
-        return d >= fromDate && d <= effectiveToDate;
-    });
-    const totalExpenses = periodExpenses.reduce((sum, e) => sum + e.amount, 0);
-    const netProfit = totalAmountPaid - totalExpenses;
-
-    // 4. ACUMULADOS: Pipeline de Pendências
+    // 3. ACUMULADOS: Pipeline de Pendências
     const proposalsForSaldoAReceber = allProposals.filter(p => {
         if (p.commissionStatus === 'Paga') return false;
         const status = p.status;
@@ -113,8 +102,6 @@ export function FinancialSummary({ rows, expenses = [], currentMonthRange, isPri
       totalAmountPaid,
       pendingAmount,
       expectedAmount,
-      totalExpenses,
-      netProfit,
       allProposalsInPeriod: currentMonthProposals,
       commissionReceivedProposals,
       proposalsForSaldoAReceber,
@@ -127,7 +114,7 @@ export function FinancialSummary({ rows, expenses = [], currentMonthRange, isPri
           sparkPaid: getSparkline(commissionReceivedProposals, 'commissionPaymentDate'),
       }
     };
-  }, [rows, expenses, currentMonthRange]);
+  }, [rows, currentMonthRange]);
   
   const privacyPlaceholder = '•••••';
 
@@ -171,25 +158,6 @@ export function FinancialSummary({ rows, expenses = [], currentMonthRange, isPri
                     description="PIPELINE EM ESTEIRA"
                 />
             </div>
-        </div>
-
-        <div className='grid gap-4 md:grid-cols-2'>
-            <StatsCard
-                title="Total de Despesas"
-                value={isPrivacyMode ? privacyPlaceholder : formatCurrency(totalExpenses)}
-                icon={Wallet}
-                description="GASTOS OPERACIONAIS DO MÊS"
-                className="border-red-200 bg-red-50/10"
-                valueClassName="text-red-600"
-            />
-            <StatsCard
-                title="LUCRO LÍQUIDO REAL"
-                value={isPrivacyMode ? privacyPlaceholder : formatCurrency(netProfit)}
-                icon={TrendingUp}
-                description="RESULTADO FINAL (PAGO - GASTO)"
-                className={cn("border-green-300 shadow-lg", netProfit < 0 ? "border-red-400 bg-red-100/20" : "bg-green-50/20")}
-                valueClassName={cn("font-black", netProfit < 0 ? "text-red-700" : "text-green-700")}
-            />
         </div>
     </div>
   );

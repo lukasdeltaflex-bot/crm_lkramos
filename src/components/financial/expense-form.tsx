@@ -25,6 +25,7 @@ import { format, parse } from 'date-fns';
 import type { Expense } from '@/lib/types';
 import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 
 const expenseSchema = z.object({
   description: z.string().min(3, 'A descrição deve ter pelo menos 3 caracteres.'),
@@ -33,6 +34,7 @@ const expenseSchema = z.object({
     message: "Data inválida.",
   }),
   category: z.string({ required_error: 'Selecione uma categoria.' }),
+  paid: z.boolean().default(false),
 });
 
 type ExpenseFormValues = z.infer<typeof expenseSchema>;
@@ -52,6 +54,7 @@ export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }:
       amount: 0,
       date: format(new Date(), 'yyyy-MM-dd'),
       category: categories[0] || 'Outros',
+      paid: false,
     },
   });
 
@@ -62,6 +65,7 @@ export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }:
         amount: expense.amount,
         date: expense.date,
         category: expense.category,
+        paid: expense.paid ?? false,
       });
     }
   }, [expense, form]);
@@ -112,28 +116,49 @@ export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }:
             />
         </div>
 
-        <FormField
-          control={form.control}
-          name="category"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Categoria</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isSaving}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a categoria" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-2 gap-4">
+            <FormField
+            control={form.control}
+            name="category"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Categoria</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isSaving}>
+                    <FormControl>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Selecione a categoria" />
+                    </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                    {categories.map((cat) => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                    </SelectContent>
+                </Select>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+
+            <FormField
+                control={form.control}
+                name="paid"
+                render={({ field }) => (
+                    <FormItem className="flex flex-col justify-end pb-2">
+                        <div className="flex items-center gap-2">
+                            <FormControl>
+                                <Switch
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                    disabled={isSaving}
+                                />
+                            </FormControl>
+                            <FormLabel className="cursor-pointer">Despesa Paga</FormLabel>
+                        </div>
+                    </FormItem>
+                )}
+            />
+        </div>
 
         <div className="flex justify-end pt-4">
           <Button type="submit" disabled={isSaving}>

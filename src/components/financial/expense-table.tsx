@@ -15,8 +15,9 @@ import { formatCurrency } from '@/lib/utils';
 import type { Expense } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Edit, Trash2, Receipt } from 'lucide-react';
+import { Edit, Trash2, Receipt, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface ExpenseTableProps {
   expenses: Expense[];
@@ -43,12 +44,13 @@ export function ExpenseTable({ expenses, onEdit, onDelete }: ExpenseTableProps) 
             <TableHead className="text-[10px] font-black uppercase tracking-widest">Data</TableHead>
             <TableHead className="text-[10px] font-black uppercase tracking-widest">Descrição</TableHead>
             <TableHead className="text-[10px] font-black uppercase tracking-widest">Categoria</TableHead>
+            <TableHead className="text-[10px] font-black uppercase tracking-widest">Situação</TableHead>
             <TableHead className="text-[10px] font-black uppercase tracking-widest text-right">Valor</TableHead>
             <TableHead className="text-[10px] font-black uppercase tracking-widest text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {expenses.map((expense) => (
+          {expenses.sort((a,b) => b.date.localeCompare(a.date)).map((expense) => (
             <TableRow key={expense.id} className="hover:bg-muted/20 transition-colors">
               <TableCell className="text-xs font-medium">
                 {format(parseISO(expense.date), 'dd/MM/yyyy', { locale: ptBR })}
@@ -57,6 +59,20 @@ export function ExpenseTable({ expenses, onEdit, onDelete }: ExpenseTableProps) 
               <TableCell>
                 <Badge variant="outline" className="bg-background text-[10px] font-black uppercase border-zinc-300">
                     {expense.category}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <Badge 
+                    variant="outline" 
+                    className={cn(
+                        "text-[10px] font-black uppercase border-2 flex w-fit items-center gap-1",
+                        expense.paid 
+                            ? "bg-green-50 text-green-600 border-green-200" 
+                            : "bg-yellow-50 text-yellow-600 border-yellow-200"
+                    )}
+                >
+                    {expense.paid ? <CheckCircle2 className="h-2.5 w-2.5" /> : <AlertCircle className="h-2.5 w-2.5" />}
+                    {expense.paid ? "Pago" : "Pendente"}
                 </Badge>
               </TableCell>
               <TableCell className="text-right font-bold text-red-600">

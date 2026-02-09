@@ -85,7 +85,8 @@
         "description": { "type": "string" },
         "amount": { "type": "number" },
         "date": { "type": "string", "format": "date" },
-        "category": { "type": "string" }
+        "category": { "type": "string" },
+        "paid": { "type": "boolean" }
       },
       "required": ["ownerId", "description", "amount", "date", "category"]
     }
