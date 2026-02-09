@@ -1,11 +1,10 @@
-
 'use client';
 
 import * as React from 'react';
 import type { Row } from '@tanstack/react-table';
 import type { Proposal, Customer, Expense } from '@/lib/types';
 import { StatsCard } from '@/components/dashboard/stats-card';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { CheckCircle, Hourglass, Coins, CircleDollarSign, TrendingUp, Wallet } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 import { subMonths, startOfMonth, endOfMonth, differenceInDays, subDays, isSameDay } from 'date-fns';
