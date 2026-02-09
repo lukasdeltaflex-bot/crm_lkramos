@@ -30,6 +30,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { CustomerAiForm } from '@/components/customers/customer-ai-form';
 import type { ExtractCustomerDataOutput } from '@/ai/flows/extract-customer-data-flow';
