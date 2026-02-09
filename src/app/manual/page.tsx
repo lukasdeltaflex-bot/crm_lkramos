@@ -61,12 +61,12 @@ export default function ManualPage() {
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
                         <p>Personalize o sistema para que ele tenha a cara da sua marca.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Branding Próprio</strong>: Em Configurações, suba sua logomarca. Ela aparecerá no menu e em todos os relatórios PDF oficiais.</li>
+                            <li><strong>Branding Próprio</strong>: Em Configurações, suba sua logomarca. Ela aparecerá no menu e em todos os relatórios PDF oficiais com Identidade Total.</li>
                             <li><strong>Presets de Grife</strong>: Use os botões de "Um Clique" para aplicar estilos como **Apple** (Clean), **Bloomberg** (Financeiro) ou **Gold** (Premium) instantaneamente.</li>
+                            <li><strong>Identidade Total</strong>: Ao escolher uma fonte ou cor, ela é aplicada forçadamente em 100% do sistema, garantindo consistência absoluta.</li>
                             <li><strong>Laboratório de Visualização</strong>: O simulador interativo mostra como os botões e cards ficam com cada combinação. Use o botão <strong>"Testar Interação"</strong> para ver o ritmo das animações.</li>
-                            <li><strong>Estúdio de Tipografia</strong>: Escolha entre 12 estilos de fontes, desde as Modernas e Arredondadas até a nova <strong>Business Pro</strong> e estilos Futuristas.</li>
+                            <li><strong>Estúdio de Tipografia</strong>: Escolha entre 12 estilos de fontes, desde as Modernas e Arredondadas até a nova <strong>Business Pro</strong>.</li>
                             <li><strong>Motion Design</strong>: Ajuste o ritmo do sistema entre Estático (sem transições), Sutil ou Cinematográfico (luxo com efeito elástico).</li>
-                            <li><strong>Aura Visual & Texturas</strong>: Escolha entre **Glassmorphism**, **Profundo** ou **Minimalista**, e adicione texturas de fundo como Pontos ou Grelhas.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
