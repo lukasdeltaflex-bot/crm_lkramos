@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -232,6 +233,21 @@ export default function SettingsPage() {
 
   const isLoading = isUserLoading || isSettingsLoading;
 
+  const fontOptions = [
+    { id: 'moderno', label: 'Moderna (Sans)' },
+    { id: 'classico', label: 'Clássica (Serif)' },
+    { id: 'mono', label: 'Técnica (Mono)' },
+    { id: 'arredondado', label: 'Suave (Rounded)' },
+    { id: 'condensado', label: 'Focada (Narrow)' },
+    { id: 'sharp', label: 'Impacto (Sharp)' },
+    { id: 'elegante', label: 'Luxo (Elegant)' },
+    { id: 'geometrico', label: 'Limpa (Geo)' },
+    { id: 'tecnico', label: 'Industrial (Tech)' },
+    { id: 'minimalista', label: 'Mínimo (Avenir)' },
+    { id: 'futurista', label: 'Futurista (Orbit)' },
+    { id: 'robusto', label: 'Autoridade (Bold)' }
+  ];
+
   return (
     <AppLayout>
       <PageHeader title="Configurações de Elite" />
@@ -349,7 +365,7 @@ export default function SettingsPage() {
                                     <Sparkles className="h-4 w-4 text-primary" />
                                     <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Intensidade das Cores</h4>
                                 </div>
-                                <RadioGroup value={colorIntensity} onValueChange={setColorIntensity} className="grid grid-cols-2 gap-2 max-w-sm">
+                                <RadioGroup value={colorIntensity} onValueChange={(val) => { setColorIntensity(val); updateSettings({ colorIntensity: val as any }); }} className="grid grid-cols-2 gap-2 max-w-sm">
                                     <Label htmlFor="i-sobrio" className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer transition-all", colorIntensity === 'sobrio' ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30")}>
                                         <RadioGroupItem value="sobrio" id="i-sobrio" className="sr-only" />
                                         <span className="text-xs font-bold">Sóbria (Executiva)</span>
@@ -379,7 +395,8 @@ export default function SettingsPage() {
                                 "relative p-8 rounded-2xl border bg-background overflow-hidden min-h-[350px] flex items-center justify-center transition-all",
                                 `texture-${backgroundTexture} texture-preview-bg`,
                                 `anim-${animationStyle}`,
-                                `font-${fontStyle}`
+                                `font-${fontStyle}`,
+                                `theme-${colorTheme}`
                             )}>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl relative z-10">
                                     <Card className={cn(
@@ -441,7 +458,7 @@ export default function SettingsPage() {
                                     <Shapes className="h-4 w-4 text-primary" />
                                     <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Aura Visual (Containers)</h4>
                                 </div>
-                                <RadioGroup value={containerStyle} onValueChange={setContainerStyle} className="grid grid-cols-2 gap-2">
+                                <RadioGroup value={containerStyle} onValueChange={(val) => { setContainerStyle(val as any); updateSettings({ containerStyle: val as any }); }} className="grid grid-cols-2 gap-2">
                                     {[
                                         { id: 'moderno', label: 'Padrão' },
                                         { id: 'glass', label: 'Glassmorphism' },
@@ -461,7 +478,7 @@ export default function SettingsPage() {
                                     <Monitor className="h-4 w-4 text-primary" />
                                     <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Arredondamento</h4>
                                 </div>
-                                <RadioGroup value={radius} onValueChange={setRadius} className="grid grid-cols-3 gap-2">
+                                <RadioGroup value={radius} onValueChange={(val) => { setRadius(val as any); updateSettings({ radius: val as any } as any); }} className="grid grid-cols-3 gap-2">
                                     {['executivo', 'moderno', 'suave'].map((r) => (
                                         <Label key={r} htmlFor={`r-${r}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold transition-all", radius === r ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30")}>
                                             <RadioGroupItem value={r} id={`r-${r}`} className="sr-only" />
@@ -477,24 +494,15 @@ export default function SettingsPage() {
                         <div className="space-y-6">
                             <div className="flex items-center gap-2">
                                 <Type className="h-4 w-4 text-primary" />
-                                <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Estúdio de Tipografia (Fontes)</h4>
+                                <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Estúdio de Tipografia (Fontes Expandido)</h4>
                             </div>
-                            <RadioGroup value={fontStyle} onValueChange={setFontStyle} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                {[
-                                    { id: 'moderno', label: 'Moderna (Sans)' },
-                                    { id: 'classico', label: 'Clássica (Serif)' },
-                                    { id: 'mono', label: 'Técnica (Mono)' },
-                                    { id: 'arredondado', label: 'Suave (Rounded)' },
-                                    { id: 'condensado', label: 'Focada (Narrow)' },
-                                    { id: 'sharp', label: 'Impacto (Sharp)' },
-                                    { id: 'elegante', label: 'Luxo (Elegant)' },
-                                    { id: 'geometrico', label: 'Limpa (Geo)' }
-                                ].map((f) => (
-                                    <Label key={f.id} htmlFor={`f-${f.id}`} className={cn("flex items-center justify-center rounded-md border-2 p-4 cursor-pointer text-xs font-bold transition-all text-center", fontStyle === f.id ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30")}>
+                            <RadioGroup value={fontStyle} onValueChange={(val) => { setFontStyle(val); updateSettings({ fontStyle: val }); }} className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+                                {fontOptions.map((f) => (
+                                    <Label key={f.id} htmlFor={`f-${f.id}`} className={cn("flex items-center justify-center rounded-md border-2 p-4 cursor-pointer text-xs font-bold transition-all text-center h-24", fontStyle === f.id ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30")}>
                                         <RadioGroupItem value={f.id} id={`f-${f.id}`} className="sr-only" />
                                         <div className="flex flex-col gap-1">
                                             <span className={cn("text-xl", `font-${f.id}`)}>Aa</span>
-                                            <span>{f.label}</span>
+                                            <span className="leading-tight">{f.label}</span>
                                         </div>
                                     </Label>
                                 ))}
@@ -509,7 +517,7 @@ export default function SettingsPage() {
                                     <MoveHorizontal className="h-4 w-4 text-primary" />
                                     <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Motion Design (Animações)</h4>
                                 </div>
-                                <RadioGroup value={animationStyle} onValueChange={setAnimationStyle} className="grid grid-cols-3 gap-2">
+                                <RadioGroup value={animationStyle} onValueChange={(val) => { setAnimationStyle(val as any); updateSettings({ animationStyle: val as any }); }} className="grid grid-cols-3 gap-2">
                                     {[
                                         { id: 'estatico', label: 'Estático' },
                                         { id: 'sutil', label: 'Sutil' },
@@ -528,7 +536,7 @@ export default function SettingsPage() {
                                     <Database className="h-4 w-4 text-primary" />
                                     <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Textura de Fundo</h4>
                                 </div>
-                                <RadioGroup value={backgroundTexture} onValueChange={setBackgroundTexture} className="grid grid-cols-2 gap-2">
+                                <RadioGroup value={backgroundTexture} onValueChange={(val) => { setBackgroundTexture(val as any); updateSettings({ backgroundTexture: val as any }); }} className="grid grid-cols-2 gap-2">
                                     {[
                                         { id: 'none', label: 'Liso' },
                                         { id: 'dots', label: 'Pontos' },
@@ -552,7 +560,7 @@ export default function SettingsPage() {
                                     <Layout className="h-4 w-4 text-primary" />
                                     <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Barra Lateral</h4>
                                 </div>
-                                <RadioGroup value={sidebarStyle} onValueChange={setSidebarStyle} className="grid grid-cols-3 gap-2">
+                                <RadioGroup value={sidebarStyle} onValueChange={(val) => { setSidebarStyle(val as any); updateSettings({ sidebarStyle: val as any } as any); }} className="grid grid-cols-3 gap-2">
                                     {['default', 'dark', 'light'].map((s) => (
                                         <Label key={s} htmlFor={`sid-${s}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold transition-all", sidebarStyle === s ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30")}>
                                             <RadioGroupItem value={s} id={`sid-${s}`} className="sr-only" />

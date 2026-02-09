@@ -21,7 +21,11 @@ const CONTAINER_STYLES = ["moderno", "glass", "deep", "flat"];
 const TEXTURE_OPTIONS = ["none", "dots", "grid", "lines"];
 const INTENSITY_OPTIONS = ["sobrio", "vibrante"];
 const ANIMATION_OPTIONS = ["estatico", "sutil", "cinematografico"];
-const FONT_OPTIONS = ["moderno", "classico", "mono", "arredondado", "condensado", "sharp", "elegante", "geometrico"];
+const FONT_OPTIONS = [
+    "moderno", "classico", "mono", "arredondado", "condensado", 
+    "sharp", "elegante", "geometrico", "tecnico", "minimalista", 
+    "futurista", "robusto"
+];
 
 type CustomThemeProviderProps = ThemeProviderProps & {
   children: React.ReactNode;
@@ -89,7 +93,7 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
     if (isMounted) {
       const root = document.documentElement;
       
-      // Manage Colors
+      // Manage Colors - CRITICAL: Ensure class is applied to html element
       root.classList.remove(...COLOR_THEMES.map(t => `theme-${t}`));
       root.classList.add(`theme-${colorTheme}`);
       localStorage.setItem("color-theme", colorTheme);

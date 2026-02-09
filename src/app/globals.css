@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -34,7 +35,6 @@
     --sidebar-border: 214.3 31.8% 91.4%;
     --sidebar-ring: 217 33% 25%;
 
-    /* Motion Variables Default */
     --motion-duration: 200ms;
     --motion-ease: ease-in-out;
   }
@@ -72,7 +72,7 @@
 }
 
 /* 🎨 RADIUS */
-:root.radius-executivo { --radius: 0.1rem; }
+:root.radius-executivo { --radius: 0rem; }
 :root.radius-moderno { --radius: 0.5rem; }
 :root.radius-suave { --radius: 1.25rem; }
 
@@ -85,9 +85,13 @@
 .font-sharp { --font-sans: 'Impact', 'Arial Black', sans-serif !important; }
 .font-elegante { --font-sans: 'Optima', 'Candara', 'Calibri', sans-serif !important; }
 .font-geometrico { --font-sans: 'Futura', 'Trebuchet MS', sans-serif !important; }
+.font-tecnico { --font-sans: 'Helvetica Neue', Arial, sans-serif !important; }
+.font-minimalista { --font-sans: 'Avenir', 'Inter', sans-serif !important; }
+.font-futurista { --font-sans: 'Orbitron', 'sans-serif' !important; }
+.font-robusto { --font-sans: 'Arial Black', sans-serif !important; }
 
 /* Apply Font Variable to everything when class is present on root or local */
-.font-moderno, .font-classico, .font-mono, .font-arredondado, .font-condensado, .font-sharp, .font-elegante, .font-geometrico {
+.font-moderno, .font-classico, .font-mono, .font-arredondado, .font-condensado, .font-sharp, .font-elegante, .font-geometrico, .font-tecnico, .font-minimalista, .font-futurista, .font-robusto {
     font-family: var(--font-sans) !important;
 }
 
@@ -171,13 +175,68 @@
     filter: saturate(1.25);
 }
 
-/* Theme Color Overrides (Zinc, Blue, etc.) */
-:root.theme-zinc, [class*="theme-zinc"] { --primary: 240 5.9% 10%; --ring: 240 5.9% 10%; }
-:root.theme-slate, [class*="theme-slate"] { --primary: 215 25% 27%; --ring: 215 25% 27%; }
-:root.theme-blue, [class*="theme-blue"] { --primary: 217.2 91.2% 59.8%; --ring: 217.2 91.2% 59.8%; }
-:root.theme-green, [class*="theme-green"] { --primary: 142.1 76.2% 36.3%; --ring: 142.1 76.2% 36.3%; }
-:root.theme-gold, [class*="theme-gold"] { --primary: 45 80% 40%; --ring: 45 80% 40%; }
-:root.theme-royal-gold, [class*="theme-royal-gold"] { --primary: 45 90% 35%; --ring: 45 90% 35%; }
+/* 🎨 THEME COLOR MAPPING - FULL SYNC WITH UI SELECTION */
+:root.theme-padrão { --primary: 217 33% 25%; --ring: 217 33% 25%; }
+:root.theme-zinc { --primary: 240 5.9% 10%; --ring: 240 5.9% 10%; }
+:root.theme-midnight { --primary: 222 47% 11%; --ring: 222 47% 11%; }
+:root.theme-obsidian { --primary: 240 10% 10%; --ring: 240 10% 10%; }
+:root.theme-charcoal { --primary: 210 10% 20%; --ring: 210 10% 20%; }
+:root.theme-slate { --primary: 215 25% 27%; --ring: 215 25% 27%; }
+:root.theme-titanium { --primary: 210 5% 30%; --ring: 210 5% 30%; }
+:root.theme-industrial { --primary: 200 5% 45%; --ring: 200 5% 45%; }
+:root.theme-graphite { --primary: 215 15% 35%; --ring: 215 15% 35%; }
+:root.theme-blue { --primary: 217.2 91.2% 59.8%; --ring: 217.2 91.2% 59.8%; }
+:root.theme-nordic { --primary: 210 20% 40%; --ring: 210 20% 40%; }
+:root.theme-royal-blue { --primary: 225 73% 45%; --ring: 225 73% 45%; }
+:root.theme-sky-blue { --primary: 199 89% 48%; --ring: 199 89% 48%; }
+:root.theme-arctic { --primary: 195 90% 45%; --ring: 195 90% 45%; }
+:root.theme-ocean { --primary: 210 100% 25%; --ring: 210 100% 25%; }
+:root.theme-indigo { --primary: 243 75% 59%; --ring: 243 75% 59%; }
+:root.theme-purple { --primary: 282 78% 51%; --ring: 282 78% 51%; }
+:root.theme-deep-purple { --primary: 275 80% 35%; --ring: 275 80% 35%; }
+:root.theme-amethyst { --primary: 275 70% 55%; --ring: 275 70% 55%; }
+:root.theme-violet { --primary: 262.1 83.3% 57.8%; --ring: 262.1 83.3% 57.8%; }
+:root.theme-lavender { --primary: 250 60% 60%; --ring: 250 60% 60%; }
+:root.theme-pink { --primary: 336 82% 54%; --ring: 336 82% 54%; }
+:root.theme-magenta { --primary: 322 84% 50%; --ring: 322 84% 50%; }
+:root.theme-berry { --primary: 330 80% 40%; --ring: 330 80% 40%; }
+:root.theme-rose { --primary: 346.8 77.2% 49.8%; --ring: 346.8 77.2% 49.8%; }
+:root.theme-wine { --primary: 345 60% 25%; --ring: 345 60% 25%; }
+:root.theme-claret { --primary: 345 60% 30%; --ring: 345 60% 30%; }
+:root.theme-cherry { --primary: 350 85% 40%; --ring: 350 85% 40%; }
+:root.theme-ruby { --primary: 355 100% 45%; --ring: 355 100% 45%; }
+:root.theme-crimson { --primary: 348 83% 47%; --ring: 348 83% 47%; }
+:root.theme-red { --primary: 0 72.2% 50.6%; --ring: 0 72.2% 50.6%; }
+:root.theme-volcano { --primary: 10 80% 45%; --ring: 10 80% 45%; }
+:root.theme-burnt-orange { --primary: 16 84% 44%; --ring: 16 84% 44%; }
+:root.theme-rust { --primary: 15 75% 45%; --ring: 15 75% 45%; }
+:root.theme-terracotta { --primary: 15 65% 50%; --ring: 15 65% 50%; }
+:root.theme-orange { --primary: 24.6 95% 53.1%; --ring: 24.6 95% 53.1%; }
+:root.theme-amber { --primary: 38 92% 50%; --ring: 38 92% 50%; }
+:root.theme-copper { --primary: 25 65% 45%; --ring: 25 65% 45%; }
+:root.theme-yellow { --primary: 45 93% 47%; --ring: 45 93% 47%; }
+:root.theme-mustard { --primary: 45 95% 45%; --ring: 45 95% 45%; }
+:root.theme-gold { --primary: 45 80% 40%; --ring: 45 80% 40%; }
+:root.theme-royal-gold { --primary: 45 90% 35%; --ring: 45 90% 35%; }
+:root.theme-coffee { --primary: 25 30% 20%; --ring: 25 30% 20%; }
+:root.theme-espresso { --primary: 15 20% 15%; --ring: 15 20% 15%; }
+:root.theme-bronze { --primary: 30 40% 40%; --ring: 30 40% 40%; }
+:root.theme-sand { --primary: 40 50% 65%; --ring: 40 50% 65%; }
+:root.theme-peach { --primary: 29 100% 65%; --ring: 29 100% 65%; }
+:root.theme-green { --primary: 142.1 76.2% 36.3%; --ring: 142.1 76.2% 36.3%; }
+:root.theme-forest { --primary: 145 63% 22%; --ring: 145 63% 22%; }
+:root.theme-sage { --primary: 120 15% 45%; --ring: 120 15% 45%; }
+:root.theme-olive { --primary: 80 50% 35%; --ring: 80 50% 35%; }
+:root.theme-forest-bright { --primary: 145 80% 35%; --ring: 145 80% 35%; }
+:root.theme-emerald { --primary: 158 78% 41%; --ring: 158 78% 41%; }
+:root.theme-emerald-vivid { --primary: 150 100% 40%; --ring: 150 100% 40%; }
+:root.theme-mint { --primary: 168 86% 44%; --ring: 168 86% 44%; }
+:root.theme-teal { --primary: 173 80% 40%; --ring: 173 80% 40%; }
+:root.theme-cyan { --primary: 184 90% 41%; --ring: 184 90% 41%; }
+:root.theme-lime { --primary: 85 90% 40%; --ring: 85 90% 40%; }
+:root.theme-silver { --primary: 210 15% 65%; --ring: 210 15% 65%; }
+:root.theme-gray { --primary: 220 9% 46%; --ring: 220 9% 46%; }
+:root.theme-electric { --primary: 230 100% 60%; --ring: 230 100% 60%; }
 
 @layer base {
   * { @apply border-border; }

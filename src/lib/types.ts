@@ -120,7 +120,8 @@ export type UserSettings = {
   backgroundTexture?: 'none' | 'dots' | 'grid' | 'lines';
   colorIntensity?: 'sobrio' | 'vibrante';
   animationStyle?: 'estatico' | 'sutil' | 'cinematografico';
-  fontStyle?: 'moderno' | 'classico' | 'mono';
+  fontStyle?: string;
+  colorTheme?: string;
 };
 
 export type UserProfile = {
