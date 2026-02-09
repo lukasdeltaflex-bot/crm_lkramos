@@ -82,8 +82,8 @@ export default function ManualPage() {
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
                         <p>Saiba exatamente quanto sobra no seu bolso após pagar todas as despesas operacionais.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Lançamento de Despesas</strong>: Na aba "Despesas" do Financeiro, registre seus custos (Tráfego Pago, Aluguel, Sistema, etc.).</li>
-                            <li><strong>Cálculo Automático</strong>: O sistema subtrai as despesas das comissões recebidas e exibe o <strong>Lucro Líquido Real</strong> em destaque no resumo.</li>
+                            <li><strong>Lançamento de Despesas</strong>: Na aba "Despesas" do Financeiro, registre seus custos (Tráfego Pago, Aluguel, Sistema, etc.). Marque como "Paga" ou "Pendente" para controle de fluxo.</li>
+                            <li><strong>Cálculo Automático</strong>: O sistema subtrai as despesas das comissões recebidas e exibe o <strong>Total de Despesas</strong> em destaque na aba específica.</li>
                             <li><strong>Customização de Categorias</strong>: Em Configurações, você pode criar suas próprias categorias de gastos para adaptar o DRE ao seu modelo de negócio.</li>
                         </ul>
                     </AccordionContent>
@@ -95,16 +95,16 @@ export default function ManualPage() {
                             <div className="p-2 rounded-lg bg-purple-100 text-purple-600"><Palette className="h-5 w-5" /></div>
                             <div className="text-left">
                                 <p className="font-bold">3. Personalização de Aparência Premium</p>
-                                <p className="text-xs text-muted-foreground">Cores, arredondamento e estilo de barra lateral</p>
+                                <p className="text-xs text-muted-foreground">60+ Cores, arredondamento e estilo de barra lateral</p>
                             </div>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
                         <p>Adapte o sistema LK RAMOS à identidade visual da sua empresa.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Paleta Estendida</strong>: Mais de 30 opções de cores, incluindo tons executivos como <em>Midnight</em>, <em>Charcoal</em> e <em>Wine</em>.</li>
+                            <li><strong>Paleta de Elite</strong>: Mais de 60 opções de cores, incluindo tons executivos como <em>Midnight</em>, <em>Obsidian</em>, <em>Wine</em> e <em>Titanium</em>.</li>
                             <li><strong>Arredondamento (Radius)</strong>: Escolha entre o estilo <strong>Executivo</strong> (bordas retas), <strong>Moderno</strong> (padrão) ou <strong>Suave</strong> (bem arredondado).</li>
-                            <li><strong>Contraste de Sidebar</strong>: Defina se o menu lateral deve ser sempre Escuro, sempre Claro ou acompanhar o tema geral.</li>
+                            <li><strong>Contraste de Sidebar</strong>: Defina se o menu lateral deve ser sempre Escuro, sempre Claro ou acompanhar o tema geral. O sistema garante legibilidade máxima em qualquer modo.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -145,25 +145,6 @@ export default function ManualPage() {
                             <li><strong>Automação de Datas</strong>: Ao marcar uma proposta como <strong>Pago</strong>, o sistema preenche as datas de Averbação e Pagamento automaticamente para você.</li>
                             <li><strong>Logs de Trâmite</strong>: Cada mudança de status ou anotação gera um registro histórico com data e usuário, criando uma trilha de auditoria completa.</li>
                             <li><strong>Capa de Proposta (PDF)</strong>: Gere um documento oficial da operação com visual executivo, pronto para impressão ou envio.</li>
-                        </ul>
-                    </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="limits" className="border rounded-xl bg-card px-4 shadow-sm">
-                    <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-zinc-100 text-zinc-600"><Cloud className="h-5 w-5" /></div>
-                            <div className="text-left">
-                                <p className="font-bold">6. Segurança & Infraestrutura Google</p>
-                                <p className="text-xs text-muted-foreground">Dados protegidos na nuvem</p>
-                            </div>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
-                        <p>Seus dados estão protegidos pela mesma infraestrutura que sustenta o Google.</p>
-                        <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Backups em Tempo Real</strong>: Cada alteração é salva instantaneamente na nuvem do Firebase.</li>
-                            <li><strong>Armazenamento de Anexos</strong>: Gestão de documentos com criptografia de ponta a ponta.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
