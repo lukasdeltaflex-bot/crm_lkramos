@@ -513,7 +513,7 @@ const handleExportToPdf = async () => {
           </TabsTrigger>
           <TabsTrigger value="inactive" className="gap-2">
             <UserX className="h-4 w-4" />
-            Inativos (Falecidos / 75+ Anos)
+            Inativos
             <Badge variant="secondary" className="ml-1">{inactiveCustomers.length}</Badge>
           </TabsTrigger>
         </TabsList>
