@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -28,11 +27,6 @@ import {
     FileDown, 
     Loader2, 
     CloudUpload, 
-    CheckCircle2, 
-    XCircle, 
-    Bot, 
-    Wallet, 
-    Shapes, 
     Monitor, 
     Upload, 
     X, 
@@ -89,7 +83,6 @@ export default function SettingsPage() {
   const [isLinkingDrive, setIsLinkingDrive] = useState(false);
   const [isDriveLinked, setIsDriveLinked] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
-  const [motionPreviewKey, setMotionPreviewKey] = useState(0);
   const [isMotionTestActive, setIsMotionTestActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -171,8 +164,8 @@ export default function SettingsPage() {
 
   const handleMotionTest = () => {
     setIsMotionTestActive(true);
-    setMotionPreviewKey(prev => prev + 1);
-    setTimeout(() => setIsMotionTestActive(false), 1000);
+    // Dispara uma sequência de animações no simulador
+    setTimeout(() => setIsMotionTestActive(false), 1500);
   };
 
   const applyPreset = (presetName: 'apple' | 'bloomberg' | 'gold') => {
@@ -374,7 +367,7 @@ export default function SettingsPage() {
                         
                         <Separator />
 
-                        {/* NOVO: SIMULADOR DE DESIGN REATIVO */}
+                        {/* LABORATÓRIO DE VISUALIZAÇÃO REATIVO */}
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
@@ -386,35 +379,36 @@ export default function SettingsPage() {
                                 </Button>
                             </div>
                             
+                            {/* O simulador agora aplica as classes de fonte e animação localmente para visualização */}
                             <div className={cn(
-                                "relative p-8 rounded-2xl border bg-background overflow-hidden min-h-[350px] flex items-center justify-center transition-all duration-500",
+                                "relative p-8 rounded-2xl border bg-background overflow-hidden min-h-[350px] flex items-center justify-center transition-all",
                                 `texture-${backgroundTexture} texture-preview-bg`,
                                 `anim-${animationStyle}`,
                                 `font-${fontStyle}`
                             )}>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl relative z-10">
                                     <Card className={cn(
-                                        "shadow-lg transition-all duration-500 texture-preview-box",
+                                        "shadow-lg transition-all texture-preview-box",
                                         `style-${containerStyle}`,
-                                        isMotionTestActive && "translate-y-[-10px] scale-[1.02]"
+                                        isMotionTestActive && "translate-y-[-20px] scale-[1.05] opacity-50 rotate-1"
                                     )}>
                                         <CardHeader className="pb-2">
                                             <CardTitle className="text-sm font-bold flex items-center gap-2">
                                                 <Zap className="h-4 w-4 text-primary" /> Demonstração de Design
                                             </CardTitle>
-                                            <CardDescription className="text-[10px] uppercase">Aura & Ritmo Operacional</CardDescription>
+                                            <CardDescription className="text-[10px] uppercase tracking-wider">Aura & Ritmo Operacional</CardDescription>
                                         </CardHeader>
                                         <CardContent className="space-y-4">
-                                            <p className="text-xs text-muted-foreground">Este simulador reflete instantaneamente suas escolhas de Aura, Tipografia, Motion e Cores.</p>
+                                            <p className="text-xs text-muted-foreground leading-relaxed">Este simulador reflete instantaneamente suas escolhas de Aura, Tipografia, Motion e Cores.</p>
                                             <div className="flex flex-wrap gap-2">
                                                 <Badge className="font-bold">Badge Principal</Badge>
                                                 {isMotionTestActive && (
-                                                    <Badge variant="outline" className="border-primary text-primary font-bold animate-in zoom-in duration-300">
+                                                    <Badge variant="outline" className="border-primary text-primary font-bold animate-in zoom-in slide-in-from-bottom-2 duration-500">
                                                         Novo Trâmite!
                                                     </Badge>
                                                 )}
                                             </div>
-                                            <Progress value={isMotionTestActive ? 90 : 65} className="h-1.5 transition-all duration-1000" />
+                                            <Progress value={isMotionTestActive ? 100 : 65} className="h-1.5 transition-all" />
                                         </CardContent>
                                     </Card>
 
@@ -422,13 +416,13 @@ export default function SettingsPage() {
                                         <div className="space-y-2">
                                             <Label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Interação Dinâmica</Label>
                                             <div className="flex gap-2">
-                                                <Button size="sm" className="font-bold">Primário</Button>
+                                                <Button size="sm" className={cn("font-bold transition-all", isMotionTestActive && "scale-110")}>Primário</Button>
                                                 <Button size="sm" variant="outline" className="font-bold">Contorno</Button>
                                             </div>
                                         </div>
                                         <div className={cn(
-                                            "p-4 bg-primary/5 border border-primary/10 rounded-xl transition-all duration-500",
-                                            isMotionTestActive && "translate-x-2"
+                                            "p-4 bg-primary/5 border border-primary/10 rounded-xl transition-all",
+                                            isMotionTestActive && "translate-x-4 shadow-xl"
                                         )}>
                                             <div className="flex items-center gap-3">
                                                 <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xs shadow-sm">LK</div>
@@ -505,7 +499,7 @@ export default function SettingsPage() {
                                     <Label key={f.id} htmlFor={`f-${f.id}`} className={cn("flex items-center justify-center rounded-md border-2 p-4 cursor-pointer text-xs font-bold transition-all text-center", fontStyle === f.id ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30")}>
                                         <RadioGroupItem value={f.id} id={`f-${f.id}`} className="sr-only" />
                                         <div className="flex flex-col gap-1">
-                                            <span className={cn("text-lg", `font-${f.id}`)}>Aa</span>
+                                            <span className={cn("text-xl", `font-${f.id}`)} style={{ fontFamily: `var(--font-${f.id})` }}>Aa</span>
                                             <span>{f.label}</span>
                                         </div>
                                     </Label>

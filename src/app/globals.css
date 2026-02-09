@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -34,6 +33,10 @@
     --sidebar-accent-foreground: 222.2 47.4% 11.2%;
     --sidebar-border: 214.3 31.8% 91.4%;
     --sidebar-ring: 217 33% 25%;
+
+    /* Motion Variables Default */
+    --motion-duration: 200ms;
+    --motion-ease: ease-in-out;
   }
  
   .dark {
@@ -68,12 +71,82 @@
   }
 }
 
-/* Radius Control */
+/* 🎨 RADIUS */
 :root.radius-executivo { --radius: 0.1rem; }
 :root.radius-moderno { --radius: 0.5rem; }
 :root.radius-suave { --radius: 1.25rem; }
 
-/* Sidebar Control */
+/* ✍️ TYPOGRAPHY STUDIO - Custom Font Variables */
+.font-moderno { --font-sans: 'Inter', system-ui, -apple-system, sans-serif !important; }
+.font-classico { --font-sans: 'Georgia', 'Cambria', serif !important; }
+.font-mono { --font-sans: 'ui-monospace', 'SFMono-Regular', 'Menlo', monospace !important; }
+.font-arredondado { --font-sans: 'Quicksand', 'Segoe UI', system-ui, rounded, sans-serif !important; }
+.font-condensado { --font-sans: 'Roboto Condensed', 'Arial Narrow', sans-serif !important; }
+.font-sharp { --font-sans: 'Impact', 'Arial Black', sans-serif !important; }
+.font-elegante { --font-sans: 'Optima', 'Candara', 'Calibri', sans-serif !important; }
+.font-geometrico { --font-sans: 'Futura', 'Trebuchet MS', sans-serif !important; }
+
+/* Apply Font Variable to everything when class is present on root or local */
+.font-moderno, .font-classico, .font-mono, .font-arredondado, .font-condensado, .font-sharp, .font-elegante, .font-geometrico {
+    font-family: var(--font-sans) !important;
+}
+
+/* 🎬 MOTION DESIGN */
+.anim-estatico { --motion-duration: 0ms !important; }
+.anim-sutil { --motion-duration: 200ms; --motion-ease: ease-in-out; }
+.anim-cinematografico { 
+    --motion-duration: 500ms; 
+    --motion-ease: cubic-bezier(0.34, 1.56, 0.64, 1); 
+}
+
+/* Global Transition Override */
+.anim-sutil *, .anim-cinematografico * {
+    transition-duration: var(--motion-duration) !important;
+    transition-timing-function: var(--motion-ease) !important;
+}
+
+.anim-estatico * {
+    transition: none !important;
+    animation: none !important;
+}
+
+/* 🧪 AURA VISUAL (CONTAINERS) */
+.style-glass .card, 
+.style-glass .sidebar, 
+.style-glass .popover-content,
+.style-glass .texture-preview-box {
+    background-color: hsl(var(--background) / 0.7) !important;
+    backdrop-filter: blur(12px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(12px) saturate(160%) !important;
+    border-color: hsl(var(--primary) / 0.15) !important;
+}
+
+.style-deep .card,
+.style-deep .texture-preview-box {
+    box-shadow: 0 20px 40px -10px rgb(0 0 0 / 0.3) !important;
+    border-color: hsl(var(--border) / 0.8) !important;
+}
+
+.style-flat .card,
+.style-flat .texture-preview-box {
+    box-shadow: none !important;
+    border-width: 1px !important;
+}
+
+/* 🎨 BACKGROUND TEXTURES */
+.texture-dots body, .texture-dots.texture-preview-bg {
+    background-image: radial-gradient(hsl(var(--primary) / 0.15) 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+.texture-grid body, .texture-grid.texture-preview-bg {
+    background-image: linear-gradient(hsl(var(--primary) / 0.08) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary) / 0.08) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+.texture-lines body, .texture-lines.texture-preview-bg {
+    background-image: repeating-linear-gradient(45deg, hsl(var(--primary) / 0.05), hsl(var(--primary) / 0.05) 1px, transparent 1px, transparent 10px);
+}
+
+/* Sidebar Styles */
 :root.sidebar-dark {
     --sidebar-background: 220 13% 8%;
     --sidebar-foreground: 210 20% 98%;
@@ -93,153 +166,24 @@
     --sidebar-primary-foreground: 210 40% 98%;
 }
 
-/* Sidebar Contrast Fix */
-:root.sidebar-dark .sidebar-menu-button[data-active=true] {
-    background-color: hsl(var(--sidebar-primary));
-    color: hsl(var(--sidebar-primary-foreground)) !important;
-}
-
-/* 🧪 AURA VISUAL (CONTAINERS) */
-:root.style-glass .card, 
-:root.style-glass .sidebar, 
-:root.style-glass .popover-content,
-:root.style-glass .texture-preview-box {
-    background-color: hsl(var(--background) / 0.7) !important;
-    backdrop-filter: blur(16px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-    border-color: hsl(var(--primary) / 0.15) !important;
-}
-
-:root.style-deep .card,
-:root.style-deep .texture-preview-box {
-    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25) !important;
-    border-color: hsl(var(--border) / 0.8) !important;
-}
-
-:root.style-flat .card,
-:root.style-flat .texture-preview-box {
-    box-shadow: none !important;
-    border-width: 1px !important;
-}
-
-/* 🎨 BACKGROUND TEXTURES */
-:root.texture-dots body, :root.texture-dots .texture-preview-bg {
-    background-image: radial-gradient(hsl(var(--primary) / 0.1) 1px, transparent 1px);
-    background-size: 24px 24px;
-}
-:root.texture-grid body, :root.texture-grid .texture-preview-bg {
-    background-image: linear-gradient(hsl(var(--primary) / 0.06) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary) / 0.06) 1px, transparent 1px);
-    background-size: 40px 40px;
-}
-:root.texture-lines body, :root.texture-lines .texture-preview-bg {
-    background-image: repeating-linear-gradient(45deg, hsl(var(--primary) / 0.04), hsl(var(--primary) / 0.04) 1px, transparent 1px, transparent 10px);
-}
-
-/* Intensity Control */
-:root.intensity-sobrio { --primary: var(--primary); }
+/* Intensity */
 :root.intensity-vibrante {
-    filter: saturate(1.2);
+    filter: saturate(1.25);
 }
 
-/* 🎬 MOTION DESIGN */
-:root.anim-estatico * {
-    transition: none !important;
-    animation: none !important;
-}
-
-:root.anim-cinematografico {
-    --motion-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-:root.anim-cinematografico * {
-    transition-duration: 500ms !important;
-    transition-timing-function: var(--motion-ease) !important;
-}
-
-/* ✍️ TYPOGRAPHY STUDIO */
-:root.font-moderno { --font-sans: 'Inter', system-ui, sans-serif; }
-:root.font-classico { --font-sans: Georgia, Cambria, "Times New Roman", Times, serif; }
-:root.font-mono { --font-sans: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-:root.font-arredondado { --font-sans: 'Quicksand', 'Segoe UI', system-ui, rounded, sans-serif; }
-:root.font-condensado { --font-sans: 'Roboto Condensed', 'Arial Narrow', sans-serif; }
-:root.font-sharp { --font-sans: 'Impact', 'Arial Black', sans-serif; }
-:root.font-elegante { --font-sans: 'Optima', 'Candara', Calibri, sans-serif; }
-:root.font-geometrico { --font-sans: 'Futura', 'Trebuchet MS', sans-serif; }
-
-/* Theme Color Overrides */
+/* Theme Color Overrides (Zinc, Blue, etc.) */
 :root.theme-zinc, [class*="theme-zinc"] { --primary: 240 5.9% 10%; --ring: 240 5.9% 10%; }
 :root.theme-slate, [class*="theme-slate"] { --primary: 215 25% 27%; --ring: 215 25% 27%; }
 :root.theme-blue, [class*="theme-blue"] { --primary: 217.2 91.2% 59.8%; --ring: 217.2 91.2% 59.8%; }
-:root.theme-sky-blue, [class*="theme-sky-blue"] { --primary: 199 89% 48%; --ring: 199 89% 48%; }
 :root.theme-green, [class*="theme-green"] { --primary: 142.1 76.2% 36.3%; --ring: 142.1 76.2% 36.3%; }
-:root.theme-emerald, [class*="theme-emerald"] { --primary: 158 78% 41%; --ring: 158 78% 41%; }
-:root.theme-mint, [class*="theme-mint"] { --primary: 168 86% 44%; --ring: 168 86% 44%; }
-:root.theme-cyan, [class*="theme-cyan"] { --primary: 184 90% 41%; --ring: 184 90% 41%; }
-:root.theme-yellow, [class*="theme-yellow"] { --primary: 45 93% 47%; --ring: 45 93% 47%; }
-:root.theme-orange, [class*="theme-orange"] { --primary: 24.6 95% 53.1%; --ring: 24.6 95% 53.1%; }
-:root.theme-burnt-orange, [class*="theme-burnt-orange"] { --primary: 16 84% 44%; --ring: 16 84% 44%; }
-:root.theme-peach, [class*="theme-peach"] { --primary: 29 100% 65%; --ring: 29 100% 65%; }
-:root.theme-red, [class*="theme-red"] { --primary: 0 72.2% 50.6%; --ring: 0 72.2% 50.6%; }
-:root.theme-rose, [class*="theme-rose"] { --primary: 346.8 77.2% 49.8%; --ring: 346.8 77.2% 49.8%; }
-:root.theme-pink, [class*="theme-pink"] { --primary: 336 82% 54%; --ring: 336 82% 54%; }
-:root.theme-magenta, [class*="theme-magenta"] { --primary: 322 84% 50%; --ring: 322 84% 50%; }
-:root.theme-purple, [class*="theme-purple"] { --primary: 282 78% 51%; --ring: 282 78% 51%; }
-:root.theme-violet, [class*="theme-violet"] { --primary: 262.1 83.3% 57.8%; --ring: 262.1 83.3% 57.8%; }
-:root.theme-lavender, [class*="theme-lavender"] { --primary: 250 60% 60%; --ring: 250 60% 60%; }
-:root.theme-gray, [class*="theme-gray"] { --primary: 220 9% 46%; --ring: 220 9% 46%; }
-
-/* Cores Premium */
-:root.theme-midnight, [class*="theme-midnight"] { --primary: 222 47% 11%; --ring: 222 47% 11%; }
-:root.theme-forest, [class*="theme-forest"] { --primary: 145 63% 22%; --ring: 145 63% 22%; }
-:root.theme-charcoal, [class*="theme-charcoal"] { --primary: 210 10% 20%; --ring: 210 10% 20%; }
-:root.theme-wine, [class*="theme-wine"] { --primary: 345 60% 25%; --ring: 345 60% 25%; }
-:root.theme-coffee, [class*="theme-coffee"] { --primary: 25 30% 20%; --ring: 25 30% 20%; }
 :root.theme-gold, [class*="theme-gold"] { --primary: 45 80% 40%; --ring: 45 80% 40%; }
-:root.theme-indigo, [class*="theme-indigo"] { --primary: 243 75% 59%; --ring: 243 75% 59%; }
-:root.theme-amber, [class*="theme-amber"] { --primary: 38 92% 50%; --ring: 38 92% 50%; }
-:root.theme-teal, [class*="theme-teal"] { --primary: 173 80% 40%; --ring: 173 80% 40%; }
-:root.theme-bronze, [class*="theme-bronze"] { --primary: 30 40% 40%; --ring: 30 40% 40%; }
-
-/* Lote de Cores Extras */
-:root.theme-royal-blue, [class*="theme-royal-blue"] { --primary: 225 73% 45%; --ring: 225 73% 45%; }
-:root.theme-cherry, [class*="theme-cherry"] { --primary: 350 85% 40%; --ring: 350 85% 40%; }
-:root.theme-forest-bright, [class*="theme-forest-bright"] { --primary: 145 80% 35%; --ring: 145 80% 35%; }
-:root.theme-deep-purple, [class*="theme-deep-purple"] { --primary: 275 80% 35%; --ring: 275 80% 35%; }
-:root.theme-mustard, [class*="theme-mustard"] { --primary: 45 95% 45%; --ring: 45 95% 45%; }
-:root.theme-rust, [class*="theme-rust"] { --primary: 15 75% 45%; --ring: 15 75% 45%; }
-:root.theme-arctic, [class*="theme-arctic"] { --primary: 195 90% 45%; --ring: 195 90% 45%; }
-:root.theme-lime, [class*="theme-lime"] { --primary: 85 90% 40%; --ring: 85 90% 40%; }
-:root.theme-graphite, [class*="theme-graphite"] { --primary: 215 15% 35%; --ring: 215 15% 35%; }
-:root.theme-copper, [class*="theme-copper"] { --primary: 25 65% 45%; --ring: 25 65% 45%; }
-
-/* Cores de Elite */
-:root.theme-ocean, [class*="theme-ocean"] { --primary: 210 100% 25%; --ring: 210 100% 25%; }
-:root.theme-berry, [class*="theme-berry"] { --primary: 330 80% 40%; --ring: 330 80% 40%; }
-:root.theme-olive, [class*="theme-olive"] { --primary: 80 50% 35%; --ring: 80 50% 35%; }
-:root.theme-terracotta, [class*="theme-terracotta"] { --primary: 15 65% 50%; --ring: 15 65% 50%; }
-:root.theme-electric, [class*="theme-electric"] { --primary: 230 100% 60%; --ring: 230 100% 60%; }
-:root.theme-ruby, [class*="theme-ruby"] { --primary: 355 100% 45%; --ring: 355 100% 45%; }
-:root.theme-emerald-vivid, [class*="theme-emerald-vivid"] { --primary: 150 100% 40%; --ring: 150 100% 40%; }
-:root.theme-amethyst, [class*="Amethyst"] { --primary: 275 70% 55%; --ring: 275 70% 55%; }
-:root.theme-silver, [class*="theme-silver"] { --primary: 210 15% 65%; --ring: 210 15% 65%; }
-:root.theme-sand, [class*="theme-sand"] { --primary: 40 50% 65%; --ring: 40 50% 65%; }
-
-/* Nova Gama Ultra Elite */
-:root.theme-crimson, [class*="theme-crimson"] { --primary: 348 83% 47%; --ring: 348 83% 47%; }
-:root.theme-obsidian, [class*="theme-obsidian"] { --primary: 240 10% 10%; --ring: 240 10% 10%; }
-:root.theme-nordic, [class*="theme-nordic"] { --primary: 210 20% 40%; --ring: 210 20% 45%; }
-:root.theme-volcano, [class*="theme-volcano"] { --primary: 10 80% 45%; --ring: 10 80% 45%; }
-:root.theme-titanium, [class*="theme-titanium"] { --primary: 210 5% 30%; --ring: 210 5% 30%; }
-:root.theme-espresso, [class*="theme-espresso"] { --primary: 15 20% 15%; --ring: 15 20% 15%; }
-:root.theme-sage, [class*="theme-sage"] { --primary: 120 15% 45%; --ring: 120 15% 45%; }
-:root.theme-claret, [class*="theme-claret"] { --primary: 345 60% 30%; --ring: 345 60% 30%; }
 :root.theme-royal-gold, [class*="theme-royal-gold"] { --primary: 45 90% 35%; --ring: 45 90% 35%; }
-:root.theme-industrial, [class*="theme-industrial"] { --primary: 200 5% 45%; --ring: 200 5% 45%; }
 
 @layer base {
   * { @apply border-border; }
   body { 
     @apply bg-background text-foreground;
+    font-family: var(--font-sans);
     pointer-events: auto !important;
     overflow: auto !important;
   }
@@ -253,21 +197,8 @@
     body.print-selection-proposals .proposals-table tbody tr:not([data-state='selected']) {
         display: none !important;
     }
-    
-    html, body {
-      background-color: white !important;
-      color: black !important;
-      -webkit-print-color-adjust: exact;
-    }
+    html, body { background-color: white !important; color: black !important; }
     .print\:hidden { display: none !important; }
-    .print\:block { display: block !important; }
-    .print\:p-0 { padding: 0 !important; }
-    .print\:text-xs { font-size: 0.75rem !important; }
-    .print\:font-bold { font-weight: 700 !important; }
-
-    @page {
-      size: A4;
-      margin: 1.5cm;
-    }
+    @page { size: A4; margin: 1.5cm; }
   }
 }
