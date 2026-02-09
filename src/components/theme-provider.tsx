@@ -20,6 +20,8 @@ const SIDEBAR_OPTIONS = ["default", "dark", "light"];
 const CONTAINER_STYLES = ["moderno", "glass", "deep", "flat"];
 const TEXTURE_OPTIONS = ["none", "dots", "grid", "lines"];
 const INTENSITY_OPTIONS = ["sobrio", "vibrante"];
+const ANIMATION_OPTIONS = ["estatico", "sutil", "cinematografico"];
+const FONT_OPTIONS = ["moderno", "classico", "mono"];
 
 type CustomThemeProviderProps = ThemeProviderProps & {
   children: React.ReactNode;
@@ -38,6 +40,10 @@ const ColorThemeContext = React.createContext<{
   setBackgroundTexture: (t: string) => void;
   colorIntensity: string;
   setColorIntensity: (i: string) => void;
+  animationStyle: string;
+  setAnimationStyle: (a: string) => void;
+  fontStyle: string;
+  setFontStyle: (f: string) => void;
 } | undefined>(undefined);
 
 
@@ -48,6 +54,8 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
   const [containerStyle, setContainerStyleState] = React.useState('moderno');
   const [backgroundTexture, setBackgroundTextureState] = React.useState('none');
   const [colorIntensity, setColorIntensityState] = React.useState('sobrio');
+  const [animationStyle, setAnimationStyleState] = React.useState('sutil');
+  const [fontStyle, setFontStyleState] = React.useState('moderno');
   const [isMounted, setIsMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -69,6 +77,12 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
 
     const savedIntensity = localStorage.getItem("intensity-theme");
     if (savedIntensity && INTENSITY_OPTIONS.includes(savedIntensity)) setColorIntensityState(savedIntensity);
+
+    const savedAnim = localStorage.getItem("animation-theme");
+    if (savedAnim && ANIMATION_OPTIONS.includes(savedAnim)) setAnimationStyleState(savedAnim);
+
+    const savedFont = localStorage.getItem("font-theme");
+    if (savedFont && FONT_OPTIONS.includes(savedFont)) setFontStyleState(savedFont);
   }, []);
 
   React.useEffect(() => {
@@ -106,8 +120,18 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
       root.classList.remove(...INTENSITY_OPTIONS.map(i => `intensity-${i}`));
       root.classList.add(`intensity-${colorIntensity}`);
       localStorage.setItem("intensity-theme", colorIntensity);
+
+      // Manage Animations
+      root.classList.remove(...ANIMATION_OPTIONS.map(a => `anim-${a}`));
+      root.classList.add(`anim-${animationStyle}`);
+      localStorage.setItem("animation-theme", animationStyle);
+
+      // Manage Fonts
+      root.classList.remove(...FONT_OPTIONS.map(f => `font-${f}`));
+      root.classList.add(`font-${fontStyle}`);
+      localStorage.setItem("font-theme", fontStyle);
     }
-  }, [colorTheme, radius, sidebarStyle, containerStyle, backgroundTexture, colorIntensity, isMounted]);
+  }, [colorTheme, radius, sidebarStyle, containerStyle, backgroundTexture, colorIntensity, animationStyle, fontStyle, isMounted]);
 
   const value = {
     colorTheme,
@@ -121,7 +145,11 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
     backgroundTexture,
     setBackgroundTexture: (t: string) => { if (TEXTURE_OPTIONS.includes(t)) setBackgroundTextureState(t); },
     colorIntensity,
-    setColorIntensity: (i: string) => { if (INTENSITY_OPTIONS.includes(i)) setColorIntensityState(i); }
+    setColorIntensity: (i: string) => { if (INTENSITY_OPTIONS.includes(i)) setColorIntensityState(i); },
+    animationStyle,
+    setAnimationStyle: (a: string) => { if (ANIMATION_OPTIONS.includes(a)) setAnimationStyleState(a); },
+    fontStyle,
+    setFontStyle: (f: string) => { if (FONT_OPTIONS.includes(f)) setFontStyleState(f); }
   };
 
   return (
@@ -162,5 +190,9 @@ export function useTheme() {
         setBackgroundTexture: colorThemeContext.setBackgroundTexture,
         colorIntensity: colorThemeContext.colorIntensity,
         setColorIntensity: colorThemeContext.setColorIntensity,
+        animationStyle: colorThemeContext.animationStyle,
+        setAnimationStyle: colorThemeContext.setAnimationStyle,
+        fontStyle: colorThemeContext.fontStyle,
+        setFontStyle: colorThemeContext.setFontStyle,
     };
 }

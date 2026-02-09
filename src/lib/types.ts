@@ -119,6 +119,8 @@ export type UserSettings = {
   containerStyle?: 'moderno' | 'glass' | 'deep' | 'flat';
   backgroundTexture?: 'none' | 'dots' | 'grid' | 'lines';
   colorIntensity?: 'sobrio' | 'vibrante';
+  animationStyle?: 'estatico' | 'sutil' | 'cinematografico';
+  fontStyle?: 'moderno' | 'classico' | 'mono';
 };
 
 export type UserProfile = {

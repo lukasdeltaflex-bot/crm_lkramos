@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -20,7 +21,10 @@ import {
     CloudUpload,
     FileBadge,
     Bot,
-    MousePointer2
+    MousePointer2,
+    Type,
+    MoveHorizontal,
+    Crown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -51,7 +55,7 @@ export default function ManualPage() {
                             <div className="p-2 rounded-lg bg-purple-100 text-purple-600"><Palette className="h-5 w-5" /></div>
                             <div className="text-left">
                                 <p className="font-bold">1. Estúdio de Branding & Laboratório Visual</p>
-                                <p className="text-xs text-muted-foreground">Logo próprio, estilos de aura e simulador em tempo real</p>
+                                <p className="text-xs text-muted-foreground">Logo próprio, estilos de aura, tipografia e presets</p>
                             </div>
                         </div>
                     </AccordionTrigger>
@@ -59,10 +63,10 @@ export default function ManualPage() {
                         <p>Personalize o sistema para que ele tenha a cara da sua marca.</p>
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Branding Próprio</strong>: Em Configurações, suba sua logomarca. Ela aparecerá no menu e em todos os relatórios PDF oficiais.</li>
-                            <li><strong>Laboratório de Visualização</strong>: Use o simulador interativo na aba Aparência. Ele mostra exatamente como os botões e cards ficam com cada combinação de estilo antes de você decidir.</li>
-                            <li><strong>Aura Visual</strong>: Escolha entre <strong>Glassmorphism</strong> (vidro fosco), <strong>Profundo</strong> (sombras luxuosas) ou <strong>Minimalista</strong>.</li>
-                            <li><strong>Texturas de Fundo</strong>: Adicione padrões como <strong>Pontos</strong> ou <strong>Grelhas</strong> para um acabamento profissional.</li>
-                            <li><strong>Controle de Intensidade</strong>: Alterne entre tons <strong>Sóbrios</strong> (pastéis executivos) ou <strong>Vibrantes</strong>.</li>
+                            <li><strong>Presets de Grife</strong>: Use os botões de "Um Clique" para aplicar estilos como **Apple** (Clean), **Bloomberg** (Financeiro) ou **Gold** (Premium) instantaneamente.</li>
+                            <li><strong>Laboratório de Visualização</strong>: O simulador interativo mostra como os botões e cards ficam com cada combinação antes de você decidir.</li>
+                            <li><strong>Tipografia & Motion</strong>: Escolha entre fontes Modernas, Clássicas ou Mono, e ajuste o ritmo do sistema (Estático, Sutil ou Cinematográfico).</li>
+                            <li><strong>Aura Visual & Texturas</strong>: Escolha entre **Glassmorphism**, **Profundo** ou **Minimalista**, e adicione texturas de fundo como Pontos ou Grelhas.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -135,13 +139,13 @@ export default function ManualPage() {
                 </CardHeader>
                 <CardContent className="space-y-2">
                     <Button variant="outline" className="w-full justify-start text-xs h-8" asChild>
-                        <a href="/settings?tab=appearance"><Monitor className="mr-2 h-3 w-3 text-blue-500" /> Testar Simulador</a>
+                        <a href="/settings?tab=appearance"><Crown className="mr-2 h-3 w-3 text-amber-500" /> Presets de Grife</a>
                     </Button>
                     <Button variant="outline" className="w-full justify-start text-xs h-8" asChild>
-                        <a href="/settings?tab=appearance"><Sparkles className="mr-2 h-3 w-3 text-purple-500" /> Aura Glassmorphism</a>
+                        <a href="/settings?tab=appearance"><Type className="mr-2 h-3 w-3 text-blue-500" /> Estúdio de Fontes</a>
                     </Button>
                     <Button variant="outline" className="w-full justify-start text-xs h-8" asChild>
-                        <a href="/financial?tab=expenses"><Wallet className="mr-2 h-3 w-3 text-red-500" /> Lançar Gasto</a>
+                        <a href="/settings?tab=appearance"><MoveHorizontal className="mr-2 h-3 w-3 text-purple-500" /> Motion Design</a>
                     </Button>
                     <Button variant="outline" className="w-full justify-start text-xs h-8" asChild>
                         <a href="/summary"><Bot className="mr-2 h-3 w-3 text-green-500" /> Relatório IA</a>

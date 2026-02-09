@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -38,7 +39,12 @@ import {
     Sparkles,
     Eye,
     Zap,
-    Layout
+    Layout,
+    Type,
+    MoveHorizontal,
+    Apple,
+    Briefcase,
+    Crown
 } from 'lucide-react';
 import { EditableList } from '@/components/settings/editable-list';
 import { BankEditableList } from '@/components/settings/bank-editable-list';
@@ -72,6 +78,9 @@ export default function SettingsPage() {
     containerStyle, setContainerStyle,
     backgroundTexture, setBackgroundTexture,
     colorIntensity, setColorIntensity,
+    animationStyle, setAnimationStyle,
+    fontStyle, setFontStyle,
+    setColorTheme,
     colorTheme
   } = useTheme();
   
@@ -157,6 +166,35 @@ export default function SettingsPage() {
     await updateSettings({ customLogoURL: '' });
   };
 
+  const applyPreset = (presetName: 'apple' | 'bloomberg' | 'gold') => {
+    if (presetName === 'apple') {
+        setColorTheme('zinc');
+        setContainerStyle('glass');
+        setRadius('suave');
+        setBackgroundTexture('none');
+        setAnimationStyle('cinematografico');
+        setFontStyle('moderno');
+        setSidebarStyle('light');
+    } else if (presetName === 'bloomberg') {
+        setColorTheme('green');
+        setContainerStyle('flat');
+        setRadius('executivo');
+        setBackgroundTexture('grid');
+        setAnimationStyle('estatico');
+        setFontStyle('mono');
+        setSidebarStyle('dark');
+    } else if (presetName === 'gold') {
+        setColorTheme('royal-gold');
+        setContainerStyle('deep');
+        setRadius('moderno');
+        setBackgroundTexture('dots');
+        setAnimationStyle('sutil');
+        setFontStyle('classico');
+        setSidebarStyle('dark');
+    }
+    toast({ title: `Preset ${presetName.toUpperCase()} aplicado!`, description: "Aproveite seu novo visual exclusivo." });
+  };
+
   const handleGlobalBackup = async () => {
     if (!allCustomers || !allProposals) return;
     setIsExporting(true);
@@ -238,6 +276,39 @@ export default function SettingsPage() {
                         <CardDescription>Personalize cada detalhe visual do seu ambiente de trabalho.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-10">
+                        {/* 0. PRESETS DE GRIFE */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <Crown className="h-4 w-4 text-primary" />
+                                <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Presets de Grife</h4>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <Button variant="outline" className="h-auto p-4 flex flex-col items-center gap-2 border-2 hover:border-zinc-400 transition-all" onClick={() => applyPreset('apple')}>
+                                    <Apple className="h-6 w-6" />
+                                    <div className="text-center">
+                                        <p className="font-bold text-xs uppercase">Estilo Apple</p>
+                                        <p className="text-[9px] text-muted-foreground">Glass + Zinc + Suave</p>
+                                    </div>
+                                </Button>
+                                <Button variant="outline" className="h-auto p-4 flex flex-col items-center gap-2 border-2 hover:border-green-400 transition-all" onClick={() => applyPreset('bloomberg')}>
+                                    <Briefcase className="h-6 w-6" />
+                                    <div className="text-center">
+                                        <p className="font-bold text-xs uppercase">Bloomberg Terminal</p>
+                                        <p className="text-[9px] text-muted-foreground">Flat + Green + Mono</p>
+                                    </div>
+                                </Button>
+                                <Button variant="outline" className="h-auto p-4 flex flex-col items-center gap-2 border-2 hover:border-amber-400 transition-all" onClick={() => applyPreset('gold')}>
+                                    <Sparkles className="h-6 w-6 text-amber-500" />
+                                    <div className="text-center">
+                                        <p className="font-bold text-xs uppercase">Gold Edition</p>
+                                        <p className="text-[9px] text-muted-foreground">Deep + Gold + Clássico</p>
+                                    </div>
+                                </Button>
+                            </div>
+                        </div>
+
+                        <Separator />
+
                         {/* 1. LOGO CUSTOMIZADO */}
                         <div className="space-y-4">
                             <div className="flex items-center gap-2">
@@ -253,7 +324,7 @@ export default function SettingsPage() {
                                     )}
                                 </div>
                                 <div className="space-y-3">
-                                    <p className="text-xs text-muted-foreground max-w-xs">Sua logo aparecerá no menu lateral e em todos os relatórios PDF (Capa de Proposta, Dossiê).</p>
+                                    <p className="text-xs text-muted-foreground max-w-xs">Sua logo aparecerá no menu lateral e em todos os relatórios PDF oficiais.</p>
                                     <div className="flex gap-2">
                                         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleLogoUpload} />
                                         <Button size="sm" onClick={() => fileInputRef.current?.click()} disabled={isUploadingLogo}>
@@ -303,7 +374,9 @@ export default function SettingsPage() {
                             
                             <div className={cn(
                                 "relative p-8 rounded-2xl border bg-background overflow-hidden min-h-[300px] flex items-center justify-center transition-all duration-500",
-                                `texture-${backgroundTexture} texture-preview-bg`
+                                `texture-${backgroundTexture} texture-preview-bg`,
+                                `anim-${animationStyle}`,
+                                `font-${fontStyle}`
                             )}>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl relative z-10">
                                     <Card className={cn(
@@ -317,7 +390,7 @@ export default function SettingsPage() {
                                             <CardDescription className="text-[10px] uppercase">Demonstração de Aura</CardDescription>
                                         </CardHeader>
                                         <CardContent className="space-y-4">
-                                            <p className="text-xs text-muted-foreground">Este exemplo reflete suas mudanças de Cor, Aura e Arredondamento.</p>
+                                            <p className="text-xs text-muted-foreground">Este exemplo reflete suas mudanças de Cor, Aura, Arredondamento, Fonte e Animação.</p>
                                             <div className="flex flex-wrap gap-2">
                                                 <Badge className="font-bold">Badge Ativo</Badge>
                                                 <Badge variant="outline" className="border-primary text-primary font-bold">Destaque</Badge>
@@ -346,12 +419,12 @@ export default function SettingsPage() {
                                     </div>
                                 </div>
                             </div>
-                            <p className="text-[10px] text-center text-muted-foreground italic">O simulador acima reflete instantaneamente suas mudanças. O estilo "Glassmorphism" exige que você esteja em uma página com conteúdo para ver o desfoque completo.</p>
+                            <p className="text-[10px] text-center text-muted-foreground italic">O simulador acima reflete instantaneamente suas mudanças.</p>
                         </div>
 
                         <Separator />
 
-                        {/* 3. AURA E ARREDONDAMENTO */}
+                        {/* 3. AURA, ARREDONDAMENTO, FONTE E ANIMAÇÃO */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                             <div className="space-y-4">
                                 <div className="flex items-center gap-2">
@@ -383,6 +456,48 @@ export default function SettingsPage() {
                                         <Label key={r} htmlFor={`r-${r}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold transition-all", radius === r ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30")}>
                                             <RadioGroupItem value={r} id={`r-${r}`} className="sr-only" />
                                             {r}
+                                        </Label>
+                                    ))}
+                                </RadioGroup>
+                            </div>
+                        </div>
+
+                        <Separator />
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <Type className="h-4 w-4 text-primary" />
+                                    <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Estúdio de Tipografia</h4>
+                                </div>
+                                <RadioGroup value={fontStyle} onValueChange={setFontStyle} className="grid grid-cols-3 gap-2">
+                                    {[
+                                        { id: 'moderno', label: 'Moderna' },
+                                        { id: 'classico', label: 'Clássica' },
+                                        { id: 'mono', label: 'Mono' }
+                                    ].map((f) => (
+                                        <Label key={f.id} htmlFor={`f-${f.id}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold transition-all", fontStyle === f.id ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30")}>
+                                            <RadioGroupItem value={f.id} id={`f-${f.id}`} className="sr-only" />
+                                            {f.label}
+                                        </Label>
+                                    ))}
+                                </RadioGroup>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <MoveHorizontal className="h-4 w-4 text-primary" />
+                                    <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Motion Design (Animações)</h4>
+                                </div>
+                                <RadioGroup value={animationStyle} onValueChange={setAnimationStyle} className="grid grid-cols-3 gap-2">
+                                    {[
+                                        { id: 'estatico', label: 'Estático' },
+                                        { id: 'sutil', label: 'Sutil' },
+                                        { id: 'cinematografico', label: 'Cine' }
+                                    ].map((a) => (
+                                        <Label key={a.id} htmlFor={`a-${a.id}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold transition-all", animationStyle === a.id ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30")}>
+                                            <RadioGroupItem value={a.id} id={`a-${a.id}`} className="sr-only" />
+                                            {a.label}
                                         </Label>
                                     ))}
                                 </RadioGroup>

@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -92,6 +93,12 @@
     --sidebar-primary-foreground: 210 40% 98%;
 }
 
+/* Sidebar Contrast Fix */
+:root.sidebar-dark .sidebar-menu-button[data-active=true] {
+    background-color: hsl(var(--sidebar-primary));
+    color: hsl(var(--sidebar-primary-foreground));
+}
+
 /* 🧪 AURA VISUAL (CONTAINERS) */
 :root.style-glass .card, 
 :root.style-glass .sidebar, 
@@ -132,6 +139,30 @@
 :root.intensity-sobrio { --primary: var(--primary); }
 :root.intensity-vibrante {
     filter: saturate(1.2);
+}
+
+/* 🎬 MOTION DESIGN */
+:root.anim-estatico * {
+    transition: none !important;
+    animation: none !important;
+}
+
+:root.anim-cinematografico {
+    --motion-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+:root.anim-cinematografico * {
+    transition-duration: 500ms !important;
+    transition-timing-function: var(--motion-ease) !important;
+}
+
+/* ✍️ TYPOGRAPHY STUDIO */
+:root.font-classico {
+    --font-sans: Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
+:root.font-mono {
+    --font-sans: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 /* Theme Color Overrides */
@@ -188,7 +219,7 @@
 :root.theme-electric, [class*="theme-electric"] { --primary: 230 100% 60%; --ring: 230 100% 60%; }
 :root.theme-ruby, [class*="theme-ruby"] { --primary: 355 100% 45%; --ring: 355 100% 45%; }
 :root.theme-emerald-vivid, [class*="theme-emerald-vivid"] { --primary: 150 100% 40%; --ring: 150 100% 40%; }
-:root.theme-amethyst, [class*="theme-amethyst"] { --primary: 275 70% 55%; --ring: 275 70% 55%; }
+:root.theme-amethyst, [class*="Amethyst"] { --primary: 275 70% 55%; --ring: 275 70% 55%; }
 :root.theme-silver, [class*="theme-silver"] { --primary: 210 15% 65%; --ring: 210 15% 65%; }
 :root.theme-sand, [class*="theme-sand"] { --primary: 40 50% 65%; --ring: 40 50% 65%; }
 
