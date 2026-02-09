@@ -9,7 +9,7 @@ import { doc, collection, query, where, updateDoc } from 'firebase/firestore';
 import type { Customer, Proposal, Attachment } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Phone, Mail, Calendar, FileText, CircleDollarSign, BadgePercent, MapPin, Hash, Copy, Printer, FileBadge, FolderLock, Sparkles, AlertTriangle } from 'lucide-react';
+import { User, Phone, Mail, Calendar, FileText, CircleDollarSign, BadgePercent, MapPin, Hash, Copy, Printer, FileBadge, FolderLock, Sparkles, AlertTriangle, UserRound } from 'lucide-react';
 import { format, parse, differenceInMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -95,6 +95,10 @@ const CustomerInfoCard = ({ customer, onExportDossier }: { customer: Customer; o
                             <CopyButton text={customer.cpf} label="CPF" />
                         </div>
                         <div className="flex items-center gap-2">
+                            <UserRound className="h-4 w-4 text-muted-foreground" />
+                            <strong>Gênero:</strong> {customer.gender || 'Não informado'}
+                        </div>
+                        <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
                             <strong>Nascimento:</strong> {format(parse(customer.birthDate, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy', { locale: ptBR })} ({age !== null && age > 0 ? `${age} anos` : '...'})
                         </div>
@@ -129,6 +133,7 @@ const CustomerInfoCard = ({ customer, onExportDossier }: { customer: Customer; o
                         <div className="flex items-center gap-2 col-span-1 md:col-span-2">
                             <Mail className="h-4 w-4 text-muted-foreground" />
                             <strong>Email:</strong> {customer.email || 'N/A'}
+                            {customer.email && <CopyButton text={customer.email} label="E-mail" />}
                         </div>
                         {customer.benefits && customer.benefits.length > 0 ? (
                             customer.benefits.map((benefit, index) => (
@@ -307,6 +312,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
         body: [
             ['Nome Completo', customer.name],
             ['CPF', customer.cpf],
+            ['Gênero', customer.gender || 'Não informado'],
             ['Nascimento', format(parse(customer.birthDate, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy')],
             ['Telefone', customer.phone],
             ['E-mail', customer.email || 'N/A'],

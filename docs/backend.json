@@ -24,6 +24,7 @@
         "numericId": { "type": "number" },
         "name": { "type": "string" },
         "cpf": { "type": "string" },
+        "gender": { "type": "string", "enum": ["Masculino", "Feminino"] },
         "phone": { "type": "string" },
         "ownerId": { "type": "string" }
       },

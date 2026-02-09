@@ -19,6 +19,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { CalendarIcon, Sparkles, AlertCircle, Loader2, PlusCircle, Trash2, FileText as FileIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { format, parse } from 'date-fns';
@@ -55,6 +62,7 @@ const customerSchema = z.object({
   cpf: z.string().min(11, 'CPF incompleto.').refine((val) => validateCPF(val), {
     message: "CPF inválido. Verifique se há erro de digitação.",
   }),
+  gender: z.enum(['Masculino', 'Feminino']).optional(),
   benefits: z.array(benefitSchema).optional(),
   phone: z.string().min(10, 'O telefone é obrigatório.'),
   phone2: z.string().optional(),
@@ -113,6 +121,7 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
     defaultValues: {
       name: '',
       cpf: '',
+      gender: undefined,
       benefits: [],
       phone: '',
       phone2: '',
@@ -162,6 +171,7 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
         const initial = {
             name: '',
             cpf: '',
+            gender: undefined as any,
             benefits: [],
             phone: '',
             phone2: '',
@@ -344,6 +354,27 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
                         <FormMessage />
                         </FormItem>
                     )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="gender"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Gênero</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione o gênero" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Masculino">Masculino</SelectItem>
+                              <SelectItem value="Feminino">Feminino</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
                 </div>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>

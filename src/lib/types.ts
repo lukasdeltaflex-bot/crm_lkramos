@@ -23,6 +23,7 @@ export type Customer = {
   numericId: number;
   name: string;
   cpf: string;
+  gender?: 'Masculino' | 'Feminino';
   benefits?: Benefit[];
   phone: string;
   phone2?: string;
