@@ -20,7 +20,8 @@ import {
     History,
     UserX,
     Copy,
-    CalendarCheck
+    CalendarCheck,
+    Cloud
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -84,7 +85,7 @@ export default function ManualPage() {
                             </div>
                             <div className="p-3 bg-muted/30 rounded-lg border">
                                 <p className="font-bold flex items-center gap-2 mb-2"><UserX className="h-4 w-4 text-destructive" /> Gestão de Inativos</p>
-                                <p className="text-xs">Clientes falecidos ou sem benefício podem ser marcados como "Inativos". Eles são movidos para uma aba separada e param de gerar alertas.</p>
+                                <p className="text-xs">Clientes falecidos ou que não podem mais operar podem ser marcados como "Inativos". Eles são movidos para uma aba separada e não geram alertas.</p>
                             </div>
                         </div>
                         <ul className="list-disc pl-5 mt-4 space-y-2">
@@ -174,11 +175,43 @@ export default function ManualPage() {
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
                         <p>Um ambiente profissional e focado na marca.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Logotipos via IA</strong>: Ao cadastrar um banco novo em <strong>Configurações</strong>, a IA pesquisa o site oficial e configura o ícone automaticamente.</li>
-                            <li><strong>Nomes Comerciais</strong>: O sistema remove automaticamente prefixos numéricos (ex: "001 - ") para exibir apenas o nome comercial do banco (ex: "Daycoval S.A.").</li>
-                            <li><strong>Domínios Manuais</strong>: Você pode editar o site de um banco nas Configurações para "forçar" a exibição de um logotipo específico.</li>
-                            <li><strong>Temas de Cor</strong>: Em <strong>Configurações &gt; Aparência</strong>, você pode trocar a cor principal do sistema para combinar com sua identidade.</li>
+                            <li><strong>Logotipos Inteligentes</strong>: O sistema exibe o ícone oficial do banco automaticamente. Se você adicionar um banco novo, a IA pesquisa o site dele para encontrar o logo.</li>
+                            <li><strong>Limpeza de Nomes</strong>: Esqueça os códigos chatos (001, 104). O sistema limpa os nomes dos bancos para deixar apenas o texto comercial.</li>
+                            <li><strong>Temas de Cor</strong>: Em <strong>Configurações &gt; Aparência</strong>, você pode trocar a cor principal do sistema para combinar com sua marca.</li>
                         </ul>
+                    </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="limits" className="border rounded-xl bg-card px-4 shadow-sm">
+                    <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-orange-100 text-orange-600"><Cloud className="h-5 w-5" /></div>
+                            <div className="text-left">
+                                <p className="font-bold">7. Limites Técnicos & Escalabilidade</p>
+                                <p className="text-xs text-muted-foreground">Entenda as capacidades do seu sistema</p>
+                            </div>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
+                        <p>Seu sistema opera no <strong>Firebase Spark Plan (Gratuito)</strong>. Estes são os limites diários para que você possa operar com tranquilidade:</p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="p-3 bg-muted/30 rounded-lg border">
+                                <p className="font-bold text-xs mb-1 uppercase">Banco de Dados</p>
+                                <p className="text-xl font-bold">50.000</p>
+                                <p className="text-[10px] text-muted-foreground">Leituras por dia</p>
+                            </div>
+                            <div className="p-3 bg-muted/30 rounded-lg border">
+                                <p className="font-bold text-xs mb-1 uppercase">Arquivos (Anexos)</p>
+                                <p className="text-xl font-bold">5 GB</p>
+                                <p className="text-[10px] text-muted-foreground">Total de armazenamento</p>
+                            </div>
+                            <div className="p-3 bg-muted/30 rounded-lg border">
+                                <p className="font-bold text-xs mb-1 uppercase">Escalabilidade</p>
+                                <p className="text-xl font-bold">Ilimitada</p>
+                                <p className="text-[10px] text-muted-foreground">Alterações de código</p>
+                            </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-2 italic">Nota: Para um correspondente bancário típico, estes limites são suficientes para gerenciar milhares de clientes sem custo.</p>
                     </AccordionContent>
                 </AccordionItem>
             </Accordion>
