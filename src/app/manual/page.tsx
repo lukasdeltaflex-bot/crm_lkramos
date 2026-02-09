@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -17,7 +18,9 @@ import {
     ShieldCheck, 
     Landmark,
     FileBadge,
-    Cloud
+    Cloud,
+    Wallet,
+    Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -55,50 +58,49 @@ export default function ManualPage() {
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
                         <p>O Dashboard é sua ferramenta de decisão rápida, organizado em uma hierarquia estratégica.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Radar de Vendas (<Zap className="inline h-3 w-3 text-orange-500" />)</strong>: Localizado em posição de destaque, mostra clientes com contratos pagos há mais de 12 meses. O widget agora é fixo e simétrico para garantir uma visualização harmoniosa.</li>
-                            <li><strong>Inteligência Diária</strong>: Localizada ao lado do Radar, consolida aniversários, retornos e pendências críticas do dia. Ambos os widgets possuem a mesma altura para uma interface limpa.</li>
+                            <li><strong>Radar de Vendas (<Zap className="inline h-3 w-3 text-orange-500" />)</strong>: Mostra clientes com contratos pagos há mais de 12 meses. Mesmo vazio, o card mantém a simetria do layout.</li>
+                            <li><strong>Inteligência Diária</strong>: Consolida aniversários, retornos e pendências críticas do dia.</li>
                             <li><strong>Rankings de Performance</strong>: Área central expandida para análise de rentabilidade por banco, promotora e operador.</li>
-                            <li><strong>Esteira de Propostas</strong>: Tabela em largura total no final da página para monitoramento confortável dos últimos registros.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
 
-                <AccordionItem value="customers" className="border rounded-xl bg-card px-4 shadow-sm">
+                <AccordionItem value="dre" className="border rounded-xl bg-card px-4 shadow-sm">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-green-100 text-green-600"><Users className="h-5 w-5" /></div>
+                            <div className="p-2 rounded-lg bg-red-100 text-red-600"><Wallet className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold">2. Gestão de Clientes & Ciclo de Vida</p>
-                                <p className="text-xs text-muted-foreground">Foco na base produtiva</p>
+                                <p className="font-bold">2. Controle de Despesas & Lucro Real (DRE)</p>
+                                <p className="text-xs text-muted-foreground">Saiba quanto sobra no seu bolso</p>
                             </div>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
-                        <p>Gerencie sua base com agilidade e precisão técnica.</p>
+                        <p>Não basta faturar, é preciso ter lucro. O LK RAMOS ajuda você a enxergar a saúde real da sua empresa.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Aba Inativos</strong>: Unifica clientes que foram desativados manualmente e clientes que atingiram a idade limite (75 anos ou mais). Esta simplificação mantém seu radar focado apenas em quem pode operar.</li>
-                            <li><strong>Cadastro via IA</strong>: Use o botão "Novo Cliente com IA" para extrair dados de textos do WhatsApp em segundos.</li>
-                            <li><strong>Identificação de Gênero</strong>: Campo específico para tratamento personalizado no atendimento.</li>
-                            <li><strong>Botão Copiar</strong>: Facilite o uso do CPF, Telefone e E-mail em outros sites com os ícones de cópia rápida.</li>
+                            <li><strong>Lançamento de Gastos</strong>: Na aba "Despesas" do Financeiro, registre aluguel, luz, internet e principalmente o investimento em Tráfego Pago.</li>
+                            <li><strong>Cálculo Automático</strong>: O sistema subtrai as despesas das comissões recebidas e exibe o **Lucro Líquido Real** em destaque.</li>
+                            <li><strong>Visão Mensal</strong>: Os cálculos respeitam o filtro de período selecionado no topo da página.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
 
-                <AccordionItem value="followups" className="border rounded-xl bg-card px-4 shadow-sm">
+                <AccordionItem value="preview" className="border rounded-xl bg-card px-4 shadow-sm">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-purple-100 text-purple-600"><CalendarClock className="h-5 w-5" /></div>
+                            <div className="p-2 rounded-lg bg-zinc-100 text-zinc-600"><Eye className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold">3. Mecanismo de Retornos (CRM)</p>
-                                <p className="text-xs text-muted-foreground">Calendário mensal e agendamentos</p>
+                                <p className="font-bold">3. Visualizador de Documentos Inteligente</p>
+                                <p className="text-xs text-muted-foreground">Conferência rápida sem downloads</p>
                             </div>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
-                        <p>Organize seu dia de vendas com precisão.</p>
+                        <p>Agilize sua conferência de propostas e mantenha seu computador limpo.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Calendário Mensal</strong>: Use a aba "Calendário" para visualizar picos de agendamento e organizar seu fluxo de chamadas.</li>
-                            <li><strong>Filtro de Data</strong>: Ao clicar em um dia no calendário, o sistema isola automaticamente os retornos daquela data.</li>
+                            <li><strong>Ícone de Visualização</strong>: Em qualquer anexo (ficha do cliente ou proposta), clique no ícone de "Olho".</li>
+                            <li><strong>Modo Flutuante</strong>: O documento abre em uma janela segura sobreposta ao sistema.</li>
+                            <li><strong>Privacidade</strong>: Evite baixar documentos confidenciais de clientes no seu disco rígido pessoal.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -116,47 +118,9 @@ export default function ManualPage() {
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
                         <p>Controle absoluto sobre o dinheiro em movimento.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Automação de Datas</strong>: Ao marcar como **Pago** (incluindo Portabilidade), o sistema preenche a Averbação e Pagamento automaticamente.</li>
-                            <li><strong>Histórico de Trâmites</strong>: Cada mudança de status gera um log automático. Você também pode registrar chamadas e pendências manualmente.</li>
+                            <li><strong>Automação de Datas</strong>: Ao marcar como **Pago**, o sistema preenche a Averbação e Pagamento automaticamente.</li>
+                            <li><strong>Histórico de Trâmites</strong>: Cada mudança de status gera um log automático.</li>
                             <li><strong>Capa de Proposta (PDF)</strong>: Gere o documento oficial da operação com visual executivo para impressão.</li>
-                        </ul>
-                    </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="financial" className="border rounded-xl bg-card px-4 shadow-sm">
-                    <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-yellow-100 text-yellow-600"><CircleDollarSign className="h-5 w-5" /></div>
-                            <div className="text-left">
-                                <p className="font-bold">5. Controle Financeiro & Conciliação</p>
-                                <p className="text-xs text-muted-foreground">Baixas rápidas e análise de parceiros</p>
-                            </div>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
-                        <p>Inteligência financeira aplicada ao caixa.</p>
-                        <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Conciliação com IA</strong>: Cole o texto do relatório de pagamento e a IA identifica os CPFs pagos automaticamente.</li>
-                            <li><strong>Eficiência Parceiros</strong>: Analise qual promotora paga mais rápido e qual tem o melhor ticket médio.</li>
-                        </ul>
-                    </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="visual" className="border rounded-xl bg-card px-4 shadow-sm">
-                    <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-zinc-100 text-zinc-600"><Landmark className="h-5 w-5" /></div>
-                            <div className="text-left">
-                                <p className="font-bold">6. Identidade Visual & IA de Bancos</p>
-                                <p className="text-xs text-muted-foreground">Logotipos inteligentes e temas</p>
-                            </div>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
-                        <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Logotipos Inteligentes</strong>: O sistema exibe o ícone oficial do banco automaticamente. Se você adicionar um banco novo, a IA pesquisa o site dele para encontrar o logo.</li>
-                            <li><strong>Limpeza de Nomes</strong>: O sistema limpa os nomes dos bancos para deixar apenas o texto comercial, removendo códigos numéricos.</li>
-                            <li><strong>Temas de Cor</strong>: Em <strong>Configurações &gt; Aparência</strong>, você pode trocar a cor principal do sistema para combinar com sua marca.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -166,15 +130,14 @@ export default function ManualPage() {
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-orange-100 text-orange-600"><Cloud className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold">7. Limites Técnicos & Escalabilidade</p>
-                                <p className="text-xs text-muted-foreground">Infraestrutura Profissional</p>
+                                <p className="font-bold">5. Infraestrutura Profissional</p>
+                                <p className="text-xs text-muted-foreground">Segurança Google Cloud</p>
                             </div>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
-                        <p>O seu sistema utiliza infraestrutura de nuvem profissional do Google (Firebase).</p>
+                        <p>O seu sistema utiliza infraestrutura de nuvem profissional (Firebase).</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Publicação</strong>: Não há limite de atualizações do sistema.</li>
                             <li><strong>Banco de Dados</strong>: Suporta até 50.000 leituras diárias gratuitamente.</li>
                             <li><strong>Anexos</strong>: Você possui 5 GB de armazenamento gratuito para documentos de clientes.</li>
                         </ul>
@@ -193,7 +156,7 @@ export default function ManualPage() {
                         <a href="/customers?action=new"><Bot className="mr-2 h-3 w-3" /> Cadastro via IA</a>
                     </Button>
                     <Button variant="outline" className="w-full justify-start text-xs h-8" asChild>
-                        <a href="/financial"><CircleDollarSign className="mr-2 h-3 w-3" /> Conciliar Relatório</a>
+                        <a href="/financial"><CircleDollarSign className="mr-2 h-3 w-3" /> Controle de Caixa</a>
                     </Button>
                 </CardContent>
             </Card>

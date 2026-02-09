@@ -6,11 +6,11 @@ import { PageHeader } from '@/components/page-header';
 import { FinancialDataTable, type FinancialDataTableHandle } from './data-table';
 import { getColumns } from './columns';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, where, doc, setDoc, deleteField } from 'firebase/firestore';
-import type { Proposal, Customer, CommissionStatus, UserSettings } from '@/lib/types';
+import { collection, query, where, doc, setDoc, deleteField, deleteDoc } from 'firebase/firestore';
+import type { Proposal, Customer, CommissionStatus, UserSettings, Expense } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Eye, EyeOff, Printer, FileCheck2, FileDown, FileBadge, BarChart3, Calendar, Users2, TrendingUp, CircleDollarSign } from 'lucide-react';
+import { Eye, EyeOff, Printer, FileCheck2, FileDown, FileBadge, BarChart3, Calendar, Users2, TrendingUp, CircleDollarSign, PlusCircle, Wallet, ReceiptText } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,6 +44,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ExpenseForm } from '@/components/financial/expense-form';
+import { ExpenseTable } from '@/components/financial/expense-table';
 
 
 export type ProposalWithCustomer = Proposal & { customer: Customer | undefined };
@@ -72,11 +75,13 @@ export default function FinancialPage() {
   const [isEfficiencyOpen, setIsEfficiencyOpen] = React.useState(false);
   const [isReportDialogOpen, setIsReportDialogOpen] = React.useState(false);
   const [isOperatorsDialogOpen, setIsOperatorsDialogOpen] = React.useState(false);
+  const [isExpenseFormOpen, setIsExpenseFormOpen] = React.useState(false);
   
   const [reportMonth, setReportMonth] = React.useState(getMonth(new Date()).toString());
   const [reportYear, setReportYear] = React.useState(getYear(new Date()).toString());
 
   const [selectedProposal, setSelectedProposal] = React.useState<ProposalWithCustomer | undefined>(undefined);
+  const [selectedExpense, setSelectedExpense] = React.useState<Expense | undefined>(undefined);
   const [isClient, setIsClient] = React.useState(false);
   const [rowSelection, setRowSelection] = React.useState({});
   const tableRef = React.useRef<FinancialDataTableHandle>(null);
@@ -96,6 +101,11 @@ export default function FinancialPage() {
     return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid));
   }, [firestore, user]);
 
+  const expensesQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(collection(firestore, 'users', user.uid, 'expenses'));
+  }, [firestore, user]);
+
   const settingsDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return doc(firestore, 'userSettings', user.uid);
@@ -103,6 +113,7 @@ export default function FinancialPage() {
 
   const { data: proposals, isLoading: proposalsLoading } = useCollection<Proposal>(proposalsQuery);
   const { data: customers, isLoading: customersLoading } = useCollection<Customer>(customersQuery);
+  const { data: expenses, isLoading: expensesLoading } = useCollection<Expense>(expensesQuery);
   const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
 
   const { proposalsWithCustomerData, summaryProposals, currentMonthRange, operatorStats } = React.useMemo(() => {
@@ -252,7 +263,7 @@ export default function FinancialPage() {
     setIsReportDialogOpen(false);
   };
 
-  const isLoading = proposalsLoading || customersLoading || isUserLoading;
+  const isLoading = proposalsLoading || customersLoading || isUserLoading || expensesLoading;
 
   const handleShowDetails = (title: string, props: ProposalWithCustomer[]) => {
     if (!props || props.length === 0) {
@@ -321,6 +332,32 @@ export default function FinancialPage() {
     setIsSheetOpen(false);
   };
 
+  const handleExpenseSubmit = async (data: any) => {
+    if (!firestore || !user) return;
+    const expenseId = selectedExpense?.id || doc(collection(firestore, 'users', user.uid, 'expenses')).id;
+    try {
+        await setDoc(doc(firestore, 'users', user.uid, 'expenses', expenseId), {
+            ...data,
+            id: expenseId,
+            ownerId: user.uid,
+        }, { merge: true });
+        toast({ title: "Despesa Salva", description: "O gasto foi registrado no DRE." });
+        setIsExpenseFormOpen(false);
+    } catch (e) {
+        toast({ variant: "destructive", title: "Erro ao salvar despesa" });
+    }
+  };
+
+  const handleExpenseDelete = async (id: string) => {
+    if (!firestore || !user) return;
+    try {
+        await deleteDoc(doc(firestore, 'users', user.uid, 'expenses', id));
+        toast({ title: "Despesa Removida" });
+    } catch (e) {
+        toast({ variant: "destructive", title: "Erro ao remover" });
+    }
+  };
+
   const handlePrint = React.useCallback(() => {
     const hasSelection = Object.keys(rowSelection).length > 0;
     if (hasSelection) {
@@ -348,7 +385,7 @@ export default function FinancialPage() {
   return (
     <AppLayout>
       <div className="flex items-center justify-between print:hidden">
-        <PageHeader title="Controle Financeiro" />
+        <PageHeader title="Controle Financeiro & DRE" />
         <div className="flex items-center gap-2">
             <Dialog open={isOperatorsDialogOpen} onOpenChange={setIsOperatorsDialogOpen}>
                 <DialogTrigger asChild>
@@ -543,19 +580,71 @@ export default function FinancialPage() {
             <Skeleton className="h-[400px] w-full" />
         </div>
       ) : (
-        <FinancialDataTable 
-            ref={tableRef}
-            columns={columns} 
-            data={proposalsWithCustomerData}
-            currentMonthData={summaryProposals}
-            currentMonthRange={currentMonthRange}
-            isPrivacyMode={isPrivacyMode} 
-            rowSelection={rowSelection}
-            setRowSelection={setRowSelection}
-            onShowDetails={handleShowDetails}
-            showBankLogos={userSettings?.showBankLogos ?? true}
-        />
+        <div className="space-y-8">
+            <Tabs defaultValue="commissions" className="w-full">
+                <TabsList className="bg-muted/50 mb-4">
+                    <TabsTrigger value="commissions" className="gap-2">
+                        <CircleDollarSign className="h-4 w-4" />
+                        Comissões & Fluxo
+                    </TabsTrigger>
+                    <TabsTrigger value="expenses" className="gap-2">
+                        <Wallet className="h-4 w-4" />
+                        Despesas & DRE
+                    </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="commissions" className="space-y-4">
+                    <FinancialDataTable 
+                        ref={tableRef}
+                        columns={columns} 
+                        data={proposalsWithCustomerData}
+                        currentMonthData={summaryProposals}
+                        currentMonthRange={currentMonthRange}
+                        isPrivacyMode={isPrivacyMode} 
+                        rowSelection={rowSelection}
+                        setRowSelection={setRowSelection}
+                        onShowDetails={handleShowDetails}
+                        userSettings={userSettings || null}
+                        expenses={expenses || []}
+                    />
+                </TabsContent>
+
+                <TabsContent value="expenses" className="space-y-6">
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                            <h2 className="text-xl font-bold flex items-center gap-2">
+                                <ReceiptText className="text-primary" />
+                                Livro de Despesas
+                            </h2>
+                            <p className="text-sm text-muted-foreground">Registre seus custos fixos e variáveis para apurar o lucro real.</p>
+                        </div>
+                        <Button onClick={() => { setSelectedExpense(undefined); setIsExpenseFormOpen(true); }}>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Lançar Despesa
+                        </Button>
+                    </div>
+
+                    <ExpenseTable 
+                        expenses={expenses || []} 
+                        onEdit={(e) => { setSelectedExpense(e); setIsExpenseFormOpen(true); }}
+                        onDelete={handleExpenseDelete}
+                    />
+                </TabsContent>
+            </Tabs>
+        </div>
       )}
+
+      <Dialog open={isExpenseFormOpen} onOpenChange={setIsExpenseFormOpen}>
+        <DialogContent className="max-w-md">
+            <DialogHeader>
+                <DialogTitle>{selectedExpense ? 'Editar Gasto' : 'Novo Gasto Operacional'}</DialogTitle>
+            </DialogHeader>
+            <ExpenseForm 
+                expense={selectedExpense}
+                onSubmit={handleExpenseSubmit}
+            />
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

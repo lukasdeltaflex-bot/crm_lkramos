@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -15,6 +16,11 @@ service cloud.firestore {
       
       // Subcoleção de Retornos (Follow-ups)
       match /followUps/{followUpId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Subcoleção de Despesas
+      match /expenses/{expenseId} {
         allow read, write: if isOwner(userId);
       }
     }

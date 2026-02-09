@@ -74,6 +74,20 @@
         "notes": { "type": "string" }
       },
       "required": ["ownerId", "contactName", "dueDate", "status", "createdAt"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "type": "object",
+      "description": "Controle de gastos para cálculo de lucro líquido.",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "description": { "type": "string" },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "format": "date" },
+        "category": { "type": "string" }
+      },
+      "required": ["ownerId", "description", "amount", "date", "category"]
     }
   },
   "auth": {
@@ -83,6 +97,7 @@
     "structure": [
       { "path": "/users/{userId}", "definition": { "entityName": "UserProfile" } },
       { "path": "/users/{userId}/followUps/{followUpId}", "definition": { "entityName": "FollowUp" } },
+      { "path": "/users/{userId}/expenses/{expenseId}", "definition": { "entityName": "Expense" } },
       { "path": "/customers/{customerId}", "definition": { "entityName": "Customer" } },
       { "path": "/loanProposals/{loanProposalId}", "definition": { "entityName": "LoanProposal" } },
       { "path": "/userSettings/{userId}", "definition": { "entityName": "UserSettings" } }

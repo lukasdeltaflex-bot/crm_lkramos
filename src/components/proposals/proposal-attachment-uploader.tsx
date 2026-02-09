@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -7,10 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
-import { UploadCloud, File, Trash2, Download, Loader2, AlertTriangle } from 'lucide-react';
+import { UploadCloud, File, Trash2, Download, Loader2, AlertTriangle, Eye } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import type { Attachment } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { DocumentPreviewDialog } from '@/components/ui/document-preview-dialog';
 
 interface ProposalAttachmentUploaderProps {
   userId: string;
@@ -29,6 +31,7 @@ export function ProposalAttachmentUploader({
 }: ProposalAttachmentUploaderProps) {
   const [attachments, setAttachments] = useState<Attachment[]>(initialAttachments || []);
   const [uploadingFiles, setUploadingFiles] = useState<Record<string, number>>({});
+  const [previewAttachment, setPreviewAttachment] = useState<Attachment | null>(null);
   const { storage } = useFirebase();
 
   useEffect(() => {
@@ -189,6 +192,15 @@ export function ProposalAttachmentUploader({
                 </div>
               </div>
               <div className="flex items-center gap-1">
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-primary" 
+                    onClick={() => setPreviewAttachment(attachment)}
+                    title="Visualizar documento"
+                >
+                    <Eye className="h-4 w-4" />
+                </Button>
                  <a href={attachment.url} target="_blank" rel="noopener noreferrer">
                     <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
                         <Download className="h-4 w-4" />
@@ -210,6 +222,11 @@ export function ProposalAttachmentUploader({
           )}
         </div>
       </CardContent>
+
+      <DocumentPreviewDialog 
+        attachment={previewAttachment} 
+        onClose={() => setPreviewAttachment(null)} 
+      />
     </Card>
   );
 }

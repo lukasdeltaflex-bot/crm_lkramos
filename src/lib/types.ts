@@ -141,3 +141,14 @@ export type FollowUp = {
   completedAt?: string;
   notes?: string;
 };
+
+export type ExpenseCategory = 'Aluguel' | 'Internet' | 'Telefonia' | 'Tráfego Pago' | 'Salários' | 'Impostos' | 'Outros';
+
+export type Expense = {
+  id: string;
+  ownerId: string;
+  description: string;
+  amount: number;
+  date: string; // YYYY-MM-DD
+  category: ExpenseCategory;
+};
