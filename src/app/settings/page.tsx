@@ -239,12 +239,20 @@ export default function SettingsPage() {
     { id: 'arredondado', label: 'Suave (Rounded)' },
     { id: 'condensado', label: 'Focada (Narrow)' },
     { id: 'business', label: 'Business (Clean)' },
-    { id: 'elegante', label: 'Luxo (Elegant)' },
-    { id: 'geometrico', label: 'Limpa (Geo)' },
-    { id: 'tecnico', label: 'Industrial (Tech)' },
-    { id: 'minimalista', label: 'Mínimo (Avenir)' },
-    { id: 'futurista', label: 'Futurista (Orbit)' },
-    { id: 'robusto', label: 'Autoridade (Bold)' }
+    { id: 'elegante', label: 'Elegante' },
+    { id: 'geometrico', label: 'Geométrica' },
+    { id: 'tecnico', label: 'Técnico' },
+    { id: 'minimalista', label: 'Minimalista' },
+    { id: 'futurista', label: 'Futurista' },
+    { id: 'robusto', label: 'Robusta (Bold)' },
+    { id: 'editorial', label: 'Editorial' },
+    { id: 'suico', label: 'Suíço (Swiss)' },
+    { id: 'academico', label: 'Acadêmico' },
+    { id: 'industrial', label: 'Industrial' },
+    { id: 'digital', label: 'Digital' },
+    { id: 'real', label: 'Real (Times)' },
+    { id: 'suave', label: 'Suave (Ubuntu)' },
+    { id: 'sharp', label: 'Sharp (Sharp Sans)' }
   ];
 
   return (
@@ -493,9 +501,9 @@ export default function SettingsPage() {
                         <div className="space-y-6">
                             <div className="flex items-center gap-2">
                                 <Type className="h-4 w-4 text-primary" />
-                                <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Estúdio de Tipografia (Fontes Expandido)</h4>
+                                <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Estúdio de Tipografia (20 Estilos Premium)</h4>
                             </div>
-                            <RadioGroup value={fontStyle} onValueChange={(val) => { setFontStyle(val); updateSettings({ fontStyle: val }); }} className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+                            <RadioGroup value={fontStyle} onValueChange={(val) => { setFontStyle(val); updateSettings({ fontStyle: val }); }} className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
                                 {fontOptions.map((f) => (
                                     <Label key={f.id} htmlFor={`f-${f.id}`} className={cn("flex items-center justify-center rounded-md border-2 p-4 cursor-pointer text-xs font-bold transition-all text-center h-24", fontStyle === f.id ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30")}>
                                         <RadioGroupItem value={f.id} id={`f-${f.id}`} className="sr-only" />

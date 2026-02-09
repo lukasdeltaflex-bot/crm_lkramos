@@ -23,7 +23,8 @@ const ANIMATION_OPTIONS = ["estatico", "sutil", "cinematografico"];
 const FONT_OPTIONS = [
     "moderno", "classico", "mono", "arredondado", "condensado", 
     "business", "elegante", "geometrico", "tecnico", "minimalista", 
-    "futurista", "robusto"
+    "futurista", "robusto", "editorial", "suico", "academico",
+    "industrial", "digital", "real", "suave", "sharp"
 ];
 
 type CustomThemeProviderProps = ThemeProviderProps & {

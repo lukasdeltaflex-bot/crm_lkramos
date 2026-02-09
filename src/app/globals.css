@@ -76,20 +76,26 @@
 :root.radius-suave { --radius: 1.25rem; }
 
 /* ✍️ TYPOGRAPHY STUDIO - UNIVERSAL FORCE LOGIC */
-/* Define as fontes e as aplica FORÇADAMENTE em todos os elementos */
-
 .font-moderno, .font-moderno * { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; }
 .font-classico, .font-classico * { font-family: 'Georgia', 'Cambria', 'Times New Roman', serif !important; }
 .font-mono, .font-mono * { font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace !important; }
-.font-arredondado, .font-arredondado * { font-family: 'Quicksand', 'Segoe UI Rounded', 'Arial Rounded MT Bold', system-ui, sans-serif !important; }
+.font-arredondado, .font-arredondado * { font-family: 'Quicksand', 'Segoe UI Rounded', 'Arial Rounded MT Bold', sans-serif !important; }
 .font-condensado, .font-condensado * { font-family: 'Roboto Condensed', 'Arial Narrow', sans-serif !important; }
 .font-business, .font-business * { font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif !important; }
-.font-elegante, .font-elegante * { font-family: 'Optima', 'Candara', 'Calibri', 'Source Sans Pro', sans-serif !important; }
+.font-elegante, .font-elegante * { font-family: 'Optima', 'Candara', 'Calibri', sans-serif !important; }
 .font-geometrico, .font-geometrico * { font-family: 'Futura', 'Trebuchet MS', 'Arial', sans-serif !important; }
 .font-tecnico, .font-tecnico * { font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif !important; }
 .font-minimalista, .font-minimalista * { font-family: 'Avenir', 'Inter', 'Segoe UI', sans-serif !important; }
 .font-futurista, .font-futurista * { font-family: 'Orbitron', 'Syncopate', sans-serif !important; }
-.font-robusto, .font-robusto * { font-family: 'Arial Black', 'Impact', sans-serif !important; }
+.font-robusto, .font-robusto * { font-family: 'Arial Black', sans-serif !important; }
+.font-editorial, .font-editorial * { font-family: 'Playfair Display', 'Baskerville', serif !important; }
+.font-suico, .font-suico * { font-family: 'Helvetica', 'Arial', sans-serif !important; }
+.font-academico, .font-academico * { font-family: 'Garamond', 'Palatino', serif !important; }
+.font-industrial, .font-industrial * { font-family: 'Verdana', 'Geneva', sans-serif !important; }
+.font-digital, .font-digital * { font-family: 'Consolas', 'Monaco', monospace !important; }
+.font-real, .font-real * { font-family: 'Times New Roman', 'Times', serif !important; }
+.font-suave, .font-suave * { font-family: 'Ubuntu', 'Segoe UI', sans-serif !important; }
+.font-sharp, .font-sharp * { font-family: 'Trebuchet MS', sans-serif !important; }
 
 /* Global Override for consistency */
 html[class*="font-"] body {
