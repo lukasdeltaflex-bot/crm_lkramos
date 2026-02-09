@@ -427,9 +427,23 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                 onValueChange={setStatusFilter}
                 >
                     <TabsList className="h-auto flex-wrap justify-start bg-muted/50">
-                        <TabsTrigger value="Todos">Todos</TabsTrigger>
+                        <TabsTrigger value="Todos" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Todos</TabsTrigger>
                         {proposalStatuses.map(status => (
-                            <TabsTrigger key={status} value={status}>{status}</TabsTrigger>
+                            <TabsTrigger 
+                                key={status} 
+                                value={status}
+                                className={cn(
+                                    "transition-all",
+                                    status === 'Pago' && "data-[state=active]:bg-green-600 data-[state=active]:text-white",
+                                    status === 'Saldo Pago' && "data-[state=active]:bg-orange-500 data-[state=active]:text-white",
+                                    status === 'Em Andamento' && "data-[state=active]:bg-yellow-500 data-[state=active]:text-black",
+                                    status === 'Aguardando Saldo' && "data-[state=active]:bg-blue-600 data-[state=active]:text-white",
+                                    status === 'Reprovado' && "data-[state=active]:bg-red-600 data-[state=active]:text-white",
+                                    status === 'Pendente' && "data-[state=active]:bg-purple-600 data-[state=active]:text-white",
+                                )}
+                            >
+                                {status}
+                            </TabsTrigger>
                         ))}
                     </TabsList>
                 </Tabs>

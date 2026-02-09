@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -23,7 +24,8 @@ import {
     MousePointer2,
     Type,
     MoveHorizontal,
-    Crown
+    Crown,
+    Filter
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -71,12 +73,32 @@ export default function ManualPage() {
                     </AccordionContent>
                 </AccordionItem>
 
+                <AccordionItem value="navigation" className="border rounded-xl bg-card px-4 shadow-sm">
+                    <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-orange-100 text-orange-600"><Filter className="h-5 w-5" /></div>
+                            <div className="text-left">
+                                <p className="font-bold">2. Navegação Cromática & Filtros Inteligentes</p>
+                                <p className="text-xs text-muted-foreground">Filtros coloridos e busca inteligente por ID ou CPF</p>
+                            </div>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
+                        <p>Agilize sua produtividade com a sinalização visual do sistema.</p>
+                        <ul className="list-disc pl-5 space-y-2">
+                            <li><strong>Abas Coloridas</strong>: Os botões de filtro nas telas de Propostas e Financeiro agora possuem cores representativas (Verde = Pago, Vermelho = Reprovado, etc.). Isso permite identificar instantaneamente qual "gaveta" você está visualizando.</li>
+                            <li><strong>Busca de Precisão</strong>: O campo de busca em todas as tabelas prioriza o **ID exato** do cliente ou da proposta. Se você digitar apenas números curtos, o sistema buscará apenas pelo ID, evitando confusão com telefones ou partes de CPF.</li>
+                            <li><strong>Status em Massa</strong>: Selecione várias propostas e mude o status de todas simultaneamente usando o botão de ação que aparece ao marcar os itens.</li>
+                        </ul>
+                    </AccordionContent>
+                </AccordionItem>
+
                 <AccordionItem value="dashboard" className="border rounded-xl bg-card px-4 shadow-sm">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-blue-100 text-blue-600"><LayoutDashboard className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold">2. Radar de Vendas & Inteligência Diária</p>
+                                <p className="font-bold">3. Radar de Vendas & Inteligência Diária</p>
                                 <p className="text-xs text-muted-foreground">Retenção de clientes e avisos estratégicos</p>
                             </div>
                         </div>
@@ -96,7 +118,7 @@ export default function ManualPage() {
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-red-100 text-red-600"><Wallet className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold">3. Gestão Financeira & DRE</p>
+                                <p className="font-bold">4. Gestão Financeira & DRE</p>
                                 <p className="text-xs text-muted-foreground">Controle de gastos, categorias e conciliação bancária</p>
                             </div>
                         </div>
@@ -116,7 +138,7 @@ export default function ManualPage() {
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-zinc-100 text-zinc-600"><Eye className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold">4. Visualizador de Documentos & Central Fixa</p>
+                                <p className="font-bold">5. Visualizador de Documentos & Central Fixa</p>
                                 <p className="text-xs text-muted-foreground">Conferência instantânea e documentos permanentes</p>
                             </div>
                         </div>
