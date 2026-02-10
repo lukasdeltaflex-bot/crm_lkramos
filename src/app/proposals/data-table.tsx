@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -392,7 +391,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     return cn("transition-colors status-row-custom", `status-${id}`);
   };
 
-  // ORDEM SOLICITADA PARA ABAS (Refletindo a Imagem)
+  // ORDEM SOLICITADA PARA ABAS
   const orderedTabs = ['Todos', 'Em Andamento', 'Aguardando Saldo', 'Pago', 'Saldo Pago', 'Pendente', 'Reprovado'];
 
   return (

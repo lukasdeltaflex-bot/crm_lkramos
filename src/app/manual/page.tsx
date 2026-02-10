@@ -12,13 +12,13 @@ import {
     Eye, 
     Filter,
     Pipette,
-    ListChecks,
     BookOpen,
     Zap,
     Type,
     MoveHorizontal,
     Bot,
-    MousePointer2
+    MousePointer2,
+    Shapes
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -58,7 +58,7 @@ export default function ManualPage() {
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Branding Próprio</strong>: Em Configurações, suba sua logomarca. Ela aparecerá no menu e em todos os relatórios PDF oficiais com Identidade Total.</li>
                             <li><strong>Identidade Total</strong>: Ao escolher uma fonte ou cor, ela é aplicada forçadamente em 100% do sistema, garantindo consistência absoluta.</li>
-                            <li><strong>Estúdio de Arredondamento</strong>: Níveis como Reto, Extra-Discreto (2px), Moderno (8px), Amigável (12px), Suave ou Cápsula.</li>
+                            <li><strong>Estúdio de Arredondamento</strong>: Níveis como Reto, Extra-Discreto (2px), Discreto (8px) ou Moderno (12px).</li>
                             <li><strong>Estúdio de Tipografia</strong>: 20 estilos de fontes profissionais como Industrial, Futurista, Real ou Elegante.</li>
                             <li><strong>Motion Design (Ritmo)</strong>: Ajuste a velocidade de resposta. Use o modo <strong>Instantâneo</strong> para rapidez extrema ou <strong>Atmosférico</strong> para luxo.</li>
                         </ul>
@@ -78,9 +78,9 @@ export default function ManualPage() {
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
                         <p>Ferramentas de ajuste fino para sua interface de trabalho.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Auras de Próxima Geração</strong>: Experimente os modos <strong>Glow (Neon)</strong>, <strong>Geométrico (Heavy Border)</strong>, <strong>Profundo (Inner Shadow)</strong> ou <strong>Bordado</strong>.</li>
-                            <li><strong>Intensidade do Vidro (Glass Intensity)</strong>: No estilo "Glassmorphism", utilize o slider para ajustar a opacidade e o nível de desfoque (blur).</li>
-                            <li><strong>Laboratório de Cores de Status</strong>: Defina cores personalizadas para cada status usando a paleta de elite. As cores são aplicadas automaticamente em cards e tabelas.</li>
+                            <li><strong>Auras de Próxima Geração</strong>: Experimente os modos <strong>Glow (Neon)</strong>, <strong>Geométrico (Heavy Border)</strong> ou <strong>Glassmorphism</strong>.</li>
+                            <li><strong>Intensidade do Vidro</strong>: No estilo "Glassmorphism", utilize o slider para ajustar a opacidade e o nível de desfoque (blur).</li>
+                            <li><strong>Laboratório de Cores de Status</strong>: Defina cores personalizadas para cada status. As cores são aplicadas automaticamente em cards (com 12% de aura de fundo) e tabelas.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -99,8 +99,8 @@ export default function ManualPage() {
                         <p>Agilize sua produtividade com a sinalização visual do sistema.</p>
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Abas Coloridas</strong>: Botões de filtro com cores representativas que casam com o status da proposta.</li>
-                            <li><strong>Dashboard Inteligente</strong>: Se você criar um novo status em Configurações, um novo card surgirá automaticamente no Dashboard.</li>
-                            <li><strong>Visão de Esteira</strong>: Os cards de Pendente, Em Andamento e Aguardando Saldo mostram sempre o acumulado do mês atual e do anterior.</li>
+                            <li><strong>Dashboard Inteligente</strong>: A ordem dos cards segue rigorosamente o fluxo: Digitado &rarr; Pendente &rarr; Em Andamento &rarr; Aguardando Saldo &rarr; Saldo Pago &rarr; Reprovado.</li>
+                            <li><strong>Visão de Esteira</strong>: Os cards de Pendente, Em Andamento, Aguardando Saldo e Saldo Pago mostram sempre o acumulado do mês atual e do anterior.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>

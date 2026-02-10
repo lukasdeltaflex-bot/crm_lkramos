@@ -15,10 +15,9 @@ import {
   Filter,
   XCircle,
   CheckCircle2,
-  Calendar as CalendarIcon,
-  Activity
+  Calendar as CalendarIcon
 } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, isValid, startOfDay, subDays, endOfDay, subMonths, parse, isSameDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, isValid, startOfDay, subDays, endOfDay, subMonths, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatCurrency, cn } from '@/lib/utils';
 import type { Proposal, Customer, UserProfile } from '@/lib/types';
@@ -49,16 +48,16 @@ import { ProductBreakdownChart } from '@/components/dashboard/product-breakdown-
 import { RadarWidget } from '@/components/dashboard/radar-widget';
 
 export default function DashboardPage() {
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const [dialogData, setDialogData] = useState<{ title: string; proposals: Proposal[] } | null>(null);
   const [startDateInput, setStartDateInput] = useState('');
   const [endDateInput, setEndDateInput] = useState('');
   const [appliedDateRange, setAppliedDateRange] = useState<DateRange | undefined>(undefined);
   const [isPrivacyMode, setIsPrivacyMode] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  const [dialogData, setDialogData] = useState<{ title: string; proposals: Proposal[] } | null>(null);
   
-  const { user } = useUser();
-  const firestore = useFirestore();
-
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -139,7 +138,7 @@ export default function DashboardPage() {
 
     const prevMonthStart = startOfMonth(subMonths(fromDate, 1));
 
-    // UNIVERSO MÊS VIGENTE (Para Produção, Meta e Reprovas)
+    // UNIVERSO MÊS VIGENTE (Performance e Reprovas)
     const digitizedInPeriod = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
@@ -153,14 +152,6 @@ export default function DashboardPage() {
         return d >= prevMonthStart && d <= effectiveToDate;
     });
 
-    // PAGOS NO PERÍODO (Para Meta)
-    const paidInPeriod = proposals.filter(p => {
-        if (p.status !== 'Pago') return false;
-        if (!p.datePaidToClient) return false;
-        const d = new Date(p.datePaidToClient);
-        return d >= fromDate && d <= effectiveToDate;
-    });
-
     const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
     const getTopOperator = (list: Proposal[]) => {
         const ops: Record<string, number> = {};
@@ -171,12 +162,10 @@ export default function DashboardPage() {
     };
 
     const statusAnalysis: Record<string, { total: number; count: number; proposals: Proposal[]; top: string }> = {};
-    
-    // ORDEM SOLICITADA: Total Digitado -> Pendente -> Em Andamento -> Aguardando Saldo -> Saldo Pago -> Reprovado
     const orderedFlow = ['Pendente', 'Em Andamento', 'Aguardando Saldo', 'Saldo Pago', 'Reprovado'];
 
     orderedFlow.forEach(status => {
-        // Regra Híbrida: Reprovado é apenas do mês vigente. Outros da esteira são Mês + Anterior.
+        // Regra: Reprovado é apenas do mês vigente. Outros são Mês + Anterior.
         const sourceList = (status === 'Reprovado') ? digitizedInPeriod : digitizedInExtendedPeriod;
         const list = sourceList.filter(p => p.status === status);
         
@@ -186,6 +175,13 @@ export default function DashboardPage() {
             proposals: list,
             top: getTopOperator(list)
         };
+    });
+
+    const paidInPeriod = proposals.filter(p => {
+        if (p.status !== 'Pago') return false;
+        if (!p.datePaidToClient) return false;
+        const d = new Date(p.datePaidToClient);
+        return d >= fromDate && d <= effectiveToDate;
     });
 
     return {
@@ -203,10 +199,10 @@ export default function DashboardPage() {
     setDialogData({ title, proposals: props });
   }
 
+  if (!stats) return null;
+
   const rawMonthName = isClient ? format(appliedDateRange?.from || new Date(), 'MMMM', { locale: ptBR }) : 'Mês';
   const currentMonthName = rawMonthName.charAt(0).toUpperCase() + rawMonthName.slice(1);
-
-  if (!stats) return null;
 
   return (
     <AppLayout>
@@ -288,7 +284,6 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis['Pendente'].total)} 
                     icon={BadgePercent} 
                     description="ESTEIRA (MÊS ATUAL + ANT)"
-                    isHot={true}
                     topContributor={stats.statusAnalysis['Pendente'].top}
                 />
             </div>
@@ -299,7 +294,6 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis['Em Andamento'].total)} 
                     icon={Hourglass} 
                     description="ESTEIRA (MÊS ATUAL + ANT)"
-                    isHot={true}
                     topContributor={stats.statusAnalysis['Em Andamento'].top}
                 />
             </div>
@@ -349,24 +343,12 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <RadarWidget 
-                proposals={proposals || []}
-                customers={customers || []}
-                isLoading={proposalsLoading || customersLoading}
-            />
-            <DailySummary 
-                proposals={proposals || []}
-                customers={customers || []}
-                userProfile={userProfile || null}
-            />
+            <RadarWidget proposals={proposals || []} customers={customers || []} isLoading={proposalsLoading || customersLoading} />
+            <DailySummary proposals={proposals || []} customers={customers || []} userProfile={userProfile || null} />
         </div>
 
         <div className="w-full">
-            <RecentProposals 
-                proposals={proposals || []}
-                customers={customers || []}
-                isLoading={proposalsLoading || customersLoading}
-            />
+            <RecentProposals proposals={proposals || []} customers={customers || []} isLoading={proposalsLoading || customersLoading} />
         </div>
       </div>
 

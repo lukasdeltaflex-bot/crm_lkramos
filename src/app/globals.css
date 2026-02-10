@@ -82,6 +82,37 @@
   }
 }
 
+/* 🏛️ ARREDONDAMENTO ELITE */
+.radius-reto { --radius: 0px !important; }
+.radius-extra-discreto { --radius: 2px !important; }
+.radius-discreto { --radius: 8px !important; }
+.radius-moderno { --radius: 16px !important; }
+.radius-amigavel { --radius: 22px !important; }
+.radius-suave { --radius: 28px !important; }
+.radius-capsula { --radius: 9999px !important; }
+
+/* 🎨 ESTÚDIO DE TIPOGRAFIA (20 ESTILOS) */
+.font-moderno body { font-family: var(--font-sans), sans-serif; }
+.font-classico body { font-family: Georgia, serif; }
+.font-mono body { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+.font-arredondado body { font-family: "Quicksand", "Segoe UI", sans-serif; }
+.font-condensado body { font-family: "Inter Tight", "Arial Narrow", sans-serif; }
+.font-business body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+.font-elegante body { font-family: "Didot", "Bodoni MT", serif; }
+.font-geometrico body { font-family: "Futura", "Trebuchet MS", sans-serif; }
+.font-tecnico body { font-family: "Roboto Mono", monospace; }
+.font-minimalista body { font-family: "Avenir Next", "Avenir", sans-serif; }
+.font-futurista body { font-family: "Orbitron", "Impact", sans-serif; }
+.font-robusto body { font-family: "Arial Black", Gadget, sans-serif; }
+.font-editorial body { font-family: "Charter", "Bitstream Charter", serif; }
+.font-suico body { font-family: "Univers", "Helvetica", sans-serif; }
+.font-academico body { font-family: "Century Schoolbook", serif; }
+.font-industrial body { font-family: "Bebas Neue", "Impact", sans-serif; }
+.font-digital body { font-family: "Courier New", Courier, monospace; }
+.font-real body { font-family: "Times New Roman", Times, serif; }
+.font-suave body { font-family: "Ubuntu", sans-serif; }
+.font-sharp body { font-family: "Inter", "Segoe UI", sans-serif; font-weight: 500; }
+
 /* 🚦 DYNAMIC STATUS SYSTEM V2 */
 .status-custom {
     color: hsl(var(--status-color)) !important;
@@ -96,22 +127,13 @@
     background-color: hsla(var(--status-color), 0.15) !important;
 }
 
-/* Specific ID classes used in components */
+/* Specific ID classes */
 .status-pago { --status-color: var(--status-color-pago); }
 .status-saldo-pago { --status-color: var(--status-color-saldo-pago); }
 .status-em-andamento { --status-color: var(--status-color-em-andamento); }
 .status-aguardando-saldo { --status-color: var(--status-color-aguardando-saldo); }
 .status-reprovado { --status-color: var(--status-color-reprovado); }
 .status-pendente { --status-color: var(--status-color-pendente); }
-
-/* 🏛️ ARREDONDAMENTO ELITE (Ajuste Fino de Distinção) */
-.radius-reto { --radius: 0px; }
-.radius-extra-discreto { --radius: 2px; }
-.radius-discreto { --radius: 8px; }
-.radius-moderno { --radius: 16px; }
-.radius-amigavel { --radius: 22px; }
-.radius-suave { --radius: 28px; }
-.radius-capsula { --radius: 9999px; }
 
 .style-glass .card, .style-glass .sidebar, .style-glass .popover-content {
     background-color: hsl(var(--background) / var(--glass-opacity)) !important;
@@ -124,7 +146,7 @@
 
 @layer base {
   * { @apply border-border; }
-  body { @apply bg-background text-foreground; font-family: inherit; }
+  body { @apply bg-background text-foreground; }
 }
 
 @media print {
