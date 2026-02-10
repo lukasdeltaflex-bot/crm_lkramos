@@ -184,7 +184,7 @@ export default function DashboardPage() {
     const orderedFlow = ['Pendente', 'Em Andamento', 'Aguardando Saldo', 'Saldo Pago', 'Reprovado'];
 
     orderedFlow.forEach(status => {
-        // REGRA: Reprovado apenas do mês atual. Outros da esteira: Mês atual + Mês anterior.
+        // REGRA: Reprovado apenas do mês atual e digitados no mês atual. Outros da esteira: Mês atual + Mês anterior.
         const sourceList = (status === 'Reprovado') ? digitizedInPeriod : digitizedInExtendedPeriod;
         const list = sourceList.filter(p => p.status === status);
         

@@ -410,6 +410,9 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     return cn("transition-colors status-row-custom", `status-${id}`);
   };
 
+  // ORDEM SOLICITADA: Todos, Em Andamento, Aguardando Saldo, Pago, Saldo Pago, Pendente, Reprovado
+  const orderedTabs = ['Todos', 'Em Andamento', 'Aguardando Saldo', 'Pago', 'Saldo Pago', 'Pendente', 'Reprovado'];
+
   return (
     <DndContextKit
       collisionDetection={closestCenterKit}
@@ -424,10 +427,11 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                 onValueChange={setStatusFilter}
                 >
                     <TabsList className="h-auto flex-wrap justify-start bg-muted/50 p-1">
-                        <TabsTrigger value="Todos" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Todos</TabsTrigger>
-                        {proposalStatuses.map(status => {
+                        {orderedTabs.map(status => {
                             const id = getStatusId(status);
                             const hasCustomColor = !!statusColors[status];
+                            if (status === 'Todos') return <TabsTrigger key="Todos" value="Todos" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Todos</TabsTrigger>;
+                            
                             return (
                                 <TabsTrigger 
                                     key={status} 

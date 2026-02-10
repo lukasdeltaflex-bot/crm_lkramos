@@ -1,4 +1,6 @@
 
+'use client';
+
 import {
   Card,
   CardContent,
@@ -25,8 +27,8 @@ interface StatsCardProps {
 }
 
 /**
- * StatsCard Premium Executivo V32
- * Sincronizado com o Laboratório de Cores para espelhar a identidade visual nos cards.
+ * StatsCard Premium Executivo V33
+ * Sincronização 100% com o Laboratório de Cores para evitar valores pretos.
  */
 export function StatsCard({ 
     title, 
@@ -166,7 +168,7 @@ export function StatsCard({
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-1.5">
         <div className="flex flex-col gap-0.5">
-            <CardTitle className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground group-hover:text-primary transition-colors" style={{ color: theme.style?.color }}>
+            <CardTitle className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground group-hover:text-primary transition-colors" style={{ color: theme.style?.color || 'inherit' }}>
                 {title}
             </CardTitle>
             {isCritical ? (
@@ -181,12 +183,12 @@ export function StatsCard({
         </div>
         <div className="flex items-center gap-2">
             {renderSparkline()}
-            <Icon className={cn("h-4 w-4 opacity-60", theme.text)} style={{ color: theme.style?.color }} />
+            <Icon className={cn("h-4 w-4 opacity-60", theme.text)} style={{ color: theme.style?.color || 'inherit' }} />
         </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col justify-between p-0">
         <div className="flex items-baseline justify-between gap-2">
-            <div className={cn("text-2xl sm:text-3xl font-light tracking-tighter", theme.text, valueClassName)} style={{ color: theme.style?.color }}>
+            <div className={cn("text-2xl sm:text-3xl font-light tracking-tighter", theme.text, valueClassName)} style={{ color: theme.style?.color || 'inherit' }}>
                 {value}
             </div>
             {percentage !== undefined && (
@@ -208,7 +210,7 @@ export function StatsCard({
                 )}
             </div>
             {topContributor && (
-                <p className="text-[9px] font-bold text-primary/60 truncate max-w-[100px]">
+                <p className="text-[9px] font-bold text-primary/60 truncate max-w-[100px]" style={{ color: theme.style?.color || 'inherit' }}>
                     {topContributor.split(' ')[0]}
                 </p>
             )}

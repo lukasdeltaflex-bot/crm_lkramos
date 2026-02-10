@@ -105,7 +105,15 @@
 .status-reprovado { --status-color: var(--status-color-reprovado); }
 .status-pendente { --status-color: var(--status-color-pendente); }
 
-/* Rest of the layout styles... */
+/* 🏛️ ARREDONDAMENTO ELITE (Ajuste Fino de Distinção) */
+.radius-reto { --radius: 0px; }
+.radius-extra-discreto { --radius: 2px; }
+.radius-discreto { --radius: 6px; }
+.radius-moderno { --radius: 12px; }
+.radius-amigavel { --radius: 18px; }
+.radius-suave { --radius: 24px; }
+.radius-capsula { --radius: 9999px; }
+
 .style-glass .card, .style-glass .sidebar, .style-glass .popover-content {
     background-color: hsl(var(--background) / var(--glass-opacity)) !important;
     backdrop-filter: blur(var(--glass-blur)) saturate(160%) !important;
