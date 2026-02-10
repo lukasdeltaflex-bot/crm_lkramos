@@ -65,9 +65,9 @@ export default function ManualPage() {
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Branding Próprio</strong>: Em Configurações, suba sua logomarca. Ela aparecerá no menu e em todos os relatórios PDF oficiais com Identidade Total.</li>
                             <li><strong>Identidade Total</strong>: Ao escolher uma fonte ou cor, ela é aplicada forçadamente em 100% do sistema, garantindo consistência absoluta.</li>
-                            <li><strong>Novos Níveis de Arredondamento</strong>: Escolha entre Reto (90º), Extra-Discreto (2px), Moderno (8px) ou Cápsula (32px) para definir a personalidade dos botões e cards.</li>
+                            <li><strong>Estúdio de Arredondamento</strong>: Escolha entre níveis como Reto (90º), Extra-Discreto (2px), Moderno (8px) ou Cápsula (32px) para definir a personalidade dos botões e cards.</li>
                             <li><strong>Estúdio de Tipografia</strong>: Escolha entre 20 estilos de fontes profissionais, como a *Industrial*, *Futurista* ou *Elegante*.</li>
-                            <li><strong>Motion Design (Ritmo)</strong>: Ajuste a velocidade de resposta do sistema. Use o modo *Elástico* para vivacidade ou *Atmosférico* para uma experiência de luxo extrema.</li>
+                            <li><strong>Motion Design (Ritmo)</strong>: Ajuste a velocidade de resposta. Use o modo *Elástico* para vivacidade, *Instantâneo* para rapidez extrema ou *Atmosférico* para luxo.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -83,11 +83,11 @@ export default function ManualPage() {
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
-                        <p>Novas ferramentas para um ajuste fino da sua interface de trabalho.</p>
+                        <p>Ferramentas de ajuste fino para sua interface de trabalho.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Novos Estilos de Aura</strong>: Experimente os modos <strong>Glow (Neon)</strong>, <strong>Geométrico (Heavy Border)</strong> ou <strong>Profundo (Inner Shadow)</strong>.</li>
-                            <li><strong>Intensidade do Vidro (Glass Intensity)</strong>: Ao usar a Aura "Glassmorphism", utilize o slider para ajustar a opacidade e o nível de desfoque (blur) do ambiente.</li>
-                            <li><strong>Laboratório de Cores de Status</strong>: Defina cores personalizadas para cada status usando a paleta de elite. O sistema gera automaticamente os tons de fundo e bordas para manter a legibilidade.</li>
+                            <li><strong>Auras de Próxima Geração</strong>: Experimente os modos <strong>Glow (Neon)</strong>, <strong>Geométrico (Heavy Border)</strong>, <strong>Profundo (Shadow)</strong> ou <strong>Bordado</strong>.</li>
+                            <li><strong>Intensidade do Vidro (Glass Intensity)</strong>: No estilo "Glassmorphism", utilize o slider para ajustar a opacidade e o nível de desfoque (blur) do ambiente.</li>
+                            <li><strong>Laboratório de Cores de Status</strong>: Defina cores personalizadas para cada status usando a paleta de elite. O sistema gera automaticamente os tons de fundo e bordas.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -106,8 +106,8 @@ export default function ManualPage() {
                         <p>Agilize sua produtividade com a sinalização visual do sistema.</p>
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Abas Coloridas</strong>: Os botões de filtro agora possuem cores representativas suaves que casam com o status da proposta.</li>
-                            <li><strong>Busca de Precisão</strong>: O campo de busca prioriza o **ID exato** do cliente ou da proposta para evitar confusões.</li>
-                            <li><strong>Status em Massa</strong>: Selecione várias propostas e mude o status de todas simultaneamente.</li>
+                            <li><strong>Busca de Precisão</strong>: O campo de busca prioriza o ID exato do cliente ou da proposta para evitar confusões em bases grandes.</li>
+                            <li><strong>Ações em Massa</strong>: Selecione várias propostas e mude o status de todas simultaneamente para agilizar a esteira.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -125,9 +125,9 @@ export default function ManualPage() {
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
                         <p>O Dashboard monitora oportunidades ocultas na sua base de dados.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Radar de Vendas</strong>: Identifica automaticamente clientes com contratos pagos há mais de 12 meses.</li>
+                            <li><strong>Radar de Vendas</strong>: Identifica automaticamente clientes com contratos pagos há mais de 12 meses (tempo de maturação).</li>
                             <li><strong>Inteligência Diária</strong>: Consolida retornos, alertas de comissões e clientes próximos de 75 anos.</li>
-                            <li><strong>Resumo Estratégico</strong>: Envie um relatório completo das pendências para seu e-mail em um clique.</li>
+                            <li><strong>Resumo Estratégico</strong>: Envie um relatório completo das pendências para seu e-mail em um único clique.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -146,8 +146,8 @@ export default function ManualPage() {
                         <p>Mantenha a saúde financeira da sua operação sob controle total.</p>
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Lançamento de Despesas</strong>: Registre custos operacionais e gerencie a situação (Pago/Pendente).</li>
-                            <li><strong>Categorias de Elite</strong>: Crie categorias próprias em Configurações > Opções.</li>
-                            <li><strong>Conciliação com IA</strong>: Processe relatórios de pagamento colando apenas o texto do banco para baixar comissões.</li>
+                            <li><strong>Categorias de Elite</strong>: Crie categorias próprias em Configurações &gt; Opções.</li>
+                            <li><strong>Conciliação com IA</strong>: Processe relatórios de pagamento colando apenas o texto do banco para baixar comissões automaticamente.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -165,8 +165,8 @@ export default function ManualPage() {
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
                         <p>Agilize sua conferência de propostas e mantenha a conformidade com a LGPD.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Visualização Segura</strong>: Veja imagens e PDFs sem precisar baixar arquivos usando o ícone do Olho.</li>
-                            <li><strong>Documentos Permanentes</strong>: Salve o RG/CPF na ficha do cliente para acesso em todas as propostas futuras.</li>
+                            <li><strong>Visualização Segura</strong>: Veja imagens e PDFs sem precisar baixar arquivos usando o ícone do Olho (Eye).</li>
+                            <li><strong>Documentos Permanentes</strong>: Salve o RG/CPF na ficha do cliente para acesso em todas as propostas futuras automaticamente.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
