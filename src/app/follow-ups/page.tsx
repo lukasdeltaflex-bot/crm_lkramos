@@ -20,10 +20,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { FollowUpsWidget } from '@/components/dashboard/follow-ups-widget';
 import { FollowUpCalendar } from '@/components/follow-ups/follow-up-calendar';
+import { useTheme } from '@/components/theme-provider';
+import { cn } from '@/lib/utils';
 
 export default function FollowUpsPage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const { statusColors } = useTheme();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedFollowUp, setSelectedFollowUp] = useState<FollowUp | undefined>(undefined);
   const [isActionDialogOpen, setIsActionDialogOpen] = useState(false);
@@ -195,21 +198,33 @@ export default function FollowUpsPage() {
                     <TabsList className="bg-muted/50 p-1">
                         <TabsTrigger 
                             value="pending"
-                            className="gap-2 border border-transparent data-[state=active]:bg-yellow-100 data-[state=active]:text-yellow-700 data-[state=active]:border-yellow-300 transition-all"
+                            className={cn(
+                                "gap-2 border border-transparent transition-all",
+                                tab === 'pending' && "status-custom"
+                            )}
+                            style={statusColors['Pendente'] ? { '--status-color': statusColors['Pendente'] } as any : {}}
                         >
                             <CalendarIcon className="h-4 w-4" />
                             Pendentes
                         </TabsTrigger>
                         <TabsTrigger 
                             value="calendar"
-                            className="gap-2 border border-transparent data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 data-[state=active]:border-blue-300 transition-all"
+                            className={cn(
+                                "gap-2 border border-transparent transition-all",
+                                tab === 'calendar' && "status-custom"
+                            )}
+                            style={statusColors['Em Andamento'] ? { '--status-color': statusColors['Em Andamento'] } as any : {}}
                         >
                             <CalendarIcon className="h-4 w-4" />
                             Calendário
                         </TabsTrigger>
                         <TabsTrigger 
                             value="history"
-                            className="gap-2 border border-transparent data-[state=active]:bg-zinc-100 data-[state=active]:text-zinc-700 data-[state=active]:border-zinc-300 transition-all"
+                            className={cn(
+                                "gap-2 border border-transparent transition-all",
+                                tab === 'history' && "status-custom"
+                            )}
+                            style={statusColors['Paga'] ? { '--status-color': statusColors['Paga'] } as any : {}}
                         >
                             <History className="h-4 w-4" />
                             Histórico

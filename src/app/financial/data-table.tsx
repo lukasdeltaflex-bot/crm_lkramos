@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -334,11 +333,10 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         statusColumn?.setFilterValue({ id: '__CUSTOM_FILTER_TODOS__', ...filterContext });
         dateColumn?.setFilterValue(appliedDateRange);
     } else {
-        const currentHsl = statusColors[statusFilter];
         statusColumn?.setFilterValue({ id: statusFilter, ...filterContext });
         dateColumn?.setFilterValue(appliedDateRange);
     }
-  }, [statusFilter, appliedDateRange, globalFilter, table, statusColors]);
+  }, [statusFilter, appliedDateRange, globalFilter, table]);
 
   const idToLabelMap: { [key: string]: string } = {
     customerName: 'Cliente',
@@ -489,22 +487,32 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                         </TableHeader>
                         <TableBody>
                         {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
-                            <TableRow
-                                key={row.id}
-                                data-state={row.getIsSelected() && 'selected'}
-                                className="print:even:bg-gray-50 hover:bg-primary/[0.02] transition-colors"
-                            >
-                                {row.getVisibleCells().map((cell) => (
-                                <TableCell key={cell.id} className="print:text-xs print:p-2 py-4">
-                                    {flexRender(
-                                    cell.column.columnDef.cell,
-                                    cell.getContext()
-                                    )}
-                                </TableCell>
-                                ))}
-                            </TableRow>
-                            ))
+                            table.getRowModel().rows.map((row) => {
+                                const proposal = row.original;
+                                const status = proposal.commissionStatus;
+                                const colorValue = statusColors[status];
+
+                                return (
+                                    <TableRow
+                                        key={row.id}
+                                        data-state={row.getIsSelected() && 'selected'}
+                                        className={cn(
+                                            "print:even:bg-gray-50 transition-colors border-b",
+                                            colorValue ? "status-row-custom" : "hover:bg-primary/[0.02]"
+                                        )}
+                                        style={colorValue ? { '--status-color': colorValue } as any : {}}
+                                    >
+                                        {row.getVisibleCells().map((cell) => (
+                                        <TableCell key={cell.id} className="print:text-xs print:p-2 py-4">
+                                            {flexRender(
+                                            cell.column.columnDef.cell,
+                                            cell.getContext()
+                                            )}
+                                        </TableCell>
+                                        ))}
+                                    </TableRow>
+                                )
+                            })
                         ) : (
                             <TableRow>
                             <TableCell
