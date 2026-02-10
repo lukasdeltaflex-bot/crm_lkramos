@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -19,16 +20,11 @@ interface StatsCardProps {
   percentage?: number;
   className?: string;
   valueClassName?: string;
-  sparklineData?: number[];
   isHot?: boolean;
   isCritical?: boolean;
   topContributor?: string;
 }
 
-/**
- * StatsCard Elite V48
- * Suporte a Neon Glow, Aura de Fundo e Identidade Total.
- */
 export function StatsCard({ 
     title, 
     value, 
@@ -46,33 +42,8 @@ export function StatsCard({
   
   const getThemeStyles = () => {
     const t = title.toUpperCase();
-    
-    // Regra de cores Neutras para Digitados (Solicitado)
-    if (t.includes('DIGITADO') || t.includes('PRODUÇÃO DIGITADA')) {
-        const customColor = statusColors[t];
-        if (customColor) {
-            return {
-                card: cn(containerStyle === 'glow' && 'style-glow'),
-                style: { 
-                    borderColor: `hsla(${customColor}, 0.5)`,
-                    backgroundColor: `hsla(${customColor}, 0.12)`,
-                    color: `hsl(${customColor})`,
-                    '--status-color': customColor 
-                } as any,
-                stroke: `hsl(${customColor})`
-            };
-        }
-        return { 
-            card: 'border-zinc-300 bg-zinc-50/50 dark:bg-zinc-900/40 dark:border-zinc-800', 
-            style: { color: 'hsl(var(--foreground))' }, 
-            stroke: 'hsl(var(--muted-foreground))' 
-        };
-    }
-
-    if (isCritical) return { card: 'border-red-400 bg-red-50 dark:bg-red-900/20 animate-pulse', style: {}, stroke: '#dc2626' };
-
-    // Busca cor no Laboratório
     const customColor = statusColors[title] || statusColors[t];
+
     if (customColor) {
         return {
             card: cn(containerStyle === 'glow' && 'style-glow'),
@@ -81,15 +52,14 @@ export function StatsCard({
                 backgroundColor: `hsla(${customColor}, 0.12)`,
                 color: `hsl(${customColor})`,
                 '--status-color': customColor 
-            } as any,
-            stroke: `hsl(${customColor})`
+            } as any
         };
     }
     
+    // Fallback neutro
     return { 
-        card: 'border-slate-200 bg-slate-50 dark:bg-slate-900/10', 
-        style: {},
-        stroke: '#475569'
+        card: 'border-zinc-200 bg-zinc-50/50 dark:bg-zinc-900/10 dark:border-zinc-800', 
+        style: { color: 'hsl(var(--foreground))' }
     };
   };
 
@@ -106,7 +76,7 @@ export function StatsCard({
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-1.5">
         <div className="flex flex-col gap-0.5">
-            <CardTitle className="text-[10px] font-black uppercase tracking-[0.1em]" style={{ color: theme.style?.color || 'inherit' }}>
+            <CardTitle className="text-[10px] font-black uppercase tracking-[0.1em]">
                 {title}
             </CardTitle>
             {isCritical ? (
@@ -119,11 +89,11 @@ export function StatsCard({
                 </div>
             )}
         </div>
-        <Icon className="h-4 w-4 opacity-80" style={{ color: theme.style?.color || 'inherit' }} />
+        <Icon className="h-4 w-4 opacity-80" />
       </CardHeader>
       <CardContent className="flex-1 flex flex-col justify-between p-0">
         <div className="flex items-baseline justify-between gap-2">
-            <div className={cn("text-2xl sm:text-3xl font-light tracking-tighter", valueClassName)} style={{ color: theme.style?.color || 'inherit' }}>
+            <div className={cn("text-2xl sm:text-3xl font-light tracking-tighter", valueClassName)}>
                 {value}
             </div>
             {percentage !== undefined && (
@@ -145,7 +115,7 @@ export function StatsCard({
                 )}
             </div>
             {topContributor && (
-                <p className="text-[9px] font-bold truncate max-w-[100px]" style={{ color: theme.style?.color || 'inherit' }}>
+                <p className="text-[9px] font-bold truncate max-w-[100px]">
                     {topContributor.split(' ')[0]}
                 </p>
             )}

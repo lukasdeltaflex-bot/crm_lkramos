@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -37,17 +38,8 @@
     --motion-duration: 300ms;
     --motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
 
-    /* Glass Defaults */
     --glass-opacity: 0.7;
     --glass-blur: 12px;
-
-    /* Status Color Defaults */
-    --status-color-pago: 142 76% 36%;
-    --status-color-saldo-pago: 24 95% 53%;
-    --status-color-em-andamento: 45 93% 47%;
-    --status-color-aguardando-saldo: 217 91% 60%;
-    --status-color-reprovado: 0 72% 51%;
-    --status-color-pendente: 262 83% 58%;
   }
  
   .dark {
@@ -82,17 +74,15 @@
   }
 }
 
-/* 🚦 SISTEMA DINÂMICO DE STATUS V55 */
+/* 🚦 SISTEMA DINÂMICO DE STATUS V60 */
 .status-custom {
     color: hsl(var(--status-color)) !important;
-    background-color: hsla(var(--status-color), 0.15) !important;
+    background-color: hsla(var(--status-color), 0.12) !important;
     border-color: hsla(var(--status-color), 0.5) !important;
 }
 
-/* EFEITO NEON (GLOW) */
 .style-glow .status-custom,
-.style-glow.card[style*="--status-color"],
-.style-glow .status-row-custom[style*="--status-color"] {
+.style-glow.card[style*="--status-color"] {
     box-shadow: 0 0 15px hsla(var(--status-color), 0.25) !important;
 }
 
@@ -104,7 +94,7 @@
 }
 
 /* INTENSIDADE DE CORES */
-.intensity-vibrante .status-custom { background-color: hsla(var(--status-color), 0.25) !important; font-weight: 800; }
+.intensity-vibrante .status-custom { background-color: hsla(var(--status-color), 0.2) !important; font-weight: 800; }
 .intensity-vibrante .status-row-custom { background-color: hsla(var(--status-color), 0.12) !important; }
 
 /* MOTION DESIGN */
@@ -122,8 +112,17 @@
 .texture-grid body { background-image: linear-gradient(hsl(var(--primary) / 0.08) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary) / 0.08) 1px, transparent 1px); background-size: 40px 40px; }
 .texture-lines body { background-image: repeating-linear-gradient(45deg, hsl(var(--primary) / 0.03) 0px, hsl(var(--primary) / 0.03) 1px, transparent 1px, transparent 10px); }
 
-/* TIPOGRAFIA (20 ESTILOS PREMIUM) */
-.font-moderno { font-family: var(--font-sans), system-ui, sans-serif !important; }
+/* ARREDONDAMENTO */
+.radius-reto { --radius: 0px; }
+.radius-extra-discreto { --radius: 2px; }
+.radius-discreto { --radius: 6px; }
+.radius-moderno { --radius: 12px; }
+.radius-amigavel { --radius: 16px; }
+.radius-suave { --radius: 24px; }
+.radius-capsula { --radius: 9999px; }
+
+/* TIPOGRAFIA INDUSTRIAL (20 ESTILOS) */
+.font-moderno { font-family: var(--font-sans), sans-serif !important; }
 .font-classico { font-family: "Georgia", serif !important; }
 .font-mono { font-family: ui-monospace, monospace !important; }
 .font-arredondado { font-family: "Quicksand", sans-serif !important; }
@@ -132,7 +131,7 @@
 .font-elegante { font-family: "Playfair Display", serif !important; }
 .font-geometrico { font-family: "Futura", sans-serif !important; }
 .font-tecnico { font-family: "Consolas", monospace !important; }
-.font-minimalista { font-family: "Helvetica Neue", sans-serif !important; letter-spacing: -0.02em; }
+.font-minimalista { font-family: "Helvetica Neue", sans-serif !important; }
 .font-futurista { font-family: "Orbitron", sans-serif !important; }
 .font-robusto { font-family: "Impact", sans-serif !important; }
 .font-editorial { font-family: "Bodoni MT", serif !important; }
@@ -142,14 +141,9 @@
 .font-digital { font-family: "Courier New", monospace !important; }
 .font-real { font-family: "Garamond", serif !important; }
 .font-suave { font-family: "Outfit", sans-serif !important; }
-.font-sharp { font-family: "Segoe UI", sans-serif !important; font-weight: 600; }
+.font-sharp { font-family: "Segoe UI", sans-serif !important; }
 
 @layer base {
   * { @apply border-border; transition: all var(--motion-duration) var(--motion-ease); }
   body { @apply bg-background text-foreground; }
-}
-
-@media print {
-  body.print-selection-proposals .proposals-table tbody tr:not([data-state='selected']) { display: none !important; }
-  .print\:hidden { display: none !important; }
 }

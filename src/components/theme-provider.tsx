@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -63,6 +64,7 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     setIsMounted(true);
     const getSaved = (key: string, def: string) => {
+        if (typeof window === 'undefined') return def;
         const val = localStorage.getItem(key);
         return val || def;
     };
@@ -76,12 +78,14 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
     setAnimationStyleState(getSaved("animation-theme", "sutil"));
     setFontStyleState(getSaved("font-theme", "moderno"));
     
-    const savedGlass = localStorage.getItem("glass-intensity");
-    if (savedGlass) setGlassIntensityState(Number(savedGlass));
+    if (typeof window !== 'undefined') {
+        const savedGlass = localStorage.getItem("glass-intensity");
+        if (savedGlass) setGlassIntensityState(Number(savedGlass));
 
-    const savedStatusColors = localStorage.getItem("status-colors");
-    if (savedStatusColors) {
-        try { setStatusColorsState(JSON.parse(savedStatusColors)); } catch(e) {}
+        const savedStatusColors = localStorage.getItem("status-colors");
+        if (savedStatusColors) {
+            try { setStatusColorsState(JSON.parse(savedStatusColors)); } catch(e) {}
+        }
     }
   }, []);
 
@@ -108,7 +112,7 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
       clearAndAdd(INTENSITY_OPTIONS, "intensity", colorIntensity);
       clearAndAdd(ANIMATION_OPTIONS, "anim", animationStyle);
       
-      // Font Style fix: use font- prefix
+      // Aplicar tipografia ao ROOT
       root.classList.remove(...FONT_OPTIONS.map(f => `font-${f}`));
       root.classList.add(`font-${fontStyle}`);
       localStorage.setItem("font-theme", fontStyle);

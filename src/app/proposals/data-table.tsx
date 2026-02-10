@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -13,11 +14,11 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-  Header,
   ColumnOrderState,
   ColumnSizingState,
   Table as ReactTable,
   PaginationState,
+  Header
 } from '@tanstack/react-table';
 import {
     DndContext,
@@ -30,12 +31,10 @@ import {
   } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 
-
 import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
@@ -57,7 +56,6 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -69,7 +67,7 @@ import type { ProposalStatus, Proposal, UserSettings } from '@/lib/types';
 import { DraggableHeader } from './columns';
 import type { ProposalWithCustomer } from './page';
 import { Separator } from '@/components/ui/separator';
-import { formatCurrency, calculateBusinessDays, normalizeString } from '@/lib/utils';
+import { formatCurrency, normalizeString } from '@/lib/utils';
 import { parse, isValid, startOfDay, endOfDay, subDays, startOfMonth, subMonths, endOfMonth } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { cn } from '@/lib/utils';
@@ -131,21 +129,23 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   
   React.useEffect(() => {
     setIsClient(true);
-    const savedVisibility = localStorage.getItem(STORAGE_KEY_VISIBILITY);
-    if (savedVisibility) {
-        try { setColumnVisibility(JSON.parse(savedVisibility)); } catch (e) { localStorage.removeItem(STORAGE_KEY_VISIBILITY); }
-    }
-    const savedOrder = localStorage.getItem(STORAGE_KEY_ORDER);
-    if (savedOrder) {
-        try { setColumnOrder(JSON.parse(savedOrder)); } catch (e) { localStorage.removeItem(STORAGE_KEY_ORDER); }
-    }
-    const savedSizing = localStorage.getItem(STORAGE_KEY_SIZING);
-    if (savedSizing) {
-        try { setColumnSizing(JSON.parse(savedSizing)); } catch (e) { localStorage.removeItem(STORAGE_KEY_SIZING); }
-    }
-    const savedPageSize = localStorage.getItem(STORAGE_KEY_PAGESIZE);
-    if (savedPageSize) {
-      setPagination(prev => ({ ...prev, pageSize: Number(savedPageSize) }));
+    if (typeof window !== 'undefined') {
+        const savedVisibility = localStorage.getItem(STORAGE_KEY_VISIBILITY);
+        if (savedVisibility) {
+            try { setColumnVisibility(JSON.parse(savedVisibility)); } catch (e) {}
+        }
+        const savedOrder = localStorage.getItem(STORAGE_KEY_ORDER);
+        if (savedOrder) {
+            try { setColumnOrder(JSON.parse(savedOrder)); } catch (e) {}
+        }
+        const savedSizing = localStorage.getItem(STORAGE_KEY_SIZING);
+        if (savedSizing) {
+            try { setColumnSizing(JSON.parse(savedSizing)); } catch (e) {}
+        }
+        const savedPageSize = localStorage.getItem(STORAGE_KEY_PAGESIZE);
+        if (savedPageSize) {
+          setPagination(prev => ({ ...prev, pageSize: Number(savedPageSize) }));
+        }
     }
   }, []);
 
@@ -395,7 +395,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                         <TableRow key={headerGroup.id}>
                              <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
                                 {headerGroup.headers.map(header => (
-                                    <DraggableHeader key={header.id} header={header as any} />
+                                    <DraggableHeader key={header.id} header={header as Header<ProposalWithCustomer, unknown>} />
                                 ))}
                             </SortableContext>
                         </TableRow>
