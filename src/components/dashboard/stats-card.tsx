@@ -26,8 +26,8 @@ interface StatsCardProps {
 }
 
 /**
- * StatsCard Elite V47
- * Suporte a Neon Glow e Sincronização Neutra para Digitados.
+ * StatsCard Elite V48
+ * Suporte a Neon Glow, Aura de Fundo e Identidade Total.
  */
 export function StatsCard({ 
     title, 
@@ -45,10 +45,23 @@ export function StatsCard({
   const { statusColors, containerStyle } = useTheme();
   
   const getThemeStyles = () => {
-    const t = title.toLowerCase();
+    const t = title.toUpperCase();
     
     // Regra de cores Neutras para Digitados (Solicitado)
-    if (t.includes('digitado')) {
+    if (t.includes('DIGITADO') || t.includes('PRODUÇÃO DIGITADA')) {
+        const customColor = statusColors[t];
+        if (customColor) {
+            return {
+                card: cn(containerStyle === 'glow' && 'style-glow'),
+                style: { 
+                    borderColor: `hsla(${customColor}, 0.5)`,
+                    backgroundColor: `hsla(${customColor}, 0.12)`,
+                    color: `hsl(${customColor})`,
+                    '--status-color': customColor 
+                } as any,
+                stroke: `hsl(${customColor})`
+            };
+        }
         return { 
             card: 'border-zinc-300 bg-zinc-50/50 dark:bg-zinc-900/40 dark:border-zinc-800', 
             style: { color: 'hsl(var(--foreground))' }, 
@@ -59,13 +72,13 @@ export function StatsCard({
     if (isCritical) return { card: 'border-red-400 bg-red-50 dark:bg-red-900/20 animate-pulse', style: {}, stroke: '#dc2626' };
 
     // Busca cor no Laboratório
-    const customColor = statusColors[title];
+    const customColor = statusColors[title] || statusColors[t];
     if (customColor) {
         return {
             card: cn(containerStyle === 'glow' && 'style-glow'),
             style: { 
                 borderColor: `hsla(${customColor}, 0.5)`,
-                backgroundColor: `hsla(${customColor}, 0.15)`,
+                backgroundColor: `hsla(${customColor}, 0.12)`,
                 color: `hsl(${customColor})`,
                 '--status-color': customColor 
             } as any,

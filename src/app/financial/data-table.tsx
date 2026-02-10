@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -69,6 +68,7 @@ import { FinancialSummary } from '@/components/financial/financial-summary';
 import { DraggableHeader } from './columns';
 import { Separator } from '@/components/ui/separator';
 import { proposalStatuses } from '@/lib/config-data';
+import { useTheme } from '@/components/theme-provider';
 
 const STORAGE_KEY_VISIBILITY = 'lk-ramos-financial-columns-visibility-v2';
 const STORAGE_KEY_ORDER = 'lk-ramos-financial-columns-order-v2';
@@ -104,6 +104,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   onShowDetails,
   userSettings,
 }, ref) => {
+  const { statusColors } = useTheme();
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'commissionPaymentDate', desc: true }]);
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -375,6 +376,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 isPrivacyMode={isPrivacyMode}
                 isFiltered={isAnyFilterActive}
                 onShowDetails={onShowDetails}
+                userSettings={userSettings}
             />
 
             <Card className="print:shadow-none print:border-none financial-table border-border/50 shadow-md rounded-xl overflow-hidden">
@@ -384,9 +386,19 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                             <Tabs value={statusFilter} onValueChange={(value) => setStatusFilter(value as CommissionStatus | 'Todos')}>
                                 <TabsList className="bg-muted/50">
                                     <TabsTrigger value="Todos" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Todos</TabsTrigger>
-                                    <TabsTrigger value="Paga" className="border border-transparent data-[state=active]:bg-green-100 data-[state=active]:text-green-700 data-[state=active]:border-green-300">Pagas</TabsTrigger>
-                                    <TabsTrigger value="Pendente" className="border border-transparent data-[state=active]:bg-yellow-100 data-[state=active]:text-yellow-700 data-[state=active]:border-yellow-300">Pendentes</TabsTrigger>
-                                    <TabsTrigger value="Parcial" className="border border-transparent data-[state=active]:bg-orange-100 data-[state=active]:text-orange-700 data-[state=active]:border-orange-300">Parciais</TabsTrigger>
+                                    
+                                    {['Paga', 'Pendente', 'Parcial'].map((status) => (
+                                        <TabsTrigger 
+                                            key={status}
+                                            value={status} 
+                                            className={cn(
+                                                "border border-transparent transition-all data-[state=active]:status-custom"
+                                            )}
+                                            style={statusColors[status] ? { '--status-color': statusColors[status] } as any : {}}
+                                        >
+                                            {status === 'Paga' ? 'Pagas' : status === 'Pendente' ? 'Pendentes' : 'Parciais'}
+                                        </TabsTrigger>
+                                    ))}
                                 </TabsList>
                             </Tabs>
                             <div className="flex items-center gap-2 flex-wrap">

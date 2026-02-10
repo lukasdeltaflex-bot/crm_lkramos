@@ -403,17 +403,27 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                 </TableHeader>
                 <TableBody>
                 {table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row) => (
-                    <TableRow
-                        key={row.id}
-                        data-state={row.getIsSelected() && 'selected'}
-                        className="transition-colors hover:bg-primary/[0.02]"
-                    >
-                        {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} className="py-4">{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-                        ))}
-                    </TableRow>
-                    ))
+                    table.getRowModel().rows.map((row) => {
+                        const proposal = row.original;
+                        const status = proposal.status;
+                        const colorValue = statusColors[status];
+
+                        return (
+                            <TableRow
+                                key={row.id}
+                                data-state={row.getIsSelected() && 'selected'}
+                                className={cn(
+                                    "transition-colors",
+                                    colorValue ? "status-row-custom" : "hover:bg-primary/[0.02]"
+                                )}
+                                style={colorValue ? { '--status-color': colorValue } as any : {}}
+                            >
+                                {row.getVisibleCells().map((cell) => (
+                                <TableCell key={cell.id} className="py-4">{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                                ))}
+                            </TableRow>
+                        )
+                    })
                 ) : (
                     <TableRow><TableCell colSpan={columns.length} className="h-24 text-center">Nenhum resultado para os filtros aplicados.</TableCell></TableRow>
                 )}

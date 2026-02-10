@@ -83,7 +83,7 @@
   }
 }
 
-/* 🚦 SISTEMA DINÂMICO DE STATUS V3 */
+/* 🚦 SISTEMA DINÂMICO DE STATUS V4 */
 .status-custom {
     color: hsl(var(--status-color)) !important;
     background-color: hsla(var(--status-color), 0.12) !important;
@@ -92,8 +92,9 @@
 
 /* EFEITO NEON (GLOW) */
 .style-glow .status-custom,
-.style-glow.card[style*="--status-color"] {
-    box-shadow: 0 0 15px hsla(var(--status-color), 0.3) !important;
+.style-glow.card[style*="--status-color"],
+.style-glow .status-row-custom[style*="--status-color"] {
+    box-shadow: 0 0 15px hsla(var(--status-color), 0.2) !important;
 }
 
 .status-row-custom {

@@ -211,7 +211,15 @@ export default function SettingsPage() {
 
   const isLoading = isUserLoading || isSettingsLoading;
 
-  const colorableStatuses = [...proposalStatuses, "COMISSÃO RECEBIDA", "SALDO A RECEBER", "COMISSÃO ESPERADA"];
+  const colorableStatuses = [
+    ...proposalStatuses, 
+    "Paga", "Pendente", "Parcial", // Status de Comissão
+    "TOTAL DIGITADO", 
+    "PRODUÇÃO DIGITADA", 
+    "COMISSÃO RECEBIDA", 
+    "SALDO A RECEBER", 
+    "COMISSÃO ESPERADA"
+  ];
 
   return (
     <AppLayout>
