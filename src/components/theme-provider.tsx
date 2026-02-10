@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -63,30 +62,20 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     setIsMounted(true);
-    const savedColor = localStorage.getItem("color-theme");
-    if (savedColor) setColorThemeState(savedColor);
+    const getSaved = (key: string, def: string) => {
+        const val = localStorage.getItem(key);
+        return val || def;
+    };
+
+    setColorThemeState(getSaved("color-theme", "padrão"));
+    setRadiusState(getSaved("radius-theme", "moderno"));
+    setSidebarStyleState(getSaved("sidebar-theme", "default"));
+    setContainerStyleState(getSaved("container-style", "moderno"));
+    setBackgroundTextureState(getSaved("texture-theme", "none"));
+    setColorIntensityState(getSaved("intensity-theme", "sobrio"));
+    setAnimationStyleState(getSaved("animation-theme", "sutil"));
+    setFontStyleState(getSaved("font-theme", "moderno"));
     
-    const savedRadius = localStorage.getItem("radius-theme");
-    if (savedRadius && RADIUS_OPTIONS.includes(savedRadius)) setRadiusState(savedRadius);
-    
-    const savedSidebar = localStorage.getItem("sidebar-theme");
-    if (savedSidebar && SIDEBAR_OPTIONS.includes(savedSidebar)) setSidebarStyleState(savedSidebar);
-
-    const savedContainer = localStorage.getItem("container-style");
-    if (savedContainer && CONTAINER_STYLES.includes(savedContainer)) setContainerStyleState(savedContainer);
-
-    const savedTexture = localStorage.getItem("texture-theme");
-    if (savedTexture && TEXTURE_OPTIONS.includes(savedTexture)) setBackgroundTextureState(savedTexture);
-
-    const savedIntensity = localStorage.getItem("intensity-theme");
-    if (savedIntensity && INTENSITY_OPTIONS.includes(savedIntensity)) setColorIntensityState(savedIntensity);
-
-    const savedAnim = localStorage.getItem("animation-theme");
-    if (savedAnim && ANIMATION_OPTIONS.includes(savedAnim)) setAnimationStyleState(savedAnim);
-
-    const savedFont = localStorage.getItem("font-theme");
-    if (savedFont && FONT_OPTIONS.includes(savedFont)) setFontStyleState(savedFont);
-
     const savedGlass = localStorage.getItem("glass-intensity");
     if (savedGlass) setGlassIntensityState(Number(savedGlass));
 
@@ -106,35 +95,28 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
       root.style.setProperty('--sidebar-primary', primaryValue);
       localStorage.setItem("color-theme", colorTheme);
 
-      root.classList.remove(...RADIUS_OPTIONS.map(r => `radius-${r}`));
-      root.classList.add(`radius-${radius}`);
-      localStorage.setItem("radius-theme", radius);
+      // Classes Globais
+      const clearAndAdd = (list: string[], prefix: string, current: string) => {
+          root.classList.remove(...list.map(item => `${prefix}-${item}`));
+          root.classList.add(`${prefix}-${current}`);
+          localStorage.setItem(`${prefix}-theme`, current);
+      };
 
-      root.classList.remove(...SIDEBAR_OPTIONS.map(s => `sidebar-${s}`));
+      clearAndAdd(RADIUS_OPTIONS, "radius", radius);
+      clearAndAdd(CONTAINER_STYLES, "style", containerStyle);
+      clearAndAdd(TEXTURE_OPTIONS, "texture", backgroundTexture);
+      clearAndAdd(INTENSITY_OPTIONS, "intensity", colorIntensity);
+      clearAndAdd(ANIMATION_OPTIONS, "anim", animationStyle);
+      
+      // Font Style fix: use font- prefix
+      root.classList.remove(...FONT_OPTIONS.map(f => `font-${f}`));
+      root.classList.add(`font-${fontStyle}`);
+      localStorage.setItem("font-theme", fontStyle);
+
       if (sidebarStyle !== 'default') {
         root.classList.add(`sidebar-${sidebarStyle}`);
       }
       localStorage.setItem("sidebar-theme", sidebarStyle);
-
-      root.classList.remove(...CONTAINER_STYLES.map(s => `style-${s}`));
-      root.classList.add(`style-${containerStyle}`);
-      localStorage.setItem("container-style", containerStyle);
-
-      root.classList.remove(...TEXTURE_OPTIONS.map(t => `texture-${t}`));
-      root.classList.add(`texture-${backgroundTexture}`);
-      localStorage.setItem("texture-theme", backgroundTexture);
-
-      root.classList.remove(...INTENSITY_OPTIONS.map(i => `intensity-${i}`));
-      root.classList.add(`intensity-${colorIntensity}`);
-      localStorage.setItem("intensity-theme", colorIntensity);
-
-      root.classList.remove(...ANIMATION_OPTIONS.map(a => `anim-${a}`));
-      root.classList.add(`anim-${animationStyle}`);
-      localStorage.setItem("animation-theme", animationStyle);
-
-      root.classList.remove(...FONT_OPTIONS.map(f => `font-${f}`));
-      root.classList.add(`font-${fontStyle}`);
-      localStorage.setItem("font-theme", fontStyle);
 
       root.style.setProperty('--glass-opacity', (glassIntensity / 100).toString());
       root.style.setProperty('--glass-blur', `${glassIntensity / 5}px`);
@@ -152,19 +134,19 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
     colorTheme,
     setColorTheme: (theme: string) => { setColorThemeState(theme); },
     radius,
-    setRadius: (r: string) => { if (RADIUS_OPTIONS.includes(r)) setRadiusState(r); },
+    setRadius: (r: string) => { setRadiusState(r); },
     sidebarStyle,
-    setSidebarStyle: (s: string) => { if (SIDEBAR_OPTIONS.includes(s)) setSidebarStyleState(s); },
+    setSidebarStyle: (s: string) => { setSidebarStyleState(s); },
     containerStyle,
-    setContainerStyle: (s: string) => { if (CONTAINER_STYLES.includes(s)) setContainerStyleState(s); },
+    setContainerStyle: (s: string) => { setContainerStyleState(s); },
     backgroundTexture,
-    setBackgroundTexture: (t: string) => { if (TEXTURE_OPTIONS.includes(t)) setBackgroundTextureState(t); },
+    setBackgroundTexture: (t: string) => { setBackgroundTextureState(t); },
     colorIntensity,
-    setColorIntensity: (i: string) => { if (INTENSITY_OPTIONS.includes(i)) setColorIntensityState(i); },
+    setColorIntensity: (i: string) => { setColorIntensityState(i); },
     animationStyle,
-    setAnimationStyle: (a: string) => { if (ANIMATION_OPTIONS.includes(a)) setAnimationStyleState(a); },
+    setAnimationStyle: (a: string) => { setAnimationStyleState(a); },
     fontStyle,
-    setFontStyle: (f: string) => { if (FONT_OPTIONS.includes(f)) setFontStyleState(f); },
+    setFontStyle: (f: string) => { setFontStyleState(f); },
     glassIntensity,
     setGlassIntensity: (v: number) => setGlassIntensityState(v),
     statusColors,

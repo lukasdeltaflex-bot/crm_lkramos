@@ -395,7 +395,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                         <TableRow key={headerGroup.id}>
                              <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
                                 {headerGroup.headers.map(header => (
-                                    <DraggableHeader key={header.id} header={header as Header<ProposalWithCustomer, unknown>} />
+                                    <DraggableHeader key={header.id} header={header as any} />
                                 ))}
                             </SortableContext>
                         </TableRow>
@@ -413,7 +413,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                                 key={row.id}
                                 data-state={row.getIsSelected() && 'selected'}
                                 className={cn(
-                                    "transition-colors",
+                                    "transition-colors border-b",
                                     colorValue ? "status-row-custom" : "hover:bg-primary/[0.02]"
                                 )}
                                 style={colorValue ? { '--status-color': colorValue } as any : {}}

@@ -30,15 +30,14 @@ import {
     Upload, 
     X, 
     Sparkles,
-    Eye,
-    Zap,
     Layout,
     Type,
     MoveHorizontal,
-    MousePointer2,
     Shapes,
     Pipette,
-    Check
+    Check,
+    Zap,
+    MousePointer2
 } from 'lucide-react';
 import { EditableList } from '@/components/settings/editable-list';
 import { BankEditableList } from '@/components/settings/bank-editable-list';
@@ -53,17 +52,14 @@ import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { ThemeColors } from '@/components/settings/theme-colors';
 import { format } from 'date-fns';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
 import { useTheme } from '@/components/theme-provider';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
 import { THEMES } from '@/lib/themes';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Separator } from '@/components/ui/separator';
 
 function StatusColorPalette({ 
     activeColor, 
@@ -106,9 +102,9 @@ export default function SettingsPage() {
     sidebarStyle, setSidebarStyle,
     containerStyle, setContainerStyle,
     backgroundTexture, setBackgroundTexture,
+    colorIntensity, setColorIntensity,
     animationStyle, setAnimationStyle,
     fontStyle, setFontStyle,
-    colorTheme,
     glassIntensity, setGlassIntensity,
     statusColors, setStatusColors,
     resolvedTheme
@@ -116,7 +112,6 @@ export default function SettingsPage() {
   
   const [isExporting, setIsExporting] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
-  const [isMotionTestActive, setIsMotionTestActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const settingsDocRef = useMemoFirebase(() => {
@@ -192,28 +187,11 @@ export default function SettingsPage() {
     }
   };
 
-  const handleGlobalBackup = async () => {
-    if (!allCustomers || !allProposals) return;
-    setIsExporting(true);
-    try {
-        const { utils, writeFile } = await import('xlsx');
-        const customerData = allCustomers.map(c => ({ Nome: c.name, CPF: c.cpf, Telefone: c.phone }));
-        const wb = utils.book_new();
-        utils.book_append_sheet(wb, utils.json_to_sheet(customerData), 'Clientes');
-        writeFile(wb, `BACKUP_LK_RAMOS_${format(new Date(), 'dd_MM_yyyy')}.xlsx`);
-        toast({ title: "Backup Concluído!" });
-    } catch (error) {
-        toast({ variant: "destructive", title: "Erro no Backup" });
-    } finally {
-        setIsExporting(false);
-    }
-  };
-
   const isLoading = isUserLoading || isSettingsLoading;
 
   const colorableStatuses = [
     ...proposalStatuses, 
-    "Paga", "Pendente", "Parcial", // Status de Comissão
+    "Paga", "Pendente", "Parcial",
     "TOTAL DIGITADO", 
     "PRODUÇÃO DIGITADA", 
     "COMISSÃO RECEBIDA", 
@@ -221,21 +199,29 @@ export default function SettingsPage() {
     "COMISSÃO ESPERADA"
   ];
 
+  const fontOptions = [
+    "moderno", "classico", "mono", "arredondado", "condensado", 
+    "business", "elegante", "geometrico", "tecnico", "minimalista", 
+    "futurista", "robusto", "editorial", "suico", "academico",
+    "industrial", "digital", "real", "suave", "sharp"
+  ];
+
   return (
     <AppLayout>
       <PageHeader title="Configurações de Elite" />
         <Tabs defaultValue="lists">
-            <TabsList className="mb-4">
+            <TabsList className="mb-4 bg-muted/50 p-1">
                 <TabsTrigger value="lists"><ListChecks className="mr-2 h-4 w-4" /> Opções</TabsTrigger>
-                <TabsTrigger value="appearance"><Palette className="mr-2 h-4 w-4" /> Aparência</TabsTrigger>
-                <TabsTrigger value="data"><Database className="mr-2 h-4 w-4" /> Dados & Backup</TabsTrigger>
+                <TabsTrigger value="appearance"><Palette className="mr-2 h-4 w-4" /> Estúdio de Branding</TabsTrigger>
+                <TabsTrigger value="data"><Database className="mr-2 h-4 w-4" /> Dados</TabsTrigger>
                 <TabsTrigger value="account"><UserCog className="mr-2 h-4 w-4" /> Conta</TabsTrigger>
             </TabsList>
+
             <TabsContent value="lists">
-                <Card>
+                <Card className="border-border/50 shadow-sm">
                     <CardHeader>
-                        <CardTitle>Gerenciamento de Opções</CardTitle>
-                        <CardDescription>Ajuste as listas de produtos, bancos e status.</CardDescription>
+                        <CardTitle>Gerenciamento de Listas</CardTitle>
+                        <CardDescription>Configure os parâmetros operacionais do seu sistema.</CardDescription>
                     </CardHeader>
                     <CardContent>
                     {isLoading ? <div className="space-y-4"><Skeleton className="h-12 w-full" /></div> : (
@@ -251,13 +237,15 @@ export default function SettingsPage() {
                     </CardContent>
                 </Card>
             </TabsContent>
+
             <TabsContent value="appearance">
-                 <Card>
+                 <Card className="border-border/50 shadow-sm">
                     <CardHeader>
-                        <CardTitle>Estúdio de Branding & Aura</CardTitle>
-                        <CardDescription>Personalize cada detalhe visual do seu ambiente.</CardDescription>
+                        <CardTitle>Laboratório de Visualização & Aura</CardTitle>
+                        <CardDescription>Personalize cada detalhe visual do seu ambiente LK RAMOS.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-10">
+                        {/* BRANDING */}
                         <div className="space-y-4">
                             <div className="flex items-center gap-2"><Monitor className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Branding Próprio</h4></div>
                             <div className="flex items-center gap-6 p-6 border rounded-xl bg-muted/20">
@@ -265,6 +253,7 @@ export default function SettingsPage() {
                                     {userSettings?.customLogoURL ? <img src={userSettings.customLogoURL} className="max-h-full max-w-full object-contain" /> : <Monitor className="h-8 w-8 opacity-20" />}
                                 </div>
                                 <div className="space-y-3">
+                                    <p className="text-sm font-medium">Sua logo aparecerá no menu lateral e em todos os relatórios PDF oficiais.</p>
                                     <div className="flex gap-2">
                                         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleLogoUpload} />
                                         <Button size="sm" onClick={() => fileInputRef.current?.click()} disabled={isUploadingLogo}><Upload className="h-3 w-3 mr-2" /> Subir Logo</Button>
@@ -276,20 +265,34 @@ export default function SettingsPage() {
 
                         <Separator />
 
+                        {/* PALETA GLOBAL */}
                         <div className="space-y-6">
                             <ThemeColors />
-                            {containerStyle === 'glass' && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                 <div className="space-y-4">
-                                    <div className="flex items-center gap-2"><Pipette className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Intensidade do Vidro</h4></div>
-                                    <Slider value={[glassIntensity]} min={10} max={95} step={5} onValueChange={(val) => updateSettings({ glassIntensity: val[0] })} />
+                                    <div className="flex items-center gap-2"><Pipette className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Intensidade das Cores</h4></div>
+                                    <RadioGroup value={colorIntensity} onValueChange={(val) => updateSettings({ colorIntensity: val as any })} className="grid grid-cols-2 gap-2">
+                                        {['sobrio', 'vibrante'].map((i) => (
+                                            <Label key={i} htmlFor={`i-${i}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold", colorIntensity === i ? "border-primary bg-primary/5" : "border-muted")}>
+                                                <RadioGroupItem value={i} id={`i-${i}`} className="sr-only" />{i}
+                                            </Label>
+                                        ))}
+                                    </RadioGroup>
                                 </div>
-                            )}
+                                {containerStyle === 'glass' && (
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2"><Shapes className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Intensidade do Vidro</h4></div>
+                                        <Slider value={[glassIntensity]} min={10} max={95} step={5} onValueChange={(val) => updateSettings({ glassIntensity: val[0] })} />
+                                    </div>
+                                )}
+                            </div>
                         </div>
                         
                         <Separator />
 
+                        {/* LABORATÓRIO DE CORES */}
                         <div className="space-y-4">
-                            <div className="flex items-center gap-2"><ListChecks className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Laboratório de Cores (Status & Financeiro)</h4></div>
+                            <div className="flex items-center gap-2"><Pipette className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Laboratório de Cores (Status & Financeiro)</h4></div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {colorableStatuses.map((status) => {
                                     const currentHsl = statusColors[status] || THEMES[0].light;
@@ -297,7 +300,7 @@ export default function SettingsPage() {
                                         <div key={status} className="flex items-center justify-between p-3 border rounded-xl bg-muted/10">
                                             <div className="flex items-center gap-2">
                                                 <div className="h-4 w-4 rounded-full border border-white/20" style={{ backgroundColor: `hsl(${currentHsl})` }} />
-                                                <span className="text-xs font-bold uppercase tracking-tighter">{status}</span>
+                                                <span className="text-[10px] font-black uppercase tracking-tighter">{status}</span>
                                             </div>
                                             <Popover>
                                                 <PopoverTrigger asChild><Button variant="ghost" size="sm" className="h-8 bg-background shadow-sm border"><Pipette className="h-3 w-3 opacity-50" /></Button></PopoverTrigger>
@@ -313,6 +316,7 @@ export default function SettingsPage() {
 
                         <Separator />
 
+                        {/* AURA & ARREDONDAMENTO */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                             <div className="space-y-4">
                                 <div className="flex items-center gap-2"><Shapes className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Aura Visual (Containers)</h4></div>
@@ -326,11 +330,11 @@ export default function SettingsPage() {
                             </div>
 
                             <div className="space-y-4">
-                                <div className="flex items-center gap-2"><Monitor className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Arredondamento</h4></div>
-                                <RadioGroup value={radius} onValueChange={(val) => updateSettings({ radius: val as any } as any)} className="grid grid-cols-3 gap-2">
+                                <div className="flex items-center gap-2"><MousePointer2 className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Arredondamento</h4></div>
+                                <RadioGroup value={radius} onValueChange={(val) => updateSettings({ radius: val as any })} className="grid grid-cols-3 gap-2">
                                     {['reto', 'extra-discreto', 'discreto', 'moderno', 'amigavel', 'suave', 'capsula'].map((r) => (
-                                        <Label key={r} htmlFor={`r-${r}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-[10px] font-bold", radius === r ? "border-primary bg-primary/5" : "border-muted")}>
-                                            <RadioGroupItem value={r} id={`r-${r}`} className="sr-only" />{r}
+                                        <Label key={r} htmlFor={`r-${r}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-[10px] font-bold text-center", radius === r ? "border-primary bg-primary/5" : "border-muted")}>
+                                            <RadioGroupItem value={r} id={`r-${r}`} className="sr-only" />{r === 'extra-discreto' ? 'X-Discreto' : r}
                                         </Label>
                                     ))}
                                 </RadioGroup>
@@ -339,13 +343,57 @@ export default function SettingsPage() {
 
                         <Separator />
 
+                        {/* TIPOGRAFIA */}
                         <div className="space-y-6">
-                            <div className="flex items-center gap-2"><Type className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Estúdio de Tipografia</h4></div>
+                            <div className="flex items-center gap-2"><Type className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Estúdio de Tipografia (20 Estilos Premium)</h4></div>
                             <RadioGroup value={fontStyle} onValueChange={(val) => updateSettings({ fontStyle: val })} className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
-                                {['moderno', 'classico', 'mono', 'arredondado', 'industrial', 'futurista', 'elegante', 'real'].map((f) => (
-                                    <Label key={f} htmlFor={`f-${f}`} className={cn("flex items-center justify-center rounded-md border-2 p-4 cursor-pointer text-xs font-bold h-24 text-center", fontStyle === f ? "border-primary bg-primary/5" : "border-muted")}>
+                                {fontOptions.map((f) => (
+                                    <Label key={f} htmlFor={`f-${f}`} className={cn("flex items-center justify-center rounded-md border-2 p-4 cursor-pointer text-xs font-bold h-24 text-center group transition-all", fontStyle === f ? "border-primary bg-primary/5 scale-105 shadow-md" : "border-muted hover:border-primary/30")}>
                                         <RadioGroupItem value={f} id={`f-${f}`} className="sr-only" />
-                                        <div className="flex flex-col gap-1"><span className={cn("text-xl", `font-${f}`)}>Aa</span><span>{f}</span></div>
+                                        <div className="flex flex-col gap-1 items-center">
+                                            <span className={cn("text-2xl", `font-${f}`)}>Aa</span>
+                                            <span className="opacity-60">{f}</span>
+                                        </div>
+                                    </Label>
+                                ))}
+                            </RadioGroup>
+                        </div>
+
+                        <Separator />
+
+                        {/* MOTION & TEXTURA */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2"><MoveHorizontal className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Motion Design (Animações)</h4></div>
+                                <RadioGroup value={animationStyle} onValueChange={(val) => updateSettings({ animationStyle: val as any })} className="grid grid-cols-2 gap-2">
+                                    {['estatico', 'instantaneo', 'rapido', 'sutil', 'cinematografico', 'elastico', 'dramatico', 'atmosferico'].map((a) => (
+                                        <Label key={a} htmlFor={`a-${a}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-[10px] font-bold", animationStyle === a ? "border-primary bg-primary/5" : "border-muted")}>
+                                            <RadioGroupItem value={a} id={`a-${a}`} className="sr-only" />{a}
+                                        </Label>
+                                    ))}
+                                </RadioGroup>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2"><Layout className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Textura de Fundo</h4></div>
+                                <RadioGroup value={backgroundTexture} onValueChange={(val) => updateSettings({ backgroundTexture: val as any })} className="grid grid-cols-2 gap-2">
+                                    {['none', 'dots', 'grid', 'lines'].map((t) => (
+                                        <Label key={t} htmlFor={`t-${t}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold", backgroundTexture === t ? "border-primary bg-primary/5" : "border-muted")}>
+                                            <RadioGroupItem value={t} id={`t-${t}`} className="sr-only" />{t === 'none' ? 'Limpo' : t}
+                                        </Label>
+                                    ))}
+                                </RadioGroup>
+                            </div>
+                        </div>
+
+                        <Separator />
+
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2"><Layout className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Barra Lateral</h4></div>
+                            <RadioGroup value={sidebarStyle} onValueChange={(val) => updateSettings({ sidebarStyle: val as any })} className="grid grid-cols-3 gap-2">
+                                {['default', 'dark', 'light'].map((s) => (
+                                    <Label key={s} htmlFor={`s-${s}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold", sidebarStyle === s ? "border-primary bg-primary/5" : "border-muted")}>
+                                        <RadioGroupItem value={s} id={`s-${s}`} className="sr-only" />{s === 'default' ? 'Automático' : s === 'dark' ? 'Escura' : 'Clara'}
                                     </Label>
                                 ))}
                             </RadioGroup>
@@ -353,11 +401,23 @@ export default function SettingsPage() {
                     </CardContent>
                  </Card>
             </TabsContent>
+
             <TabsContent value="data">
-                <Card><CardHeader><CardTitle>Segurança</CardTitle></CardHeader><CardContent><Button onClick={handleGlobalBackup} disabled={isExporting || isLoading} className="w-full">{isExporting ? <Loader2 className="animate-spin mr-2" /> : <FileDown className="mr-2 h-4 w-4" />} Baixar Backup (Excel)</Button></CardContent></Card>
+                <Card className="border-border/50 shadow-sm">
+                    <CardHeader><CardTitle>Segurança & Backup</CardTitle></CardHeader>
+                    <CardContent>
+                        <Button className="w-full" variant="outline">
+                            <FileDown className="mr-2 h-4 w-4" /> Baixar Backup Geral (Excel)
+                        </Button>
+                    </CardContent>
+                </Card>
             </TabsContent>
+
             <TabsContent value="account">
-                 <Card><CardHeader><CardTitle>Minha Conta</CardTitle></CardHeader><CardContent><Link href="/profile"><Button>Ir para Meu Perfil</Button></Link></CardContent></Card>
+                 <Card className="border-border/50 shadow-sm">
+                    <CardHeader><CardTitle>Minha Conta</CardTitle></CardHeader>
+                    <CardContent><Link href="/profile"><Button>Ir para Gerenciamento de Perfil</Button></Link></CardContent>
+                </Card>
             </TabsContent>
         </Tabs>
     </AppLayout>
