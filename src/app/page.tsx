@@ -1,4 +1,3 @@
-
 'use client';
 import React, { useState, useEffect, useMemo } from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -52,7 +51,6 @@ export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  // Estados de controle
   const [dialogData, setDialogData] = useState<{ title: string; proposals: Proposal[] } | null>(null);
   const [startDateInput, setStartDateInput] = useState('');
   const [endDateInput, setEndDateInput] = useState('');
@@ -75,7 +73,7 @@ export default function DashboardPage() {
     if (!firestore || !user) return null;
     return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid));
   }, [firestore, user]);
-  const { data: customers, isLoading: customersLoading } = useCollection<Customer>(customersQuery);
+  const { data: customers } = useCollection<Customer>(customersQuery);
 
   const userProfileDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -88,19 +86,14 @@ export default function DashboardPage() {
     if (formattedValue.length > 8) formattedValue = formattedValue.substring(0, 8);
     formattedValue = formattedValue.replace(/(\d{2})(\d)/, '$1/$2');
     formattedValue = formattedValue.replace(/(\d{2})(\d)/, '$1/$2');
-    
-    if (type === 'start') {
-      setStartDateInput(formattedValue);
-    } else {
-      setEndDateInput(formattedValue);
-    }
+    if (type === 'start') setStartDateInput(formattedValue);
+    else setEndDateInput(formattedValue);
   };
 
   const applyRange = (range: 'today' | 'yesterday' | 'week' | 'month' | 'lastMonth') => {
     const now = new Date();
     let from: Date;
     let to: Date = now;
-
     switch (range) {
         case 'today': from = startOfDay(now); break;
         case 'yesterday': from = startOfDay(subDays(now, 1)); to = endOfDay(subDays(now, 1)); break;
@@ -109,7 +102,6 @@ export default function DashboardPage() {
         case 'lastMonth': from = startOfMonth(subMonths(now, 1)); to = endOfMonth(subMonths(now, 1)); break;
         default: return;
     }
-
     setStartDateInput(from.toLocaleDateString('pt-BR'));
     setEndDateInput(to.toLocaleDateString('pt-BR'));
     setAppliedDateRange({ from, to });
@@ -140,7 +132,7 @@ export default function DashboardPage() {
 
     const prevMonthStart = startOfMonth(subMonths(fromDate, 1));
 
-    // UNIVERSO MÊS VIGENTE (Performance, Reprovas e Mix de Produtos)
+    // UNIVERSO MÊS VIGENTE (Performance e Reprovas)
     const digitizedInPeriod = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
@@ -167,10 +159,8 @@ export default function DashboardPage() {
     const orderedFlow = ['Pendente', 'Em Andamento', 'Aguardando Saldo', 'Saldo Pago', 'Reprovado'];
 
     orderedFlow.forEach(status => {
-        // REGRA DE OURO: Reprovado é estritamente do mês vigente. Outros são Mês + Anterior.
         const sourceList = (status === 'Reprovado') ? digitizedInPeriod : digitizedInExtendedPeriod;
         const list = sourceList.filter(p => p.status === status);
-        
         statusAnalysis[status] = {
             total: getSum(list),
             count: list.length,
@@ -186,12 +176,18 @@ export default function DashboardPage() {
         return d >= fromDate && d <= effectiveToDate;
     });
 
+    // IDENTIFICA QUAL STATUS ESTÁ "EM ALTA" (Maior volume na esteira ativa)
+    const hotStatus = Object.entries(statusAnalysis)
+        .filter(([name]) => name !== 'Reprovado')
+        .sort((a, b) => b[1].total - a[1].total)[0]?.[0];
+
     return {
         totalDigitado: getSum(digitizedInPeriod),
         topTotal: getTopOperator(digitizedInPeriod),
         statusAnalysis,
+        hotStatus,
         proposals: {
-            digitadoNoMes: digitizedInPeriod, // Mix de produtos usa esse universo
+            digitadoNoMes: digitizedInPeriod,
             pagoNoMes: paidInPeriod
         }
     };
@@ -287,6 +283,7 @@ export default function DashboardPage() {
                     icon={BadgePercent} 
                     description="ESTEIRA (MÊS ATUAL + ANT)"
                     topContributor={stats.statusAnalysis['Pendente'].top}
+                    isHot={stats.hotStatus === 'Pendente'}
                 />
             </div>
 
@@ -297,6 +294,7 @@ export default function DashboardPage() {
                     icon={Hourglass} 
                     description="ESTEIRA (MÊS ATUAL + ANT)"
                     topContributor={stats.statusAnalysis['Em Andamento'].top}
+                    isHot={stats.hotStatus === 'Em Andamento'}
                 />
             </div>
 
@@ -307,6 +305,7 @@ export default function DashboardPage() {
                     icon={Clock} 
                     description="ESTEIRA (MÊS ATUAL + ANT)"
                     topContributor={stats.statusAnalysis['Aguardando Saldo'].top}
+                    isHot={stats.hotStatus === 'Aguardando Saldo'}
                 />
             </div>
 
@@ -317,6 +316,7 @@ export default function DashboardPage() {
                     icon={CheckCircle2} 
                     description="ESTEIRA (MÊS ATUAL + ANT)"
                     topContributor={stats.statusAnalysis['Saldo Pago'].top}
+                    isHot={stats.hotStatus === 'Saldo Pago'}
                 />
             </div>
 
@@ -345,12 +345,12 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <RadarWidget proposals={proposals || []} customers={customers || []} isLoading={proposalsLoading || customersLoading} />
+            <RadarWidget proposals={proposals || []} customers={customers || []} isLoading={proposalsLoading} />
             <DailySummary proposals={proposals || []} customers={customers || []} userProfile={userProfile || null} />
         </div>
 
         <div className="w-full">
-            <RecentProposals proposals={proposals || []} customers={customers || []} isLoading={proposalsLoading || customersLoading} />
+            <RecentProposals proposals={proposals || []} customers={customers || []} isLoading={proposalsLoading} />
         </div>
       </div>
 

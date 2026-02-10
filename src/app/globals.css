@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -93,48 +92,48 @@
 .radius-capsula { --radius: 9999px !important; }
 
 /* 🎨 MOTOR DE TIPOGRAFIA (20 ESTILOS) */
-.font-moderno { font-family: var(--font-sans), sans-serif; }
-.font-classico { font-family: Georgia, serif; }
-.font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-.font-arredondado { font-family: "Quicksand", "Segoe UI", sans-serif; }
-.font-condensado { font-family: "Inter Tight", "Arial Narrow", sans-serif; }
-.font-business { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
-.font-elegante { font-family: "Didot", "Bodoni MT", serif; }
-.font-geometrico { font-family: "Futura", "Trebuchet MS", sans-serif; }
-.font-tecnico { font-family: "Roboto Mono", monospace; }
-.font-minimalista { font-family: "Avenir Next", "Avenir", sans-serif; }
-.font-futurista { font-family: "Orbitron", "Impact", sans-serif; }
-.font-robusto { font-family: "Arial Black", Gadget, sans-serif; }
-.font-editorial { font-family: "Charter", "Bitstream Charter", serif; }
-.font-suico { font-family: "Univers", "Helvetica", sans-serif; }
-.font-academico { font-family: "Century Schoolbook", serif; }
-.font-industrial { font-family: "Bebas Neue", "Impact", sans-serif; }
-.font-digital { font-family: "Courier New", Courier, monospace; }
-.font-real { font-family: "Times New Roman", Times, serif; }
-.font-suave { font-family: "Ubuntu", sans-serif; }
-.font-sharp { font-family: "Inter", "Segoe UI", sans-serif; font-weight: 500; }
+.font-moderno { font-family: var(--font-sans), sans-serif !important; }
+.font-classico { font-family: Georgia, serif !important; }
+.font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; }
+.font-arredondado { font-family: "Quicksand", "Segoe UI", sans-serif !important; }
+.font-condensado { font-family: "Inter Tight", "Arial Narrow", sans-serif !important; }
+.font-business { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important; }
+.font-elegante { font-family: "Didot", "Bodoni MT", serif !important; }
+.font-geometrico { font-family: "Futura", "Trebuchet MS", sans-serif !important; }
+.font-tecnico { font-family: "Roboto Mono", monospace !important; }
+.font-minimalista { font-family: "Avenir Next", "Avenir", sans-serif !important; }
+.font-futurista { font-family: "Orbitron", "Impact", sans-serif !important; }
+.font-robusto { font-family: "Arial Black", Gadget, sans-serif !important; }
+.font-editorial { font-family: "Charter", "Bitstream Charter", serif !important; }
+.font-suico { font-family: "Univers", "Helvetica", sans-serif !important; }
+.font-academico { font-family: "Century Schoolbook", serif !important; }
+.font-industrial { font-family: "Bebas Neue", "Impact", sans-serif !important; }
+.font-digital { font-family: "Courier New", Courier, monospace !important; }
+.font-real { font-family: "Times New Roman", Times, serif !important; }
+.font-suave { font-family: "Ubuntu", sans-serif !important; }
+.font-sharp { font-family: "Inter", "Segoe UI", sans-serif !important; font-weight: 500 !important; }
 
 /* Aplicação Global da Tipografia */
-html.font-moderno, html.font-moderno body { @extend .font-moderno; }
-html.font-classico, html.font-classico body { @extend .font-classico; }
-html.font-mono, html.font-mono body { @extend .font-mono; }
-html.font-arredondado, html.font-arredondado body { @extend .font-arredondado; }
-html.font-condensado, html.font-condensado body { @extend .font-condensado; }
-html.font-business, html.font-business body { @extend .font-business; }
-html.font-elegante, html.font-elegante body { @extend .font-elegante; }
-html.font-geometrico, html.font-geometrico body { @extend .font-geometrico; }
-html.font-tecnico, html.font-tecnico body { @extend .font-tecnico; }
-html.font-minimalista, html.font-minimalista body { @extend .font-minimalista; }
-html.font-futurista, html.font-futurista body { @extend .font-futurista; }
-html.font-robusto, html.font-robusto body { @extend .font-robusto; }
-html.font-editorial, html.font-editorial body { @extend .font-editorial; }
-html.font-suico, html.font-suico body { @extend .font-suico; }
-html.font-academico, html.font-academico body { @extend .font-academico; }
-html.font-industrial, html.font-industrial body { @extend .font-industrial; }
-html.font-digital, html.font-digital body { @extend .font-digital; }
-html.font-real, html.font-real body { @extend .font-real; }
-html.font-suave, html.font-suave body { @extend .font-suave; }
-html.font-sharp, html.font-sharp body { @extend .font-sharp; }
+html.font-moderno, html.font-moderno body { font-family: var(--font-sans), sans-serif !important; }
+html.font-classico, html.font-classico body { font-family: Georgia, serif !important; }
+html.font-mono, html.font-mono body { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; }
+html.font-arredondado, html.font-arredondado body { font-family: "Quicksand", "Segoe UI", sans-serif !important; }
+html.font-condensado, html.font-condensado body { font-family: "Inter Tight", "Arial Narrow", sans-serif !important; }
+html.font-business, html.font-business body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important; }
+html.font-elegante, html.font-elegante body { font-family: "Didot", "Bodoni MT", serif !important; }
+html.font-geometrico, html.font-geometrico body { font-family: "Futura", "Trebuchet MS", sans-serif !important; }
+html.font-tecnico, html.font-tecnico body { font-family: "Roboto Mono", monospace !important; }
+html.font-minimalista, html.font-minimalista body { font-family: "Avenir Next", "Avenir", sans-serif !important; }
+html.font-futurista, html.font-futurista body { font-family: "Orbitron", "Impact", sans-serif !important; }
+html.font-robusto, html.font-robusto body { font-family: "Arial Black", Gadget, sans-serif !important; }
+html.font-editorial, html.font-editorial body { font-family: "Charter", "Bitstream Charter", serif !important; }
+html.font-suico, html.font-suico body { font-family: "Univers", "Helvetica", sans-serif !important; }
+html.font-academico, html.font-academico body { font-family: "Century Schoolbook", serif !important; }
+html.font-industrial, html.font-industrial body { font-family: "Bebas Neue", "Impact", sans-serif !important; }
+html.font-digital, html.font-digital body { font-family: "Courier New", Courier, monospace !important; }
+html.font-real, html.font-real body { font-family: "Times New Roman", Times, serif !important; }
+html.font-suave, html.font-suave body { font-family: "Ubuntu", sans-serif !important; }
+html.font-sharp, html.font-sharp body { font-family: "Inter", "Segoe UI", sans-serif !important; }
 
 /* 🚦 SISTEMA DINÂMICO DE STATUS V2 */
 .status-custom {

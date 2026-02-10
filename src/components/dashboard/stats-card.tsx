@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -27,8 +26,9 @@ interface StatsCardProps {
 }
 
 /**
- * StatsCard Elite V38
- * Aura de fundo (12%) e Bordas (50%) nítidas e sincronizadas com o Laboratório de Cores.
+ * StatsCard Elite V45
+ * Aura de fundo realçada (12%) e Bordas Dinâmicas (50%) sincronizadas com o Laboratório de Cores.
+ * Selo EM ALTA restaurado com animação de pulsação.
  */
 export function StatsCard({ 
     title, 
@@ -39,7 +39,6 @@ export function StatsCard({
     percentage, 
     className, 
     valueClassName,
-    sparklineData = [],
     isHot = false,
     isCritical = false,
     topContributor
@@ -54,7 +53,7 @@ export function StatsCard({
             card: '',
             style: { 
                 borderColor: `hsla(${customColor}, 0.5)`, // Borda nítida
-                backgroundColor: `hsla(${customColor}, 0.12)`, // Fundo levemente visível
+                backgroundColor: `hsla(${customColor}, 0.12)`, // Fundo visível (Aura)
                 color: `hsl(${customColor})`, // Texto na cor do status
                 '--status-color': customColor 
             } as any,
@@ -82,7 +81,6 @@ export function StatsCard({
         className={cn(
             'hover:shadow-lg transition-all group relative overflow-hidden rounded-xl h-full flex flex-col border-2 py-3.5 px-5', 
             theme.card,
-            isHot && 'ring-2 ring-orange-500 ring-offset-2',
             className
         )}
         style={theme.style}
@@ -97,7 +95,7 @@ export function StatsCard({
                     <AlertTriangle className="h-2.5 w-2.5 fill-current" /> PENDÊNCIA
                 </div>
             ) : isHot && (
-                <div className="flex items-center gap-1 text-[8px] font-bold text-orange-600 animate-pulse">
+                <div className="flex items-center gap-1 text-[8px] font-black text-orange-600 bg-white/80 dark:bg-black/40 px-1.5 py-0.5 rounded-full border border-orange-200 animate-pulse">
                     <Zap className="h-2.5 w-2.5 fill-current" /> EM ALTA
                 </div>
             )}
