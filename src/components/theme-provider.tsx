@@ -169,7 +169,9 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
 export function ThemeProvider({ children, ...props }: CustomThemeProviderProps) {
   return (
     <NextThemesProvider {...props}>
-      <ColorThemeProvider>{children}</ColorThemeProvider>
+      <ColorThemeProvider>
+        {children}
+      </ColorThemeProvider>
     </NextThemesProvider>
   )
 }

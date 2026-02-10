@@ -118,20 +118,26 @@
 .texture-grid { background-image: linear-gradient(hsl(var(--primary) / 0.05) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary) / 0.05) 1px, transparent 1px); background-size: 30px 30px; }
 .texture-lines { background-image: repeating-linear-gradient(45deg, hsl(var(--primary) / 0.02) 0px, hsl(var(--primary) / 0.02) 1px, transparent 1px, transparent 8px); }
 
-/* 🛡️ BARRA LATERAL ELITE (REGRAS DE IMPACTO) */
+/* 🛡️ BARRA LATERAL ELITE (CONTRASTE MÁXIMO) */
 .sidebar-dark [data-sidebar="sidebar"] {
     --sidebar-background: 240 10% 4% !important;
     --sidebar-foreground: 0 0% 100% !important;
     background-color: #000000 !important;
 }
 .sidebar-dark [data-sidebar="sidebar"] * { color: #ffffff !important; }
+.sidebar-dark [data-sidebar="sidebar"] .group-data-\[active\=true\]\:bg-sidebar-accent[data-active=true] {
+    background-color: hsla(0, 0%, 100%, 0.1) !important;
+}
 
 .sidebar-light [data-sidebar="sidebar"] {
     --sidebar-background: 0 0% 100% !important;
-    --sidebar-foreground: 0 0% 0% !important;
+    --sidebar-foreground: 240 10% 4% !important;
     background-color: #ffffff !important;
 }
 .sidebar-light [data-sidebar="sidebar"] * { color: #000000 !important; }
+.sidebar-light [data-sidebar="sidebar"] .group-data-\[active\=true\]\:bg-sidebar-accent[data-active=true] {
+    background-color: hsla(0, 0%, 0%, 0.05) !important;
+}
 
 /* ✍️ TIPOGRAFIA ELITE (20 ESTILOS) */
 .font-moderno { font-family: "Inter", sans-serif !important; }

@@ -31,7 +31,6 @@ import {
     Upload, 
     X, 
     Sparkles,
-    Layout,
     Type,
     MoveHorizontal,
     Shapes,
@@ -276,7 +275,7 @@ export default function SettingsPage() {
                                             {userSettings?.customLogoURL ? <img src={userSettings.customLogoURL} className="max-h-full max-w-full object-contain" alt="Preview Logo" /> : <Monitor className="h-8 w-8 opacity-20" />}
                                         </div>
                                         <div className="space-y-3">
-                                            <p className="text-sm font-medium">Sua logo aparecerá no menu lateral e em todos os relatórios PDF oficiais com Identidade Total.</p>
+                                            <p className="text-sm font-medium">Sua logo aparecerá no menu lateral e em todos os relatórios PDF oficiais.</p>
                                             <div className="flex gap-2">
                                                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleLogoUpload} />
                                                 <Button size="sm" onClick={() => fileInputRef.current?.click()} disabled={isUploadingLogo}><Upload className="h-3 w-3 mr-2" /> Subir Logo</Button>
@@ -453,15 +452,8 @@ export default function SettingsPage() {
                                             icon={Zap} 
                                             description="VALOR EM TRÂMITE"
                                             isHot={true}
-                                            className={cn(
-                                                preview.containerStyle === 'glow' && "style-glow",
-                                                preview.containerStyle === 'glass' && "style-glass",
-                                                preview.containerStyle === 'geometrico' && "style-geometrico",
-                                                preview.containerStyle === 'deep' && "style-deep"
-                                            )}
-                                            style={{
-                                                '--status-color': preview.statusColors['COMISSÃO ESPERADA'] || '217 33% 25%'
-                                            } as any}
+                                            overrideContainerStyle={preview.containerStyle}
+                                            overrideStatusColors={preview.statusColors}
                                         />
 
                                         <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mt-6">Preview de Badge & Botão</p>

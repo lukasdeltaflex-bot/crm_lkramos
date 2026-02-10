@@ -23,6 +23,8 @@ interface StatsCardProps {
   isCritical?: boolean;
   topContributor?: string;
   style?: React.CSSProperties;
+  overrideStatusColors?: Record<string, string>;
+  overrideContainerStyle?: string;
 }
 
 export function StatsCard({ 
@@ -37,10 +39,15 @@ export function StatsCard({
     isHot = false,
     isCritical = false,
     topContributor,
-    style
+    style,
+    overrideStatusColors,
+    overrideContainerStyle
 }: StatsCardProps) {
-  const { statusColors, containerStyle } = useTheme();
+  const { statusColors: globalStatusColors, containerStyle: globalContainerStyle } = useTheme();
   
+  const statusColors = overrideStatusColors || globalStatusColors;
+  const containerStyle = overrideContainerStyle || globalContainerStyle;
+
   const getThemeStyles = () => {
     const t = title.toUpperCase();
     const customColor = statusColors[title] || statusColors[t];
@@ -57,7 +64,7 @@ export function StatsCard({
         };
     }
     
-    // Fallback neutro - Zinc para TOTAL DIGITADO e PRODUÇÃO DIGITADA
+    // Fallback neutro
     if (t === 'TOTAL DIGITADO' || t === 'PRODUÇÃO DIGITADA') {
         return {
             card: 'border-zinc-300 bg-zinc-50/80 dark:bg-zinc-900/40 dark:border-zinc-700',
