@@ -26,7 +26,7 @@ import {
     Filter,
     Pipette,
     ListChecks
-} from 'lucide-center';
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function ManualPage() {
