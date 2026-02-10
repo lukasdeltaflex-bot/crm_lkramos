@@ -1,3 +1,4 @@
+
 "use client"
 
 import React from 'react';
@@ -65,9 +66,9 @@ export default function ManualPage() {
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Branding Próprio</strong>: Em Configurações, suba sua logomarca. Ela aparecerá no menu e em todos os relatórios PDF oficiais com Identidade Total.</li>
                             <li><strong>Identidade Total</strong>: Ao escolher uma fonte ou cor, ela é aplicada forçadamente em 100% do sistema, garantindo consistência absoluta.</li>
-                            <li><strong>Estúdio de Arredondamento</strong>: Escolha entre níveis como Reto (90º), Extra-Discreto (2px), Moderno (8px) ou Cápsula (32px) para definir a personalidade dos botões e cards.</li>
+                            <li><strong>Estúdio de Arredondamento</strong>: Escolha entre níveis como Reto (90º), Extra-Discreto (2px), Moderno (8px), Amigável (12px) ou Cápsula (32px).</li>
                             <li><strong>Estúdio de Tipografia</strong>: Escolha entre 20 estilos de fontes profissionais, como a *Industrial*, *Futurista* ou *Elegante*.</li>
-                            <li><strong>Motion Design (Ritmo)</strong>: Ajuste a velocidade de resposta. Use o modo *Elástico* para vivacidade, *Instantâneo* para rapidez extrema ou *Atmosférico* para luxo.</li>
+                            <li><strong>Motion Design (Ritmo)</strong>: Ajuste a velocidade de resposta. Use o modo *Instantâneo* para rapidez extrema ou *Atmosférico* para luxo.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -127,7 +128,7 @@ export default function ManualPage() {
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Radar de Vendas</strong>: Identifica automaticamente clientes com contratos pagos há mais de 12 meses (tempo de maturação).</li>
                             <li><strong>Inteligência Diária</strong>: Consolida retornos, alertas de comissões e clientes próximos de 75 anos.</li>
-                            <li><strong>Resumo Estratégico</strong>: Envie um relatório completo das pendências para seu e-mail em um único clique.</li>
+                            <li><strong>Layout Industrial</strong>: O grid 3x2 organiza os volumes de Total Digitado, Pendente, Em Andamento, Aguardando Saldo, Saldo Pago e Reprovado com clareza máxima.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>

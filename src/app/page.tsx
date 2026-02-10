@@ -60,7 +60,7 @@ export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  const [dialogData, setDialogData] = useState<{ title: string; proposals: Proposal[] } | null>(null);
+  const [dialogData, setDialogData] = setDialogData = useState<{ title: string; proposals: Proposal[] } | null>(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -155,7 +155,7 @@ export default function DashboardPage() {
         list.forEach(p => {
             if (p.operator) ops[p.operator] = (ops[p.operator] || 0) + p.grossAmount;
         });
-        return Object.entries(ops).sort((a,b) => b[1] - a[1])[0]?.[0] || '---';
+        return Object.entries(ops).sort((a,b) => b[1] - a[1])[0]?.[0] || userProfile?.displayName || userProfile?.fullName || '---';
     };
 
     const getSparkline = (list: Proposal[]) => {
@@ -212,7 +212,7 @@ export default function DashboardPage() {
             pago: paidInPeriod
         }
     };
-  }, [proposals, appliedDateRange, isClient, activeProposalStatuses]);
+  }, [proposals, appliedDateRange, isClient, activeProposalStatuses, userProfile]);
 
   const handleShowDetails = (title: string, props: Proposal[]) => {
     setDialogData({ title, proposals: props });
@@ -222,17 +222,6 @@ export default function DashboardPage() {
   const currentMonthName = rawMonthName.charAt(0).toUpperCase() + rawMonthName.slice(1);
 
   if (!stats) return null;
-
-  // Icons mapping for dynamic cards
-  const getStatusIcon = (status: string) => {
-      const s = status.toLowerCase();
-      if (s.includes('pago')) return CheckCircle2;
-      if (s.includes('andamento')) return Hourglass;
-      if (s.includes('saldo')) return Clock;
-      if (s.includes('repro')) return XCircle;
-      if (s.includes('pendente')) return BadgePercent;
-      return Activity;
-  };
 
   return (
     <AppLayout>
@@ -288,7 +277,7 @@ export default function DashboardPage() {
             </div>
         </div>
 
-        {/* META & KPI PRINCIPAL (PAGO) */}
+        {/* META DE PRODUÇÃO (KPI PRINCIPAL) */}
         <div className="w-full">
             <GoalCard 
                 currentProduction={stats.statusAnalysis['Pago']?.total || 0} 
@@ -300,38 +289,81 @@ export default function DashboardPage() {
             />
         </div>
 
-        {/* 1. TOTAL DIGITADO (CABECALHO DA GRADE) */}
-        <div className="w-full">
+        {/* GRID DE STATUS 3x2 CONFORME REFERÊNCIA */}
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {/* 1. TOTAL DIGITADO */}
             <div className="cursor-pointer" onClick={() => handleShowDetails('Total Digitado (Mês)', stats.proposals.todos)}>
                 <StatsCard 
                     title="Total Digitado" 
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.totalDigitado)} 
                     icon={FileText} 
-                    description="PRODUÇÃO MENSAL TOTAL"
+                    description="PRODUÇÃO MENSAL"
                     sparklineData={stats.totalDigitadoSpark}
                     topContributor={stats.topTotal}
                 />
             </div>
-        </div>
 
-        {/* 2. GRID DINÂMICO DE STATUS - ORDEM: PENDENTE, EM ANDAMENTO, AGUARDANDO SALDO, SALDO PAGO, REPROVADO */}
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {activeProposalStatuses.filter(s => s !== 'Pago').map((status) => {
-                const analysis = stats.statusAnalysis[status];
-                if (!analysis) return null;
-                return (
-                    <div key={status} className="cursor-pointer" onClick={() => handleShowDetails(`${status} (Acumulado)`, analysis.proposals)}>
-                        <StatsCard 
-                            title={status} 
-                            value={isPrivacyMode ? '•••••' : formatCurrency(analysis.total)} 
-                            icon={getStatusIcon(status)} 
-                            description="FLUXO EM ESTEIRA"
-                            sparklineData={analysis.spark}
-                            topContributor={analysis.top}
-                        />
-                    </div>
-                )
-            })}
+            {/* 2. PENDENTE */}
+            <div className="cursor-pointer" onClick={() => handleShowDetails('Pendente (Acumulado)', stats.statusAnalysis['Pendente']?.proposals || [])}>
+                <StatsCard 
+                    title="Pendente" 
+                    value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis['Pendente']?.total || 0)} 
+                    icon={BadgePercent} 
+                    description="VS PRODUÇÃO ATUAL"
+                    sparklineData={stats.statusAnalysis['Pendente']?.spark}
+                    topContributor={stats.statusAnalysis['Pendente']?.top}
+                    isHot={true}
+                />
+            </div>
+
+            {/* 3. EM ANDAMENTO */}
+            <div className="cursor-pointer" onClick={() => handleShowDetails('Em Andamento (Acumulado)', stats.statusAnalysis['Em Andamento']?.proposals || [])}>
+                <StatsCard 
+                    title="Em Andamento" 
+                    value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis['Em Andamento']?.total || 0)} 
+                    icon={Hourglass} 
+                    description="VS PRODUÇÃO ATUAL"
+                    sparklineData={stats.statusAnalysis['Em Andamento']?.spark}
+                    topContributor={stats.statusAnalysis['Em Andamento']?.top}
+                    isHot={true}
+                />
+            </div>
+
+            {/* 4. AGUARDANDO SALDO */}
+            <div className="cursor-pointer" onClick={() => handleShowDetails('Aguardando Saldo (Acumulado)', stats.statusAnalysis['Aguardando Saldo']?.proposals || [])}>
+                <StatsCard 
+                    title="Aguardando Saldo" 
+                    value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis['Aguardando Saldo']?.total || 0)} 
+                    icon={Clock} 
+                    description="VS PRODUÇÃO ATUAL"
+                    sparklineData={stats.statusAnalysis['Aguardando Saldo']?.spark}
+                    topContributor={stats.statusAnalysis['Aguardando Saldo']?.top}
+                />
+            </div>
+
+            {/* 5. SALDO PAGO */}
+            <div className="cursor-pointer" onClick={() => handleShowDetails('Saldo Pago (Acumulado)', stats.statusAnalysis['Saldo Pago']?.proposals || [])}>
+                <StatsCard 
+                    title="Saldo Pago" 
+                    value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis['Saldo Pago']?.total || 0)} 
+                    icon={CheckCircle2} 
+                    description="VS PRODUÇÃO ATUAL"
+                    sparklineData={stats.statusAnalysis['Saldo Pago']?.spark}
+                    topContributor={stats.statusAnalysis['Saldo Pago']?.top}
+                />
+            </div>
+
+            {/* 6. REPROVADO */}
+            <div className="cursor-pointer" onClick={() => handleShowDetails('Reprovado (Acumulado)', stats.statusAnalysis['Reprovado']?.proposals || [])}>
+                <StatsCard 
+                    title="Reprovado" 
+                    value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis['Reprovado']?.total || 0)} 
+                    icon={XCircle} 
+                    description="DO TOTAL DIGITADO"
+                    sparklineData={stats.statusAnalysis['Reprovado']?.spark}
+                    topContributor={stats.statusAnalysis['Reprovado']?.top}
+                />
+            </div>
         </div>
 
         {/* HISTÓRICO FINANCEIRO E MIX DE PRODUTOS */}
@@ -344,7 +376,7 @@ export default function DashboardPage() {
             </div>
         </div>
 
-        {/* RANKINGS DE PRODUÇÃO (ÁREA NOBRE) */}
+        {/* RANKINGS DE PRODUÇÃO */}
         <div className="w-full">
             <PartnerPerformanceCharts proposals={stats.proposals.todos} />
         </div>
@@ -363,7 +395,7 @@ export default function DashboardPage() {
             />
         </div>
 
-        {/* MONITORAMENTO DE ESTEIRA (LARGURA TOTAL) */}
+        {/* MONITORAMENTO DE ESTEIRA */}
         <div className="w-full">
             <RecentProposals 
                 proposals={proposals || []}
