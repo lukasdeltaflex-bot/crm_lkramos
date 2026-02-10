@@ -134,7 +134,7 @@
     background-color: #000000 !important;
     color: #ffffff !important;
 }
-.sidebar-dark [data-sidebar="sidebar"] * { color: #ffffff !important; }
+.sidebar-dark [data-sidebar="sidebar"] * { color: inherit !important; }
 .sidebar-dark [data-sidebar="sidebar"] [data-active="true"] {
     background-color: rgba(255, 255, 255, 0.15) !important;
     color: #ffffff !important;
@@ -149,7 +149,7 @@
     color: #000000 !important;
     border-right: 1px solid #e5e7eb !important;
 }
-.sidebar-light [data-sidebar="sidebar"] * { color: #000000 !important; }
+.sidebar-light [data-sidebar="sidebar"] * { color: inherit !important; }
 .sidebar-light [data-sidebar="sidebar"] [data-active="true"] {
     background-color: rgba(0, 0, 0, 0.05) !important;
     color: #000000 !important;

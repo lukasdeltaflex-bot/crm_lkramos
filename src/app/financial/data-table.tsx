@@ -104,7 +104,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   onShowDetails,
   userSettings,
 }, ref) => {
-  const { statusColors } = useTheme();
+  const { statusColors, containerStyle } = useTheme();
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'commissionPaymentDate', desc: true }]);
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);

@@ -73,13 +73,15 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
     const averbados = allProposals.filter(p => {
         const hasAverbacao = !!p.dateApproved;
         const isNotFullyPaid = p.commissionStatus !== 'Paga';
-        return hasAverbacao && isNotFullyPaid;
+        const isNotReprovado = p.status !== 'Reprovado';
+        return hasAverbacao && isNotFullyPaid && isNotReprovado;
     });
     const totalSaldoAReceber = averbados.reduce((sum, p) => sum + (p.commissionValue - (p.amountPaid || 0)), 0);
 
     /**
      * 4. COMISSÃO ESPERADA (Independente de Mês)
-     * Regra: Contratos que NÃO estão reprovados nem pagos.
+     * Regra: Soma todos os contratos da base, independente do mês, 
+     * EXCLUINDO estritamente 'Reprovado' e 'Pago'.
      */
     const esperados = allProposals.filter(p => {
         const isNotReprovado = p.status !== 'Reprovado';

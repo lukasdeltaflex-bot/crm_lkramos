@@ -156,7 +156,7 @@ export default function SettingsPage() {
         statusColors: userSettings.statusColors || theme.statusColors
       });
     }
-  }, [userSettings]);
+  }, [userSettings, theme.radius, theme.containerStyle, theme.backgroundTexture, theme.colorIntensity, theme.animationStyle, theme.fontStyle, theme.sidebarStyle, theme.statusColors]);
 
   const updateSettings = async (updatedLists: Partial<UserSettings>) => {
     if (settingsDocRef) {
@@ -460,6 +460,7 @@ export default function SettingsPage() {
                                             overrideContainerStyle={preview.containerStyle}
                                             overrideIntensity={preview.colorIntensity}
                                             overrideRadius={preview.radius}
+                                            overrideAnimationStyle={preview.animationStyle}
                                         />
 
                                         <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mt-6">Preview de Barra Lateral</p>

@@ -27,6 +27,7 @@ interface StatsCardProps {
   overrideContainerStyle?: string;
   overrideIntensity?: string;
   overrideRadius?: string;
+  overrideAnimationStyle?: string;
 }
 
 export function StatsCard({ 
@@ -45,14 +46,16 @@ export function StatsCard({
     overrideStatusColors,
     overrideContainerStyle,
     overrideIntensity,
-    overrideRadius
+    overrideRadius,
+    overrideAnimationStyle
 }: StatsCardProps) {
-  const { statusColors: globalStatusColors, containerStyle: globalContainerStyle, colorIntensity: globalIntensity, radius: globalRadius } = useTheme();
+  const { statusColors: globalStatusColors, containerStyle: globalContainerStyle, colorIntensity: globalIntensity, radius: globalRadius, animationStyle: globalAnimationStyle } = useTheme();
   
   const statusColors = overrideStatusColors || globalStatusColors;
   const containerStyle = overrideContainerStyle || globalContainerStyle;
   const intensity = overrideIntensity || globalIntensity;
   const radius = overrideRadius || globalRadius;
+  const animationStyle = overrideAnimationStyle || globalAnimationStyle;
 
   const getThemeStyles = () => {
     // Tenta encontrar cor para o título ou status
@@ -65,6 +68,7 @@ export function StatsCard({
                 containerStyle === 'glow' && 'style-glow',
                 `intensity-${intensity}`,
                 `radius-${radius}`,
+                `anim-${animationStyle}`,
                 'card'
             ),
             style: { 
@@ -75,7 +79,7 @@ export function StatsCard({
     
     // Fallback neutro com altura uniforme
     return { 
-        card: cn(`style-${containerStyle}`, 'border-zinc-200 bg-zinc-50/50 dark:bg-zinc-900/10 dark:border-zinc-800', `radius-${radius}`, 'card'), 
+        card: cn(`style-${containerStyle}`, 'border-zinc-200 bg-zinc-50/50 dark:bg-zinc-900/10 dark:border-zinc-800', `radius-${radius}`, `anim-${animationStyle}`, 'card'), 
         style: {}
     };
   };
@@ -85,7 +89,7 @@ export function StatsCard({
   return (
     <Card 
         className={cn(
-            'hover:shadow-lg transition-all group relative overflow-hidden flex flex-col border-2 py-3.5 px-5 min-h-[160px] status-custom h-full', 
+            'hover:shadow-lg transition-all group relative overflow-hidden flex flex-col border-2 py-3.5 px-5 min-h-[165px] status-custom h-full', 
             themeStyles.card,
             className
         )}
