@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -80,13 +79,12 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
 
     /**
      * 4. COMISSÃO ESPERADA (Independente de Mês)
-     * Regra: Todos os contratos da base, EXCEÇÃO: Reprovados/Cancelados e os já Pagos.
+     * Regra: Contratos que NÃO estão reprovados nem pagos.
      */
     const esperados = allProposals.filter(p => {
         const isNotReprovado = p.status !== 'Reprovado';
         const isNotPaid = p.status !== 'Pago';
-        const commissionNotReceived = p.commissionStatus !== 'Paga';
-        return isNotReprovado && isNotPaid && commissionNotReceived;
+        return isNotReprovado && isNotPaid;
     });
     const totalComissaoEsperada = esperados.reduce((sum, p) => sum + (p.commissionValue - (p.amountPaid || 0)), 0);
 

@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -65,42 +64,35 @@ export function StatsCard({
                 `style-${containerStyle}`,
                 containerStyle === 'glow' && 'style-glow',
                 `intensity-${intensity}`,
-                `radius-${radius}`
+                `radius-${radius}`,
+                'card'
             ),
             style: { 
                 borderColor: `hsla(${customColor}, var(--status-border-opacity, 0.5))`,
                 backgroundColor: `hsla(${customColor}, var(--status-bg-opacity, 0.12))`,
                 color: `hsl(${customColor})`,
                 '--status-color': customColor,
-                borderRadius: radius === 'organico' ? '32px' : radius === 'capsula' ? '9999px' : undefined
             } as any
         };
     }
     
     // Fallback neutro
-    if (t === 'TOTAL DIGITADO' || t === 'PRODUÇÃO DIGITADA') {
-        return {
-            card: cn(`style-${containerStyle}`, 'border-zinc-300 bg-zinc-50/80 dark:bg-zinc-900/40 dark:border-zinc-700', `radius-${radius}`),
-            style: { color: 'hsl(var(--foreground))', borderRadius: radius === 'organico' ? '32px' : radius === 'capsula' ? '9999px' : undefined }
-        }
-    }
-
     return { 
-        card: cn(`style-${containerStyle}`, 'border-zinc-200 bg-zinc-50/50 dark:bg-zinc-900/10 dark:border-zinc-800', `radius-${radius}`), 
-        style: { color: 'hsl(var(--foreground))', borderRadius: radius === 'organico' ? '32px' : radius === 'capsula' ? '9999px' : undefined }
+        card: cn(`style-${containerStyle}`, 'border-zinc-200 bg-zinc-50/50 dark:bg-zinc-900/10 dark:border-zinc-800', `radius-${radius}`, 'card'), 
+        style: { color: 'hsl(var(--foreground))' }
     };
   };
 
-  const theme = getThemeStyles();
+  const themeStyles = getThemeStyles();
 
   return (
     <Card 
         className={cn(
             'hover:shadow-lg transition-all group relative overflow-hidden flex flex-col border-2 py-3.5 px-5', 
-            theme.card,
+            themeStyles.card,
             className
         )}
-        style={{ ...theme.style, ...style }}
+        style={{ ...themeStyles.style, ...style }}
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-1.5">
         <div className="flex flex-col gap-0.5">

@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -450,11 +449,7 @@ export default function SettingsPage() {
                                     `anim-${preview.animationStyle}`,
                                     `style-${preview.containerStyle}`,
                                     `intensity-${preview.colorIntensity}`
-                                )}
-                                style={{
-                                    '--radius': preview.radius === 'organico' ? '32px' : preview.radius === 'capsula' ? '9999px' : '8px',
-                                    '--motion-duration': preview.animationStyle === 'atmosferico' ? '1200ms' : '300ms'
-                                } as any}>
+                                )}>
                                     <div className="space-y-4">
                                         <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Preview de KPI & Aura</p>
                                         <StatsCard 
@@ -472,7 +467,7 @@ export default function SettingsPage() {
 
                                         <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mt-6">Preview de Barra Lateral</p>
                                         <div className={cn(
-                                            "border rounded-[var(--radius)] p-4 flex gap-3 transition-all",
+                                            "border rounded-[var(--radius)] p-4 flex gap-3 transition-all shadow-sm",
                                             preview.sidebarStyle === 'dark' ? "bg-black text-white" : preview.sidebarStyle === 'light' ? "bg-white text-black" : "bg-muted text-foreground"
                                         )}>
                                             <div className="flex flex-col gap-2">
