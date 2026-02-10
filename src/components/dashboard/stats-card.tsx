@@ -27,8 +27,8 @@ interface StatsCardProps {
 }
 
 /**
- * StatsCard Premium Executivo V33
- * Sincronização 100% com o Laboratório de Cores para evitar valores pretos.
+ * StatsCard Premium Executivo V34
+ * Sincronização 100% com o Laboratório de Cores e Aura de Fundo (5% opacidade).
  */
 export function StatsCard({ 
     title, 
@@ -58,7 +58,7 @@ export function StatsCard({
             stroke: `hsl(${customColor})`,
             style: { 
                 borderColor: `hsla(${customColor}, 0.3)`,
-                backgroundColor: `hsla(${customColor}, 0.05)`,
+                backgroundColor: `hsla(${customColor}, 0.05)`, // Aura de fundo leve (5%)
                 color: `hsl(${customColor})`,
                 '--status-color': customColor 
             } as any

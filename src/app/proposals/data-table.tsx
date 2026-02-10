@@ -24,7 +24,7 @@ import {
     DndContext as DndContextKit,
     closestCenter as closestCenterKit,
     KeyboardSensor as KeyboardSensorKit,
-    PointerSensor as PointerSensorKit,
+    PointerSensorKit,
     useSensor as useSensorKit,
     useSensors as useSensorsKit,
     DragEndEvent as DragEndEventKit,
@@ -208,25 +208,12 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     let to: Date = now;
 
     switch (range) {
-        case 'today':
-            from = startOfDay(now);
-            break;
-        case 'yesterday':
-            from = startOfDay(subDays(now, 1));
-            to = endOfDay(subDays(now, 1));
-            break;
-        case 'week':
-            from = startOfDay(subDays(now, 7));
-            break;
-        case 'month':
-            from = startOfMonth(now);
-            break;
-        case 'lastMonth':
-            from = startOfMonth(subMonths(now, 1));
-            to = endOfMonth(subMonths(now, 1));
-            break;
-        default:
-            return;
+        case 'today': from = startOfDay(now); break;
+        case 'yesterday': from = startOfDay(subDays(now, 1)); to = endOfDay(subDays(now, 1)); break;
+        case 'week': from = startOfDay(subDays(now, 7)); break;
+        case 'month': from = startOfMonth(now); break;
+        case 'lastMonth': from = startOfMonth(subMonths(now, 1)); to = endOfMonth(subMonths(now, 1)); break;
+        default: return;
     }
 
     setStartDateInput(from.toLocaleDateString('pt-BR'));
@@ -237,7 +224,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const handleApplyFilter = () => {
     const startDate = parse(startDateInput, 'dd/MM/yyyy', new Date());
     const endDate = parse(endDateInput, 'dd/MM/yyyy', new Date());
-
     const isValidStart = isValid(startDate) && startDateInput.length === 10;
     const isValidEnd = isValid(endDate) && endDateInput.length === 10;
 
@@ -308,11 +294,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     },
     globalFilterFn: (row, columnId, filterValue) => {
         const searchTerm = normalizeString(String(filterValue ?? ''));
-    
-        if (!searchTerm) {
-          return true;
-        }
-    
+        if (!searchTerm) return true;
         const proposal = row.original;
         const customer = proposal.customer;
         
@@ -410,7 +392,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     return cn("transition-colors status-row-custom", `status-${id}`);
   };
 
-  // ORDEM SOLICITADA: Todos, Em Andamento, Aguardando Saldo, Pago, Saldo Pago, Pendente, Reprovado
+  // ORDEM SOLICITADA PARA ABAS
   const orderedTabs = ['Todos', 'Em Andamento', 'Aguardando Saldo', 'Pago', 'Saldo Pago', 'Pendente', 'Reprovado'];
 
   return (

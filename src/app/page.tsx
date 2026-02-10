@@ -19,9 +19,9 @@ import {
   Calendar as CalendarIcon,
   Activity
 } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, isValid, startOfDay, subDays, endOfDay, subMonths, parse, isSameDay, isSameMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth, isValid, startOfDay, subDays, endOfDay, subMonths, parse, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { formatCurrency, cn, getAge } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import type { Proposal, Customer, UserProfile, UserSettings } from '@/lib/types';
 import {
   Dialog,
@@ -140,25 +140,7 @@ export default function DashboardPage() {
 
     const prevMonthStart = startOfMonth(subMonths(fromDate, 1));
 
-    const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
-
-    const getTopOperator = (list: Proposal[]) => {
-        const ops: Record<string, number> = {};
-        list.forEach(p => {
-            if (p.operator) ops[p.operator] = (ops[p.operator] || 0) + p.grossAmount;
-        });
-        return Object.entries(ops).sort((a,b) => b[1] - a[1])[0]?.[0] || '---';
-    };
-
-    const getSparkline = (list: Proposal[]) => {
-        const days = Array.from({length: 7}, (_, i) => subDays(effectiveToDate, 6 - i));
-        return days.map(day => {
-            return list.filter(p => p.dateDigitized && isSameDay(new Date(p.dateDigitized), day))
-                       .reduce((sum, p) => sum + p.grossAmount, 0);
-        });
-    };
-
-    // UNIVERSO MÊS VIGENTE (Meta, Total Digitado, Reprovas e Mix)
+    // UNIVERSO MÊS VIGENTE
     const digitizedInPeriod = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
@@ -172,7 +154,7 @@ export default function DashboardPage() {
         return d >= prevMonthStart && d <= effectiveToDate;
     });
 
-    // PAGOS NO PERÍODO (Para Meta de Produção)
+    // PAGOS NO PERÍODO (Para Meta)
     const paidInPeriod = proposals.filter(p => {
         if (p.status !== 'Pago') return false;
         if (!p.datePaidToClient) return false;
@@ -180,26 +162,33 @@ export default function DashboardPage() {
         return d >= fromDate && d <= effectiveToDate;
     });
 
-    const statusAnalysis: Record<string, { total: number; count: number; spark: number[]; top: string; proposals: Proposal[] }> = {};
+    const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
+    const getTopOperator = (list: Proposal[]) => {
+        const ops: Record<string, number> = {};
+        list.forEach(p => {
+            if (p.operator) ops[p.operator] = (ops[p.operator] || 0) + p.grossAmount;
+        });
+        return Object.entries(ops).sort((a,b) => b[1] - a[1])[0]?.[0] || '---';
+    };
+
+    const statusAnalysis: Record<string, { total: number; count: number; proposals: Proposal[]; top: string }> = {};
     const orderedFlow = ['Pendente', 'Em Andamento', 'Aguardando Saldo', 'Saldo Pago', 'Reprovado'];
 
     orderedFlow.forEach(status => {
-        // REGRA: Reprovado apenas do mês atual e digitados no mês atual. Outros da esteira: Mês atual + Mês anterior.
+        // Regra: Reprovado é só do mês vigente. Outros da esteira são Mês + Anterior.
         const sourceList = (status === 'Reprovado') ? digitizedInPeriod : digitizedInExtendedPeriod;
         const list = sourceList.filter(p => p.status === status);
         
         statusAnalysis[status] = {
             total: getSum(list),
             count: list.length,
-            spark: getSparkline(list),
-            top: getTopOperator(list),
-            proposals: list
+            proposals: list,
+            top: getTopOperator(list)
         };
     });
 
     return {
         totalDigitado: getSum(digitizedInPeriod),
-        totalDigitadoSpark: getSparkline(digitizedInPeriod),
         topTotal: getTopOperator(digitizedInPeriod),
         statusAnalysis,
         proposals: {
@@ -277,7 +266,6 @@ export default function DashboardPage() {
                 totalDigitized={stats.totalDigitado}
                 isPrivacyMode={isPrivacyMode}
                 onValueClick={() => handleShowDetails('Contratos Pagos no Período', stats.proposals.pagoNoMes)}
-                sparklineData={stats.totalDigitadoSpark}
                 topContributor={stats.topTotal}
             />
         </div>
@@ -289,7 +277,6 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.totalDigitado)} 
                     icon={FileText} 
                     description="PRODUÇÃO MENSAL"
-                    sparklineData={stats.totalDigitadoSpark}
                     topContributor={stats.topTotal}
                 />
             </div>
@@ -301,7 +288,6 @@ export default function DashboardPage() {
                     icon={BadgePercent} 
                     description="ESTEIRA (MÊS ATUAL + ANT)"
                     isHot={true}
-                    sparklineData={stats.statusAnalysis['Pendente'].spark}
                     topContributor={stats.statusAnalysis['Pendente'].top}
                 />
             </div>
@@ -313,7 +299,6 @@ export default function DashboardPage() {
                     icon={Hourglass} 
                     description="ESTEIRA (MÊS ATUAL + ANT)"
                     isHot={true}
-                    sparklineData={stats.statusAnalysis['Em Andamento'].spark}
                     topContributor={stats.statusAnalysis['Em Andamento'].top}
                 />
             </div>
@@ -324,7 +309,6 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis['Aguardando Saldo'].total)} 
                     icon={Clock} 
                     description="ESTEIRA (MÊS ATUAL + ANT)"
-                    sparklineData={stats.statusAnalysis['Aguardando Saldo'].spark}
                     topContributor={stats.statusAnalysis['Aguardando Saldo'].top}
                 />
             </div>
@@ -335,7 +319,6 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis['Saldo Pago'].total)} 
                     icon={CheckCircle2} 
                     description="ESTEIRA (MÊS ATUAL + ANT)"
-                    sparklineData={stats.statusAnalysis['Saldo Pago'].spark}
                     topContributor={stats.statusAnalysis['Saldo Pago'].top}
                 />
             </div>
@@ -346,7 +329,6 @@ export default function DashboardPage() {
                     value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis['Reprovado'].total)} 
                     icon={XCircle} 
                     description="DO TOTAL DIGITADO NO MÊS"
-                    sparklineData={stats.statusAnalysis['Reprovado'].spark}
                     topContributor={stats.statusAnalysis['Reprovado'].top}
                 />
             </div>
