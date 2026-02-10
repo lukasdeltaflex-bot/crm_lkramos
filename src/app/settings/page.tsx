@@ -539,7 +539,8 @@ export default function SettingsPage() {
                                         { id: 'flat', label: 'Minimalista' },
                                         { id: 'glow', label: 'Neon Glow' },
                                         { id: 'soft', label: 'Soft (No Border)' },
-                                        { id: 'bordado', label: 'Bordado' }
+                                        { id: 'bordado', label: 'Bordado' },
+                                        { id: 'geometrico', label: 'Geométrico' }
                                     ].map((s) => (
                                         <Label key={s.id} htmlFor={`s-${s.id}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold transition-all", containerStyle === s.id ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30")}>
                                             <RadioGroupItem value={s.id} id={`s-${s.id}`} className="sr-only" />
@@ -556,13 +557,15 @@ export default function SettingsPage() {
                                 </div>
                                 <RadioGroup value={radius} onValueChange={(val) => { setRadius(val as any); updateSettings({ radius: val as any } as any); }} className="grid grid-cols-3 gap-2">
                                     {[
-                                        { id: 'reto', label: 'Reto' },
+                                        { id: 'reto', label: 'Reto (0)' },
+                                        { id: 'extra-discreto', label: 'X-Discreto' },
                                         { id: 'discreto', label: 'Discreto' },
                                         { id: 'moderno', label: 'Moderno' },
+                                        { id: 'amigavel', label: 'Amigável' },
                                         { id: 'suave', label: 'Suave' },
                                         { id: 'capsula', label: 'Cápsula' }
                                     ].map((r) => (
-                                        <Label key={r.id} htmlFor={`r-${r.id}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold transition-all", radius === r.id ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30")}>
+                                        <Label key={r.id} htmlFor={`r-${r.id}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-[10px] font-bold transition-all", radius === r.id ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30")}>
                                             <RadioGroupItem value={r.id} id={`r-${r.id}`} className="sr-only" />
                                             {r.label}
                                         </Label>
@@ -602,13 +605,15 @@ export default function SettingsPage() {
                                 <RadioGroup value={animationStyle} onValueChange={(val) => { setAnimationStyle(val as any); updateSettings({ animationStyle: val as any }); }} className="grid grid-cols-3 gap-2">
                                     {[
                                         { id: 'estatico', label: 'Estático' },
+                                        { id: 'instantaneo', label: 'Instante' },
                                         { id: 'rapido', label: 'Rápido' },
                                         { id: 'sutil', label: 'Sutil' },
                                         { id: 'cinematografico', label: 'Cine' },
                                         { id: 'elastico', label: 'Elástico' },
-                                        { id: 'dramatico', label: 'Dramático' }
+                                        { id: 'dramatico', label: 'Dramático' },
+                                        { id: 'atmosferico', label: 'Atmos' }
                                     ].map((a) => (
-                                        <Label key={a.id} htmlFor={`a-${a.id}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold transition-all", animationStyle === a.id ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30")}>
+                                        <Label key={a.id} htmlFor={`a-${a.id}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-[10px] font-bold transition-all", animationStyle === a.id ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30")}>
                                             <RadioGroupItem value={a.id} id={`a-${a.id}`} className="sr-only" />
                                             {a.label}
                                         </Label>
