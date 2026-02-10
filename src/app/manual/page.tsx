@@ -128,7 +128,7 @@ export default function ManualPage() {
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Radar de Vendas</strong>: Identifica automaticamente clientes com contratos pagos há mais de 12 meses (tempo de maturação).</li>
                             <li><strong>Inteligência Diária</strong>: Consolida retornos, alertas de comissões e clientes próximos de 75 anos.</li>
-                            <li><strong>Layout Inteligente</strong>: O grid organiza os volumes de forma dinâmica, mantendo o "Total Digitado" e a "Meta (Pagos)" como guias principais.</li>
+                            <li><strong>Layout Inteligente</strong>: O grid organiza os volumes de forma dinâmica, mantendo a ordem: <strong>Total Digitado, Pendente, Em Andamento, Aguardando Saldo, Saldo Pago e Reprovado</strong>.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
