@@ -281,27 +281,28 @@ const handleExportToPdf = async () => {
     
     setRowSelection({});
 
-    try {
-        await updateDoc(customerRef, anonymizedData);
-        toast({
-          title: 'Cliente Removido',
-          description: 'Os dados do cliente foram anonimizados com sucesso.',
+    updateDoc(customerRef, anonymizedData)
+        .then(() => {
+            toast({
+                title: 'Cliente Removido',
+                description: 'Os dados do cliente foram anonimizados com sucesso.',
+            });
+        })
+        .catch(async (error: any) => {
+            if (error.code === 'permission-denied') {
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: customerRef.path,
+                    operation: 'update',
+                    requestResourceData: anonymizedData
+                }));
+            }
+            console.error('Error anonymizing customer:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Erro ao remover',
+                description: 'Não foi possível anonimizar o cliente.',
+            });
         });
-    } catch(error: any) {
-        if (error.code === 'permission-denied') {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: customerRef.path,
-                operation: 'update',
-                requestResourceData: anonymizedData
-            }));
-        }
-        console.error('Error anonymizing customer:', error);
-        toast({
-            variant: 'destructive',
-            title: 'Erro ao remover',
-            description: 'Não foi possível anonimizar o cliente.',
-        });
-    }
   };
 
   const handleAnonymizeSelected = async () => {
@@ -374,20 +375,34 @@ const handleExportToPdf = async () => {
     }
 
     setIsSaving(true);
-    try {
-      if (sheetMode === 'edit' && selectedCustomer) {
+    
+    if (sheetMode === 'edit' && selectedCustomer) {
         const customerToUpdate: Customer = {
-          ...selectedCustomer,
-          ...data,
+            ...selectedCustomer,
+            ...data,
         };
         const docRef = doc(firestore, 'customers', selectedCustomer.id);
-        await setDoc(docRef, customerToUpdate, { merge: true });
+        
+        // Non-blocking setDoc
+        setDoc(docRef, customerToUpdate, { merge: true })
+            .catch(async (error) => {
+                if (error.code === 'permission-denied') {
+                    errorEmitter.emit('permission-error', new FirestorePermissionError({
+                        path: docRef.path,
+                        operation: 'update',
+                        requestResourceData: customerToUpdate
+                    }));
+                }
+            });
+
         toast({
-          title: 'Cliente Atualizado!',
-          description: `O cliente ${data.name} foi atualizado com sucesso.`,
+            title: 'Cliente Atualizado!',
+            description: `O cliente ${data.name} foi atualizado com sucesso.`,
         });
+        setIsDialog(false);
+        setIsSaving(false);
   
-      } else {
+    } else {
         const newDocRef = doc(collection(firestore, 'customers'));
         
         let nextNumericId = 1;
@@ -403,28 +418,24 @@ const handleExportToPdf = async () => {
           ownerId: user.uid,
           status: data.status || 'active',
         };
-        await setDoc(newDocRef, newCustomerWithId);
+
+        // Non-blocking setDoc
+        setDoc(newDocRef, newCustomerWithId)
+            .catch(async (error) => {
+                if (error.code === 'permission-denied') {
+                    errorEmitter.emit('permission-error', new FirestorePermissionError({
+                        path: newDocRef.path,
+                        operation: 'create',
+                        requestResourceData: newCustomerWithId
+                    }));
+                }
+            });
+
         toast({
           title: 'Cliente Salvo!',
           description: `O cliente ${data.name} foi salvo com sucesso.`,
         });
-      }
-      setIsDialog(false);
-    } catch (error: any) {
-      if (error.code === 'permission-denied') {
-          errorEmitter.emit('permission-error', new FirestorePermissionError({
-              path: 'customers',
-              operation: 'write',
-              requestResourceData: data
-          }));
-      }
-      console.error('Error saving customer:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao Salvar',
-        description: 'Não foi possível salvar os dados do cliente.',
-      });
-    } finally {
+        setIsDialog(false);
         setIsSaving(false);
     }
   };

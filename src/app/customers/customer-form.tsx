@@ -40,7 +40,7 @@ import { doc, collection } from 'firebase/firestore';
 
 const benefitSchema = z.object({
     number: z.string().min(1, "O número do benefício é obrigatório."),
-    species: z.string().optional(),
+    species: z.string().nullable().optional(),
 });
 
 const attachmentSchema = z.object({
@@ -55,29 +55,30 @@ const customerSchema = z.object({
   cpf: z.string().min(11, 'CPF incompleto.').refine((val) => validateCPF(val), {
     message: "CPF inválido. Verifique se há erro de digitação.",
   }),
-  gender: z.enum(['Masculino', 'Feminino']).optional(),
+  gender: z.enum(['Masculino', 'Feminino']).nullable().optional(),
   status: z.enum(['active', 'inactive']).default('active'),
   benefits: z.array(benefitSchema).optional(),
   phone: z.string().min(10, 'O telefone é obrigatório.'),
-  phone2: z.string().optional(),
-  email: z.string().email('O email é inválido.').or(z.literal('')).optional(),
+  phone2: z.string().nullable().optional(),
+  email: z.string().email('O email é inválido.').or(z.literal('')).nullable().optional(),
   birthDate: z.string().refine((date) => {
     try {
+      if (!date) return false;
       const parsedDate = parse(date, 'dd/MM/yyyy', new Date());
       return !isNaN(parsedDate.getTime());
     } catch {
       return false;
     }
   }, { message: 'Data inválida. Use o formato dd/mm/aaaa.' }),
-  observations: z.string().optional(),
+  observations: z.string().nullable().optional(),
   // Address
-  cep: z.string().optional(),
-  street: z.string().optional(),
-  number: z.string().optional(),
-  complement: z.string().optional(),
-  neighborhood: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
+  cep: z.string().nullable().optional(),
+  street: z.string().nullable().optional(),
+  number: z.string().nullable().optional(),
+  complement: z.string().nullable().optional(),
+  neighborhood: z.string().nullable().optional(),
+  city: z.string().nullable().optional(),
+  state: z.string().nullable().optional(),
   documents: z.array(attachmentSchema).optional(),
 });
 
@@ -103,10 +104,10 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
   const [tempCustomerId, setTempCustomerId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    if (firestore && !customer?.id) {
+    if (firestore && !customer?.id && !tempCustomerId) {
         setTempCustomerId(doc(collection(firestore, 'customers')).id);
     }
-  }, [firestore, customer]);
+  }, [firestore, customer, tempCustomerId]);
 
   const currentCustomerId = customer?.id || tempCustomerId;
 
@@ -203,6 +204,18 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
             birthDate: formattedBirthDate,
             documents: source.documents || [],
             status: source.status || 'active',
+            // Ensure nulls from DB are handled as strings for form inputs
+            gender: source.gender || undefined,
+            phone2: source.phone2 || '',
+            email: source.email || '',
+            observations: source.observations || '',
+            cep: source.cep || '',
+            street: source.street || '',
+            number: source.number || '',
+            complement: source.complement || '',
+            neighborhood: source.neighborhood || '',
+            city: source.city || '',
+            state: source.state || '',
           };
         }
         return initial;
@@ -385,7 +398,7 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Gênero</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                          <Select onValueChange={field.onChange} defaultValue={field.value || undefined} value={field.value || undefined}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Selecione o gênero" />
