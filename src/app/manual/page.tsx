@@ -1,4 +1,3 @@
-
 "use client"
 
 import React from 'react';
@@ -107,8 +106,8 @@ export default function ManualPage() {
                         <p>Agilize sua produtividade com a sinalização visual do sistema.</p>
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Abas Coloridas</strong>: Os botões de filtro agora possuem cores representativas suaves que casam com o status da proposta.</li>
-                            <li><strong>Cards de Status Dinâmicos</strong>: O Dashboard e o Resumo Financeiro criam ou removem cards automaticamente conforme você gerencia seus status nas configurações.</li>
-                            <li><strong>Busca de Precisão</strong>: O campo de busca prioriza o ID exato do cliente ou da proposta para evitar confusões em bases grandes.</li>
+                            <li><strong>Cards de Status Dinâmicos</strong>: O Dashboard e o Resumo Financeiro organizam os cards na sequência: <strong>Digitado, Pendente, Em Andamento, Aguardando Saldo, Saldo Pago e Reprovado</strong>.</li>
+                            <li><strong>Inteligência de Reprova</strong>: O card de "Reprovado" exibe apenas as propostas que foram recusadas no mês vigente, permitindo um controle real das perdas atuais.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>

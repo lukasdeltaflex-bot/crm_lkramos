@@ -16,10 +16,9 @@ import {
   XCircle,
   CheckCircle2,
   Calendar as CalendarIcon,
-  CircleDollarSign,
   Activity
 } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, isValid, startOfDay, subDays, endOfDay, subMonths, parse, isSameDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, isValid, startOfDay, subDays, endOfDay, subMonths, parse, isSameDay, isSameMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatCurrency, cn, getAge } from '@/lib/utils';
 import type { Proposal, Customer, UserProfile, UserSettings } from '@/lib/types';
@@ -178,16 +177,35 @@ export default function DashboardPage() {
         return d >= fromDate && d <= effectiveToDate;
     });
 
+    // REGRA ESPECIAL REPROVADO: Apenas reprovados no período vigente
+    const reprovedInPeriod = proposals.filter(p => {
+        if (p.status !== 'Reprovado') return false;
+        
+        // Verifica quando ele foi marcado como Reprovado no histórico
+        const reprovalEntry = p.history?.filter(h => h.message.includes('Reprovado'))
+                                .sort((a, b) => b.date.localeCompare(a.date))[0];
+        
+        const eventDate = reprovalEntry ? new Date(reprovalEntry.date) : new Date(p.dateDigitized);
+        return eventDate >= fromDate && eventDate <= effectiveToDate;
+    });
+
     const accumulatedProposals = proposals.filter(p => {
         const d = new Date(p.dateDigitized);
         return d <= effectiveToDate;
     });
 
-    // Map totals for all possible statuses
     const statusAnalysis: Record<string, { total: number; count: number; spark: number[]; top: string; proposals: Proposal[] }> = {};
     
     activeProposalStatuses.forEach(status => {
-        const list = (status === 'Pago') ? paidInPeriod : accumulatedProposals.filter(p => p.status === status);
+        let list: Proposal[] = [];
+        if (status === 'Pago') {
+            list = paidInPeriod;
+        } else if (status === 'Reprovado') {
+            list = reprovedInPeriod;
+        } else {
+            list = accumulatedProposals.filter(p => p.status === status);
+        }
+
         statusAnalysis[status] = {
             total: getSum(list),
             count: list.length,
@@ -221,6 +239,9 @@ export default function DashboardPage() {
   const currentMonthName = rawMonthName.charAt(0).toUpperCase() + rawMonthName.slice(1);
 
   if (!stats) return null;
+
+  // ORDEM EXATA SOLICITADA PARA OS CARDS
+  const orderedStatuses = ['Pendente', 'Em Andamento', 'Aguardando Saldo', 'Saldo Pago', 'Reprovado'];
 
   return (
     <AppLayout>
@@ -286,9 +307,7 @@ export default function DashboardPage() {
             />
         </div>
 
-        {/* GRID DINÂMICO DE CARDS */}
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {/* CARD 1: SEMPRE TOTAL DIGITADO */}
             <div className="cursor-pointer" onClick={() => handleShowDetails('Total Digitado (Mês)', stats.proposals.todos)}>
                 <StatsCard 
                     title="Total Digitado" 
@@ -300,26 +319,24 @@ export default function DashboardPage() {
                 />
             </div>
 
-            {/* DEMAIS CARDS: DINÂMICOS BASEADOS NOS STATUS ATIVOS */}
-            {activeProposalStatuses.filter(s => s !== 'Pago').map((statusName) => {
+            {orderedStatuses.map((statusName) => {
                 const statusData = stats.statusAnalysis[statusName];
                 if (!statusData) return null;
 
-                // Mapeamento de Meta-dados para manter a identidade visual solicitada
                 const getStatusMeta = (name: string) => {
                     const lower = name.toLowerCase();
                     if (lower === 'pendente') return { icon: BadgePercent, isHot: true, desc: "VS PRODUÇÃO ATUAL" };
                     if (lower === 'em andamento') return { icon: Hourglass, isHot: true, desc: "VS PRODUÇÃO ATUAL" };
                     if (lower === 'aguardando saldo') return { icon: Clock, desc: "VS PRODUÇÃO ATUAL" };
                     if (lower === 'saldo pago') return { icon: CheckCircle2, desc: "VS PRODUÇÃO ATUAL" };
-                    if (lower === 'reprovado') return { icon: XCircle, desc: "DO TOTAL DIGITADO" };
+                    if (lower === 'reprovado') return { icon: XCircle, desc: "DO MÊS ATUAL" };
                     return { icon: Activity, desc: "VOLUME ACUMULADO" };
                 };
 
                 const meta = getStatusMeta(statusName);
 
                 return (
-                    <div key={statusName} className="cursor-pointer" onClick={() => handleShowDetails(`${statusName} (Acumulado)`, statusData.proposals)}>
+                    <div key={statusName} className="cursor-pointer" onClick={() => handleShowDetails(`${statusName} ${statusName === 'Reprovado' ? '(Mês)' : '(Acumulado)'}`, statusData.proposals)}>
                         <StatsCard 
                             title={statusName} 
                             value={isPrivacyMode ? '•••••' : formatCurrency(statusData.total)} 
