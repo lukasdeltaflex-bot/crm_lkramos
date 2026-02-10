@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -23,7 +24,7 @@ import {
     DndContext as DndContextKit,
     closestCenter as closestCenterKit,
     KeyboardSensor as KeyboardSensorKit,
-    PointerSensorKit,
+    PointerSensor as PointerSensorKit,
     useSensor as useSensorKit,
     useSensors as useSensorsKit,
     DragEndEvent as DragEndEventKit,
@@ -391,7 +392,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     return cn("transition-colors status-row-custom", `status-${id}`);
   };
 
-  // ORDEM SOLICITADA PARA ABAS
+  // ORDEM SOLICITADA PARA ABAS (MIRROR DASHBOARD)
   const orderedTabs = ['Todos', 'Em Andamento', 'Aguardando Saldo', 'Pago', 'Saldo Pago', 'Pendente', 'Reprovado'];
 
   return (

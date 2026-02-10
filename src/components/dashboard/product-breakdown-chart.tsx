@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from "react"
@@ -57,11 +58,15 @@ export function ProductBreakdownChart({ proposals }: ProductBreakdownChartProps)
   }, [proposals])
 
   const totalVolume = React.useMemo(() => {
-    // Sincroniza com o Total Digitado passado via props
+    // Sincroniza com o Total Digitado passado via props (Mês Vigente)
     return proposals.reduce((acc, curr) => acc + (curr.grossAmount || 0), 0);
   }, [proposals])
 
-  if (proposals.length === 0) return null
+  if (proposals.length === 0) return (
+    <Card className="flex flex-col h-full items-center justify-center p-10 border-dashed">
+        <p className="text-muted-foreground text-sm">Sem produção no período para o mix.</p>
+    </Card>
+  )
 
   return (
     <Card className="flex flex-col h-full border-none shadow-md hover:shadow-lg transition-all duration-300">

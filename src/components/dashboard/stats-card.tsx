@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -26,8 +27,8 @@ interface StatsCardProps {
 }
 
 /**
- * StatsCard Elite V37
- * Aura de fundo (12%) e Bordas (50%) perfeitamente integradas ao Laboratório de Cores.
+ * StatsCard Elite V38
+ * Aura de fundo (12%) e Bordas (50%) nítidas e sincronizadas com o Laboratório de Cores.
  */
 export function StatsCard({ 
     title, 
@@ -46,15 +47,15 @@ export function StatsCard({
   const { statusColors } = useTheme();
   
   const getThemeStyles = () => {
-    // Prioridade: Cor do Laboratório de Status
+    // Busca a cor exata definida no laboratório para o status (Título)
     const customColor = statusColors[title];
     if (customColor) {
         return {
             card: '',
             style: { 
-                borderColor: `hsla(${customColor}, 0.5)`,
-                backgroundColor: `hsla(${customColor}, 0.12)`,
-                color: `hsl(${customColor})`,
+                borderColor: `hsla(${customColor}, 0.5)`, // Borda nítida
+                backgroundColor: `hsla(${customColor}, 0.12)`, // Fundo levemente visível
+                color: `hsl(${customColor})`, // Texto na cor do status
                 '--status-color': customColor 
             } as any,
             stroke: `hsl(${customColor})`
@@ -64,7 +65,7 @@ export function StatsCard({
     const t = title.toLowerCase();
     if (isCritical) return { card: 'border-red-400 bg-red-50 dark:bg-red-900/20 animate-pulse', style: {}, stroke: '#dc2626' };
 
-    // Fallbacks Neutros
+    // Fallback para "Total Digitado" e outros neutros
     if (t.includes('digitado')) return { card: 'border-zinc-300 bg-zinc-50 dark:bg-zinc-900/40', style: {}, stroke: '#a1a1aa' };
     
     return { 

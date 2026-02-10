@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useEffect, useMemo } from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -51,6 +52,7 @@ export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
 
+  // Estados de controle
   const [dialogData, setDialogData] = useState<{ title: string; proposals: Proposal[] } | null>(null);
   const [startDateInput, setStartDateInput] = useState('');
   const [endDateInput, setEndDateInput] = useState('');
@@ -138,7 +140,7 @@ export default function DashboardPage() {
 
     const prevMonthStart = startOfMonth(subMonths(fromDate, 1));
 
-    // UNIVERSO MÊS VIGENTE (Performance e Reprovas)
+    // UNIVERSO MÊS VIGENTE (Performance, Reprovas e Mix de Produtos)
     const digitizedInPeriod = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
@@ -165,7 +167,7 @@ export default function DashboardPage() {
     const orderedFlow = ['Pendente', 'Em Andamento', 'Aguardando Saldo', 'Saldo Pago', 'Reprovado'];
 
     orderedFlow.forEach(status => {
-        // Regra: Reprovado é apenas do mês vigente. Outros são Mês + Anterior.
+        // REGRA DE OURO: Reprovado é estritamente do mês vigente. Outros são Mês + Anterior.
         const sourceList = (status === 'Reprovado') ? digitizedInPeriod : digitizedInExtendedPeriod;
         const list = sourceList.filter(p => p.status === status);
         
@@ -189,7 +191,7 @@ export default function DashboardPage() {
         topTotal: getTopOperator(digitizedInPeriod),
         statusAnalysis,
         proposals: {
-            digitadoNoMes: digitizedInPeriod,
+            digitadoNoMes: digitizedInPeriod, // Mix de produtos usa esse universo
             pagoNoMes: paidInPeriod
         }
     };
@@ -259,7 +261,7 @@ export default function DashboardPage() {
 
         <div className="w-full">
             <GoalCard 
-                currentProduction={stats.proposals.pagoNoMes.reduce((sum, p) => sum + p.grossAmount, 0)} 
+                currentProduction={stats.proposals.pagoNoMes.reduce((sum, p) => sum + (p.grossAmount || 0), 0)} 
                 totalDigitized={stats.totalDigitado}
                 isPrivacyMode={isPrivacyMode}
                 onValueClick={() => handleShowDetails('Contratos Pagos no Período', stats.proposals.pagoNoMes)}
