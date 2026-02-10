@@ -192,17 +192,26 @@ export default function FollowUpsPage() {
         <div className="lg:col-span-2 space-y-6">
             <Tabs value={tab} onValueChange={setTab} className="space-y-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <TabsList>
-                        <TabsTrigger value="pending">
-                            <CalendarIcon className="mr-2 h-4 w-4" />
+                    <TabsList className="bg-muted/50 p-1">
+                        <TabsTrigger 
+                            value="pending"
+                            className="gap-2 border border-transparent data-[state=active]:bg-yellow-100 data-[state=active]:text-yellow-700 data-[state=active]:border-yellow-300 transition-all"
+                        >
+                            <CalendarIcon className="h-4 w-4" />
                             Pendentes
                         </TabsTrigger>
-                        <TabsTrigger value="calendar">
-                            <CalendarIcon className="mr-2 h-4 w-4" />
+                        <TabsTrigger 
+                            value="calendar"
+                            className="gap-2 border border-transparent data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 data-[state=active]:border-blue-300 transition-all"
+                        >
+                            <CalendarIcon className="h-4 w-4" />
                             Calendário
                         </TabsTrigger>
-                        <TabsTrigger value="history">
-                            <History className="mr-2 h-4 w-4" />
+                        <TabsTrigger 
+                            value="history"
+                            className="gap-2 border border-transparent data-[state=active]:bg-zinc-100 data-[state=active]:text-zinc-700 data-[state=active]:border-zinc-300 transition-all"
+                        >
+                            <History className="h-4 w-4" />
                             Histórico
                         </TabsTrigger>
                     </TabsList>

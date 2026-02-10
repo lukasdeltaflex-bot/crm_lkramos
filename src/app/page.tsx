@@ -262,7 +262,7 @@ export default function DashboardPage() {
                     <Input 
                         placeholder="--" 
                         value={startDateInput}
-                        onChange={(e) => handleDateInputChange(e.target.value, 'start')}
+                        onChange={(e) => setDateInputChange(e.target.value, 'start')}
                         maxLength={10}
                         className="h-9 w-24 border-none shadow-none text-center"
                     />
@@ -271,7 +271,7 @@ export default function DashboardPage() {
                     <Input 
                         placeholder="--" 
                         value={endDateInput}
-                        onChange={(e) => handleDateInputChange(e.target.value, 'end')}
+                        onChange={(e) => setDateInputChange(e.target.value, 'end')}
                         maxLength={10}
                         className="h-9 w-24 border-none shadow-none text-center"
                     />
