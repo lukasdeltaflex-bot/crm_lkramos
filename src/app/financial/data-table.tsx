@@ -286,7 +286,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         const proposal = row.original;
         const customer = proposal.customer;
         
-        // Busca exata por ID
         if (/^\d+$/.test(searchTerm)) {
             const isExactId = customer && String(customer.numericId) === searchTerm;
             if (isExactId) return true;

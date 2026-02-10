@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -11,8 +10,8 @@ import {
 } from '@/components/ui/table';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '../ui/badge';
-import { Skeleton } from '../ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, cn, calculateBusinessDays, cleanBankName } from '@/lib/utils';
 import type { Proposal, Customer, UserSettings } from '@/lib/types';
 import { useMemo, useState, useEffect } from 'react';
@@ -24,10 +23,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import Link from 'next/link';
-import { Avatar, AvatarFallback } from '../ui/avatar';
-import { BankIcon } from '../bank-icon';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { BankIcon } from '@/components/bank-icon';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
+import { useTheme } from '@/components/theme-provider';
 
 interface RecentProposalsProps {
     proposals: Proposal[];
@@ -39,6 +39,7 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
   const [hasMounted, setHasMounted] = useState(false);
   const { user } = useUser();
   const firestore = useFirestore();
+  const { statusColors } = useTheme();
 
   useEffect(() => {
     setHasMounted(true);
@@ -106,13 +107,20 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                 recentProposals.map((proposal) => {
                     const isPortAwaitingBalance = proposal.product === 'Portabilidade' && proposal.status === 'Aguardando Saldo';
                     const businessDays = hasMounted && proposal.dateDigitized ? calculateBusinessDays(new Date(proposal.dateDigitized)) : 0;
+                    const colorValue = statusColors[proposal.status];
 
-                    // Limpa o nome do banco para exibição
                     const cleanBank = cleanBankName(proposal.bank);
                     const customDomain = userSettings?.bankDomains?.[proposal.bank];
 
                     return (
-                        <TableRow key={proposal.id} className="hover:bg-primary/[0.02] border-b border-border/30 transition-all group">
+                        <TableRow 
+                            key={proposal.id} 
+                            className={cn(
+                                "hover:bg-primary/[0.02] border-b border-border/30 transition-all group",
+                                colorValue && "status-row-custom"
+                            )}
+                            style={colorValue ? { '--status-color': colorValue } as any : {}}
+                        >
                             <TableCell className="px-6 py-5">
                                 <div className="flex items-center gap-3">
                                     <Avatar className="h-9 w-9 border border-primary/10 shadow-sm">
@@ -143,14 +151,8 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                                 <div className="flex items-center gap-2">
                                     <Badge
                                         variant="outline"
-                                        className={cn('px-3 py-1 text-[10px] font-medium uppercase tracking-wider border-2', {
-                                            'border-green-500/30 text-green-600 bg-green-50/80 dark:bg-green-900/40': proposal.status === 'Pago',
-                                            'border-orange-500/30 text-orange-600 bg-orange-50/80 dark:bg-orange-900/40': proposal.status === 'Saldo Pago',
-                                            'border-yellow-500/30 text-yellow-600 bg-yellow-50/80 dark:bg-yellow-900/40': proposal.status === 'Em Andamento',
-                                            'border-blue-500/30 text-blue-600 bg-blue-50/80 dark:bg-blue-900/40': proposal.status === 'Aguardando Saldo',
-                                            'border-red-500/30 text-red-600 bg-red-50/80 dark:bg-red-900/40': proposal.status === 'Reprovado',
-                                            'border-purple-500/30 text-purple-600 bg-purple-50/80 dark:bg-green-900/40': proposal.status === 'Pendente',
-                                        })}
+                                        className="px-3 py-1 text-[10px] font-black uppercase tracking-wider border-2 status-custom"
+                                        style={colorValue ? { '--status-color': colorValue } as any : {}}
                                     >
                                         {proposal.status}
                                     </Badge>
@@ -160,7 +162,7 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                                                 <TooltipTrigger asChild>
                                                     <AlertCircle className={cn(
                                                         "h-4 w-4 cursor-help transition-colors", 
-                                                        businessDays >= 5 ? "text-destructive animate-pulse" : 
+                                                        businessDays >= 5 ? "text-red-600 animate-pulse" : 
                                                         businessDays === 4 ? "text-orange-500" : 
                                                         "text-blue-400"
                                                     )} />
