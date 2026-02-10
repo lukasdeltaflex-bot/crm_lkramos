@@ -68,7 +68,7 @@
     --sidebar-background: 220 13% 8%;
     --sidebar-foreground: 210 20% 98%;
     --sidebar-primary: 217 33% 35%;
-    --sidebar-primary-foreground: 210 20% 98%;
+    --sidebar-primary-foreground: 210 40% 98%;
     --sidebar-accent: 215 27.9% 16.9%;
     --sidebar-accent-foreground: 210 20% 98%;
     --sidebar-border: 215 27.9% 25%;
@@ -76,7 +76,7 @@
   }
 }
 
-/* 🚦 SISTEMA DINÂMICO DE STATUS V75 */
+/* 🚦 SISTEMA DINÂMICO DE STATUS */
 .status-custom {
     color: hsl(var(--status-color)) !important;
     background-color: hsla(var(--status-color), var(--status-bg-opacity, 0.12)) !important;

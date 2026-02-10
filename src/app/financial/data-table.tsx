@@ -492,8 +492,8 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                         {table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => {
                                 const proposal = row.original;
-                                const status = proposal.commissionStatus;
-                                const colorValue = statusColors[status];
+                                const commissionStatus = proposal.commissionStatus;
+                                const colorValue = statusColors[commissionStatus];
 
                                 return (
                                     <TableRow

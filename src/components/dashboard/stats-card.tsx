@@ -85,7 +85,7 @@ export function StatsCard({
   return (
     <Card 
         className={cn(
-            'hover:shadow-lg transition-all group relative overflow-hidden flex flex-col border-2 py-3.5 px-5 min-h-[150px] status-custom h-full', 
+            'hover:shadow-lg transition-all group relative overflow-hidden flex flex-col border-2 py-3.5 px-5 min-h-[160px] status-custom h-full', 
             themeStyles.card,
             className
         )}

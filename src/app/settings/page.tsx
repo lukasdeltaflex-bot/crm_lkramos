@@ -456,8 +456,8 @@ export default function SettingsPage() {
                                             description="VALOR EM TRÂMITE"
                                             isHot={true}
                                             className="hover:scale-105 transition-transform"
-                                            overrideContainerStyle={preview.containerStyle}
                                             overrideStatusColors={preview.statusColors}
+                                            overrideContainerStyle={preview.containerStyle}
                                             overrideIntensity={preview.colorIntensity}
                                             overrideRadius={preview.radius}
                                         />

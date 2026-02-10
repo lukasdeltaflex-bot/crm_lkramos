@@ -85,7 +85,7 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
         });
   };
 
-  const hasCustomColor = !!statusColors[currentStatus];
+  const colorValue = statusColors[currentStatus];
 
   return (
     <Select
@@ -100,8 +100,8 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
                     getStatusClass(currentStatus),
                     containerStyle === 'glow' && "shadow-[0_0_10px_hsla(var(--status-color),0.3)]"
                 )}
-                style={hasCustomColor ? { 
-                    '--status-color': statusColors[currentStatus] 
+                style={colorValue ? { 
+                    '--status-color': colorValue 
                 } as any : {}}
             >
                 {currentStatus}
