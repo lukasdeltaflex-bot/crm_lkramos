@@ -41,6 +41,7 @@ import {
     Eye,
     Landmark,
     Bot,
+    LayoutDashboard,
     Layout
 } from 'lucide-react';
 import { EditableList } from '@/components/settings/editable-list';
@@ -439,11 +440,13 @@ export default function SettingsPage() {
                             </CardHeader>
                             <CardContent className="space-y-6">
                                 <div className={cn(
-                                    "p-6 rounded-2xl transition-all duration-500",
+                                    "p-6 rounded-2xl transition-all duration-500 border shadow-sm",
                                     `texture-${preview.backgroundTexture}`,
                                     `radius-${preview.radius}`,
                                     `font-${preview.fontStyle}`,
-                                    `anim-${preview.animationStyle}`
+                                    `anim-${preview.animationStyle}`,
+                                    `style-${preview.containerStyle}`,
+                                    `intensity-${preview.colorIntensity}`
                                 )}>
                                     <div className="space-y-4">
                                         <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Preview de KPI</p>
@@ -456,6 +459,19 @@ export default function SettingsPage() {
                                             overrideContainerStyle={preview.containerStyle}
                                             overrideStatusColors={preview.statusColors}
                                         />
+
+                                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mt-6">Preview de Barra Lateral</p>
+                                        <div className={cn(
+                                            "border rounded-xl p-4 flex gap-3 transition-all",
+                                            preview.sidebarStyle === 'dark' ? "bg-black text-white" : preview.sidebarStyle === 'light' ? "bg-white text-black" : "bg-muted text-foreground"
+                                        )}>
+                                            <div className="flex flex-col gap-2">
+                                                <div className="h-2 w-12 bg-current opacity-20 rounded" />
+                                                <div className="h-2 w-10 bg-current opacity-40 rounded" />
+                                            </div>
+                                            <Separator orientation="vertical" className="h-8" />
+                                            <LayoutDashboard className="h-5 w-5" />
+                                        </div>
 
                                         <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mt-6">Preview de Badge & Botão</p>
                                         <div className="flex flex-wrap gap-2 p-4 border rounded-xl bg-background shadow-inner">

@@ -54,7 +54,10 @@ export function StatsCard({
 
     if (customColor) {
         return {
-            card: cn(containerStyle === 'glow' && 'style-glow'),
+            card: cn(
+                `style-${containerStyle}`,
+                containerStyle === 'glow' && 'style-glow'
+            ),
             style: { 
                 borderColor: `hsla(${customColor}, 0.5)`,
                 backgroundColor: `hsla(${customColor}, 0.12)`,
@@ -67,13 +70,13 @@ export function StatsCard({
     // Fallback neutro
     if (t === 'TOTAL DIGITADO' || t === 'PRODUÇÃO DIGITADA') {
         return {
-            card: 'border-zinc-300 bg-zinc-50/80 dark:bg-zinc-900/40 dark:border-zinc-700',
+            card: cn(`style-${containerStyle}`, 'border-zinc-300 bg-zinc-50/80 dark:bg-zinc-900/40 dark:border-zinc-700'),
             style: { color: 'hsl(var(--foreground))' }
         }
     }
 
     return { 
-        card: 'border-zinc-200 bg-zinc-50/50 dark:bg-zinc-900/10 dark:border-zinc-800', 
+        card: cn(`style-${containerStyle}`, 'border-zinc-200 bg-zinc-50/50 dark:bg-zinc-900/10 dark:border-zinc-800'), 
         style: { color: 'hsl(var(--foreground))' }
     };
   };

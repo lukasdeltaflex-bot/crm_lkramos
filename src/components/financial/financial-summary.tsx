@@ -68,7 +68,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
     /**
      * 3. SALDO A RECEBER (Independente de Mês)
      * Regra: Apenas contratos que possuem a DATA DE AVERBAÇÃO preenchida, 
-     * independente do mês, e que ainda não foram pagos.
+     * independente do mês, e que ainda não foram pagos integralmente.
      */
     const averbados = allProposals.filter(p => {
         const hasAverbacao = !!p.dateApproved;
@@ -80,11 +80,13 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
     /**
      * 4. COMISSÃO ESPERADA (Independente de Mês)
      * Regra: Todos os contratos da base, EXCEÇÃO: Reprovados/Cancelados e os já Pagos.
+     * Focado apenas na esteira ativa (Pendente, Em Andamento, Aguardando Saldo, Saldo Pago).
      */
     const esperados = allProposals.filter(p => {
         const isNotReprovado = p.status !== 'Reprovado';
-        const isNotPaid = p.commissionStatus !== 'Paga';
-        return isNotReprovado && isNotPaid;
+        const isNotPaid = p.status !== 'Pago';
+        const commissionNotReceived = p.commissionStatus !== 'Paga';
+        return isNotReprovado && isNotPaid && commissionNotReceived;
     });
     const totalComissaoEsperada = esperados.reduce((sum, p) => sum + (p.commissionValue - (p.amountPaid || 0)), 0);
 
