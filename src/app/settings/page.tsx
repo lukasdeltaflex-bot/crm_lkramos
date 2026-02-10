@@ -40,7 +40,8 @@ import {
     MousePointer2,
     Eye,
     Landmark,
-    Bot
+    Bot,
+    Layout
 } from 'lucide-react';
 import { EditableList } from '@/components/settings/editable-list';
 import { BankEditableList } from '@/components/settings/bank-editable-list';
@@ -154,7 +155,7 @@ export default function SettingsPage() {
         statusColors: userSettings.statusColors || theme.statusColors
       });
     }
-  }, [userSettings]);
+  }, [userSettings, theme.radius, theme.containerStyle, theme.backgroundTexture, theme.colorIntensity, theme.animationStyle, theme.fontStyle, theme.sidebarStyle, theme.statusColors]);
 
   const updateSettings = async (updatedLists: Partial<UserSettings>) => {
     if (settingsDocRef) {
@@ -414,7 +415,7 @@ export default function SettingsPage() {
                                 <Separator />
 
                                 <div className="space-y-4">
-                                    <div className="flex items-center gap-2"><Layout className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Barra Lateral</h4></div>
+                                    <div className="flex items-center gap-2"><Shapes className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Barra Lateral</h4></div>
                                     <RadioGroup value={preview.sidebarStyle} onValueChange={(val) => setPreview(p => ({ ...p, sidebarStyle: val }))} className="grid grid-cols-3 gap-2">
                                         {['default', 'dark', 'light'].map((s) => (
                                             <Label key={s} htmlFor={`s-${s}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold", preview.sidebarStyle === s ? "border-primary bg-primary/5" : "border-muted")}>
