@@ -107,8 +107,8 @@ export default function ManualPage() {
                         <p>Agilize sua produtividade com a sinalização visual do sistema.</p>
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Abas Coloridas</strong>: Os botões de filtro agora possuem cores representativas suaves que casam com o status da proposta.</li>
+                            <li><strong>Cards de Status Dinâmicos</strong>: O Dashboard e o Resumo Financeiro criam ou removem cards automaticamente conforme você gerencia seus status nas configurações.</li>
                             <li><strong>Busca de Precisão</strong>: O campo de busca prioriza o ID exato do cliente ou da proposta para evitar confusões em bases grandes.</li>
-                            <li><strong>Ações em Massa</strong>: Selecione várias propostas e mude o status de todas simultaneamente para agilizar a esteira.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -128,7 +128,7 @@ export default function ManualPage() {
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Radar de Vendas</strong>: Identifica automaticamente clientes com contratos pagos há mais de 12 meses (tempo de maturação).</li>
                             <li><strong>Inteligência Diária</strong>: Consolida retornos, alertas de comissões e clientes próximos de 75 anos.</li>
-                            <li><strong>Layout Industrial</strong>: O grid 3x2 organiza os volumes de Total Digitado, Pendente, Em Andamento, Aguardando Saldo, Saldo Pago e Reprovado com clareza máxima.</li>
+                            <li><strong>Layout Inteligente</strong>: O grid organiza os volumes de forma dinâmica, mantendo o "Total Digitado" e a "Meta (Pagos)" como guias principais.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>

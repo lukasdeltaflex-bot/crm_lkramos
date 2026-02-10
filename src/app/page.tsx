@@ -60,7 +60,7 @@ export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  const [dialogData, setDialogData] = setDialogData = useState<{ title: string; proposals: Proposal[] } | null>(null);
+  const [dialogData, setDialogData] = useState<{ title: string; proposals: Proposal[] } | null>(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -226,7 +226,6 @@ export default function DashboardPage() {
   return (
     <AppLayout>
        <div className="space-y-8 animate-in fade-in duration-500 w-full max-w-full pb-10">
-        {/* HEADER & FILTROS */}
         <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
@@ -277,7 +276,6 @@ export default function DashboardPage() {
             </div>
         </div>
 
-        {/* META DE PRODUÇÃO (KPI PRINCIPAL) */}
         <div className="w-full">
             <GoalCard 
                 currentProduction={stats.statusAnalysis['Pago']?.total || 0} 
@@ -289,9 +287,9 @@ export default function DashboardPage() {
             />
         </div>
 
-        {/* GRID DE STATUS 3x2 CONFORME REFERÊNCIA */}
+        {/* GRID DINÂMICO DE CARDS */}
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {/* 1. TOTAL DIGITADO */}
+            {/* CARD 1: SEMPRE TOTAL DIGITADO */}
             <div className="cursor-pointer" onClick={() => handleShowDetails('Total Digitado (Mês)', stats.proposals.todos)}>
                 <StatsCard 
                     title="Total Digitado" 
@@ -303,70 +301,40 @@ export default function DashboardPage() {
                 />
             </div>
 
-            {/* 2. PENDENTE */}
-            <div className="cursor-pointer" onClick={() => handleShowDetails('Pendente (Acumulado)', stats.statusAnalysis['Pendente']?.proposals || [])}>
-                <StatsCard 
-                    title="Pendente" 
-                    value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis['Pendente']?.total || 0)} 
-                    icon={BadgePercent} 
-                    description="VS PRODUÇÃO ATUAL"
-                    sparklineData={stats.statusAnalysis['Pendente']?.spark}
-                    topContributor={stats.statusAnalysis['Pendente']?.top}
-                    isHot={true}
-                />
-            </div>
+            {/* DEMAIS CARDS: DINÂMICOS BASEADOS NOS STATUS ATIVOS */}
+            {activeProposalStatuses.filter(s => s !== 'Pago').map((statusName) => {
+                const statusData = stats.statusAnalysis[statusName];
+                if (!statusData) return null;
 
-            {/* 3. EM ANDAMENTO */}
-            <div className="cursor-pointer" onClick={() => handleShowDetails('Em Andamento (Acumulado)', stats.statusAnalysis['Em Andamento']?.proposals || [])}>
-                <StatsCard 
-                    title="Em Andamento" 
-                    value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis['Em Andamento']?.total || 0)} 
-                    icon={Hourglass} 
-                    description="VS PRODUÇÃO ATUAL"
-                    sparklineData={stats.statusAnalysis['Em Andamento']?.spark}
-                    topContributor={stats.statusAnalysis['Em Andamento']?.top}
-                    isHot={true}
-                />
-            </div>
+                // Mapeamento de Meta-dados para manter a identidade visual solicitada
+                const getStatusMeta = (name: string) => {
+                    const lower = name.toLowerCase();
+                    if (lower === 'pendente') return { icon: BadgePercent, isHot: true, desc: "VS PRODUÇÃO ATUAL" };
+                    if (lower === 'em andamento') return { icon: Hourglass, isHot: true, desc: "VS PRODUÇÃO ATUAL" };
+                    if (lower === 'aguardando saldo') return { icon: Clock, desc: "VS PRODUÇÃO ATUAL" };
+                    if (lower === 'saldo pago') return { icon: CheckCircle2, desc: "VS PRODUÇÃO ATUAL" };
+                    if (lower === 'reprovado') return { icon: XCircle, desc: "DO TOTAL DIGITADO" };
+                    return { icon: Activity, desc: "VOLUME ACUMULADO" };
+                };
 
-            {/* 4. AGUARDANDO SALDO */}
-            <div className="cursor-pointer" onClick={() => handleShowDetails('Aguardando Saldo (Acumulado)', stats.statusAnalysis['Aguardando Saldo']?.proposals || [])}>
-                <StatsCard 
-                    title="Aguardando Saldo" 
-                    value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis['Aguardando Saldo']?.total || 0)} 
-                    icon={Clock} 
-                    description="VS PRODUÇÃO ATUAL"
-                    sparklineData={stats.statusAnalysis['Aguardando Saldo']?.spark}
-                    topContributor={stats.statusAnalysis['Aguardando Saldo']?.top}
-                />
-            </div>
+                const meta = getStatusMeta(statusName);
 
-            {/* 5. SALDO PAGO */}
-            <div className="cursor-pointer" onClick={() => handleShowDetails('Saldo Pago (Acumulado)', stats.statusAnalysis['Saldo Pago']?.proposals || [])}>
-                <StatsCard 
-                    title="Saldo Pago" 
-                    value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis['Saldo Pago']?.total || 0)} 
-                    icon={CheckCircle2} 
-                    description="VS PRODUÇÃO ATUAL"
-                    sparklineData={stats.statusAnalysis['Saldo Pago']?.spark}
-                    topContributor={stats.statusAnalysis['Saldo Pago']?.top}
-                />
-            </div>
-
-            {/* 6. REPROVADO */}
-            <div className="cursor-pointer" onClick={() => handleShowDetails('Reprovado (Acumulado)', stats.statusAnalysis['Reprovado']?.proposals || [])}>
-                <StatsCard 
-                    title="Reprovado" 
-                    value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis['Reprovado']?.total || 0)} 
-                    icon={XCircle} 
-                    description="DO TOTAL DIGITADO"
-                    sparklineData={stats.statusAnalysis['Reprovado']?.spark}
-                    topContributor={stats.statusAnalysis['Reprovado']?.top}
-                />
-            </div>
+                return (
+                    <div key={statusName} className="cursor-pointer" onClick={() => handleShowDetails(`${statusName} (Acumulado)`, statusData.proposals)}>
+                        <StatsCard 
+                            title={statusName} 
+                            value={isPrivacyMode ? '•••••' : formatCurrency(statusData.total)} 
+                            icon={meta.icon} 
+                            description={meta.desc}
+                            sparklineData={statusData.spark}
+                            topContributor={statusData.top}
+                            isHot={meta.isHot}
+                        />
+                    </div>
+                );
+            })}
         </div>
 
-        {/* HISTÓRICO FINANCEIRO E MIX DE PRODUTOS */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
                 <CommissionChart proposals={proposals || []} />
@@ -376,12 +344,10 @@ export default function DashboardPage() {
             </div>
         </div>
 
-        {/* RANKINGS DE PRODUÇÃO */}
         <div className="w-full">
             <PartnerPerformanceCharts proposals={stats.proposals.todos} />
         </div>
 
-        {/* CENTRAL DE AÇÃO IMEDIATA: RADAR + INTELIGÊNCIA */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <RadarWidget 
                 proposals={proposals || []}
@@ -395,7 +361,6 @@ export default function DashboardPage() {
             />
         </div>
 
-        {/* MONITORAMENTO DE ESTEIRA */}
         <div className="w-full">
             <RecentProposals 
                 proposals={proposals || []}
