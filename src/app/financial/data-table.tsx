@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -332,19 +333,12 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     if (statusFilter === 'Todos') {
         statusColumn?.setFilterValue({ id: '__CUSTOM_FILTER_TODOS__', ...filterContext });
         dateColumn?.setFilterValue(appliedDateRange);
-    } else if (statusFilter === 'Paga') {
-        statusColumn?.setFilterValue({ id: 'Paga', ...filterContext });
-        if (!appliedDateRange) {
-            const now = new Date();
-            dateColumn?.setFilterValue({ from: startOfMonth(now), to: endOfMonth(now) });
-        } else {
-            dateColumn?.setFilterValue(appliedDateRange);
-        }
     } else {
+        const currentHsl = statusColors[statusFilter];
         statusColumn?.setFilterValue({ id: statusFilter, ...filterContext });
         dateColumn?.setFilterValue(appliedDateRange);
     }
-  }, [statusFilter, appliedDateRange, globalFilter, table]);
+  }, [statusFilter, appliedDateRange, globalFilter, table, statusColors]);
 
   const idToLabelMap: { [key: string]: string } = {
     customerName: 'Cliente',

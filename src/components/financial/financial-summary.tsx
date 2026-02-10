@@ -44,7 +44,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
-    // 1. PRODUÇÃO DIGITADA: Valor total do mês (mesmo reprovados)
+    // 1. PRODUÇÃO DIGITADA: Todos os contratos digitados no mês (MESMO REPROVADOS)
     const currentMonthDigitized = allProposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
@@ -52,7 +52,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
     });
     const totalMonthlyComissaoDigitada = currentMonthDigitized.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
 
-    // 2. COMISSÃO RECEBIDA: Dinheiro no caixa (independente do mês da proposta)
+    // 2. COMISSÃO RECEBIDA: Dinheiro que entrou no mês vigente (independente de quando a proposta foi feita)
     const commissionReceivedProposals = allProposals.filter(p => {
         if (p.commissionStatus !== 'Paga' || !p.commissionPaymentDate) return false;
         const d = new Date(p.commissionPaymentDate);
@@ -60,27 +60,28 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
     });
     const totalAmountPaid = commissionReceivedProposals.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
 
-    // 3. SALDO A RECEBER: Contratos com DATA DE AVERBAÇÃO preenchida (mesmo que Pagos com saldo pendente)
+    // 3. SALDO A RECEBER: Apenas contratos AVERBADOS ou PAGOS (com saldo pendente), independente do mês. Ignora Reprovados.
     const proposalsWithBalance = allProposals.filter(p => {
-        const hasAverbacao = !!p.dateApproved;
-        const isNotFullyPaid = p.commissionStatus !== 'Paga';
         const isNotReprovado = p.status !== 'Reprovado';
-        return hasAverbacao && isNotFullyPaid && isNotReprovado;
+        const isNotFullyPaid = p.commissionStatus !== 'Paga';
+        const hasAverbacaoOrPaid = !!p.dateApproved || p.status === 'Pago' || p.status === 'Saldo Pago';
+        return isNotReprovado && isNotFullyPaid && hasAverbacaoOrPaid;
     });
     const totalSaldoAReceber = proposalsWithBalance.reduce((sum, p) => sum + (p.commissionValue - (p.amountPaid || 0)), 0);
 
-    // 4. COMISSÃO ESPERADA: Todos os contratos da base (exceto pagos ou reprovados)
+    // 4. COMISSÃO ESPERADA: Todos os contratos da base, EXCETO Reprovados, Pagos (status) ou já Recebidos. Independente do mês.
+    // Foca na esteira que ainda não finalizou.
     const proposalsEsperadas = allProposals.filter(p => {
         const isNotReprovado = p.status !== 'Reprovado';
+        const isNotFinalized = p.status !== 'Pago' && p.status !== 'Saldo Pago';
         const isNotFullyPaid = p.commissionStatus !== 'Paga';
-        return isNotReprovado && isNotFullyPaid;
+        return isNotReprovado && isNotFinalized && isNotFullyPaid;
     });
     const totalComissaoEsperada = proposalsEsperadas.reduce((sum, p) => sum + (p.commissionValue - (p.amountPaid || 0)), 0);
 
     const ticketMedio = currentMonthDigitized.length > 0 ? totalMonthlyComissaoDigitada / currentMonthDigitized.length : 0;
     const eficiencia = (totalAmountPaid + totalSaldoAReceber) > 0 ? (totalAmountPaid / (totalAmountPaid + totalSaldoAReceber)) * 100 : 0;
     
-    // Inteligência "EM ALTA" no Financeiro
     const financeKpis = [
         { name: "PRODUÇÃO DIGITADA", value: totalMonthlyComissaoDigitada },
         { name: "COMISSÃO RECEBIDA", value: totalAmountPaid },
@@ -133,7 +134,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
                 />
             </div>
 
-            <div className="cursor-pointer" onClick={() => onShowDetails("Saldo a Receber (Averbados)", proposalsWithBalance)}>
+            <div className="cursor-pointer" onClick={() => onShowDetails("Saldo a Receber (Averbados/Pagos)", proposalsWithBalance)}>
                 <StatsCard
                     title="SALDO A RECEBER"
                     value={isPrivacyMode ? privacyPlaceholder : formatCurrency(totalSaldoAReceber)}
@@ -143,12 +144,12 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
                 />
             </div>
 
-            <div className="cursor-pointer" onClick={() => onShowDetails("Comissão Esperada (Base Geral)", proposalsEsperadas)}>
+            <div className="cursor-pointer" onClick={() => onShowDetails("Comissão Esperada (Carteira Ativa)", proposalsEsperadas)}>
                 <StatsCard
                     title="COMISSÃO ESPERADA"
                     value={isPrivacyMode ? privacyPlaceholder : formatCurrency(totalComissaoEsperada)}
                     icon={CircleDollarSign}
-                    description="PIPELINE ATIVO TOTAL"
+                    description="PIPELINE EM TRÂMITE"
                     isHot={metrics.hotKpi === "COMISSÃO ESPERADA"}
                 />
             </div>

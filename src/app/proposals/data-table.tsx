@@ -307,8 +307,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     debtBalanceArrivalDate: 'Chegada Saldo',
   }
 
-  const getStatusId = (status: string) => status.replace(/\s+/g, '-').toLowerCase();
-
   const orderedTabs = ['Todos', 'Em Andamento', 'Aguardando Saldo', 'Pago', 'Saldo Pago', 'Pendente', 'Reprovado'];
 
   return (

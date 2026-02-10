@@ -179,7 +179,7 @@ export default function SettingsPage() {
 
   const isLoading = isUserLoading || isSettingsLoading;
 
-  // Usa Set para garantir chaves únicas e evitar erro de console
+  // Usa Set para garantir chaves únicas
   const colorableStatuses = Array.from(new Set([
     ...proposalStatuses, 
     "Paga", "Pendente", "Parcial",
@@ -246,7 +246,7 @@ export default function SettingsPage() {
                                             {userSettings?.customLogoURL ? <img src={userSettings.customLogoURL} className="max-h-full max-w-full object-contain" alt="Preview Logo" /> : <Monitor className="h-8 w-8 opacity-20" />}
                                         </div>
                                         <div className="space-y-3">
-                                            <p className="text-sm font-medium">Sua logo aparecerá no menu lateral e em todos os relatórios PDF oficiais com Identidade Total.</p>
+                                            <p className="text-sm font-medium">Sua logo aparecerá no menu lateral e em todos os relatórios PDF oficiais.</p>
                                             <div className="flex gap-2">
                                                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleLogoUpload} />
                                                 <Button size="sm" onClick={() => fileInputRef.current?.click()} disabled={isUploadingLogo}><Upload className="h-3 w-3 mr-2" /> Subir Logo</Button>
