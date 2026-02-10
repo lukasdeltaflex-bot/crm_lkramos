@@ -1,3 +1,4 @@
+
 import {
   Card,
   CardContent,
@@ -6,6 +7,7 @@ import {
 } from '@/components/ui/card';
 import { LucideIcon, Zap, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/components/theme-provider';
 
 interface StatsCardProps {
   title: string;
@@ -23,8 +25,8 @@ interface StatsCardProps {
 }
 
 /**
- * StatsCard Premium Executivo V30
- * Otimizado para alto contraste no Modo Escuro nos temas Zinc.
+ * StatsCard Premium Executivo V31
+ * Sincronizado com o Laboratório de Cores para Cards Dinâmicos.
  */
 export function StatsCard({ 
     title, 
@@ -40,9 +42,26 @@ export function StatsCard({
     isCritical = false,
     topContributor
 }: StatsCardProps) {
+  const { statusColors } = useTheme();
   
   const getThemeStyles = () => {
     const t = title.toLowerCase();
+
+    // Prioridade 1: Cores Dinâmicas do Laboratório de Status
+    // Se o título do card for exatamente o nome de um status, usamos a cor customizada.
+    const customColor = statusColors[title];
+    if (customColor) {
+        return {
+            card: '',
+            text: 'text-foreground',
+            stroke: `hsl(${customColor})`,
+            style: { 
+                borderColor: `hsla(${customColor}, 0.3)`,
+                backgroundColor: `hsla(${customColor}, 0.05)`,
+                '--status-color': customColor 
+            } as any
+        };
+    }
 
     if (isCritical) 
         return {
@@ -52,8 +71,7 @@ export function StatsCard({
         };
 
     // TEMAS NEUTROS (TOTAL DIGITADO / TOTAL COMISSÕES)
-    // Refinado para contraste máximo no Modo Escuro
-    if (t === 'total digitado' || t === 'total de comissões')
+    if (t === 'total digitado' || t === 'produção digitada' || t === 'total de comissões')
         return {
             card: 'border-zinc-300 dark:border-zinc-500/40 bg-zinc-50/50 dark:bg-zinc-900/40',
             text: 'text-zinc-600 dark:text-zinc-100',
@@ -137,12 +155,15 @@ export function StatsCard({
   };
 
   return (
-    <Card className={cn(
-        'hover:shadow-md transition-all group relative overflow-hidden rounded-xl h-full flex flex-col border-2 py-3.5 px-5', 
-        theme.card,
-        isHot && 'ring-2 ring-orange-500 ring-offset-2',
-        className
-    )}>
+    <Card 
+        className={cn(
+            'hover:shadow-md transition-all group relative overflow-hidden rounded-xl h-full flex flex-col border-2 py-3.5 px-5', 
+            theme.card,
+            isHot && 'ring-2 ring-orange-500 ring-offset-2',
+            className
+        )}
+        style={theme.style}
+    >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-1.5">
         <div className="flex flex-col gap-0.5">
             <CardTitle className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground group-hover:text-primary transition-colors">

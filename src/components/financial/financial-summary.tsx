@@ -3,12 +3,13 @@
 
 import * as React from 'react';
 import type { Row } from '@tanstack/react-table';
-import type { Proposal, Customer } from '@/lib/types';
+import type { Proposal, Customer, UserSettings } from '@/lib/types';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { formatCurrency, cn } from '@/lib/utils';
-import { CheckCircle, Hourglass, Coins, CircleDollarSign } from 'lucide-react';
+import { CheckCircle, Hourglass, Coins, CircleDollarSign, Activity } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 import { subMonths, startOfMonth, endOfMonth, differenceInDays, subDays, isSameDay } from 'date-fns';
+import * as configData from '@/lib/config-data';
 
 type ProposalWithCustomer = Proposal & { customer: Customer };
 
@@ -18,22 +19,20 @@ interface FinancialSummaryProps {
   isPrivacyMode: boolean;
   isFiltered: boolean;
   onShowDetails: (title: string, proposals: ProposalWithCustomer[]) => void;
+  userSettings: UserSettings | null;
 }
 
 /**
- * Resumo Financeiro Simplificado
- * Focado exclusivamente em métricas de produção e fluxo de caixa de comissões.
+ * Resumo Financeiro Inteligente
+ * Agora gera cards dinamicamente baseados nos status de comissão configurados.
  */
-export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFiltered, onShowDetails }: FinancialSummaryProps) {
+export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFiltered, onShowDetails, userSettings }: FinancialSummaryProps) {
   const {
     totalPotentialCommission,
     totalAmountPaid,
-    pendingAmount,
-    expectedAmount,
     allProposalsInPeriod,
     commissionReceivedProposals,
-    proposalsForSaldoAReceber,
-    expectedCommissionProposals,
+    statusSpecificData,
     metrics,
   } = React.useMemo(() => {
     const allProposals = Array.isArray(rows) && rows.length > 0 
@@ -47,7 +46,9 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
-    // 1. PRODUÇÃO MENSAL: Baseado na Data de Digitação
+    const activeCommissionStatuses = userSettings?.commissionStatuses || configData.commissionStatuses;
+
+    // 1. PRODUÇÃO MENSAL
     const currentMonthProposals = allProposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
@@ -56,7 +57,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
 
     const totalPotentialCommission = currentMonthProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
 
-    // 2. FLUXO DE CAIXA: Baseado na Data de Pagamento da Comissão
+    // 2. COMISSÕES PAGAS NO PERÍODO
     const commissionReceivedProposals = allProposals.filter(p => {
         if (p.commissionStatus !== 'Paga' || !p.commissionPaymentDate) return false;
         const d = new Date(p.commissionPaymentDate);
@@ -64,29 +65,15 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     });
     const totalAmountPaid = commissionReceivedProposals.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
 
-    // 3. ACUMULADOS: Pipeline de Pendências
-    const proposalsForSaldoAReceber = allProposals.filter(p => {
-        if (p.commissionStatus === 'Paga') return false;
-        const status = p.status;
-        const hasAverbacao = !!p.dateApproved;
-        return status === 'Pago' || (hasAverbacao && ['Em Andamento', 'Saldo Pago', 'Pendente'].includes(status));
+    // 3. ANÁLISE DINÂMICA POR STATUS DE COMISSÃO
+    const statusSpecificData: Record<string, { total: number; proposals: ProposalWithCustomer[] }> = {};
+    activeCommissionStatuses.forEach(status => {
+        const list = allProposals.filter(p => p.commissionStatus === status);
+        statusSpecificData[status] = {
+            total: list.reduce((sum, p) => sum + (p.commissionValue || 0), 0),
+            proposals: list
+        };
     });
-    const pendingAmount = proposalsForSaldoAReceber.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
-
-    const isCriticalSaldo = proposalsForSaldoAReceber.some(p => {
-        if (!p.dateApproved) return false;
-        return differenceInDays(today, new Date(p.dateApproved)) > 15;
-    });
-
-    // Comissão Esperada
-    const expectedCommissionProposals = allProposals.filter(p => {
-        if (p.commissionStatus === 'Paga') return false;
-        const isReprovado = p.status === 'Reprovado';
-        const hasAverbacao = !!p.dateApproved;
-        const isPagoStatus = p.status === 'Pago' || p.status === 'Saldo Pago';
-        return !isReprovado && !hasAverbacao && !isPagoStatus;
-    });
-    const expectedAmount = expectedCommissionProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
 
     // Sparklines
     const getSparkline = (list: Proposal[], dateField: keyof Proposal) => {
@@ -104,27 +91,32 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     return {
       totalPotentialCommission,
       totalAmountPaid,
-      pendingAmount,
-      expectedAmount,
       allProposalsInPeriod: currentMonthProposals,
       commissionReceivedProposals,
-      proposalsForSaldoAReceber,
-      expectedCommissionProposals,
+      statusSpecificData,
       metrics: {
-          isCriticalSaldo,
           avgTotal: getAvg(totalPotentialCommission, currentMonthProposals),
           avgPaid: getAvg(totalAmountPaid, commissionReceivedProposals),
           sparkTotal: getSparkline(currentMonthProposals, 'dateDigitized'),
           sparkPaid: getSparkline(commissionReceivedProposals, 'commissionPaymentDate'),
       }
     };
-  }, [rows, currentMonthRange]);
+  }, [rows, currentMonthRange, userSettings]);
   
   const privacyPlaceholder = '•••••';
+  const activeCommissionStatuses = userSettings?.commissionStatuses || configData.commissionStatuses;
+
+  const getCommissionIcon = (status: string) => {
+      if (status === 'Paga') return CheckCircle;
+      if (status === 'Pendente') return Hourglass;
+      if (status === 'Parcial') return Coins;
+      return Activity;
+  };
 
   return (
     <div className='space-y-6 mb-8'>
         <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4 print:grid-cols-4'>
+            {/* KPIs Fixos de Movimentação */}
             <div className="cursor-pointer" onClick={() => onShowDetails("Total de Comissões Digitadas", allProposalsInPeriod)}>
                 <StatsCard
                     title="Produção Digitada"
@@ -145,23 +137,18 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
                     sparklineData={metrics.sparkPaid}
                 />
             </div>
-            <div className="cursor-pointer" onClick={() => onShowDetails("Saldo a Receber (Averbados)", proposalsForSaldoAReceber)}>
-                <StatsCard
-                    title="Saldo a Receber"
-                    value={isPrivacyMode ? privacyPlaceholder : formatCurrency(pendingAmount)}
-                    icon={Hourglass}
-                    description="FATURAMENTO PENDENTE"
-                    isCritical={metrics.isCriticalSaldo}
-                />
-            </div>
-            <div className="cursor-pointer" onClick={() => onShowDetails("Comissão Esperada (Pipeline)", expectedCommissionProposals)}>
-                <StatsCard
-                    title="Comissão Esperada"
-                    value={isPrivacyMode ? privacyPlaceholder : formatCurrency(expectedAmount)}
-                    icon={CircleDollarSign}
-                    description="PIPELINE EM ESTEIRA"
-                />
-            </div>
+
+            {/* CARDS DINÂMICOS - SEGUINDO A LÓGICA DE STATUS CUSTOMIZADOS */}
+            {activeCommissionStatuses.filter(s => s !== 'Paga').map(status => (
+                <div key={status} className="cursor-pointer" onClick={() => onShowDetails(`Volume em ${status}`, statusSpecificData[status]?.proposals || [])}>
+                    <StatsCard
+                        title={status}
+                        value={isPrivacyMode ? privacyPlaceholder : formatCurrency(statusSpecificData[status]?.total || 0)}
+                        icon={getCommissionIcon(status)}
+                        description="FLUXO DE COMISSÕES"
+                    />
+                </div>
+            ))}
         </div>
     </div>
   );
