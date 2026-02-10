@@ -75,16 +75,11 @@
   }
 }
 
-/* 🚦 SISTEMA DINÂMICO DE STATUS V70 */
+/* 🚦 SISTEMA DINÂMICO DE STATUS V75 */
 .status-custom {
     color: hsl(var(--status-color)) !important;
     background-color: hsla(var(--status-color), 0.15) !important;
     border-color: hsla(var(--status-color), 0.5) !important;
-}
-
-.style-glow .status-custom,
-.style-glow.card[style*="--status-color"] {
-    box-shadow: 0 0 15px hsla(var(--status-color), 0.3) !important;
 }
 
 .status-row-custom {
@@ -94,16 +89,56 @@
     background-color: hsla(var(--status-color), 0.2) !important;
 }
 
-/* INTENSIDADE DE CORES */
-.intensity-vibrante .status-custom { 
-    background-color: hsla(var(--status-color), 0.25) !important; 
-    font-weight: 800; 
-}
-.intensity-vibrante .status-row-custom { 
-    background-color: hsla(var(--status-color), 0.18) !important; 
+/* 🌟 AURA VISUAL (CONTAINERS) */
+.style-glow .status-custom,
+.style-glow.card[style*="--status-color"],
+.style-glow [data-state="active"].status-custom {
+    box-shadow: 0 0 15px hsla(var(--status-color), 0.4) !important;
 }
 
-/* MOTION DESIGN */
+.style-glass .card, .style-glass .border {
+    background-color: hsla(var(--background), var(--glass-opacity)) !important;
+    backdrop-filter: blur(var(--glass-blur)) !important;
+}
+
+.style-deep .card {
+    box-shadow: 0 10px 30px -5px rgba(0,0,0,0.1), 0 4px 15px -5px rgba(0,0,0,0.05) !important;
+}
+
+.style-flat .card {
+    box-shadow: none !important;
+    border-width: 1px !important;
+}
+
+.style-geometrico .card, .style-geometrico .border {
+    border-width: 2px !important;
+}
+
+.style-bordado .card, .style-bordado .border {
+    border-style: dashed !important;
+}
+
+/* 🏔️ TEXTURAS */
+.texture-dots body { background-image: radial-gradient(hsl(var(--primary) / 0.15) 1px, transparent 1px); background-size: 24px 24px; }
+.texture-grid body { background-image: linear-gradient(hsl(var(--primary) / 0.08) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary) / 0.08) 1px, transparent 1px); background-size: 40px 40px; }
+.texture-lines body { background-image: repeating-linear-gradient(45deg, hsl(var(--primary) / 0.03) 0px, hsl(var(--primary) / 0.03) 1px, transparent 1px, transparent 10px); }
+
+/* 🛡️ BARRA LATERAL */
+.sidebar-dark .sidebar {
+    --sidebar-background: 220 13% 10%;
+    --sidebar-foreground: 210 20% 98%;
+    --sidebar-border: 215 27.9% 25%;
+    --sidebar-accent: 215 27.9% 16.9%;
+}
+
+.sidebar-light .sidebar {
+    --sidebar-background: 210 40% 98%;
+    --sidebar-foreground: 222.2 47.4% 11.2%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-accent: 210 40% 94.1%;
+}
+
+/* 🏃 MOTION DESIGN */
 .anim-estatico * { transition: none !important; animation: none !important; }
 .anim-instantaneo * { --motion-duration: 50ms; }
 .anim-rapido * { --motion-duration: 150ms; }
@@ -113,12 +148,7 @@
 .anim-dramatico * { --motion-duration: 800ms; }
 .anim-atmosferico * { --motion-duration: 1200ms; --motion-ease: cubic-bezier(0.16, 1, 0.3, 1); }
 
-/* TEXTURAS */
-.texture-dots body { background-image: radial-gradient(hsl(var(--primary) / 0.15) 1px, transparent 1px); background-size: 24px 24px; }
-.texture-grid body { background-image: linear-gradient(hsl(var(--primary) / 0.08) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary) / 0.08) 1px, transparent 1px); background-size: 40px 40px; }
-.texture-lines body { background-image: repeating-linear-gradient(45deg, hsl(var(--primary) / 0.03) 0px, hsl(var(--primary) / 0.03) 1px, transparent 1px, transparent 10px); }
-
-/* ARREDONDAMENTO */
+/* 📐 ARREDONDAMENTO */
 .radius-reto { --radius: 0px; }
 .radius-extra-discreto { --radius: 2px; }
 .radius-discreto { --radius: 6px; }
@@ -127,7 +157,7 @@
 .radius-suave { --radius: 24px; }
 .radius-capsula { --radius: 9999px; }
 
-/* TIPOGRAFIA INDUSTRIAL (20 ESTILOS) */
+/* ✍️ TIPOGRAFIA */
 .font-moderno { --font-sans: "Inter", sans-serif; }
 .font-classico { --font-sans: "Georgia", serif; }
 .font-mono { --font-sans: ui-monospace, monospace; }

@@ -292,7 +292,7 @@ export default function SettingsPage() {
                                         {colorableStatuses.map((status) => {
                                             const currentHsl = statusColors[status] || THEMES[0].light;
                                             return (
-                                                <div key={`color-${status}`} className="flex items-center justify-between p-3 border rounded-xl bg-muted/10">
+                                                <div key={`color-status-${status}`} className="flex items-center justify-between p-3 border rounded-xl bg-muted/10">
                                                     <div className="flex items-center gap-2">
                                                         <div className="h-4 w-4 rounded-full border border-white/20" style={{ backgroundColor: `hsl(${currentHsl})` }} />
                                                         <span className="text-[10px] font-black uppercase tracking-tighter">{status}</span>
@@ -427,7 +427,7 @@ export default function SettingsPage() {
                                 <div className="space-y-3">
                                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Preview de Tipografia</p>
                                     <div className="p-4 border rounded-xl bg-background space-y-2">
-                                        <p className="text-2xl font-bold leading-tight">LK RAMOS Gestão de Elite</p>
+                                        <p className={cn("text-2xl font-bold leading-tight", `font-${fontStyle}`)}>LK RAMOS Gestão de Elite</p>
                                         <p className="text-xs text-muted-foreground leading-relaxed">
                                             Este texto serve para validar a legibilidade da fonte <strong>{fontStyle}</strong> em diferentes tamanhos e pesos.
                                         </p>

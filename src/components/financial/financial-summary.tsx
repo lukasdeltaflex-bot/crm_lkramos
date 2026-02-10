@@ -44,7 +44,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
 
     /**
      * 1. PRODUÇÃO DIGITADA (Mês Vigente)
-     * Valor de comissão de TODOS os contratos digitados no mês, incluindo reprovados.
+     * Regra: Soma TODOS os contratos digitados no mês, incluindo reprovados.
      */
     const digitizedInPeriod = allProposals.filter(p => {
         if (!p.dateDigitized) return false;
@@ -54,8 +54,8 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
     const totalComissaoProducaoDigitada = digitizedInPeriod.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
 
     /**
-     * 2. COMISSÃO RECEBIDA (Mês Vigente)
-     * Valor efetivamente recebido no caixa durante o período selecionado.
+     * 2. COMISSÃO RECEBIDA (Período)
+     * Dinheiro que efetivamente entrou no caixa.
      */
     const receivedInPeriod = allProposals.filter(p => {
         if (p.commissionStatus !== 'Paga' || !p.commissionPaymentDate) return false;
@@ -66,21 +66,18 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
 
     /**
      * 3. SALDO A RECEBER (Independente de Mês)
-     * Contratos com Data de Averbação preenchida que ainda não foram pagos integralmente.
-     * Exclui apenas Reprovados.
+     * Regra: Contratos com Data de Averbação preenchida que ainda não foram pagos.
      */
     const averbados = allProposals.filter(p => {
-        const isNotReprovado = p.status !== 'Reprovado';
         const isNotFullyPaid = p.commissionStatus !== 'Paga';
-        const hasAverbacao = !!p.dateApproved || p.status === 'Pago' || p.status === 'Saldo Pago';
-        return isNotReprovado && isNotFullyPaid && hasAverbacao;
+        const hasAverbacao = !!p.dateApproved;
+        return isNotFullyPaid && hasAverbacao && p.status !== 'Reprovado';
     });
     const totalSaldoAReceber = averbados.reduce((sum, p) => sum + (p.commissionValue - (p.amountPaid || 0)), 0);
 
     /**
      * 4. COMISSÃO ESPERADA (Independente de Mês)
-     * Todos os contratos da base, exceto cancelados/reprovados e os que já foram pagos.
-     * Representa o faturamento total da esteira ativa.
+     * Regra: Todos os contratos menos os reprovados e os já pagos.
      */
     const esperados = allProposals.filter(p => {
         const isNotReprovado = p.status !== 'Reprovado';
