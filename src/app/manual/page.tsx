@@ -125,8 +125,7 @@ export default function ManualPage() {
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
                         <p>Mantenha a saúde financeira da sua operação sob controle total.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Quarteto Executivo</strong>: Acompanhe Produção Digitada (Bruta), Comissão Recebida, Saldo a Receber (Pendente Geral) e Comissão Esperada (Mês).</li>
-                            <li><strong>Lançamento de Despesas</strong>: Registre custos operacionais para cálculo de lucro real.</li>
+                            <li><strong>Lançamento de Despesas</strong>: Registre custos operacionais e gerencie a situação (Pago/Pendente).</li>
                             <li><strong>Categorias de Elite</strong>: Crie categorias próprias em Configurações &gt; Opções.</li>
                             <li><strong>Conciliação com IA</strong>: Processe relatórios de pagamento colando apenas o texto do banco para baixar comissões automaticamente.</li>
                         </ul>

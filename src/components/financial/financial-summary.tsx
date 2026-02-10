@@ -4,11 +4,10 @@ import * as React from 'react';
 import type { Row } from '@tanstack/react-table';
 import type { Proposal, Customer, UserSettings } from '@/lib/types';
 import { StatsCard } from '@/components/dashboard/stats-card';
-import { formatCurrency, cn } from '@/lib/utils';
-import { CheckCircle, Hourglass, Coins, CircleDollarSign, Activity, Wallet } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
+import { CheckCircle, Hourglass, CircleDollarSign, TrendingUp, Activity } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
-import { subMonths, startOfMonth, endOfMonth, differenceInDays, subDays, isSameDay } from 'date-fns';
-import * as configData from '@/lib/config-data';
+import { startOfMonth, endOfMonth, subDays, isSameDay } from 'date-fns';
 
 type ProposalWithCustomer = Proposal & { customer: Customer };
 
@@ -21,11 +20,7 @@ interface FinancialSummaryProps {
   userSettings: UserSettings | null;
 }
 
-/**
- * Resumo Financeiro Consolidado LK RAMOS
- * Restaurado os cards de Saldo a Receber e Comissão Esperada para visão executiva.
- */
-export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFiltered, onShowDetails, userSettings }: FinancialSummaryProps) {
+export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onShowDetails }: FinancialSummaryProps) {
   const {
     totalMonthlyGross,
     totalPotentialCommission,
@@ -47,7 +42,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     const effectiveToDate = new Date(toDate);
     effectiveToDate.setHours(23, 59, 59, 999);
 
-    // 1. PRODUÇÃO MENSAL (Focado no que foi digitado no período)
+    // 1. PRODUÇÃO MENSAL (VOLUME BRUTO)
     const currentMonthProposals = allProposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
@@ -57,7 +52,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     const totalMonthlyGross = currentMonthProposals.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
     const totalPotentialCommission = currentMonthProposals.reduce((sum, p) => sum + (p.commissionValue || 0), 0);
 
-    // 2. COMISSÕES PAGAS NO PERÍODO (Dinheiro no caixa)
+    // 2. COMISSÃO RECEBIDA (CASH IN)
     const commissionReceivedProposals = allProposals.filter(p => {
         if (p.commissionStatus !== 'Paga' || !p.commissionPaymentDate) return false;
         const d = new Date(p.commissionPaymentDate);
@@ -65,7 +60,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
     });
     const totalAmountPaid = commissionReceivedProposals.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
 
-    // 3. SALDO A RECEBER (Pendente Geral de todas as propostas ativas)
+    // 3. SALDO A RECEBER (PENDENTE GERAL)
     const proposalsWithBalance = allProposals.filter(p => 
         p.status !== 'Reprovado' && 
         p.commissionStatus !== 'Paga' &&
@@ -84,7 +79,8 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
         });
     };
 
-    const getAvg = (val: number, list: any[]) => list.length > 0 ? val / list.length : 0;
+    const ticketMedio = currentMonthProposals.length > 0 ? totalPotentialCommission / currentMonthProposals.length : 0;
+    const eficiencia = (totalAmountPaid + totalSaldoAReceber) > 0 ? (totalAmountPaid / (totalAmountPaid + totalSaldoAReceber)) * 100 : 0;
     
     return {
       totalMonthlyGross,
@@ -95,8 +91,8 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
       commissionReceivedProposals,
       proposalsWithBalance,
       metrics: {
-          avgTotal: getAvg(totalPotentialCommission, currentMonthProposals),
-          avgPaid: getAvg(totalAmountPaid, commissionReceivedProposals),
+          ticketMedio,
+          eficiencia,
           sparkTotal: getSparkline(currentMonthProposals, 'dateDigitized'),
           sparkPaid: getSparkline(commissionReceivedProposals, 'commissionPaymentDate'),
       }
@@ -108,49 +104,47 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, isFil
   return (
     <div className='space-y-6 mb-8'>
         <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4 print:grid-cols-4'>
-            {/* CARD 1: PRODUÇÃO DIGITADA (VOLUME BRUTO MENSAL) */}
+            {/* CARD 1: PRODUÇÃO DIGITADA */}
             <div className="cursor-pointer" onClick={() => onShowDetails("Produção Digitada (Bruta)", allProposalsInPeriod)}>
                 <StatsCard
-                    title="Produção Digitada"
+                    title="PRODUÇÃO DIGITADA"
                     value={isPrivacyMode ? privacyPlaceholder : formatCurrency(totalMonthlyGross)}
-                    icon={CircleDollarSign}
-                    description="VOLUME BRUTO MENSAL"
-                    subValue={`Propostas: ${allProposalsInPeriod.length}`}
+                    icon={Activity}
+                    description="COMISSÃO POTENCIAL"
+                    subValue={`TICKET MÉDIO: ${formatCurrency(metrics.ticketMedio)}`}
                     sparklineData={metrics.sparkTotal}
                 />
             </div>
 
-            {/* CARD 2: COMISSÃO RECEBIDA (CASH IN MENSAL) */}
+            {/* CARD 2: COMISSÃO RECEBIDA */}
             <div className="cursor-pointer" onClick={() => onShowDetails("Comissões Recebidas no Mês", commissionReceivedProposals)}>
                 <StatsCard
-                    title="Comissão Recebida"
+                    title="COMISSÃO RECEBIDA"
                     value={isPrivacyMode ? privacyPlaceholder : formatCurrency(totalAmountPaid)}
-                    icon={CheckCircle}
+                    icon={TrendingUp}
                     description="DINHEIRO NO CAIXA"
-                    subValue={`Média: ${formatCurrency(metrics.avgPaid)}`}
+                    subValue={`EFICIÊNCIA: ${metrics.eficiencia.toFixed(1)}%`}
                     sparklineData={metrics.sparkPaid}
                 />
             </div>
 
-            {/* CARD 3: SALDO A RECEBER (PENDENTE GERAL) */}
+            {/* CARD 3: SALDO A RECEBER */}
             <div className="cursor-pointer" onClick={() => onShowDetails("Saldo a Receber (Pendente Geral)", proposalsWithBalance)}>
                 <StatsCard
-                    title="Saldo a Receber"
+                    title="SALDO A RECEBER"
                     value={isPrivacyMode ? privacyPlaceholder : formatCurrency(totalSaldoAReceber)}
-                    icon={Coins}
-                    description="SALDO A RECEBER"
-                    subValue={`${proposalsWithBalance.length} Contratos pendentes`}
+                    icon={Hourglass}
+                    description="FATURAMENTO PENDENTE"
                 />
             </div>
 
-            {/* CARD 4: COMISSÃO ESPERADA (POTENCIAL MENSAL) */}
+            {/* CARD 4: COMISSÃO ESPERADA */}
             <div className="cursor-pointer" onClick={() => onShowDetails("Comissão Esperada (Produção Mês)", allProposalsInPeriod)}>
                 <StatsCard
-                    title="Comissão Esperada"
+                    title="COMISSÃO ESPERADA"
                     value={isPrivacyMode ? privacyPlaceholder : formatCurrency(totalPotentialCommission)}
-                    icon={Hourglass}
-                    description="COMISSÃO ESPERADA"
-                    subValue={`Ticket Médio: ${formatCurrency(metrics.avgTotal)}`}
+                    icon={CircleDollarSign}
+                    description="PIPELINE EM ESTEIRA"
                 />
             </div>
         </div>
