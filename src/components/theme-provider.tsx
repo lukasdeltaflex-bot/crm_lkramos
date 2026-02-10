@@ -98,7 +98,6 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
       root.style.setProperty('--sidebar-primary', primaryValue);
       localStorage.setItem("color-theme", colorTheme);
 
-      // Classes Globais - Aplicação forçada
       const clearAndAdd = (list: string[], prefix: string, current: string) => {
           root.classList.remove(...list.map(item => `${prefix}-${item}`));
           root.classList.add(`${prefix}-${current}`);
@@ -111,12 +110,10 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
       clearAndAdd(INTENSITY_OPTIONS, "intensity", colorIntensity);
       clearAndAdd(ANIMATION_OPTIONS, "anim", animationStyle);
       
-      // Aplicar tipografia ao ROOT
       root.classList.remove(...FONT_OPTIONS.map(f => `font-${f}`));
       root.classList.add(`font-${fontStyle}`);
       localStorage.setItem("font-theme", fontStyle);
 
-      // Sidebar - Aplicação forçada
       root.classList.remove("sidebar-dark", "sidebar-light");
       if (sidebarStyle !== 'default') {
         root.classList.add(`sidebar-${sidebarStyle}`);
@@ -127,7 +124,6 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
       root.style.setProperty('--glass-blur', `${glassIntensity / 5}px`);
       localStorage.setItem("glass-intensity", String(glassIntensity));
 
-      // Injeta variáveis de cores de status
       Object.entries(statusColors).forEach(([name, color]) => {
           const varName = `--status-color-${name.replace(/\s+/g, '-').toLowerCase()}`;
           root.style.setProperty(varName, color);
@@ -170,9 +166,7 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
 export function ThemeProvider({ children, ...props }: CustomThemeProviderProps) {
   return (
     <NextThemesProvider {...props}>
-      <ColorThemeProvider>
-        {children}
-      </ColorThemeProvider>
+      <ColorThemeProvider>{children}</ColorThemeProvider>
     </NextThemesProvider>
   )
 }

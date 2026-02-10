@@ -113,7 +113,6 @@ export default function SettingsPage() {
 
   const { data: userSettings, isLoading: isSettingsLoading } = useDoc<UserSettings>(settingsDocRef);
 
-  // PREVIEW LOCAL (Simulador vivo)
   const [preview, setPreview] = useState({
     radius: theme.radius,
     containerStyle: theme.containerStyle,
