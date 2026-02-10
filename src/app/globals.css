@@ -83,6 +83,12 @@
     border-color: hsla(var(--status-color), var(--status-border-opacity, 0.5)) !important;
 }
 
+/* NEON GLOW PARA CARDS EM ALTA */
+.card-hot-neon {
+    border-color: hsla(var(--status-color), 0.8) !important;
+    box-shadow: 0 0 15px hsla(var(--status-color), 0.4), inset 0 0 5px hsla(var(--status-color), 0.1) !important;
+}
+
 .status-row-custom {
     background-color: hsla(var(--status-color), 0.08) !important;
 }
@@ -127,7 +133,7 @@
 
 /* 🛡️ BARRA LATERAL ELITE (CONTRASTE MÁXIMO) */
 .sidebar-dark [data-sidebar="sidebar"] {
-    --sidebar-background: 240 10% 4% !important;
+    --sidebar-background: 240 10% 2% !important;
     --sidebar-foreground: 0 0% 100% !important;
     --sidebar-accent: 240 5% 15% !important;
     --sidebar-accent-foreground: 0 0% 100% !important;
@@ -136,8 +142,9 @@
 }
 .sidebar-dark [data-sidebar="sidebar"] * { color: inherit !important; }
 .sidebar-dark [data-sidebar="sidebar"] [data-active="true"] {
-    background-color: rgba(255, 255, 255, 0.15) !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
     color: #ffffff !important;
+    border-left: 3px solid #ffffff;
 }
 
 .sidebar-light [data-sidebar="sidebar"] {
@@ -153,6 +160,7 @@
 .sidebar-light [data-sidebar="sidebar"] [data-active="true"] {
     background-color: rgba(0, 0, 0, 0.05) !important;
     color: #000000 !important;
+    border-left: 3px solid #000000;
 }
 
 /* ✍️ TIPOGRAFIA ELITE */

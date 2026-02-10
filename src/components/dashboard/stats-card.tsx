@@ -69,6 +69,7 @@ export function StatsCard({
                 `intensity-${intensity}`,
                 `radius-${radius}`,
                 `anim-${animationStyle}`,
+                isHot && 'card-hot-neon',
                 'card'
             ),
             style: { 
@@ -79,8 +80,10 @@ export function StatsCard({
     
     // Fallback neutro com altura uniforme
     return { 
-        card: cn(`style-${containerStyle}`, 'border-zinc-200 bg-zinc-50/50 dark:bg-zinc-900/10 dark:border-zinc-800', `radius-${radius}`, `anim-${animationStyle}`, 'card'), 
-        style: {}
+        card: cn(`style-${containerStyle}`, 'border-zinc-200 bg-zinc-50/50 dark:bg-zinc-900/10 dark:border-zinc-800', `radius-${radius}`, `anim-${animationStyle}`, isHot && 'card-hot-neon', 'card'), 
+        style: {
+            '--status-color': '217 33% 25%'
+        } as any
     };
   };
 
