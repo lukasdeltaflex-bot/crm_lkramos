@@ -179,7 +179,8 @@ export default function SettingsPage() {
 
   const isLoading = isUserLoading || isSettingsLoading;
 
-  const colorableStatuses = [
+  // Usa Set para garantir chaves únicas e evitar erro de console
+  const colorableStatuses = Array.from(new Set([
     ...proposalStatuses, 
     "Paga", "Pendente", "Parcial",
     "TOTAL DIGITADO", 
@@ -187,7 +188,7 @@ export default function SettingsPage() {
     "COMISSÃO RECEBIDA", 
     "SALDO A RECEBER", 
     "COMISSÃO ESPERADA"
-  ];
+  ]));
 
   const fontOptions = [
     "moderno", "classico", "mono", "arredondado", "condensado", 
@@ -461,7 +462,11 @@ export default function SettingsPage() {
             <TabsContent value="account">
                  <Card className="border-border/50 shadow-sm">
                     <CardHeader><CardTitle>Minha Conta</CardTitle></CardHeader>
-                    <CardContent><Link href="/profile"><Button>Ir para Gerenciamento de Perfil</Button></Link></CardContent>
+                    <CardContent>
+                        <Link href="/profile">
+                            <Button>Ir para Gerenciamento de Perfil</Button>
+                        </Link>
+                    </CardContent>
                 </Card>
             </TabsContent>
         </Tabs>

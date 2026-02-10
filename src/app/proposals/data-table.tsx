@@ -122,10 +122,10 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
       commissionValue: false,
       customerCpf: false,
   };
-  const defaultOrder = React.useMemo(() => columns.map(c => c.id!), [columns]);
+  const initialOrder = React.useMemo(() => columns.map(c => c.id!), [columns]);
 
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(defaultVisibility);
-  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(defaultOrder);
+  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(initialOrder);
   
   React.useEffect(() => {
     setIsClient(true);
@@ -245,7 +245,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     autoResetPageIndex: false,
     enableColumnResizing: true,
     columnResizeMode: 'onChange',
-    enableColumnOrdering: true,
     state: {
       sorting,
       columnFilters,
@@ -324,14 +323,16 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                 <Tabs value={statusFilter} onValueChange={setStatusFilter}>
                     <TabsList className="h-auto flex-wrap justify-start bg-muted/50 p-1">
                         {orderedTabs.map(status => {
-                            const id = getStatusId(status);
                             const hasCustomColor = !!statusColors[status];
                             if (status === 'Todos') return <TabsTrigger key="Todos" value="Todos" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Todos</TabsTrigger>;
                             return (
                                 <TabsTrigger 
                                     key={status} 
                                     value={status}
-                                    className={cn("transition-all border border-transparent data-[state=active]:status-custom", `status-${id}`)}
+                                    className={cn(
+                                        "transition-all border border-transparent data-[state=active]:status-custom",
+                                        containerStyle === 'glow' && "data-[state=active]:shadow-[0_0_15px_hsla(var(--status-color),0.4)]"
+                                    )}
                                     style={hasCustomColor ? { '--status-color': statusColors[status] } as any : {}}
                                 >
                                     {status}
