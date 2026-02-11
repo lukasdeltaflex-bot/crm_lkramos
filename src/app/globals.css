@@ -125,7 +125,7 @@
 .texture-grid { background-image: linear-gradient(hsl(var(--muted-foreground) / 0.05) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--muted-foreground) / 0.05) 1px, transparent 1px); background-size: 20px 20px; }
 .texture-lines { background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, hsl(var(--muted-foreground) / 0.03) 10px, hsl(var(--muted-foreground) / 0.03) 11px); }
 
-/* Tipografia Expandida */
+/* Tipografia Expandida com Reforço Total */
 .font-moderno, .font-moderno * { font-family: 'Inter', sans-serif !important; }
 .font-classico, .font-classico * { font-family: 'Playfair Display', serif !important; }
 .font-mono, .font-mono * { font-family: 'JetBrains Mono', monospace !important; }

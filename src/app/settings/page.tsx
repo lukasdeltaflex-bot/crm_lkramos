@@ -208,7 +208,7 @@ export default function SettingsPage() {
     "EM ANDAMENTO", "AGUARDANDO SALDO", "PAGO", 
     "SALDO PAGO", "PENDENTE", "REPROVADO", 
     "PAGA", "PARCIAL", "COMISSÃO ESPERADA", 
-    "SALDO A RECEBER"
+    "SALDO A RECEBER", "DIGITADO"
   ];
 
   const FONT_LABELS: Record<string, string> = {
@@ -595,11 +595,16 @@ export default function SettingsPage() {
             </TabsContent>
 
             <TabsContent value="data">
-                <Card className="border-border/50 shadow-sm">
-                    <CardHeader><CardTitle>Backup & Segurança</CardTitle></CardHeader>
-                    <CardContent>
-                        <Button className="w-full" variant="outline">
-                            <FileDown className="mr-2 h-4 w-4" /> Exportar Banco de Dados (Excel)
+                <Card className="border-border/50 shadow-sm overflow-hidden">
+                    <CardHeader className="bg-green-500/5 border-b border-green-500/10">
+                        <CardTitle className="text-lg font-bold flex items-center gap-2 text-green-700 dark:text-green-400">
+                            <Database className="h-5 w-5 text-green-600" />
+                            Backup & Segurança
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                        <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold h-12 shadow-lg transition-all border-none" variant="default">
+                            <FileDown className="mr-2 h-5 w-5" /> Exportar Banco de Dados (Excel)
                         </Button>
                     </CardContent>
                 </Card>
