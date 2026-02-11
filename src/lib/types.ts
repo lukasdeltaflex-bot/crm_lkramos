@@ -1,3 +1,4 @@
+
 export type Benefit = {
   number: string;
   species?: string;
@@ -124,6 +125,9 @@ export type UserSettings = {
   sidebarStyle?: string;
   colorTheme?: string;
   statusColors?: Record<string, string>;
+  // Cloud Sync
+  monthlyGoal?: number;
+  dismissedAlerts?: string[];
 };
 
 export type UserProfile = {

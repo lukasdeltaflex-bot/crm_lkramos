@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -12,9 +13,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
-import type { Customer, Proposal, FollowUp } from '@/lib/types';
+import { useCollection, useFirestore, useUser, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, query, where, doc, setDoc } from 'firebase/firestore';
+import type { Customer, Proposal, FollowUp, UserSettings } from '@/lib/types';
 import { differenceInDays, format, differenceInMonths } from 'date-fns';
 import { getWhatsAppUrl, calculateBusinessDays, getAge } from '@/lib/utils';
 import Link from 'next/link';
@@ -22,12 +23,9 @@ import { generateBirthdayMessage } from '@/ai/flows/generate-birthday-message-fl
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
-const STORAGE_KEY = 'lk-ramos-dismissed-notifications-v1';
-
 export function NotificationBell() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const [dismissedIds, setDismissedIds] = useState<string[]>([]);
   const [isClient, setIsClient] = useState(false);
 
   // AI State
@@ -38,14 +36,6 @@ export function NotificationBell() {
 
   useEffect(() => {
     setIsClient(true);
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        setDismissedIds(JSON.parse(saved));
-      } catch (e) {
-        localStorage.removeItem(STORAGE_KEY);
-      }
-    }
   }, []);
 
   const customersQuery = useMemoFirebase(() => {
@@ -66,9 +56,17 @@ export function NotificationBell() {
     );
   }, [firestore, user]);
 
+  const settingsDocRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'userSettings', user.uid);
+  }, [firestore, user]);
+
   const { data: customers } = useCollection<Customer>(customersQuery);
   const { data: proposals } = useCollection<Proposal>(proposalsQuery);
   const { data: followUps } = useCollection<FollowUp>(followUpsQuery);
+  const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
+
+  const dismissedIds = userSettings?.dismissedAlerts || [];
 
   const notifications = React.useMemo(() => {
     if (!isClient) return [];
@@ -180,12 +178,18 @@ export function NotificationBell() {
     return notifications.filter(n => !dismissedIds.includes(n.id));
   }, [notifications, dismissedIds]);
 
-  const handleDismiss = (e: React.MouseEvent, id: string) => {
+  const handleDismiss = async (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
-    const newDismissed = [...dismissedIds, id];
-    setDismissedIds(newDismissed);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newDismissed));
+    if (!user || !firestore) return;
+
+    try {
+        await setDoc(doc(firestore, 'userSettings', user.uid), {
+            dismissedAlerts: [...dismissedIds, id]
+        }, { merge: true });
+    } catch (err) {
+        console.error("Failed to dismiss cloud alert:", err);
+    }
   };
 
   const handleBdayClick = async (e: React.MouseEvent, customerId: string) => {
@@ -245,9 +249,10 @@ export function NotificationBell() {
                     variant="ghost" 
                     size="sm" 
                     className="h-auto p-0 text-[10px] text-muted-foreground hover:text-primary"
-                    onClick={() => {
-                        setDismissedIds([]);
-                        localStorage.removeItem(STORAGE_KEY);
+                    onClick={async () => {
+                        if (user && firestore) {
+                            await setDoc(doc(firestore, 'userSettings', user.uid), { dismissedAlerts: [] }, { merge: true });
+                        }
                     }}
                 >
                     Restaurar Tudo

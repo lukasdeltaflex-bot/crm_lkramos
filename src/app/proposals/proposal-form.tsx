@@ -205,6 +205,7 @@ export function ProposalForm({
   }, []);
 
   useEffect(() => {
+    // CORREÇÃO CRÍTICA: Rota de coleção corrigida para loanProposals
     if (firestore && !proposal?.id && !tempProposalId) {
       setTempProposalId(doc(collection(firestore, 'loanProposals')).id);
     }

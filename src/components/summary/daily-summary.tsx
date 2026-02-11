@@ -1,10 +1,11 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Bot, Send, BellRing, Clock, BadgePercent, X, Info, Loader2, CalendarClock, Cake, MessageSquareText, Hourglass, Coins, Zap } from 'lucide-react';
-import type { Customer, Proposal, UserProfile, FollowUp } from '@/lib/types';
+import type { Customer, Proposal, UserProfile, FollowUp, UserSettings } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { differenceInDays, format, differenceInMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -14,8 +15,8 @@ import { toast } from '@/hooks/use-toast';
 import { sendSummaryEmail } from '@/ai/flows/send-summary-email-flow';
 import { generateBirthdayMessage } from '@/ai/flows/generate-birthday-message-flow';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, doc, setDoc } from 'firebase/firestore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import Link from 'next/link';
 
@@ -24,8 +25,6 @@ interface DailySummaryProps {
   customers: Customer[];
   userProfile: UserProfile | null;
 }
-
-const DISMISS_STORAGE_KEY = 'dismissed_daily_summary_items_v1';
 
 function SummaryAlertItem({
   id,
@@ -66,7 +65,6 @@ function SummaryAlertItem({
 export function DailySummary({ proposals, customers, userProfile }: DailySummaryProps) {
   const { user } = useUser();
   const firestore = useFirestore();
-  const [dismissedItems, setDismissedItems] = useState<string[]>([]);
   const [isClient, setIsClient] = useState(false);
   const [isSending, setIsSending] = useState(false);
   
@@ -80,28 +78,29 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
     if (!firestore || !user) return null;
     return collection(firestore, 'users', user.uid, 'followUps');
   }, [firestore, user]);
+
+  const settingsDocRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'userSettings', user.uid);
+  }, [firestore, user]);
+
   const { data: followUps } = useCollection<FollowUp>(followUpsQuery);
+  const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
 
   useEffect(() => {
     setIsClient(true);
-    try {
-      const storedDismissed = localStorage.getItem(DISMISS_STORAGE_KEY);
-      if (storedDismissed) {
-        setDismissedItems(JSON.parse(storedDismissed));
-      }
-    } catch (error) {
-      console.error("Failed to parse dismissed items from localStorage", error);
-      localStorage.removeItem(DISMISS_STORAGE_KEY);
-    }
   }, []);
 
-  const handleDismiss = (itemId: string) => {
-    const newDismissed = [...dismissedItems, itemId];
-    setDismissedItems(newDismissed);
+  const dismissedItems = userSettings?.dismissedAlerts || [];
+
+  const handleDismiss = async (itemId: string) => {
+    if (!user || !firestore) return;
     try {
-        localStorage.setItem(DISMISS_STORAGE_KEY, JSON.stringify(newDismissed));
-    } catch (error) {
-        console.error("Failed to save dismissed items to localStorage", error);
+        await setDoc(doc(firestore, 'userSettings', user.uid), {
+            dismissedAlerts: [...dismissedItems, itemId]
+        }, { merge: true });
+    } catch (e) {
+        console.error("Failed to sync dismiss state:", e);
     }
   };
 

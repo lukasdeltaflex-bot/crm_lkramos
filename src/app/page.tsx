@@ -1,9 +1,10 @@
+
 'use client';
 import React, { useState, useEffect, useMemo } from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, where, doc } from 'firebase/firestore';
+import { collection, query, where, doc, setDoc } from 'firebase/firestore';
 import {
   FileText,
   Clock,
@@ -20,7 +21,7 @@ import {
 import { format, startOfMonth, endOfMonth, isValid, startOfDay, subDays, endOfDay, subMonths, parse, eachDayOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatCurrency, cn } from '@/lib/utils';
-import type { Proposal, Customer, UserProfile } from '@/lib/types';
+import type { Proposal, Customer, UserProfile, UserSettings } from '@/lib/types';
 import {
   Dialog,
   DialogContent,
@@ -46,6 +47,7 @@ import {
 import { CommissionChart } from '@/components/dashboard/commission-chart';
 import { ProductBreakdownChart } from '@/components/dashboard/product-breakdown-chart';
 import { RadarWidget } from '@/components/dashboard/radar-widget';
+import { toast } from '@/hooks/use-toast';
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -80,6 +82,24 @@ export default function DashboardPage() {
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
   const { data: userProfile } = useDoc<UserProfile>(userProfileDocRef);
+
+  const settingsDocRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'userSettings', user.uid);
+  }, [firestore, user]);
+  const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
+
+  const handleGoalChange = async (newGoal: number) => {
+    if (!user || !firestore) return;
+    try {
+        await setDoc(doc(firestore, 'userSettings', user.uid), {
+            monthlyGoal: newGoal
+        }, { merge: true });
+        toast({ title: 'Meta Atualizada na Nuvem' });
+    } catch (e) {
+        toast({ variant: 'destructive', title: 'Erro ao salvar meta' });
+    }
+  };
 
   const handleDateInputChange = (value: string, type: 'start' | 'end') => {
     let formattedValue = value.replace(/\D/g, '');
@@ -308,6 +328,8 @@ export default function DashboardPage() {
             <GoalCard 
                 currentProduction={stats.proposals.pagoNoMes.reduce((sum, p) => sum + (p.grossAmount || 0), 0)} 
                 totalDigitized={stats.totalDigitado}
+                monthlyGoal={userSettings?.monthlyGoal || 150000}
+                onGoalChange={handleGoalChange}
                 isPrivacyMode={isPrivacyMode}
                 onValueClick={() => handleShowDetails('Contratos Pagos no Período', stats.proposals.pagoNoMes)}
                 topContributor={stats.topTotal}

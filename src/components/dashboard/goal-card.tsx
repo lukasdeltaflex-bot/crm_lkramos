@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -9,6 +10,8 @@ import { Input } from '@/components/ui/input';
 interface GoalCardProps {
   currentProduction: number;
   totalDigitized: number;
+  monthlyGoal: number;
+  onGoalChange: (newGoal: number) => void;
   isPrivacyMode?: boolean;
   onValueClick?: () => void;
   className?: string;
@@ -17,11 +20,11 @@ interface GoalCardProps {
   topContributor?: string;
 }
 
-const STORAGE_KEY_GOAL = 'lk-ramos-monthly-goal-v1';
-
 export function GoalCard({ 
     currentProduction, 
     totalDigitized, 
+    monthlyGoal,
+    onGoalChange,
     isPrivacyMode, 
     onValueClick, 
     className,
@@ -30,32 +33,23 @@ export function GoalCard({
     topContributor
 }: GoalCardProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [monthlyGoal, setMonthlyGoal] = useState(150000);
-  const [editValue, setEditValue] = useState('150000');
+  const [editValue, setEditValue] = useState(String(monthlyGoal));
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
-    const savedGoal = localStorage.getItem(STORAGE_KEY_GOAL);
-    if (savedGoal) {
-      const parsed = parseFloat(savedGoal);
-      if (!isNaN(parsed)) {
-        setMonthlyGoal(parsed);
-        setEditValue(savedGoal);
-      }
-    }
-  }, []);
+    setEditValue(String(monthlyGoal));
+  }, [monthlyGoal]);
 
   const handleSave = () => {
     const parsed = parseFloat(editValue);
     if (!isNaN(parsed) && parsed > 0) {
-      setMonthlyGoal(parsed);
-      localStorage.setItem(STORAGE_KEY_GOAL, String(parsed));
+      onGoalChange(parsed);
       setIsEditing(false);
     }
   };
 
-  const percentageOfGoal = Math.min((currentProduction / monthlyGoal) * 100, 100);
+  const percentageOfGoal = Math.min((currentProduction / (monthlyGoal || 1)) * 100, 100);
   const conversionRate = totalDigitized > 0 ? (currentProduction / totalDigitized) * 100 : 0;
 
   const renderSparkline = () => {

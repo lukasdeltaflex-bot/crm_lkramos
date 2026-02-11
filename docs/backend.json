@@ -16,6 +16,18 @@
       },
       "required": ["uid", "email"]
     },
+    "UserSettings": {
+      "title": "User Settings",
+      "type": "object",
+      "description": "Global user configurations and persistent states.",
+      "properties": {
+        "monthlyGoal": { "type": "number" },
+        "dismissedAlerts": { "type": "array", "items": { "type": "string" } },
+        "productTypes": { "type": "array", "items": { "type": "string" } },
+        "proposalStatuses": { "type": "array", "items": { "type": "string" } },
+        "banks": { "type": "array", "items": { "type": "string" } }
+      }
+    },
     "Customer": {
       "title": "Customer",
       "type": "object",
