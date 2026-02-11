@@ -106,11 +106,11 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                 recentProposals.map((proposal) => {
                     const isPortAwaitingBalance = proposal.product === 'Portabilidade' && proposal.status === 'Aguardando Saldo';
                     
-                    // REGRA: Contagem real pelo tempo de status ou data de digitação
                     const referenceDate = proposal.statusAwaitingBalanceAt || proposal.dateDigitized;
                     const businessDays = hasMounted && referenceDate ? calculateBusinessDays(referenceDate) : 0;
                     
-                    const colorValue = statusColors[proposal.status];
+                    const statusKey = proposal.status.toUpperCase();
+                    const colorValue = statusColors[statusKey] || statusColors[proposal.status];
                     const cleanBank = cleanBankName(proposal.bank);
                     const customDomain = userSettings?.bankDomains?.[proposal.bank];
                     const isBigWin = proposal.commissionValue >= 3000;
@@ -158,7 +158,7 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                                 <div className="flex items-center gap-2">
                                     <Badge
                                         variant="outline"
-                                        className="px-3 py-1 text-[10px] font-black uppercase tracking-wider border-2 status-custom"
+                                        className="px-3 py-1 text-[10px] font-black uppercase tracking-wider border-2 status-custom rounded-full"
                                         style={colorValue ? { '--status-color': colorValue } as any : {}}
                                     >
                                         {proposal.status}

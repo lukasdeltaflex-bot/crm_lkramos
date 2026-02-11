@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -54,14 +53,12 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
         dataToUpdate.debtBalanceArrivalDate = now;
     }
     else if (newStatus === 'Aguardando Saldo' && isPortability) {
-        // GRAVA O MOMENTO EXATO DA ENTRADA NO STATUS PARA MONITORAMENTO
         dataToUpdate.statusAwaitingBalanceAt = now;
     }
 
     const user = auth?.currentUser;
     const userName = user?.displayName || user?.email || 'Sistema';
 
-    // Linha do Tempo Automática
     const historyEntry: ProposalHistoryEntry = {
         id: crypto.randomUUID(),
         date: now,
@@ -72,7 +69,6 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
 
     const docRef = doc(firestore, 'loanProposals', proposalId);
     
-    // Non-blocking update
     updateDoc(docRef, dataToUpdate)
         .then(() => {
             toast({
@@ -91,7 +87,8 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
         });
   };
 
-  const colorValue = statusColors[currentStatus.toUpperCase()] || statusColors[currentStatus];
+  const statusKey = currentStatus.toUpperCase();
+  const colorValue = statusColors[statusKey] || statusColors[currentStatus];
 
   return (
     <Select
@@ -103,7 +100,7 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
             <Badge 
                 variant="outline" 
                 className={cn(
-                    "w-full justify-center text-[10px] font-black uppercase tracking-tighter py-1 px-3 border-2 transition-all status-custom",
+                    "w-full justify-center text-[10px] font-black uppercase tracking-tighter py-1.5 px-4 border-2 transition-all status-custom rounded-full",
                     containerStyle === 'glow' && "shadow-[0_0_10px_hsla(var(--status-color),0.3)]"
                 )}
                 style={colorValue ? { 

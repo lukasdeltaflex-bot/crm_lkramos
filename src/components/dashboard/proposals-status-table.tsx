@@ -68,14 +68,15 @@ function DataTable<TData, TValue>({
               table.getRowModel().rows.map((row) => {
                 const proposal = row.original as any;
                 const status = proposal.status;
-                const colorValue = statusColors[status];
+                const statusKey = status.toUpperCase();
+                const colorValue = statusColors[statusKey] || statusColors[status];
 
                 return (
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && 'selected'}
                     className={cn(
-                        "transition-colors",
+                        "transition-colors border-b",
                         colorValue && "status-row-custom"
                     )}
                     style={colorValue ? { '--status-color': colorValue } as any : {}}
