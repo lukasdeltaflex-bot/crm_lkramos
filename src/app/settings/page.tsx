@@ -191,7 +191,6 @@ export default function SettingsPage() {
     ...initialProposalStatuses, 
     "Paga", "Pendente", "Parcial",
     "COMISSÃO ESPERADA",
-    "PRODUÇÃO DIGITADA",
     "SALDO A RECEBER"
   ]));
 

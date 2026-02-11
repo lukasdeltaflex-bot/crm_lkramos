@@ -58,9 +58,15 @@ export function StatsCard({
   const animationStyle = overrideAnimationStyle || globalAnimationStyle;
 
   const getThemeStyles = () => {
-    // Tenta encontrar a cor baseada no título ou descrição
     const statusKey = title.toUpperCase();
-    const customColor = statusColors[statusKey] || statusColors[title] || statusColors[description?.toUpperCase() || ''] || statusColors[description || ''];
+    
+    // Tenta encontrar a cor baseada no título ou descrição
+    let customColor = statusColors[statusKey] || statusColors[title] || statusColors[description?.toUpperCase() || ''] || statusColors[description || ''];
+
+    // COR NEUTRA PARA CARDS ESPECÍFICOS (TOTAL DIGITADO / PRODUÇÃO DIGITADA)
+    if (statusKey === "TOTAL DIGITADO" || statusKey === "PRODUÇÃO DIGITADA") {
+        customColor = "240 5% 65%"; // Zinc Neutro Confortável (Claro e Escuro)
+    }
 
     const cardClasses = cn(
         'hover:shadow-lg transition-all group relative overflow-hidden flex flex-col border-2 py-3.5 px-5 min-h-[160px] h-full card',
@@ -69,7 +75,7 @@ export function StatsCard({
         `intensity-${intensity}`,
         `radius-${radius}`,
         `anim-${animationStyle}`,
-        (isHot || title === "COMISSÃO ESPERADA") ? 'card-hot-neon status-custom' : 'status-custom',
+        (isHot || statusKey === "COMISSÃO ESPERADA") ? 'card-hot-neon status-custom' : 'status-custom',
         className
     );
 

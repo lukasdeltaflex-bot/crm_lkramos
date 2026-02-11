@@ -190,7 +190,6 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
 
 /**
  * 🛠️ COMPONENTE DE CÉLULA DE STATUS COM PULSAÇÃO
- * Encapsula a lógica de monitoramento de dias úteis para portabilidade.
  */
 const StatusCellWithPulse = ({ 
     proposal, 
