@@ -17,7 +17,7 @@ import {
   CheckCircle2,
   Calendar as CalendarIcon
 } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, isValid, startOfDay, subDays, endOfDay, subMonths, parse } from 'date-fns';
+import { format, startOfMonth, endOfMonth, isValid, startOfDay, subDays, endOfDay, subMonths, parse, eachDayOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatCurrency, cn } from '@/lib/utils';
 import type { Proposal, Customer, UserProfile } from '@/lib/types';
@@ -131,12 +131,19 @@ export default function DashboardPage() {
     effectiveToDate.setHours(23, 59, 59, 999);
 
     const prevMonthStart = startOfMonth(subMonths(fromDate, 1));
+    const prevMonthEnd = endOfMonth(subMonths(fromDate, 1));
 
     // UNIVERSO MÊS VIGENTE (Performance e Reprovas)
     const digitizedInPeriod = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
         return d >= fromDate && d <= effectiveToDate;
+    });
+
+    const digitizedInPrevPeriod = proposals.filter(p => {
+        if (!p.dateDigitized) return false;
+        const d = new Date(p.dateDigitized);
+        return d >= prevMonthStart && d <= prevMonthEnd;
     });
 
     // UNIVERSO ESTEIRA (Mês Vigente + Anterior)
@@ -155,17 +162,41 @@ export default function DashboardPage() {
         return Object.entries(ops).sort((a,b) => b[1] - a[1])[0]?.[0] || '---';
     };
 
-    const statusAnalysis: Record<string, { total: number; count: number; proposals: Proposal[]; top: string }> = {};
+    // CALCULO DE TENDÊNCIA (ÚLTIMOS 7 DIAS) PARA O SPARKLINE
+    const last7Days = eachDayOfInterval({ start: subDays(today, 6), end: today });
+    const productionTrend = last7Days.map(day => {
+        const dayStart = startOfDay(day);
+        const dayEnd = endOfDay(day);
+        return proposals
+            .filter(p => {
+                const d = new Date(p.dateDigitized);
+                return d >= dayStart && d <= dayEnd;
+            })
+            .reduce((sum, p) => sum + (p.grossAmount || 0), 0);
+    });
+
+    const statusAnalysis: Record<string, { total: number; count: number; proposals: Proposal[]; top: string; trend: number[] }> = {};
     const orderedFlow = ['Pendente', 'Em Andamento', 'Aguardando Saldo', 'Saldo Pago', 'Reprovado'];
 
     orderedFlow.forEach(status => {
         const sourceList = (status === 'Reprovado') ? digitizedInPeriod : digitizedInExtendedPeriod;
         const list = sourceList.filter(p => p.status === status);
+        
+        // Simula uma tendência simples para o sparkline baseada no status
+        const trend = last7Days.map(day => {
+            const dayStart = startOfDay(day);
+            const dayEnd = endOfDay(day);
+            return sourceList
+                .filter(p => p.status === status && new Date(p.dateDigitized) >= dayStart && new Date(p.dateDigitized) <= dayEnd)
+                .length;
+        });
+
         statusAnalysis[status] = {
             total: getSum(list),
             count: list.length,
             proposals: list,
-            top: getTopOperator(list)
+            top: getTopOperator(list),
+            trend
         };
     });
 
@@ -176,13 +207,31 @@ export default function DashboardPage() {
         return d >= fromDate && d <= effectiveToDate;
     });
 
+    const paidInPrevPeriod = proposals.filter(p => {
+        if (p.status !== 'Pago') return false;
+        if (!p.datePaidToClient) return false;
+        const d = new Date(p.datePaidToClient);
+        return d >= prevMonthStart && d <= prevMonthEnd;
+    });
+
+    const totalPaidCurrent = getSum(paidInPeriod);
+    const totalPaidPrev = getSum(paidInPrevPeriod);
+    const paidTrendPercentage = totalPaidPrev > 0 ? ((totalPaidCurrent - totalPaidPrev) / totalPaidPrev) * 100 : 0;
+
+    const totalDigitizedCurrent = getSum(digitizedInPeriod);
+    const totalDigitizedPrev = getSum(digitizedInPrevPeriod);
+    const digitizedTrendPercentage = totalDigitizedPrev > 0 ? ((totalDigitizedCurrent - totalDigitizedPrev) / totalDigitizedPrev) * 100 : 0;
+
     // IDENTIFICA QUAL STATUS ESTÁ "EM ALTA" (Maior volume na esteira ativa)
     const hotStatus = Object.entries(statusAnalysis)
         .filter(([name]) => name !== 'Reprovado')
         .sort((a, b) => b[1].total - a[1].total)[0]?.[0];
 
     return {
-        totalDigitado: getSum(digitizedInPeriod),
+        totalDigitado: totalDigitizedCurrent,
+        digitizedTrendPercentage,
+        productionTrend,
+        paidTrendPercentage,
         topTotal: getTopOperator(digitizedInPeriod),
         statusAnalysis,
         hotStatus,
@@ -262,6 +311,7 @@ export default function DashboardPage() {
                 isPrivacyMode={isPrivacyMode}
                 onValueClick={() => handleShowDetails('Contratos Pagos no Período', stats.proposals.pagoNoMes)}
                 topContributor={stats.topTotal}
+                sparklineData={stats.productionTrend}
             />
         </div>
 
@@ -273,6 +323,8 @@ export default function DashboardPage() {
                     icon={FileText} 
                     description="PRODUÇÃO MENSAL"
                     topContributor={stats.topTotal}
+                    percentage={stats.digitizedTrendPercentage}
+                    sparklineData={stats.productionTrend}
                 />
             </div>
 
@@ -284,6 +336,7 @@ export default function DashboardPage() {
                     description="ESTEIRA (MÊS ATUAL + ANT)"
                     topContributor={stats.statusAnalysis['Pendente'].top}
                     isHot={stats.hotStatus === 'Pendente'}
+                    sparklineData={stats.statusAnalysis['Pendente'].trend}
                 />
             </div>
 
@@ -295,6 +348,7 @@ export default function DashboardPage() {
                     description="ESTEIRA (MÊS ATUAL + ANT)"
                     topContributor={stats.statusAnalysis['Em Andamento'].top}
                     isHot={stats.hotStatus === 'Em Andamento'}
+                    sparklineData={stats.statusAnalysis['Em Andamento'].trend}
                 />
             </div>
 
@@ -306,6 +360,7 @@ export default function DashboardPage() {
                     description="ESTEIRA (MÊS ATUAL + ANT)"
                     topContributor={stats.statusAnalysis['Aguardando Saldo'].top}
                     isHot={stats.hotStatus === 'Aguardando Saldo'}
+                    sparklineData={stats.statusAnalysis['Aguardando Saldo'].trend}
                 />
             </div>
 
@@ -317,6 +372,7 @@ export default function DashboardPage() {
                     description="ESTEIRA (MÊS ATUAL + ANT)"
                     topContributor={stats.statusAnalysis['Saldo Pago'].top}
                     isHot={stats.hotStatus === 'Saldo Pago'}
+                    sparklineData={stats.statusAnalysis['Saldo Pago'].trend}
                 />
             </div>
 
@@ -327,6 +383,7 @@ export default function DashboardPage() {
                     icon={XCircle} 
                     description="DO TOTAL DIGITADO NO MÊS"
                     topContributor={stats.statusAnalysis['Reprovado'].top}
+                    sparklineData={stats.statusAnalysis['Reprovado'].trend}
                 />
             </div>
         </div>

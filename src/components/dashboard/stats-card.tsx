@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { LucideIcon, Zap, AlertTriangle } from 'lucide-react';
+import { LucideIcon, Zap, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 
@@ -22,6 +22,7 @@ interface StatsCardProps {
   isHot?: boolean;
   isCritical?: boolean;
   topContributor?: string;
+  sparklineData?: number[];
   style?: React.CSSProperties;
   overrideStatusColors?: Record<string, string>;
   overrideContainerStyle?: string;
@@ -42,6 +43,7 @@ export function StatsCard({
     isHot = false,
     isCritical = false,
     topContributor,
+    sparklineData = [],
     style,
     overrideStatusColors,
     overrideContainerStyle,
@@ -59,11 +61,8 @@ export function StatsCard({
 
   const getThemeStyles = () => {
     const statusKey = title.toUpperCase();
-    
-    // Tenta encontrar a cor baseada no título (exatamente como no Laboratório)
     let customColor = statusColors[statusKey] || statusColors[title];
 
-    // COR NEUTRA PARA CARDS ESPECÍFICOS DE VOLUME
     if (statusKey === "TOTAL DIGITADO" || statusKey === "PRODUÇÃO DIGITADA") {
         customColor = "240 5% 65%"; 
     }
@@ -88,6 +87,31 @@ export function StatsCard({
     };
   };
 
+  const renderSparkline = () => {
+    if (!sparklineData || sparklineData.length < 2) return null;
+    const max = Math.max(...sparklineData, 1);
+    const width = 60;
+    const height = 20;
+    const points = sparklineData.map((v, i) => {
+        const x = (i / (sparklineData.length - 1)) * width;
+        const y = height - (v / max) * height;
+        return `${x},${y}`;
+    }).join(' ');
+
+    return (
+        <svg width={width} height={height} className="opacity-40">
+            <polyline
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                points={points}
+            />
+        </svg>
+    );
+  };
+
   const themeStyles = getThemeStyles();
 
   return (
@@ -110,7 +134,10 @@ export function StatsCard({
                 </div>
             )}
         </div>
-        <Icon className="h-4 w-4 opacity-80" />
+        <div className="flex items-center gap-2">
+            {renderSparkline()}
+            <Icon className="h-4 w-4 opacity-80" />
+        </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col justify-between p-0">
         <div className="flex items-baseline justify-between gap-2">
@@ -118,8 +145,12 @@ export function StatsCard({
                 {value}
             </div>
             {percentage !== undefined && (
-                <div className="text-[10px] font-bold bg-background/60 dark:bg-zinc-950/40 px-2 py-0.5 rounded border border-border/30">
-                    {percentage.toFixed(1).replace('.', ',')}%
+                <div className={cn(
+                    "text-[10px] font-bold px-2 py-0.5 rounded border flex items-center gap-1",
+                    percentage >= 0 ? "bg-green-500/10 border-green-500/20 text-green-600" : "bg-red-500/10 border-red-500/20 text-red-600"
+                )}>
+                    {percentage >= 0 ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
+                    {Math.abs(percentage).toFixed(1).replace('.', ',')}%
                 </div>
             )}
         </div>

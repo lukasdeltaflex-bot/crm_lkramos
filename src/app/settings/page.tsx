@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -500,6 +499,7 @@ export default function SettingsPage() {
                                             icon={Zap} 
                                             description={`SIMULAÇÃO: ${previewStatus}`}
                                             isHot={preview.containerStyle === 'glow' || preview.colorIntensity === 'neon'}
+                                            sparklineData={[10, 40, 20, 80, 50, 90, 70]}
                                             overrideStatusColors={preview.statusColors}
                                             overrideContainerStyle={preview.containerStyle}
                                             overrideIntensity={preview.colorIntensity}
