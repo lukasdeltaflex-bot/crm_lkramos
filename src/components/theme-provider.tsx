@@ -88,7 +88,9 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
       const clearAndAdd = (list: string[], prefix: string, current: string) => {
           [root, body].forEach(el => {
               el.classList.remove(...list.map(item => `${prefix}-${item}`));
-              el.classList.add(`${prefix}-${current}`);
+              if (current !== 'none' && current !== 'padrão') {
+                el.classList.add(`${prefix}-${current}`);
+              }
           });
       };
 
@@ -101,7 +103,9 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
       
       [root, body].forEach(el => {
           el.classList.remove(...SIDEBAR_OPTIONS.map(s => `sidebar-${s}`));
-          el.classList.add(`sidebar-${sidebarStyle}`);
+          if (sidebarStyle !== 'padrão') {
+            el.classList.add(`sidebar-${sidebarStyle}`);
+          }
       });
     }
   }, [colorTheme, radius, containerStyle, backgroundTexture, colorIntensity, animationStyle, fontStyle, sidebarStyle, isMounted, resolvedTheme]);
