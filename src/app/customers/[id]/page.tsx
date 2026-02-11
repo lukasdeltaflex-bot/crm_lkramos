@@ -9,7 +9,7 @@ import { doc, collection, query, where, updateDoc } from 'firebase/firestore';
 import type { Customer, Proposal, Attachment } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Phone, Mail, Calendar, FileText, CircleDollarSign, BadgePercent, MapPin, Hash, Copy, Printer, FileBadge, FolderLock, Sparkles, AlertTriangle, UserRound, UserX, UserCheck } from 'lucide-react';
+import { User, Phone, Mail, Calendar, FileText, CircleDollarSign, BadgePercent, MapPin, Hash, Copy, Printer, FileBadge, FolderLock, Sparkles, AlertTriangle, UserRound, UserX, UserCheck, ShieldCheck } from 'lucide-react';
 import { format, parse, differenceInMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -92,9 +92,9 @@ const CustomerInfoCard = ({
                                 <><UserX className="mr-2 h-4 w-4" /> Tornar Inativo</>
                             )}
                         </Button>
-                        <Button variant="outline" onClick={onExportDossier}>
+                        <Button variant="outline" className="bg-primary/5 border-primary/20 text-primary hover:bg-primary/10" onClick={onExportDossier}>
                             <FileBadge className="mr-2 h-4 w-4" />
-                            Dossiê (PDF)
+                            Dossiê Oficial (PDF)
                         </Button>
                         <Button variant="outline" onClick={() => window.print()}>
                             <Printer className="mr-2 h-4 w-4" />
@@ -326,63 +326,72 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
   };
 
   const handleExportDossier = async () => {
-    if (!customer || !proposals) return;
+    if (!customer || !proposals || !user) return;
 
     const { default: jsPDF } = await import('jspdf');
     const { default: autoTable } = await import('jspdf-autotable');
 
     const doc = new jsPDF();
+    const primaryColor = [40, 74, 127];
+    const accentColor = [212, 175, 55]; // Gold
     
     // Header
     doc.setFontSize(22);
-    doc.setTextColor(40, 74, 127);
-    doc.text("Dossiê do Cliente", 14, 20);
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.setFont("helvetica", "bold");
+    doc.text("DOSSIÊ OFICIAL DO CLIENTE", 14, 20);
+    
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 14, 28);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Proprietário da Carteira: ${user.displayName || user.email}`, 14, 28);
+    doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 14, 33);
     
-    doc.setDrawColor(40, 74, 127);
-    doc.line(14, 32, 196, 32);
+    doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.setLineWidth(0.5);
+    doc.line(14, 38, 196, 38);
 
     // Section: Personal Data
     doc.setFontSize(14);
-    doc.setTextColor(0);
-    doc.text("Informações Pessoais", 14, 42);
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.setFont("helvetica", "bold");
+    doc.text("INFORMAÇÕES CADASTRAIS", 14, 48);
     
     autoTable(doc, {
-        startY: 45,
+        startY: 52,
         body: [
             ['Nome Completo', customer.name],
             ['CPF', customer.cpf],
-            ['Status', customer.status === 'inactive' ? 'Inativo' : 'Ativo'],
+            ['Status no Sistema', customer.status === 'inactive' ? 'Inativo' : 'Ativo'],
             ['Gênero', customer.gender || 'Não informado'],
-            ['Nascimento', format(parse(customer.birthDate, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy')],
-            ['Telefone', customer.phone],
+            ['Data de Nascimento', format(parse(customer.birthDate, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy')],
+            ['Telefone Principal', customer.phone],
             ['E-mail', customer.email || 'N/A'],
             ['Cidade/UF', `${customer.city || '-'} / ${customer.state || '-'}`],
-            ['Endereço', `${customer.street || '-'}, ${customer.number || '-'} ${customer.complement ? '(' + customer.complement + ')' : ''}`],
+            ['Logradouro', `${customer.street || '-'}, ${customer.number || '-'} ${customer.complement ? '(' + customer.complement + ')' : ''}`],
         ],
         theme: 'plain',
-        styles: { fontSize: 10 },
-        columnStyles: { 0: { fontStyle: 'bold', width: 40 } }
+        styles: { fontSize: 10, cellPadding: 2 },
+        columnStyles: { 0: { fontStyle: 'bold', width: 50, textColor: [80, 80, 80] } }
     });
 
     // Section: Benefits
     if (customer.benefits && customer.benefits.length > 0) {
-        doc.text("Benefícios Cadastrados", 14, (doc as any).lastAutoTable.finalY + 15);
+        doc.text("BENEFÍCIOS ATIVOS", 14, (doc as any).lastAutoTable.finalY + 15);
         autoTable(doc, {
             startY: (doc as any).lastAutoTable.finalY + 18,
-            head: [['Número do Benefício', 'Espécie']],
+            head: [['Número do Benefício', 'Espécie / Categoria']],
             body: customer.benefits.map(b => [b.number, b.species || '-']),
-            headStyles: { fillColor: [40, 74, 127] }
+            headStyles: { fillColor: primaryColor, fontSize: 10, fontStyle: 'bold' },
+            styles: { fontSize: 10 }
         });
     }
 
     // Section: Proposal History
-    doc.text("Histórico de Propostas", 14, (doc as any).lastAutoTable.finalY + 15);
+    doc.text("HISTÓRICO DE OPERAÇÕES BANCÁRIAS", 14, (doc as any).lastAutoTable.finalY + 15);
     autoTable(doc, {
         startY: (doc as any).lastAutoTable.finalY + 18,
-        head: [['Nº Proposta', 'Produto', 'Status', 'Valor Bruto', 'Data']],
+        head: [['Nº Proposta', 'Produto', 'Status Final', 'Valor Bruto', 'Data']],
         body: proposals.map(p => [
             p.proposalNumber,
             p.product,
@@ -390,12 +399,63 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
             formatCurrency(p.grossAmount),
             format(new Date(p.dateDigitized), 'dd/MM/yyyy')
         ]),
-        headStyles: { fillColor: [40, 74, 127] },
+        headStyles: { fillColor: [70, 70, 70], fontSize: 9 },
         styles: { fontSize: 9 }
     });
 
-    doc.save(`Dossie_${customer.name.replace(/\s+/g, '_')}.pdf`);
-    toast({ title: "Dossiê Gerado!", description: "O PDF foi baixado com sucesso." });
+    // Final Section: Declaration and Signature
+    const finalY = (doc as any).lastAutoTable.finalY;
+    const pageHeight = doc.internal.pageSize.height;
+
+    // Check if we need a new page for signatures
+    if (finalY > pageHeight - 80) {
+        doc.addPage();
+        doc.setFontSize(14);
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.setFont("helvetica", "bold");
+        doc.text("DECLARAÇÃO E FORMALIZAÇÃO", 14, 25);
+    } else {
+        doc.text("DECLARAÇÃO E FORMALIZAÇÃO", 14, finalY + 20);
+    }
+
+    const startSignatureY = doc.lastAutoTable ? Math.max(finalY + 25, 25) : 50;
+    
+    doc.setFontSize(9);
+    doc.setTextColor(80);
+    doc.setFont("helvetica", "normal");
+    const declarationText = `Eu, ${customer.name}, inscrito(a) no CPF ${customer.cpf}, declaro que as informações acima descritas são verdadeiras e estou ciente de que o processamento destes dados é realizado para fins exclusivos de operacionalização de propostas de crédito consignado e/ou produtos bancários correlatos, em conformidade com a Lei Geral de Proteção de Dados (LGPD).`;
+    const splitText = doc.splitTextToSize(declarationText, 180);
+    doc.text(splitText, 14, startSignatureY);
+
+    // Signature lines
+    const signatureY = startSignatureY + 35;
+    doc.setDrawColor(150);
+    doc.line(14, signatureY, 90, signatureY);
+    doc.line(110, signatureY, 186, signatureY);
+    
+    doc.setFontSize(8);
+    doc.text("ASSINATURA DO CLIENTE", 52, signatureY + 5, { align: 'center' });
+    doc.text("AGENTE RESPONSÁVEL", 148, signatureY + 5, { align: 'center' });
+    doc.text(`${customer.city || 'Local'}, ________ de ________________ de 20____`, 14, signatureY + 15);
+
+    // Electronic Authentication Footer
+    const footerY = pageHeight - 20;
+    const authHash = Buffer.from(`${customer.id}-${Date.now()}`).toString('hex').substring(0, 16).toUpperCase();
+    
+    doc.setDrawColor(230);
+    doc.line(14, footerY - 5, 196, footerY - 5);
+    
+    doc.setFontSize(7);
+    doc.setTextColor(150);
+    doc.text("DOCUMENTO GERADO PELO SISTEMA LK RAMOS - AUTENTICAÇÃO ELETRÔNICA", 105, footerY, { align: 'center' });
+    doc.setFont("courier", "bold");
+    doc.text(`CHAVE DE VALIDAÇÃO: ${authHash}`, 105, footerY + 4, { align: 'center' });
+
+    doc.save(`Dossie_Oficial_${customer.name.replace(/\s+/g, '_')}.pdf`);
+    toast({ 
+        title: "Dossiê Gerado com Sucesso!", 
+        description: "O documento oficial foi processado e baixado." 
+    });
   };
 
   const isLoading = isCustomerLoading || areProposalsLoading;
