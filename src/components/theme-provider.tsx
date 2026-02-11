@@ -5,11 +5,16 @@ import { ThemeProvider as NextThemesProvider, useTheme as useNextTheme } from "n
 import { type ThemeProviderProps } from "next-themes/dist/types"
 import { THEMES } from "@/lib/themes"
 
-const RADIUS_OPTIONS = ["reto", "extra-discreto", "discreto", "moderno", "amigavel", "organico", "capsula"];
+const RADIUS_OPTIONS = ["reto", "extra-discreto", "discreto", "suave", "moderno", "amigavel", "organico", "capsula"];
 const CONTAINER_STYLES = ["moderno", "glass", "deep", "flat", "glow", "geometrico"];
 const TEXTURE_OPTIONS = ["none", "dots", "grid", "lines"];
 const INTENSITY_OPTIONS = ["minima", "equilibrada", "impactante", "neon"];
-const FONT_OPTIONS = ["moderno", "classico", "mono", "arredondado", "industrial", "futurista", "elegante", "real", "espacial", "minimalista"];
+const FONT_OPTIONS = [
+    "moderno", "classico", "mono", "arredondado", "industrial", 
+    "futurista", "elegante", "real", "espacial", "minimalista",
+    "editorial", "geom-vivida", "tecnica", "impacto", "clean",
+    "soft", "neo-classico", "corp", "sharp", "script"
+];
 const ANIMATION_OPTIONS = ["instantaneo", "sutil", "atmosferico", "cinematografico"];
 const SIDEBAR_OPTIONS = ["padrão", "dark", "light"];
 
@@ -96,7 +101,6 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
       root.classList.add(`font-${fontStyle}`);
       localStorage.setItem("lk-font-theme", fontStyle);
 
-      // Sidebar Style
       root.classList.remove(...SIDEBAR_OPTIONS.map(s => `sidebar-${s}`));
       root.classList.add(`sidebar-${sidebarStyle}`);
       localStorage.setItem("lk-sidebar-style", sidebarStyle);

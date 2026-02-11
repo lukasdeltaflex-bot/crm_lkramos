@@ -290,7 +290,9 @@ export const getColumns = (
     header: () => <div className="text-right">Valor Bruto</div>,
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue('grossAmount'));
-      return <div className="text-right font-medium">{formatCurrency(amount)}</div>;
+      return (
+        <div className="text-right font-medium">{formatCurrency(amount)}</div>
+      );
     },
   },
   {

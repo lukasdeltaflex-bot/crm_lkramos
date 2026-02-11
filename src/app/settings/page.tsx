@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
@@ -41,7 +41,9 @@ import {
     Layout,
     FileDown,
     PanelLeft,
-    Image as ImageIcon
+    Image as ImageIcon,
+    Play,
+    Bot
 } from 'lucide-react';
 import { EditableList } from '@/components/settings/editable-list';
 import { BankEditableList } from '@/components/settings/bank-editable-list';
@@ -121,10 +123,10 @@ export default function SettingsPage() {
     statusColors: theme.statusColors
   });
 
+  // Sync preview with actual theme but only once or on manual trigger
   useEffect(() => {
     if (userSettings) {
-      setPreview(p => ({
-        ...p,
+      setPreview({
         radius: userSettings.radius || theme.radius,
         containerStyle: userSettings.containerStyle || theme.containerStyle,
         backgroundTexture: userSettings.backgroundTexture || theme.backgroundTexture,
@@ -133,7 +135,7 @@ export default function SettingsPage() {
         fontStyle: userSettings.fontStyle || theme.fontStyle,
         sidebarStyle: userSettings.sidebarStyle || theme.sidebarStyle,
         statusColors: userSettings.statusColors || theme.statusColors
-      }));
+      });
     }
   }, [userSettings]);
 
@@ -190,6 +192,16 @@ export default function SettingsPage() {
     "PAGA", "PARCIAL", "COMISSÃO ESPERADA", 
     "SALDO A RECEBER"
   ];
+
+  const FONT_LABELS: Record<string, string> = {
+    "moderno": "Inter (Padrão)", "classico": "Playfair", "mono": "JetBrains", 
+    "arredondado": "Lexend", "industrial": "Bebas Neue", "futurista": "Orbitron", 
+    "elegante": "EB Garamond", "real": "Cinzel", "espacial": "Space Grotesk", 
+    "minimalista": "Outfit", "editorial": "Lora (Editorial)", "geom-vivida": "Urbanist",
+    "tecnica": "Fira Sans", "impacto": "Kanit", "clean": "Work Sans",
+    "soft": "Quicksand", "neo-classico": "Spectral", "corp": "Manrope",
+    "sharp": "Roboto Condensed", "script": "Cormorant"
+  };
 
   return (
     <AppLayout>
@@ -345,24 +357,34 @@ export default function SettingsPage() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                     <div className="space-y-4">
-                                        <div className="flex items-center gap-2"><MousePointer2 className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Arredondamento</h4></div>
-                                        <RadioGroup value={preview.radius} onValueChange={(val) => setPreview(p => ({ ...p, radius: val }))} className="grid grid-cols-3 gap-2">
-                                            {['reto', 'extra-discreto', 'discreto', 'moderno', 'amigavel', 'organico', 'capsula'].map((r) => (
-                                                <Label key={r} htmlFor={`r-${r}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-[10px] font-bold text-center", preview.radius === r ? "border-primary bg-primary/5" : "border-muted")}>
-                                                    <RadioGroupItem value={r} id={`r-${r}`} className="sr-only" />{r}
+                                        <div className="flex items-center gap-2"><MousePointer2 className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Arredondamento de Precisão</h4></div>
+                                        <RadioGroup value={preview.radius} onValueChange={(val) => setPreview(p => ({ ...p, radius: val }))} className="grid grid-cols-4 gap-2">
+                                            {['reto', 'extra-discreto', 'discreto', 'suave', 'moderno', 'amigavel', 'organico', 'capsula'].map((r) => (
+                                                <Label key={r} htmlFor={`r-${r}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-[10px] font-bold text-center h-12", preview.radius === r ? "border-primary bg-primary/5" : "border-muted")}>
+                                                    <RadioGroupItem value={r} id={`r-${r}`} className="sr-only" />{r === 'extra-discreto' ? '2px' : r === 'discreto' ? '4px' : r === 'suave' ? '8px' : r === 'moderno' ? '12px' : r}
                                                 </Label>
                                             ))}
                                         </RadioGroup>
                                     </div>
                                     <div className="space-y-4">
-                                        <div className="flex items-center gap-2"><Type className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Tipografia de Elite</h4></div>
-                                        <RadioGroup value={preview.fontStyle} onValueChange={(val) => setPreview(p => ({ ...p, fontStyle: val }))} className="grid grid-cols-2 gap-2">
-                                            {['moderno', 'classico', 'mono', 'arredondado', 'industrial', 'futurista', 'elegante', 'real', 'espacial', 'minimalista'].map((f) => (
-                                                <Label key={f} htmlFor={`f-${f}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-[10px] font-bold", preview.fontStyle === f ? "border-primary bg-primary/5" : "border-muted")}>
-                                                    <RadioGroupItem value={f} id={`f-${f}`} className="sr-only" />{f}
-                                                </Label>
+                                        <div className="flex items-center gap-2"><Type className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Tipografia Expandida</h4></div>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {Object.keys(FONT_LABELS).map((f) => (
+                                                <Button 
+                                                    key={f}
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className={cn(
+                                                        "justify-start text-[10px] h-9 px-3 font-bold border-2 transition-all",
+                                                        `font-${f}`,
+                                                        preview.fontStyle === f ? "border-primary bg-primary/5 text-primary" : "border-muted hover:border-primary/30"
+                                                    )}
+                                                    onClick={() => setPreview(p => ({ ...p, fontStyle: f }))}
+                                                >
+                                                    {FONT_LABELS[f]}
+                                                </Button>
                                             ))}
-                                        </RadioGroup>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -399,34 +421,72 @@ export default function SettingsPage() {
                             <CardHeader className="bg-primary/5 border-b border-primary/10">
                                 <CardTitle className="text-lg font-bold flex items-center gap-2">
                                     <Eye className="h-5 w-5 text-primary" />
-                                    Laboratório de Visualização
+                                    Laboratório 360°
                                 </CardTitle>
-                                <CardDescription>Teste sua marca antes de aplicar globalmente.</CardDescription>
+                                <CardDescription>Valide cada detalhe antes da aplicação global.</CardDescription>
                             </CardHeader>
                             <CardContent className="p-0">
                                 <div className={cn(
-                                    "p-10 min-h-[400px] flex items-center justify-center transition-all",
+                                    "p-8 min-h-[500px] flex flex-col gap-8 items-center justify-center transition-all",
                                     `texture-${preview.backgroundTexture}`,
                                     `radius-${preview.radius}`,
                                     `font-${preview.fontStyle}`,
                                     `anim-${preview.animationStyle}`
                                 )}>
+                                    {/* Teste de Card */}
                                     <div className="w-full max-w-sm">
                                         <StatsCard 
                                             title="EM ANDAMENTO" 
-                                            value="R$ 45.000,00" 
+                                            value="R$ 150.000,00" 
                                             icon={Zap} 
-                                            description="SIMULAÇÃO DE STATUS"
+                                            description="TESTE DE CONTAINER"
                                             isHot={preview.containerStyle === 'glow' || preview.colorIntensity === 'neon'}
                                             overrideStatusColors={preview.statusColors}
                                             overrideContainerStyle={preview.containerStyle}
                                             overrideIntensity={preview.colorIntensity}
                                             overrideRadius={preview.radius}
+                                            overrideAnimationStyle={preview.animationStyle}
                                         />
+                                    </div>
+
+                                    {/* Teste de Botões e Ritmo */}
+                                    <div className="w-full max-w-sm space-y-4">
+                                        <p className="text-[9px] font-black uppercase text-center text-muted-foreground tracking-[0.2em] mb-4">Painel de Teste de Ritmo</p>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <Button 
+                                                className={cn(
+                                                    "group relative overflow-hidden transition-all border-2 h-12 font-bold",
+                                                    `radius-${preview.radius}`,
+                                                    `anim-${preview.animationStyle}`
+                                                )}
+                                            >
+                                                <Play className="mr-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                                                TESTAR RITMO
+                                            </Button>
+                                            <Button 
+                                                variant="outline"
+                                                className={cn(
+                                                    "border-2 h-12 font-bold hover:bg-primary hover:text-white transition-all",
+                                                    `radius-${preview.radius}`,
+                                                    `anim-${preview.animationStyle}`
+                                                )}
+                                            >
+                                                INTERAÇÃO
+                                            </Button>
+                                        </div>
+                                        <div className="flex items-center justify-center gap-2 py-4">
+                                            <div className={cn(
+                                                "h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center animate-bounce",
+                                                `anim-${preview.animationStyle}`
+                                            )}>
+                                                <Bot className="h-5 w-5 text-primary" />
+                                            </div>
+                                            <p className="text-[10px] font-bold text-muted-foreground uppercase">Animação: {preview.animationStyle}</p>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="p-4 bg-muted/30 border-t border-primary/10">
-                                    <p className="text-[10px] font-black uppercase text-center text-muted-foreground tracking-widest">Ritmo da Interface: {preview.animationStyle}</p>
+                                    <p className="text-[10px] font-black uppercase text-center text-primary tracking-widest animate-pulse">Laboratório de Visualização Ativo</p>
                                 </div>
                             </CardContent>
                         </Card>
