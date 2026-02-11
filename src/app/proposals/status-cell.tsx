@@ -26,10 +26,6 @@ interface StatusCellProps {
   onStatusChange?: (proposalId: string, newStatus: ProposalStatus, product?: string) => void;
 }
 
-const getStatusClass = (status: ProposalStatus) => {
-  return cn('w-full justify-center text-[10px] font-black uppercase tracking-tighter py-1 px-3 border-2 transition-all status-custom');
-};
-
 export function StatusCell({ proposalId, currentStatus, product, onStatusChange }: StatusCellProps) {
   const firestore = useFirestore();
   const { statusColors, containerStyle } = useTheme();
@@ -85,7 +81,7 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
         });
   };
 
-  const colorValue = statusColors[currentStatus];
+  const colorValue = statusColors[currentStatus.toUpperCase()] || statusColors[currentStatus];
 
   return (
     <Select
@@ -97,7 +93,7 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
             <Badge 
                 variant="outline" 
                 className={cn(
-                    getStatusClass(currentStatus),
+                    "w-full justify-center text-[10px] font-black uppercase tracking-tighter py-1 px-3 border-2 transition-all status-custom",
                     containerStyle === 'glow' && "shadow-[0_0_10px_hsla(var(--status-color),0.3)]"
                 )}
                 style={colorValue ? { 

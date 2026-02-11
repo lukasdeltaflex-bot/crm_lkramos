@@ -79,14 +79,17 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
   React.useLayoutEffect(() => {
     if (isMounted) {
       const root = document.documentElement;
+      const body = document.body;
       
       const activeTheme = THEMES.find(t => t.name === colorTheme) || THEMES[0];
       const primaryValue = resolvedTheme === 'dark' ? activeTheme.dark : activeTheme.light;
       root.style.setProperty('--primary', primaryValue);
 
       const clearAndAdd = (list: string[], prefix: string, current: string) => {
-          root.classList.remove(...list.map(item => `${prefix}-${item}`));
-          root.classList.add(`${prefix}-${current}`);
+          [root, body].forEach(el => {
+              el.classList.remove(...list.map(item => `${prefix}-${item}`));
+              el.classList.add(`${prefix}-${current}`);
+          });
       };
 
       clearAndAdd(RADIUS_OPTIONS, "radius", radius);
@@ -95,11 +98,13 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
       clearAndAdd(INTENSITY_OPTIONS, "intensity", colorIntensity);
       clearAndAdd(ANIMATION_OPTIONS, "anim", animationStyle);
       
-      root.classList.remove(...FONT_OPTIONS.map(f => `font-${f}`));
-      root.classList.add(`font-${fontStyle}`);
-
-      root.classList.remove(...SIDEBAR_OPTIONS.map(s => `sidebar-${s}`));
-      root.classList.add(`sidebar-${sidebarStyle}`);
+      [root, body].forEach(el => {
+          el.classList.remove(...FONT_OPTIONS.map(f => `font-${f}`));
+          el.classList.add(`font-${fontStyle}`);
+          
+          el.classList.remove(...SIDEBAR_OPTIONS.map(s => `sidebar-${s}`));
+          el.classList.add(`sidebar-${sidebarStyle}`);
+      });
     }
   }, [colorTheme, radius, containerStyle, backgroundTexture, colorIntensity, animationStyle, fontStyle, sidebarStyle, isMounted, resolvedTheme]);
 

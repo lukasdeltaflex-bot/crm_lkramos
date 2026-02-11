@@ -96,14 +96,14 @@
 .intensity-neon { --status-bg-opacity: 0.25; --status-border-opacity: 1; }
 
 /* Arredondamento */
-.radius-reto { --radius: 0rem; }
-.radius-extra-discreto { --radius: 0.125rem; }
-.radius-discreto { --radius: 0.25rem; }
-.radius-suave { --radius: 0.5rem; }
-.radius-moderno { --radius: 0.75rem; }
-.radius-amigavel { --radius: 1rem; }
-.radius-organico { --radius: 1.5rem; }
-.radius-capsula { --radius: 2.5rem; }
+.radius-reto { --radius: 0rem !important; }
+.radius-extra-discreto { --radius: 0.125rem !important; }
+.radius-discreto { --radius: 0.25rem !important; }
+.radius-suave { --radius: 0.5rem !important; }
+.radius-moderno { --radius: 0.75rem !important; }
+.radius-amigavel { --radius: 1rem !important; }
+.radius-organico { --radius: 1.5rem !important; }
+.radius-capsula { --radius: 2.5rem !important; }
 
 /* Aura Styles */
 .style-moderno { @apply border shadow-sm; }
@@ -126,47 +126,47 @@
 .texture-lines { background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, hsl(var(--muted-foreground) / 0.03) 10px, hsl(var(--muted-foreground) / 0.03) 11px); }
 
 /* Tipografia Expandida */
-.font-moderno { font-family: 'Inter', sans-serif !important; }
-.font-classico { font-family: 'Playfair Display', serif !important; }
-.font-mono { font-family: 'JetBrains Mono', monospace !important; }
-.font-arredondado { font-family: 'Lexend', sans-serif !important; }
-.font-industrial { font-family: 'Bebas Neue', cursive !important; }
-.font-futurista { font-family: 'Orbitron', sans-serif !important; }
-.font-elegante { font-family: 'EB Garamond', serif !important; }
-.font-real { font-family: 'Cinzel', serif !important; }
-.font-espacial { font-family: 'Space Grotesk', sans-serif !important; }
-.font-minimalista { font-family: 'Outfit', sans-serif !important; }
-.font-editorial { font-family: 'Lora', serif !important; }
-.font-geom-vivida { font-family: 'Urbanist', sans-serif !important; }
-.font-tecnica { font-family: 'Fira Sans', sans-serif !important; }
-.font-impacto { font-family: 'Kanit', sans-serif !important; }
-.font-clean { font-family: 'Work Sans', sans-serif !important; }
-.font-soft { font-family: 'Quicksand', sans-serif !important; }
-.font-neo-classico { font-family: 'Spectral', serif !important; }
-.font-corp { font-family: 'Manrope', sans-serif !important; }
-.font-sharp { font-family: 'Roboto Condensed', sans-serif !important; }
-.font-script { font-family: 'Cormorant Garamond', serif !important; }
+.font-moderno, .font-moderno * { font-family: 'Inter', sans-serif !important; }
+.font-classico, .font-classico * { font-family: 'Playfair Display', serif !important; }
+.font-mono, .font-mono * { font-family: 'JetBrains Mono', monospace !important; }
+.font-arredondado, .font-arredondado * { font-family: 'Lexend', sans-serif !important; }
+.font-industrial, .font-industrial * { font-family: 'Bebas Neue', cursive !important; }
+.font-futurista, .font-futurista * { font-family: 'Orbitron', sans-serif !important; }
+.font-elegante, .font-elegante * { font-family: 'EB Garamond', serif !important; }
+.font-real, .font-real * { font-family: 'Cinzel', serif !important; }
+.font-espacial, .font-espacial * { font-family: 'Space Grotesk', sans-serif !important; }
+.font-minimalista, .font-minimalista * { font-family: 'Outfit', sans-serif !important; }
+.font-editorial, .font-editorial * { font-family: 'Lora', serif !important; }
+.font-geom-vivida, .font-geom-vivida * { font-family: 'Urbanist', sans-serif !important; }
+.font-tecnica, .font-tecnica * { font-family: 'Fira Sans', sans-serif !important; }
+.font-impacto, .font-impacto * { font-family: 'Kanit', sans-serif !important; }
+.font-clean, .font-clean * { font-family: 'Work Sans', sans-serif !important; }
+.font-soft, .font-soft * { font-family: 'Quicksand', sans-serif !important; }
+.font-neo-classico, .font-neo-classico * { font-family: 'Spectral', serif !important; }
+.font-corp, .font-corp * { font-family: 'Manrope', sans-serif !important; }
+.font-sharp, .font-sharp * { font-family: 'Roboto Condensed', sans-serif !important; }
+.font-script, .font-script * { font-family: 'Cormorant Garamond', serif !important; }
 
 /* Sidebar Styles */
 .sidebar-dark {
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 240 5.9% 10% !important;
+    --sidebar-foreground: 240 4.8% 95.9% !important;
+    --sidebar-primary: 224.3 76.3% 48% !important;
+    --sidebar-primary-foreground: 0 0% 100% !important;
+    --sidebar-accent: 240 3.7% 15.9% !important;
+    --sidebar-accent-foreground: 240 4.8% 95.9% !important;
+    --sidebar-border: 240 3.7% 15.9% !important;
+    --sidebar-ring: 217.2 91.2% 59.8% !important;
 }
 .sidebar-light {
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 0 0% 100% !important;
+    --sidebar-foreground: 240 5.3% 26.1% !important;
+    --sidebar-primary: 240 5.9% 10% !important;
+    --sidebar-primary-foreground: 0 0% 98% !important;
+    --sidebar-accent: 240 4.8% 95.9% !important;
+    --sidebar-accent-foreground: 240 5.9% 10% !important;
+    --sidebar-border: 220 13% 91% !important;
+    --sidebar-ring: 217.2 91.2% 59.8% !important;
 }
 
 /* Status e Linhas */
