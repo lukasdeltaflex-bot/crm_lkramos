@@ -6,24 +6,17 @@ import { type ThemeProviderProps } from "next-themes/dist/types"
 import { THEMES } from "@/lib/themes"
 
 const RADIUS_OPTIONS = ["reto", "extra-discreto", "discreto", "moderno", "amigavel", "organico", "capsula"];
-const SIDEBAR_OPTIONS = ["default", "dark", "light"];
 const CONTAINER_STYLES = ["moderno", "glass", "deep", "flat", "glow", "geometrico"];
 const TEXTURE_OPTIONS = ["none", "dots", "grid", "lines"];
 const INTENSITY_OPTIONS = ["minima", "equilibrada", "impactante", "neon"];
-const FONT_OPTIONS = ["moderno", "classico", "mono", "arredondado", "industrial", "futurista"];
+const FONT_OPTIONS = ["moderno", "classico", "mono", "arredondado", "industrial", "futurista", "elegante", "real", "espacial", "minimalista"];
 const ANIMATION_OPTIONS = ["instantaneo", "sutil", "atmosferico", "cinematografico"];
 
-type CustomThemeProviderProps = ThemeProviderProps & {
-  children: React.ReactNode;
-};
-
-const ColorThemeContext = React.createContext<{
+type ColorThemeContextType = {
   colorTheme: string;
   setColorTheme: (theme: string) => void;
   radius: string;
   setRadius: (r: string) => void;
-  sidebarStyle: string;
-  setSidebarStyle: (s: string) => void;
   containerStyle: string;
   setContainerStyle: (s: string) => void;
   backgroundTexture: string;
@@ -36,19 +29,19 @@ const ColorThemeContext = React.createContext<{
   setFontStyle: (f: string) => void;
   statusColors: Record<string, string>;
   setStatusColors: (colors: Record<string, string>) => void;
-} | undefined>(undefined);
+};
 
+const ColorThemeContext = React.createContext<ColorThemeContextType | undefined>(undefined);
 
 function ColorThemeProvider({ children }: { children: React.ReactNode }) {
-  const [colorTheme, setColorThemeState] = React.useState('padrão');
-  const [radius, setRadiusState] = React.useState('moderno');
-  const [sidebarStyle, setSidebarStyleState] = React.useState('default');
-  const [containerStyle, setContainerStyleState] = React.useState('moderno');
-  const [backgroundTexture, setBackgroundTextureState] = React.useState('none');
-  const [colorIntensity, setColorIntensityState] = React.useState('equilibrada');
-  const [animationStyle, setAnimationStyleState] = React.useState('sutil');
-  const [fontStyle, setFontStyleState] = React.useState('moderno');
-  const [statusColors, setStatusColorsState] = React.useState<Record<string, string>>({});
+  const [colorTheme, setColorTheme] = React.useState('padrão');
+  const [radius, setRadius] = React.useState('moderno');
+  const [containerStyle, setContainerStyle] = React.useState('moderno');
+  const [backgroundTexture, setBackgroundTexture] = React.useState('none');
+  const [colorIntensity, setColorIntensity] = React.useState('equilibrada');
+  const [animationStyle, setAnimationStyle] = React.useState('sutil');
+  const [fontStyle, setFontStyle] = React.useState('moderno');
+  const [statusColors, setStatusColors] = React.useState<Record<string, string>>({});
   const [isMounted, setIsMounted] = React.useState(false);
   const { resolvedTheme } = useNextTheme();
 
@@ -59,18 +52,17 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
         return localStorage.getItem(key) || def;
     };
 
-    setColorThemeState(getSaved("lk-color-theme", "padrão"));
-    setRadiusState(getSaved("lk-radius-theme", "moderno"));
-    setSidebarStyleState(getSaved("lk-sidebar-theme", "default"));
-    setContainerStyleState(getSaved("lk-container-style", "moderno"));
-    setBackgroundTextureState(getSaved("lk-texture-theme", "none"));
-    setColorIntensityState(getSaved("lk-intensity-theme", "equilibrada"));
-    setAnimationStyleState(getSaved("lk-animation-theme", "sutil"));
-    setFontStyleState(getSaved("lk-font-theme", "moderno"));
+    setColorTheme(getSaved("lk-color-theme", "padrão"));
+    setRadius(getSaved("lk-radius-theme", "moderno"));
+    setContainerStyle(getSaved("lk-container-style", "moderno"));
+    setBackgroundTexture(getSaved("lk-texture-theme", "none"));
+    setColorIntensity(getSaved("lk-intensity-theme", "equilibrada"));
+    setAnimationStyle(getSaved("lk-animation-theme", "sutil"));
+    setFontStyle(getSaved("lk-font-theme", "moderno"));
     
     const savedStatusColors = localStorage.getItem("lk-status-colors");
     if (savedStatusColors) {
-        try { setStatusColorsState(JSON.parse(savedStatusColors)); } catch(e) {}
+        try { setStatusColors(JSON.parse(savedStatusColors)); } catch(e) {}
     }
   }, []);
 
@@ -101,28 +93,18 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
 
       localStorage.setItem("lk-status-colors", JSON.stringify(statusColors));
     }
-  }, [colorTheme, radius, sidebarStyle, containerStyle, backgroundTexture, colorIntensity, animationStyle, fontStyle, statusColors, isMounted, resolvedTheme]);
+  }, [colorTheme, radius, containerStyle, backgroundTexture, colorIntensity, animationStyle, fontStyle, statusColors, isMounted, resolvedTheme]);
 
   const value = React.useMemo(() => ({
-    colorTheme,
-    setColorTheme: (theme: string) => setColorThemeState(theme),
-    radius,
-    setRadius: (r: string) => setRadiusState(r),
-    sidebarStyle,
-    setSidebarStyle: (s: string) => setSidebarStyleState(s),
-    containerStyle,
-    setContainerStyle: (s: string) => setContainerStyleState(s),
-    backgroundTexture,
-    setBackgroundTexture: (t: string) => setBackgroundTextureState(t),
-    colorIntensity,
-    setColorIntensity: (i: string) => setColorIntensityState(i),
-    animationStyle,
-    setAnimationStyle: (a: string) => setAnimationStyleState(a),
-    fontStyle,
-    setFontStyle: (f: string) => setFontStyleState(f),
-    statusColors,
-    setStatusColors: (colors: Record<string, string>) => setStatusColorsState(colors)
-  }), [colorTheme, radius, sidebarStyle, containerStyle, backgroundTexture, colorIntensity, animationStyle, fontStyle, statusColors]);
+    colorTheme, setColorTheme,
+    radius, setRadius,
+    containerStyle, setContainerStyle,
+    backgroundTexture, setBackgroundTexture,
+    colorIntensity, setColorIntensity,
+    animationStyle, setAnimationStyle,
+    fontStyle, setFontStyle,
+    statusColors, setStatusColors
+  }), [colorTheme, radius, containerStyle, backgroundTexture, colorIntensity, animationStyle, fontStyle, statusColors]);
 
   return (
     <ColorThemeContext.Provider value={value}>
@@ -131,8 +113,7 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-
-export function ThemeProvider({ children, ...props }: CustomThemeProviderProps) {
+export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   return (
     <NextThemesProvider {...props}>
       <ColorThemeProvider>
@@ -146,29 +127,12 @@ export function useTheme() {
     const nextThemeContext = useNextTheme();
     const colorThemeContext = React.useContext(ColorThemeContext);
 
-    if (nextThemeContext === undefined || colorThemeContext === undefined) {
+    if (colorThemeContext === undefined) {
         throw new Error("useTheme must be used within a ThemeProvider");
     }
 
-    return {
+    return React.useMemo(() => ({
         ...nextThemeContext,
-        colorTheme: colorThemeContext.colorTheme,
-        setColorTheme: colorThemeContext.setColorTheme,
-        radius: colorThemeContext.radius,
-        setRadius: colorThemeContext.setRadius,
-        sidebarStyle: colorThemeContext.sidebarStyle,
-        setSidebarStyle: colorThemeContext.setSidebarStyle,
-        containerStyle: colorThemeContext.containerStyle,
-        setContainerStyle: colorThemeContext.setContainerStyle,
-        backgroundTexture: colorThemeContext.backgroundTexture,
-        setBackgroundTexture: colorThemeContext.setBackgroundTexture,
-        colorIntensity: colorThemeContext.colorIntensity,
-        setColorIntensity: colorThemeContext.setColorIntensity,
-        animationStyle: colorThemeContext.animationStyle,
-        setAnimationStyle: colorThemeContext.setAnimationStyle,
-        fontStyle: colorThemeContext.fontStyle,
-        setFontStyle: colorThemeContext.setFontStyle,
-        statusColors: colorThemeContext.statusColors,
-        setStatusColors: colorThemeContext.setStatusColors,
-    };
+        ...colorThemeContext
+    }), [nextThemeContext, colorThemeContext]);
 }

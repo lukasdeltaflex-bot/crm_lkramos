@@ -25,7 +25,6 @@ import {
     Palette, 
     UserCog, 
     Database, 
-    FileDown, 
     Loader2, 
     Monitor, 
     Upload, 
@@ -39,15 +38,14 @@ import {
     Zap,
     MousePointer2,
     Eye,
-    Landmark,
-    Layout
+    Layout,
+    FileDown
 } from 'lucide-react';
 import { EditableList } from '@/components/settings/editable-list';
 import { BankEditableList } from '@/components/settings/bank-editable-list';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import type { UserSettings } from '@/lib/types';
-import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -107,8 +105,9 @@ export default function SettingsPage() {
     return doc(firestore, 'userSettings', user.uid);
   }, [firestore, user]);
 
-  const { data: userSettings, isLoading: isSettingsLoading } = useDoc<UserSettings>(settingsDocRef);
+  const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
 
+  // Preview local para o Simulador (evita loops sincronizando apenas no clique)
   const [preview, setPreview] = useState({
     radius: theme.radius,
     containerStyle: theme.containerStyle,
@@ -116,24 +115,24 @@ export default function SettingsPage() {
     colorIntensity: theme.colorIntensity,
     animationStyle: theme.animationStyle,
     fontStyle: theme.fontStyle,
-    sidebarStyle: theme.sidebarStyle,
     statusColors: theme.statusColors
   });
 
+  // Sincroniza o preview inicial UMA VEZ quando os dados carregam do banco
   useEffect(() => {
     if (userSettings) {
-      setPreview({
+      setPreview(p => ({
+        ...p,
         radius: userSettings.radius || theme.radius,
         containerStyle: userSettings.containerStyle || theme.containerStyle,
         backgroundTexture: userSettings.backgroundTexture || theme.backgroundTexture,
         colorIntensity: userSettings.colorIntensity || theme.colorIntensity,
         animationStyle: userSettings.animationStyle || theme.animationStyle,
         fontStyle: userSettings.fontStyle || theme.fontStyle,
-        sidebarStyle: userSettings.sidebarStyle || theme.sidebarStyle,
         statusColors: userSettings.statusColors || theme.statusColors
-      });
+      }));
     }
-  }, [userSettings, theme]);
+  }, [userSettings]);
 
   const updateSettings = async (updatedLists: Partial<UserSettings>) => {
     if (settingsDocRef) {
@@ -153,7 +152,6 @@ export default function SettingsPage() {
       theme.setColorIntensity(preview.colorIntensity);
       theme.setAnimationStyle(preview.animationStyle);
       theme.setFontStyle(preview.fontStyle);
-      theme.setSidebarStyle(preview.sidebarStyle);
       theme.setStatusColors(preview.statusColors);
       
       updateSettings({
@@ -163,7 +161,6 @@ export default function SettingsPage() {
           colorIntensity: preview.colorIntensity,
           animationStyle: preview.animationStyle,
           fontStyle: preview.fontStyle,
-          sidebarStyle: preview.sidebarStyle,
           statusColors: preview.statusColors
       });
   };
@@ -196,28 +193,28 @@ export default function SettingsPage() {
             <TabsList className="mb-8 bg-muted/30 p-1.5 h-14 rounded-full border border-border/50 flex w-fit gap-2">
                 <TabsTrigger 
                     value="lists" 
-                    className="rounded-full px-6 gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white transition-all shadow-none"
+                    className="rounded-full px-6 gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white transition-all shadow-none font-bold"
                 >
                     <ListChecks className="h-4 w-4" /> 
                     Parâmetros
                 </TabsTrigger>
                 <TabsTrigger 
                     value="appearance" 
-                    className="rounded-full px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all shadow-none"
+                    className="rounded-full px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all shadow-none font-bold"
                 >
                     <Palette className="h-4 w-4" /> 
                     Aparência
                 </TabsTrigger>
                 <TabsTrigger 
                     value="data" 
-                    className="rounded-full px-6 gap-2 data-[state=active]:bg-green-600 data-[state=active]:text-white transition-all shadow-none"
+                    className="rounded-full px-6 gap-2 data-[state=active]:bg-green-600 data-[state=active]:text-white transition-all shadow-none font-bold"
                 >
                     <Database className="h-4 w-4" /> 
                     Dados & Backup
                 </TabsTrigger>
                 <TabsTrigger 
                     value="account" 
-                    className="rounded-full px-6 gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white transition-all shadow-none"
+                    className="rounded-full px-6 gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white transition-all shadow-none font-bold"
                 >
                     <UserCog className="h-4 w-4" /> 
                     Conta
@@ -233,8 +230,8 @@ export default function SettingsPage() {
                                     <CardTitle>Identidade Visual de Elite</CardTitle>
                                     <CardDescription>Personalize o motor visual e o brilho industrial da sua marca.</CardDescription>
                                 </div>
-                                <Button onClick={handleApplyAppearance} size="sm" className="bg-primary hover:bg-primary/90">
-                                    <Sparkles className="mr-2 h-4 w-4" /> Aplicar Mudanças
+                                <Button onClick={handleApplyAppearance} size="sm" className="bg-primary hover:bg-primary/90 font-bold">
+                                    <Sparkles className="mr-2 h-4 w-4" /> Aplicar em Todo o Sistema
                                 </Button>
                             </CardHeader>
                             <CardContent className="space-y-10">
@@ -326,8 +323,8 @@ export default function SettingsPage() {
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2"><Type className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Tipografia de Elite</h4></div>
                                         <RadioGroup value={preview.fontStyle} onValueChange={(val) => setPreview(p => ({ ...p, fontStyle: val }))} className="grid grid-cols-2 gap-2">
-                                            {['moderno', 'classico', 'mono', 'arredondado', 'industrial', 'futurista'].map((f) => (
-                                                <Label key={f} htmlFor={`f-${f}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold", preview.fontStyle === f ? "border-primary bg-primary/5" : "border-muted")}>
+                                            {['moderno', 'classico', 'mono', 'arredondado', 'industrial', 'futurista', 'elegante', 'real', 'espacial', 'minimalista'].map((f) => (
+                                                <Label key={f} htmlFor={`f-${f}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-[10px] font-bold", preview.fontStyle === f ? "border-primary bg-primary/5" : "border-muted")}>
                                                     <RadioGroupItem value={f} id={`f-${f}`} className="sr-only" />{f}
                                                 </Label>
                                             ))}

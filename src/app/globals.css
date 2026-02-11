@@ -91,6 +91,10 @@
 .font-arredondado { font-family: 'Lexend', sans-serif; }
 .font-industrial { font-family: 'Bebas Neue', cursive; }
 .font-futurista { font-family: 'Orbitron', sans-serif; }
+.font-elegante { font-family: 'EB Garamond', serif; }
+.font-real { font-family: 'Cinzel', serif; }
+.font-espacial { font-family: 'Space Grotesk', sans-serif; }
+.font-minimalista { font-family: 'Outfit', sans-serif; }
 
 /* 🏁 TEXTURAS DE FUNDO */
 .texture-dots { background-image: radial-gradient(hsl(var(--muted-foreground) / 0.15) 1px, transparent 1px); background-size: 20px 20px; }
