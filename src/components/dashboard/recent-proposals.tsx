@@ -156,16 +156,11 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                                     >
                                         {proposal.status}
                                     </Badge>
-                                    {isPortAwaitingBalance && hasMounted && (
+                                    {isPortAwaitingBalance && hasMounted && businessDays >= 5 && (
                                         <TooltipProvider>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
-                                                    <AlertCircle className={cn(
-                                                        "h-5 w-5 cursor-help transition-all", 
-                                                        businessDays >= 5 ? "text-red-600 animate-alert-pulse" : 
-                                                        businessDays === 4 ? "text-orange-500" : 
-                                                        "text-blue-400"
-                                                    )} />
+                                                    <AlertCircle className="h-5 w-5 text-red-600 animate-alert-pulse" />
                                                 </TooltipTrigger>
                                                 <TooltipContent>
                                                     <p className="font-semibold text-xs text-primary">Monitoramento de Saldo</p>
