@@ -133,7 +133,7 @@ export default function SettingsPage() {
         statusColors: userSettings.statusColors || theme.statusColors
       });
     }
-  }, [userSettings]);
+  }, [userSettings, theme]);
 
   const updateSettings = async (updatedLists: Partial<UserSettings>) => {
     if (settingsDocRef) {
@@ -194,12 +194,36 @@ export default function SettingsPage() {
   return (
     <AppLayout>
       <PageHeader title="Estúdio de Branding LK RAMOS" />
-        <Tabs defaultValue="appearance">
-            <TabsList className="mb-4 bg-muted/50 p-1">
-                <TabsTrigger value="appearance"><Palette className="mr-2 h-4 w-4" /> Aparência & Aura</TabsTrigger>
-                <TabsTrigger value="lists"><ListChecks className="mr-2 h-4 w-4" /> Parâmetros</TabsTrigger>
-                <TabsTrigger value="data"><Database className="mr-2 h-4 w-4" /> Dados</TabsTrigger>
-                <TabsTrigger value="account"><UserCog className="mr-2 h-4 w-4" /> Conta</TabsTrigger>
+        <Tabs defaultValue="appearance" className="w-full">
+            <TabsList className="mb-8 bg-muted/30 p-1.5 h-14 rounded-full border border-border/50 flex w-fit gap-2">
+                <TabsTrigger 
+                    value="lists" 
+                    className="rounded-full px-6 gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white transition-all shadow-none"
+                >
+                    <ListChecks className="h-4 w-4" /> 
+                    Opções
+                </TabsTrigger>
+                <TabsTrigger 
+                    value="appearance" 
+                    className="rounded-full px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all shadow-none"
+                >
+                    <Palette className="h-4 w-4" /> 
+                    Aparência
+                </TabsTrigger>
+                <TabsTrigger 
+                    value="data" 
+                    className="rounded-full px-6 gap-2 data-[state=active]:bg-green-600 data-[state=active]:text-white transition-all shadow-none"
+                >
+                    <Database className="h-4 w-4" /> 
+                    Dados & Backup
+                </TabsTrigger>
+                <TabsTrigger 
+                    value="account" 
+                    className="rounded-full px-6 gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white transition-all shadow-none"
+                >
+                    <UserCog className="h-4 w-4" /> 
+                    Conta
+                </TabsTrigger>
             </TabsList>
 
             <TabsContent value="appearance">
@@ -335,7 +359,7 @@ export default function SettingsPage() {
                                         value="R$ 45.000,00" 
                                         icon={Zap} 
                                         description="EXEMPLO DE STATUS"
-                                        isHot={preview.containerStyle === 'glow'}
+                                        isHot={preview.containerStyle === 'glow' || preview.colorIntensity === 'neon'}
                                         overrideStatusColors={preview.statusColors}
                                         overrideContainerStyle={preview.containerStyle}
                                         overrideIntensity={preview.colorIntensity}

@@ -1,6 +1,6 @@
 'use client';
 
-import { ColumnDef, Header, Table, flexRender } from '@tanstack/react-table';
+import { ColumnDef, Header, flexRender } from '@tanstack/react-table';
 import type { Proposal, ProposalStatus, UserSettings } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
