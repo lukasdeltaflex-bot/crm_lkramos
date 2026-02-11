@@ -161,7 +161,7 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
                                                     <AlertCircle className={cn(
-                                                        "h-4 w-4 cursor-help transition-all", 
+                                                        "h-5 w-5 cursor-help transition-all", 
                                                         businessDays >= 5 ? "text-red-600 animate-alert-pulse" : 
                                                         businessDays === 4 ? "text-orange-500" : 
                                                         "text-blue-400"

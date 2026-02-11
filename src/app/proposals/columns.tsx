@@ -1,4 +1,3 @@
-
 'use client';
 
 import { ColumnDef, Header, Table } from '@tanstack/react-table';
@@ -23,9 +22,9 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
   } from "@/components/ui/alert-dialog"
-import { MoreHorizontal, ArrowUpDown, GripVertical, ArrowUp, ArrowDown, Copy } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, GripVertical, ArrowUp, ArrowDown, Copy, AlertCircle } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { formatCurrency, cleanBankName } from '@/lib/utils';
+import { formatCurrency, cleanBankName, calculateBusinessDays } from '@/lib/utils';
 import React from 'react';
 import { StatusCell } from './status-cell';
 import { type ProposalWithCustomer } from './page';
@@ -54,7 +53,6 @@ const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
     try {
         const date = new Date(dateString);
-        // Check if date is valid
         if (isNaN(date.getTime())) return '-';
         return format(date, "dd/MM/yyyy", { locale: ptBR });
     } catch (e) {
@@ -127,7 +125,7 @@ const ActionsCell: React.FC<ActionsCellProps> = ({ row, onEdit, onView, onDelete
     );
 };
 
-const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => {
+export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => {
     const isDraggable = header.column.columnDef.enableColumnOrdering !== false;
 
     const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({ 
@@ -303,13 +301,23 @@ export const getColumns = (
     header: 'Status',
     cell: ({ row }) => {
       const proposal = row.original;
+      const isPortAwaitingBalance = proposal.product === 'Portabilidade' && proposal.status === 'Aguardando Saldo';
+      const businessDays = proposal.dateDigitized ? calculateBusinessDays(new Date(proposal.dateDigitized)) : 0;
+
       return (
-        <StatusCell
-          proposalId={proposal.id}
-          currentStatus={proposal.status}
-          product={proposal.product}
-          onStatusChange={onStatusChange}
-        />
+        <div className="flex items-center gap-2">
+            <div className="w-28">
+                <StatusCell
+                    proposalId={proposal.id}
+                    currentStatus={proposal.status}
+                    product={proposal.product}
+                    onStatusChange={onStatusChange}
+                />
+            </div>
+            {isPortAwaitingBalance && businessDays >= 5 && (
+                <AlertCircle className="h-4 w-4 text-red-600 animate-alert-pulse shrink-0" />
+            )}
+        </div>
       );
     },
     filterFn: (row, id, value) => {
