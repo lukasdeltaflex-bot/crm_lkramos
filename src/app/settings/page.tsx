@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -95,7 +96,7 @@ function StatusColorPalette({
 }
 
 export default function SettingsPage() {
-  const { user, isUserLoading } = useUser();
+  const { user } = useUser();
   const firestore = useFirestore();
   const theme = useTheme();
   
@@ -122,7 +123,8 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (userSettings) {
-      setPreview({
+      setPreview(prev => ({
+        ...prev,
         radius: userSettings.radius || theme.radius,
         containerStyle: userSettings.containerStyle || theme.containerStyle,
         backgroundTexture: userSettings.backgroundTexture || theme.backgroundTexture,
@@ -131,9 +133,9 @@ export default function SettingsPage() {
         fontStyle: userSettings.fontStyle || theme.fontStyle,
         sidebarStyle: userSettings.sidebarStyle || theme.sidebarStyle,
         statusColors: userSettings.statusColors || theme.statusColors
-      });
+      }));
     }
-  }, [userSettings, theme]);
+  }, [userSettings]);
 
   const updateSettings = async (updatedLists: Partial<UserSettings>) => {
     if (settingsDocRef) {
@@ -182,7 +184,7 @@ export default function SettingsPage() {
     }
   };
 
-  const isLoading = isUserLoading || isSettingsLoading;
+  const isLoading = isSettingsLoading;
 
   const colorableStatuses = [
     "EM ANDAMENTO", "AGUARDANDO SALDO", "PAGO", 

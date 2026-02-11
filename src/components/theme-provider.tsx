@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -103,7 +104,6 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
       root.classList.add(`font-${fontStyle}`);
       localStorage.setItem("font-theme", fontStyle);
 
-      // Injeção de Cores de Status
       Object.entries(statusColors).forEach(([name, color]) => {
           const varName = `--status-color-${name.replace(/\s+/g, '-').toLowerCase()}`;
           root.style.setProperty(varName, color);
@@ -112,28 +112,28 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [colorTheme, radius, sidebarStyle, containerStyle, backgroundTexture, colorIntensity, fontStyle, statusColors, isMounted, resolvedTheme]);
 
-  const value = {
+  const value = React.useMemo(() => ({
     colorTheme,
-    setColorTheme: (theme: string) => { setColorThemeState(theme); },
+    setColorTheme: (theme: string) => setColorThemeState(theme),
     radius,
-    setRadius: (r: string) => { setRadiusState(r); },
+    setRadius: (r: string) => setRadiusState(r),
     sidebarStyle,
-    setSidebarStyle: (s: string) => { setSidebarStyleState(s); },
+    setSidebarStyle: (s: string) => setSidebarStyleState(s),
     containerStyle,
-    setContainerStyle: (s: string) => { setContainerStyleState(s); },
+    setContainerStyle: (s: string) => setContainerStyleState(s),
     backgroundTexture,
-    setBackgroundTexture: (t: string) => { setBackgroundTextureState(t); },
+    setBackgroundTexture: (t: string) => setBackgroundTextureState(t),
     colorIntensity,
-    setColorIntensity: (i: string) => { setColorIntensityState(i); },
+    setColorIntensity: (i: string) => setColorIntensityState(i),
     animationStyle,
-    setAnimationStyle: (a: string) => { setAnimationStyleState(a); },
+    setAnimationStyle: (a: string) => setAnimationStyleState(a),
     fontStyle,
-    setFontStyle: (f: string) => { setFontStyleState(f); },
+    setFontStyle: (f: string) => setFontStyleState(f),
     glassIntensity,
     setGlassIntensity: (v: number) => setGlassIntensityState(v),
     statusColors,
     setStatusColors: (colors: Record<string, string>) => setStatusColorsState(colors)
-  };
+  }), [colorTheme, radius, sidebarStyle, containerStyle, backgroundTexture, colorIntensity, animationStyle, fontStyle, glassIntensity, statusColors]);
 
   return (
     <ColorThemeContext.Provider value={value}>
