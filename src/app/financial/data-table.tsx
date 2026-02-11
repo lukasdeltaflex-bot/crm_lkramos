@@ -551,6 +551,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                                 // Prioridade para cor de status de comissão no financeiro
                                 const statusKey = (proposal.commissionStatus || proposal.status).toUpperCase();
                                 const colorValue = statusColors[statusKey] || statusColors[proposal.commissionStatus || proposal.status];
+                                const isBigWin = proposal.commissionValue >= 3000;
 
                                 return (
                                     <TableRow
@@ -558,7 +559,8 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                                         data-state={row.getIsSelected() && 'selected'}
                                         className={cn(
                                             "print:even:bg-gray-50 transition-colors border-b",
-                                            colorValue && "status-row-custom"
+                                            colorValue && "status-row-custom",
+                                            isBigWin && "big-win-row"
                                         )}
                                         style={colorValue ? { '--status-color': colorValue } as any : {}}
                                     >

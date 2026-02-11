@@ -411,6 +411,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                                 const proposal = row.original;
                                 const status = proposal.status;
                                 const colorValue = statusColors[status.toUpperCase()] || statusColors[status];
+                                const isBigWin = proposal.commissionValue >= 3000;
 
                                 return (
                                     <TableRow
@@ -418,7 +419,8 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                                         data-state={row.getIsSelected() && 'selected'}
                                         className={cn(
                                             "transition-colors border-b",
-                                            colorValue && "status-row-custom"
+                                            colorValue && "status-row-custom",
+                                            isBigWin && "big-win-row"
                                         )}
                                         style={colorValue ? { '--status-color': colorValue } as any : {}}
                                     >

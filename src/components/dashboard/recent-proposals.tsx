@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -16,7 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, cn, calculateBusinessDays, cleanBankName } from '@/lib/utils';
 import type { Proposal, Customer, UserSettings } from '@/lib/types';
 import { useMemo, useState, useEffect } from 'react';
-import { AlertCircle, ArrowRight, User } from 'lucide-react';
+import { AlertCircle, ArrowRight, User, TrendingUp, Zap } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -114,13 +113,15 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                     const colorValue = statusColors[proposal.status];
                     const cleanBank = cleanBankName(proposal.bank);
                     const customDomain = userSettings?.bankDomains?.[proposal.bank];
+                    const isBigWin = proposal.commissionValue >= 3000;
 
                     return (
                         <TableRow 
                             key={proposal.id} 
                             className={cn(
                                 "hover:bg-primary/[0.02] border-b border-border/30 transition-all group",
-                                colorValue && "status-row-custom"
+                                colorValue && "status-row-custom",
+                                isBigWin && "big-win-row"
                             )}
                             style={colorValue ? { '--status-color': colorValue } as any : {}}
                         >
@@ -132,7 +133,10 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="overflow-hidden">
-                                        <div className="font-bold text-primary/90 group-hover:text-primary transition-colors truncate max-w-[200px]">{proposal.customer?.name || 'Cliente não encontrado'}</div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="font-bold text-primary/90 group-hover:text-primary transition-colors truncate max-w-[180px]">{proposal.customer?.name || 'Cliente não encontrado'}</div>
+                                            {isBigWin && <Zap className="h-3 w-3 text-orange-500 fill-orange-500" title="Contrato de Alta Performance" />}
+                                        </div>
                                         <div className="text-[10px] text-muted-foreground font-medium mt-0.5">
                                             {proposal.customer?.cpf || 'CPF não informado'}
                                         </div>
@@ -182,7 +186,10 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                                 </div>
                             </TableCell>
                             <TableCell className="px-6 py-5 text-right font-normal text-primary">
-                                {formatCurrency(proposal.grossAmount)}
+                                <div className="flex flex-col items-end">
+                                    <span className={cn(isBigWin && "font-bold text-orange-600")}>{formatCurrency(proposal.grossAmount)}</span>
+                                    {isBigWin && <span className="text-[8px] font-black uppercase text-orange-500 tracking-tighter">Big Win</span>}
+                                </div>
                             </TableCell>
                         </TableRow>
                     );

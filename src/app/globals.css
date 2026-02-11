@@ -230,3 +230,23 @@
     0%, 100% { opacity: 0.3; transform: scale(1); }
     50% { opacity: 0.6; transform: scale(1.02); }
 }
+
+/* 🏆 BIG WIN AURA (Alta Performance) */
+.big-win-row {
+    position: relative !important;
+    background-color: hsla(45, 100%, 50%, 0.05) !important;
+}
+.big-win-row::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(to bottom, #d4af37, #ffd700, #d4af37);
+    box-shadow: 2px 0 10px rgba(212, 175, 55, 0.4);
+    z-index: 5;
+}
+.big-win-row:hover {
+    background-color: hsla(45, 100%, 50%, 0.08) !important;
+}
