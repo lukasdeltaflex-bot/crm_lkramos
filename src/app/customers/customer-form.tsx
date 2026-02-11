@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,13 +20,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Sparkles, AlertCircle, Loader2, PlusCircle, Trash2, FileText as FileIcon, UserCheck, UserX } from 'lucide-react';
+import { Sparkles, AlertCircle, Loader2, PlusCircle, Trash2, FileText as FileIcon, UserCheck, UserX, AlertTriangle } from 'lucide-react';
 import { format, parse } from 'date-fns';
 import { cn, getAge, validateCPF } from '@/lib/utils';
 import type { Customer, Benefit, Attachment } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { summarizeNotes } from '@/ai/flows/summarize-notes-flow';
 import { toast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -90,12 +89,13 @@ type CustomerFormData = Partial<Omit<Customer, 'id' | 'ownerId'>>;
 
 interface CustomerFormProps {
   customer?: Customer;
+  allCustomers: Customer[];
   defaultValues?: CustomerFormData;
   onSubmit: (data: FormCustomer) => void;
   isSaving?: boolean;
 }
 
-export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = false }: CustomerFormProps) {
+export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, isSaving = false }: CustomerFormProps) {
   const { user } = useUser();
   const firestore = useFirestore();
   const [isSummarizing, setIsSummarizing] = useState(false);
@@ -140,9 +140,15 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
     name: "benefits"
   });
 
+  const cpfValue = form.watch('cpf');
   const birthDateValue = form.watch('birthDate');
   const phone1Value = form.watch('phone');
   const phone2Value = form.watch('phone2');
+
+  const duplicateCpfCustomer = useMemo(() => {
+    if (!cpfValue || cpfValue.length < 14) return null;
+    return allCustomers.find(c => c.cpf === cpfValue && c.id !== customer?.id);
+  }, [cpfValue, allCustomers, customer]);
 
   useEffect(() => {
     if (birthDateValue && birthDateValue.length === 10) {
@@ -224,6 +230,15 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
   }, [customer, defaultValues, form]);
 
   function handleFormSubmit(data: CustomerFormValues) {
+    if (duplicateCpfCustomer) {
+        toast({
+            variant: 'destructive',
+            title: 'CPF Duplicado',
+            description: `Este CPF já pertence ao cliente "${duplicateCpfCustomer.name}".`,
+        });
+        return;
+    }
+
     const parsedDate = parse(data.birthDate, 'dd/MM/yyyy', new Date());
     const newCustomerData: FormCustomer = {
       ...data,
@@ -384,11 +399,20 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
                     name="cpf"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>CPF (Validação Automática)</FormLabel>
+                        <FormLabel>CPF (Verificação em tempo real)</FormLabel>
                         <FormControl>
                             <Input placeholder="000.000.000-00" {...field} onChange={handleCpfChange} maxLength={14}/>
                         </FormControl>
                         <FormMessage />
+                        {duplicateCpfCustomer && (
+                            <Alert variant="destructive" className="mt-2 py-2 px-3 border-2 animate-in slide-in-from-top-1">
+                                <AlertTriangle className="h-4 w-4" />
+                                <AlertTitle className="text-xs font-bold uppercase">CPF Já Cadastrado!</AlertTitle>
+                                <AlertDescription className="text-[10px] font-medium leading-tight">
+                                    Este CPF já pertence ao cliente <strong>{duplicateCpfCustomer.name}</strong>. Evite cadastros duplicados.
+                                </AlertDescription>
+                            </Alert>
+                        )}
                         </FormItem>
                     )}
                     />
@@ -736,7 +760,7 @@ export function CustomerForm({ customer, defaultValues, onSubmit, isSaving = fal
           </div>
         </ScrollArea>
         <div className="flex justify-end pt-8">
-            <Button type="submit" disabled={isSaving}>
+            <Button type="submit" disabled={isSaving || !!duplicateCpfCustomer}>
                 {isSaving ? (
                     <><Loader2 className="mr-2 h-4 w-4 animate-spin" /><span>Salvando...</span></>
                 ) : (

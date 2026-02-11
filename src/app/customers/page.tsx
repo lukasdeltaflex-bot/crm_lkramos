@@ -550,6 +550,7 @@ const handleExportToPdf = async () => {
           <CustomerForm
             onSubmit={handleFormSubmit}
             customer={selectedCustomer}
+            allCustomers={customers || []}
             defaultValues={defaultValues}
             isSaving={isSaving}
           />
