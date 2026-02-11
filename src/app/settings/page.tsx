@@ -40,8 +40,7 @@ import {
     MousePointer2,
     Eye,
     Landmark,
-    Bot,
-    LayoutDashboard
+    Bot
 } from 'lucide-react';
 import { EditableList } from '@/components/settings/editable-list';
 import { BankEditableList } from '@/components/settings/bank-editable-list';
@@ -60,9 +59,7 @@ import { Label } from '@/components/ui/label';
 import { THEMES } from '@/lib/themes';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
 import { StatsCard } from '@/components/dashboard/stats-card';
-import { Badge } from '@/components/ui/badge';
 
 function StatusColorPalette({ 
     activeColor, 
@@ -187,7 +184,6 @@ export default function SettingsPage() {
 
   const isLoading = isUserLoading || isSettingsLoading;
 
-  // LISTA COMPLETA DA IMAGEM
   const colorableStatuses = [
     "EM ANDAMENTO", "AGUARDANDO SALDO", "PAGO", 
     "SALDO PAGO", "PENDENTE", "REPROVADO", 
@@ -279,7 +275,7 @@ export default function SettingsPage() {
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2"><Shapes className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Estilo de Aura (Containers)</h4></div>
                                         <RadioGroup value={preview.containerStyle} onValueChange={(val) => setPreview(p => ({ ...p, containerStyle: val }))} className="grid grid-cols-2 gap-2">
-                                            {['moderno', 'glass', 'deep', 'flat', 'glow', 'soft', 'geometrico'].map((s) => (
+                                            {['moderno', 'glass', 'deep', 'flat', 'glow', 'geometrico'].map((s) => (
                                                 <Label key={s} htmlFor={`s-${s}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold", preview.containerStyle === s ? "border-primary bg-primary/5" : "border-muted")}>
                                                     <RadioGroupItem value={s} id={`s-${s}`} className="sr-only" />{s === 'glow' ? 'Neon Glow' : s}
                                                 </Label>
@@ -323,33 +319,28 @@ export default function SettingsPage() {
                                     <Eye className="h-5 w-5 text-primary" />
                                     Laboratório de Visualização
                                 </CardTitle>
-                                <CardDescription>Veja todos os status em tempo real.</CardDescription>
+                                <CardDescription>Simulação do card de status em tempo real.</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div className={cn(
-                                    "p-4 rounded-2xl transition-all border shadow-sm",
+                                    "p-6 rounded-2xl transition-all border shadow-sm",
                                     `texture-${preview.backgroundTexture}`,
                                     `radius-${preview.radius}`,
                                     `font-${preview.fontStyle}`,
                                     `style-${preview.containerStyle}`,
                                     `intensity-${preview.colorIntensity}`
                                 )}>
-                                    <div className="grid grid-cols-1 gap-3">
-                                        {colorableStatuses.map(status => (
-                                            <StatsCard 
-                                                key={`preview-${status}`}
-                                                title={status} 
-                                                value="R$ 0,00" 
-                                                icon={status.includes("COMISSÃO") ? Zap : status.includes("SALDO") ? ListChecks : Monitor} 
-                                                description="EXEMPLO DE STATUS"
-                                                isHot={preview.containerStyle === 'glow'}
-                                                overrideStatusColors={preview.statusColors}
-                                                overrideContainerStyle={preview.containerStyle}
-                                                overrideIntensity={preview.colorIntensity}
-                                                overrideRadius={preview.radius}
-                                            />
-                                        ))}
-                                    </div>
+                                    <StatsCard 
+                                        title="EM ANDAMENTO" 
+                                        value="R$ 45.000,00" 
+                                        icon={Zap} 
+                                        description="EXEMPLO DE STATUS"
+                                        isHot={preview.containerStyle === 'glow'}
+                                        overrideStatusColors={preview.statusColors}
+                                        overrideContainerStyle={preview.containerStyle}
+                                        overrideIntensity={preview.colorIntensity}
+                                        overrideRadius={preview.radius}
+                                    />
                                 </div>
                             </CardContent>
                         </Card>

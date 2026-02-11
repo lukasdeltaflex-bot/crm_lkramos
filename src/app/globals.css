@@ -27,17 +27,13 @@
     --ring: 217 33% 25%;
     --radius: 0.5rem;
 
-    --motion-duration: 300ms;
-    --motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
-    --glass-opacity: 0.7;
-    --glass-blur: 12px;
     --status-bg-opacity: 0.08;
     --status-border-opacity: 0.4;
   }
  
   .dark {
     --background: 222 47% 4%;
-    --foreground: 210 40% 98%;
+    --foreground: 210 40% 98%; /* Ice White */
     --card: 222 47% 2%;
     --card-foreground: 210 40% 98%;
     --popover: 222 47% 2%;
@@ -58,7 +54,7 @@
   }
 }
 
-/* 🎨 NÍVEIS DE INTENSIDADE */
+/* 🎨 INTENSIDADE */
 .intensity-minima { --status-bg-opacity: 0.02; --status-border-opacity: 0.2; }
 .intensity-equilibrada { --status-bg-opacity: 0.08; --status-border-opacity: 0.4; }
 .intensity-impactante { --status-bg-opacity: 0.15; --status-border-opacity: 0.7; }
@@ -76,8 +72,8 @@
 /* 🌟 ESTILOS DE AURA */
 .style-moderno { @apply border shadow-sm; }
 .style-glass { 
-    background-color: hsla(var(--background) / var(--glass-opacity)) !important;
-    backdrop-filter: blur(var(--glass-blur)) !important;
+    background-color: hsla(var(--background) / 0.7) !important;
+    backdrop-filter: blur(12px) !important;
     @apply border shadow-lg;
 }
 .style-deep { @apply border-2 shadow-2xl; }
@@ -86,10 +82,9 @@
     border-color: hsl(var(--status-color) / 0.6) !important;
     box-shadow: 0 0 20px hsl(var(--status-color) / 0.3), inset 0 0 10px hsl(var(--status-color) / 0.05) !important;
 }
-.style-soft { @apply border-none shadow-md bg-opacity-50; }
 .style-geometrico { @apply border-2 border-primary/20 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)]; }
 
-/* 🎭 FONTES PREMIUM */
+/* 🎭 FONTES */
 .font-moderno { font-family: 'Inter', sans-serif; }
 .font-classico { font-family: 'Playfair Display', serif; }
 .font-mono { font-family: 'JetBrains Mono', monospace; }
@@ -97,7 +92,7 @@
 .font-industrial { font-family: 'Bebas Neue', cursive; }
 .font-futurista { font-family: 'Orbitron', sans-serif; }
 
-/* 🚦 SISTEMA DE STATUS DINÂMICO */
+/* 🚦 SISTEMA DE STATUS */
 .status-custom {
     color: hsl(var(--status-color)) !important;
     background-color: hsl(var(--status-color) / var(--status-bg-opacity, 0.08)) !important;
@@ -111,7 +106,7 @@
     background-color: hsl(var(--status-color) / 0.1) !important;
 }
 
-/* 🔘 ABAS DE STATUS (FILTROS) */
+/* 🔘 ABAS DE STATUS */
 .status-tab {
     color: hsl(var(--status-color) / 0.6) !important;
     transition: all 0.3s ease !important;
@@ -123,10 +118,10 @@
     box-shadow: 0 4px 12px -2px hsl(var(--status-color) / 0.2) !important;
 }
 
-/* ⚡ PULSAÇÃO INDUSTRIAL REFORÇADA */
+/* ⚡ PULSAÇÃO DE ALERTA */
 @keyframes alert-pulse-industrial {
   0% { transform: scale(1); filter: drop-shadow(0 0 0px rgba(220, 38, 38, 0)); opacity: 1; }
-  50% { transform: scale(1.25); filter: drop-shadow(0 0 15px rgba(220, 38, 38, 1)) drop-shadow(0 0 5px rgba(220, 38, 38, 0.8)); opacity: 0.8; }
+  50% { transform: scale(1.2); filter: drop-shadow(0 0 12px rgba(220, 38, 38, 1)) drop-shadow(0 0 4px rgba(220, 38, 38, 0.6)); opacity: 0.8; }
   100% { transform: scale(1); filter: drop-shadow(0 0 0px rgba(220, 38, 38, 0)); opacity: 1; }
 }
 .animate-alert-pulse {
