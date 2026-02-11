@@ -56,7 +56,7 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DraggableHeader } from './columns';
 import type { Customer } from '@/lib/types';
-import { normalizeString } from '@/lib/utils';
+import { normalizeString, cn } from '@/lib/utils';
 
 const STORAGE_KEY_VISIBILITY = 'lk-ramos-customer-columns-visibility-v3';
 const STORAGE_KEY_ORDER = 'lk-ramos-customer-columns-order-v3';
@@ -262,14 +262,14 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         <div className="p-4">
           <div className="flex items-center justify-between py-4">
             <div className='relative w-full max-w-sm'>
-                <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+                <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-60' />
                 <Input
                 placeholder="Busca (ID exato, nome, CPF...)"
                 value={globalFilter ?? ''}
                 onChange={(event) =>
                     setGlobalFilter(event.target.value)
                 }
-                className="pl-9 w-full"
+                className="pl-9 w-full bg-muted/20 border-primary/10 h-11 focus-visible:ring-primary/20 transition-all font-medium"
                 />
             </div>
             <DropdownMenu>

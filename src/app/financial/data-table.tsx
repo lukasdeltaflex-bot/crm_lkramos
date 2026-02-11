@@ -198,7 +198,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   );
 
   const handleDateInputChange = (value: string, type: 'start' | 'end') => {
-    let formattedValue = value.replace(/\D/g, '');
+    formattedValue = value.replace(/\D/g, '');
     if (formattedValue.length > 8) formattedValue = formattedValue.substring(0, 8);
     formattedValue = formattedValue.replace(/(\d{2})(\d)/, '$1/$2');
     formattedValue = formattedValue.replace(/(\d{2})(\d)/, '$1/$2');
@@ -491,14 +491,14 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 <div className="p-4 space-y-4 print:p-0">
                     <div className="flex items-center justify-between py-4 print:hidden">
                     <div className='relative w-full max-sm:max-w-full max-w-sm'>
-                        <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+                        <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-60' />
                         <Input
                         placeholder="Busca Inteligente (Nome, CPF, ID, Proposta...)"
                         value={globalFilter ?? ''}
                         onChange={(event) =>
                             setGlobalFilter(event.target.value)
                         }
-                        className="pl-9 w-full bg-card"
+                        className="pl-9 w-full bg-muted/20 border-primary/10 h-11 focus-visible:ring-primary/20 transition-all font-medium"
                         />
                     </div>
                     <DropdownMenu>

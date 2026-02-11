@@ -67,10 +67,9 @@ import type { ProposalStatus, Proposal, UserSettings } from '@/lib/types';
 import { DraggableHeader } from './columns';
 import type { ProposalWithCustomer } from './page';
 import { Separator } from '@/components/ui/separator';
-import { formatCurrency, normalizeString } from '@/lib/utils';
+import { formatCurrency, normalizeString, cn } from '@/lib/utils';
 import { parse, isValid, startOfDay, endOfDay, subDays, startOfMonth, subMonths, endOfMonth } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
-import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 
 const STORAGE_KEY_VISIBILITY = 'lk-ramos-proposal-columns-visibility-v5';
@@ -103,13 +102,13 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'dateDigitized', desc: true }]);
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-  const [globalFilter, setGlobalFilter] = React.useState('');
-  const [isClient, setIsClient] = React.useState(false);
   const [pagination, setPagination] = React.useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
   });
   const [statusFilter, setStatusFilter] = React.useState('Todos');
+  const [globalFilter, setGlobalFilter] = React.useState('');
+  const [isClient, setIsClient] = React.useState(false);
   const [startDateInput, setStartDateInput] = React.useState('');
   const [endDateInput, setEndDateInput] = React.useState('');
   const [appliedDateRange, setAppliedDateRange] = React.useState<DateRange | undefined>(undefined);
@@ -362,12 +361,12 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                     <div className="flex items-center justify-between py-4">
                     <div className="flex items-center gap-2 flex-grow">
                         <div className='relative w-full max-md:max-w-full max-w-md'>
-                            <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+                            <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-60' />
                             <Input 
                                 placeholder="Busca Inteligente (Nome, CPF, ID, Proposta...)" 
                                 value={globalFilter ?? ''} 
                                 onChange={(event) => setGlobalFilter(event.target.value)} 
-                                className="pl-9 w-full bg-card" 
+                                className="pl-9 w-full bg-muted/20 border-primary/10 h-11 focus-visible:ring-primary/20 transition-all font-medium" 
                             />
                         </div>
                         {selectedRowCount > 0 && (
