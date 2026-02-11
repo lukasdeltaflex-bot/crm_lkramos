@@ -52,7 +52,7 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
   }, [proposals, customers]);
 
   return (
-    <Card className="h-full flex flex-col border-orange-500/20 bg-orange-500/5 dark:bg-orange-500/[0.02] shadow-lg overflow-hidden">
+    <Card className="h-full flex flex-col border-orange-500/20 bg-orange-500/5 dark:bg-orange-500/[0.03] shadow-lg overflow-hidden">
       <CardHeader className="pb-4 bg-orange-500/[0.08] dark:bg-orange-500/[0.05] border-b border-orange-500/10">
         <div className="flex items-center justify-between">
             <div className="space-y-1">
@@ -63,7 +63,7 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
                 <CardDescription className="text-[10px] font-black uppercase text-orange-600/70 dark:text-orange-400/60 tracking-widest">Retenção e Refinanciamento</CardDescription>
             </div>
             {!isLoading && radarOpportunities.length > 0 && (
-                <Badge variant="outline" className="bg-background border-orange-500/30 text-orange-600 dark:text-orange-400 font-bold">
+                <Badge variant="outline" className="bg-background dark:bg-zinc-900 border-orange-500/30 text-orange-600 dark:text-orange-400 font-bold">
                     {radarOpportunities.length} OPORTUNIDADES
                 </Badge>
             )}
@@ -79,7 +79,7 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
         ) : radarOpportunities.length === 0 ? (
             <div className="flex h-[400px] flex-col items-center justify-center text-center text-muted-foreground p-8 border-2 border-dashed border-orange-500/10 rounded-xl bg-muted/5">
                 <Zap className="h-10 w-10 mb-4 opacity-10" />
-                <p className="font-bold text-sm">Radar Limpo</p>
+                <p className="font-bold text-sm text-foreground/80">Radar Limpo</p>
                 <p className="text-[11px] opacity-60 mt-1">Nenhum contrato amadurecido para retenção no momento.</p>
             </div>
         ) : (
@@ -87,13 +87,13 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
                 <div className="space-y-3 pr-4 pb-6">
                     {radarOpportunities.map((opt) => (
                         <Link key={opt.customer.id} href={`/customers/${opt.customer.id}`}>
-                            <div className="group flex items-center gap-3 p-3 rounded-xl border border-orange-500/10 bg-card hover:border-orange-500/40 hover:bg-orange-500/[0.02] transition-all">
+                            <div className="group flex items-center gap-3 p-3 rounded-xl border border-orange-500/10 dark:border-orange-500/20 bg-card dark:bg-zinc-900/50 hover:border-orange-500/40 hover:bg-orange-500/[0.02] dark:hover:bg-orange-500/[0.05] transition-all">
                                 <div className="h-10 w-10 rounded-full bg-orange-500/10 flex items-center justify-center shrink-0">
                                     <User className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-bold text-foreground truncate group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">{opt.customer.name}</p>
-                                    <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase">
+                                    <p className="text-sm font-bold text-foreground group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors truncate">{opt.customer.name}</p>
+                                    <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground dark:text-zinc-400 uppercase">
                                         <TrendingUp className="h-3 w-3 text-orange-500" />
                                         Pago há {opt.months} meses • {formatCurrency(opt.lastProposal.grossAmount)}
                                     </div>
@@ -107,7 +107,7 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
         )}
       </CardContent>
       <div className="px-6 py-3 border-t border-orange-500/10 bg-orange-500/[0.03]">
-          <p className="text-[9px] text-center text-muted-foreground font-bold uppercase tracking-tighter">
+          <p className="text-[9px] text-center text-muted-foreground dark:text-zinc-500 font-bold uppercase tracking-tighter">
               Clientes ativos com contratos pagos há mais de 1 ano
           </p>
       </div>

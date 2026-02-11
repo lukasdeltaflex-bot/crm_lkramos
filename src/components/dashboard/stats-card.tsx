@@ -104,7 +104,7 @@ export function StatsCard({
                     <AlertTriangle className="h-2.5 w-2.5 fill-current" /> PENDÊNCIA
                 </div>
             ) : isHot && (
-                <div className="flex items-center gap-1 text-[8px] font-black text-orange-600 bg-background/80 dark:bg-black/40 px-1.5 py-0.5 rounded-full border border-orange-200">
+                <div className="flex items-center gap-1 text-[8px] font-black text-orange-600 dark:text-orange-400 bg-background/80 dark:bg-zinc-950/60 px-1.5 py-0.5 rounded-full border border-orange-200 dark:border-orange-900/50">
                     <Zap className="h-2.5 w-2.5 fill-current" /> EM ALTA
                 </div>
             )}
@@ -113,11 +113,11 @@ export function StatsCard({
       </CardHeader>
       <CardContent className="flex-1 flex flex-col justify-between p-0">
         <div className="flex items-baseline justify-between gap-2">
-            <div className={cn("text-2xl sm:text-3xl font-light tracking-tighter text-foreground", valueClassName)}>
+            <div className={cn("text-2xl sm:text-3xl font-light tracking-tighter text-foreground dark:text-zinc-100", valueClassName)}>
                 {value}
             </div>
             {percentage !== undefined && (
-                <div className="text-[10px] font-bold bg-background/60 px-2 py-0.5 rounded border border-border/30">
+                <div className="text-[10px] font-bold bg-background/60 dark:bg-zinc-950/40 px-2 py-0.5 rounded border border-border/30">
                     {percentage.toFixed(1).replace('.', ',')}%
                 </div>
             )}
@@ -125,17 +125,17 @@ export function StatsCard({
         
         <div className="mt-2 pt-2 border-t border-border/10 flex items-center justify-between">
             <div className="flex flex-col">
-                <p className="text-[9px] font-bold opacity-70 uppercase tracking-tighter text-muted-foreground">
+                <p className="text-[9px] font-bold opacity-70 uppercase tracking-tighter text-muted-foreground dark:text-zinc-400">
                     {description}
                 </p>
                 {subValue && (
-                    <p className="text-[9px] font-black opacity-80 uppercase tracking-tighter mt-0.5">
+                    <p className="text-[9px] font-black opacity-80 uppercase tracking-tighter mt-0.5 dark:text-zinc-300">
                         {subValue}
                     </p>
                 )}
             </div>
             {topContributor && (
-                <p className="text-[9px] font-bold truncate max-w-[100px] text-foreground">
+                <p className="text-[9px] font-bold truncate max-w-[100px] text-foreground dark:text-zinc-200">
                     {topContributor.split(' ')[0]}
                 </p>
             )}
