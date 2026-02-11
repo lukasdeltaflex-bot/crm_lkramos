@@ -105,6 +105,7 @@ export default function SettingsPage() {
   const theme = useTheme();
   
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [testAnimation, setTestAnimation] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const settingsDocRef = useMemoFirebase(() => {
@@ -159,6 +160,7 @@ export default function SettingsPage() {
   };
 
   const handleApplyAppearance = () => {
+      // Aplica no contexto global do ThemeProvider
       theme.setRadius(preview.radius);
       theme.setContainerStyle(preview.containerStyle);
       theme.setBackgroundTexture(preview.backgroundTexture);
@@ -169,6 +171,7 @@ export default function SettingsPage() {
       theme.setColorTheme(preview.colorTheme);
       theme.setStatusColors(preview.statusColors);
       
+      // Salva no banco de dados
       saveSettingsToFirebase({
           radius: preview.radius,
           containerStyle: preview.containerStyle,
@@ -194,6 +197,11 @@ export default function SettingsPage() {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleTriggerTestAnimation = () => {
+    setTestAnimation(true);
+    setTimeout(() => setTestAnimation(false), 1500);
   };
 
   const colorableStatuses = [
@@ -505,6 +513,7 @@ export default function SettingsPage() {
                                             overrideIntensity={preview.colorIntensity}
                                             overrideRadius={preview.radius}
                                             overrideAnimationStyle={preview.animationStyle}
+                                            style={testAnimation ? { transform: 'translateX(20px)' } : {}}
                                         />
                                     </div>
 
@@ -516,8 +525,10 @@ export default function SettingsPage() {
                                                 className={cn(
                                                     "group relative overflow-hidden transition-all border-2 h-12 font-bold",
                                                     `radius-${preview.radius}`,
-                                                    `anim-${preview.animationStyle}`
+                                                    `anim-${preview.animationStyle}`,
+                                                    testAnimation && "scale-110 rotate-2"
                                                 )}
+                                                onClick={handleTriggerTestAnimation}
                                             >
                                                 <Play className="mr-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                                                 TESTAR RITMO
@@ -527,7 +538,8 @@ export default function SettingsPage() {
                                                 className={cn(
                                                     "border-2 h-12 font-bold hover:bg-primary hover:text-white transition-all",
                                                     `radius-${preview.radius}`,
-                                                    `anim-${preview.animationStyle}`
+                                                    `anim-${preview.animationStyle}`,
+                                                    testAnimation && "-translate-y-2 opacity-50"
                                                 )}
                                             >
                                                 INTERAÇÃO

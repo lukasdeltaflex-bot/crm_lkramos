@@ -81,7 +81,14 @@
 .anim-atmosferico { --transition-speed: 0.5s; }
 .anim-cinematografico { --transition-speed: 1s; }
 
-* { transition-duration: var(--transition-speed); }
+/* Aplicação forçada de Ritmo em elementos que possuem classes de transição */
+[class*="anim-"] *, 
+.anim-instantaneo *, 
+.anim-sutil *, 
+.anim-atmosferico *, 
+.anim-cinematografico * { 
+    transition-duration: var(--transition-speed) !important; 
+}
 
 /* Intensidade */
 .intensity-minima { --status-bg-opacity: 0.02; --status-border-opacity: 0.2; }
@@ -140,6 +147,29 @@
 .texture-dots { background-image: radial-gradient(hsl(var(--muted-foreground) / 0.15) 1px, transparent 1px); background-size: 20px 20px; }
 .texture-grid { background-image: linear-gradient(hsl(var(--muted-foreground) / 0.05) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--muted-foreground) / 0.05) 1px, transparent 1px); background-size: 20px 20px; }
 .texture-lines { background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, hsl(var(--muted-foreground) / 0.03) 10px, hsl(var(--muted-foreground) / 0.03) 11px); }
+
+/* Estúdio da Barra Lateral (Overrides de variáveis) */
+.sidebar-dark {
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+}
+
+.sidebar-light {
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+}
 
 /* Status e Linhas */
 .status-custom {
