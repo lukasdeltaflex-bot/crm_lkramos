@@ -320,14 +320,14 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                 <Tabs value={statusFilter} onValueChange={setStatusFilter}>
                     <TabsList className="h-auto flex-wrap justify-start bg-muted/50 p-1">
                         {orderedTabs.map(status => {
-                            const colorValue = statusColors[status];
+                            const colorValue = statusColors[status.toUpperCase()] || statusColors[status];
                             if (status === 'Todos') return <TabsTrigger key="Todos" value="Todos" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Todos</TabsTrigger>;
                             
                             return (
                                 <TabsTrigger 
                                     key={status} 
                                     value={status}
-                                    className="status-tab font-black uppercase text-[10px] tracking-widest px-4 h-9"
+                                    className="status-tab font-black uppercase text-[10px] tracking-widest px-4 h-9 border border-transparent"
                                     style={colorValue ? { '--status-color': colorValue } as any : {}}
                                 >
                                     {status}
@@ -410,7 +410,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                             table.getRowModel().rows.map((row) => {
                                 const proposal = row.original;
                                 const status = proposal.status;
-                                const colorValue = statusColors[status];
+                                const colorValue = statusColors[status.toUpperCase()] || statusColors[status];
 
                                 return (
                                     <TableRow

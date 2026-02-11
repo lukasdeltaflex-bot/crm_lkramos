@@ -362,7 +362,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     >
         <div className="space-y-4 max-w-[1600px] mx-auto">
             <FinancialSummary 
-                rows={currentMonthData}
+                rows={data} // Use full data for trend calculation
                 currentMonthRange={appliedDateRange || currentMonthRange}
                 isPrivacyMode={isPrivacyMode}
                 isFiltered={isAnyFilterActive}
@@ -377,12 +377,12 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                             <TabsTrigger value="Todos" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Todos</TabsTrigger>
                             
                             {['Paga', 'Pendente', 'Parcial'].map((status) => {
-                                const colorValue = statusColors[status];
+                                const colorValue = statusColors[status.toUpperCase()] || statusColors[status];
                                 return (
                                     <TabsTrigger 
                                         key={status}
                                         value={status} 
-                                        className="status-tab font-black uppercase text-[10px] tracking-widest px-4 h-9"
+                                        className="status-tab font-black uppercase text-[10px] tracking-widest px-4 h-9 border border-transparent"
                                         style={colorValue ? { '--status-color': colorValue } as any : {}}
                                     >
                                         {status === 'Paga' ? 'Pagas' : status === 'Pendente' ? 'Pendentes' : 'Parciais'}
@@ -490,8 +490,8 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                             table.getRowModel().rows.map((row) => {
                                 const proposal = row.original;
                                 // Prioridade para cor de status de comissão no financeiro
-                                const statusKey = proposal.commissionStatus || proposal.status;
-                                const colorValue = statusColors[statusKey];
+                                const statusKey = (proposal.commissionStatus || proposal.status).toUpperCase();
+                                const colorValue = statusColors[statusKey] || statusColors[proposal.commissionStatus || proposal.status];
 
                                 return (
                                     <TableRow

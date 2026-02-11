@@ -81,7 +81,6 @@
 .anim-atmosferico { --transition-speed: 0.5s; }
 .anim-cinematografico { --transition-speed: 1s; }
 
-/* Aplicação forçada de Ritmo em elementos que possuem classes de transição */
 [class*="anim-"] *, 
 .anim-instantaneo *, 
 .anim-sutil *, 
@@ -96,7 +95,7 @@
 .intensity-impactante { --status-bg-opacity: 0.15; --status-border-opacity: 0.7; }
 .intensity-neon { --status-bg-opacity: 0.25; --status-border-opacity: 1; }
 
-/* Arredondamento Industrial */
+/* Arredondamento */
 .radius-reto { --radius: 0rem; }
 .radius-extra-discreto { --radius: 0.125rem; }
 .radius-discreto { --radius: 0.25rem; }
@@ -106,7 +105,7 @@
 .radius-organico { --radius: 1.5rem; }
 .radius-capsula { --radius: 2.5rem; }
 
-/* Estilos de Aura (Containers) */
+/* Aura Styles */
 .style-moderno { @apply border shadow-sm; }
 .style-glass { 
     background-color: hsla(var(--background) / 0.7) !important;
@@ -121,34 +120,12 @@
 }
 .style-geometrico { @apply border-2 border-primary/20 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)]; }
 
-/* Tipografia de Elite */
-.font-moderno { font-family: 'Inter', sans-serif; }
-.font-classico { font-family: 'Playfair Display', serif; }
-.font-mono { font-family: 'JetBrains Mono', monospace; }
-.font-arredondado { font-family: 'Lexend', sans-serif; }
-.font-industrial { font-family: 'Bebas Neue', cursive; }
-.font-futurista { font-family: 'Orbitron', sans-serif; }
-.font-elegante { font-family: 'EB Garamond', serif; }
-.font-real { font-family: 'Cinzel', serif; }
-.font-espacial { font-family: 'Space Grotesk', sans-serif; }
-.font-minimalista { font-family: 'Outfit', sans-serif; }
-.font-editorial { font-family: 'Lora', serif; }
-.font-geom-vivida { font-family: 'Urbanist', sans-serif; }
-.font-tecnica { font-family: 'Fira Sans', sans-serif; }
-.font-impacto { font-family: 'Kanit', sans-serif; }
-.font-clean { font-family: 'Work Sans', sans-serif; }
-.font-soft { font-family: 'Quicksand', sans-serif; }
-.font-neo-classico { font-family: 'Spectral', serif; }
-.font-corp { font-family: 'Manrope', sans-serif; }
-.font-sharp { font-family: 'Roboto Condensed', sans-serif; }
-.font-script { font-family: 'Cormorant Garamond', serif; }
-
-/* Texturas de Fundo */
+/* Texturas */
 .texture-dots { background-image: radial-gradient(hsl(var(--muted-foreground) / 0.15) 1px, transparent 1px); background-size: 20px 20px; }
 .texture-grid { background-image: linear-gradient(hsl(var(--muted-foreground) / 0.05) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--muted-foreground) / 0.05) 1px, transparent 1px); background-size: 20px 20px; }
 .texture-lines { background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, hsl(var(--muted-foreground) / 0.03) 10px, hsl(var(--muted-foreground) / 0.03) 11px); }
 
-/* Estúdio da Barra Lateral (Overrides de variáveis) */
+/* Sidebar Styles */
 .sidebar-dark {
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
@@ -159,7 +136,6 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 }
-
 .sidebar-light {
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -185,12 +161,21 @@
     background-color: hsl(var(--status-color) / 0.1) !important;
 }
 
+.status-tab {
+    transition: all var(--transition-speed);
+}
+.status-tab[data-state=active] {
+    background-color: hsl(var(--status-color) / 0.15) !important;
+    color: hsl(var(--status-color)) !important;
+    border-color: hsl(var(--status-color) / 0.5) !important;
+    box-shadow: 0 0 10px hsl(var(--status-color) / 0.2);
+}
+
 @layer base {
   * { @apply border-border; }
   body { @apply bg-background text-foreground antialiased; }
 }
 
-/* Pulsação Industrial Reforçada */
 @keyframes alert-pulse-industrial {
   0% { transform: scale(1); filter: drop-shadow(0 0 0px rgba(220, 38, 38, 0)); opacity: 1; }
   50% { transform: scale(1.2); filter: drop-shadow(0 0 15px rgba(220, 38, 38, 0.9)); opacity: 0.8; }
