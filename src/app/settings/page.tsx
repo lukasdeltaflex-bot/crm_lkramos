@@ -201,7 +201,7 @@ export default function SettingsPage() {
                     className="rounded-full px-6 gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white transition-all shadow-none"
                 >
                     <ListChecks className="h-4 w-4" /> 
-                    Opções
+                    Parâmetros
                 </TabsTrigger>
                 <TabsTrigger 
                     value="appearance" 
@@ -240,6 +240,10 @@ export default function SettingsPage() {
                                 </Button>
                             </CardHeader>
                             <CardContent className="space-y-10">
+                                <ThemeColors />
+
+                                <Separator />
+
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-2"><Monitor className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Branding (Logomarca)</h4></div>
                                     <div className="flex items-center gap-6 p-6 border rounded-xl bg-muted/20">

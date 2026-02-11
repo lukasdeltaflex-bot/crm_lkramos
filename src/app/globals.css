@@ -33,7 +33,7 @@
  
   .dark {
     --background: 222 47% 4%;
-    --foreground: 210 40% 98%; /* Ice White */
+    --foreground: 210 40% 98%; /* Ice White - Conforto Visual */
     --card: 222 47% 2%;
     --card-foreground: 210 40% 98%;
     --popover: 222 47% 2%;
@@ -118,7 +118,7 @@
     box-shadow: 0 4px 12px -2px hsl(var(--status-color) / 0.2) !important;
 }
 
-/* ⚡ PULSAÇÃO DE ALERTA INDUSTRIAL */
+/* ⚡ PULSAÇÃO DE ALERTA INDUSTRIAL (REFORÇADA) */
 @keyframes alert-pulse-industrial {
   0% { 
     transform: scale(1); 

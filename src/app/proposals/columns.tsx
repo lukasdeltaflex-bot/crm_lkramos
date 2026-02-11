@@ -38,16 +38,6 @@ import { toast } from '@/hooks/use-toast';
 import type { DateRange } from 'react-day-picker';
 import { BankIcon } from '@/components/bank-icon';
 
-type ActionsCellProps = {
-    row: {
-      original: ProposalWithCustomer;
-    };
-    onEdit: (proposal: ProposalWithCustomer) => void;
-    onView: (proposal: ProposalWithCustomer) => void;
-    onDelete: (proposalId: string) => void;
-    onDuplicate: (proposal: ProposalWithCustomer) => void;
-};
-
 const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
     try {
@@ -78,7 +68,7 @@ const CopyButton = ({ text, label }: { text: string | undefined; label: string }
     );
 }
 
-const ActionsCell: React.FC<ActionsCellProps> = ({ row, onEdit, onView, onDelete, onDuplicate }) => {
+const ActionsCell = ({ row, onEdit, onView, onDelete, onDuplicate }: any) => {
     const proposal = row.original;
     return (
       <div className="text-right">
@@ -219,11 +209,11 @@ const StatusCellWithPulse = ({
 }
 
 export const getColumns = (
-    onEdit: (proposal: ProposalWithCustomer) => void,
-    onView: (proposal: ProposalWithCustomer) => void,
-    onDelete: (proposalId: string) => void,
-    onStatusChange: (proposalId: string, newStatus: ProposalStatus, product?: string) => void,
-    onDuplicate: (proposal: ProposalWithCustomer) => void
+    onEdit: any,
+    onView: any,
+    onDelete: any,
+    onStatusChange: any,
+    onDuplicate: any
     ): ColumnDef<ProposalWithCustomer>[] => [
   {
     id: 'select',
