@@ -61,7 +61,7 @@ export default function ManualPage() {
                             <div className="p-2 rounded-lg bg-blue-100 text-blue-600"><Palette className="h-5 w-5" /></div>
                             <div className="text-left">
                                 <p className="font-bold">1. Estúdio de Branding & Atmosferas</p>
-                                <p className="text-xs text-muted-foreground">Logo própria, paletas premium e fundos animados</p>
+                                <p className="text-xs text-muted-foreground">Logo própria, paletas premium e fundos animados suaves</p>
                             </div>
                         </div>
                     </AccordionTrigger>
@@ -69,7 +69,7 @@ export default function ManualPage() {
                         <p>O LK RAMOS permite que o sistema tenha a alma da sua marca através de ferramentas de customização avançada.</p>
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Laboratório 360°</strong>: Experimente cores, fontes e ritmos em tempo real antes de aplicar globalmente.</li>
-                            <li><strong>Atmosferas Digitais</strong>: Ative fundos animados sutis (Nebulosa, Aurora, Sunset) para uma experiência de luxo e profundidade visual.</li>
+                            <li><strong>Atmosferas Claras & Equilibradas</strong>: Ative fundos animados sutis (Nebulosa Suave, Aurora Boreal, Sunset Pastel) otimizados para máxima legibilidade e conforto visual.</li>
                             <li><strong>Branding Próprio</strong>: Upload de logomarca própria, exibida no menu lateral e em todos os relatórios PDF oficiais.</li>
                         </ul>
                     </AccordionContent>
@@ -112,7 +112,7 @@ export default function ManualPage() {
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Monitoramento de Saldo</strong>: Portabilidades em "Aguardando Saldo" exibem pulsação vermelha ao atingir 5 dias úteis de espera.</li>
                             <li><strong>Aura Big Win (Dourada)</strong>: Propostas com comissão superior a <strong>R$ 3.000,00</strong> ganham destaque dourado exclusivo.</li>
-                            <li><strong>Deep Linking</strong>: Clique em um alerta no Dashboard e seja levado diretamente para a proposta com o filtro já aplicado.</li>
+                            <li><strong>Navegação Inteligente por Alerta</strong>: Ao clicar em um alerta no Dashboard, o sistema leva você direto para a Proposta ou Cliente, aplicando filtros automaticamente.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -170,7 +170,7 @@ export default function ManualPage() {
                 <CardContent className="space-y-4">
                     <div className="flex items-start gap-2">
                         <CloudSun className="h-4 w-4 text-orange-500 shrink-0" />
-                        <p className="text-[10px] text-muted-foreground leading-tight">Combine o <strong>Modo Glass</strong> com uma <strong>Atmosfera Nebula</strong> para criar o efeito visual mais sofisticado da plataforma.</p>
+                        <p className="text-[10px] text-muted-foreground leading-tight">As novas <strong>Atmosferas Claras</strong> foram projetadas para reduzir o cansaço visual em longas jornadas de digitação.</p>
                     </div>
                     <Button variant="outline" className="w-full justify-start text-xs h-8" asChild>
                         <a href="/settings?tab=appearance"><Palette className="mr-2 h-3 w-3 text-blue-500" /> Estúdio de Branding</a>

@@ -166,7 +166,7 @@
 .texture-grid { background-image: linear-gradient(hsl(var(--muted-foreground) / 0.05) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--muted-foreground) / 0.05) 1px, transparent 1px); background-size: 20px 20px; }
 .texture-lines { background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, hsl(var(--muted-foreground) / 0.03) 10px, hsl(var(--muted-foreground) / 0.03) 11px); }
 
-/* ✨ ATMOSFERAS (FUNDOS ANIMADOS) */
+/* ✨ ATMOSFERAS (FUNDOS ANIMADOS) - VERSÃO CLARA/EQUILIBRADA */
 @keyframes nebula-flow {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
@@ -174,28 +174,34 @@
 }
 
 .aura-nebula {
-  background: linear-gradient(-45deg, #09090b, #18181b, #27272a, #09090b);
+  background: linear-gradient(-45deg, #f8fafc, #f1f5f9, #e2e8f0, #f8fafc);
   background-size: 400% 400%;
   animation: nebula-flow 15s ease infinite;
 }
 
 .aura-aurora {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #0d9488 50%, #1e293b 75%, #0f172a 100%);
+  background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 25%, #f0fdf4 50%, #ccfbf1 75%, #f0fdfa 100%);
   background-size: 400% 400%;
   animation: nebula-flow 20s ease infinite;
 }
 
 .aura-sunset {
-  background: linear-gradient(135deg, #1e1b4b 0%, #451a03 50%, #1e1b4b 100%);
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 50%, #fff1f2 100%);
   background-size: 200% 200%;
   animation: nebula-flow 12s ease-in-out infinite;
 }
 
 .aura-ocean {
-  background: linear-gradient(135deg, #082f49 0%, #0c4a6e 50%, #082f49 100%);
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0fdff 100%);
   background-size: 300% 300%;
   animation: nebula-flow 18s ease infinite;
 }
+
+/* No Dark mode, mantemos equilibradas para não ofuscar o texto claro */
+.dark .aura-nebula { background: linear-gradient(-45deg, #0f172a, #1e293b, #0f172a); }
+.dark .aura-aurora { background: linear-gradient(135deg, #064e3b, #065f46, #064e3b); }
+.dark .aura-sunset { background: linear-gradient(135deg, #451a03, #78350f, #451a03); }
+.dark .aura-ocean { background: linear-gradient(135deg, #0c4a6e, #075985, #0c4a6e); }
 
 /* Status e Linhas */
 .status-custom {

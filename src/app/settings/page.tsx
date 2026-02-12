@@ -167,7 +167,6 @@ export default function SettingsPage() {
 
   const saveSettingsToFirebase = (updated: Partial<UserSettings>) => {
     if (settingsDocRef) {
-        // Non-blocking write
         setDoc(settingsDocRef, updated, { merge: true });
         toast({ title: "Configurações Salvas!" });
     }
@@ -252,8 +251,6 @@ export default function SettingsPage() {
     setIsExporting(true);
     try {
         const { utils, writeFile } = await import('xlsx');
-        
-        // 1. Aba de Clientes
         const customersSheetData = customers.map(c => ({
             ID: c.numericId,
             Nome: c.name,
@@ -266,8 +263,6 @@ export default function SettingsPage() {
             Status: c.status || 'active',
             Observacoes: c.observations || ''
         }));
-
-        // 2. Aba de Propostas
         const proposalsSheetData = proposals.map(p => ({
             Proposta: p.proposalNumber,
             Cliente_ID: p.customerId,
@@ -282,14 +277,11 @@ export default function SettingsPage() {
             Comissao_R$: p.commissionValue,
             Data_Digitacao: p.dateDigitized
         }));
-
         const wb = utils.book_new();
         const wsCustomers = utils.json_to_sheet(customersSheetData);
         const wsProposals = utils.json_to_sheet(proposalsSheetData);
-
         utils.book_append_sheet(wb, wsCustomers, "Clientes");
         utils.book_append_sheet(wb, wsProposals, "Propostas");
-
         writeFile(wb, `BACKUP_TOTAL_${format(new Date(), 'dd_MM_yyyy')}.xlsx`);
         toast({ title: "Backup Realizado!", description: "Sua base de dados foi exportada com sucesso." });
     } catch (e) {
@@ -323,10 +315,10 @@ export default function SettingsPage() {
 
   const auraLabels: Record<string, string> = {
     "limpo": "Liso (Padrão)",
-    "nebula": "Nebulosa (Dark)",
-    "aurora": "Aurora Escura",
-    "sunset": "Sunset Industrial",
-    "ocean": "Oceano Profundo"
+    "nebula": "Nebulosa Suave",
+    "aurora": "Aurora Boreal",
+    "sunset": "Sunset Pastel",
+    "ocean": "Mar Cristalino"
   };
 
   const previewPrimaryColor = React.useMemo(() => {
@@ -396,7 +388,7 @@ export default function SettingsPage() {
                                 <Separator />
 
                                 <div className="space-y-4">
-                                    <div className="flex items-center gap-2"><CloudSun className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Fundos Atmosféricos (Aura)</h4></div>
+                                    <div className="flex items-center gap-2"><CloudSun className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Fundos Atmosféricos (Aura) - Coleção Clara & Equilibrada</h4></div>
                                     <RadioGroup value={preview.auraStyle} onValueChange={(val) => setPreview(p => ({ ...p, auraStyle: val }))} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                                         {Object.keys(auraLabels).map((a) => (
                                             <Label key={a} htmlFor={`aura-${a}`} className={cn("flex flex-col items-center justify-center rounded-xl border-2 p-4 cursor-pointer text-center gap-2 transition-all", preview.auraStyle === a ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-muted hover:border-primary/30")}>
@@ -406,7 +398,7 @@ export default function SettingsPage() {
                                             </Label>
                                         ))}
                                     </RadioGroup>
-                                    <p className="text-[10px] text-muted-foreground text-center font-bold uppercase tracking-widest animate-pulse mt-2">✨ Atmosferas animadas são otimizadas para alto desempenho</p>
+                                    <p className="text-[10px] text-muted-foreground text-center font-bold uppercase tracking-widest animate-pulse mt-2">✨ Atmosferas otimizadas para visibilidade total em qualquer tema.</p>
                                 </div>
 
                                 <Separator />
@@ -732,7 +724,6 @@ export default function SettingsPage() {
                             onUpdate={(b, d) => saveSettingsToFirebase({ banks: b, bankDomains: d })} 
                         />
 
-                        {/* NOVO: Promotoras com IA */}
                         <BankEditableList 
                             title="Promotoras e Parceiros IA"
                             banks={userSettings?.promoters || ["Promotora Exemplo"]} 
