@@ -70,6 +70,7 @@ import { DraggableHeader } from './columns';
 import { Separator } from '@/components/ui/separator';
 import { proposalStatuses } from '@/lib/config-data';
 import { useTheme } from '@/components/theme-provider';
+import { BankIcon } from '@/components/bank-icon';
 
 const STORAGE_KEY_VISIBILITY = 'lk-ramos-financial-columns-visibility-v2';
 const STORAGE_KEY_ORDER = 'lk-ramos-financial-columns-order-v2';
@@ -414,13 +415,33 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                         <div className="flex items-center gap-2 bg-card border rounded-lg px-2 py-1 shadow-sm">
                             <Landmark className="h-3.5 w-3.5 text-muted-foreground" />
                             <Select value={bankFilter} onValueChange={setBankFilter}>
-                                <SelectTrigger className="h-7 w-[160px] border-none bg-transparent focus:ring-0 text-xs font-bold uppercase">
-                                    <SelectValue placeholder="Todos os Bancos" />
+                                <SelectTrigger className="h-7 w-auto min-w-[160px] border-none bg-transparent focus:ring-0 text-xs font-bold uppercase">
+                                    <div className="flex items-center gap-2">
+                                        {bankFilter !== 'all' && (
+                                            <BankIcon 
+                                                bankName={bankFilter} 
+                                                domain={userSettings?.bankDomains?.[bankFilter]} 
+                                                showLogo={userSettings?.showBankLogos ?? true} 
+                                                className="h-3.5 w-3.5"
+                                            />
+                                        )}
+                                        <SelectValue placeholder="Todos os Bancos" />
+                                    </div>
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">Todos os Bancos</SelectItem>
                                     {uniqueBanks.map(b => (
-                                        <SelectItem key={b} value={b}>{cleanBankName(b)}</SelectItem>
+                                        <SelectItem key={b} value={b}>
+                                            <div className="flex items-center gap-2">
+                                                <BankIcon 
+                                                    bankName={b} 
+                                                    domain={userSettings?.bankDomains?.[b]} 
+                                                    showLogo={userSettings?.showBankLogos ?? true} 
+                                                    className="h-4 w-4"
+                                                />
+                                                <span>{cleanBankName(b)}</span>
+                                            </div>
+                                        </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -429,13 +450,33 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                         <div className="flex items-center gap-2 bg-card border rounded-lg px-2 py-1 shadow-sm">
                             <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
                             <Select value={promoterFilter} onValueChange={setPromoterFilter}>
-                                <SelectTrigger className="h-7 w-[160px] border-none bg-transparent focus:ring-0 text-xs font-bold uppercase">
-                                    <SelectValue placeholder="Todas Promotoras" />
+                                <SelectTrigger className="h-7 w-auto min-w-[160px] border-none bg-transparent focus:ring-0 text-xs font-bold uppercase">
+                                    <div className="flex items-center gap-2">
+                                        {promoterFilter !== 'all' && (
+                                            <BankIcon 
+                                                bankName={promoterFilter} 
+                                                domain={userSettings?.promoterDomains?.[promoterFilter]} 
+                                                showLogo={userSettings?.showPromoterLogos ?? true} 
+                                                className="h-3.5 w-3.5"
+                                            />
+                                        )}
+                                        <SelectValue placeholder="Todas Promotoras" />
+                                    </div>
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">Todas Promotoras</SelectItem>
                                     {uniquePromoters.map(p => (
-                                        <SelectItem key={p} value={p}>{p}</SelectItem>
+                                        <SelectItem key={p} value={p}>
+                                            <div className="flex items-center gap-2">
+                                                <BankIcon 
+                                                    bankName={p} 
+                                                    domain={userSettings?.promoterDomains?.[p]} 
+                                                    showLogo={userSettings?.showPromoterLogos ?? true} 
+                                                    className="h-4 w-4"
+                                                />
+                                                <span>{p}</span>
+                                            </div>
+                                        </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
