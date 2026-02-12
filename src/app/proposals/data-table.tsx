@@ -72,6 +72,7 @@ import { formatCurrency, normalizeString, cn } from '@/lib/utils';
 import { parse, isValid, startOfDay, endOfDay, subDays, startOfMonth, subMonths, endOfMonth } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { useTheme } from '@/components/theme-provider';
+import { useSearchParams } from 'next/navigation';
 
 const STORAGE_KEY_VISIBILITY = 'lk-ramos-proposal-columns-visibility-v5';
 const STORAGE_KEY_ORDER = 'lk-ramos-proposal-columns-order-v5';
@@ -100,6 +101,9 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   userSettings,
 }, ref) => {
   const { statusColors, containerStyle } = useTheme();
+  const searchParams = useSearchParams();
+  const searchFromUrl = searchParams.get('search');
+
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'dateDigitized', desc: true }]);
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -108,7 +112,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     pageSize: 10,
   });
   const [statusFilter, setStatusFilter] = React.useState('Todos');
-  const [globalFilter, setGlobalFilter] = React.useState('');
+  const [globalFilter, setGlobalFilter] = React.useState(searchFromUrl || '');
   const [isClient, setIsClient] = React.useState(false);
   const [startDateInput, setStartDateInput] = React.useState('');
   const [endDateInput, setEndDateInput] = React.useState('');
@@ -148,6 +152,14 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         }
     }
   }, []);
+
+  // Inteligência de Alerta: Captura o número da proposta da URL e aplica o filtro
+  React.useEffect(() => {
+    if (searchFromUrl) {
+      setGlobalFilter(searchFromUrl);
+      setStatusFilter('Todos');
+    }
+  }, [searchFromUrl]);
 
 
   React.useEffect(() => {
@@ -385,7 +397,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                                 placeholder="Busca Inteligente (Nome, CPF, ID, Proposta...)" 
                                 value={globalFilter ?? ''} 
                                 onChange={(event) => setGlobalFilter(event.target.value)} 
-                                className="pl-9 w-full bg-muted/20 border-primary/10 h-11 focus-visible:ring-primary/20 transition-all font-medium" 
+                                className="pl-9 w-full bg-muted/20 border-primary/10 h-11 focus-visible:ring-primary/20 transition-all font-medium rounded-full" 
                             />
                         </div>
                         {selectedRowCount > 0 && (
