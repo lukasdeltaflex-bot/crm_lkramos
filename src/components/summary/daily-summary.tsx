@@ -4,9 +4,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bot, Send, BellRing, Clock, BadgePercent, X, Info, Loader2, CalendarClock, Cake, MessageSquareText, Hourglass, Coins, Zap } from 'lucide-react';
+import { Bot, Send, X, Loader2, CalendarClock, Cake, Hourglass, BadgePercent, Zap, Info, ChevronRight } from 'lucide-react';
 import type { Customer, Proposal, UserProfile, FollowUp, UserSettings } from '@/lib/types';
-import { Skeleton } from '../ui/skeleton';
 import { differenceInDays, format, differenceInMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { calculateBusinessDays, getAge, cn, getWhatsAppUrl } from '@/lib/utils';
@@ -31,6 +30,7 @@ function SummaryAlertItem({
   icon,
   title,
   description,
+  link,
   onDismiss,
   action,
 }: {
@@ -38,27 +38,41 @@ function SummaryAlertItem({
   icon: React.ReactNode;
   title: string;
   description: string;
+  link: string;
   onDismiss: (id: string) => void;
   action?: React.ReactNode;
 }) {
   return (
-    <Alert className="bg-card shadow-sm border-border/50 relative hover:border-primary/30 transition-colors">
-      <div className="flex items-start gap-3">
-        <div className="mt-0.5">{icon}</div>
-        <div className="flex-1">
-          <AlertTitle className="text-sm font-bold tracking-tight">{title}</AlertTitle>
-          <AlertDescription className="text-[11px] text-muted-foreground leading-snug">{description}</AlertDescription>
-          {action && <div className="mt-2">{action}</div>}
-        </div>
-      </div>
-      <button
-        onClick={() => onDismiss(id)}
-        className="absolute top-2 right-2 p-1 text-muted-foreground/50 hover:text-foreground rounded-md transition-colors"
-        aria-label="Dispensar alerta"
-      >
-        <X className="h-3.5 w-3.5" />
-      </button>
-    </Alert>
+    <div className="relative group">
+        <Link href={link} className="block">
+            <Alert className="bg-card shadow-sm border-border/50 py-4 cursor-pointer hover:border-primary/40 hover:bg-muted/5 transition-all group-hover:shadow-md">
+                <div className="flex items-start gap-4">
+                    <div className="mt-1 shrink-0">{icon}</div>
+                    <div className="flex-1 overflow-hidden">
+                        <AlertTitle className="text-sm font-black uppercase tracking-tight text-foreground group-hover:text-primary transition-colors truncate">
+                            {title}
+                        </AlertTitle>
+                        <AlertDescription className="text-[11px] font-medium text-muted-foreground leading-snug mt-1">
+                            {description}
+                        </AlertDescription>
+                        {action && <div className="mt-3" onClick={(e) => e.stopPropagation()}>{action}</div>}
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground/30 mt-1 opacity-0 group-hover:opacity-100 transition-all" />
+                </div>
+            </Alert>
+        </Link>
+        <button
+            onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onDismiss(id);
+            }}
+            className="absolute top-2 right-2 p-1.5 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 rounded-md transition-all z-10"
+            title="Dispensar alerta"
+        >
+            <X className="h-3.5 w-3.5" />
+        </button>
+    </div>
   );
 }
 
@@ -68,7 +82,6 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
   const [isClient, setIsClient] = useState(false);
   const [isSending, setIsSending] = useState(false);
   
-  // AI Birthday Message State
   const [isGeneratingBday, setIsGeneratingBday] = useState(false);
   const [generatedBdayMessage, setGeneratedBdayMessage] = useState('');
   const [selectedBdayCustomer, setSelectedBdayCustomer] = useState<Customer | null>(null);
@@ -99,6 +112,7 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
         await setDoc(doc(firestore, 'userSettings', user.uid), {
             dismissedAlerts: [...dismissedItems, itemId]
         }, { merge: true });
+        toast({ title: "Alerta removido do Dashboard" });
     } catch (e) {
         console.error("Failed to sync dismiss state:", e);
     }
@@ -111,17 +125,16 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
     const todayIso = format(now, 'yyyy-MM-dd');
     const customerMap = new Map(customers.map(c => [c.id, c]));
 
-    // Alertas de Aniversário: Apenas para clientes ATIVOS que farão 75 em breve ou hoje
     const birthdayAlerts = customers
         .filter(c => c.status !== 'inactive' && getAge(c.birthDate) >= 74 && getAge(c.birthDate) < 75)
         .map(c => ({ 
             id: `birthday-${c.id}`,
             customerId: c.id,
             customerName: c.name, 
-            age: 75
+            age: 75,
+            link: `/customers/${c.id}`
         }));
 
-    // Radar de Vendas: Apenas para clientes ATIVOS (menos de 75 anos)
     const radarAlerts = customers
         .filter(c => c.status !== 'inactive' && getAge(c.birthDate) < 75)
         .filter(c => {
@@ -135,7 +148,8 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
         .map(c => ({
             id: `radar-${c.id}`,
             customerName: c.name,
-            customerId: c.id
+            customerId: c.id,
+            link: `/customers/${c.id}`
         }));
 
     const followUpReminders = proposals
@@ -145,6 +159,7 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
         customerName: customerMap.get(p.customerId)?.name || 'Cliente Desconhecido',
         proposalNumber: p.proposalNumber,
         daysOpen: differenceInDays(now, new Date(p.dateDigitized)),
+        link: `/proposals?open=${p.id}`
       }));
 
     const commissionReminders = proposals
@@ -159,6 +174,7 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
         customerName: customerMap.get(p.customerId)?.name || 'Cliente Desconhecido',
         proposalNumber: p.proposalNumber,
         daysPending: differenceInDays(now, new Date(p.datePaidToClient!)),
+        link: `/proposals?open=${p.id}`
       }));
 
     const debtBalanceReminders = proposals
@@ -173,6 +189,7 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
             customerName: customerMap.get(p.customerId)?.name || 'Cliente Desconhecido',
             proposalNumber: p.proposalNumber,
             daysWaiting: calculateBusinessDays(new Date(p.dateDigitized)),
+            link: `/proposals?open=${p.id}`
         }));
     
     const partialCommissionReminders = proposals
@@ -188,6 +205,7 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
             amountPaid: p.amountPaid,
             totalCommission: p.commissionValue,
             daysSincePayment: differenceInDays(now, new Date(p.commissionPaymentDate!)),
+            link: `/proposals?open=${p.id}`
         }));
 
     const manualFollowUps = (followUps || [])
@@ -196,7 +214,8 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
             id: `manual-fup-${f.id}`,
             contactName: f.contactName,
             description: f.description,
-            isToday: f.dueDate === todayIso
+            isToday: f.dueDate === todayIso,
+            link: '/follow-ups'
         }));
 
     return { birthdayAlerts, followUpReminders, commissionReminders, debtBalanceReminders, partialCommissionReminders, manualFollowUps, radarAlerts };
@@ -221,11 +240,7 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
 
   const handleSendEmail = async () => {
     if (!userProfile || !userProfile.email) {
-      toast({
-        variant: 'destructive',
-        title: 'E-mail não encontrado',
-        description: 'Não foi possível encontrar o e-mail do seu perfil para enviar o resumo.',
-      });
+      toast({ variant: 'destructive', title: 'E-mail não encontrado' });
       return;
     }
 
@@ -247,24 +262,10 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
       });
 
       if (result.success) {
-        toast({
-          title: 'E-mail Enviado!',
-          description: `Um resumo das suas pendências foi enviado para ${userProfile.email}.`,
-        });
-      } else {
-        toast({
-            variant: 'destructive',
-            title: 'Falha ao Enviar',
-            description: result.message,
-        });
+        toast({ title: 'E-mail Enviado!', description: `Resumo enviado para ${userProfile.email}.` });
       }
     } catch (error) {
       console.error('Error sending summary email:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Falha no Envio',
-        description: 'Não foi possível enviar o e-mail de resumo. Tente novamente mais tarde.',
-      });
     } finally {
       setIsSending(false);
     }
@@ -283,8 +284,6 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
         const { message } = await generateBirthdayMessage({ customerName: customer.name });
         setGeneratedBdayMessage(message);
     } catch (error) {
-        console.error("Error generating bday message:", error);
-        toast({ variant: 'destructive', title: 'Erro na IA', description: 'Não foi possível gerar a mensagem agora.' });
         setIsBdayModalOpen(false);
     } finally {
         setIsGeneratingBday(false);
@@ -308,7 +307,7 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
                 <Bot className="text-primary h-5 w-5" />
                 Inteligência Diária
             </CardTitle>
-            <CardDescription className="text-[10px] font-bold uppercase tracking-widest opacity-60">
+            <CardDescription className="text-[10px] font-black uppercase tracking-[0.15em] opacity-60">
                 Alertas estratégicos do dia
             </CardDescription>
         </div>
@@ -317,13 +316,9 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
             size="sm" 
             onClick={handleSendEmail} 
             disabled={isSending}
-            className="h-8 px-4 bg-primary text-primary-foreground hover:bg-primary/90 rounded-full font-bold text-[10px] uppercase tracking-wider shadow-md transition-all group"
+            className="h-9 px-5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-full font-bold text-[10px] uppercase tracking-wider shadow-lg transition-all group"
         >
-            {isSending ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" />
-            ) : (
-                <Send className="h-3.5 w-3.5 mr-2 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-            )}
+            {isSending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : <Send className="h-3.5 w-3.5 mr-2 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />}
             Resumo E-mail
         </Button>
       </CardHeader>
@@ -331,158 +326,137 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
         {!hasVisibleAlerts ? (
             <div className="flex h-[400px] flex-col items-center justify-center text-center text-muted-foreground p-8 border-2 border-dashed border-border/50 rounded-xl bg-muted/5">
                 <Info className="h-10 w-10 mb-4 opacity-20" />
-                <p className="font-bold text-sm text-foreground/80">Tudo em dia!</p>
-                <p className="text-[11px] opacity-60 mt-1">Nenhuma pendência ou alerta estratégico para agora.</p>
+                <p className="font-bold text-sm text-foreground/80 tracking-tight">Esteira Limpa!</p>
+                <p className="text-[11px] opacity-60 mt-1 uppercase font-bold tracking-tighter">Nenhuma pendência ou alerta estratégico para agora.</p>
             </div>
         ) : (
-            <ScrollArea className="h-[400px] w-full">
-                <div className="space-y-5 pr-4 pb-6">
-                    {visibleRadarAlerts.length > 0 && (
-                        <div className="space-y-2">
-                            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-orange-600 flex items-center gap-2">
-                                <Zap className="h-3 w-3 fill-orange-600" /> Radar de Vendas (Retenção)
+            <ScrollArea className="h-[450px] w-full">
+                <div className="space-y-6 pr-4 pb-10">
+                    {/* SEÇÃO: SALDO DEVEDOR (VERMELHO) */}
+                    {visibleDebtBalanceReminders.length > 0 && (
+                        <div className="space-y-3">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-red-600 flex items-center gap-2 px-1">
+                                <Hourglass className="h-3.5 w-3.5" /> Alertas de Saldo Devedor
                             </h3>
-                            <div className="grid gap-2">
+                            <div className="grid gap-2.5">
+                                {visibleDebtBalanceReminders.map(reminder => (
+                                    <SummaryAlertItem 
+                                        key={reminder.id}
+                                        id={reminder.id}
+                                        icon={<Hourglass className="h-4.5 w-4.5 text-red-500" />}
+                                        title={reminder.customerName}
+                                        description={`Proposta ${reminder.proposalNumber} aguardando saldo há ${reminder.daysWaiting} dias úteis. Prazo de 5 dias atingido.`}
+                                        link={reminder.link}
+                                        onDismiss={handleDismiss}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* SEÇÃO: COBRANÇAS (AZUL) */}
+                    {(visibleCommissionReminders.length > 0 || visiblePartialCommissionReminders.length > 0) && (
+                        <div className="space-y-3">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-600 flex items-center gap-2 px-1">
+                                <BadgePercent className="h-3.5 w-3.5" /> Cobranças Pendentes
+                            </h3>
+                            <div className="grid gap-2.5">
+                                {visibleCommissionReminders.map(reminder => (
+                                    <SummaryAlertItem 
+                                        key={reminder.id}
+                                        id={reminder.id}
+                                        icon={<BadgePercent className="h-4.5 w-4.5 text-blue-500" />}
+                                        title={reminder.customerName}
+                                        description={`Comissão da Prop. ${reminder.proposalNumber} não identificada há ${reminder.daysPending} dias.`}
+                                        link={reminder.link}
+                                        onDismiss={handleDismiss}
+                                    />
+                                ))}
+                                {visiblePartialCommissionReminders.map(reminder => (
+                                    <SummaryAlertItem 
+                                        key={reminder.id}
+                                        id={reminder.id}
+                                        icon={<Coins className="h-4.5 w-4.5 text-blue-500" />}
+                                        title={reminder.customerName}
+                                        description={`Recebido R$ ${reminder.amountPaid.toFixed(2)} de R$ ${reminder.totalCommission.toFixed(2)} há ${reminder.daysSincePayment} dias. Cobrar saldo.`}
+                                        link={reminder.link}
+                                        onDismiss={handleDismiss}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* SEÇÃO: RADAR E OPORTUNIDADES (LARANJA) */}
+                    {visibleRadarAlerts.length > 0 && (
+                        <div className="space-y-3">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-orange-600 flex items-center gap-2 px-1">
+                                <Zap className="h-3.5 w-3.5 fill-orange-600" /> Radar de Vendas (Retenção)
+                            </h3>
+                            <div className="grid gap-2.5">
                                 {visibleRadarAlerts.map(r => (
                                     <SummaryAlertItem 
                                         key={r.id}
                                         id={r.id}
-                                        icon={<Zap className="h-4 w-4 text-orange-500 fill-orange-500" />}
+                                        icon={<Zap className="h-4.5 w-4.5 text-orange-500 fill-orange-500" />}
                                         title={r.customerName}
-                                        description="Cliente com contrato pago há mais de 12 meses. Oportunidade de Refinanciamento ou Portabilidade."
+                                        description="Contrato pago há mais de 12 meses. Oportunidade de Refinanciamento identificada."
+                                        link={r.link}
                                         onDismiss={handleDismiss}
-                                        action={
-                                            <Link href={`/customers/${r.customerId}`}>
-                                                <Button size="sm" variant="outline" className="h-7 text-[10px] font-bold border-orange-200 text-orange-700 hover:bg-orange-50">
-                                                    Abrir Ficha do Cliente
-                                                </Button>
-                                            </Link>
-                                        }
                                     />
                                 ))}
                             </div>
                         </div>
                     )}
+
+                    {/* SEÇÃO: RETORNOS E AGENDA (ROXO) */}
                     {visibleManualFollowUps.length > 0 && (
-                        <div className="space-y-2">
-                            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/80 flex items-center gap-2">
-                                <CalendarClock className="h-3 w-3 text-primary" /> Retornos Agendados
+                        <div className="space-y-3">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-purple-600 flex items-center gap-2 px-1">
+                                <CalendarClock className="h-3.5 w-3.5" /> Retornos Agendados
                             </h3>
-                            <div className="grid gap-2">
+                            <div className="grid gap-2.5">
                                 {visibleManualFollowUps.map(f => (
                                     <SummaryAlertItem 
                                         key={f.id}
                                         id={f.id}
-                                        icon={<CalendarClock className={cn("h-4 w-4", f.isToday ? "text-yellow-500" : "text-destructive")} />}
+                                        icon={<CalendarClock className={cn("h-4.5 w-4.5", f.isToday ? "text-yellow-500" : "text-destructive")} />}
                                         title={f.contactName}
                                         description={f.description}
+                                        link={f.link}
                                         onDismiss={handleDismiss}
                                     />
                                 ))}
                             </div>
                         </div>
                     )}
+
+                    {/* SEÇÃO: ANIVERSÁRIOS (ROSA) */}
                     {visibleBirthdayAlerts.length > 0 && (
-                        <div className="space-y-2">
-                            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-pink-500/80 flex items-center gap-2">
-                                <Cake className="h-3 w-3 text-pink-500" /> Alerta de Idade (Próximo 75 Anos)
+                        <div className="space-y-3">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-pink-600 flex items-center gap-2 px-1">
+                                <Cake className="h-3.5 w-3.5" /> Alerta de Idade (75 Anos)
                             </h3>
-                            <div className="grid gap-2">
+                            <div className="grid gap-2.5">
                                 {visibleBirthdayAlerts.map(alert => (
                                     <SummaryAlertItem 
                                         key={alert.id}
                                         id={alert.id}
-                                        icon={<Cake className="h-4 w-4 text-pink-500" />}
+                                        icon={<Cake className="h-4.5 w-4.5 text-pink-500" />}
                                         title={alert.customerName}
-                                        description={`Cliente completará ${alert.age} anos em breve. Verifique as políticas de crédito vigentes para esta faixa etária.`}
+                                        description={`Próximo aos ${alert.age} anos. Verifique as restrições de crédito vigentes.`}
+                                        link={alert.link}
                                         onDismiss={handleDismiss}
                                         action={
                                             <Button 
                                                 size="sm" 
                                                 variant="outline" 
-                                                className="h-7 text-[10px] font-bold border-pink-200 text-pink-600 hover:bg-pink-50"
+                                                className="h-8 text-[10px] font-black uppercase border-pink-200 text-pink-600 hover:bg-pink-50"
                                                 onClick={() => handleGenerateBdayMessage(alert.customerId)}
                                             >
-                                                <Bot className="mr-1.5 h-3 w-3" />
-                                                Gerar Mensagem WhatsApp
+                                                <Bot className="mr-2 h-3.5 w-3.5" /> Gerar Mensagem WhatsApp
                                             </Button>
                                         }
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                    {visibleDebtBalanceReminders.length > 0 && (
-                        <div className="space-y-2">
-                            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-destructive/80 flex items-center gap-2">
-                                <Hourglass className="h-3 w-3 text-destructive" /> Alertas de Saldo Devedor
-                            </h3>
-                            <div className="grid gap-2">
-                                {visibleDebtBalanceReminders.map(reminder => (
-                                    <SummaryAlertItem 
-                                        key={reminder.id}
-                                        id={reminder.id}
-                                        icon={<Hourglass className="h-4 w-4 text-destructive" />}
-                                        title={`${reminder.customerName}`}
-                                        description={`Proposta ${reminder.proposalNumber} aguardando saldo há ${reminder.daysWaiting} dias úteis. Prazo de 5 dias atingido.`}
-                                        onDismiss={handleDismiss}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                    {visibleFollowUpReminders.length > 0 && (
-                        <div className="space-y-2">
-                            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-orange-500/80 flex items-center gap-2">
-                                <Clock className="h-3 w-3 text-orange-500" /> Esteiras em Atraso
-                            </h3>
-                            <div className="grid gap-2">
-                                {visibleFollowUpReminders.map(reminder => (
-                                    <SummaryAlertItem 
-                                        key={reminder.id}
-                                        id={reminder.id}
-                                        icon={<Clock className="h-4 w-4 text-orange-500" />}
-                                        title={`${reminder.customerName}`}
-                                        description={`Proposta ${reminder.proposalNumber} sem movimentação há ${reminder.daysOpen} dias.`}
-                                        onDismiss={handleDismiss}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                    {visibleCommissionReminders.length > 0 && (
-                        <div className="space-y-2">
-                            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/80 flex items-center gap-2">
-                                <BadgePercent className="h-3 w-3 text-primary" /> Cobranças Pendentes
-                            </h3>
-                            <div className="grid gap-2">
-                                {visibleCommissionReminders.map(reminder => (
-                                    <SummaryAlertItem 
-                                        key={reminder.id}
-                                        id={reminder.id}
-                                        icon={<BadgePercent className="h-4 w-4 text-primary" />}
-                                        title={`${reminder.customerName}`}
-                                        description={`Comissão da Prop. ${reminder.proposalNumber} não identificada há ${reminder.daysPending} dias.`}
-                                        onDismiss={handleDismiss}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                    {visiblePartialCommissionReminders.length > 0 && (
-                        <div className="space-y-2">
-                            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/80 flex items-center gap-2">
-                                <Coins className="h-3 w-3 text-orange-500" /> Comissões Parciais
-                            </h3>
-                            <div className="grid gap-2">
-                                {visiblePartialCommissionReminders.map(reminder => (
-                                    <SummaryAlertItem 
-                                        key={reminder.id}
-                                        id={reminder.id}
-                                        icon={<Coins className="h-4 w-4 text-orange-500" />}
-                                        title={`${reminder.customerName}`}
-                                        description={`Recebido R$ ${reminder.amountPaid.toFixed(2)} de R$ ${reminder.totalCommission.toFixed(2)} há ${reminder.daysSincePayment} dias. Cobrar saldo.`}
-                                        onDismiss={handleDismiss}
                                     />
                                 ))}
                             </div>
@@ -493,8 +467,8 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
         )}
       </CardContent>
       <div className="px-6 py-3 border-t border-border/10 bg-muted/5">
-          <p className="text-[9px] text-center text-muted-foreground/50 font-bold uppercase tracking-tighter">
-              Central de notificações e alertas inteligentes
+          <p className="text-[9px] text-center text-muted-foreground/50 font-black uppercase tracking-[0.3em]">
+              CENTRAL DE NOTIFICAÇÕES E ALERTAS INTELIGENTES
           </p>
       </div>
     </Card>
@@ -511,7 +485,7 @@ export function DailySummary({ proposals, customers, userProfile }: DailySummary
                 {isGeneratingBday ? (
                     <div className="flex flex-col items-center justify-center py-10 gap-4">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="text-sm text-muted-foreground animate-pulse">A IA está criando uma mensagem única...</p>
+                        <p className="text-sm text-muted-foreground animate-pulse font-bold uppercase">A IA está criando uma mensagem única...</p>
                     </div>
                 ) : (
                     <textarea 

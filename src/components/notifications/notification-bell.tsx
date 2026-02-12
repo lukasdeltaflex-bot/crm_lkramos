@@ -76,14 +76,11 @@ export function NotificationBell() {
     const todayStr = format(now, 'MM-dd');
     const todayIso = format(now, 'yyyy-MM-dd');
 
-    // Notificações para clientes ATIVOS
     customers?.forEach(c => {
       const age = getAge(c.birthDate);
       const isInactive = c.status === 'inactive' || age >= 75;
-      
       if (isInactive) return;
       
-      // Aniversários hoje (Apenas se ainda for Ativo)
       if (c.birthDate && c.birthDate.substring(5) === todayStr) {
         alerts.push({
           id: `bday-${c.id}-${todayStr}`,
@@ -95,7 +92,6 @@ export function NotificationBell() {
         });
       }
 
-      // RADAR DE VENDAS: Retenção (Apenas se ainda for Ativo)
       const hasMatured = proposals?.some(p => {
           if (p.customerId !== c.id) return false;
           if (p.status !== 'Pago' && p.status !== 'Saldo Pago') return false;
@@ -114,7 +110,6 @@ export function NotificationBell() {
       }
     });
 
-    // Retornos agendados para hoje ou atrasados
     followUps?.forEach(f => {
         if (f.dueDate <= todayIso) {
             alerts.push({
@@ -127,7 +122,6 @@ export function NotificationBell() {
         }
     });
 
-    // Pendências Financeiras
     proposals?.forEach(p => {
       if ((p.status === 'Pago' || p.status === 'Saldo Pago') && p.commissionStatus === 'Pendente' && p.datePaidToClient) {
         const days = differenceInDays(now, new Date(p.datePaidToClient));
@@ -142,7 +136,6 @@ export function NotificationBell() {
         }
       }
 
-      // Saldo devedor (>= 5 dias úteis)
       if (p.product === 'Portabilidade' && p.status === 'Aguardando Saldo' && p.dateDigitized) {
           const bizDays = calculateBusinessDays(new Date(p.dateDigitized));
           if (bizDays >= 5) {
@@ -156,7 +149,6 @@ export function NotificationBell() {
           }
       }
 
-      // Comissões parciais atrasadas (> 15 dias)
       if (p.commissionStatus === 'Parcial' && p.commissionPaymentDate) {
           const daysSince = differenceInDays(now, new Date(p.commissionPaymentDate));
           if (daysSince > 15) {
@@ -208,8 +200,7 @@ export function NotificationBell() {
         const { message } = await generateBirthdayMessage({ customerName: customer.name });
         setGeneratedBdayMessage(message);
     } catch (error) {
-        console.error("Error generating bday message:", error);
-        toast({ variant: 'destructive', title: 'Erro na IA', description: 'Falha ao gerar mensagem.' });
+        toast({ variant: 'destructive', title: 'Erro na IA' });
         setIsBdayModalOpen(false);
     } finally {
         setIsGeneratingBday(false);
@@ -275,13 +266,13 @@ export function NotificationBell() {
                         <div className="flex items-start gap-3">
                             {n.type === 'birthday' && <Cake className="h-4 w-4 text-pink-500 mt-1" />}
                             {n.type === 'radar' && <Zap className="h-4 w-4 text-orange-500 fill-orange-500 mt-1" />}
-                            {n.type === 'commission' && <BadgePercent className="h-4 w-4 text-orange-500 mt-1" />}
-                            {n.type === 'followup' && <CalendarClock className="h-4 w-4 text-blue-500 mt-1" />}
-                            {n.type === 'debt' && <Hourglass className="h-4 w-4 text-destructive mt-1" />}
-                            {n.type === 'partial' && <Coins className="h-4 w-4 text-orange-500 mt-1" />}
+                            {n.type === 'commission' && <BadgePercent className="h-4 w-4 text-blue-500 mt-1" />}
+                            {n.type === 'followup' && <CalendarClock className="h-4 w-4 text-purple-500 mt-1" />}
+                            {n.type === 'debt' && <Hourglass className="h-4 w-4 text-red-500 mt-1" />}
+                            {n.type === 'partial' && <Coins className="h-4 w-4 text-blue-500 mt-1" />}
                             <div className="space-y-1 overflow-hidden">
-                            <p className="text-sm font-medium leading-none truncate">{n.title}</p>
-                            <p className="text-xs text-muted-foreground">{n.date}</p>
+                            <p className="text-sm font-bold leading-none truncate">{n.title}</p>
+                            <p className="text-[10px] text-muted-foreground">{n.date}</p>
                             </div>
                         </div>
                         </DropdownMenuItem>
@@ -324,7 +315,7 @@ export function NotificationBell() {
                 {isGeneratingBday ? (
                     <div className="flex flex-col items-center justify-center py-10 gap-4">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="text-sm text-muted-foreground animate-pulse">Criando parabéns personalizado...</p>
+                        <p className="text-sm text-muted-foreground animate-pulse font-bold uppercase">Criando parabéns personalizado...</p>
                     </div>
                 ) : (
                     <textarea 
