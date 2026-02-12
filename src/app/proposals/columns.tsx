@@ -1,4 +1,3 @@
-
 'use client';
 
 import { ColumnDef, Header, flexRender } from '@tanstack/react-table';
@@ -25,7 +24,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { MoreHorizontal, ArrowUpDown, GripVertical, ArrowUp, ArrowDown, Copy, AlertCircle, Info } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { formatCurrency, cleanBankName, calculateBusinessDays, cn } from '@/lib/utils';
+import { formatCurrency, cleanBankName, calculateBusinessDays, cn, isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
 import React, { useState, useEffect } from 'react';
 import { StatusCell } from './status-cell';
 import { format, isValid } from 'date-fns';
@@ -41,6 +40,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
 
 type ProposalWithCustomer = Proposal & { customer: any };
 
@@ -288,7 +288,27 @@ export const getColumns = (
     accessorFn: (row) => row.customer?.name,
     header: 'Cliente',
     cell: ({ row }) => {
-        return row.original.customer?.name || <span className="text-muted-foreground">Cliente não encontrado</span>
+        const customer = row.original.customer;
+        const name = customer?.name;
+        const phone = customer?.phone;
+        const isWh = phone ? isWhatsApp(phone) : false;
+
+        return (
+            <div className="flex items-center gap-2">
+                <span className="font-medium">{name || 'Cliente não encontrado'}</span>
+                {isWh && (
+                    <a 
+                        href={getWhatsAppUrl(phone!)} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-green-500 hover:text-green-600 transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <WhatsAppIcon className="h-3.5 w-3.5" />
+                    </a>
+                )}
+            </div>
+        )
     }
   },
   {

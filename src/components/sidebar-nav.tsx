@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -31,20 +30,27 @@ export function SidebarNav() {
   return (
     <>
     <SidebarMenu>
-      {links.filter(l => !l.hidden).map((link) => (
-        <SidebarMenuItem key={link.href}>
-          <SidebarMenuButton
-            asChild
-            isActive={pathname === link.href}
-            tooltip={link.label}
-          >
-            <Link href={link.href}>
-              <link.icon />
-              <span>{link.label}</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      ))}
+      {links.filter(l => !l.hidden).map((link) => {
+        // Lógica de ativação inteligente: exata para o dashboard, ou por início de caminho para as outras seções
+        const isActive = link.href === '/' 
+            ? pathname === '/' 
+            : pathname.startsWith(link.href);
+
+        return (
+            <SidebarMenuItem key={link.href}>
+            <SidebarMenuButton
+                asChild
+                isActive={isActive}
+                tooltip={link.label}
+            >
+                <Link href={link.href}>
+                <link.icon />
+                <span>{link.label}</span>
+                </Link>
+            </SidebarMenuButton>
+            </SidebarMenuItem>
+        )
+      })}
     </SidebarMenu>
     <div className="flex-grow" />
      <SidebarMenu>
@@ -52,7 +58,7 @@ export function SidebarNav() {
             <SidebarMenuItem key={link.href}>
                 <SidebarMenuButton
                 asChild
-                isActive={pathname === link.href}
+                isActive={pathname.startsWith(link.href)}
                 tooltip={link.label}
                 >
                 <Link href={link.href}>

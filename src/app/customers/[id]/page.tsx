@@ -1,4 +1,3 @@
-
 'use client';
 import React from 'react';
 import { useParams } from 'next/navigation';
@@ -6,11 +5,11 @@ import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
 import { useDoc, useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { doc, collection, query, where, updateDoc } from 'firebase/firestore';
-import type { Customer, Proposal, Attachment } from '@/lib/types';
+import type { Customer, Proposal, Attachment, ProposalHistoryEntry } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Phone, Mail, Calendar, FileText, CircleDollarSign, BadgePercent, MapPin, Hash, Copy, Printer, FileBadge, FolderLock, Sparkles, AlertTriangle, UserRound, UserX, UserCheck, ShieldCheck } from 'lucide-react';
-import { format, parse, differenceInMonths } from 'date-fns';
+import { User, Phone, Mail, Calendar, FileText, CircleDollarSign, BadgePercent, MapPin, Hash, Copy, Printer, FileBadge, FolderLock, Sparkles, AlertTriangle, UserRound, UserX, UserCheck, ShieldCheck, History, MessageSquareQuote } from 'lucide-react';
+import { format, parse, differenceInMonths, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -25,6 +24,7 @@ import { toast } from '@/hooks/use-toast';
 import { CustomerAttachmentUploader } from '@/components/customers/customer-attachment-uploader';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 const CopyButton = ({ text, label }: { text: string; label: string }) => {
@@ -261,6 +261,81 @@ const CustomerFinancialSummary = ({ proposals }: { proposals: Proposal[] }) => {
       </div>
     );
 };
+
+interface CustomerTimelineProps {
+    proposals: Proposal[];
+}
+
+const CustomerTimeline = ({ proposals }: CustomerTimelineProps) => {
+    const timelineEvents = React.useMemo(() => {
+        const events: (ProposalHistoryEntry & { proposalNumber: string; product: string })[] = [];
+        
+        proposals.forEach(p => {
+            if (p.history && Array.isArray(p.history)) {
+                p.history.forEach(entry => {
+                    events.push({
+                        ...entry,
+                        proposalNumber: p.proposalNumber,
+                        product: p.product
+                    });
+                });
+            }
+        });
+
+        // Ordena por data decrescente
+        return events.sort((a, b) => b.date.localeCompare(a.date));
+    }, [proposals]);
+
+    return (
+        <Card className="h-full">
+            <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg font-bold flex items-center gap-2">
+                        <History className="h-5 w-5 text-primary" />
+                        Linha do Tempo Global
+                    </CardTitle>
+                    <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest">{timelineEvents.length} EVENTOS</Badge>
+                </div>
+            </CardHeader>
+            <CardContent>
+                {timelineEvents.length === 0 ? (
+                    <div className="text-center py-12 border-2 border-dashed rounded-xl bg-muted/5">
+                        <History className="h-8 w-8 mx-auto mb-2 opacity-10" />
+                        <p className="text-xs text-muted-foreground">Nenhum histórico registrado para este cliente.</p>
+                    </div>
+                ) : (
+                    <ScrollArea className="h-[500px] pr-4">
+                        <div className="space-y-6 relative before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-muted/50">
+                            {timelineEvents.map((event) => (
+                                <div key={event.id} className="relative pl-8 group">
+                                    <div className="absolute left-0 top-1 h-4 w-4 rounded-full border-2 border-background bg-primary shadow-sm group-hover:scale-125 transition-transform" />
+                                    <div className="space-y-1">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[10px] font-black uppercase text-primary/70">{event.userName || 'Sistema'}</span>
+                                            <span className="text-[10px] text-muted-foreground font-bold">{format(parseISO(event.date), "dd/MM/yy HH:mm")}</span>
+                                        </div>
+                                        <div className="p-3 bg-muted/30 rounded-lg border border-border/50 group-hover:border-primary/20 transition-all">
+                                            <div className="flex items-center gap-2 mb-1.5">
+                                                <Badge variant="secondary" className="text-[9px] font-black bg-primary/10 text-primary uppercase">
+                                                    Prop. {event.proposalNumber}
+                                                </Badge>
+                                                <span className="text-[9px] font-bold text-muted-foreground uppercase">{event.product}</span>
+                                            </div>
+                                            <p className="text-xs leading-relaxed text-foreground flex items-start gap-2">
+                                                <MessageSquareQuote className="h-3 w-3 mt-0.5 text-muted-foreground shrink-0" />
+                                                {event.message}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </ScrollArea>
+                )}
+            </CardContent>
+        </Card>
+    )
+}
   
 
 export default function CustomerDetailPage({ params }: { params: { id: string } }) {
@@ -520,6 +595,9 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
                     <CustomerAiSummary customer={customer} proposals={proposals || []} />
                 </div>
                 <CustomerFinancialSummary proposals={proposals || []} />
+                
+                <CustomerTimeline proposals={proposals || []} />
+
                 <Card>
                     <CardHeader>
                         <CardTitle>Histórico de Propostas</CardTitle>
