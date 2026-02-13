@@ -67,7 +67,7 @@ export default function ManualPage() {
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
-                        <p>O LK RAMOS vigia cada segundo do seu dinheiro. Se uma proposta ultrapassa o tempo saudável em um status, o sistema exibe um alerta piscante.</p>
+                        <p>O LK RAMOS vigia cada segundo do seu dinheiro. Si uma proposta ultrapassa o tempo saudável em um status, o sistema exibe um alerta piscante.</p>
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Regras de Alerta</strong>: 2 dias em "Pendente", 3 dias em "Em Andamento" ou 5 dias úteis em "Aguardando Saldo".</li>
                             <li><strong>Identificação</strong>: Um ícone de cronômetro vermelho pulsará ao lado do status na tabela de propostas.</li>
@@ -154,6 +154,7 @@ export default function ManualPage() {
                         <p>Centralize o conhecimento sobre o seu cliente para aumentar a taxa de conversão.</p>
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Histórico Unificado</strong>: Na Ficha do Cliente, o sistema mescla todos os eventos de todas as propostas em uma única linha do tempo cronológica.</li>
+                            <li><strong>Cards de Indicadores Clicáveis</strong>: No topo da ficha do cliente, clique nos cards de "Propostas", "Total Contratado" ou "Comissão" para abrir um detalhamento instantâneo dos contratos que formam esses valores.</li>
                             <li><strong>Radar de Retenção</strong>: Alertas automáticos para clientes com contratos pagos há mais de 12 meses, ideal para oferecer portabilidade ou refinanciamento.</li>
                             <li><strong>Gestão de Documentos Fixos</strong>: Salve documentos que não mudam (RG, CPF) uma única vez e eles estarão disponíveis em todas as futuras propostas do cliente.</li>
                         </ul>

@@ -25,6 +25,13 @@ import { CustomerAttachmentUploader } from '@/components/customers/customer-atta
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { ProposalsStatusTable } from '@/components/dashboard/proposals-status-table';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 
 
 const CopyButton = ({ text, label }: { text: string; label: string }) => {
@@ -222,42 +229,56 @@ const CustomerInfoCard = ({
     )
 }
 
-const CustomerFinancialSummary = ({ proposals }: { proposals: Proposal[] }) => {
+const CustomerFinancialSummary = ({ 
+    proposals, 
+    onShowDetails 
+}: { 
+    proposals: Proposal[]; 
+    onShowDetails: (title: string, proposals: Proposal[]) => void;
+}) => {
     const summary = React.useMemo(() => {
       let totalContracted = 0;
       let totalCommission = 0;
+      const paidProposals: Proposal[] = [];
   
       proposals.forEach((proposal) => {
         if (proposal.status === 'Pago' || proposal.status === 'Saldo Pago') {
           totalContracted += proposal.grossAmount;
+          paidProposals.push(proposal);
           if (proposal.commissionValue) {
             totalCommission += proposal.commissionValue;
           }
         }
       });
   
-      return { totalContracted, totalCommission, proposalCount: proposals.length };
+      return { totalContracted, totalCommission, proposalCount: proposals.length, paidProposals };
     }, [proposals]);
   
     return (
       <div className="grid gap-4 md:grid-cols-3">
-        <StatsCard
-          title="Propostas Realizadas"
-          value={String(summary.proposalCount)}
-          icon={FileText}
-        />
-        <StatsCard
-          title="Total Contratado"
-          value={formatCurrency(summary.totalContracted)}
-          icon={CircleDollarSign}
-          valueClassName="text-green-500"
-        />
-        <StatsCard
-          title="Comissão Gerada"
-          value={formatCurrency(summary.totalCommission)}
-          icon={BadgePercent}
-          valueClassName="text-blue-500"
-        />
+        <div className="cursor-pointer" onClick={() => onShowDetails("Propostas Realizadas", proposals)}>
+            <StatsCard
+                title="Propostas Realizadas"
+                value={String(summary.proposalCount)}
+                icon={FileText}
+            />
+        </div>
+        <div className="cursor-pointer" onClick={() => onShowDetails("Total Contratado (Pagos)", summary.paidProposals)}>
+            <StatsCard
+                title="Total Contratado"
+                value={formatCurrency(summary.totalContracted)}
+                icon={CircleDollarSign}
+                valueClassName="text-green-500"
+            />
+        </div>
+        <div className="cursor-pointer" onClick={() => onShowDetails("Comissão Gerada (Pagos)", summary.paidProposals)}>
+            <StatsCard
+                title="Comissão Gerada"
+                value={formatCurrency(summary.totalCommission)}
+                icon={BadgePercent}
+                valueClassName="text-blue-500"
+            />
+        </div>
       </div>
     );
 };
@@ -343,6 +364,8 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
   const firestore = useFirestore();
   const { user } = useUser();
 
+  const [dialogData, setDialogData] = React.useState<{ title: string; proposals: Proposal[] } | null>(null);
+
   const customerDocRef = useMemoFirebase(() => {
     if (!firestore || !customerId) return null;
     return doc(firestore, 'customers', customerId);
@@ -398,6 +421,10 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
         console.error("Error updating customer documents:", e);
         toast({ variant: "destructive", title: "Erro ao atualizar", description: "Não foi possível salvar a alteração." });
     }
+  };
+
+  const handleShowDetails = (title: string, props: Proposal[]) => {
+    setDialogData({ title, proposals: props });
   };
 
   const handleExportDossier = async () => {
@@ -594,7 +621,10 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
                 <div className="print:hidden">
                     <CustomerAiSummary customer={customer} proposals={proposals || []} />
                 </div>
-                <CustomerFinancialSummary proposals={proposals || []} />
+                <CustomerFinancialSummary 
+                    proposals={proposals || []} 
+                    onShowDetails={handleShowDetails}
+                />
                 
                 <CustomerTimeline proposals={proposals || []} />
 
@@ -627,6 +657,17 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
             </div>
         </div>
       </div>
+
+      <Dialog open={!!dialogData} onOpenChange={(isOpen) => !isOpen && setDialogData(null)}>
+        <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+            <DialogHeader>
+                <DialogTitle>{dialogData?.title}</DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 overflow-y-auto">
+                <ProposalsStatusTable proposals={dialogData?.proposals || []} customers={customers ? [customer] : []} />
+            </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
