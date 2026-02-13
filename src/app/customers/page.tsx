@@ -359,19 +359,24 @@ const handleExportToPdf = async () => {
     }
   };
 
-  const handleFormSubmit = async (data: Omit<Customer, 'id' | 'ownerId' | 'numericId'>) => {
+  const handleFormSubmit = async (formData: Omit<Customer, 'id' | 'ownerId' | 'numericId'>) => {
     if (!firestore || !user) return;
 
     setIsSaving(true);
     try {
+        // Limpeza de campos indefinidos para evitar erros de servidor Firebase
+        const cleanedData = Object.fromEntries(
+            Object.entries(formData).filter(([_, v]) => v !== undefined)
+        );
+
         const cpfExists = customers?.find(
-          (c) => c.cpf === data.cpf && c.id !== selectedCustomer?.id
+          (c) => c.cpf === formData.cpf && c.id !== selectedCustomer?.id
         );
         if (cpfExists) {
             toast({
                 variant: 'destructive',
                 title: 'CPF já cadastrado',
-                description: `O CPF ${data.cpf} já pertence ao cliente "${cpfExists.name}".`,
+                description: `O CPF ${formData.cpf} já pertence ao cliente "${cpfExists.name}".`,
             });
             setIsSaving(false);
             return;
@@ -380,7 +385,8 @@ const handleExportToPdf = async () => {
         if (sheetMode === 'edit' && selectedCustomer) {
             const customerToUpdate: Customer = {
                 ...selectedCustomer,
-                ...data,
+                ...cleanedData,
+                ownerId: user.uid // Garante a propriedade para segurança
             };
             const docRef = doc(firestore, 'customers', selectedCustomer.id);
             
@@ -398,7 +404,7 @@ const handleExportToPdf = async () => {
 
             toast({
                 title: 'Cliente Atualizado!',
-                description: `O cliente ${data.name} foi atualizado com sucesso.`,
+                description: `O cliente ${formData.name} foi atualizado com sucesso.`,
             });
             setIsDialog(false);
         } else {
@@ -411,12 +417,12 @@ const handleExportToPdf = async () => {
             }
 
             const newCustomerWithId: Customer = {
-              ...data,
+              ...cleanedData,
               id: newDocRef.id,
               numericId: nextNumericId,
               ownerId: user.uid,
-              status: data.status || 'active',
-            };
+              status: formData.status || 'active',
+            } as Customer;
 
             // Non-blocking setDoc
             setDoc(newDocRef, newCustomerWithId)
@@ -432,7 +438,7 @@ const handleExportToPdf = async () => {
 
             toast({
               title: 'Cliente Salvo!',
-              description: `O cliente ${data.name} foi salvo com sucesso.`,
+              description: `O cliente ${formData.name} foi salvo com sucesso.`,
             });
             setIsDialog(false);
         }

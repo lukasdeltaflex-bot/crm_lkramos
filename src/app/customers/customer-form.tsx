@@ -169,64 +169,40 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   }, [birthDateValue]);
 
   useEffect(() => {
-    const getInitialData = () => {
-        const initial = {
-            name: '',
-            cpf: '',
-            gender: undefined as any,
-            status: 'active' as const,
-            benefits: [],
-            phone: '',
-            phone2: '',
-            email: '',
-            birthDate: '',
-            observations: '',
-            cep: '',
-            street: '',
-            number: '',
-            complement: '',
-            neighborhood: '',
-            city: '',
-            state: '',
-            documents: [],
-        };
+    const source = customer || defaultValues;
 
-        const source = customer || defaultValues;
-
-        if (source) {
-          let formattedBirthDate = '';
-          if (source.birthDate) {
-              try {
-                  const date = parse(source.birthDate, 'yyyy-MM-dd', new Date());
-                  if (!isNaN(date.getTime())) {
-                      formattedBirthDate = format(date, 'dd/MM/yyyy');
-                  }
-              } catch (e) {}
-          }
-          return {
-            ...initial,
-            ...source,
-            benefits: source.benefits || [],
-            birthDate: formattedBirthDate,
-            documents: source.documents || [],
-            status: source.status || 'active',
-            // Ensure nulls from DB are handled as strings for form inputs
-            gender: source.gender || undefined,
-            phone2: source.phone2 || '',
-            email: source.email || '',
-            observations: source.observations || '',
-            cep: source.cep || '',
-            street: source.street || '',
-            number: source.number || '',
-            complement: source.complement || '',
-            neighborhood: source.neighborhood || '',
-            city: source.city || '',
-            state: source.state || '',
-          };
-        }
-        return initial;
+    if (source) {
+      let formattedBirthDate = '';
+      if (source.birthDate) {
+          try {
+              const date = parse(source.birthDate, 'yyyy-MM-dd', new Date());
+              if (!isNaN(date.getTime())) {
+                  formattedBirthDate = format(date, 'dd/MM/yyyy');
+              }
+          } catch (e) {}
+      }
+      
+      form.reset({
+        name: source.name || '',
+        cpf: source.cpf || '',
+        gender: source.gender || undefined,
+        status: (source.status as any) || 'active',
+        benefits: source.benefits || [],
+        phone: source.phone || '',
+        phone2: source.phone2 || '',
+        email: source.email || '',
+        birthDate: formattedBirthDate,
+        observations: source.observations || '',
+        cep: source.cep || '',
+        street: source.street || '',
+        number: source.number || '',
+        complement: source.complement || '',
+        neighborhood: source.neighborhood || '',
+        city: source.city || '',
+        state: source.state || '',
+        documents: source.documents || [],
+      });
     }
-    form.reset(getInitialData());
   }, [customer, defaultValues, form]);
 
   function handleFormSubmit(data: CustomerFormValues) {
@@ -359,7 +335,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                       name="status"
                       render={({ field }) => (
                         <FormItem className="w-40">
-                          <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger className={cn(
                                 "h-8 text-xs font-bold uppercase border-2",
@@ -422,7 +398,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Gênero</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value || undefined} value={field.value || undefined}>
+                          <Select onValueChange={field.onChange} value={field.value || undefined}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Selecione o gênero" />

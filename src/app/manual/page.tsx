@@ -189,7 +189,7 @@ export default function ManualPage() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="text-[10px] text-muted-foreground leading-relaxed">
-                    Sua conta está blindada com regras de acesso por proprietário. Somente você pode visualizar e editar os dados da sua carteira. O backup total está disponível na aba de Configurações.
+                    Sua conta está blindada com regras de acesso por proprietário. O sistema agora possui proteção contra campos vazios ou indefinidos durante a edição manual de registros.
                 </CardContent>
             </Card>
         </div>
