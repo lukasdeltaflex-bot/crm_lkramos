@@ -405,7 +405,7 @@ const handleExportToPdf = async () => {
                             requestResourceData: customerToUpdate
                         }));
                     }
-                    toast({ variant: 'destructive', title: 'Erro ao salvar', description: 'Permissão negada ou erro de rede.' });
+                    toast({ variant: "destructive", title: "Erro ao salvar", description: "Permissão negada ou erro de rede." });
                 });
         } else {
             const newDocRef = doc(collection(firestore, 'customers'));
@@ -440,7 +440,7 @@ const handleExportToPdf = async () => {
                             requestResourceData: newCustomerWithId
                         }));
                     }
-                    toast({ variant: 'destructive', title: 'Erro ao criar', description: 'Não foi possível salvar os dados.' });
+                    toast({ variant: "destructive", title: "Erro ao criar", description: "Não foi possível salvar os dados." });
                 });
         }
     } catch (error) {
