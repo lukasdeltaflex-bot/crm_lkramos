@@ -424,7 +424,7 @@ function ProposalsPageContent() {
                 description: `O status da proposta foi alterado para "${newStatus}".`,
             });
         })
-        .catch(async (error: any) => {
+        .catch(async (error) => {
             if (error.code === 'permission-denied') {
                 errorEmitter.emit('permission-error', new FirestorePermissionError({
                     path: docRef.path,

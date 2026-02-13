@@ -364,8 +364,9 @@ const handleExportToPdf = async () => {
 
     setIsSaving(true);
     try {
+        // MOTOR DE LIMPEZA: Remove valores nulos ou indefinidos que quebram o salvamento
         const cleanedData = Object.fromEntries(
-            Object.entries(formData).filter(([_, v]) => v !== undefined)
+            Object.entries(formData).filter(([_, v]) => v !== undefined && v !== null)
         );
 
         const cpfExists = customers?.find(
