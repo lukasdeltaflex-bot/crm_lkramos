@@ -664,7 +664,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
                 <DialogTitle>{dialogData?.title}</DialogTitle>
             </DialogHeader>
             <div className="flex-1 overflow-y-auto">
-                <ProposalsStatusTable proposals={dialogData?.proposals || []} customers={customers ? [customer] : []} />
+                <ProposalsStatusTable proposals={dialogData?.proposals || []} customers={customer ? [customer] : []} />
             </div>
         </DialogContent>
       </Dialog>
