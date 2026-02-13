@@ -13,8 +13,8 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { proposalStatuses } from '@/lib/config-data';
 import type { ProposalStatus, ProposalHistoryEntry } from '@/lib/types';
-import { useFirestore, auth } from '@/firebase';
-import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { useFirestore, auth, useDoc, useMemoFirebase } from '@/firebase';
+import { doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -31,7 +31,7 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
   const firestore = useFirestore();
   const { statusColors, containerStyle } = useTheme();
 
-  const handleUpdate = (newStatus: ProposalStatus) => {
+  const handleUpdate = async (newStatus: ProposalStatus) => {
     if (newStatus === currentStatus) return;
 
     if (onStatusChange) {
@@ -58,6 +58,25 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
     }
     else if (newStatus === 'Aguardando Saldo' && isPortability) {
         dataToUpdate.statusAwaitingBalanceAt = now;
+    }
+
+    // Automação Financeira: Se entrar no perfil "Saldo a Receber", define como Pendente se estiver vazio
+    try {
+        const docRef = doc(firestore, 'loanProposals', proposalId);
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+            const proposal = snap.data();
+            const willHaveApprovalDate = dataToUpdate.dateApproved || proposal.dateApproved;
+            const isNotReprovado = newStatus !== 'Reprovado';
+            
+            if (isNotReprovado && willHaveApprovalDate) {
+                if (!proposal.commissionStatus || proposal.commissionStatus === '') {
+                    dataToUpdate.commissionStatus = 'Pendente';
+                }
+            }
+        }
+    } catch (e) {
+        // Fallback silencioso se falhar a leitura
     }
 
     const user = auth?.currentUser;

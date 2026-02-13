@@ -395,6 +395,16 @@ function ProposalsPageContent() {
         }
     }
 
+    // Automação: Perfil Saldo a Receber (Averbado e não Reprovado) -> Status Comissão Pendente
+    const willHaveApprovalDate = dataToUpdate.dateApproved || proposal.dateApproved;
+    const isNotReprovado = newStatus !== 'Reprovado';
+    
+    if (isNotReprovado && willHaveApprovalDate) {
+        if (!proposal.commissionStatus || proposal.commissionStatus === '') {
+            dataToUpdate.commissionStatus = 'Pendente';
+        }
+    }
+
     // Linha do Tempo Automática
     const historyEntry: ProposalHistoryEntry = {
         id: crypto.randomUUID(),
@@ -455,6 +465,16 @@ function ProposalsPageContent() {
           dataToUpdate.datePaidToClient = currentDate;
       } else if (newStatus === 'Saldo Pago' && isPortability) {
           dataToUpdate.debtBalanceArrivalDate = currentDate;
+      }
+
+      // Automação: Perfil Saldo a Receber (Averbado e não Reprovado) -> Status Comissão Pendente
+      const willHaveApprovalDate = dataToUpdate.dateApproved || proposal?.dateApproved;
+      const isNotReprovado = newStatus !== 'Reprovado';
+      
+      if (isNotReprovado && willHaveApprovalDate) {
+          if (!proposal?.commissionStatus || proposal?.commissionStatus === '') {
+              dataToUpdate.commissionStatus = 'Pendente';
+          }
       }
 
       // Linha do Tempo Automática (Massa)
@@ -550,15 +570,15 @@ function ProposalsPageContent() {
         const dateApproved = toISO(data.dateApproved);
         let commissionStatus = data.commissionStatus;
 
-        const isEligibleForFinancialTracking = 
-            data.status === 'Pago' ||
-            data.status === 'Saldo Pago' ||
-            ((data.status === 'Em Andamento' || data.status === 'Pendente') && !!dateApproved);
+        // Automação: Perfil Saldo a Receber (Averbado e não Reprovado) -> Status Comissão Pendente
+        const isEligibleForFinancialFlow = 
+            data.status !== 'Reprovado' && 
+            (!!dateApproved || data.status === 'Pago' || data.status === 'Saldo Pago');
         
-        if (isEligibleForFinancialTracking && (!commissionStatus || commissionStatus === '')) {
+        if (isEligibleForFinancialFlow && (!commissionStatus || commissionStatus === '')) {
             commissionStatus = 'Pendente';
         } 
-        else if (!isEligibleForFinancialTracking && (!commissionStatus || commissionStatus === 'Pendente')) {
+        else if (!isEligibleForFinancialFlow && (!commissionStatus || commissionStatus === 'Pendente')) {
             commissionStatus = '';
         }
 

@@ -134,6 +134,7 @@ export default function ManualPage() {
                         <p>Controle financeiro de nível contábil para sua operação.</p>
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Blindagem de Pendências</strong>: Comissões "Pendente" ou "Parcial" nunca saem da vista até serem baixadas.</li>
+                            <li><strong>Automação de Entrada</strong>: Propostas com data de averbação que não estão reprovadas são automaticamente marcadas como "Pendente" no financeiro, evitando que você esqueça de cobrar qualquer contrato.</li>
                             <li><strong>Balanço Mensal (PDF)</strong>: Relatório que subtrai despesas de comissões, apresentando o <strong>Lucro Líquido Real</strong>.</li>
                             <li><strong>Eficiência de Parceiros</strong>: Gráficos que mostram qual promotora paga mais rápido e gera maior ticket médio.</li>
                         </ul>
