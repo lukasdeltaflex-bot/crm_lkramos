@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&family=Lexend:wght@300;400;700&family=Bebas+Neue&family=Orbitron:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;700&family=Cinzel:wght@400;700&family=Space+Grotesk:wght@300;400;700&family=Outfit:wght@300;400;700&family=Lora:ital,wght@0,400;0,700;1,400&family=Urbanist:wght@300;400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300;400;700&family=Kanit:wght@300;400;700&family=Work+Sans:wght@300;400;700&family=Quicksand:wght@300;500;700&family=Spectral:ital,wght@0,400;0,700;1,400&family=Manrope:wght@300;400;700&family=Roboto+Condensed:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,700;1,400&display=swap');
@@ -167,7 +168,7 @@
 /* Texturas */
 .texture-dots { background-image: radial-gradient(hsl(var(--muted-foreground) / 0.15) 1px, transparent 1px); background-size: 20px 20px; }
 .texture-grid { background-image: linear-gradient(hsl(var(--muted-foreground) / 0.05) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--muted-foreground) / 0.05) 1px, transparent 1px); background-size: 20px 20px; }
-.texture-lines { background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, hsl(var(--muted-foreground) / 0.03) 10px, hsl(var(--muted-foreground) / 0.03) 11px); }
+.texture-texture-lines { background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, hsl(var(--muted-foreground) / 0.03) 10px, hsl(var(--muted-foreground) / 0.03) 11px); }
 
 /* ✨ ATMOSFERAS ANIMADAS */
 @keyframes nebula-flow {
@@ -291,15 +292,27 @@
     z-index: 20;
     background-color: inherit;
     border-right: 1px solid hsl(var(--border) / 0.5);
-    box-shadow: 2px 0 5px -2px rgba(0,0,0,0.05);
+    box-shadow: 4px 0 8px -4px rgba(0,0,0,0.15); /* Sombra mais forte para separar visualmente */
 }
 
+/* Ajuste de fundo para cabeçalhos fixos para evitar transparência */
 .proposals-table tr th:first-child,
 .financial-table tr th:first-child {
-    background-color: hsl(var(--muted)/0.5);
+    background-color: hsl(var(--muted)) !important;
+}
+
+/* Garante que o corpo da linha mantenha o fundo ao rolar */
+.proposals-table tr td:first-child,
+.financial-table tr td:first-child {
+    background-color: var(--background-row, white);
+}
+
+.dark .proposals-table tr td:first-child,
+.dark .financial-table tr td:first-child {
+    background-color: #0a0a0a !important;
 }
 
 .dark .proposals-table tr th:first-child,
 .dark .financial-table tr th:first-child {
-    background-color: hsl(var(--zinc-900));
+    background-color: #1a1a1a !important;
 }

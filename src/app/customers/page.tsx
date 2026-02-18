@@ -364,9 +364,9 @@ const handleExportToPdf = async () => {
 
     setIsSaving(true);
     try {
-        // MOTOR DE LIMPEZA: Remove valores nulos ou indefinidos que quebram o salvamento
+        // MOTOR DE LIMPEZA AVANÇADO: Remove undefined para evitar erros de servidor
         const cleanedData = Object.fromEntries(
-            Object.entries(formData).filter(([_, v]) => v !== undefined && v !== null)
+            Object.entries(formData).filter(([_, v]) => v !== undefined)
         );
 
         const cpfExists = customers?.find(
@@ -406,7 +406,7 @@ const handleExportToPdf = async () => {
                             requestResourceData: customerToUpdate
                         }));
                     }
-                    toast({ variant: "destructive", title: "Erro ao salvar", description: "Permissão negada ou erro de rede." });
+                    toast({ variant: "destructive", title: "Erro ao salvar", description: "Falha na comunicação com o servidor. Tente novamente." });
                 });
         } else {
             const newDocRef = doc(collection(firestore, 'customers'));

@@ -1,3 +1,4 @@
+
 "use client"
 
 import React from 'react';
@@ -31,7 +32,8 @@ import {
     CloudSun,
     Timer,
     History,
-    Move
+    Move,
+    Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -169,7 +171,7 @@ export default function ManualPage() {
                 <AccordionItem value="safety" className="border rounded-xl bg-card px-4 shadow-sm">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-zinc-100 text-zinc-600"><Fingerprint className="h-5 w-5" /></div>
+                            <div className="p-2 rounded-lg bg-zinc-100 text-zinc-600"><Shield className="h-5 w-5" /></div>
                             <div className="text-left">
                                 <p className="font-bold">6. Estabilização & Proteção de Dados</p>
                                 <p className="text-xs text-muted-foreground">Edição segura e blindagem contra erros de servidor</p>
@@ -179,9 +181,9 @@ export default function ManualPage() {
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
                         <p>O LK RAMOS conta com um motor de validação industrial para garantir que nenhuma informação seja perdida ou digitada incorretamente.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Preservação de Campos</strong>: O sistema garante que o campo de "Gênero" e outros dados sensíveis sejam preservados e carregados corretamente durante a edição.</li>
+                            <li><strong>Preservação de Campos</strong>: O sistema agora garante que o campo de **Gênero** e outros dados sensíveis sejam preservados e carregados corretamente durante a edição, sem resets automáticos.</li>
+                            <li><strong>Motor de Limpeza de Dados</strong>: Antes de enviar qualquer alteração para o banco de dados, o sistema remove valores "indefinidos" (undefined), eliminando o erro de salvamento no servidor.</li>
                             <li><strong>Validação de Data</strong>: Proteção contra formatos de data inválidos que antes causavam interrupções no salvamento.</li>
-                            <li><strong>Limpeza Automática</strong>: Antes de enviar dados para o servidor, o sistema remove valores nulos ou indefinidos, garantindo 100% de compatibilidade com o banco de dados em nuvem.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -200,7 +202,7 @@ export default function ManualPage() {
                     <AccordionContent className="pt-2 pb-4 space-y-4 text-sm leading-relaxed">
                         <p>Gerencie centenas de contratos com o mesmo conforto de uma planilha de alta performance.</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Coluna de Seleção Fixa</strong>: A primeira coluna (Checkbox) agora fica travada no lado esquerdo. Mesmo que você role a tabela para ver valores distantes, você nunca perde o vínculo da linha selecionada.</li>
+                            <li><strong>Coluna de Seleção Fixa</strong>: A primeira coluna (Checkbox) agora fica travada no lado esquerdo com sombra visual. Mesmo que você role a tabela para ver valores distantes, você nunca perde o vínculo da linha selecionada.</li>
                             <li><strong>Blindagem de Overflow</strong>: O sistema agora isola o movimento das tabelas, impedindo que a barra de rolagem "quebre" o layout lateral do dashboard.</li>
                             <li><strong>Destaque de Big Wins</strong>: Contratos com comissão superior a R$ 3.000,00 recebem uma borda dourada resiliente, visível em qualquer ponto da rolagem.</li>
                         </ul>
