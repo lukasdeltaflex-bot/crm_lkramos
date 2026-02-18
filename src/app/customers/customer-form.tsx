@@ -146,11 +146,13 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
           } catch (e) {}
       }
       
+      const genderValue = source.gender || '';
+
       // Reinicializa o formulário garantindo strings vazias para Selects em vez de undefined
       form.reset({
         name: source.name || '',
         cpf: source.cpf || '',
-        gender: source.gender || '', // GARANTE QUE O VALOR NÃO SEJA UNDEFINED
+        gender: genderValue,
         status: source.status || 'active',
         benefits: source.benefits || [],
         phone: source.phone || '',
@@ -167,6 +169,11 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         state: source.state || '',
         documents: source.documents || [],
       });
+
+      // Força o valor do gênero no estado do formulário para evitar reset assíncrono
+      if (genderValue) {
+          form.setValue('gender', genderValue);
+      }
     }
   }, [customer, defaultValues, form]);
 

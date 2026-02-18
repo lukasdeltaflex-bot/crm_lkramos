@@ -417,14 +417,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                             <Select value={bankFilter} onValueChange={setBankFilter}>
                                 <SelectTrigger className="h-7 w-auto min-w-[160px] border-none bg-transparent focus:ring-0 text-xs font-bold uppercase">
                                     <div className="flex items-center gap-2">
-                                        {bankFilter !== 'all' && (
-                                            <BankIcon 
-                                                bankName={bankFilter} 
-                                                domain={userSettings?.bankDomains?.[bankFilter]} 
-                                                showLogo={userSettings?.showBankLogos ?? true} 
-                                                className="h-3.5 w-3.5"
-                                            />
-                                        )}
                                         <SelectValue placeholder="Todos os Bancos" />
                                     </div>
                                 </SelectTrigger>
@@ -452,14 +444,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                             <Select value={promoterFilter} onValueChange={setPromoterFilter}>
                                 <SelectTrigger className="h-7 w-auto min-w-[160px] border-none bg-transparent focus:ring-0 text-xs font-bold uppercase">
                                     <div className="flex items-center gap-2">
-                                        {promoterFilter !== 'all' && (
-                                            <BankIcon 
-                                                bankName={promoterFilter} 
-                                                domain={userSettings?.promoterDomains?.[promoterFilter]} 
-                                                showLogo={userSettings?.showPromoterLogos ?? true} 
-                                                className="h-3.5 w-3.5"
-                                            />
-                                        )}
                                         <SelectValue placeholder="Todas Promotoras" />
                                     </div>
                                 </SelectTrigger>
