@@ -132,7 +132,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     name: "benefits"
   });
 
-  // 🛡️ BLINDAGEM DE CARREGAMENTO (Fix Gênero e Dados)
   useEffect(() => {
     const source = customer || defaultValues;
     if (source) {
@@ -148,7 +147,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       
       const genderValue = source.gender || '';
 
-      // Reinicializa o formulário garantindo strings vazias para Selects em vez de undefined
       form.reset({
         name: source.name || '',
         cpf: source.cpf || '',
@@ -169,11 +167,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         state: source.state || '',
         documents: source.documents || [],
       });
-
-      // Força o valor do gênero no estado do formulário para evitar reset assíncrono
-      if (genderValue) {
-          form.setValue('gender', genderValue);
-      }
     }
   }, [customer, defaultValues, form]);
 
@@ -378,6 +371,8 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                     <FormControl>
                         <Input placeholder="João da Silva" {...field} />
                     </FormControl>
+                    <FormItem>
+                    </FormItem>
                     <FormMessage />
                     </FormItem>
                 )}
@@ -412,6 +407,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         <FormItem>
                           <FormLabel>Gênero</FormLabel>
                           <Select 
+                            key={currentCustomerId || 'new'}
                             onValueChange={field.onChange} 
                             value={field.value || ""}
                           >

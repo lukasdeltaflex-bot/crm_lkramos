@@ -413,15 +413,17 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
                     <div className="flex items-center gap-2 flex-wrap">
                         <div className="flex items-center gap-2 bg-card border rounded-lg px-2 py-1 shadow-sm">
-                            <Landmark className="h-3.5 w-3.5 text-muted-foreground" />
                             <Select value={bankFilter} onValueChange={setBankFilter}>
                                 <SelectTrigger className="h-7 w-auto min-w-[160px] border-none bg-transparent focus:ring-0 text-xs font-bold uppercase">
-                                    <div className="flex items-center gap-2">
-                                        <SelectValue placeholder="Todos os Bancos" />
-                                    </div>
+                                    <SelectValue placeholder="Todos os Bancos" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">Todos os Bancos</SelectItem>
+                                    <SelectItem value="all">
+                                        <div className="flex items-center gap-2">
+                                            <Landmark className="h-4 w-4 text-muted-foreground" />
+                                            <span>Todos os Bancos</span>
+                                        </div>
+                                    </SelectItem>
                                     {uniqueBanks.map(b => (
                                         <SelectItem key={b} value={b}>
                                             <div className="flex items-center gap-2">
@@ -440,15 +442,17 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                         </div>
 
                         <div className="flex items-center gap-2 bg-card border rounded-lg px-2 py-1 shadow-sm">
-                            <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
                             <Select value={promoterFilter} onValueChange={setPromoterFilter}>
                                 <SelectTrigger className="h-7 w-auto min-w-[160px] border-none bg-transparent focus:ring-0 text-xs font-bold uppercase">
-                                    <div className="flex items-center gap-2">
-                                        <SelectValue placeholder="Todas Promotoras" />
-                                    </div>
+                                    <SelectValue placeholder="Todas Promotoras" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">Todas Promotoras</SelectItem>
+                                    <SelectItem value="all">
+                                        <div className="flex items-center gap-2">
+                                            <Building2 className="h-4 w-4 text-muted-foreground" />
+                                            <span>Todas Promotoras</span>
+                                        </div>
+                                    </SelectItem>
                                     {uniquePromoters.map(p => (
                                         <SelectItem key={p} value={p}>
                                             <div className="flex items-center gap-2">
