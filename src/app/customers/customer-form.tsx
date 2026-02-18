@@ -103,14 +103,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   const [age, setAge] = useState<number | null>(null);
   const [tempCustomerId, setTempCustomerId] = useState<string | undefined>(undefined);
 
-  useEffect(() => {
-    if (firestore && !customer?.id && !tempCustomerId) {
-        setTempCustomerId(doc(collection(firestore, 'customers')).id);
-    }
-  }, [firestore, customer, tempCustomerId]);
-
-  const currentCustomerId = customer?.id || tempCustomerId;
-
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
     defaultValues: {
@@ -140,6 +132,51 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     name: "benefits"
   });
 
+  // 🔥 FIX CRÍTICO: Sincronização de valores para edição sem perda de Gênero
+  useEffect(() => {
+    const source = customer || defaultValues;
+    if (source) {
+      let formattedBirthDate = '';
+      if (source.birthDate) {
+          try {
+              const date = parse(source.birthDate, 'yyyy-MM-dd', new Date());
+              if (isValid(date)) {
+                  formattedBirthDate = format(date, 'dd/MM/yyyy');
+              }
+          } catch (e) {}
+      }
+      
+      form.reset({
+        name: source.name || '',
+        cpf: source.cpf || '',
+        gender: source.gender || '', // Garante que o valor salvo seja injetado ou fique vazio, mas nunca indefinido
+        status: source.status || 'active',
+        benefits: source.benefits || [],
+        phone: source.phone || '',
+        phone2: source.phone2 || '',
+        email: source.email || '',
+        birthDate: formattedBirthDate,
+        observations: source.observations || '',
+        cep: source.cep || '',
+        street: source.street || '',
+        number: source.number || '',
+        complement: source.complement || '',
+        neighborhood: source.neighborhood || '',
+        city: source.city || '',
+        state: source.state || '',
+        documents: source.documents || [],
+      });
+    }
+  }, [customer, defaultValues, form]);
+
+  useEffect(() => {
+    if (firestore && !customer?.id && !tempCustomerId) {
+        setTempCustomerId(doc(collection(firestore, 'customers')).id);
+    }
+  }, [firestore, customer, tempCustomerId]);
+
+  const currentCustomerId = customer?.id || tempCustomerId;
+
   const cpfValue = form.watch('cpf');
   const birthDateValue = form.watch('birthDate');
   const phone1Value = form.watch('phone');
@@ -167,44 +204,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       setAge(null);
     }
   }, [birthDateValue]);
-
-  // 🔥 FIX CRÍTICO DE GÊNERO: Garantindo que o valor seja injetado no reset do formulário
-  useEffect(() => {
-    const source = customer || defaultValues;
-
-    if (source) {
-      let formattedBirthDate = '';
-      if (source.birthDate) {
-          try {
-              const date = parse(source.birthDate, 'yyyy-MM-dd', new Date());
-              if (isValid(date)) {
-                  formattedBirthDate = format(date, 'dd/MM/yyyy');
-              }
-          } catch (e) {}
-      }
-      
-      form.reset({
-        name: source.name || '',
-        cpf: source.cpf || '',
-        gender: source.gender || '', // Mantendo string vazia se for nulo para o Select funcionar
-        status: source.status || 'active',
-        benefits: source.benefits || [],
-        phone: source.phone || '',
-        phone2: source.phone2 || '',
-        email: source.email || '',
-        birthDate: formattedBirthDate,
-        observations: source.observations || '',
-        cep: source.cep || '',
-        street: source.street || '',
-        number: source.number || '',
-        complement: source.complement || '',
-        neighborhood: source.neighborhood || '',
-        city: source.city || '',
-        state: source.state || '',
-        documents: source.documents || [],
-      });
-    }
-  }, [customer, defaultValues, form]);
 
   function handleFormSubmit(data: CustomerFormValues) {
     if (duplicateCpfCustomer) {
