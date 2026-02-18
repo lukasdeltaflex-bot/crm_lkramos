@@ -286,35 +286,40 @@
 .proposals-table tr th:first-child,
 .proposals-table tr td:first-child,
 .financial-table tr th:first-child,
-.financial-table tr td:first-child {
+.financial-table tr td:first-child,
+.customers-table tr th:first-child,
+.customers-table tr td:first-child {
     position: sticky !important;
     left: 0;
-    z-index: 30 !important;
-    background-color: white !important; /* Fundo sólido para evitar transparência */
+    z-index: 40 !important;
+    background-color: hsl(var(--background)) !important;
     border-right: 2px solid hsl(var(--border) / 0.8);
     box-shadow: 6px 0 12px -4px rgba(0,0,0,0.2); 
 }
 
 /* Ajuste de fundo para cabeçalhos fixos */
 .proposals-table tr th:first-child,
-.financial-table tr th:first-child {
+.financial-table tr th:first-child,
+.customers-table tr th:first-child {
     background-color: hsl(var(--muted)) !important;
 }
 
 /* Garante que o corpo da linha mantenha o fundo ao rolar no modo escuro */
 .dark .proposals-table tr td:first-child,
-.dark .financial-table tr td:first-child {
+.dark .financial-table tr td:first-child,
+.dark .customers-table tr td:first-child {
     background-color: #050505 !important;
     border-right-color: #333;
 }
 
 .dark .proposals-table tr th:first-child,
-.dark .financial-table tr th:first-child {
+.dark .financial-table tr th:first-child,
+.dark .customers-table tr th:first-child {
     background-color: #1a1a1a !important;
 }
 
 /* Corrige o vácuo visual na lateral da tabela */
-.proposals-table > div, .financial-table > div {
+.proposals-table > div, .financial-table > div, .customers-table > div {
     overflow-x: auto;
     scrollbar-gutter: stable;
 }

@@ -168,7 +168,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     }
   }, [birthDateValue]);
 
-  // 🔥 FIX DE GÊNERO E RESET: Garantindo que os dados sejam injetados sem perdas
+  // 🔥 FIX CRÍTICO DE GÊNERO: Garantindo que o valor seja injetado no reset do formulário
   useEffect(() => {
     const source = customer || defaultValues;
 
@@ -183,11 +183,10 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
           } catch (e) {}
       }
       
-      // Reset explícito para evitar sumiço do gênero
       form.reset({
         name: source.name || '',
         cpf: source.cpf || '',
-        gender: source.gender || '',
+        gender: source.gender || '', // Mantendo string vazia se for nulo para o Select funcionar
         status: source.status || 'active',
         benefits: source.benefits || [],
         phone: source.phone || '',
@@ -407,7 +406,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                           <FormLabel>Gênero</FormLabel>
                           <Select 
                             onValueChange={field.onChange} 
-                            value={field.value ?? ""}
+                            value={field.value || ""}
                           >
                             <FormControl>
                               <SelectTrigger>
