@@ -414,6 +414,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                         <div className="flex items-center gap-2 bg-card border rounded-lg px-2 py-1 shadow-sm">
                             <Select value={bankFilter} onValueChange={setBankFilter}>
                                 <SelectTrigger className="h-7 w-auto min-w-[160px] border-none bg-transparent focus:ring-0 text-xs font-bold uppercase">
+                                    {/* 🛡️ FIX ÍCONE DUPLICADO: O SelectValue já renderiza o ícone do SelectItem selecionado */}
                                     <SelectValue placeholder="Todos os Bancos" />
                                 </SelectTrigger>
                                 <SelectContent>

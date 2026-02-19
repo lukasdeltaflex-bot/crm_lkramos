@@ -62,6 +62,7 @@ function cleanCustomerData(data: any): any {
         const cleaned: any = {};
         Object.keys(data).forEach(key => {
             const val = data[key];
+            // Remove 'undefined' e strings vazias que não devem ser enviadas como nulas
             if (val !== undefined) {
                 cleaned[key] = cleanCustomerData(val);
             }

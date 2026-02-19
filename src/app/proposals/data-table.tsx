@@ -242,8 +242,14 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     setAppliedDateRange(undefined);
   }
 
+  // 🛡️ REATIVIDADE INSTANTÂNEA: Filtra os dados ANTES de passar para o motor da tabela
+  const filteredData = React.useMemo(() => {
+    if (statusFilter === 'Todos') return data;
+    return data.filter(p => p.status === statusFilter);
+  }, [data, statusFilter]);
+
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     getRowId: (row) => row.id,
     getCoreRowModel: getCoreRowModel(),
@@ -287,16 +293,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
       },
   });
   
-  // 🔥 BLINDAGEM DE REATIVIDADE: Garante que a tabela mude imediatamente ao trocar de aba
-  React.useEffect(() => {
-    const statusColumn = table.getColumn('status');
-    if (statusFilter === 'Todos') {
-        statusColumn?.setFilterValue(undefined);
-    } else {
-        statusColumn?.setFilterValue([statusFilter]);
-    }
-  }, [statusFilter, table]);
-
   React.useEffect(() => {
     const dateColumn = table.getColumn('dateDigitized');
     dateColumn?.setFilterValue(appliedDateRange);

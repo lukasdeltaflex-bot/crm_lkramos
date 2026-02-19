@@ -169,9 +169,11 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         documents: source.documents || [],
       });
       
-      // Sincronização explícita para o componente Select
+      // BLINDAGEM DE GÊNERO: Sincronização explícita e forçada
       if (genderValue) {
-          form.setValue('gender', genderValue);
+          setTimeout(() => {
+            form.setValue('gender', genderValue, { shouldValidate: true });
+          }, 10);
       }
     }
   }, [customer, defaultValues, form]);
@@ -186,6 +188,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   const birthDateValue = form.watch('birthDate');
   const phone1Value = form.watch('phone');
   const phone2Value = form.watch('phone2');
+  const watchedGender = form.watch('gender');
 
   const duplicateCpfCustomer = useMemo(() => {
     if (!cpfValue || cpfValue.length < 14) return null;
@@ -403,14 +406,16 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                     )}
                     />
                     <FormField
-                      key={`gender-field-sync-${currentCustomerId}`}
                       control={form.control}
                       name="gender"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Gênero</FormLabel>
+                          {/* 🛡️ KEY DE RECONSTRUÇÃO: Força o Select a atualizar quando o cliente muda */}
                           <Select 
+                            key={`gender-select-sync-${currentCustomerId}`}
                             onValueChange={field.onChange} 
+                            defaultValue={field.value || ""}
                             value={field.value || ""}
                           >
                             <FormControl>
