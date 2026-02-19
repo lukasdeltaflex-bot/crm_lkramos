@@ -254,9 +254,9 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 </Select>
                 <Separator orientation="vertical" className="h-4 mx-1 bg-zinc-300" />
                 <div className="flex items-center gap-1">
-                    <Input placeholder="De" value={startDateInput} onChange={(e) => setStartDateInput(handleDateMask(e))} className="h-7 w-24 border-none bg-muted/40 text-[10px] text-center font-black rounded-full" />
+                    <Input placeholder="De" value={startDateInput} onChange={(e) => setStartDateInput(handleDateMask(e))} className="h-7 w-28 border-none bg-muted/40 text-[11px] text-center font-black rounded-full" />
                     <span className="text-muted-foreground font-black">-</span>
-                    <Input placeholder="Até" value={endDateInput} onChange={(e) => setEndDateInput(handleDateMask(e))} className="h-7 w-24 border-none bg-muted/40 text-[10px] text-center font-black rounded-full" />
+                    <Input placeholder="Até" value={endDateInput} onChange={(e) => setEndDateInput(handleDateMask(e))} className="h-7 w-28 border-none bg-muted/40 text-[11px] text-center font-black rounded-full" />
                 </div>
             </div>
             <Button size="sm" onClick={handleApplyFilter} className="h-9 bg-primary text-white hover:bg-primary/90 rounded-full px-6 text-xs font-black uppercase shadow-lg gap-2">
@@ -273,7 +273,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                         placeholder="Busca Inteligente (Nome, CPF, Banco...)" 
                         value={globalFilter} 
                         onChange={(e) => setGlobalFilter(e.target.value)} 
-                        className="pl-10 h-11 bg-background border-2 border-zinc-300 dark:border-primary/40 rounded-full text-sm font-bold shadow-md focus-visible:ring-primary/20 transition-all placeholder:text-muted-foreground/80" 
+                        className="pl-10 h-11 bg-background border-2 border-zinc-300 dark:border-primary/40 rounded-full text-base font-bold shadow-md focus-visible:ring-primary/20 transition-all placeholder:text-muted-foreground/80" 
                     />
                 </div>
                 <DropdownMenu>
@@ -313,7 +313,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                                         <TableRow 
                                             key={row.id} 
                                             className={cn(
-                                                "transition-colors border-b h-12 hover:bg-primary/[0.03] dark:hover:bg-primary/5", 
+                                                "transition-colors border-b h-14 hover:bg-primary/[0.03] dark:hover:bg-primary/5", 
                                                 colorValue && "status-row-custom"
                                             )} 
                                             style={colorValue ? { '--status-color': colorValue } as any : {}}
@@ -322,7 +322,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                                                 <TableCell 
                                                     key={cell.id} 
                                                     style={{ width: cell.column.getSize() }} 
-                                                    className="p-2 text-sm border-zinc-100/50 dark:border-zinc-800/50"
+                                                    className="p-3 text-sm border-none"
                                                 >
                                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                                 </TableCell>

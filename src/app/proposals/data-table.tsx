@@ -183,7 +183,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
 
   React.useImperativeHandle(ref, () => ({ table }));
 
-  // CÁLCULO DOS TOTAIS APENAS PARA AS LINHAS SELECIONADAS (Regra de Negócio solicitada)
   const selectedRows = table.getFilteredSelectedRowModel().rows;
   
   const totalGross = React.useMemo(() => 
@@ -268,14 +267,14 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                             placeholder="De" 
                             value={startDateInput}
                             onChange={(e) => handleDateInputChange(e.target.value, 'start')}
-                            className="h-7 w-24 border-none bg-muted/40 text-[10px] text-center font-black rounded-full"
+                            className="h-7 w-28 border-none bg-muted/40 text-[11px] text-center font-black rounded-full"
                         />
                         <span className="text-muted-foreground font-black">-</span>
                         <Input 
                             placeholder="Até" 
                             value={endDateInput}
                             onChange={(e) => handleDateInputChange(e.target.value, 'end')}
-                            className="h-7 w-24 border-none bg-muted/40 text-[10px] text-center font-black rounded-full"
+                            className="h-7 w-28 border-none bg-muted/40 text-[11px] text-center font-black rounded-full"
                         />
                     </div>
                     <Button size="sm" onClick={handleApplyFilter} className="h-7 bg-primary text-white rounded-full px-4 text-[10px] font-black uppercase transition-all shadow-md">
@@ -291,7 +290,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                         placeholder="Busca Inteligente (Nome, CPF, Proposta...)"
                         value={globalFilter ?? ''}
                         onChange={(e) => setGlobalFilter(e.target.value)}
-                        className="pl-10 h-11 bg-background border-2 border-zinc-300 dark:border-primary/40 rounded-full text-sm font-bold shadow-md focus-visible:ring-primary/20 transition-all placeholder:text-muted-foreground/80"
+                        className="pl-10 h-11 bg-background border-2 border-zinc-300 dark:border-primary/40 rounded-full text-base font-bold shadow-md focus-visible:ring-primary/20 transition-all placeholder:text-muted-foreground/80"
                     />
                 </div>
                 <DropdownMenu>
@@ -339,7 +338,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                                             <TableRow 
                                                 key={row.id} 
                                                 className={cn(
-                                                    "transition-colors border-b h-12 hover:bg-primary/[0.03] dark:hover:bg-primary/5",
+                                                    "transition-colors border-b h-14 hover:bg-primary/[0.03] dark:hover:bg-primary/5",
                                                     colorValue && "status-row-custom"
                                                 )}
                                                 style={colorValue ? { '--status-color': colorValue } as any : {}}
@@ -348,7 +347,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                                                     <TableCell 
                                                         key={cell.id} 
                                                         style={{ width: cell.column.getSize() }} 
-                                                        className="p-2 text-sm border-none"
+                                                        className="p-3 text-sm border-none"
                                                     >
                                                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                                     </TableCell>
@@ -368,7 +367,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between px-6 py-3 border-t-2 bg-muted/10 font-black text-[10px] uppercase tracking-[0.1em] text-foreground/60">
+                <div className="flex items-center justify-between px-6 py-4 border-t-2 bg-muted/10 font-black text-[11px] uppercase tracking-[0.1em] text-foreground/60">
                     <div className="flex items-center gap-4">
                         <div>
                             {table.getFilteredSelectedRowModel().rows.length} DE{' '}
