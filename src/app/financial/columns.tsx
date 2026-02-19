@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ColumnDef, flexRender, Header } from '@tanstack/react-table';
@@ -37,7 +38,7 @@ const CopyButton = ({ text, label }: { text: string | undefined; label: string }
         });
     };
     return (
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleCopy}>
+        <Button variant="ghost" size="icon" className="h-7 w-7 opacity-40 hover:opacity-100 transition-opacity" onClick={handleCopy}>
             <Copy className="h-3.5 w-3.5" />
             <span className="sr-only">Copiar {label}</span>
         </Button>
@@ -87,7 +88,7 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
                         </div>
                     )}
                     <div className={cn(
-                        "overflow-hidden font-black text-xs uppercase tracking-wider text-muted-foreground leading-tight flex items-center gap-1.5",
+                        "overflow-hidden font-black text-[10px] uppercase tracking-wider text-foreground leading-tight flex items-center gap-1.5",
                         isActions && "text-right pr-2",
                         isSelect && "justify-center w-full pr-0"
                     )}>
@@ -132,7 +133,7 @@ export const getColumns = (
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Selecionar tudo"
-        className="rounded-full h-5 w-5"
+        className="rounded-full h-5 w-5 border-2"
       />
     ),
     cell: ({ row }) => (
@@ -140,7 +141,7 @@ export const getColumns = (
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
         aria-label="Selecionar linha"
-        className="rounded-full h-5 w-5"
+        className="rounded-full h-5 w-5 border-2"
       />
     ),
     enableSorting: false,
@@ -151,14 +152,14 @@ export const getColumns = (
     id: 'Promotora',
     accessorKey: 'promoter',
     header: 'Promotora',
-    cell: ({ row }) => <span className="text-xs font-medium">{row.original.promoter}</span>,
+    cell: ({ row }) => <span className="text-xs font-bold text-foreground/90">{row.original.promoter}</span>,
     size: 150,
   },
   {
     id: 'Cliente',
     accessorFn: (row) => row.customer?.name,
     header: 'Cliente',
-    cell: ({ row }) => <span className="font-bold text-primary uppercase text-xs tracking-tight">{row.original.customer?.name}</span>,
+    cell: ({ row }) => <span className="font-black text-primary uppercase text-xs tracking-tight">{row.original.customer?.name}</span>,
     size: 200,
   },
   {
@@ -168,7 +169,7 @@ export const getColumns = (
     cell: ({ row }) => {
         const cpf = row.original.customer?.cpf;
         return (
-            <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+            <div className="flex items-center gap-1 text-xs font-black text-foreground/80">
                 <span>{cpf || '-'}</span>
                 {cpf && <CopyButton text={cpf} label="CPF" />}
             </div>
@@ -181,8 +182,8 @@ export const getColumns = (
     accessorKey: 'proposalNumber',
     header: 'Nº Proposta',
     cell: ({ row }) => (
-        <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
-            <Link href={`/proposals?open=${row.original.id}`} className="text-primary hover:underline font-bold">
+        <div className="flex items-center gap-1 text-xs font-black text-foreground/80">
+            <Link href={`/proposals?open=${row.original.id}`} className="text-primary hover:underline font-black">
                 {row.original.proposalNumber}
             </Link>
             <CopyButton text={row.original.proposalNumber} label="Proposta" />
@@ -194,7 +195,7 @@ export const getColumns = (
     id: 'Produto',
     accessorKey: 'product',
     header: 'Produto',
-    cell: ({ row }) => <span className="text-xs font-medium">{row.original.product}</span>,
+    cell: ({ row }) => <span className="text-xs font-bold text-foreground/80">{row.original.product}</span>,
     size: 120,
   },
   {
@@ -207,7 +208,7 @@ export const getColumns = (
         return (
             <div className="flex items-center gap-2">
                 <BankIcon bankName={bankRaw} domain={settings?.bankDomains?.[bankRaw]} showLogo={settings?.showBankLogos ?? true} />
-                <span className="truncate text-xs font-medium">{cleanBankName(bankRaw)}</span>
+                <span className="truncate text-xs font-bold text-foreground/90">{cleanBankName(bankRaw)}</span>
             </div>
         )
     },
@@ -220,7 +221,7 @@ export const getColumns = (
     cell: ({ row, table }) => {
       const isPrivacyMode = (table.options.meta as {isPrivacyMode?: boolean})?.isPrivacyMode;
       if (isPrivacyMode) return <div className="text-left font-medium">•••••</div>;
-      return <div className="text-right font-bold text-xs">{formatCurrency(row.original.grossAmount)}</div>;
+      return <div className="text-right font-black text-xs text-foreground">{formatCurrency(row.original.grossAmount)}</div>;
     },
     size: 120,
   },
@@ -228,7 +229,7 @@ export const getColumns = (
     id: 'Comissão (%)',
     accessorKey: 'commissionPercentage',
     header: 'Comissão (%)',
-    cell: ({ row }) => <span className="text-xs font-medium">{row.original.commissionPercentage.toFixed(2)}%</span>,
+    cell: ({ row }) => <span className="text-xs font-bold text-foreground/70">{row.original.commissionPercentage.toFixed(2)}%</span>,
     size: 100,
   },
   {
@@ -237,7 +238,7 @@ export const getColumns = (
     header: 'Valor Comissão',
     cell: ({ row, table }) => {
         const isPrivacyMode = (table.options.meta as {isPrivacyMode?: boolean})?.isPrivacyMode;
-        return isPrivacyMode ? '•••••' : <span className="text-xs font-bold">{formatCurrency(row.original.commissionValue)}</span>;
+        return isPrivacyMode ? '•••••' : <span className="text-xs font-black text-foreground">{formatCurrency(row.original.commissionValue)}</span>;
     },
     size: 120,
   },
@@ -252,7 +253,7 @@ export const getColumns = (
     id: 'Data Pagamento',
     accessorKey: 'commissionPaymentDate',
     header: 'Data Pagamento',
-    cell: ({ row }) => <span className="text-xs font-medium">{formatDateSafe(row.original.commissionPaymentDate)}</span>,
+    cell: ({ row }) => <span className="text-xs font-bold text-foreground/70">{formatDateSafe(row.original.commissionPaymentDate)}</span>,
     size: 120,
   },
   {
@@ -267,7 +268,7 @@ export const getColumns = (
     header: '',
     cell: ({ row }) => (
         <div className="text-right print:hidden">
-            <Button variant="ghost" size="icon" className="rounded-full h-8 w-8" onClick={() => onEdit(row.original)}>
+            <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 border border-transparent hover:border-border" onClick={() => onEdit(row.original)}>
                 <MoreHorizontal className="h-4 w-4" />
             </Button>
         </div>

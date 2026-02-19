@@ -45,8 +45,8 @@ const CopyButton = ({ text, label }: { text: string | undefined; label: string }
         });
     };
     return (
-        <Button variant="ghost" size="icon" className="h-7 w-7 opacity-20 hover:opacity-100 transition-opacity" onClick={handleCopy}>
-            <Copy className="h-3 w-3" />
+        <Button variant="ghost" size="icon" className="h-7 w-7 opacity-40 hover:opacity-100 transition-opacity" onClick={handleCopy}>
+            <Copy className="h-3.5 w-3.5" />
             <span className="sr-only">Copiar {label}</span>
         </Button>
     );
@@ -74,7 +74,7 @@ export const DraggableHeader = ({ header }: { header: Header<Customer, unknown> 
             colSpan={header.colSpan}
             style={style}
             className={cn(
-                'relative p-0 h-14 border-r last:border-r-0 bg-transparent group transition-colors hover:bg-muted/10',
+                'relative p-0 h-14 border-r last:border-r-0 bg-muted/30 group transition-colors hover:bg-muted/50',
                 isSelect && 'w-[50px] min-w-[50px]'
             )}
         >
@@ -99,7 +99,7 @@ export const DraggableHeader = ({ header }: { header: Header<Customer, unknown> 
                     )}
 
                     <div className={cn(
-                        "overflow-hidden font-black text-[10px] uppercase tracking-widest text-muted-foreground/80 leading-tight flex items-center gap-1.5",
+                        "overflow-hidden font-black text-[10px] uppercase tracking-widest text-foreground leading-tight flex items-center gap-1.5",
                         isActions && "text-right pr-2",
                         isSelect && "justify-center w-full pr-0"
                     )}>
@@ -139,15 +139,15 @@ const ActionsCell = ({ row, onEdit, onDelete }: any) => {
     <div className="text-right" onClick={(e) => e.stopPropagation()}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted transition-colors rounded-full">
+          <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted transition-colors rounded-full border border-transparent hover:border-border">
             <span className="sr-only">Abrir menu</span>
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuContent align="end" className="w-48 shadow-xl border-2">
           <DropdownMenuLabel>Opções do Registro</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => onEdit(customer)}>
+          <DropdownMenuItem onSelect={() => onEdit(customer)} className="font-bold">
             Editar Cadastro
           </DropdownMenuItem>
           <DropdownMenuSeparator />
@@ -155,7 +155,7 @@ const ActionsCell = ({ row, onEdit, onDelete }: any) => {
             <AlertDialogTrigger asChild>
                 <DropdownMenuItem
                     onSelect={(e) => e.preventDefault()}
-                    className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                    className="text-destructive focus:text-destructive focus:bg-destructive/10 font-bold"
                 >
                     Remover Registro
                 </DropdownMenuItem>
@@ -193,7 +193,7 @@ export const getColumns = (
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Selecionar tudo"
-        className="rounded-full h-5 w-5 border-border/50"
+        className="rounded-full h-5 w-5 border-2"
       />
     ),
     cell: ({ row }) => (
@@ -201,7 +201,7 @@ export const getColumns = (
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
         aria-label="Selecionar linha"
-        className="rounded-full h-5 w-5 border-border/50"
+        className="rounded-full h-5 w-5 border-2"
       />
     ),
     enableSorting: false,
@@ -212,7 +212,7 @@ export const getColumns = (
     id: 'ID',
     accessorFn: (row) => row.numericId,
     header: 'ID',
-    cell: ({ row }) => <span className="text-xs font-bold text-muted-foreground/60">{row.original.numericId}</span>,
+    cell: ({ row }) => <span className="text-xs font-black text-foreground/80">{row.original.numericId}</span>,
     size: 80,
   },
   {
@@ -236,7 +236,7 @@ export const getColumns = (
     cell: ({ row }) => {
         const cpf = row.original.cpf;
         return (
-          <div className="flex items-center gap-1 font-medium text-muted-foreground/80 text-[11px]">
+          <div className="flex items-center gap-1 font-bold text-foreground/90 text-xs">
             <span>{cpf}</span>
             <CopyButton text={cpf} label="CPF" />
           </div>
@@ -252,11 +252,11 @@ export const getColumns = (
         const phone = row.original.phone;
         const isWhatsAppNumber = isWhatsApp(phone);
         return (
-          <div className="flex items-center gap-2 font-medium text-xs">
+          <div className="flex items-center gap-2 font-bold text-xs">
             <span>{phone}</span>
             {isWhatsAppNumber && (
-              <a href={getWhatsAppUrl(phone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600">
-                <WhatsAppIcon className="h-3.5 w-3.5" />
+              <a href={getWhatsAppUrl(phone)} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:text-green-700">
+                <WhatsAppIcon className="h-4 w-4" />
               </a>
             )}
           </div>
@@ -273,11 +273,11 @@ export const getColumns = (
         if (!phone) return <span className="text-muted-foreground/30 italic text-[10px]">---</span>;
         const isWhatsAppNumber = isWhatsApp(phone);
         return (
-          <div className="flex items-center gap-2 font-medium text-xs">
+          <div className="flex items-center gap-2 font-bold text-xs text-foreground/80">
             <span>{phone}</span>
             {isWhatsAppNumber && (
-              <a href={getWhatsAppUrl(phone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600">
-                <WhatsAppIcon className="h-3.5 w-3.5" />
+              <a href={getWhatsAppUrl(phone)} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:text-green-700">
+                <WhatsAppIcon className="h-4 w-4" />
               </a>
             )}
           </div>
@@ -289,21 +289,21 @@ export const getColumns = (
     id: 'Cidade',
     accessorFn: (row) => row.city,
     header: 'Cidade',
-    cell: ({ row }) => <span className="text-xs text-muted-foreground truncate block">{row.original.city || '-'}</span>,
+    cell: ({ row }) => <span className="text-xs text-foreground font-medium truncate block">{row.original.city || '-'}</span>,
     size: 150,
   },
   {
     id: 'Estado',
     accessorFn: (row) => row.state,
     header: 'Estado',
-    cell: ({ row }) => <span className="text-xs text-muted-foreground font-bold">{row.original.state || '-'}</span>,
+    cell: ({ row }) => <span className="text-xs text-foreground font-black uppercase">{row.original.state || '-'}</span>,
     size: 80,
   },
   {
     id: 'Observações',
     accessorFn: (row) => row.observations,
     header: 'Observações',
-    cell: ({ row }) => <div className="truncate max-w-[200px] text-zinc-400 italic text-[10px]">{row.original.observations}</div>,
+    cell: ({ row }) => <div className="truncate max-w-[200px] text-muted-foreground italic text-[10px]">{row.original.observations}</div>,
     size: 200,
   },
   {

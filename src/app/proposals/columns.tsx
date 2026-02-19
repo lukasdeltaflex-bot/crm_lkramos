@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ColumnDef, Header, flexRender } from '@tanstack/react-table';
@@ -46,7 +47,7 @@ const CopyButton = ({ text, label }: { text: string | undefined; label: string }
         });
     };
     return (
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleCopy}>
+        <Button variant="ghost" size="icon" className="h-7 w-7 opacity-40 hover:opacity-100 transition-opacity" onClick={handleCopy}>
             <Copy className="h-3.5 w-3.5" />
             <span className="sr-only">Copiar {label}</span>
         </Button>
@@ -59,22 +60,22 @@ const ActionsCell = ({ row, onEdit, onView, onDelete, onDuplicate }: any) => {
       <div className="text-right" onClick={(e) => e.stopPropagation()}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted transition-colors rounded-full">
+            <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted transition-colors rounded-full border border-transparent hover:border-border">
               <span className="sr-only">Abrir menu</span>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuContent align="end" className="w-48 shadow-xl border-2">
             <DropdownMenuLabel>Ações da Proposta</DropdownMenuLabel>
-            <DropdownMenuItem onSelect={() => onView(proposal)}>Ver detalhes</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => onEdit(proposal)}>Editar Registro</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => onDuplicate(proposal)}>Duplicar Proposta</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => onView(proposal)} className="font-bold">Ver detalhes</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => onEdit(proposal)} className="font-bold">Editar Registro</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => onDuplicate(proposal)} className="font-bold">Duplicar Proposta</DropdownMenuItem>
             <DropdownMenuSeparator />
             <AlertDialog>
                 <AlertDialogTrigger asChild>
                     <DropdownMenuItem 
                         onSelect={(e) => e.preventDefault()}
-                        className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                        className="text-destructive focus:text-destructive focus:bg-destructive/10 font-bold"
                         >
                         Cancelar Proposta
                     </DropdownMenuItem>
@@ -139,7 +140,7 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
                         </div>
                     )}
                     <div className={cn(
-                        "overflow-hidden font-black text-xs uppercase tracking-wider text-muted-foreground leading-tight flex items-center gap-1.5",
+                        "overflow-hidden font-black text-[10px] uppercase tracking-wider text-foreground leading-tight flex items-center gap-1.5",
                         isActions && "text-right pr-2",
                         isSelect && "justify-center w-full pr-0"
                     )}>
@@ -185,7 +186,7 @@ export const getColumns = (
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Selecionar tudo"
-        className="rounded-full h-5 w-5"
+        className="rounded-full h-5 w-5 border-2"
       />
     ),
     cell: ({ row }) => (
@@ -193,7 +194,7 @@ export const getColumns = (
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
         aria-label="Selecionar linha"
-        className="rounded-full h-5 w-5"
+        className="rounded-full h-5 w-5 border-2"
       />
     ),
     enableSorting: false,
@@ -213,7 +214,7 @@ export const getColumns = (
         return (
             <div className="flex items-center gap-2">
                 <BankIcon bankName={promoter} domain={domain} showLogo={showLogos} className="h-4 w-4" />
-                <span className="truncate text-xs font-medium">{promoter}</span>
+                <span className="truncate text-xs font-bold text-foreground/90">{promoter}</span>
             </div>
         )
     },
@@ -226,7 +227,7 @@ export const getColumns = (
     cell: ({ row }) => {
         const num = row.original.proposalNumber;
         return (
-            <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+            <div className="flex items-center gap-1 text-xs font-black text-foreground/80">
                 <span>{num}</span>
                 <CopyButton text={num} label="Proposta" />
             </div>
@@ -239,7 +240,7 @@ export const getColumns = (
     accessorFn: (row) => row.customer?.name,
     header: 'Cliente',
     cell: ({ row }) => (
-        <div className="flex items-center gap-2 font-bold text-primary uppercase text-xs tracking-tight">
+        <div className="flex items-center gap-2 font-black text-primary uppercase text-xs tracking-tight">
             {row.original.customer?.name || '---'}
         </div>
     ),
@@ -249,14 +250,14 @@ export const getColumns = (
     id: 'Produto',
     accessorKey: 'product',
     header: 'Produto',
-    cell: ({ row }) => <span className="text-xs font-medium">{row.original.product}</span>,
+    cell: ({ row }) => <span className="text-xs font-bold text-foreground/80">{row.original.product}</span>,
     size: 120,
   },
   {
     id: 'Valor Bruto',
     accessorKey: 'grossAmount',
     header: () => <div className="text-right">Valor Bruto</div>,
-    cell: ({ row }) => <div className="text-right font-bold text-xs">{formatCurrency(row.original.grossAmount)}</div>,
+    cell: ({ row }) => <div className="text-right font-black text-xs text-foreground">{formatCurrency(row.original.grossAmount)}</div>,
     size: 120,
   },
   {
@@ -272,7 +273,7 @@ export const getColumns = (
         return (
             <div className="flex items-center gap-2">
                 <BankIcon bankName={bankRaw} domain={customDomain} showLogo={showLogos} />
-                <span className="truncate text-xs font-medium">{cleanBankName(bankRaw)}</span>
+                <span className="truncate text-xs font-bold text-foreground/90">{cleanBankName(bankRaw)}</span>
             </div>
         )
     },
@@ -298,7 +299,7 @@ export const getColumns = (
     id: 'Data Digitação',
     accessorKey: 'dateDigitized',
     header: 'Data Digitação',
-    cell: ({ row }) => <span className="text-xs font-medium">{formatDateSafe(row.original.dateDigitized)}</span>,
+    cell: ({ row }) => <span className="text-xs font-bold text-foreground/70">{formatDateSafe(row.original.dateDigitized)}</span>,
     size: 120,
   },
   {

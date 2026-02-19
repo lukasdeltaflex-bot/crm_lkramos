@@ -61,10 +61,10 @@ import { DraggableHeader } from './columns';
 import type { Customer } from '@/lib/types';
 import { normalizeString, cn } from '@/lib/utils';
 
-const STORAGE_KEY_VISIBILITY = 'lk-ramos-customer-columns-visibility-v10';
-const STORAGE_KEY_ORDER = 'lk-ramos-customer-columns-order-v10';
-const STORAGE_KEY_SIZING = 'lk-ramos-customer-columns-sizing-v10';
-const STORAGE_KEY_PAGESIZE = 'lk-ramos-customer-page-size-v10';
+const STORAGE_KEY_VISIBILITY = 'lk-ramos-customer-columns-visibility-v11';
+const STORAGE_KEY_ORDER = 'lk-ramos-customer-columns-order-v11';
+const STORAGE_KEY_SIZING = 'lk-ramos-customer-columns-sizing-v11';
+const STORAGE_KEY_PAGESIZE = 'lk-ramos-customer-page-size-v11';
 
 interface DataTableProps {
   columns: ColumnDef<Customer, unknown>[];
@@ -201,25 +201,25 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
 
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
-      <Card className="rounded-[1.5rem] border border-border/50 dark:border-primary/20 bg-card shadow-lg overflow-hidden p-1">
+      <Card className="rounded-[1.5rem] border-2 border-zinc-200 dark:border-primary/30 bg-card shadow-xl overflow-hidden p-1">
         <div className="py-2">
           <div className="flex items-center justify-between px-4 py-2 gap-4">
             <div className='relative w-full max-w-sm group'>
-                <Search className='absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-60 group-focus-within:opacity-100 transition-opacity' />
+                <Search className='absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-80 group-focus-within:opacity-100 transition-opacity' />
                 <Input
                     placeholder="Busca Inteligente (Nome, CPF, ID...)"
                     value={globalFilter ?? ''}
                     onChange={(event) => setGlobalFilter(event.target.value)}
-                    className="pl-10 w-full bg-background border-primary/20 dark:border-primary/30 h-10 rounded-full focus-visible:ring-primary/20 shadow-sm transition-all font-medium text-xs placeholder:text-muted-foreground/60"
+                    className="pl-10 w-full bg-background border-2 border-zinc-300 dark:border-primary/40 h-11 rounded-full focus-visible:ring-primary/20 shadow-md transition-all font-bold text-xs placeholder:text-muted-foreground/80"
                 />
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-auto rounded-full font-bold h-10 border-border dark:border-primary/20 bg-background px-6 shadow-sm hover:bg-muted/50 transition-all text-xs">
+                <Button variant="outline" className="ml-auto rounded-full font-black h-11 border-2 border-zinc-300 dark:border-primary/30 bg-background px-6 shadow-md hover:bg-muted/50 transition-all text-[10px] uppercase tracking-widest">
                   Colunas <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-56 shadow-2xl border-2">
                 <DropdownMenuLabel>Personalizar Visão</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {table
@@ -229,7 +229,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
                     return (
                       <DropdownMenuCheckboxItem
                         key={column.id}
-                        className="capitalize text-xs font-medium"
+                        className="capitalize text-xs font-bold"
                         checked={column.getIsVisible()}
                         onCheckedChange={(value) => column.toggleVisibility(!!value)}
                       >
@@ -246,7 +246,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
                 <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
                     <TableHeader>
                         {table.getHeaderGroups().map(headerGroup => (
-                        <TableRow key={headerGroup.id} className="hover:bg-transparent border-b bg-muted/30 dark:bg-zinc-900/50">
+                        <TableRow key={headerGroup.id} className="hover:bg-transparent border-b-2 bg-muted/40 dark:bg-zinc-900/60">
                             <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
                             {headerGroup.headers.map(header => (
                                 <DraggableHeader key={header.id} header={header as Header<Customer, unknown>} />
@@ -269,14 +269,14 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
                             <TableRow
                             key={row.id}
                             data-state={row.getIsSelected() && 'selected'}
-                            className="hover:bg-muted/5 dark:hover:bg-primary/5 transition-colors border-b last:border-0 h-11"
+                            className="hover:bg-primary/[0.03] dark:hover:bg-primary/5 transition-colors border-b h-11"
                             >
                             {row.getVisibleCells().map((cell) => (
                                 <TableCell 
                                     key={cell.id} 
                                     style={{ width: cell.column.getSize() }}
                                     className={cn(
-                                        "p-2 text-xs",
+                                        "p-2 text-xs border-r last:border-r-0 border-zinc-100 dark:border-zinc-800/50",
                                         cell.column.id === 'Selecionar' && 'px-0 text-center'
                                     )}
                                 >
@@ -287,7 +287,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
                         ))
                         ) : (
                         <TableRow>
-                            <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground font-bold uppercase text-[10px] tracking-widest opacity-40">Nenhum cliente na base.</TableCell>
+                            <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground font-black uppercase text-[10px] tracking-widest opacity-40">Nenhum cliente na base.</TableCell>
                         </TableRow>
                         )}
                     </TableBody>
@@ -295,19 +295,19 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
             </div>
           </div>
 
-          <div className="flex items-center justify-between px-6 py-3 border-t bg-muted/5">
-            <div className="flex-1 text-[10px] font-black uppercase text-muted-foreground/40 tracking-widest">
+          <div className="flex items-center justify-between px-6 py-3 border-t-2 bg-muted/10">
+            <div className="flex-1 text-[10px] font-black uppercase text-foreground/40 tracking-widest">
               {table.getFilteredSelectedRowModel().rows.length} de{' '}
               {table.getFilteredRowModel().rows.length} selecionados
             </div>
             <div className="flex items-center space-x-6 lg:space-x-8">
                 <div className="flex items-center space-x-2">
-                    <p className="text-[10px] font-black uppercase text-muted-foreground/40">Linhas</p>
+                    <p className="text-[10px] font-black uppercase text-foreground/40">Linhas</p>
                     <Select
                         value={`${table.getState().pagination.pageSize}`}
                         onValueChange={(value) => table.setPageSize(Number(value))}
                     >
-                        <SelectTrigger className="h-8 w-[70px] bg-background border-border rounded-md text-xs">
+                        <SelectTrigger className="h-8 w-[70px] bg-background border-2 border-zinc-200 rounded-md text-xs font-bold">
                             <SelectValue placeholder={table.getState().pagination.pageSize} />
                         </SelectTrigger>
                         <SelectContent side="top">
@@ -318,9 +318,9 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
                     </Select>
                 </div>
                 <div className="flex items-center space-x-2">
-                    <Button variant="outline" className="h-8 w-8 p-0 border-border" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}><ChevronLeft className="h-4 w-4" /></Button>
-                    <div className="flex w-[80px] items-center justify-center text-[10px] font-black uppercase text-muted-foreground/40 tracking-tighter">Pág {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}</div>
-                    <Button variant="outline" className="h-8 w-8 p-0 border-border" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}><ChevronRight className="h-4 w-4" /></Button>
+                    <Button variant="outline" className="h-8 w-8 p-0 border-2" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}><ChevronLeft className="h-4 w-4" /></Button>
+                    <div className="flex w-[80px] items-center justify-center text-[10px] font-black uppercase text-foreground/60 tracking-tighter">Pág {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}</div>
+                    <Button variant="outline" className="h-8 w-8 p-0 border-2" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}><ChevronRight className="h-4 w-4" /></Button>
                 </div>
             </div>
           </div>
