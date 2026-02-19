@@ -175,17 +175,17 @@ export const getColumns = (
   {
     accessorKey: 'promoter',
     header: 'Promotora',
-    id: 'promotora'
+    id: 'Promotora'
   },
   {
     accessorKey: 'customer.name',
     header: 'Cliente',
-    id: 'customerName',
+    id: 'Cliente',
   },
   {
     accessorKey: 'customer.cpf',
     header: 'CPF',
-    id: 'customerCpf',
+    id: 'CPF',
     cell: ({row}) => {
         const cpf = row.original.customer.cpf;
         return (
@@ -199,7 +199,7 @@ export const getColumns = (
   {
     accessorKey: 'proposalNumber',
     header: 'Nº Proposta',
-    id: 'proposalNumber',
+    id: 'Nº Proposta',
     cell: ({ row }) => {
         const proposal = row.original;
         return (
@@ -215,12 +215,12 @@ export const getColumns = (
   {
     accessorKey: 'product',
     header: 'Produto',
-    id: 'produto'
+    id: 'Produto'
   },
   {
     accessorKey: 'bank',
     header: 'Banco',
-    id: 'banco',
+    id: 'Banco',
     cell: ({ row, table }) => {
         const bankRaw = row.original.bank;
         const bank = cleanBankName(bankRaw);
@@ -238,14 +238,14 @@ export const getColumns = (
   },
   {
     accessorKey: 'grossAmount',
-    header: () => <div className="text-right print:p-0 print:font-bold print:text-black">Valor Bruto</div>,
+    header: () => <div className="text-right">Valor Bruto</div>,
     cell: ({ row, table }) => {
       const isPrivacyMode = (table.options.meta as {isPrivacyMode?: boolean})?.isPrivacyMode;
       if (isPrivacyMode) return <div className="text-left font-medium">•••••</div>;
       const amount = parseFloat(row.getValue('grossAmount'));
       return <div className="text-right font-medium">{formatCurrency(amount)}</div>;
     },
-    id: 'grossAmount',
+    id: 'Valor Bruto',
   },
   {
     accessorKey: 'commissionPercentage',
@@ -256,7 +256,7 @@ export const getColumns = (
       const percentage = parseFloat(row.getValue('commissionPercentage'));
       return `${percentage.toFixed(2)}%`;
     },
-    id: 'commissionPercentage'
+    id: 'Comissão (%)'
   },
   {
     accessorKey: 'commissionValue',
@@ -267,7 +267,7 @@ export const getColumns = (
         const amount = parseFloat(row.getValue('commissionValue'));
         return formatCurrency(amount);
       },
-    id: 'commissionValue',
+    id: 'Valor Comissão',
   },
   {
     accessorKey: 'amountPaid',
@@ -278,7 +278,7 @@ export const getColumns = (
       const amount = parseFloat(row.getValue('amountPaid') || '0');
       return formatCurrency(amount);
     },
-    id: 'amountPaid',
+    id: 'Valor Pago',
   },
   {
     accessorKey: 'commissionStatus',
@@ -292,64 +292,7 @@ export const getColumns = (
         />
       );
     },
-    filterFn: (row, id, filterValue) => {
-        const commissionStatus = row.getValue(id) as string;
-        const mainStatus = row.original.status;
-        
-        // REGRA DE OURO: Reprovadas nunca aparecem no financeiro
-        if (mainStatus === 'Reprovado') return false;
-
-        // Extraímos metadados do filtro se for um objeto
-        const filterId = typeof filterValue === 'object' ? filterValue?.id : filterValue;
-        const hasDateFilter = typeof filterValue === 'object' ? !!filterValue?.hasDateFilter : false;
-        const hasGlobalFilter = typeof filterValue === 'object' ? !!filterValue?.hasGlobalFilter : false;
-
-        // REGRA PARA ABA "TODOS"
-        if (filterId === '__CUSTOM_FILTER_TODOS__') {
-            // BLINDAGEM FINANCEIRA: Se for "Pendente" ou "Parcial", MOSTRA SEMPRE (não importa a data)
-            if (commissionStatus === 'Pendente' || commissionStatus === 'Parcial') return true;
-
-            // Se for "Pago", mostramos apenas se for do mês vigente 
-            // OU se houver busca ativa (termo de pesquisa ou filtro de data)
-            if (mainStatus === 'Pago') {
-                if (hasDateFilter || hasGlobalFilter) return true; // Deixa o filtro de busca/data decidir
-
-                const checkDateStr = row.original.datePaidToClient || row.original.dateDigitized;
-                if (!checkDateStr) return false;
-                const dDate = new Date(checkDateStr);
-                const now = new Date();
-                return isSameMonth(dDate, now) && dDate.getFullYear() === now.getFullYear();
-            }
-            
-            // Pipeline visível permanentemente na aba Todos
-            const visibleInTodos = ['Em Andamento', 'Aguardando Saldo', 'Saldo Pago', 'Pendente'];
-            return visibleInTodos.includes(mainStatus);
-        }
-        
-        // REGRA PARA ABA "PAGAS"
-        if (filterId === 'Paga') {
-            if (commissionStatus !== 'Paga') return false;
-            if (hasDateFilter || hasGlobalFilter) return true;
-
-            const paymentDateStr = row.original.commissionPaymentDate;
-            if (!paymentDateStr) return false;
-            const pDate = new Date(paymentDateStr);
-            const now = new Date();
-            return isSameMonth(pDate, now) && pDate.getFullYear() === now.getFullYear();
-        }
-
-        // Filtros específicos por comissão (Pendente / Parcial)
-        if (filterId === 'Pendente') return commissionStatus === 'Pendente';
-        if (filterId === 'Parcial') return commissionStatus === 'Parcial';
-
-        // Suporte para arrays (uso interno tanstack)
-        if (Array.isArray(filterValue)) {
-            return filterValue.includes(commissionStatus);
-        }
-        
-        return commissionStatus === filterId;
-    },
-    id: 'commissionStatus',
+    id: 'Status Comissão',
   },
   {
     accessorKey: 'commissionPaymentDate',
@@ -357,30 +300,12 @@ export const getColumns = (
     cell: ({ row }) => {
         return formatDateSafe(row.getValue('commissionPaymentDate'));
     },
-    filterFn: (row, id, filterValue: DateRange) => {
-      if (!filterValue || !filterValue.from) {
-        return true;
-      }
-      
-      const cellValue = row.getValue(id) as string;
-      if (!cellValue) return false;
-
-      const cellDate = new Date(cellValue);
-      if (!isValid(cellDate)) return false;
-
-      const fromDate = filterValue.from;
-      const toDate = filterValue.to ? new Date(filterValue.to) : new Date(filterValue.from);
-      toDate.setHours(23, 59, 59, 999);
-
-      return cellDate >= fromDate && cellDate <= toDate;
-    },
-    id: 'commissionPaymentDate',
+    id: 'Data Pagamento',
   },
   {
     accessorKey: 'status',
     header: 'Status Proposta',
-    id: 'status',
-    enableHiding: true,
+    id: 'Status Proposta',
     cell: ({ row }) => {
         const proposal = row.original;
         return (
