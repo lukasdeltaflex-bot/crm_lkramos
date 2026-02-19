@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ColumnDef, Header, flexRender } from '@tanstack/react-table';
@@ -44,8 +45,8 @@ const CopyButton = ({ text, label }: { text: string | undefined; label: string }
         });
     };
     return (
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleCopy}>
-            <Copy className="h-3.5 w-3.5" />
+        <Button variant="ghost" size="icon" className="h-7 w-7 opacity-20 hover:opacity-100 transition-opacity" onClick={handleCopy}>
+            <Copy className="h-3 w-3" />
             <span className="sr-only">Copiar {label}</span>
         </Button>
     );
@@ -73,14 +74,14 @@ export const DraggableHeader = ({ header }: { header: Header<Customer, unknown> 
             colSpan={header.colSpan}
             style={style}
             className={cn(
-                'relative p-0 h-14 border-r last:border-r-0 bg-muted/30 group transition-colors hover:bg-muted/50',
+                'relative p-0 h-12 border-r last:border-r-0 bg-transparent group transition-colors hover:bg-muted/10',
                 isSelect && 'w-[50px] min-w-[50px]'
             )}
         >
             <div className="flex flex-col h-full justify-center">
                 <div
                     className={cn(
-                        'flex items-center gap-2 h-full px-3',
+                        'flex items-center gap-1.5 h-full px-3',
                         isDraggable && 'cursor-pointer select-none',
                         isActions && 'justify-end'
                     )}
@@ -90,15 +91,15 @@ export const DraggableHeader = ({ header }: { header: Header<Customer, unknown> 
                         <div
                             {...attributes}
                             {...listeners}
-                            className="p-1 hover:bg-primary/10 rounded cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-primary transition-colors"
+                            className="p-1 hover:bg-primary/5 rounded cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-primary transition-colors"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <GripVertical className="h-4 w-4" />
+                            <GripVertical className="h-3.5 w-3.5" />
                         </div>
                     )}
 
                     <div className={cn(
-                        "overflow-hidden font-black text-xs uppercase tracking-wider text-muted-foreground leading-tight flex items-center gap-1.5",
+                        "overflow-hidden font-black text-[10px] uppercase tracking-[0.1em] text-muted-foreground/60 leading-tight flex items-center gap-1",
                         isActions && "text-right pr-2",
                         isSelect && "justify-center w-full pr-0"
                     )}>
@@ -123,8 +124,8 @@ export const DraggableHeader = ({ header }: { header: Header<Customer, unknown> 
                     onMouseDown={header.getResizeHandler()}
                     onTouchStart={header.getResizeHandler()}
                     className={cn(
-                        "absolute right-0 top-0 h-full w-1.5 cursor-col-resize select-none touch-none hover:bg-primary/40 z-20 transition-colors",
-                        header.column.getIsResizing() ? "bg-primary w-1" : "opacity-0 group-hover:opacity-100"
+                        "absolute right-0 top-0 h-full w-1.5 cursor-col-resize select-none touch-none hover:bg-primary/20 z-20 transition-colors",
+                        header.column.getIsResizing() ? "bg-primary w-0.5" : "opacity-0"
                     )}
                 />
             )}
@@ -192,7 +193,7 @@ export const getColumns = (
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Selecionar tudo"
-        className="rounded-full h-5 w-5"
+        className="rounded-full h-5 w-5 border-border/50"
       />
     ),
     cell: ({ row }) => (
@@ -200,7 +201,7 @@ export const getColumns = (
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
         aria-label="Selecionar linha"
-        className="rounded-full h-5 w-5"
+        className="rounded-full h-5 w-5 border-border/50"
       />
     ),
     enableSorting: false,
@@ -211,6 +212,7 @@ export const getColumns = (
     id: 'ID',
     accessorKey: 'numericId',
     header: 'ID',
+    cell: ({ row }) => <span className="text-xs font-medium text-muted-foreground/60">{row.original.numericId}</span>,
     size: 80,
   },
   {
@@ -220,7 +222,7 @@ export const getColumns = (
     cell: ({ row }) => {
         const customer = row.original;
         return (
-            <Link href={`/customers/${customer.id}`} className="font-bold text-primary hover:underline uppercase text-xs tracking-tight">
+            <Link href={`/customers/${customer.id}`} className="font-bold text-primary hover:underline uppercase text-xs tracking-tight truncate block max-w-[220px]">
                 {customer.name}
             </Link>
         )
@@ -234,7 +236,7 @@ export const getColumns = (
     cell: ({ row }) => {
         const cpf = row.original.cpf;
         return (
-          <div className="flex items-center gap-1 font-medium text-muted-foreground text-xs">
+          <div className="flex items-center gap-1 font-medium text-muted-foreground/80 text-[11px]">
             <span>{cpf}</span>
             <CopyButton text={cpf} label="CPF" />
           </div>
@@ -254,7 +256,7 @@ export const getColumns = (
             <span>{phone}</span>
             {isWhatsAppNumber && (
               <a href={getWhatsAppUrl(phone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600">
-                <WhatsAppIcon className="h-4 w-4" />
+                <WhatsAppIcon className="h-3.5 w-3.5" />
               </a>
             )}
           </div>
@@ -268,14 +270,14 @@ export const getColumns = (
     header: 'Telefone 2',
     cell: ({ row }) => {
         const phone = row.original.phone2;
-        if (!phone) return <span className="text-muted-foreground/30 italic text-xs">Não informado</span>;
+        if (!phone) return <span className="text-muted-foreground/30 italic text-[10px]">---</span>;
         const isWhatsAppNumber = isWhatsApp(phone);
         return (
           <div className="flex items-center gap-2 font-medium text-xs">
             <span>{phone}</span>
             {isWhatsAppNumber && (
               <a href={getWhatsAppUrl(phone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600">
-                <WhatsAppIcon className="h-4 w-4" />
+                <WhatsAppIcon className="h-3.5 w-3.5" />
               </a>
             )}
           </div>
@@ -287,21 +289,21 @@ export const getColumns = (
     id: 'Cidade',
     accessorKey: 'city',
     header: 'Cidade',
-    cell: ({ row }) => <span className="text-xs">{row.original.city || '-'}</span>,
+    cell: ({ row }) => <span className="text-xs text-muted-foreground truncate block">{row.original.city || '-'}</span>,
     size: 150,
   },
   {
     id: 'Estado',
     accessorKey: 'state',
     header: 'Estado',
-    cell: ({ row }) => <span className="text-xs">{row.original.state || '-'}</span>,
+    cell: ({ row }) => <span className="text-xs text-muted-foreground font-bold">{row.original.state || '-'}</span>,
     size: 80,
   },
   {
     id: 'Observações',
     accessorKey: 'observations',
     header: 'Observações',
-    cell: ({ row }) => <div className="truncate max-w-[200px] text-zinc-500 italic text-xs">{row.original.observations}</div>,
+    cell: ({ row }) => <div className="truncate max-w-[200px] text-zinc-400 italic text-[10px]">{row.original.observations}</div>,
     size: 200,
   },
   {

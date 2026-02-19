@@ -265,63 +265,70 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             {appliedDateRange && <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => { setStartDateInput(''); setEndDateInput(''); setAppliedDateRange(undefined); }}><X className="h-4 w-4" /></Button>}
         </div>
 
-        <div className="flex items-center justify-between gap-4 py-2">
-            <div className='relative w-full max-w-md'>
-                <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-60' />
-                <Input placeholder="Busca Inteligente..." value={globalFilter} onChange={(e) => setGlobalFilter(e.target.value)} className="pl-9 h-11 bg-card border-primary/10 rounded-full text-sm font-medium shadow-sm focus-visible:ring-primary/20" />
-            </div>
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="h-11 rounded-full px-6 font-bold border-primary/10 bg-card shadow-sm gap-2">
-                        Colunas <ChevronDown className="h-4 w-4" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>Exibir/Ocultar</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {table.getAllColumns().filter(c => c.getCanHide()).map(column => (
-                        <DropdownMenuCheckboxItem key={column.id} className="capitalize text-xs font-medium" checked={column.getIsVisible()} onCheckedChange={v => column.toggleVisibility(!!v)}>
-                            {column.id}
-                        </DropdownMenuCheckboxItem>
-                    ))}
-                </DropdownMenuContent>
-            </DropdownMenu>
-        </div>
-
-        <div className="rounded-2xl border shadow-xl overflow-hidden bg-card financial-table">
-            <div className="overflow-x-auto">
-                <Table style={{ width: table.getTotalSize() }}>
-                    <TableHeader className="bg-muted/20">
-                        {table.getHeaderGroups().map(hg => (
-                            <TableRow key={hg.id} className="border-b-2">
-                                {hg.headers.map(h => <DraggableHeader key={h.id} header={h} />)}
-                            </TableRow>
+        <Card className="rounded-[2rem] border border-border/50 bg-card shadow-sm overflow-hidden p-2">
+            <div className="flex items-center justify-between px-4 py-2 gap-4">
+                <div className='relative w-full max-w-md'>
+                    <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-40' />
+                    <Input 
+                        placeholder="Busca Inteligente..." 
+                        value={globalFilter} 
+                        onChange={(e) => setGlobalFilter(e.target.value)} 
+                        className="pl-9 h-10 bg-muted/20 border-transparent rounded-full text-xs font-medium placeholder:text-muted-foreground/50 focus-visible:ring-primary/20" 
+                    />
+                </div>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="h-10 rounded-full px-6 font-bold border-border/50 bg-card shadow-sm gap-2 text-xs text-muted-foreground">
+                            Colunas <ChevronDown className="h-4 w-4 opacity-50" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuLabel>Exibir/Ocultar</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {table.getAllColumns().filter(c => c.getCanHide()).map(column => (
+                            <DropdownMenuCheckboxItem key={column.id} className="capitalize text-xs font-medium" checked={column.getIsVisible()} onCheckedChange={v => column.toggleVisibility(!!v)}>
+                                {column.id}
+                            </DropdownMenuCheckboxItem>
                         ))}
-                    </TableHeader>
-                    <TableBody>
-                        {table.getRowModel().rows.length > 0 ? (
-                            table.getRowModel().rows.map(row => {
-                                const status = row.original.commissionStatus;
-                                const colorValue = statusColors[status?.toUpperCase()] || statusColors[status || ''];
-                                return (
-                                    <TableRow 
-                                        key={row.id} 
-                                        className={cn("transition-colors border-b hover:bg-muted/5", colorValue && "status-row-custom")} 
-                                        style={colorValue ? { '--status-color': colorValue } as any : {}}
-                                    >
-                                        {row.getVisibleCells().map(cell => (
-                                            <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-                                        ))}
-                                    </TableRow>
-                                )
-                            })
-                        ) : (
-                            <TableRow><TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground font-bold uppercase text-[10px] tracking-widest opacity-40">Sem registros para este filtro.</TableCell></TableRow>
-                        )}
-                    </TableBody>
-                </Table>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
-        </div>
+
+            <div className="rounded-2xl border-none overflow-hidden financial-table">
+                <div className="overflow-x-auto">
+                    <Table style={{ width: table.getTotalSize() }}>
+                        <TableHeader className="bg-muted/10">
+                            {table.getHeaderGroups().map(hg => (
+                                <TableRow key={hg.id} className="border-b">
+                                    {hg.headers.map(h => <DraggableHeader key={h.id} header={h as any} />)}
+                                </TableRow>
+                            ))}
+                        </TableHeader>
+                        <TableBody>
+                            {table.getRowModel().rows.length > 0 ? (
+                                table.getRowModel().rows.map(row => {
+                                    const status = row.original.commissionStatus;
+                                    const colorValue = statusColors[status?.toUpperCase()] || statusColors[status || ''];
+                                    return (
+                                        <TableRow 
+                                            key={row.id} 
+                                            className={cn("transition-colors border-b h-12 hover:bg-muted/5", colorValue && "status-row-custom")} 
+                                            style={colorValue ? { '--status-color': colorValue } as any : {}}
+                                        >
+                                            {row.getVisibleCells().map(cell => (
+                                                <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                                            ))}
+                                        </TableRow>
+                                    )
+                                })
+                            ) : (
+                                <TableRow><TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground font-bold uppercase text-[10px] tracking-widest opacity-40">Sem registros para este filtro.</TableCell></TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+            </div>
+        </Card>
     </div>
   );
 });

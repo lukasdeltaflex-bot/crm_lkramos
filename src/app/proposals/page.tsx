@@ -227,34 +227,17 @@ function ProposalsPageContent() {
     }
 
     const visibleColumns = table.getVisibleLeafColumns().filter(
-        c => c.id !== 'select' && c.id !== 'actions'
+        c => c.id !== 'Selecionar' && c.id !== 'Ações'
     );
 
-    const idMap: {[key: string]: string} = {
-        promoter: 'Promotora',
-        proposalNumber: 'Nº Proposta',
-        customerName: 'Cliente',
-        customerCpf: 'CPF',
-        product: 'Produto',
-        banco_digitado_v6: 'Banco Digitado',
-        operator: 'Operador',
-        grossAmount: 'Valor Bruto',
-        status: 'Status',
-        commissionValue: 'Comissão',
-        dateDigitized: 'Data Digitação',
-        dateApproved: 'Data Averbação',
-        datePaidToClient: 'Data Pgto. Cliente',
-        debtBalanceArrivalDate: 'Chegada Saldo',
-    };
-
-    const headers = visibleColumns.map(c => idMap[c.id] || c.id);
+    const headers = visibleColumns.map(c => c.id);
 
     const dataForSheet = [headers];
     rowsToExport.forEach(row => {
         const rowData: any[] = [];
         visibleColumns.forEach(col => {
             let value = row.getValue(col.id as any);
-            if (['dateDigitized', 'dateApproved', 'datePaidToClient', 'debtBalanceArrivalDate'].includes(col.id)) {
+            if (['Data Digitação', 'Data Averbação', 'Data Pgto. Cliente', 'Chegada Saldo'].includes(col.id)) {
                 if (value) {
                     try { value = format(new Date(value as string), "dd/MM/yyyy", { locale: ptBR }); } catch(e) {}
                 }
@@ -268,80 +251,6 @@ function ProposalsPageContent() {
     const workbook = utils.book_new();
     utils.book_append_sheet(workbook, worksheet, 'Propostas');
     writeFile(workbook, 'propostas.xlsx');
-  };
-
-  const handleExportToPdf = async () => {
-    const table = tableRef.current?.table;
-    if (!table) return;
-
-    const { default: jsPDF } = await import('jspdf');
-    const { default: autoTable } = await import('jspdf-autotable');
-
-    const selectedRows = table.getFilteredSelectedRowModel().rows;
-    let rowsToExport = selectedRows;
-
-    if (rowsToExport.length === 0) {
-        rowsToExport = table.getFilteredRowModel().rows;
-    }
-
-    if (rowsToExport.length === 0) {
-        toast({
-            variant: "destructive",
-            title: "Nenhuma proposta para exportar",
-            description: "A tabela está vazia ou os filtros não retornaram resultados.",
-        });
-        return;
-    }
-
-    const visibleColumns = table.getVisibleLeafColumns().filter(
-        c => c.id !== 'select' && c.id !== 'actions'
-    );
-
-    const idMap: {[key: string]: string} = {
-        promoter: 'Promotora',
-        proposalNumber: 'Nº Proposta',
-        customerName: 'Cliente',
-        customerCpf: 'CPF',
-        product: 'Produto',
-        banco_digitado_v6: 'Banco Digitado',
-        operator: 'Operador',
-        grossAmount: 'Valor Bruto',
-        status: 'Status',
-        commissionValue: 'Comissão',
-        dateDigitized: 'Data Digitação',
-        dateApproved: 'Data Averbação',
-        datePaidToClient: 'Data Pgto. Cliente',
-        debtBalanceArrivalDate: 'Chegada Saldo',
-    };
-
-    const head = [visibleColumns.map(c => idMap[c.id] || c.id)];
-
-    const body = rowsToExport.map(row => {
-        const rowData: any[] = [];
-        visibleColumns.forEach(col => {
-            let value = row.getValue(col.id as any);
-             if (['dateDigitized', 'dateApproved', 'datePaidToClient', 'debtBalanceArrivalDate'].includes(col.id)) {
-                if (value) {
-                    try { value = format(new Date(value as string), "dd/MM/yyyy", { locale: ptBR }); } catch(e) {}
-                }
-            }
-            if (['grossAmount', 'commissionValue'].includes(col.id)) {
-                value = formatCurrency(Number(value));
-            }
-            rowData.push(value ?? '');
-        });
-        return rowData;
-    });
-
-    const doc = new jsPDF();
-    doc.text("Relatório de Propostas", 14, 15);
-    autoTable(doc, {
-        head: head,
-        body: body,
-        startY: 20,
-    });
-
-    doc.save('propostas.pdf');
   };
 
   const handleDeleteProposal = React.useCallback(async (proposalId: string) => {
@@ -395,7 +304,7 @@ function ProposalsPageContent() {
         }
     }
 
-    // BLINDAGEM FINANCEIRA: Se for elegível (averbado e não reprovado), define como Pendente
+    // BLINDAGEM FINANCEIRA
     const willHaveApprovalDate = dataToUpdate.dateApproved || proposal.dateApproved;
     const isNotReprovado = newStatus !== 'Reprovado';
     
@@ -405,7 +314,7 @@ function ProposalsPageContent() {
         }
     }
 
-    // Linha do Tempo Automática
+    // Linha do Tempo
     const historyEntry: ProposalHistoryEntry = {
         id: crypto.randomUUID(),
         date: currentDate,
@@ -416,7 +325,6 @@ function ProposalsPageContent() {
 
     const docRef = doc(firestore, 'loanProposals', proposalId);
     
-    // Non-blocking update
     updateDoc(docRef, dataToUpdate)
         .then(() => {
             toast({
@@ -432,12 +340,6 @@ function ProposalsPageContent() {
                     requestResourceData: dataToUpdate
                 }));
             }
-            console.error('Error updating status:', error);
-            toast({
-                variant: 'destructive',
-                title: 'Erro ao Atualizar',
-                description: 'Não foi possível alterar o status da proposta.',
-            });
         });
   }, [firestore, proposals, user]);
 
@@ -467,7 +369,6 @@ function ProposalsPageContent() {
           dataToUpdate.debtBalanceArrivalDate = currentDate;
       }
 
-      // BLINDAGEM FINANCEIRA: Se for elegível (averbado e não reprovado), define como Pendente
       const willHaveApprovalDate = dataToUpdate.dateApproved || proposal?.dateApproved;
       const isNotReprovado = newStatus !== 'Reprovado';
       
@@ -477,7 +378,6 @@ function ProposalsPageContent() {
           }
       }
 
-      // Linha do Tempo Automática (Massa)
       if (proposal && proposal.status !== newStatus) {
           dataToUpdate.history = arrayUnion({
               id: crypto.randomUUID(),
@@ -497,19 +397,7 @@ function ProposalsPageContent() {
         description: `${selectedIds.length} proposta(s) foram atualizadas para "${newStatus}".`,
       });
     } catch (error: any) {
-      if (error.code === 'permission-denied') {
-          errorEmitter.emit('permission-error', new FirestorePermissionError({
-              path: 'batch/loanProposals',
-              operation: 'update',
-              requestResourceData: { status: newStatus }
-          }));
-      }
       console.error('Error updating statuses in bulk:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao atualizar',
-        description: 'Ocorreu um erro ao atualizar o status das propostas.',
-      });
     }
   }, [firestore, rowSelection, proposals, user]);
   
@@ -527,32 +415,15 @@ function ProposalsPageContent() {
     
     try {
       await batch.commit()
-      toast({
-          title: 'Propostas Canceladas!',
-          description: `${selectedIds.length} proposta(s) foram canceladas com sucesso.`,
-      });
+      toast({ title: 'Propostas Canceladas!', description: `${selectedIds.length} proposta(s) foram removidas.` });
     } catch (error: any) {
-      if (error.code === 'permission-denied') {
-          errorEmitter.emit('permission-error', new FirestorePermissionError({
-              path: 'batch/loanProposals',
-              operation: 'delete'
-          }));
-      }
       console.error('Error deleting proposals in bulk:', error);
-      toast({
-          variant: 'destructive',
-          title: 'Erro ao cancelar',
-          description: 'Ocorreu um erro ao cancelar as propostas selecionadas.',
-      });
     }
   }, [firestore, rowSelection]);
 
 
   const handleFormSubmit = async (data: any) => {
-    if (!firestore || !user) {
-        toast({ variant: 'destructive', title: 'Erro de Sessão', description: 'Usuário não autenticado.' });
-        return;
-    }
+    if (!firestore || !user) return;
   
     const toISO = (dateString?: string): string | null => {
         if (!dateString || dateString.trim() === '') return null;
@@ -570,7 +441,6 @@ function ProposalsPageContent() {
         const dateApproved = toISO(data.dateApproved);
         let commissionStatus = data.commissionStatus;
 
-        // BLINDAGEM FINANCEIRA: Se for elegível (averbado e não reprovado), define como Pendente se estiver vazio
         const isEligibleForFinancialFlow = 
             data.status !== 'Reprovado' && 
             (!!dateApproved || data.status === 'Pago' || data.status === 'Saldo Pago');
@@ -600,7 +470,6 @@ function ProposalsPageContent() {
       if (sheetMode === 'edit' && selectedProposal) {
         const docRef = doc(firestore, 'loanProposals', selectedProposal.id);
         
-        // Linha do Tempo Automática na Edição via Formulário
         if (data.status !== selectedProposal.status) {
             const historyEntry: ProposalHistoryEntry = {
                 id: crypto.randomUUID(),
@@ -612,19 +481,8 @@ function ProposalsPageContent() {
             proposalData.statusUpdatedAt = currentDate;
         }
 
-        // Non-blocking setDoc
-        setDoc(docRef, proposalData, { merge: true })
-            .catch(async (error) => {
-                if (error.code === 'permission-denied') {
-                    errorEmitter.emit('permission-error', new FirestorePermissionError({
-                        path: docRef.path,
-                        operation: 'update',
-                        requestResourceData: proposalData
-                    }));
-                }
-            });
-
-        toast({ title: 'Proposta Atualizada!', description: `A proposta foi salva.` });
+        setDoc(docRef, proposalData, { merge: true });
+        toast({ title: 'Proposta Atualizada!' });
         setIsDialogOpen(false);
       } else {
         const newDocRef = doc(collection(firestore, 'loanProposals'));
@@ -633,37 +491,14 @@ function ProposalsPageContent() {
           id: newDocRef.id,
           statusUpdatedAt: currentDate 
         };
-        
-        // Non-blocking setDoc
-        setDoc(newDocRef, finalData)
-            .catch(async (error) => {
-                if (error.code === 'permission-denied') {
-                    errorEmitter.emit('permission-error', new FirestorePermissionError({
-                        path: newDocRef.path,
-                        operation: 'create',
-                        requestResourceData: finalData
-                    }));
-                }
-            });
-
-        toast({ title: 'Proposta Salva!', description: `A nova proposta foi criada.` });
+        setDoc(newDocRef, finalData);
+        toast({ title: 'Proposta Salva!' });
         setIsDialogOpen(false);
       }
-    } catch (error: any) {
-      console.error('Error saving proposal:', error);
-      toast({ variant: 'destructive', title: 'Falha Técnica', description: 'Não foi possível preparar os dados para salvamento.' });
     } finally {
         setIsSaving(false);
     }
   };
-
-  const getSheetTitle = () => {
-    if (sheetMode === 'new') return 'Nova Proposta';
-    if (sheetMode === 'edit') return 'Editar Proposta';
-    return 'Detalhes da Proposta';
-  };
-
-  const isLoading = proposalsLoading || customersLoading || isUserLoading || settingsLoading;
 
   const columns = React.useMemo(() => getColumns(handleEditProposal, handleViewProposal, handleDeleteProposal, handleStatusChange, handleDuplicateProposal), [handleEditProposal, handleViewProposal, handleDeleteProposal, handleStatusChange, handleDuplicateProposal]);
 
@@ -671,70 +506,43 @@ function ProposalsPageContent() {
 
   return (
     <>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-6">
         <PageHeader title="Propostas" />
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
             {selectedCount > 0 && (
-                <>
-                    <Button variant="outline" onClick={handlePrint} className="bg-primary/5 border-primary/20 text-primary">
-                        <Printer className="mr-2 h-4 w-4" />
-                        Imprimir Seleção ({selectedCount})
-                    </Button>
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button variant="destructive">
-                                <Trash2 />
-                                Cancelar ({selectedCount})
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    Essa ação não pode ser desfeita. Isso irá cancelar permanentemente {selectedCount} proposta(s).
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogAction onClick={handleBulkDelete}>Cancelar Propostas</AlertDialogAction>
-                                <AlertDialogCancel>Voltar</AlertDialogCancel>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                </>
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm" className="rounded-full px-6 text-xs font-bold shadow-lg">
+                            <Trash2 className="h-3.5 w-3.5 mr-2" /> Cancelar ({selectedCount})
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                            <AlertDialogDescription>Remover {selectedCount} proposta(s) permanentemente?</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogAction onClick={handleBulkDelete}>Sim, Remover</AlertDialogAction>
+                            <AlertDialogCancel>Voltar</AlertDialogCancel>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             )}
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="outline">
-                        <FileDown />
-                        Exportar
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuItem onSelect={handleExportToExcel}>
-                        Exportar para Excel (.xlsx)
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={handleExportToPdf}>
-                        Exportar para PDF (.pdf)
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-            <Button variant="outline" onClick={handlePrint}>
-                <Printer />
-                Imprimir Relatório
+            <Button variant="outline" className="h-10 px-6 rounded-full font-bold border-border/50 text-xs" onClick={handleExportToExcel}>
+                <FileDown className="mr-2 h-4 w-4" /> Exportar
             </Button>
-            <Button onClick={handleNewProposal}>
-                <PlusCircle />
-                Nova Proposta
+            <Button variant="outline" className="h-10 px-6 rounded-full font-bold border-border/50 text-xs" onClick={handlePrint}>
+                <Printer className="mr-2 h-4 w-4" /> Imprimir
+            </Button>
+            <Button onClick={handleNewProposal} className="h-10 px-8 rounded-full font-bold bg-[#00AEEF] hover:bg-[#0096D1] text-white shadow-lg shadow-[#00AEEF]/20 transition-all border-none text-xs">
+                <PlusCircle className="mr-2 h-4 w-4" /> Nova Proposta
             </Button>
         </div>
       </div>
+
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent
-          className="max-w-3xl"
-        >
-          <DialogHeader className="print:hidden">
-            <DialogTitle>{getSheetTitle()}</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader><DialogTitle>{sheetMode === 'edit' ? 'Editar Proposta' : 'Nova Proposta'}</DialogTitle></DialogHeader>
           <ProposalForm 
             proposal={selectedProposal} 
             allProposals={proposals || []}
@@ -763,14 +571,7 @@ function ProposalsPageContent() {
       </Dialog>
 
       {isLoading ? (
-        <div className="rounded-md border border-border/50 p-4">
-            <div className="space-y-2">
-              <Skeleton className="h-10 w-full" />
-              {Array.from({ length: 10 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-        </div>
+        <div className="rounded-md border border-border/50 p-4"><Skeleton className="h-64 w-full" /></div>
       ) : (
         <ProposalsDataTable 
             ref={tableRef}

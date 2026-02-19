@@ -27,7 +27,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getAge } from '@/lib/utils';
+import { getAge, cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -155,12 +155,12 @@ function CustomersPageContent() {
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <PageHeader title="Clientes" />
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="h-10 px-6 rounded-full font-bold border-primary/10 hover:bg-primary/5 transition-all">
+                    <Button variant="outline" className="h-10 px-6 rounded-full font-bold border-border/50 hover:bg-muted/50 transition-all text-xs">
                         <FileDown className="mr-2 h-4 w-4" /> Exportar
                     </Button>
                 </DropdownMenuTrigger>
@@ -171,7 +171,7 @@ function CustomersPageContent() {
             <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
                 <Button 
                     variant="outline" 
-                    className="h-10 px-6 rounded-full font-bold bg-zinc-50/50 text-zinc-700 border-zinc-200 hover:bg-zinc-100"
+                    className="h-10 px-6 rounded-full font-bold bg-background text-foreground border-border/50 hover:bg-muted/50 transition-all text-xs"
                     onClick={() => setIsAiModalOpen(true)}
                 >
                     <Sparkles className="h-4 w-4 mr-2" /> Novo Cliente com IA
@@ -183,30 +183,36 @@ function CustomersPageContent() {
             </Dialog>
             <Button 
                 onClick={handleNewCustomer} 
-                className="h-10 px-8 rounded-full font-bold bg-sky-500 hover:bg-sky-600 text-white shadow-lg shadow-sky-500/20 transition-all border-none"
+                className="h-10 px-8 rounded-full font-bold bg-[#00AEEF] hover:bg-[#0096D1] text-white shadow-lg shadow-[#00AEEF]/20 transition-all border-none text-xs"
             >
                 <PlusCircle className="mr-2 h-4 w-4" /> Novo Cliente
             </Button>
         </div>
       </div>
 
-      <Tabs value={filter} onValueChange={setFilter} className="mb-8">
-        <TabsList className="bg-muted/30 p-1 rounded-full border border-border/50 h-12 flex w-fit gap-2">
+      <Tabs value={filter} onValueChange={setFilter} className="mb-6">
+        <TabsList className="bg-transparent p-0 flex w-fit gap-3">
           <TabsTrigger 
             value="active" 
-            className="gap-2 rounded-full font-bold px-8 h-full transition-all data-[state=active]:bg-green-50 data-[state=active]:text-green-600 border border-transparent data-[state=active]:border-green-500/20"
+            className={cn(
+                "gap-2 rounded-full font-bold px-6 h-9 transition-all border border-border/50 text-xs",
+                "data-[state=active]:bg-green-50 data-[state=active]:text-green-600 data-[state=active]:border-green-200"
+            )}
           >
-            <UserCheck className="h-4 w-4" />
+            <UserCheck className="h-3.5 w-3.5" />
             Ativos 
-            <Badge variant="secondary" className="bg-green-100 text-green-700 ml-1 h-5 w-5 p-0 flex items-center justify-center rounded-full border-none text-[10px] font-black">{activeCustomers.length}</Badge>
+            <Badge variant="secondary" className="bg-green-100 text-green-700 ml-1.5 h-5 min-w-[20px] p-0 flex items-center justify-center rounded-full border-none text-[10px] font-black">{activeCustomers.length}</Badge>
           </TabsTrigger>
           <TabsTrigger 
             value="inactive" 
-            className="gap-2 rounded-full font-bold px-8 h-full transition-all data-[state=active]:bg-zinc-100 data-[state=active]:text-zinc-600 border border-transparent data-[state=active]:border-zinc-500/20"
+            className={cn(
+                "gap-2 rounded-full font-bold px-6 h-9 transition-all border border-border/50 text-xs",
+                "data-[state=active]:bg-zinc-100 data-[state=active]:text-zinc-600 data-[state=active]:border-zinc-300"
+            )}
           >
-            <UserX className="h-4 w-4" />
+            <UserX className="h-3.5 w-3.5" />
             Inativos 
-            <Badge variant="secondary" className="bg-zinc-200 text-zinc-700 ml-1 h-5 w-5 p-0 flex items-center justify-center rounded-full border-none text-[10px] font-black">{inactiveCustomers.length}</Badge>
+            <Badge variant="secondary" className="bg-zinc-200 text-zinc-700 ml-1.5 h-5 min-w-[20px] p-0 flex items-center justify-center rounded-full border-none text-[10px] font-black">{inactiveCustomers.length}</Badge>
           </TabsTrigger>
         </TabsList>
       </Tabs>
