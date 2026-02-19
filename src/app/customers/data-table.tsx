@@ -61,10 +61,10 @@ import type { Customer } from '@/lib/types';
 import { normalizeString, cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 
-const STORAGE_KEY_VISIBILITY = 'lk-ramos-customer-columns-visibility-v7';
-const STORAGE_KEY_ORDER = 'lk-ramos-customer-columns-order-v7';
-const STORAGE_KEY_SIZING = 'lk-ramos-customer-columns-sizing-v7';
-const STORAGE_KEY_PAGESIZE = 'lk-ramos-customer-page-size-v3';
+const STORAGE_KEY_VISIBILITY = 'lk-ramos-customer-columns-visibility-v8';
+const STORAGE_KEY_ORDER = 'lk-ramos-customer-columns-order-v8';
+const STORAGE_KEY_SIZING = 'lk-ramos-customer-columns-sizing-v8';
+const STORAGE_KEY_PAGESIZE = 'lk-ramos-customer-page-size-v4';
 
 
 interface DataTableProps {

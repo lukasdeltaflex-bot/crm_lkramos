@@ -44,7 +44,7 @@ const CopyButton = ({ text, label }: { text: string | undefined; label: string }
         });
     };
     return (
-        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopy}>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleCopy}>
             <Copy className="h-3.5 w-3.5" />
             <span className="sr-only">Copiar {label}</span>
         </Button>
@@ -93,12 +93,12 @@ export const DraggableHeader = ({ header }: { header: Header<Customer, unknown> 
                             className="p-1 hover:bg-primary/10 rounded cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-primary transition-colors"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <GripVertical className="h-3.5 w-3.5" />
+                            <GripVertical className="h-4 w-4" />
                         </div>
                     )}
 
                     <div className={cn(
-                        "overflow-hidden font-bold text-[11px] uppercase tracking-wider text-muted-foreground leading-tight flex items-center gap-1",
+                        "overflow-hidden font-black text-[11px] uppercase tracking-wider text-muted-foreground leading-tight flex items-center gap-1.5",
                         isActions && "text-right pr-2",
                         isSelect && "justify-center w-full pr-0"
                     )}>
@@ -220,7 +220,7 @@ export const getColumns = (
     cell: ({ row }) => {
         const customer = row.original;
         return (
-            <Link href={`/customers/${customer.id}`} className="font-bold text-primary hover:underline uppercase text-[11px] tracking-tight">
+            <Link href={`/customers/${customer.id}`} className="font-bold text-primary hover:underline uppercase text-xs tracking-tight">
                 {customer.name}
             </Link>
         )
@@ -234,7 +234,7 @@ export const getColumns = (
     cell: ({ row }) => {
         const cpf = row.original.cpf;
         return (
-          <div className="flex items-center gap-1 font-medium text-muted-foreground text-[11px]">
+          <div className="flex items-center gap-1 font-medium text-muted-foreground text-xs">
             <span>{cpf}</span>
             <CopyButton text={cpf} label="CPF" />
           </div>
@@ -250,7 +250,7 @@ export const getColumns = (
         const phone = row.original.phone;
         const isWhatsAppNumber = isWhatsApp(phone);
         return (
-          <div className="flex items-center gap-2 font-medium text-[11px]">
+          <div className="flex items-center gap-2 font-medium text-xs">
             <span>{phone}</span>
             {isWhatsAppNumber && (
               <a href={getWhatsAppUrl(phone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600">
@@ -268,10 +268,10 @@ export const getColumns = (
     header: 'Telefone 2',
     cell: ({ row }) => {
         const phone = row.original.phone2;
-        if (!phone) return <span className="text-muted-foreground/30 italic text-[10px]">Não informado</span>;
+        if (!phone) return <span className="text-muted-foreground/30 italic text-[11px]">Não informado</span>;
         const isWhatsAppNumber = isWhatsApp(phone);
         return (
-          <div className="flex items-center gap-2 font-medium text-[11px]">
+          <div className="flex items-center gap-2 font-medium text-xs">
             <span>{phone}</span>
             {isWhatsAppNumber && (
               <a href={getWhatsAppUrl(phone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600">
@@ -287,21 +287,21 @@ export const getColumns = (
     id: 'Cidade',
     accessorKey: 'city',
     header: 'Cidade',
-    cell: ({ row }) => row.original.city || '-',
+    cell: ({ row }) => <span className="text-xs">{row.original.city || '-'}</span>,
     size: 150,
   },
   {
     id: 'Estado',
     accessorKey: 'state',
     header: 'Estado',
-    cell: ({ row }) => row.original.state || '-',
+    cell: ({ row }) => <span className="text-xs">{row.original.state || '-'}</span>,
     size: 80,
   },
   {
     id: 'Observações',
     accessorKey: 'observations',
     header: 'Observações',
-    cell: ({ row }) => <div className="truncate max-w-[200px] text-zinc-500 italic text-[10px]">{row.original.observations}</div>,
+    cell: ({ row }) => <div className="truncate max-w-[200px] text-zinc-500 italic text-[11px]">{row.original.observations}</div>,
     size: 200,
   },
   {
