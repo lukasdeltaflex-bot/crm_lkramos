@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ColumnDef, Header, flexRender } from '@tanstack/react-table';
@@ -22,18 +23,17 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { MoreHorizontal, ArrowUpDown, GripVertical, ArrowUp, ArrowDown, Copy, AlertCircle, Info, Building2, Timer } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, GripVertical, ArrowUp, ArrowDown, Copy, Timer } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { formatCurrency, cleanBankName, calculateBusinessDays, cn, isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
 import React, { useState, useEffect } from 'react';
 import { StatusCell } from './status-cell';
-import { format, isValid, parseISO } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { TableHead } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
-import type { DateRange } from 'react-day-picker';
 import { BankIcon } from '@/components/bank-icon';
 import {
   Tooltip,
@@ -42,8 +42,6 @@ import {
   TooltipProvider
 } from "@/components/ui/tooltip"
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
-
-type ProposalWithCustomer = Proposal & { customer: any };
 
 const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
@@ -103,14 +101,14 @@ const ActionsCell = ({ row, onEdit, onView, onDelete, onDuplicate }: any) => {
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                        <AlertDialogTitle>Cancelar Proposta?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Essa ação não pode ser desfeita. A proposta nº {proposal.proposalNumber} será cancelada permanentemente.
+                            A proposta nº {proposal.proposalNumber} será cancelada permanentemente.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Voltar</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => onDelete(proposal.id)}>Cancelar Proposta</AlertDialogAction>
+                        <AlertDialogAction onClick={() => onDelete(proposal.id)}>Confirmar</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -121,8 +119,7 @@ const ActionsCell = ({ row, onEdit, onView, onDelete, onDuplicate }: any) => {
 };
 
 export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => {
-    const isDraggable = header.column.columnDef.enableColumnOrdering !== false;
-
+    const isDraggable = header.column.getCanSort();
     const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({ 
         id: header.column.id,
         disabled: !isDraggable,
@@ -144,102 +141,24 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
             <div
                 className={cn(
                     'flex items-center gap-1 h-full px-4',
-                    header.column.getCanSort() && 'cursor-pointer select-none'
+                    isDraggable && 'cursor-pointer select-none'
                 )}
                 onClick={header.column.getToggleSortingHandler()}
             >
                  <button
                     {...attributes}
                     {...listeners}
-                    className="p-1 -ml-2 cursor-grab disabled:cursor-default"
+                    className="p-1 -ml-2 cursor-grab"
                     onClick={(e) => e.stopPropagation()}
-                    disabled={!isDraggable}
                 >
-                    <GripVertical className={cn("h-4 w-4", !isDraggable && "opacity-30")} />
+                    <GripVertical className="h-4 w-4 opacity-30" />
                 </button>
                 <div className="flex-1">
-                    {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                        )}
+                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                 </div>
-                 {header.column.getCanSort() && (
-                    <div className="ml-1">
-                        {header.column.getIsSorted() === 'asc' ? <ArrowUp className="h-4 w-4" /> : header.column.getIsSorted() === 'desc' ? <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 text-muted-foreground/50" />}
-                    </div>
-                )}
             </div>
-            {header.column.getCanResize() && (
-                 <div
-                    onMouseDown={header.getResizeHandler()}
-                    onTouchStart={header.getResizeHandler()}
-                    className={cn(
-                        'absolute right-0 top-0 z-10 h-full w-2.5 cursor-col-resize select-none touch-none bg-transparent transition-colors hover:bg-primary/50',
-                        header.column.getIsResizing() && 'bg-primary'
-                    )}
-                />
-            )}
         </TableHead>
     )
-}
-
-const StatusCellWithMonitor = ({ 
-    proposal, 
-    onStatusChange 
-}: { 
-    proposal: ProposalWithCustomer; 
-    onStatusChange: (proposalId: string, newStatus: ProposalStatus, product?: string) => void;
-}) => {
-    const [hasMounted, setHasMounted] = useState(false);
-    useEffect(() => setHasMounted(true), []);
-
-    // Lógica do Monitor de Prazo Crítico
-    const status = proposal.status;
-    const refDate = proposal.statusUpdatedAt || proposal.statusAwaitingBalanceAt || proposal.dateDigitized;
-    const daysSince = hasMounted && refDate ? calculateBusinessDays(refDate) : 0;
-
-    let isCritical = false;
-    let threshold = 0;
-
-    if (status === 'Em Andamento' && daysSince >= 3) { isCritical = true; threshold = 3; }
-    else if (status === 'Aguardando Saldo' && daysSince >= 5) { isCritical = true; threshold = 5; }
-    else if (status === 'Pendente' && daysSince >= 2) { isCritical = true; threshold = 2; }
-    else if (status === 'Saldo Pago' && daysSince >= 3) { isCritical = true; threshold = 3; }
-
-    return (
-        <div className="flex items-center gap-2">
-            <div className="w-28">
-                <StatusCell
-                    proposalId={proposal.id}
-                    currentStatus={proposal.status}
-                    product={proposal.product}
-                    onStatusChange={onStatusChange}
-                />
-            </div>
-            {isCritical && hasMounted && (
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <div className="flex items-center justify-center h-5 w-5 rounded-full border border-red-200 bg-red-50 text-red-600 animate-alert-pulse cursor-help shadow-sm">
-                                <Timer className="h-3 w-3" />
-                            </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="bg-white text-zinc-950 border shadow-2xl p-4 rounded-[2rem] min-w-[220px]">
-                            <div className="space-y-1 text-center">
-                                <p className="font-bold text-sm text-red-600">Alerta de Prazo Crítico</p>
-                                <p className="text-xs font-medium text-muted-foreground">
-                                    Este contrato está em <span className="font-bold text-zinc-900">{status}</span> há <span className="font-bold text-red-600">{daysSince} dia(s)</span>.
-                                </p>
-                                <p className="text-[10px] text-muted-foreground italic mt-1">Limite sugerido: {threshold} dias.</p>
-                            </div>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            )}
-        </div>
-    );
 }
 
 export const getColumns = (
@@ -248,7 +167,7 @@ export const getColumns = (
     onDelete: any,
     onStatusChange: any,
     onDuplicate: any
-    ): ColumnDef<ProposalWithCustomer>[] => [
+    ): ColumnDef<Proposal & { customer: any }>[] => [
   {
     id: 'selecionar',
     header: ({ table }) => (
@@ -270,7 +189,6 @@ export const getColumns = (
     ),
     enableSorting: false,
     enableHiding: false,
-    enableColumnOrdering: false,
   },
   {
     accessorKey: 'promoter',
@@ -295,11 +213,11 @@ export const getColumns = (
     id: 'Nº Proposta',
     header: 'Nº Proposta',
     cell: ({ row }) => {
-        const proposalNumber = row.original.proposalNumber;
+        const num = row.original.proposalNumber;
         return (
             <div className="flex items-center gap-1">
-                <span>{proposalNumber}</span>
-                <CopyButton text={proposalNumber} label="Número da Proposta" />
+                <span>{num}</span>
+                <CopyButton text={num} label="Proposta" />
             </div>
         )
     }
@@ -308,43 +226,11 @@ export const getColumns = (
     id: 'Cliente',
     accessorFn: (row) => row.customer?.name,
     header: 'Cliente',
-    cell: ({ row }) => {
-        const customer = row.original.customer;
-        const name = customer?.name;
-        const phone = customer?.phone;
-        const isWh = phone ? isWhatsApp(phone) : false;
-
-        return (
-            <div className="flex items-center gap-2">
-                <span className="font-medium">{name || 'Cliente não encontrado'}</span>
-                {isWh && (
-                    <a 
-                        href={getWhatsAppUrl(phone!)} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="text-green-500 hover:text-green-600 transition-colors"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <WhatsAppIcon className="h-3.5 w-3.5" />
-                    </a>
-                )}
-            </div>
-        )
-    }
-  },
-  {
-    id: 'CPF',
-    accessorFn: (row) => row.customer?.cpf,
-    header: 'CPF',
-    cell: ({ row }) => {
-        const cpf = row.original.customer?.cpf;
-        return (
-             <div className="flex items-center gap-1">
-                <span>{cpf || '-'}</span>
-                {cpf && <CopyButton text={cpf} label="CPF" />}
-            </div>
-        )
-    }
+    cell: ({ row }) => (
+        <div className="flex items-center gap-2 font-medium">
+            {row.original.customer?.name || '---'}
+        </div>
+    )
   },
   {
     accessorKey: 'product',
@@ -355,20 +241,14 @@ export const getColumns = (
     accessorKey: 'grossAmount',
     id: 'Valor Bruto',
     header: () => <div className="text-right">Valor Bruto</div>,
-    cell: ({ row }) => {
-      const amount = row.original.grossAmount;
-      return (
-        <div className="text-right font-medium">{formatCurrency(amount)}</div>
-      );
-    },
+    cell: ({ row }) => <div className="text-right font-medium">{formatCurrency(row.original.grossAmount)}</div>,
   },
   {
     accessorKey: 'bank',
-    header: 'Banco Digitado',
-    id: 'Banco Digitado',
+    id: 'Banco',
+    header: 'Banco',
     cell: ({ row, table }) => {
         const bankRaw = row.original.bank;
-        const bank = cleanBankName(bankRaw);
         const settings = (table.options.meta as any)?.userSettings as UserSettings;
         const showLogos = settings?.showBankLogos ?? true;
         const customDomain = settings?.bankDomains?.[bankRaw];
@@ -376,7 +256,7 @@ export const getColumns = (
         return (
             <div className="flex items-center gap-2">
                 <BankIcon bankName={bankRaw} domain={customDomain} showLogo={showLogos} />
-                <span className="truncate">{bank}</span>
+                <span className="truncate">{cleanBankName(bankRaw)}</span>
             </div>
         )
     }
@@ -386,80 +266,25 @@ export const getColumns = (
     id: 'Status',
     header: 'Status',
     cell: ({ row }) => (
-        <StatusCellWithMonitor 
-            proposal={row.original} 
-            onStatusChange={onStatusChange} 
-        />
+        <div className="w-28">
+            <StatusCell
+                proposalId={row.original.id}
+                currentStatus={row.original.status}
+                product={row.original.product}
+                onStatusChange={onStatusChange}
+            />
+        </div>
     ),
-    filterFn: (row, id, value) => {
-        if (!value || (Array.isArray(value) && value.length === 0)) return true;
-        const status = row.getValue(id);
-        return Array.isArray(value) ? value.includes(status) : status === value;
-    }
-  },
-  {
-    accessorKey: 'operator',
-    id: 'Operador',
-    header: 'Operador',
-  },
-  {
-    accessorKey: 'commissionValue',
-    id: 'Comissão',
-    header: () => <div className="text-right">Comissão</div>,
-    cell: ({ row }) => {
-        const amount = row.original.commissionValue;
-        return <div className="text-right">{formatCurrency(amount)}</div>;
-      },
   },
   {
     accessorKey: 'dateDigitized',
     id: 'Data Digitação',
     header: 'Data Digitação',
     cell: ({ row }) => formatDate(row.original.dateDigitized),
-    filterFn: (row, id, filterValue: DateRange) => {
-        if (!filterValue || !filterValue.from) {
-          return true;
-        }
-        
-        const cellValue = row.original.dateDigitized;
-        if (!cellValue) {
-          return false;
-        }
-  
-        const cellDate = new Date(cellValue);
-        if (!isValid(cellDate)) {
-          return false;
-        }
-  
-        const fromDate = filterValue.from;
-        const toDate = filterValue.to ? new Date(filterValue.to) : new Date(filterValue.from);
-        toDate.setHours(23, 59, 59, 999);
-  
-        return cellDate >= fromDate && cellDate <= toDate;
-      },
   },
   {
-    accessorKey: 'dateApproved',
-    id: 'Data Averbação',
-    header: 'Data Averbação',
-    cell: ({ row }) => formatDate(row.original.dateApproved)
-  },
-  {
-    accessorKey: 'datePaidToClient',
-    id: 'Data Pgto. Cliente',
-    header: 'Data Pgto. Cliente',
-    cell: ({ row }) => formatDate(row.original.datePaidToClient)
-  },
-  {
-    accessorKey: 'debtBalanceArrivalDate',
-    id: 'Chegada Saldo',
-    header: 'Chegada Saldo',
-    cell: ({ row }) => formatDate(row.original.debtBalanceArrivalDate)
-  },
-  {
-    id: 'ações',
+    id: 'Ações',
     cell: (props) => <ActionsCell {...props} onEdit={onEdit} onView={onView} onDelete={onDelete} onDuplicate={onDuplicate} />,
-    enableColumnOrdering: false,
-    enableSorting: false,
+    enableHiding: false,
   },
 ].map(column => ({ ...column, id: column.id || column.accessorKey as string}));

@@ -53,12 +53,6 @@ const CopyButton = ({ text, label }: { text: string | undefined; label: string }
     );
 };
 
-interface ActionsCellProps {
-  row: { original: Customer };
-  onEdit: (customer: Customer) => void;
-  onDelete: (customerId: string) => void;
-}
-
 export const DraggableHeader = ({ header }: { header: Header<Customer, unknown> }) => {
     const isDraggable = header.column.getCanSort();
     const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({
@@ -107,27 +101,17 @@ export const DraggableHeader = ({ header }: { header: Header<Customer, unknown> 
                             header.getContext()
                         )}
                 </div>
-                 {header.column.getCanSort() && (
+                 {header.column.getIsSorted() && (
                     <div className="ml-1">
-                        {header.column.getIsSorted() === 'asc' ? <ArrowUp className="h-4 w-4" /> : header.column.getIsSorted() === 'desc' ? <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 text-muted-foreground/50" />}
+                        {header.column.getIsSorted() === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
                     </div>
                 )}
             </div>
-            {header.column.getCanResize() && (
-                <div
-                    onMouseDown={header.getResizeHandler()}
-                    onTouchStart={header.getResizeHandler()}
-                    className={cn(
-                        'absolute right-0 top-0 z-10 h-full w-2.5 cursor-col-resize select-none touch-none bg-transparent transition-colors',
-                        header.column.getIsResizing() ? 'bg-primary/50' : 'hover:bg-primary/20',
-                    )}
-                />
-            )}
         </TableHead>
     )
 }
 
-const ActionsCell: React.FC<ActionsCellProps> = ({ row, onEdit, onDelete }) => {
+const ActionsCell = ({ row, onEdit, onDelete }: any) => {
   const customer = row.original;
   return (
     <div className="text-right" onClick={(e) => e.stopPropagation()}>
@@ -157,7 +141,7 @@ const ActionsCell: React.FC<ActionsCellProps> = ({ row, onEdit, onDelete }) => {
               <AlertDialogHeader>
                 <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Essa ação não pode ser desfeita. Os dados pessoais do cliente &quot;{customer.name}&quot; serão anonimizados, mas o histórico de propostas será mantido.
+                  Essa ação não pode ser desfeita. Os dados pessoais do cliente &quot;{customer.name}&quot; serão anonimizados.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -199,13 +183,11 @@ export const getColumns = (
     ),
     enableSorting: false,
     enableHiding: false,
-    enableColumnOrdering: false,
   },
   {
     accessorKey: 'numericId',
     id: 'ID',
     header: 'ID',
-    enableHiding: false,
   },
   {
     accessorKey: 'name',
@@ -219,14 +201,13 @@ export const getColumns = (
             </Link>
         )
     },
-    enableHiding: false,
   },
   {
     accessorKey: 'cpf',
     id: 'CPF',
     header: 'CPF',
     cell: ({ row }) => {
-        const cpf = row.getValue('cpf') as string;
+        const cpf = row.original.cpf;
         return (
           <div className="flex items-center gap-1">
             <span>{cpf}</span>
@@ -240,27 +221,7 @@ export const getColumns = (
     id: 'Telefone',
     header: 'Telefone',
     cell: ({ row }) => {
-        const phone = row.getValue('phone') as string;
-        const isWhatsAppNumber = isWhatsApp(phone);
-        return (
-          <div className="flex items-center gap-2">
-            <span>{phone}</span>
-            {isWhatsAppNumber && (
-              <a href={getWhatsAppUrl(phone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600">
-                <WhatsAppIcon />
-              </a>
-            )}
-          </div>
-        );
-      },
-  },
-  {
-    accessorKey: 'phone2',
-    id: 'Telefone 2',
-    header: 'Telefone 2',
-    cell: ({ row }) => {
-        const phone = row.getValue('phone2') as string;
-        if (!phone) return null;
+        const phone = row.original.phone;
         const isWhatsAppNumber = isWhatsApp(phone);
         return (
           <div className="flex items-center gap-2">
@@ -288,16 +249,11 @@ export const getColumns = (
     accessorKey: 'observations',
     id: 'Observações',
     header: 'Observações',
-    cell: ({ row }) => {
-        const obs = row.getValue('observations') as string;
-        return <div className="truncate max-w-[200px]">{obs}</div>
-    }
+    cell: ({ row }) => <div className="truncate max-w-[200px]">{row.original.observations}</div>
   },
   {
-    id: 'ações',
+    id: 'Ações',
     cell: (props) => <ActionsCell {...props} onEdit={onEdit} onDelete={onDelete} />,
-    enableColumnOrdering: false,
     enableHiding: false,
-    enableSorting: false,
   },
-].map(column => ({ ...column, enableSorting: (column as any).enableSorting !== false, id: column.id || column.accessorKey as string}));
+].map(column => ({ ...column, id: column.id || column.accessorKey as string}));

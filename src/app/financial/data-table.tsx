@@ -4,19 +4,17 @@
 import * as React from 'react';
 import {
   ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
   RowSelectionState,
   Table as ReactTable,
+  VisibilityState,
+  SortingState,
 } from '@tanstack/react-table';
-import { format, parse, isValid, startOfDay, endOfDay, subDays, startOfMonth, subMonths, endOfMonth } from 'date-fns';
+import { format, parse, isValid, startOfDay, endOfDay, subDays, startOfMonth } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 
 import {
@@ -49,9 +47,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { X, Filter, Search, Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
-import { Card } from '@/components/ui/card';
 import { cn, cleanBankName } from '@/lib/utils';
-import type { CommissionStatus, Proposal, Customer, UserSettings } from '@/lib/types';
+import type { Proposal, Customer, UserSettings } from '@/lib/types';
 import { FinancialSummary } from '@/components/financial/financial-summary';
 import { DraggableHeader } from './columns';
 import { Separator } from '@/components/ui/separator';
@@ -59,10 +56,10 @@ import { BankIcon } from '@/components/bank-icon';
 import { useTheme } from '@/components/theme-provider';
 
 type ProposalWithCustomer = Proposal & { customer: Customer };
+
 interface DataTableProps {
   columns: ColumnDef<ProposalWithCustomer, unknown>[];
   data: ProposalWithCustomer[];
-  currentMonthData: ProposalWithCustomer[];
   currentMonthRange: { from: Date; to: Date };
   isPrivacyMode: boolean;
   rowSelection: RowSelectionState;
@@ -87,8 +84,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 }, ref) => {
   const { statusColors } = useTheme();
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'Data Pagamento', desc: true }]);
-  
-  // Tradução dos IDs no estado de visibilidade
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
       'Promotora': false,
       'CPF': false,
@@ -131,8 +126,8 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     if (globalFilter) {
         const lower = globalFilter.toLowerCase();
         list = list.filter(p => 
-            p.customer.name.toLowerCase().includes(lower) ||
-            p.customer.cpf.includes(lower) ||
+            p.customer?.name?.toLowerCase().includes(lower) ||
+            p.customer?.cpf?.includes(lower) ||
             p.proposalNumber.includes(lower) ||
             p.bank.toLowerCase().includes(lower) ||
             p.promoter.toLowerCase().includes(lower)
@@ -150,7 +145,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
-    getFilteredRowModel: getFilteredRowModel(),
     onRowSelectionChange: setRowSelection,
     state: { sorting, globalFilter, rowSelection, columnVisibility },
     meta: { isPrivacyMode, userSettings },
@@ -215,35 +209,25 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
             <div className="flex items-center gap-2 ml-auto">
                 <Select value={bankFilter} onValueChange={setBankFilter}>
-                    <SelectTrigger className="h-9 w-auto min-w-[180px] bg-card border-primary/10 shadow-sm rounded-full text-xs font-bold uppercase px-4">
+                    <SelectTrigger className="h-9 min-w-[180px] bg-card rounded-full text-xs font-bold uppercase px-4">
                         <SelectValue placeholder="TODOS OS BANCOS" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">TODOS OS BANCOS</SelectItem>
                         {banksList.map(b => (
-                            <SelectItem key={b} value={b}>
-                                <div className="flex items-center gap-2">
-                                    <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogo={true} className="h-4 w-4" />
-                                    <span>{cleanBankName(b).toUpperCase()}</span>
-                                </div>
-                            </SelectItem>
+                            <SelectItem key={b} value={b}>{cleanBankName(b).toUpperCase()}</SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
 
                 <Select value={promoterFilter} onValueChange={setPromoterFilter}>
-                    <SelectTrigger className="h-9 w-auto min-w-[180px] bg-card border-primary/10 shadow-sm rounded-full text-xs font-bold uppercase px-4">
+                    <SelectTrigger className="h-9 min-w-[180px] bg-card rounded-full text-xs font-bold uppercase px-4">
                         <SelectValue placeholder="TODAS PROMOTORAS" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">TODAS PROMOTORAS</SelectItem>
                         {promotersList.map(p => (
-                            <SelectItem key={p} value={p}>
-                                <div className="flex items-center gap-2">
-                                    <BankIcon bankName={p} domain={userSettings?.promoterDomains?.[p]} showLogo={true} className="h-4 w-4" />
-                                    <span>{p.toUpperCase()}</span>
-                                </div>
-                            </SelectItem>
+                            <SelectItem key={p} value={p}>{p.toUpperCase()}</SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
@@ -254,13 +238,9 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             <div className="flex items-center gap-2 bg-card border rounded-full px-3 py-1 shadow-sm">
                 <Select onValueChange={(val) => {
                     const now = new Date();
-                    let from: Date;
-                    switch(val) {
-                        case 'today': from = startOfDay(now); break;
-                        case 'yesterday': from = startOfDay(subDays(now, 1)); break;
-                        case 'month': from = startOfMonth(now); break;
-                        default: from = startOfMonth(now);
-                    }
+                    let from = startOfMonth(now);
+                    if(val === 'today') from = startOfDay(now);
+                    if(val === 'yesterday') from = startOfDay(subDays(now, 1));
                     setStartDateInput(format(from, 'dd/MM/yyyy'));
                     setEndDateInput(format(now, 'dd/MM/yyyy'));
                     setAppliedDateRange({ from, to: now });
@@ -277,40 +257,21 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 </Select>
                 <Separator orientation="vertical" className="h-4 mx-1" />
                 <div className="flex items-center gap-1">
-                    <Input 
-                        placeholder="De" 
-                        value={startDateInput}
-                        onChange={(e) => handleDateInputChange(e.target.value, 'start')}
-                        className="h-7 w-20 border-none bg-muted/30 text-[10px] text-center font-bold"
-                    />
-                    <span className="text-muted-foreground opacity-40">-</span>
-                    <Input 
-                        placeholder="Até" 
-                        value={endDateInput}
-                        onChange={(e) => handleDateInputChange(e.target.value, 'end')}
-                        className="h-7 w-20 border-none bg-muted/30 text-[10px] text-center font-bold"
-                    />
+                    <Input placeholder="De" value={startDateInput} onChange={(e) => handleDateInputChange(e.target.value, 'start')} className="h-7 w-20 border-none bg-muted/30 text-[10px] text-center font-bold" />
+                    <span className="text-muted-foreground">-</span>
+                    <Input placeholder="Até" value={endDateInput} onChange={(e) => handleDateInputChange(e.target.value, 'end')} className="h-7 w-20 border-none bg-muted/30 text-[10px] text-center font-bold" />
                 </div>
             </div>
             <Button size="sm" onClick={handleApplyFilter} className="h-9 bg-primary hover:bg-primary/90 rounded-full px-6 text-xs font-bold uppercase shadow-md gap-2">
                 <Filter className="h-3.5 w-3.5" /> Aplicar
             </Button>
-            {appliedDateRange && (
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => { setStartDateInput(''); setEndDateInput(''); setAppliedDateRange(undefined); }}>
-                    <X className="h-4 w-4" />
-                </Button>
-            )}
+            {appliedDateRange && <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => { setStartDateInput(''); setEndDateInput(''); setAppliedDateRange(undefined); }}><X className="h-4 w-4" /></Button>}
         </div>
 
         <div className="flex items-center justify-between gap-4 py-2">
             <div className='relative w-full max-w-md'>
                 <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-60' />
-                <Input
-                    placeholder="Busca Inteligente (Nome, CPF, ID, Proposta...)"
-                    value={globalFilter ?? ''}
-                    onChange={(e) => setGlobalFilter(e.target.value)}
-                    className="pl-9 h-11 bg-card border-primary/10 rounded-full text-sm font-medium shadow-sm focus-visible:ring-primary/20"
-                />
+                <Input placeholder="Busca Inteligente..." value={globalFilter} onChange={(e) => setGlobalFilter(e.target.value)} className="pl-9 h-11 bg-card border-primary/10 rounded-full text-sm font-medium shadow-sm focus-visible:ring-primary/20" />
             </div>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -322,12 +283,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                     <DropdownMenuLabel>Personalizar Colunas</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {table.getAllColumns().filter(c => c.getCanHide()).map(column => (
-                        <DropdownMenuCheckboxItem
-                            key={column.id}
-                            className="capitalize text-xs font-medium"
-                            checked={column.getIsVisible()}
-                            onCheckedChange={v => column.toggleVisibility(!!v)}
-                        >
+                        <DropdownMenuCheckboxItem key={column.id} className="capitalize text-xs font-medium" checked={column.getIsVisible()} onCheckedChange={v => column.toggleVisibility(!!v)}>
                             {column.id}
                         </DropdownMenuCheckboxItem>
                     ))}
@@ -335,12 +291,12 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             </DropdownMenu>
         </div>
 
-        <Card className="financial-table border-border/50 shadow-xl rounded-2xl overflow-hidden">
+        <div className="rounded-2xl border shadow-xl overflow-hidden bg-card financial-table">
             <div className="overflow-x-auto">
                 <Table>
                     <TableHeader className="bg-muted/20">
                         {table.getHeaderGroups().map(hg => (
-                            <TableRow key={hg.id} className="hover:bg-transparent border-b-2">
+                            <TableRow key={hg.id} className="border-b-2">
                                 {hg.headers.map(h => <DraggableHeader key={h.id} header={h} />)}
                             </TableRow>
                         ))}
@@ -349,16 +305,9 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                         {table.getRowModel().rows.length > 0 ? (
                             table.getRowModel().rows.map(row => {
                                 const status = row.original.commissionStatus;
-                                const colorValue = statusColors[status?.toUpperCase() || ''] || statusColors[status || ''];
+                                const colorValue = statusColors[status?.toUpperCase()] || statusColors[status || ''];
                                 return (
-                                    <TableRow 
-                                        key={row.id} 
-                                        className={cn(
-                                            "transition-colors border-b",
-                                            colorValue && "status-row-custom"
-                                        )}
-                                        style={colorValue ? { '--status-color': colorValue } as any : {}}
-                                    >
+                                    <TableRow key={row.id} className={cn("transition-colors border-b", colorValue && "status-row-custom")} style={colorValue ? { '--status-color': colorValue } as any : {}}>
                                         {row.getVisibleCells().map(cell => (
                                             <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                                         ))}
@@ -366,16 +315,12 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                                 )
                             })
                         ) : (
-                            <TableRow>
-                                <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em] opacity-40">
-                                    Nenhum registro encontrado para este filtro.
-                                </TableCell>
-                            </TableRow>
+                            <TableRow><TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground font-bold uppercase text-[10px] tracking-widest opacity-40">Sem registros para este filtro.</TableCell></TableRow>
                         )}
                     </TableBody>
                 </Table>
             </div>
-        </Card>
+        </div>
     </div>
   );
 });
