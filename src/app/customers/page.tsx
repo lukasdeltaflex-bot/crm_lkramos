@@ -1,4 +1,3 @@
-
 'use client';
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -50,7 +49,7 @@ type CustomerFormData = Partial<Omit<Customer, 'id' | 'ownerId'>>;
 
 /**
  * 🛡️ MOTOR DE LIMPEZA RECURSIVA (Fix Erro de Servidor)
- * Remove categoricamente qualquer propriedade 'undefined' antes do envio.
+ * Remove categoricamente qualquer propriedade 'undefined' antes do envio ao Firebase.
  */
 function cleanCustomerData(data: any): any {
     if (data === null || data === undefined) return null;
@@ -174,7 +173,7 @@ function CustomersPageContent() {
     if (rowsToExport.length === 0) {
         toast({
             variant: "destructive",
-            title: "Nenhum cliente para exportar",
+            title: "Nenum cliente para exportar",
             description: "A tabela está vazia ou os filtros não retornaram resultados.",
         });
         return;
@@ -389,11 +388,12 @@ const handleExportToPdf = async () => {
 
     setIsSaving(true);
     try {
-        // 🔥 LIMPEZA TOTAL (Peneira dados inválidos para evitar Erro de Servidor)
         const rawFinalData = {
             ...formData,
             ownerId: user.uid
         };
+        
+        // 🔥 LIMPEZA INDUSTRIAL: Remove valores 'undefined' que causam erro no Firebase
         const cleanedData = cleanCustomerData(rawFinalData);
 
         const cpfExists = customers?.find(

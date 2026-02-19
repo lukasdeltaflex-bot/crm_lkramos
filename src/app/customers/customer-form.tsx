@@ -131,7 +131,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     name: "benefits"
   });
 
-  // 🛡️ REARQUITETURA DE INICIALIZAÇÃO: Força a persistência do Gênero
+  // 🛡️ BLINDAGEM DE INICIALIZAÇÃO: Sincronização forçada de campos controlados
   useEffect(() => {
     const source = customer || defaultValues;
     if (source) {
@@ -168,9 +168,9 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         documents: source.documents || [],
       });
       
-      // SINCRONIZAÇÃO FORÇADA: Garante que o Select não perca o valor após o reset
+      // Força a atualização manual do gênero para evitar perda de sincronia com o ShadCN Select
       if (genderValue) {
-          form.setValue('gender', genderValue, { shouldValidate: true });
+          form.setValue('gender', genderValue);
       }
     }
   }, [customer, defaultValues, form]);
@@ -187,7 +187,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   const birthDateValue = form.watch('birthDate');
   const phone1Value = form.watch('phone');
   const phone2Value = form.watch('phone2');
-  const genderValue = form.watch('gender');
 
   const duplicateCpfCustomer = useMemo(() => {
     if (!cpfValue || cpfValue.length < 14) return null;
@@ -407,13 +406,13 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                     )}
                     />
                     <FormField
+                      key={`gender-field-${currentCustomerId}`}
                       control={form.control}
                       name="gender"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Gênero</FormLabel>
                           <Select 
-                            key={currentCustomerId}
                             onValueChange={field.onChange} 
                             value={field.value || ""}
                           >
