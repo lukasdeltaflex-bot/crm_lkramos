@@ -394,7 +394,9 @@ export const getColumns = (
     ),
     filterFn: (row, id, value) => {
         if (!value || (Array.isArray(value) && value.length === 0)) return true;
-        return value.includes(row.getValue(id));
+        const status = row.getValue(id);
+        // Garantimos que a comparação funcione mesmo com arrays ou valores únicos vindos das abas
+        return Array.isArray(value) ? value.includes(status) : status === value;
     }
   },
   {

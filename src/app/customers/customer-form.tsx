@@ -132,7 +132,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     name: "benefits"
   });
 
-  // 🛡️ REARQUITETURA DE INICIALIZAÇÃO: Sincronia absoluta com o Gênero salvo
+  // 🛡️ REARQUITETURA DE INICIALIZAÇÃO: Força a persistência do Gênero
   useEffect(() => {
     const source = customer || defaultValues;
     if (source) {
@@ -169,9 +169,11 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         documents: source.documents || [],
       });
       
-      // Força a atualização do campo Gênero no estado do RHF
+      // SINCRONIZAÇÃO FORÇADA: Garante que o Select não perca o valor após o reset
       if (genderValue) {
-          form.setValue('gender', genderValue, { shouldValidate: true });
+          setTimeout(() => {
+              form.setValue('gender', genderValue, { shouldValidate: true });
+          }, 50);
       }
     }
   }, [customer, defaultValues, form]);

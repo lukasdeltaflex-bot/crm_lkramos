@@ -289,10 +289,15 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
       },
   });
   
+  // 🔥 BLINDAGEM DE REATIVIDADE: Garante que a tabela mude imediatamente ao trocar de aba
   React.useEffect(() => {
     const statusColumn = table.getColumn('status');
-    if (statusFilter === 'Todos') statusColumn?.setFilterValue(undefined);
-    else statusColumn?.setFilterValue([statusFilter]);
+    if (statusFilter === 'Todos') {
+        statusColumn?.setFilterValue(undefined);
+    } else {
+        // Passamos como array para garantir que o motor de busca TanStack identifique a mudança
+        statusColumn?.setFilterValue([statusFilter]);
+    }
   }, [statusFilter, table]);
 
   React.useEffect(() => {
@@ -335,7 +340,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     >
         <div className="space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-4">
-                <Tabs value={statusFilter} onValueChange={setStatusFilter}>
+                <Tabs value={statusFilter} onValueChange={(val) => setStatusFilter(val)}>
                     <TabsList className="h-auto flex-wrap justify-start bg-muted/50 p-1">
                         {orderedTabs.map(status => {
                             const colorValue = statusColors[status.toUpperCase()] || statusColors[status];
