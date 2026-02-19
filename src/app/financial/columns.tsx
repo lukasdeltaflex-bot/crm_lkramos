@@ -1,4 +1,3 @@
-
 'use client';
 
 import { ColumnDef, flexRender, Header } from '@tanstack/react-table';
@@ -148,7 +147,7 @@ export const getColumns = (
   }
 ): ColumnDef<ProposalWithCustomer>[] => [
   {
-    id: 'select',
+    id: 'selecionar',
     header: ({ table }) => (
       <Checkbox
         checked={
@@ -242,7 +241,7 @@ export const getColumns = (
     cell: ({ row, table }) => {
       const isPrivacyMode = (table.options.meta as {isPrivacyMode?: boolean})?.isPrivacyMode;
       if (isPrivacyMode) return <div className="text-left font-medium">•••••</div>;
-      const amount = parseFloat(row.getValue('grossAmount'));
+      const amount = row.original.grossAmount;
       return <div className="text-right font-medium">{formatCurrency(amount)}</div>;
     },
     id: 'Valor Bruto',
@@ -253,7 +252,7 @@ export const getColumns = (
     cell: ({ row, table }) => {
       const isPrivacyMode = (table.options.meta as {isPrivacyMode?: boolean})?.isPrivacyMode;
       if (isPrivacyMode) return '•••••';
-      const percentage = parseFloat(row.getValue('commissionPercentage'));
+      const percentage = row.original.commissionPercentage;
       return `${percentage.toFixed(2)}%`;
     },
     id: 'Comissão (%)'
@@ -264,7 +263,7 @@ export const getColumns = (
     cell: ({ row, table }) => {
         const isPrivacyMode = (table.options.meta as {isPrivacyMode?: boolean})?.isPrivacyMode;
         if (isPrivacyMode) return '•••••';
-        const amount = parseFloat(row.getValue('commissionValue'));
+        const amount = row.original.commissionValue;
         return formatCurrency(amount);
       },
     id: 'Valor Comissão',
@@ -275,7 +274,7 @@ export const getColumns = (
     cell: ({ row, table }) => {
       const isPrivacyMode = (table.options.meta as {isPrivacyMode?: boolean})?.isPrivacyMode;
       if (isPrivacyMode) return '•••••';
-      const amount = parseFloat(row.getValue('amountPaid') || '0');
+      const amount = row.original.amountPaid || 0;
       return formatCurrency(amount);
     },
     id: 'Valor Pago',
@@ -298,7 +297,7 @@ export const getColumns = (
     accessorKey: 'commissionPaymentDate',
     header: 'Data Pagamento',
     cell: ({ row }) => {
-        return formatDateSafe(row.getValue('commissionPaymentDate'));
+        return formatDateSafe(row.original.commissionPaymentDate);
     },
     id: 'Data Pagamento',
   },
@@ -319,7 +318,7 @@ export const getColumns = (
     }
   },
   {
-    id: 'actions',
+    id: 'ações',
     cell: (props) => <ActionsCell {...props} onEdit={onEdit} />,
     enableHiding: false,
     enableColumnOrdering: false,

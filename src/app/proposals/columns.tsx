@@ -1,4 +1,3 @@
-
 'use client';
 
 import { ColumnDef, Header, flexRender } from '@tanstack/react-table';
@@ -296,7 +295,7 @@ export const getColumns = (
     id: 'Nº Proposta',
     header: 'Nº Proposta',
     cell: ({ row }) => {
-        const proposalNumber = row.getValue('proposalNumber') as string;
+        const proposalNumber = row.original.proposalNumber;
         return (
             <div className="flex items-center gap-1">
                 <span>{proposalNumber}</span>
@@ -357,7 +356,7 @@ export const getColumns = (
     id: 'Valor Bruto',
     header: () => <div className="text-right">Valor Bruto</div>,
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue('grossAmount'));
+      const amount = row.original.grossAmount;
       return (
         <div className="text-right font-medium">{formatCurrency(amount)}</div>
       );
@@ -408,7 +407,7 @@ export const getColumns = (
     id: 'Comissão',
     header: () => <div className="text-right">Comissão</div>,
     cell: ({ row }) => {
-        const amount = parseFloat(row.getValue('commissionValue'));
+        const amount = row.original.commissionValue;
         return <div className="text-right">{formatCurrency(amount)}</div>;
       },
   },
@@ -416,13 +415,13 @@ export const getColumns = (
     accessorKey: 'dateDigitized',
     id: 'Data Digitação',
     header: 'Data Digitação',
-    cell: ({ row }) => formatDate(row.getValue('dateDigitized')),
+    cell: ({ row }) => formatDate(row.original.dateDigitized),
     filterFn: (row, id, filterValue: DateRange) => {
         if (!filterValue || !filterValue.from) {
           return true;
         }
         
-        const cellValue = row.getValue(id) as string;
+        const cellValue = row.original.dateDigitized;
         if (!cellValue) {
           return false;
         }
@@ -443,19 +442,19 @@ export const getColumns = (
     accessorKey: 'dateApproved',
     id: 'Data Averbação',
     header: 'Data Averbação',
-    cell: ({ row }) => formatDate(row.getValue('dateApproved'))
+    cell: ({ row }) => formatDate(row.original.dateApproved)
   },
   {
     accessorKey: 'datePaidToClient',
     id: 'Data Pgto. Cliente',
     header: 'Data Pgto. Cliente',
-    cell: ({ row }) => formatDate(row.getValue('datePaidToClient'))
+    cell: ({ row }) => formatDate(row.original.datePaidToClient)
   },
   {
     accessorKey: 'debtBalanceArrivalDate',
     id: 'Chegada Saldo',
     header: 'Chegada Saldo',
-    cell: ({ row }) => formatDate(row.getValue('debtBalanceArrivalDate'))
+    cell: ({ row }) => formatDate(row.original.debtBalanceArrivalDate)
   },
   {
     id: 'ações',

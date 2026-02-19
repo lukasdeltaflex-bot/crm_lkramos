@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -325,7 +324,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>Exibir/Ocultar</DropdownMenuLabel>
+                    <DropdownMenuLabel>Exibir/Ocultar Colunas</DropdownMenuLabel>
                     <Separator />
                     {table.getAllColumns().filter(c => c.getCanHide()).map(column => (
                         <DropdownMenuCheckboxItem
