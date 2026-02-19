@@ -282,7 +282,6 @@
 }
 
 /* 💎 BLINDAGEM DE TABELAS (STICKY COLUMNS) */
-/* Garante que a coluna de seleção herde o fundo da linha quando colorida por status */
 .proposals-table tr th:first-child,
 .proposals-table tr td:first-child,
 .financial-table tr th:first-child,
@@ -292,7 +291,7 @@
     position: sticky !important;
     left: 0;
     z-index: 40 !important;
-    background-color: inherit !important; /* HERANÇA OBRIGATÓRIA PARA CORES DE STATUS */
+    background-color: inherit !important;
     border-right: 2px solid hsl(var(--border) / 0.8);
     box-shadow: 6px 0 12px -4px rgba(0,0,0,0.2); 
 }
