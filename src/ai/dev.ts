@@ -1,4 +1,3 @@
-
 'use server';
 
 import { config } from 'dotenv';
@@ -9,6 +8,7 @@ import '@/ai/flows/follow-up-reminder.ts';
 import '@/ai/flows/summarize-notes-flow.ts';
 import '@/ai/flows/summarize-customer-history-flow.ts';
 import '@/ai/flows/extract-customer-data-flow.ts';
+import '@/ai/flows/extract-data-from-image-flow.ts';
 import '@/ai/flows/reconcile-commissions-flow.ts';
 import '@/ai/flows/commission-reminder-flow.ts';
 import '@/ai/flows/debt-balance-reminder-flow.ts';

@@ -81,9 +81,7 @@ const customerSchema = z.object({
 });
 
 type CustomerFormValues = z.infer<typeof customerSchema>;
-
 type FormCustomer = Omit<Customer, 'id' | 'ownerId' | 'numericId'>;
-
 type CustomerFormData = Partial<Omit<Customer, 'id' | 'ownerId'>>;
 
 interface CustomerFormProps {
@@ -101,6 +99,9 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   const [isFetchingCep, setIsFetchingCep] = useState(false);
   const [age, setAge] = useState<number | null>(null);
   const [tempCustomerId, setTempCustomerId] = useState<string | undefined>(undefined);
+
+  // ID estável para chaves de componentes controlados
+  const currentCustomerId = customer?.id || tempCustomerId || 'new';
 
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
@@ -131,8 +132,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     name: "benefits"
   });
 
-  const currentCustomerId = customer?.id || tempCustomerId || 'new';
-
   useEffect(() => {
     const source = customer || defaultValues;
     if (source) {
@@ -140,14 +139,13 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       if (source.birthDate) {
           try {
               const date = parse(source.birthDate, 'yyyy-MM-dd', new Date());
-              if (isValid(date)) {
-                  formattedBirthDate = format(date, 'dd/MM/yyyy');
-              }
+              if (isValid(date)) formattedBirthDate = format(date, 'dd/MM/yyyy');
           } catch (e) {}
       }
       
       const genderValue = source.gender || '';
 
+      // Reset forçado com fallbacks para evitar undefined
       form.reset({
         name: source.name || '',
         cpf: source.cpf || '',
@@ -168,12 +166,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         state: source.state || '',
         documents: source.documents || [],
       });
-      
-      if (genderValue) {
-          setTimeout(() => {
-            form.setValue('gender', genderValue, { shouldValidate: true });
-          }, 10);
-      }
     }
   }, [customer, defaultValues, form]);
 
@@ -283,15 +275,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
         const data = await response.json();
         if (data.erro) {
-            toast({
-                variant: 'destructive',
-                title: 'CEP não encontrado',
-                description: 'Verifique o CEP digitado e tente novamente.',
-            });
-            form.setValue('street', '');
-            form.setValue('neighborhood', '');
-            form.setValue('city', '');
-            form.setValue('state', '');
+            toast({ variant: 'destructive', title: 'CEP não encontrado' });
         } else {
             form.setValue('street', data.logradouro);
             form.setValue('neighborhood', data.bairro);
@@ -300,11 +284,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
             form.setFocus('number');
         }
     } catch (error) {
-        toast({
-            variant: 'destructive',
-            title: 'Erro ao buscar CEP',
-            description: 'Não foi possível buscar o endereço.',
-        });
+        toast({ variant: 'destructive', title: 'Erro ao buscar CEP' });
     } finally {
         setIsFetchingCep(false);
     }
@@ -313,16 +293,16 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   const handleSummarize = async () => {
     const currentObservations = form.getValues('observations');
     if (!currentObservations || currentObservations.trim() === '') {
-      toast({ variant: 'destructive', title: 'Campo vazio', description: 'Não há observações para resumir.' });
+      toast({ variant: 'destructive', title: 'Campo vazio' });
       return;
     }
     setIsSummarizing(true);
     try {
       const summary = await summarizeNotes(currentObservations);
       form.setValue('observations', summary, { shouldValidate: true });
-      toast({ title: 'Observações Resumidas!', description: 'As anotações foram resumidas com sucesso pela IA.' });
+      toast({ title: 'Observações Resumidas!' });
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Erro ao resumir', description: 'Não foi possível gerar o resumo.' });
+      toast({ variant: 'destructive', title: 'Erro ao resumir' });
     } finally {
       setIsSummarizing(false);
     }
@@ -386,7 +366,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                     name="cpf"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>CPF (Verificação em tempo real)</FormLabel>
+                        <FormLabel>CPF</FormLabel>
                         <FormControl>
                             <Input placeholder="000.000.000-00" {...field} onChange={handleCpfChange} maxLength={14}/>
                         </FormControl>
@@ -396,7 +376,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                 <AlertTriangle className="h-4 w-4" />
                                 <AlertTitle className="text-xs font-bold uppercase">CPF Já Cadastrado!</AlertTitle>
                                 <AlertDescription className="text-[10px] font-medium leading-tight">
-                                    Este CPF já pertence ao cliente <strong>{duplicateCpfCustomer.name}</strong>. Evite cadastros duplicados.
+                                    Este CPF já pertence ao cliente <strong>{duplicateCpfCustomer.name}</strong>.
                                 </AlertDescription>
                             </Alert>
                         )}
@@ -410,9 +390,8 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         <FormItem>
                           <FormLabel>Gênero</FormLabel>
                           <Select 
-                            key={`gender-select-sync-${currentCustomerId}`}
+                            key={`gender-sync-${currentCustomerId}`} // CHAVE PARA EVITAR RESET NO FORM
                             onValueChange={field.onChange} 
-                            defaultValue={field.value || ""}
                             value={field.value || ""}
                           >
                             <FormControl>
@@ -470,33 +449,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                             </FormItem>
                         )}
                     />
-                    <FormField
-                        control={form.control}
-                        name="phone2"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Telefone 2 (Opcional)</FormLabel>
-                                <FormControl>
-                                    <div className="relative flex items-center">
-                                        <Input
-                                            placeholder="(11) 91234-5678"
-                                            {...field}
-                                            onChange={(e) => handlePhoneChange(e, 'phone2')}
-                                            maxLength={15}
-                                            value={field.value || ''}
-                                            className="pr-10"
-                                        />
-                                        {phone2Value && isWhatsApp(phone2Value) && (
-                                            <a href={getWhatsAppUrl(phone2Value)} target="_blank" rel="noopener noreferrer" className="absolute right-3 text-green-500 hover:text-green-600">
-                                                <WhatsAppIcon />
-                                            </a>
-                                        )}
-                                    </div>
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
                 </div>
                 <div className="flex items-start gap-4">
                     <FormField
@@ -523,7 +475,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                             <AlertCircle className="h-4 w-4" />
                             <AlertTitle>Atenção!</AlertTitle>
                             <AlertDescription>
-                                Cliente com {age} anos. Verifique as restrições de idade.
+                                Cliente com {age} anos. Verifique restrições.
                             </AlertDescription>
                         </Alert>
                     )}
@@ -542,7 +494,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         onClick={() => append({ number: "", species: "" })}
                     >
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        Adicionar Benefício
+                        Adicionar
                     </Button>
                 </div>
                 <div className="space-y-4">
@@ -553,22 +505,9 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                             name={`benefits.${index}.number`}
                             render={({ field }) => (
                                 <FormItem className="flex-1">
-                                    <FormLabel className='text-xs'>Número do Benefício</FormLabel>
+                                    <FormLabel className='text-xs'>Número</FormLabel>
                                     <FormControl>
                                         <Input placeholder='000.000.000-0' {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name={`benefits.${index}.species`}
-                            render={({ field }) => (
-                                <FormItem className="flex-1">
-                                    <FormLabel className='text-xs'>Espécie (Opcional)</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder='Aposentadoria por Idade' {...field} value={field.value ?? ''} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -585,11 +524,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         </Button>
                     </div>
                 ))}
-                {fields.length === 0 && (
-                    <div className="text-sm text-muted-foreground text-center py-4 border border-dashed rounded-md">
-                        <p>Nenhum benefício adicionado.</p>
-                    </div>
-                )}
                 </div>
             </div>
 
@@ -635,62 +569,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                             <FormLabel>Número</FormLabel>
                             <FormControl>
                                 <Input placeholder="123" {...field} value={field.value || ''} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-                <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                    <FormField
-                        control={form.control}
-                        name="complement"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Complemento</FormLabel>
-                            <FormControl>
-                                <Input placeholder="Apto 45" {...field} value={field.value || ''} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="neighborhood"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Bairro</FormLabel>
-                            <FormControl>
-                                <Input placeholder="Centro" {...field} value={field.value || ''} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-                <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                    <FormField
-                        control={form.control}
-                        name="city"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Cidade</FormLabel>
-                            <FormControl>
-                                <Input placeholder="São Paulo" {...field} value={field.value || ''} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="state"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Estado</FormLabel>
-                            <FormControl>
-                                <Input placeholder="SP" {...field} value={field.value || ''} />
                             </FormControl>
                             <FormMessage />
                             </FormItem>
@@ -745,9 +623,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                     initialAttachments={form.getValues('documents') || []}
                     onAttachmentsChange={handleDocumentsChange}
                 />
-                <p className="text-xs text-muted-foreground mt-2">
-                    Arquivos como RG, CPF e Comprovante de Residência salvos aqui estarão disponíveis em todas as futuras propostas deste cliente.
-                </p>
             </div>
           </div>
         </ScrollArea>
