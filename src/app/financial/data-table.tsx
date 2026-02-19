@@ -417,12 +417,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                                     <SelectValue placeholder="Todos os Bancos" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">
-                                        <div className="flex items-center gap-2">
-                                            <Landmark className="h-4 w-4 text-muted-foreground" />
-                                            <span>Todos os Bancos</span>
-                                        </div>
-                                    </SelectItem>
+                                    <SelectItem value="all">Todos os Bancos</SelectItem>
                                     {uniqueBanks.map(b => (
                                         <SelectItem key={b} value={b}>
                                             <div className="flex items-center gap-2">
@@ -446,12 +441,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                                     <SelectValue placeholder="Todas Promotoras" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">
-                                        <div className="flex items-center gap-2">
-                                            <Building2 className="h-4 w-4 text-muted-foreground" />
-                                            <span>Todas Promotoras</span>
-                                        </div>
-                                    </SelectItem>
+                                    <SelectItem value="all">Todas Promotoras</SelectItem>
                                     {uniquePromoters.map(p => (
                                         <SelectItem key={p} value={p}>
                                             <div className="flex items-center gap-2">

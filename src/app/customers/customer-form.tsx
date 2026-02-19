@@ -131,7 +131,8 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     name: "benefits"
   });
 
-  // 🛡️ BLINDAGEM DE INICIALIZAÇÃO: Sincronização forçada de campos controlados
+  const currentCustomerId = customer?.id || tempCustomerId || 'new';
+
   useEffect(() => {
     const source = customer || defaultValues;
     if (source) {
@@ -168,7 +169,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         documents: source.documents || [],
       });
       
-      // Força a atualização manual do gênero para evitar perda de sincronia com o ShadCN Select
+      // Sincronização explícita para o componente Select
       if (genderValue) {
           form.setValue('gender', genderValue);
       }
@@ -180,8 +181,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         setTempCustomerId(doc(collection(firestore, 'customers')).id);
     }
   }, [firestore, customer, tempCustomerId]);
-
-  const currentCustomerId = customer?.id || tempCustomerId;
 
   const cpfValue = form.watch('cpf');
   const birthDateValue = form.watch('birthDate');
@@ -376,8 +375,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                     <FormControl>
                         <Input placeholder="João da Silva" {...field} />
                     </FormControl>
-                    <FormItem>
-                    </FormItem>
                     <FormMessage />
                     </FormItem>
                 )}
@@ -406,7 +403,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                     )}
                     />
                     <FormField
-                      key={`gender-field-${currentCustomerId}`}
+                      key={`gender-field-sync-${currentCustomerId}`}
                       control={form.control}
                       name="gender"
                       render={({ field }) => (
@@ -742,7 +739,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                 </h3>
                 <CustomerAttachmentUploader
                     userId={user?.uid || ''}
-                    customerId={currentCustomerId || ''}
+                    customerId={currentCustomerId === 'new' ? '' : currentCustomerId}
                     initialAttachments={form.getValues('documents') || []}
                     onAttachmentsChange={handleDocumentsChange}
                 />

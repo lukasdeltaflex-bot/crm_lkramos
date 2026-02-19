@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&family=Lexend:wght@300;400;700&family=Bebas+Neue&family=Orbitron:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;700&family=Cinzel:wght@400;700&family=Space+Grotesk:wght@300;400;700&family=Outfit:wght@300;400;700&family=Lora:ital,wght@0,400;0,700;1,400&family=Urbanist:wght@300;400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300;400;700&family=Kanit:wght@300;400;700&family=Work+Sans:wght@300;400;700&family=Quicksand:wght@300;500;700&family=Spectral:ital,wght@0,400;0,700;1,400&family=Manrope:wght@300;400;700&family=Roboto+Condensed:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,700;1,400&display=swap');
@@ -283,6 +282,7 @@
 }
 
 /* 💎 BLINDAGEM DE TABELAS (STICKY COLUMNS) */
+/* Garante que a coluna de seleção herde o fundo da linha quando colorida por status */
 .proposals-table tr th:first-child,
 .proposals-table tr td:first-child,
 .financial-table tr th:first-child,
@@ -292,31 +292,35 @@
     position: sticky !important;
     left: 0;
     z-index: 40 !important;
-    background-color: hsl(var(--background)) !important; /* FUNDO SÓLIDO OBRIGATÓRIO */
+    background-color: inherit !important; /* HERANÇA OBRIGATÓRIA PARA CORES DE STATUS */
     border-right: 2px solid hsl(var(--border) / 0.8);
     box-shadow: 6px 0 12px -4px rgba(0,0,0,0.2); 
-    opacity: 1 !important; /* GARANTE QUE NÃO SEJA TRANSPARENTE */
 }
 
-/* Ajuste de fundo para cabeçalhos fixos */
+/* Fundo padrão para quando a linha não tem cor customizada */
+.proposals-table tr td:first-child,
+.financial-table tr td:first-child,
+.customers-table tr td:first-child {
+    background-color: hsl(var(--background)) !important;
+}
+
+/* Cabeçalhos fixos com fundo muted */
 .proposals-table tr th:first-child,
 .financial-table tr th:first-child,
 .customers-table tr th:first-child {
     background-color: hsl(var(--muted)) !important;
 }
 
-/* Garante que o corpo da linha mantenha o fundo ao rolar no modo escuro */
+/* Sobrescrita para linhas com status colorido */
+.proposals-table tr.status-row-custom td:first-child,
+.financial-table tr.status-row-custom td:first-child {
+    background-color: hsl(var(--status-color) / 0.06) !important;
+}
+
 .dark .proposals-table tr td:first-child,
 .dark .financial-table tr td:first-child,
 .dark .customers-table tr td:first-child {
     background-color: #050505 !important;
-    border-right-color: #333;
-}
-
-.dark .proposals-table tr th:first-child,
-.dark .financial-table tr th:first-child,
-.dark .customers-table tr th:first-child {
-    background-color: #1a1a1a !important;
 }
 
 /* Corrige o vácuo visual na lateral da tabela */

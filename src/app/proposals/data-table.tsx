@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -153,7 +152,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     }
   }, []);
 
-  // Inteligência de Alerta: Captura o número da proposta da URL e aplica o filtro
   React.useEffect(() => {
     if (searchFromUrl) {
       setGlobalFilter(searchFromUrl);
@@ -295,7 +293,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     if (statusFilter === 'Todos') {
         statusColumn?.setFilterValue(undefined);
     } else {
-        // Passamos como array para garantir que o motor de busca TanStack identifique a mudança
         statusColumn?.setFilterValue([statusFilter]);
     }
   }, [statusFilter, table]);
