@@ -113,7 +113,7 @@ export const DraggableHeader = ({ header }: { header: Header<Customer, unknown> 
                     onTouchStart={header.getResizeHandler()}
                     className={cn(
                         "absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none hover:bg-primary/30 z-10",
-                        header.column.getIsResizing() ? "bg-primary opacity-100" : "opacity-0"
+                        header.column.getIsResizing() ? "bg-primary opacity-100" : "opacity-0 group-hover:opacity-100"
                     )}
                 />
             )}
@@ -222,6 +222,27 @@ export const getColumns = (
     header: 'Telefone',
     cell: ({ row }) => {
         const phone = row.original.phone;
+        const isWhatsAppNumber = isWhatsApp(phone);
+        return (
+          <div className="flex items-center gap-2 font-medium text-zinc-600">
+            <span>{phone}</span>
+            {isWhatsAppNumber && (
+              <a href={getWhatsAppUrl(phone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600">
+                <WhatsAppIcon className="h-4 w-4" />
+              </a>
+            )}
+          </div>
+        );
+      },
+    size: 150,
+  },
+  {
+    accessorKey: 'phone2',
+    id: 'Telefone 2',
+    header: 'Telefone 2',
+    cell: ({ row }) => {
+        const phone = row.original.phone2;
+        if (!phone) return <span className="text-muted-foreground/30 italic text-[10px]">Não informado</span>;
         const isWhatsAppNumber = isWhatsApp(phone);
         return (
           <div className="flex items-center gap-2 font-medium text-zinc-600">

@@ -61,9 +61,9 @@ import { DraggableHeader } from './columns';
 import type { Customer } from '@/lib/types';
 import { normalizeString, cn } from '@/lib/utils';
 
-const STORAGE_KEY_VISIBILITY = 'lk-ramos-customer-columns-visibility-v4';
-const STORAGE_KEY_ORDER = 'lk-ramos-customer-columns-order-v4';
-const STORAGE_KEY_SIZING = 'lk-ramos-customer-columns-sizing-v4';
+const STORAGE_KEY_VISIBILITY = 'lk-ramos-customer-columns-visibility-v5';
+const STORAGE_KEY_ORDER = 'lk-ramos-customer-columns-order-v5';
+const STORAGE_KEY_SIZING = 'lk-ramos-customer-columns-sizing-v5';
 const STORAGE_KEY_PAGESIZE = 'lk-ramos-customer-page-size-v2';
 
 
