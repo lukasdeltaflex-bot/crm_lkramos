@@ -153,7 +153,6 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
                 </div>
             </div>
 
-            {/* RESIZER HANDLE */}
             {header.column.getCanResize() && (
                 <div
                     onMouseDown={header.getResizeHandler()}
@@ -202,6 +201,7 @@ export const getColumns = (
   },
   {
     id: 'Promotora',
+    accessorKey: 'promoter',
     header: 'Promotora',
     cell: ({ row, table }) => {
         const promoter = row.original.promoter;
@@ -220,6 +220,7 @@ export const getColumns = (
   },
   {
     id: 'Nº Proposta',
+    accessorKey: 'proposalNumber',
     header: 'Nº Proposta',
     cell: ({ row }) => {
         const num = row.original.proposalNumber;
@@ -234,6 +235,7 @@ export const getColumns = (
   },
   {
     id: 'Cliente',
+    accessorFn: (row) => row.customer?.name,
     header: 'Cliente',
     cell: ({ row }) => (
         <div className="flex items-center gap-2 font-bold text-primary uppercase text-[11px] tracking-tight">
@@ -244,18 +246,21 @@ export const getColumns = (
   },
   {
     id: 'Produto',
+    accessorKey: 'product',
     header: 'Produto',
     cell: ({ row }) => <span className="text-[11px] font-medium">{row.original.product}</span>,
     size: 120,
   },
   {
     id: 'Valor Bruto',
+    accessorKey: 'grossAmount',
     header: () => <div className="text-right">Valor Bruto</div>,
     cell: ({ row }) => <div className="text-right font-bold text-[11px]">{formatCurrency(row.original.grossAmount)}</div>,
     size: 120,
   },
   {
     id: 'Banco',
+    accessorKey: 'bank',
     header: 'Banco',
     cell: ({ row, table }) => {
         const bankRaw = row.original.bank;
@@ -274,6 +279,7 @@ export const getColumns = (
   },
   {
     id: 'Status',
+    accessorKey: 'status',
     header: 'Status',
     cell: ({ row }) => (
         <div className="w-full">
@@ -289,6 +295,7 @@ export const getColumns = (
   },
   {
     id: 'Data Digitação',
+    accessorKey: 'dateDigitized',
     header: 'Data Digitação',
     cell: ({ row }) => <span className="text-[11px] font-medium">{formatDateSafe(row.original.dateDigitized)}</span>,
     size: 120,

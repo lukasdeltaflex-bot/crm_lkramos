@@ -118,7 +118,6 @@ export const DraggableHeader = ({ header }: { header: Header<Customer, unknown> 
                 </div>
             </div>
 
-            {/* RESIZER HANDLE - CRITICAL FOR ADJUSTING WIDTH */}
             {header.column.getCanResize() && (
                 <div
                     onMouseDown={header.getResizeHandler()}
@@ -210,12 +209,13 @@ export const getColumns = (
   },
   {
     id: 'ID',
+    accessorKey: 'numericId',
     header: 'ID',
-    cell: ({ row }) => row.original.numericId,
     size: 80,
   },
   {
     id: 'Nome',
+    accessorKey: 'name',
     header: 'Nome',
     cell: ({ row }) => {
         const customer = row.original;
@@ -229,6 +229,7 @@ export const getColumns = (
   },
   {
     id: 'CPF',
+    accessorKey: 'cpf',
     header: 'CPF',
     cell: ({ row }) => {
         const cpf = row.original.cpf;
@@ -243,6 +244,7 @@ export const getColumns = (
   },
   {
     id: 'Telefone',
+    accessorKey: 'phone',
     header: 'Telefone',
     cell: ({ row }) => {
         const phone = row.original.phone;
@@ -262,6 +264,7 @@ export const getColumns = (
   },
   {
     id: 'Telefone 2',
+    accessorKey: 'phone2',
     header: 'Telefone 2',
     cell: ({ row }) => {
         const phone = row.original.phone2;
@@ -282,18 +285,21 @@ export const getColumns = (
   },
   {
     id: 'Cidade',
+    accessorKey: 'city',
     header: 'Cidade',
     cell: ({ row }) => row.original.city || '-',
     size: 150,
   },
   {
     id: 'Estado',
+    accessorKey: 'state',
     header: 'Estado',
     cell: ({ row }) => row.original.state || '-',
     size: 80,
   },
   {
     id: 'Observações',
+    accessorKey: 'observations',
     header: 'Observações',
     cell: ({ row }) => <div className="truncate max-w-[200px] text-zinc-500 italic text-[10px]">{row.original.observations}</div>,
     size: 200,

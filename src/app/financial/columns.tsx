@@ -102,7 +102,6 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
                 </div>
             </div>
 
-            {/* RESIZER HANDLE */}
             {header.column.getCanResize() && (
                 <div
                     onMouseDown={header.getResizeHandler()}
@@ -150,18 +149,21 @@ export const getColumns = (
   },
   {
     id: 'Promotora',
+    accessorKey: 'promoter',
     header: 'Promotora',
     cell: ({ row }) => <span className="text-[11px] font-medium">{row.original.promoter}</span>,
     size: 150,
   },
   {
     id: 'Cliente',
+    accessorFn: (row) => row.customer?.name,
     header: 'Cliente',
     cell: ({ row }) => <span className="font-bold text-primary uppercase text-[11px] tracking-tight">{row.original.customer?.name}</span>,
     size: 200,
   },
   {
     id: 'CPF',
+    accessorFn: (row) => row.customer?.cpf,
     header: 'CPF',
     cell: ({ row }) => {
         const cpf = row.original.customer?.cpf;
@@ -176,6 +178,7 @@ export const getColumns = (
   },
   {
     id: 'Nº Proposta',
+    accessorKey: 'proposalNumber',
     header: 'Nº Proposta',
     cell: ({ row }) => (
         <div className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
@@ -189,12 +192,14 @@ export const getColumns = (
   },
   {
     id: 'Produto',
+    accessorKey: 'product',
     header: 'Produto',
     cell: ({ row }) => <span className="text-[11px] font-medium">{row.original.product}</span>,
     size: 120,
   },
   {
     id: 'Banco',
+    accessorKey: 'bank',
     header: 'Banco',
     cell: ({ row, table }) => {
         const bankRaw = row.original.bank;
@@ -210,6 +215,7 @@ export const getColumns = (
   },
   {
     id: 'Valor Bruto',
+    accessorKey: 'grossAmount',
     header: () => <div className="text-right">Valor Bruto</div>,
     cell: ({ row, table }) => {
       const isPrivacyMode = (table.options.meta as {isPrivacyMode?: boolean})?.isPrivacyMode;
@@ -220,12 +226,14 @@ export const getColumns = (
   },
   {
     id: 'Comissão (%)',
+    accessorKey: 'commissionPercentage',
     header: 'Comissão (%)',
     cell: ({ row }) => <span className="text-[11px] font-medium">{row.original.commissionPercentage.toFixed(2)}%</span>,
     size: 100,
   },
   {
     id: 'Valor Comissão',
+    accessorKey: 'commissionValue',
     header: 'Valor Comissão',
     cell: ({ row, table }) => {
         const isPrivacyMode = (table.options.meta as {isPrivacyMode?: boolean})?.isPrivacyMode;
@@ -235,18 +243,21 @@ export const getColumns = (
   },
   {
     id: 'Status Comissão',
+    accessorKey: 'commissionStatus',
     header: 'Status Comissão',
     cell: ({ row }) => <CommissionStatusCell proposal={row.original} onStatusUpdate={onStatusUpdate} onEdit={onEdit} />,
     size: 140,
   },
   {
     id: 'Data Pagamento',
+    accessorKey: 'commissionPaymentDate',
     header: 'Data Pagamento',
     cell: ({ row }) => <span className="text-[11px] font-medium">{formatDateSafe(row.original.commissionPaymentDate)}</span>,
     size: 120,
   },
   {
     id: 'Status Proposta',
+    accessorKey: 'status',
     header: 'Status Proposta',
     cell: ({ row }) => <div className="w-full"><StatusCell proposalId={row.original.id} currentStatus={row.original.status} /></div>,
     size: 140,
