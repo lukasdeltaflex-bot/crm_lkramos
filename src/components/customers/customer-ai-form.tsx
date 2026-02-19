@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Loader2, Camera, Upload, Image as ImageIcon, FileText, X } from 'lucide-react';
+import { Sparkles, Loader2, Camera, Upload, Image as ImageIcon, FileText, X, Info } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { extractCustomerData } from '@/ai/flows/extract-customer-data-flow';
 import { extractDataFromImage } from '@/ai/flows/extract-data-from-image-flow';
@@ -64,7 +64,6 @@ export function CustomerAiForm({ onSubmit }: CustomerAiFormProps) {
           return;
       }
       
-      // Adaptando formato da imagem para o formulário de cliente
       const finalData = {
           ...extractedData,
           benefits: extractedData.benefitNumber ? [{ number: extractedData.benefitNumber }] : []
