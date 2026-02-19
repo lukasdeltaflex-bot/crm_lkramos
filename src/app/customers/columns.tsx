@@ -145,7 +145,6 @@ const ActionsCell = ({ row, onEdit, onDelete }: any) => {
             >
                 Remover
             </DropdownMenuItem>
-            {/* O AlertDialog está fora para evitar conflitos de portal se necessário, mas mantemos a lógica */}
           </AlertDialog>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -223,27 +222,6 @@ export const getColumns = (
     header: 'Telefone',
     cell: ({ row }) => {
         const phone = row.original.phone;
-        const isWhatsAppNumber = isWhatsApp(phone);
-        return (
-          <div className="flex items-center gap-2 font-medium text-zinc-600">
-            <span>{phone}</span>
-            {isWhatsAppNumber && (
-              <a href={getWhatsAppUrl(phone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600">
-                <WhatsAppIcon className="h-4 w-4" />
-              </a>
-            )}
-          </div>
-        );
-      },
-    size: 150,
-  },
-  {
-    accessorKey: 'phone2',
-    id: 'Telefone 2',
-    header: 'Telefone 2',
-    cell: ({ row }) => {
-        const phone = row.original.phone2;
-        if (!phone) return null;
         const isWhatsAppNumber = isWhatsApp(phone);
         return (
           <div className="flex items-center gap-2 font-medium text-zinc-600">

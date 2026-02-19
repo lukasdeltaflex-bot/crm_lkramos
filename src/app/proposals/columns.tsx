@@ -89,7 +89,6 @@ const ActionsCell = ({ row, onEdit, onView, onDelete, onDuplicate }: any) => {
                     >
                     Cancelar
                 </DropdownMenuItem>
-                {/* AlertDialog logic usually handled in page but structure kept */}
             </AlertDialog>
           </DropdownMenuContent>
         </DropdownMenu>
