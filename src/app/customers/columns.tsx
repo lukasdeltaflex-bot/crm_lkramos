@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Column, ColumnDef, Header, flexRender } from '@tanstack/react-table';
+import { ColumnDef, Header, flexRender } from '@tanstack/react-table';
 import type { Customer } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, ArrowUpDown, GripVertical, ArrowUp, ArrowDown, Copy } from 'lucide-react';
+import { MoreHorizontal, GripVertical, ArrowUp, ArrowDown, Copy } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   AlertDialog,
@@ -26,9 +26,8 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import Link from 'next/link';
-import { isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
+import { isWhatsApp, getWhatsAppUrl, cn } from '@/lib/utils';
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
-import { cn } from '@/lib/utils';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { TableHead } from '@/components/ui/table';

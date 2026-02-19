@@ -1,3 +1,4 @@
+
 'use client';
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -6,25 +7,12 @@ import { PageHeader } from '@/components/page-header';
 import { CustomerDataTable, type CustomerDataTableHandle } from './data-table';
 import { getColumns } from './columns';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Sparkles, Trash2, FileDown, UserCheck, UserX, Camera } from 'lucide-react';
+import { PlusCircle, Sparkles, FileDown, UserCheck, UserX } from 'lucide-react';
 import { CustomerForm } from './customer-form';
 import type { Customer } from '@/lib/types';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, writeBatch, updateDoc, setDoc, query, where } from 'firebase/firestore';
+import { collection, doc, updateDoc, setDoc, query, where } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
 import {
   Dialog,
   DialogContent,
@@ -44,11 +32,6 @@ import { getAge } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
-type CustomerFormData = Partial<Omit<Customer, 'id' | 'ownerId'>>;
-
-/**
- * 🛡️ MOTOR DE LIMPEZA RECURSIVA (Fix Erro de Servidor)
- */
 function cleanCustomerData(data: any): any {
     if (data === null || data === undefined) return null;
     if (Array.isArray(data)) return data.map(item => cleanCustomerData(item)).filter(i => i !== undefined);
@@ -72,7 +55,7 @@ function CustomersPageContent() {
   const [isDialog, setIsDialog] = React.useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = React.useState(false);
   const [selectedCustomer, setSelectedCustomer] = React.useState<Customer | undefined>(undefined);
-  const [defaultValues, setDefaultValues] = React.useState<CustomerFormData | undefined>(undefined);
+  const [defaultValues, setDefaultValues] = React.useState<any | undefined>(undefined);
   const [sheetMode, setSheetMode] = React.useState<'new' | 'edit'>('new');
   const [rowSelection, setRowSelection] = React.useState({});
   const [isSaving, setIsSaving] = React.useState(false);
@@ -112,12 +95,8 @@ function CustomersPageContent() {
   };
 
   const handleAiFormSubmit = (aiData: any) => {
-    const prefilledData: CustomerFormData = {
-        ...aiData,
-        birthDate: aiData.birthDate,
-    };
     setSelectedCustomer(undefined);
-    setDefaultValues(prefilledData);
+    setDefaultValues(aiData);
     setSheetMode('new');
     setIsAiModalOpen(false);
     setIsDialog(true);
@@ -144,13 +123,12 @@ function CustomersPageContent() {
     return filter === 'active' ? activeCustomers : inactiveCustomers;
   }, [filter, activeCustomers, inactiveCustomers]);
 
-
   const handleExportToExcel = async () => {
     const table = tableRef.current?.table;
     if (!table) return;
     const { utils, writeFile } = await import('xlsx');
-    const rowsToExport = table.getFilteredSelectedRowModel().rows.length > 0 ? table.getFilteredSelectedRowModel().rows : table.getFilteredRowModel().rows;
-    const worksheet = utils.json_to_sheet(rowsToExport.map(r => r.original));
+    const rows = table.getFilteredRowModel().rows;
+    const worksheet = utils.json_to_sheet(rows.map(r => r.original));
     const workbook = utils.book_new();
     utils.book_append_sheet(workbook, worksheet, 'Clientes');
     writeFile(workbook, 'clientes.xlsx');
@@ -190,12 +168,14 @@ function CustomersPageContent() {
 
   return (
     <>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-6">
         <PageHeader title="Clientes" />
         <div className="flex items-center gap-2">
              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="h-10 px-4 font-bold border-primary/20 hover:bg-primary/5"><FileDown className="mr-2 h-4 w-4" /> Exportar</Button>
+                    <Button variant="outline" className="h-10 px-4 font-bold border-primary/20 hover:bg-primary/5">
+                        <FileDown className="mr-2 h-4 w-4" /> Exportar
+                    </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     <DropdownMenuItem onSelect={handleExportToExcel}>Excel (.xlsx)</DropdownMenuItem>
@@ -203,7 +183,7 @@ function CustomersPageContent() {
             </DropdownMenu>
             <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
                 <DialogTrigger asChild>
-                    <Button variant="outline" className="h-10 px-4 font-bold bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100">
+                    <Button variant="outline" className="h-10 px-4 font-bold bg-orange-50/50 text-orange-600 border-orange-200/50 hover:bg-orange-100/50">
                         <Sparkles className="h-4 w-4 mr-2" /> Cadastrar via IA / Foto
                     </Button>
                 </DialogTrigger>
@@ -212,15 +192,33 @@ function CustomersPageContent() {
                     <CustomerAiForm onSubmit={handleAiFormSubmit} />
                 </DialogContent>
             </Dialog>
-            <Button onClick={handleNewCustomer} className="h-10 px-6 font-bold bg-primary hover:bg-primary/90 shadow-md"><PlusCircle className="mr-2 h-4 w-4" /> Novo Cliente</Button>
+            <Button onClick={handleNewCustomer} className="h-10 px-6 font-bold bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 border-2 shadow-none transition-all">
+                <PlusCircle className="mr-2 h-4 w-4" /> Novo Cliente
+            </Button>
         </div>
       </div>
-      <Tabs value={filter} onValueChange={setFilter} className="mb-4">
-        <TabsList className="bg-muted/50 p-1 rounded-full border">
-          <TabsTrigger value="active" className="gap-2 rounded-full font-bold px-6 data-[state=active]:bg-green-500 data-[state=active]:text-white">Ativos <Badge variant="secondary" className="bg-white/20 text-current">{activeCustomers.length}</Badge></TabsTrigger>
-          <TabsTrigger value="inactive" className="gap-2 rounded-full font-bold px-6 data-[state=active]:bg-zinc-500 data-[state=active]:text-white">Inativos <Badge variant="secondary" className="bg-white/20 text-current">{inactiveCustomers.length}</Badge></TabsTrigger>
+
+      <Tabs value={filter} onValueChange={setFilter} className="mb-6">
+        <TabsList className="bg-muted/30 p-1 rounded-full border border-border/50 h-12">
+          <TabsTrigger 
+            value="active" 
+            className="gap-2 rounded-full font-bold px-8 h-full transition-all border-2 border-transparent data-[state=active]:bg-green-50 data-[state=active]:text-green-600 data-[state=active]:border-green-500/20"
+          >
+            <UserCheck className="h-4 w-4" />
+            Ativos 
+            <Badge variant="secondary" className="bg-green-100 text-green-700 ml-1 border-none">{activeCustomers.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="inactive" 
+            className="gap-2 rounded-full font-bold px-8 h-full transition-all border-2 border-transparent data-[state=active]:bg-zinc-100 data-[state=active]:text-zinc-600 data-[state=active]:border-zinc-500/20"
+          >
+            <UserX className="h-4 w-4" />
+            Inativos 
+            <Badge variant="secondary" className="bg-zinc-200 text-zinc-700 ml-1 border-none">{inactiveCustomers.length}</Badge>
+          </TabsTrigger>
         </TabsList>
       </Tabs>
+
       <Dialog open={isDialog} onOpenChange={setIsDialog}>
         <DialogContent className="max-w-4xl">
           <DialogHeader><DialogTitle>{sheetMode === 'edit' ? 'Editar' : 'Novo'} Cliente</DialogTitle></DialogHeader>
@@ -233,6 +231,7 @@ function CustomersPageContent() {
           />
         </DialogContent>
       </Dialog>
+
       <CustomerDataTable 
         columns={columns} 
         data={displayedCustomers} 

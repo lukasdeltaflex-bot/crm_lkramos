@@ -15,8 +15,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { TableHead } from '@/components/ui/table';
@@ -113,9 +111,9 @@ export const getColumns = (
     enableHiding: false,
   },
   {
-    accessorKey: 'promoter',
+    id: 'Promotora',
+    accessorFn: (row) => row.promoter,
     header: 'Promotora',
-    id: 'Promotora'
   },
   {
     id: 'Cliente',
@@ -137,9 +135,9 @@ export const getColumns = (
     },
   },
   {
-    accessorKey: 'proposalNumber',
-    header: 'Nº Proposta',
     id: 'Nº Proposta',
+    accessorFn: (row) => row.proposalNumber,
+    header: 'Nº Proposta',
     cell: ({ row }) => (
         <div className="flex items-center gap-1">
             <Link href={`/proposals?open=${row.original.id}`} className="text-primary hover:underline font-medium">
@@ -150,14 +148,14 @@ export const getColumns = (
     )
   },
   {
-    accessorKey: 'product',
+    id: 'Produto',
+    accessorFn: (row) => row.product,
     header: 'Produto',
-    id: 'Produto'
   },
   {
-    accessorKey: 'bank',
-    header: 'Banco',
     id: 'Banco',
+    accessorFn: (row) => row.bank,
+    header: 'Banco',
     cell: ({ row, table }) => {
         const bankRaw = row.original.bank;
         const settings = (table.options.meta as any)?.userSettings as UserSettings;
@@ -170,38 +168,39 @@ export const getColumns = (
     }
   },
   {
-    accessorKey: 'grossAmount',
+    id: 'Valor Bruto',
+    accessorFn: (row) => row.grossAmount,
     header: () => <div className="text-right">Valor Bruto</div>,
     cell: ({ row, table }) => {
       const isPrivacyMode = (table.options.meta as {isPrivacyMode?: boolean})?.isPrivacyMode;
       if (isPrivacyMode) return <div className="text-left font-medium">•••••</div>;
       return <div className="text-right font-medium">{formatCurrency(row.original.grossAmount)}</div>;
     },
-    id: 'Valor Bruto',
   },
   {
-    accessorKey: 'commissionPercentage',
-    header: 'Comissão (%)',
     id: 'Comissão (%)',
+    accessorFn: (row) => row.commissionPercentage,
+    header: 'Comissão (%)',
     cell: ({ row }) => `${row.original.commissionPercentage.toFixed(2)}%`,
   },
   {
-    accessorKey: 'commissionValue',
-    header: 'Valor Comissão',
     id: 'Valor Comissão',
+    accessorFn: (row) => row.commissionValue,
+    header: 'Valor Comissão',
     cell: ({ row, table }) => {
         const isPrivacyMode = (table.options.meta as {isPrivacyMode?: boolean})?.isPrivacyMode;
         return isPrivacyMode ? '•••••' : formatCurrency(row.original.commissionValue);
     },
   },
   {
-    accessorKey: 'commissionStatus',
-    header: 'Status Comissão',
     id: 'Status Comissão',
+    accessorFn: (row) => row.commissionStatus,
+    header: 'Status Comissão',
     cell: ({ row }) => <CommissionStatusCell proposal={row.original} onStatusUpdate={onStatusUpdate} onEdit={onEdit} />,
   },
   {
     id: 'Data Pagamento',
+    accessorFn: (row) => row.commissionPaymentDate,
     header: 'Data Pagamento',
     cell: ({ row }) => formatDateSafe(row.original.commissionPaymentDate),
   },
@@ -224,4 +223,4 @@ export const getColumns = (
     ),
     enableHiding: false,
   },
-].map(column => ({ ...column, id: column.id || column.accessorKey as string}));
+].map(column => ({ ...column, id: column.id || (column as any).accessorKey }));

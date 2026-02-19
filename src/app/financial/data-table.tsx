@@ -280,7 +280,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>Personalizar Colunas</DropdownMenuLabel>
+                    <DropdownMenuLabel>Exibir/Ocultar</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {table.getAllColumns().filter(c => c.getCanHide()).map(column => (
                         <DropdownMenuCheckboxItem key={column.id} className="capitalize text-xs font-medium" checked={column.getIsVisible()} onCheckedChange={v => column.toggleVisibility(!!v)}>

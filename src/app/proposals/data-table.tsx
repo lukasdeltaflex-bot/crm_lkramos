@@ -4,32 +4,18 @@
 import * as React from 'react';
 import {
   ColumnDef,
-  ColumnFiltersState,
-  RowSelectionState,
-  SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-  ColumnOrderState,
-  ColumnSizingState,
+  RowSelectionState,
   Table as ReactTable,
-  PaginationState,
-  Header
+  VisibilityState,
+  SortingState,
 } from '@tanstack/react-table';
-import {
-    DndContext,
-    closestCenter,
-    KeyboardSensor,
-    PointerSensor,
-    useSensors,
-    DragEndEvent,
-    useSensor,
-  } from '@dnd-kit/core';
-import { SortableContext, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { parse, isValid, startOfDay, endOfDay, subDays, startOfMonth, format } from 'date-fns';
+import type { DateRange } from 'react-day-picker';
 
 import {
   Table,
@@ -57,20 +43,16 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuLabel,
-  DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, X, Search, Calendar as CalendarIcon } from 'lucide-react';
+import { Filter, X, Search, Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { proposalStatuses } from '@/lib/config-data';
-import type { ProposalStatus, Proposal, UserSettings } from '@/lib/types';
+import type { ProposalStatus, UserSettings } from '@/lib/types';
 import { DraggableHeader } from './columns';
 import type { ProposalWithCustomer } from './page';
 import { Separator } from '@/components/ui/separator';
-import { formatCurrency, normalizeString, cn } from '@/lib/utils';
-import { parse, isValid, startOfDay, endOfDay, subDays, startOfMonth, subMonths, endOfMonth, format } from 'date-fns';
-import type { DateRange } from 'react-day-picker';
+import { normalizeString, cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 
 interface DataTableProps {
@@ -101,7 +83,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const [endDateInput, setEndDateInput] = React.useState('');
   const [appliedDateRange, setAppliedDateRange] = React.useState<DateRange | undefined>(undefined);
   
-  // FIX: Tradução das chaves de visibilidade para bater com o id traduzido em columns.tsx
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
       'Operador': false,
       'Comissão': false,
@@ -181,8 +162,8 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     <div className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-4 bg-muted/10 p-2 rounded-xl border border-border/50 shadow-sm">
             <Tabs value={statusFilter} onValueChange={setStatusFilter}>
-                <TabsList className="h-auto flex-wrap justify-start bg-transparent p-0">
-                    <TabsTrigger value="Todos" className="font-bold px-4">Todos</TabsTrigger>
+                <TabsList className="h-auto flex-wrap justify-start bg-transparent p-0 gap-1">
+                    <TabsTrigger value="Todos" className="font-bold px-4 h-9">Todos</TabsTrigger>
                     {['Em Andamento', 'Aguardando Saldo', 'Pago', 'Saldo Pago', 'Pendente', 'Reprovado'].map(s => {
                         const colorValue = statusColors[s.toUpperCase()] || statusColors[s];
                         return (
@@ -213,7 +194,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                     setEndDateInput(format(now, 'dd/MM/yyyy'));
                     setAppliedDateRange({ from, to: now });
                 }}>
-                    <SelectTrigger className="h-7 w-[120px] border-none bg-transparent focus:ring-0 text-xs font-bold uppercase">
+                    <SelectTrigger className="h-7 w-[120px] border-none bg-transparent focus:ring-0 text-xs font-bold uppercase p-0">
                         <CalendarIcon className="mr-2 h-3 w-3 text-primary" />
                         <SelectValue placeholder="PERÍODO" />
                     </SelectTrigger>
@@ -230,17 +211,17 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                         placeholder="De" 
                         value={startDateInput}
                         onChange={(e) => handleDateInputChange(e.target.value, 'start')}
-                        className="h-7 w-20 border-none bg-muted/30 text-[10px] text-center"
+                        className="h-7 w-20 border-none bg-muted/30 text-[10px] text-center font-bold"
                     />
                     <span className="text-muted-foreground">-</span>
                     <Input 
                         placeholder="Até" 
                         value={endDateInput}
                         onChange={(e) => handleDateInputChange(e.target.value, 'end')}
-                        className="h-7 w-20 border-none bg-muted/30 text-[10px] text-center"
+                        className="h-7 w-20 border-none bg-muted/30 text-[10px] text-center font-bold"
                     />
                 </div>
-                <Button size="sm" onClick={handleApplyFilter} className="h-7 bg-primary rounded-full px-4 text-[10px] font-bold uppercase">
+                <Button size="sm" onClick={handleApplyFilter} className="h-7 bg-primary rounded-full px-4 text-[10px] font-bold uppercase transition-all shadow-sm">
                     <Filter className="h-3 w-3 mr-1" /> Aplicar
                 </Button>
             </div>
@@ -250,10 +231,10 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
             <div className='relative w-full max-w-md'>
                 <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-60' />
                 <Input
-                    placeholder="Busca Inteligente (Nome, CPF, ID, Proposta...)"
+                    placeholder="Busca Inteligente (Nome, CPF, Proposta...)"
                     value={globalFilter ?? ''}
                     onChange={(e) => setGlobalFilter(e.target.value)}
-                    className="pl-9 h-11 bg-card border-primary/10 rounded-full text-sm font-medium shadow-sm focus-visible:ring-primary/20"
+                    className="pl-9 h-11 bg-card border-primary/10 rounded-full text-sm font-medium shadow-sm focus-visible:ring-primary/20 transition-all"
                 />
             </div>
             <DropdownMenu>
@@ -263,7 +244,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>Personalizar Colunas</DropdownMenuLabel>
+                    <DropdownMenuLabel>Exibir/Ocultar</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {table.getAllColumns().filter(c => c.getCanHide()).map(column => (
                         <DropdownMenuCheckboxItem
@@ -279,7 +260,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
             </DropdownMenu>
         </div>
 
-        <Card className="proposals-table border-border/50 shadow-md rounded-xl overflow-hidden">
+        <Card className="proposals-table border-border/50 shadow-md rounded-xl overflow-hidden bg-card">
             <div className="p-0">
                 <div className="overflow-x-auto">
                     <Table>
@@ -312,8 +293,8 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                                 })
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground font-medium uppercase text-[10px] tracking-widest">
-                                        Nenhuma proposta encontrada para estes filtros.
+                                    <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground font-medium uppercase text-[10px] tracking-widest opacity-40">
+                                        Nenhuma proposta encontrada.
                                     </TableCell>
                                 </TableRow>
                             )}
