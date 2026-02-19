@@ -231,12 +231,12 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
 
         <div className="flex items-center justify-between gap-4">
             <div className='relative w-full max-w-md group'>
-                <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-80 group-focus-within:opacity-100 transition-opacity' />
+                <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80 group-focus-within:opacity-100 transition-opacity' />
                 <Input
                     placeholder="Busca Inteligente (Nome, CPF, Proposta...)"
                     value={globalFilter ?? ''}
                     onChange={(e) => setGlobalFilter(e.target.value)}
-                    className="pl-9 h-11 bg-background border-2 border-zinc-300 dark:border-primary/40 rounded-full text-sm font-bold shadow-md focus-visible:ring-primary/20 transition-all placeholder:text-muted-foreground/80"
+                    className="pl-10 h-11 bg-background border-2 border-zinc-300 dark:border-primary/40 rounded-full text-sm font-bold shadow-md focus-visible:ring-primary/20 transition-all placeholder:text-muted-foreground/80"
                 />
             </div>
             <DropdownMenu>
@@ -282,13 +282,13 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                                         <TableRow 
                                             key={row.id} 
                                             className={cn(
-                                                "transition-colors border-b h-11 hover:bg-primary/[0.03] dark:hover:bg-primary/5",
+                                                "transition-colors border-b h-12 hover:bg-primary/[0.03] dark:hover:bg-primary/5",
                                                 colorValue && "status-row-custom"
                                             )}
                                             style={colorValue ? { '--status-color': colorValue } as any : {}}
                                         >
                                             {row.getVisibleCells().map(cell => (
-                                                <TableCell key={cell.id} style={{ width: cell.column.getSize() }} className="p-2 text-xs border-r last:border-r-0 border-zinc-100 dark:border-zinc-800/50">
+                                                <TableCell key={cell.id} style={{ width: cell.column.getSize() }} className="p-2 text-sm border-zinc-100 dark:border-zinc-800/50">
                                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                                 </TableCell>
                                             ))}

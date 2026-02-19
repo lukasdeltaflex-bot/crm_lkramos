@@ -23,7 +23,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import Link from 'next/link';
 import { isWhatsApp, getWhatsAppUrl, cn } from '@/lib/utils';
@@ -74,7 +73,7 @@ export const DraggableHeader = ({ header }: { header: Header<Customer, unknown> 
             colSpan={header.colSpan}
             style={style}
             className={cn(
-                'relative p-0 h-14 border-r last:border-r-0 bg-muted/30 group transition-colors hover:bg-muted/50',
+                'relative p-0 h-14 bg-muted/30 group transition-colors hover:bg-muted/50 border-b-2',
                 isSelect && 'w-[50px] min-w-[50px]'
             )}
         >
@@ -152,14 +151,12 @@ const ActionsCell = ({ row, onEdit, onDelete }: any) => {
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <AlertDialog>
-            <AlertDialogTrigger asChild>
-                <DropdownMenuItem
-                    onSelect={(e) => e.preventDefault()}
-                    className="text-destructive focus:text-destructive focus:bg-destructive/10 font-bold"
-                >
-                    Remover Registro
-                </DropdownMenuItem>
-            </AlertDialogTrigger>
+            <DropdownMenuItem
+                onSelect={(e) => e.preventDefault()}
+                className="text-destructive focus:text-destructive focus:bg-destructive/10 font-bold"
+            >
+                Remover Registro
+            </DropdownMenuItem>
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
@@ -212,7 +209,7 @@ export const getColumns = (
     id: 'ID',
     accessorFn: (row) => row.numericId,
     header: 'ID',
-    cell: ({ row }) => <span className="text-xs font-black text-foreground/80">{row.original.numericId}</span>,
+    cell: ({ row }) => <span className="text-sm font-black text-foreground/80">{row.original.numericId}</span>,
     size: 80,
   },
   {
@@ -222,7 +219,7 @@ export const getColumns = (
     cell: ({ row }) => {
         const customer = row.original;
         return (
-            <Link href={`/customers/${customer.id}`} className="font-bold text-primary hover:underline uppercase text-xs tracking-tight truncate block max-w-[220px]">
+            <Link href={`/customers/${customer.id}`} className="font-bold text-primary hover:underline uppercase text-sm tracking-tight truncate block max-w-[220px]">
                 {customer.name}
             </Link>
         )
@@ -236,7 +233,7 @@ export const getColumns = (
     cell: ({ row }) => {
         const cpf = row.original.cpf;
         return (
-          <div className="flex items-center gap-1 font-bold text-foreground/90 text-xs">
+          <div className="flex items-center gap-1 font-bold text-foreground/90 text-sm">
             <span>{cpf}</span>
             <CopyButton text={cpf} label="CPF" />
           </div>
@@ -252,7 +249,7 @@ export const getColumns = (
         const phone = row.original.phone;
         const isWhatsAppNumber = isWhatsApp(phone);
         return (
-          <div className="flex items-center gap-2 font-bold text-xs">
+          <div className="flex items-center gap-2 font-bold text-sm">
             <span>{phone}</span>
             {isWhatsAppNumber && (
               <a href={getWhatsAppUrl(phone)} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:text-green-700">
@@ -270,10 +267,10 @@ export const getColumns = (
     header: 'Telefone 2',
     cell: ({ row }) => {
         const phone = row.original.phone2;
-        if (!phone) return <span className="text-muted-foreground/30 italic text-[10px]">---</span>;
+        if (!phone) return <span className="text-muted-foreground/30 italic text-xs">---</span>;
         const isWhatsAppNumber = isWhatsApp(phone);
         return (
-          <div className="flex items-center gap-2 font-bold text-xs text-foreground/80">
+          <div className="flex items-center gap-2 font-bold text-sm text-foreground/80">
             <span>{phone}</span>
             {isWhatsAppNumber && (
               <a href={getWhatsAppUrl(phone)} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:text-green-700">
@@ -289,21 +286,21 @@ export const getColumns = (
     id: 'Cidade',
     accessorFn: (row) => row.city,
     header: 'Cidade',
-    cell: ({ row }) => <span className="text-xs text-foreground font-medium truncate block">{row.original.city || '-'}</span>,
+    cell: ({ row }) => <span className="text-sm text-foreground font-medium truncate block">{row.original.city || '-'}</span>,
     size: 150,
   },
   {
     id: 'Estado',
     accessorFn: (row) => row.state,
     header: 'Estado',
-    cell: ({ row }) => <span className="text-xs text-foreground font-black uppercase">{row.original.state || '-'}</span>,
+    cell: ({ row }) => <span className="text-sm text-foreground font-black uppercase">{row.original.state || '-'}</span>,
     size: 80,
   },
   {
     id: 'Observações',
     accessorFn: (row) => row.observations,
     header: 'Observações',
-    cell: ({ row }) => <div className="truncate max-w-[200px] text-muted-foreground italic text-[10px]">{row.original.observations}</div>,
+    cell: ({ row }) => <div className="truncate max-w-[200px] text-muted-foreground italic text-xs">{row.original.observations}</div>,
     size: 200,
   },
   {

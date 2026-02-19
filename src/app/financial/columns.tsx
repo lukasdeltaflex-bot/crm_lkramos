@@ -66,7 +66,7 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
             ref={setNodeRef}
             colSpan={header.colSpan}
             style={style}
-            className={cn('relative p-0 h-14 border-r last:border-r-0 bg-muted/30 group transition-colors hover:bg-muted/50')}
+            className={cn('relative p-0 h-14 bg-muted/30 group transition-colors hover:bg-muted/50 border-b-2')}
         >
             <div className="flex flex-col h-full justify-center">
                 <div
@@ -152,14 +152,14 @@ export const getColumns = (
     id: 'Promotora',
     accessorKey: 'promoter',
     header: 'Promotora',
-    cell: ({ row }) => <span className="text-xs font-bold text-foreground/90">{row.original.promoter}</span>,
+    cell: ({ row }) => <span className="text-sm font-bold text-foreground/90">{row.original.promoter}</span>,
     size: 150,
   },
   {
     id: 'Cliente',
     accessorFn: (row) => row.customer?.name,
     header: 'Cliente',
-    cell: ({ row }) => <span className="font-black text-primary uppercase text-xs tracking-tight">{row.original.customer?.name}</span>,
+    cell: ({ row }) => <span className="font-black text-primary uppercase text-sm tracking-tight">{row.original.customer?.name}</span>,
     size: 200,
   },
   {
@@ -169,7 +169,7 @@ export const getColumns = (
     cell: ({ row }) => {
         const cpf = row.original.customer?.cpf;
         return (
-            <div className="flex items-center gap-1 text-xs font-black text-foreground/80">
+            <div className="flex items-center gap-1 text-sm font-black text-foreground/80">
                 <span>{cpf || '-'}</span>
                 {cpf && <CopyButton text={cpf} label="CPF" />}
             </div>
@@ -182,7 +182,7 @@ export const getColumns = (
     accessorKey: 'proposalNumber',
     header: 'Nº Proposta',
     cell: ({ row }) => (
-        <div className="flex items-center gap-1 text-xs font-black text-foreground/80">
+        <div className="flex items-center gap-1 text-sm font-black text-foreground/80">
             <Link href={`/proposals?open=${row.original.id}`} className="text-primary hover:underline font-black">
                 {row.original.proposalNumber}
             </Link>
@@ -195,7 +195,7 @@ export const getColumns = (
     id: 'Produto',
     accessorKey: 'product',
     header: 'Produto',
-    cell: ({ row }) => <span className="text-xs font-bold text-foreground/80">{row.original.product}</span>,
+    cell: ({ row }) => <span className="text-sm font-bold text-foreground/80">{row.original.product}</span>,
     size: 120,
   },
   {
@@ -208,7 +208,7 @@ export const getColumns = (
         return (
             <div className="flex items-center gap-2">
                 <BankIcon bankName={bankRaw} domain={settings?.bankDomains?.[bankRaw]} showLogo={settings?.showBankLogos ?? true} />
-                <span className="truncate text-xs font-bold text-foreground/90">{cleanBankName(bankRaw)}</span>
+                <span className="truncate text-sm font-bold text-foreground/90">{cleanBankName(bankRaw)}</span>
             </div>
         )
     },
@@ -221,7 +221,7 @@ export const getColumns = (
     cell: ({ row, table }) => {
       const isPrivacyMode = (table.options.meta as {isPrivacyMode?: boolean})?.isPrivacyMode;
       if (isPrivacyMode) return <div className="text-left font-medium">•••••</div>;
-      return <div className="text-right font-black text-xs text-foreground">{formatCurrency(row.original.grossAmount)}</div>;
+      return <div className="text-right font-black text-sm text-foreground">{formatCurrency(row.original.grossAmount)}</div>;
     },
     size: 120,
   },
@@ -229,7 +229,7 @@ export const getColumns = (
     id: 'Comissão (%)',
     accessorKey: 'commissionPercentage',
     header: 'Comissão (%)',
-    cell: ({ row }) => <span className="text-xs font-bold text-foreground/70">{row.original.commissionPercentage.toFixed(2)}%</span>,
+    cell: ({ row }) => <span className="text-sm font-bold text-foreground/70">{row.original.commissionPercentage.toFixed(2)}%</span>,
     size: 100,
   },
   {
@@ -238,7 +238,7 @@ export const getColumns = (
     header: 'Valor Comissão',
     cell: ({ row, table }) => {
         const isPrivacyMode = (table.options.meta as {isPrivacyMode?: boolean})?.isPrivacyMode;
-        return isPrivacyMode ? '•••••' : <span className="text-xs font-black text-foreground">{formatCurrency(row.original.commissionValue)}</span>;
+        return isPrivacyMode ? '•••••' : <span className="text-sm font-black text-foreground">{formatCurrency(row.original.commissionValue)}</span>;
     },
     size: 120,
   },
@@ -253,7 +253,7 @@ export const getColumns = (
     id: 'Data Pagamento',
     accessorKey: 'commissionPaymentDate',
     header: 'Data Pagamento',
-    cell: ({ row }) => <span className="text-xs font-bold text-foreground/70">{formatDateSafe(row.original.commissionPaymentDate)}</span>,
+    cell: ({ row }) => <span className="text-sm font-bold text-foreground/70">{formatDateSafe(row.original.commissionPaymentDate)}</span>,
     size: 120,
   },
   {

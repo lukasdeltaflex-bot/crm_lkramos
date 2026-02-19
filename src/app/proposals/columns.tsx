@@ -2,7 +2,7 @@
 'use client';
 
 import { ColumnDef, Header, flexRender } from '@tanstack/react-table';
-import type { Proposal, ProposalStatus, UserSettings } from '@/lib/types';
+import type { Proposal, UserSettings } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -21,7 +21,6 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { MoreHorizontal, GripVertical, ArrowUp, ArrowDown, Copy } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -33,7 +32,6 @@ import { CSS } from '@dnd-kit/utilities';
 import { TableHead } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
 import { BankIcon } from '@/components/bank-icon';
-import Link from 'next/link';
 
 const CopyButton = ({ text, label }: { text: string | undefined; label: string }) => {
     if (!text) return null;
@@ -72,14 +70,12 @@ const ActionsCell = ({ row, onEdit, onView, onDelete, onDuplicate }: any) => {
             <DropdownMenuItem onSelect={() => onDuplicate(proposal)} className="font-bold">Duplicar Proposta</DropdownMenuItem>
             <DropdownMenuSeparator />
             <AlertDialog>
-                <AlertDialogTrigger asChild>
-                    <DropdownMenuItem 
-                        onSelect={(e) => e.preventDefault()}
-                        className="text-destructive focus:text-destructive focus:bg-destructive/10 font-bold"
-                        >
-                        Cancelar Proposta
-                    </DropdownMenuItem>
-                </AlertDialogTrigger>
+                <DropdownMenuItem 
+                    onSelect={(e) => e.preventDefault()}
+                    className="text-destructive focus:text-destructive focus:bg-destructive/10 font-bold"
+                    >
+                    Cancelar Proposta
+                </DropdownMenuItem>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Cancelar proposta?</AlertDialogTitle>
@@ -118,7 +114,7 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
             ref={setNodeRef}
             colSpan={header.colSpan}
             style={style}
-            className={cn('relative p-0 h-14 border-r last:border-r-0 bg-muted/30 group transition-colors hover:bg-muted/50')}
+            className={cn('relative p-0 h-14 bg-muted/30 group transition-colors hover:bg-muted/50 border-b-2')}
         >
             <div className="flex flex-col h-full justify-center">
                 <div
@@ -214,7 +210,7 @@ export const getColumns = (
         return (
             <div className="flex items-center gap-2">
                 <BankIcon bankName={promoter} domain={domain} showLogo={showLogos} className="h-4 w-4" />
-                <span className="truncate text-xs font-bold text-foreground/90">{promoter}</span>
+                <span className="truncate text-sm font-bold text-foreground/90">{promoter}</span>
             </div>
         )
     },
@@ -227,7 +223,7 @@ export const getColumns = (
     cell: ({ row }) => {
         const num = row.original.proposalNumber;
         return (
-            <div className="flex items-center gap-1 text-xs font-black text-foreground/80">
+            <div className="flex items-center gap-1 text-sm font-black text-foreground/80">
                 <span>{num}</span>
                 <CopyButton text={num} label="Proposta" />
             </div>
@@ -240,7 +236,7 @@ export const getColumns = (
     accessorFn: (row) => row.customer?.name,
     header: 'Cliente',
     cell: ({ row }) => (
-        <div className="flex items-center gap-2 font-black text-primary uppercase text-xs tracking-tight">
+        <div className="flex items-center gap-2 font-black text-primary uppercase text-sm tracking-tight">
             {row.original.customer?.name || '---'}
         </div>
     ),
@@ -250,14 +246,14 @@ export const getColumns = (
     id: 'Produto',
     accessorKey: 'product',
     header: 'Produto',
-    cell: ({ row }) => <span className="text-xs font-bold text-foreground/80">{row.original.product}</span>,
+    cell: ({ row }) => <span className="text-sm font-bold text-foreground/80">{row.original.product}</span>,
     size: 120,
   },
   {
     id: 'Valor Bruto',
     accessorKey: 'grossAmount',
     header: () => <div className="text-right">Valor Bruto</div>,
-    cell: ({ row }) => <div className="text-right font-black text-xs text-foreground">{formatCurrency(row.original.grossAmount)}</div>,
+    cell: ({ row }) => <div className="text-right font-black text-sm text-foreground">{formatCurrency(row.original.grossAmount)}</div>,
     size: 120,
   },
   {
@@ -273,7 +269,7 @@ export const getColumns = (
         return (
             <div className="flex items-center gap-2">
                 <BankIcon bankName={bankRaw} domain={customDomain} showLogo={showLogos} />
-                <span className="truncate text-xs font-bold text-foreground/90">{cleanBankName(bankRaw)}</span>
+                <span className="truncate text-sm font-bold text-foreground/90">{cleanBankName(bankRaw)}</span>
             </div>
         )
     },
@@ -299,7 +295,7 @@ export const getColumns = (
     id: 'Data Digitação',
     accessorKey: 'dateDigitized',
     header: 'Data Digitação',
-    cell: ({ row }) => <span className="text-xs font-bold text-foreground/70">{formatDateSafe(row.original.dateDigitized)}</span>,
+    cell: ({ row }) => <span className="text-sm font-bold text-foreground/70">{formatDateSafe(row.original.dateDigitized)}</span>,
     size: 120,
   },
   {

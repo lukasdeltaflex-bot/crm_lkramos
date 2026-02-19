@@ -61,10 +61,10 @@ import { DraggableHeader } from './columns';
 import type { Customer } from '@/lib/types';
 import { normalizeString, cn } from '@/lib/utils';
 
-const STORAGE_KEY_VISIBILITY = 'lk-ramos-customer-columns-visibility-v11';
-const STORAGE_KEY_ORDER = 'lk-ramos-customer-columns-order-v11';
-const STORAGE_KEY_SIZING = 'lk-ramos-customer-columns-sizing-v11';
-const STORAGE_KEY_PAGESIZE = 'lk-ramos-customer-page-size-v11';
+const STORAGE_KEY_VISIBILITY = 'lk-ramos-customer-columns-visibility-v12';
+const STORAGE_KEY_ORDER = 'lk-ramos-customer-columns-order-v12';
+const STORAGE_KEY_SIZING = 'lk-ramos-customer-columns-sizing-v12';
+const STORAGE_KEY_PAGESIZE = 'lk-ramos-customer-page-size-v12';
 
 interface DataTableProps {
   columns: ColumnDef<Customer, unknown>[];
@@ -205,12 +205,12 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         <div className="py-2">
           <div className="flex items-center justify-between px-4 py-2 gap-4">
             <div className='relative w-full max-w-sm group'>
-                <Search className='absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-80 group-focus-within:opacity-100 transition-opacity' />
+                <Search className='absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80 group-focus-within:opacity-100 transition-opacity' />
                 <Input
                     placeholder="Busca Inteligente (Nome, CPF, ID...)"
                     value={globalFilter ?? ''}
                     onChange={(event) => setGlobalFilter(event.target.value)}
-                    className="pl-10 w-full bg-background border-2 border-zinc-300 dark:border-primary/40 h-11 rounded-full focus-visible:ring-primary/20 shadow-md transition-all font-bold text-xs placeholder:text-muted-foreground/80"
+                    className="pl-11 w-full bg-background border-2 border-zinc-300 dark:border-primary/40 h-11 rounded-full focus-visible:ring-primary/20 shadow-md transition-all font-bold text-sm placeholder:text-muted-foreground/80"
                 />
             </div>
             <DropdownMenu>
@@ -269,14 +269,14 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
                             <TableRow
                             key={row.id}
                             data-state={row.getIsSelected() && 'selected'}
-                            className="hover:bg-primary/[0.03] dark:hover:bg-primary/5 transition-colors border-b h-11"
+                            className="hover:bg-primary/[0.03] dark:hover:bg-primary/5 transition-colors border-b h-12"
                             >
                             {row.getVisibleCells().map((cell) => (
                                 <TableCell 
                                     key={cell.id} 
                                     style={{ width: cell.column.getSize() }}
                                     className={cn(
-                                        "p-2 text-xs border-r last:border-r-0 border-zinc-100 dark:border-zinc-800/50",
+                                        "p-2 text-sm border-zinc-100 dark:border-zinc-800/50",
                                         cell.column.id === 'Selecionar' && 'px-0 text-center'
                                     )}
                                 >

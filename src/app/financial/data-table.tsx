@@ -53,7 +53,6 @@ import type { Proposal, Customer, UserSettings } from '@/lib/types';
 import { FinancialSummary } from '@/components/financial/financial-summary';
 import { DraggableHeader } from './columns';
 import { Separator } from '@/components/ui/separator';
-import { BankIcon } from '@/components/bank-icon';
 import { useTheme } from '@/components/theme-provider';
 
 type ProposalWithCustomer = Proposal & { customer: Customer };
@@ -268,12 +267,12 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         <Card className="rounded-[1.5rem] border-2 border-zinc-200 dark:border-primary/30 bg-card shadow-xl overflow-hidden p-1">
             <div className="flex items-center justify-between px-4 py-2 gap-4">
                 <div className='relative w-full max-w-md group'>
-                    <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-80 group-focus-within:opacity-100 transition-opacity' />
+                    <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80 group-focus-within:opacity-100 transition-opacity' />
                     <Input 
                         placeholder="Busca Inteligente (Nome, CPF, Banco...)" 
                         value={globalFilter} 
                         onChange={(e) => setGlobalFilter(e.target.value)} 
-                        className="pl-9 h-11 bg-background border-2 border-zinc-300 dark:border-primary/40 rounded-full text-sm font-bold shadow-md focus-visible:ring-primary/20 transition-all placeholder:text-muted-foreground/80" 
+                        className="pl-10 h-11 bg-background border-2 border-zinc-300 dark:border-primary/40 rounded-full text-sm font-bold shadow-md focus-visible:ring-primary/20 transition-all placeholder:text-muted-foreground/80" 
                     />
                 </div>
                 <DropdownMenu>
@@ -313,13 +312,13 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                                         <TableRow 
                                             key={row.id} 
                                             className={cn(
-                                                "transition-colors border-b h-11 hover:bg-primary/[0.03] dark:hover:bg-primary/5", 
+                                                "transition-colors border-b h-12 hover:bg-primary/[0.03] dark:hover:bg-primary/5", 
                                                 colorValue && "status-row-custom"
                                             )} 
                                             style={colorValue ? { '--status-color': colorValue } as any : {}}
                                         >
                                             {row.getVisibleCells().map(cell => (
-                                                <TableCell key={cell.id} style={{ width: cell.column.getSize() }} className="p-2 text-xs border-r last:border-r-0 border-zinc-100 dark:border-zinc-800/50">
+                                                <TableCell key={cell.id} style={{ width: cell.column.getSize() }} className="p-2 text-sm border-zinc-100 dark:border-zinc-800/50">
                                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                                 </TableCell>
                                             ))}
