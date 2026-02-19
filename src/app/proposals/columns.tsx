@@ -139,7 +139,7 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
                         </div>
                     )}
                     <div className={cn(
-                        "overflow-hidden font-black text-[11px] uppercase tracking-wider text-muted-foreground leading-tight flex items-center gap-1.5",
+                        "overflow-hidden font-black text-xs uppercase tracking-wider text-muted-foreground leading-tight flex items-center gap-1.5",
                         isActions && "text-right pr-2",
                         isSelect && "justify-center w-full pr-0"
                     )}>

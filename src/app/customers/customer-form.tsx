@@ -100,7 +100,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   const [age, setAge] = useState<number | null>(null);
   const [tempCustomerId, setTempCustomerId] = useState<string | undefined>(undefined);
 
-  // ID estável para chaves de componentes controlados
   const currentCustomerId = customer?.id || tempCustomerId || 'new';
 
   const form = useForm<CustomerFormValues>({
@@ -145,7 +144,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       
       const genderValue = source.gender || '';
 
-      // Reset forçado com fallbacks para evitar undefined
       form.reset({
         name: source.name || '',
         cpf: source.cpf || '',
@@ -178,7 +176,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   const cpfValue = form.watch('cpf');
   const birthDateValue = form.watch('birthDate');
   const phone1Value = form.watch('phone');
-  const phone2Value = form.watch('phone2');
 
   const duplicateCpfCustomer = useMemo(() => {
     if (!cpfValue || cpfValue.length < 14) return null;
@@ -366,7 +363,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                     name="cpf"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>CPF</FormLabel>
+                        <FormLabel>CPF (Verificação em tempo real)</FormLabel>
                         <FormControl>
                             <Input placeholder="000.000.000-00" {...field} onChange={handleCpfChange} maxLength={14}/>
                         </FormControl>
@@ -390,7 +387,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         <FormItem>
                           <FormLabel>Gênero</FormLabel>
                           <Select 
-                            key={`gender-sync-${currentCustomerId}`} // CHAVE PARA EVITAR RESET NO FORM
+                            key={`gender-sync-${currentCustomerId}`}
                             onValueChange={field.onChange} 
                             value={field.value || ""}
                           >

@@ -98,7 +98,7 @@ export const DraggableHeader = ({ header }: { header: Header<Customer, unknown> 
                     )}
 
                     <div className={cn(
-                        "overflow-hidden font-black text-[11px] uppercase tracking-wider text-muted-foreground leading-tight flex items-center gap-1.5",
+                        "overflow-hidden font-black text-xs uppercase tracking-wider text-muted-foreground leading-tight flex items-center gap-1.5",
                         isActions && "text-right pr-2",
                         isSelect && "justify-center w-full pr-0"
                     )}>
@@ -268,7 +268,7 @@ export const getColumns = (
     header: 'Telefone 2',
     cell: ({ row }) => {
         const phone = row.original.phone2;
-        if (!phone) return <span className="text-muted-foreground/30 italic text-[11px]">Não informado</span>;
+        if (!phone) return <span className="text-muted-foreground/30 italic text-xs">Não informado</span>;
         const isWhatsAppNumber = isWhatsApp(phone);
         return (
           <div className="flex items-center gap-2 font-medium text-xs">
@@ -301,7 +301,7 @@ export const getColumns = (
     id: 'Observações',
     accessorKey: 'observations',
     header: 'Observações',
-    cell: ({ row }) => <div className="truncate max-w-[200px] text-zinc-500 italic text-[11px]">{row.original.observations}</div>,
+    cell: ({ row }) => <div className="truncate max-w-[200px] text-zinc-500 italic text-xs">{row.original.observations}</div>,
     size: 200,
   },
   {
