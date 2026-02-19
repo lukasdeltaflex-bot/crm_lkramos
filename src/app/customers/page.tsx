@@ -195,7 +195,7 @@ function CustomersPageContent() {
         <div className="flex items-center gap-2">
              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="outline"><FileDown /> Exportar</Button>
+                    <Button variant="outline" className="h-10 px-4 font-bold border-primary/20 hover:bg-primary/5"><FileDown className="mr-2 h-4 w-4" /> Exportar</Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     <DropdownMenuItem onSelect={handleExportToExcel}>Excel (.xlsx)</DropdownMenuItem>
@@ -203,8 +203,8 @@ function CustomersPageContent() {
             </DropdownMenu>
             <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
                 <DialogTrigger asChild>
-                    <Button variant="outline" className="bg-primary/5 text-primary border-primary/20">
-                        <Sparkles className="h-4 w-4" /> Cadastrar via IA / Foto
+                    <Button variant="outline" className="h-10 px-4 font-bold bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100">
+                        <Sparkles className="h-4 w-4 mr-2" /> Cadastrar via IA / Foto
                     </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-xl">
@@ -212,13 +212,13 @@ function CustomersPageContent() {
                     <CustomerAiForm onSubmit={handleAiFormSubmit} />
                 </DialogContent>
             </Dialog>
-            <Button onClick={handleNewCustomer}><PlusCircle /> Novo Cliente</Button>
+            <Button onClick={handleNewCustomer} className="h-10 px-6 font-bold bg-primary hover:bg-primary/90 shadow-md"><PlusCircle className="mr-2 h-4 w-4" /> Novo Cliente</Button>
         </div>
       </div>
       <Tabs value={filter} onValueChange={setFilter} className="mb-4">
-        <TabsList className="bg-muted/50">
-          <TabsTrigger value="active" className="gap-2">Ativos <Badge variant="secondary">{activeCustomers.length}</Badge></TabsTrigger>
-          <TabsTrigger value="inactive" className="gap-2">Inativos <Badge variant="secondary">{inactiveCustomers.length}</Badge></TabsTrigger>
+        <TabsList className="bg-muted/50 p-1 rounded-full border">
+          <TabsTrigger value="active" className="gap-2 rounded-full font-bold px-6 data-[state=active]:bg-green-500 data-[state=active]:text-white">Ativos <Badge variant="secondary" className="bg-white/20 text-current">{activeCustomers.length}</Badge></TabsTrigger>
+          <TabsTrigger value="inactive" className="gap-2 rounded-full font-bold px-6 data-[state=active]:bg-zinc-500 data-[state=active]:text-white">Inativos <Badge variant="secondary" className="bg-white/20 text-current">{inactiveCustomers.length}</Badge></TabsTrigger>
         </TabsList>
       </Tabs>
       <Dialog open={isDialog} onOpenChange={setIsDialog}>

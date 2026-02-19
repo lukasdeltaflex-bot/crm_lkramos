@@ -161,7 +161,7 @@ export function CustomerAiForm({ onSubmit }: CustomerAiFormProps) {
                     disabled={isLoading}
                 >
                     {isLoading ? (
-                        <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Analisando Texto...</>
+                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analisando Texto...</>
                     ) : (
                         <><Sparkles className="mr-2 h-5 w-5" /> Analisar e Preencher</>
                     )}

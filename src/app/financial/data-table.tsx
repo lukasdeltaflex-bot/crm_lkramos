@@ -5,6 +5,7 @@ import {
   ColumnDef,
   ColumnFiltersState,
   SortingState,
+  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -36,9 +37,15 @@ import {
     TabsList,
     TabsTrigger,
   } from '@/components/ui/tabs';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Filter, Search, Calendar as CalendarIcon } from 'lucide-react';
+import { X, Filter, Search, Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { cn, cleanBankName } from '@/lib/utils';
 import type { CommissionStatus, Proposal, Customer, UserSettings } from '@/lib/types';
@@ -46,6 +53,7 @@ import { FinancialSummary } from '@/components/financial/financial-summary';
 import { DraggableHeader } from './columns';
 import { Separator } from '@/components/ui/separator';
 import { BankIcon } from '@/components/bank-icon';
+import { useTheme } from '@/components/theme-provider';
 
 type ProposalWithCustomer = Proposal & { customer: Customer };
 interface DataTableProps {
@@ -74,8 +82,15 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   onShowDetails,
   userSettings,
 }, ref) => {
+  const { statusColors } = useTheme();
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'commissionPaymentDate', desc: true }]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
+      promotora: false,
+      customerCpf: false,
+      commissionPercentage: false,
+      status: false
+  });
   const [statusFilter, setStatusFilter] = React.useState<CommissionStatus | 'Todos'>('Todos');
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [bankFilter, setBankFilter] = React.useState('all');
@@ -93,16 +108,17 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
     getFilteredRowModel: getFilteredRowModel(),
     onGlobalFilterChange: setGlobalFilter,
     onRowSelectionChange: setRowSelection,
-    state: { sorting, columnFilters, globalFilter, rowSelection },
+    state: { sorting, columnFilters, globalFilter, rowSelection, columnVisibility },
     meta: { isPrivacyMode, userSettings },
   });
 
   React.useImperativeHandle(ref, () => ({ table }));
 
-  // 🚀 SINCRONIZAÇÃO DE FILTROS REATIVOS
+  // Sincronização de Filtros
   React.useEffect(() => {
     table.getColumn('commissionStatus')?.setFilterValue({
         id: statusFilter === 'Todos' ? '__CUSTOM_FILTER_TODOS__' : statusFilter,
@@ -172,18 +188,50 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         />
 
         <div className="flex flex-col gap-4 py-4 print:hidden">
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
                     <TabsList className="bg-muted/50 p-1">
                         <TabsTrigger value="Todos">Todos</TabsTrigger>
-                        {['Paga', 'Pendente', 'Parcial'].map(s => (
-                            <TabsTrigger key={s} value={s} className="status-tab font-black uppercase text-[10px] tracking-widest px-4 h-9">
-                                {s === 'Paga' ? 'PAGAS' : s === 'Pendente' ? 'PENDENTES' : 'PARCIAIS'}
-                            </TabsTrigger>
-                        ))}
+                        {['Paga', 'Pendente', 'Parcial'].map(s => {
+                            const colorValue = statusColors[s.toUpperCase()] || statusColors[s];
+                            return (
+                                <TabsTrigger 
+                                    key={s} 
+                                    value={s} 
+                                    className="status-tab font-black uppercase text-[10px] tracking-widest px-4 h-9"
+                                    style={colorValue ? { '--status-color': colorValue } as any : {}}
+                                >
+                                    {s === 'Paga' ? 'PAGAS' : s === 'Pendente' ? 'PENDENTES' : 'PARCIAIS'}
+                                </TabsTrigger>
+                            );
+                        })}
                     </TabsList>
                 </Tabs>
 
+                <div className="flex items-center gap-2">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-9 gap-2">
+                                Colunas <ChevronDown className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                            {table.getAllColumns().filter(c => c.getCanHide()).map(column => (
+                                <DropdownMenuCheckboxItem
+                                    key={column.id}
+                                    className="capitalize"
+                                    checked={column.getIsVisible()}
+                                    onCheckedChange={v => column.toggleVisibility(!!v)}
+                                >
+                                    {column.id}
+                                </DropdownMenuCheckboxItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 bg-muted/20 p-3 rounded-xl border border-border/50 shadow-sm">
                 <div className="flex items-center gap-2 bg-card border rounded-lg px-2 py-1 shadow-sm">
                     <Select value={bankFilter} onValueChange={setBankFilter}>
                         <SelectTrigger className="h-7 w-auto min-w-[180px] border-none bg-transparent focus:ring-0 text-xs font-bold uppercase">
@@ -221,9 +269,9 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                         </SelectContent>
                     </Select>
                 </div>
-            </div>
 
-            <div className="flex flex-wrap items-center gap-3 bg-muted/20 p-3 rounded-xl border border-border/50">
+                <Separator orientation="vertical" className="h-6 mx-1" />
+
                 <Select onValueChange={(val) => applyRange(val)}>
                     <SelectTrigger className='w-[140px] h-9 border-none shadow-none focus:ring-0 font-bold text-xs uppercase'>
                         <CalendarIcon className='mr-2 h-4 w-4 text-primary' />
@@ -237,7 +285,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                         <SelectItem value="lastMonth">Mês Passado</SelectItem>
                     </SelectContent>
                 </Select>
-                <Separator orientation="vertical" className="h-6 mx-1" />
+
                 <div className="flex items-center gap-2">
                     <Input 
                         placeholder="De" 
@@ -256,7 +304,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                     />
                 </div>
                 <Button size="sm" onClick={handleApplyFilter} className='h-9 bg-primary hover:bg-primary/90 rounded-full px-6 font-bold uppercase text-[10px] tracking-widest shadow-md'>
-                    <Filter className="h-3.5 w-3.5 mr-2" /> Aplicar Filtro
+                    <Filter className="h-3.5 w-3.5 mr-2" /> Aplicar
                 </Button>
                 {appliedDateRange && (
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => { setStartDateInput(''); setEndDateInput(''); setAppliedDateRange(undefined); }}>
