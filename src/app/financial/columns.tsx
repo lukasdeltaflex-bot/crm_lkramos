@@ -4,7 +4,7 @@
 import { ColumnDef, flexRender, Header } from '@tanstack/react-table';
 import type { Proposal, Customer, CommissionStatus, UserSettings } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, GripVertical, Copy } from 'lucide-react';
+import { MoreHorizontal, GripVertical, Copy, ArrowUp, ArrowDown } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { formatCurrency, cleanBankName, formatDateSafe } from '@/lib/utils';
 import { cn } from '@/lib/utils';
@@ -63,19 +63,34 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
             ref={setNodeRef}
             colSpan={header.colSpan}
             style={style}
-            className={cn('relative p-0 h-12 border-r last:border-r-0 bg-muted/20')}
+            className={cn('relative p-0 h-14 border-r last:border-r-0 bg-muted/30 group')}
         >
-            <div className="flex items-center gap-1 h-full px-4">
-                <button
-                    {...attributes}
-                    {...listeners}
-                    className="p-1 -ml-2 cursor-grab"
-                    onClick={(e) => e.stopPropagation()}
+            <div className="flex flex-col h-full justify-center">
+                <div
+                    className={cn(
+                        'flex items-center gap-2 h-full px-3',
+                        isDraggable && 'cursor-pointer select-none'
+                    )}
+                    onClick={header.column.getToggleSortingHandler()}
                 >
-                    <GripVertical className="h-4 w-4 opacity-30" />
-                </button>
-                <div className="flex-1 overflow-hidden font-bold text-[11px] uppercase tracking-wider text-muted-foreground">
-                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                    {isDraggable && (
+                        <div
+                            {...attributes}
+                            {...listeners}
+                            className="p-1 hover:bg-primary/10 rounded cursor-grab text-muted-foreground/40"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <GripVertical className="h-3.5 w-3.5" />
+                        </div>
+                    )}
+                    <div className="flex-1 overflow-hidden font-bold text-[10px] uppercase tracking-widest text-muted-foreground leading-tight">
+                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                    </div>
+                    {header.column.getIsSorted() && (
+                        <div className="text-primary">
+                            {header.column.getIsSorted() === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -85,8 +100,8 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
                     onMouseDown={header.getResizeHandler()}
                     onTouchStart={header.getResizeHandler()}
                     className={cn(
-                        "absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none hover:bg-primary/30 z-10",
-                        header.column.getIsResizing() ? "bg-primary opacity-100" : "opacity-0"
+                        "absolute right-0 top-0 h-full w-1.5 cursor-col-resize select-none touch-none hover:bg-primary/40 z-20 transition-colors",
+                        header.column.getIsResizing() ? "bg-primary w-1" : "opacity-0 group-hover:opacity-100"
                     )}
                 />
             )}
@@ -135,6 +150,7 @@ export const getColumns = (
     id: 'Cliente',
     accessorFn: (row) => row.customer?.name,
     header: 'Cliente',
+    cell: ({ row }) => <span className="font-bold text-primary">{row.original.customer?.name}</span>,
     size: 200,
   },
   {
@@ -235,12 +251,9 @@ export const getColumns = (
     id: 'Ações',
     cell: ({ row }) => (
         <div className="text-right print:hidden">
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuItem onSelect={() => onEdit(row.original)}>Editar Comissão</DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => onEdit(row.original)}>
+                <MoreHorizontal className="h-4 w-4" />
+            </Button>
         </div>
     ),
     enableHiding: false,

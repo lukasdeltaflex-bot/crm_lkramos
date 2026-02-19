@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, GripVertical, ArrowUp, ArrowDown, Copy } from 'lucide-react';
+import { MoreHorizontal, GripVertical, ArrowUp, ArrowDown, Copy, Phone } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   AlertDialog,
@@ -69,41 +69,42 @@ export const DraggableHeader = ({ header }: { header: Header<Customer, unknown> 
             ref={setNodeRef}
             colSpan={header.colSpan}
             style={style}
-            className={cn('relative p-0 h-12 border-r last:border-r-0 bg-muted/20')}
+            className={cn('relative p-0 h-14 border-r last:border-r-0 bg-muted/30 group')}
         >
-            <div
-                className={cn(
-                    'flex items-center gap-1 h-full px-4',
-                    isDraggable && 'cursor-pointer select-none'
-                )}
-                onClick={header.column.getToggleSortingHandler()}
-            >
-                <button
-                    {...attributes}
-                    {...listeners}
+            <div className="flex flex-col h-full justify-center">
+                <div
                     className={cn(
-                        "p-1 -ml-2",
-                        isDraggable ? "cursor-grab" : "cursor-default",
+                        'flex items-center gap-2 h-full px-3',
+                        isDraggable && 'cursor-pointer select-none'
                     )}
-                    onClick={(e) => e.stopPropagation()}
-                    disabled={!isDraggable}
+                    onClick={header.column.getToggleSortingHandler()}
                 >
-                    <GripVertical className={cn("h-4 w-4", !isDraggable && "opacity-30")} />
-                </button>
+                    {isDraggable && (
+                        <div
+                            {...attributes}
+                            {...listeners}
+                            className="p-1 hover:bg-primary/10 rounded cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-primary transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <GripVertical className="h-3.5 w-3.5" />
+                        </div>
+                    )}
 
-                <div className="flex-1 overflow-hidden font-bold text-[11px] uppercase tracking-wider text-muted-foreground">
-                    {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                        )}
-                </div>
-                 {header.column.getIsSorted() && (
-                    <div className="ml-1">
-                        {header.column.getIsSorted() === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
+                    <div className="flex-1 overflow-hidden font-bold text-[10px] uppercase tracking-widest text-muted-foreground leading-tight">
+                        {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                            )}
                     </div>
-                )}
+                    
+                    {header.column.getIsSorted() && (
+                        <div className="text-primary">
+                            {header.column.getIsSorted() === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* RESIZER HANDLE */}
@@ -112,8 +113,8 @@ export const DraggableHeader = ({ header }: { header: Header<Customer, unknown> 
                     onMouseDown={header.getResizeHandler()}
                     onTouchStart={header.getResizeHandler()}
                     className={cn(
-                        "absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none hover:bg-primary/30 z-10",
-                        header.column.getIsResizing() ? "bg-primary opacity-100" : "opacity-0 group-hover:opacity-100"
+                        "absolute right-0 top-0 h-full w-1.5 cursor-col-resize select-none touch-none hover:bg-primary/40 z-20 transition-colors",
+                        header.column.getIsResizing() ? "bg-primary w-1" : "opacity-0 group-hover:opacity-100"
                     )}
                 />
             )}
@@ -127,7 +128,7 @@ const ActionsCell = ({ row, onEdit, onDelete }: any) => {
     <div className="text-right" onClick={(e) => e.stopPropagation()}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted transition-colors">
+          <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted transition-colors rounded-full">
             <span className="sr-only">Abrir menu</span>
             <MoreHorizontal className="h-4 w-4" />
           </Button>
@@ -194,7 +195,7 @@ export const getColumns = (
     cell: ({ row }) => {
         const customer = row.original;
         return (
-            <Link href={`/customers/${customer.id}`} className="font-bold text-sky-600 hover:underline">
+            <Link href={`/customers/${customer.id}`} className="font-bold text-primary hover:underline">
                 {customer.name}
             </Link>
         )
@@ -208,7 +209,7 @@ export const getColumns = (
     cell: ({ row }) => {
         const cpf = row.original.cpf;
         return (
-          <div className="flex items-center gap-1 font-medium text-zinc-600">
+          <div className="flex items-center gap-1 font-medium text-muted-foreground">
             <span>{cpf}</span>
             <CopyButton text={cpf} label="CPF" />
           </div>
@@ -224,7 +225,7 @@ export const getColumns = (
         const phone = row.original.phone;
         const isWhatsAppNumber = isWhatsApp(phone);
         return (
-          <div className="flex items-center gap-2 font-medium text-zinc-600">
+          <div className="flex items-center gap-2 font-medium">
             <span>{phone}</span>
             {isWhatsAppNumber && (
               <a href={getWhatsAppUrl(phone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600">
@@ -245,7 +246,7 @@ export const getColumns = (
         if (!phone) return <span className="text-muted-foreground/30 italic text-[10px]">Não informado</span>;
         const isWhatsAppNumber = isWhatsApp(phone);
         return (
-          <div className="flex items-center gap-2 font-medium text-zinc-600">
+          <div className="flex items-center gap-2 font-medium">
             <span>{phone}</span>
             {isWhatsAppNumber && (
               <a href={getWhatsAppUrl(phone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600">
