@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -42,6 +43,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
@@ -85,6 +87,8 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 }, ref) => {
   const { statusColors } = useTheme();
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'Data Pagamento', desc: true }]);
+  
+  // Tradução dos IDs no estado de visibilidade
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
       'Promotora': false,
       'CPF': false,
@@ -100,26 +104,21 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const [endDateInput, setEndDateInput] = React.useState('');
   const [appliedDateRange, setAppliedDateRange] = React.useState<DateRange | undefined>(undefined);
 
-  // FILTRAGEM REATIVA INTEGRADA
   const filteredData = React.useMemo(() => {
     let list = data;
 
-    // 1. Filtro de Aba
     if (statusFilter !== 'Todos') {
         list = list.filter(p => p.commissionStatus === statusFilter);
     }
 
-    // 2. Filtro de Bancos
     if (bankFilter !== 'all') {
         list = list.filter(p => p.bank === bankFilter);
     }
 
-    // 3. Filtro de Promotoras
     if (promoterFilter !== 'all') {
         list = list.filter(p => p.promoter === promoterFilter);
     }
 
-    // 4. Filtro de Data
     if (appliedDateRange && appliedDateRange.from) {
         const fromDate = appliedDateRange.from;
         const toDate = appliedDateRange.to ? endOfDay(appliedDateRange.to) : endOfDay(appliedDateRange.from);
@@ -129,7 +128,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         });
     }
 
-    // 5. Busca Inteligente
     if (globalFilter) {
         const lower = globalFilter.toLowerCase();
         list = list.filter(p => 
@@ -194,7 +192,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             userSettings={userSettings}
         />
 
-        {/* NÍVEL 1: STATUS E PARCEIROS */}
         <div className="flex flex-wrap items-center justify-between gap-4 bg-muted/10 p-2 rounded-xl border border-border/50 shadow-sm">
             <Tabs value={statusFilter} onValueChange={setStatusFilter}>
                 <TabsList className="bg-transparent p-0 gap-1 h-auto flex-wrap">
@@ -253,7 +250,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             </div>
         </div>
 
-        {/* NÍVEL 2: PERÍODO E DATAS */}
         <div className="flex flex-wrap items-center gap-3 bg-muted/5 p-2 rounded-xl">
             <div className="flex items-center gap-2 bg-card border rounded-full px-3 py-1 shadow-sm">
                 <Select onValueChange={(val) => {
@@ -306,7 +302,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             )}
         </div>
 
-        {/* NÍVEL 3: BUSCA E COLUNAS */}
         <div className="flex items-center justify-between gap-4 py-2">
             <div className='relative w-full max-w-md'>
                 <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-60' />
@@ -324,8 +319,8 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>Exibir/Ocultar Colunas</DropdownMenuLabel>
-                    <Separator />
+                    <DropdownMenuLabel>Personalizar Colunas</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
                     {table.getAllColumns().filter(c => c.getCanHide()).map(column => (
                         <DropdownMenuCheckboxItem
                             key={column.id}

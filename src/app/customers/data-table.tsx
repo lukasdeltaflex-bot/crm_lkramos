@@ -50,6 +50,8 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search } from 'lucide-react';
@@ -84,7 +86,8 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   rowSelection,
   setRowSelection,
 }, ref) => {
-  const [sorting, setSorting] = React.useState<SortingState>([{ id: 'numericId', desc: true }]);
+  // FIX: ID alterado de 'numericId' para 'ID' para bater com a definição em columns.tsx
+  const [sorting, setSorting] = React.useState<SortingState>([{ id: 'ID', desc: true }]);
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [isClient, setIsClient] = React.useState(false);
@@ -95,9 +98,9 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   });
 
   const defaultVisibility: VisibilityState = {
-    observations: false,
-    city: false,
-    state: false,
+    'Observações': false,
+    'Cidade': false,
+    'Estado': false,
   };
   const initialColumns = React.useMemo(() => columns.map(c => c.id!), [columns]);
 
@@ -209,13 +212,9 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     
         const customer = row.original;
         
-        // BUSCA EXATA POR ID: Regra de ouro para evitar confusão com CPFs/Telefones
         if (/^\d+$/.test(searchTerm)) {
             const isExactId = String(customer.numericId) === searchTerm;
             if (isExactId) return true;
-            
-            // Se for um número curto (< 7 dígitos) e NÃO for o ID exato, 
-            // ignoramos os outros campos para garantir precisão máxima na busca por ID.
             if (searchTerm.length < 7) return false;
         } 
         
@@ -242,17 +241,6 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     table,
   }));
 
-  const idMap: {[key: string]: string} = {
-    numericId: 'ID',
-    name: 'Nome',
-    cpf: 'CPF',
-    phone: 'Telefone',
-    phone2: 'Telefone 2',
-    city: 'Cidade',
-    state: 'Estado',
-    observations: 'Observações'
-  }
-
   return (
     <DndContext
       collisionDetection={closestCenter}
@@ -265,21 +253,23 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
             <div className='relative w-full max-w-sm'>
                 <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-60' />
                 <Input
-                placeholder="Busca (ID exato, nome, CPF...)"
+                placeholder="Busca Inteligente (Nome, CPF, ID...)"
                 value={globalFilter ?? ''}
                 onChange={(event) =>
                     setGlobalFilter(event.target.value)
                 }
-                className="pl-9 w-full bg-muted/20 border-primary/10 h-11 focus-visible:ring-primary/20 transition-all font-medium"
+                className="pl-9 w-full bg-muted/20 border-primary/10 h-11 rounded-full focus-visible:ring-primary/20 transition-all font-medium"
                 />
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-auto">
+                <Button variant="outline" className="ml-auto rounded-full font-bold h-11 border-primary/10">
                   Colunas <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Personalizar Colunas</DropdownMenuLabel>
+                <DropdownMenuSeparator />
                 {table
                   .getAllColumns()
                   .filter((column) => column.getCanHide())
@@ -287,13 +277,13 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
                     return (
                       <DropdownMenuCheckboxItem
                         key={column.id}
-                        className="capitalize"
+                        className="capitalize text-xs font-medium"
                         checked={column.getIsVisible()}
                         onCheckedChange={(value) =>
                           column.toggleVisibility(!!value)
                         }
                       >
-                        {idMap[column.id] || column.id}
+                        {column.id}
                       </DropdownMenuCheckboxItem>
                     );
                   })}

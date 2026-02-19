@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -100,24 +101,22 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const [endDateInput, setEndDateInput] = React.useState('');
   const [appliedDateRange, setAppliedDateRange] = React.useState<DateRange | undefined>(undefined);
   
+  // FIX: Tradução das chaves de visibilidade para bater com o id traduzido em columns.tsx
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
-      operator: false,
-      commissionValue: false,
-      dateApproved: false,
-      datePaidToClient: false,
-      debtBalanceArrivalDate: false
+      'Operador': false,
+      'Comissão': false,
+      'Data Averbação': false,
+      'Data Pgto. Cliente': false,
+      'Chegada Saldo': false
   });
 
-  // FILTRO REATIVO INSTANTÂNEO
   const filteredData = React.useMemo(() => {
     let list = data;
     
-    // Filtro por Aba de Status
     if (statusFilter !== 'Todos') {
         list = list.filter(p => p.status === statusFilter);
     }
 
-    // Filtro de Data
     if (appliedDateRange && appliedDateRange.from) {
         const fromDate = appliedDateRange.from;
         const toDate = appliedDateRange.to ? endOfDay(appliedDateRange.to) : endOfDay(appliedDateRange.from);
@@ -128,7 +127,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         });
     }
 
-    // Filtro de Busca Inteligente
     if (globalFilter) {
         const lower = normalizeString(globalFilter);
         list = list.filter(p => 
@@ -270,11 +268,11 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                     {table.getAllColumns().filter(c => c.getCanHide()).map(column => (
                         <DropdownMenuCheckboxItem
                             key={column.id}
-                            className="capitalize"
+                            className="capitalize text-xs font-medium"
                             checked={column.getIsVisible()}
                             onCheckedChange={v => column.toggleVisibility(!!v)}
                         >
-                            {column.id === 'banco_digitado_v6' ? 'Banco Digitado' : column.id}
+                            {column.id}
                         </DropdownMenuCheckboxItem>
                     ))}
                 </DropdownMenuContent>
