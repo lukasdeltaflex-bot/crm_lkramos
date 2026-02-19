@@ -1,4 +1,3 @@
-
 'use client';
 
 import { ColumnDef, Header, flexRender } from '@tanstack/react-table';
@@ -114,12 +113,12 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
             ref={setNodeRef}
             colSpan={header.colSpan}
             style={style}
-            className={cn('relative p-0 h-14 bg-muted/30 group transition-colors hover:bg-muted/50 border-b-2')}
+            className={cn('relative p-0 h-14 transition-colors hover:bg-muted/50 border-b-2 border-zinc-200 dark:border-zinc-800')}
         >
             <div className="flex flex-col h-full justify-center">
                 <div
                     className={cn(
-                        'flex items-center gap-2 h-full px-3',
+                        'flex items-center gap-1 h-full px-2',
                         isDraggable && 'cursor-pointer select-none',
                         isActions && 'justify-end'
                     )}
@@ -132,18 +131,18 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
                             className="p-1 hover:bg-primary/10 rounded cursor-grab text-muted-foreground/40"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <GripVertical className="h-4 w-4" />
+                            <GripVertical className="h-3.5 w-3.5" />
                         </div>
                     )}
                     <div className={cn(
-                        "overflow-hidden font-black text-[10px] uppercase tracking-wider text-foreground leading-tight flex items-center gap-1.5",
+                        "overflow-hidden font-black text-[10px] uppercase tracking-wider text-foreground leading-tight flex items-center gap-1",
                         isActions && "text-right pr-2",
                         isSelect && "justify-center w-full pr-0"
                     )}>
                         {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                         
                         {header.column.getIsSorted() && (
-                            <div className="text-primary shrink-0">
+                            <div className="text-primary shrink-0 ml-1">
                                 {header.column.getIsSorted() === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
                             </div>
                         )}
@@ -156,8 +155,8 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
                     onMouseDown={header.getResizeHandler()}
                     onTouchStart={header.getResizeHandler()}
                     className={cn(
-                        "absolute right-0 top-0 h-full w-1.5 cursor-col-resize select-none touch-none hover:bg-primary/40 z-20 transition-colors",
-                        header.column.getIsResizing() ? "bg-primary w-1" : "opacity-0 group-hover:opacity-100"
+                        "absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none hover:bg-primary/40 z-20 transition-colors",
+                        header.column.getIsResizing() ? "bg-primary" : "opacity-0 group-hover:opacity-100"
                     )}
                 />
             )}
@@ -182,7 +181,7 @@ export const getColumns = (
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Selecionar tudo"
-        className="rounded-full h-5 w-5 border-2"
+        className="rounded-full h-5 w-5 border-2 border-zinc-300"
       />
     ),
     cell: ({ row }) => (
@@ -190,7 +189,7 @@ export const getColumns = (
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
         aria-label="Selecionar linha"
-        className="rounded-full h-5 w-5 border-2"
+        className="rounded-full h-5 w-5 border-2 border-zinc-300"
       />
     ),
     enableSorting: false,
