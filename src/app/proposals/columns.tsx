@@ -393,7 +393,8 @@ export const getColumns = (
         />
     ),
     filterFn: (row, id, value) => {
-        return value.includes(row.getValue(id))
+        if (!value || (Array.isArray(value) && value.length === 0)) return true;
+        return value.includes(row.getValue(id));
     }
   },
   {

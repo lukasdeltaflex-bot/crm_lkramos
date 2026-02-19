@@ -132,6 +132,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     name: "benefits"
   });
 
+  // 🛡️ REARQUITETURA DE INICIALIZAÇÃO: Sincronia absoluta com o Gênero salvo
   useEffect(() => {
     const source = customer || defaultValues;
     if (source) {
@@ -167,6 +168,11 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         state: source.state || '',
         documents: source.documents || [],
       });
+      
+      // Força a atualização do campo Gênero no estado do RHF
+      if (genderValue) {
+          form.setValue('gender', genderValue, { shouldValidate: true });
+      }
     }
   }, [customer, defaultValues, form]);
 
@@ -182,6 +188,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   const birthDateValue = form.watch('birthDate');
   const phone1Value = form.watch('phone');
   const phone2Value = form.watch('phone2');
+  const genderValue = form.watch('gender');
 
   const duplicateCpfCustomer = useMemo(() => {
     if (!cpfValue || cpfValue.length < 14) return null;
@@ -407,7 +414,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         <FormItem>
                           <FormLabel>Gênero</FormLabel>
                           <Select 
-                            key={currentCustomerId || 'new'}
                             onValueChange={field.onChange} 
                             value={field.value || ""}
                           >
