@@ -13,6 +13,7 @@ import {
   Table as ReactTable,
   VisibilityState,
   SortingState,
+  ColumnSizingState,
 } from '@tanstack/react-table';
 import { parse, isValid, startOfDay, endOfDay, subDays, startOfMonth, format } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
@@ -82,6 +83,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const [startDateInput, setStartDateInput] = React.useState('');
   const [endDateInput, setEndDateInput] = React.useState('');
   const [appliedDateRange, setAppliedDateRange] = React.useState<DateRange | undefined>(undefined);
+  const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
       'Operador': false,
@@ -132,7 +134,10 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    state: { globalFilter, rowSelection, columnVisibility },
+    onColumnSizingChange: setColumnSizing,
+    enableColumnResizing: true,
+    columnResizeMode: 'onChange',
+    state: { globalFilter, rowSelection, columnVisibility, columnSizing },
     meta: { userSettings },
   });
 
@@ -170,7 +175,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                             <TabsTrigger 
                                 key={s} 
                                 value={s} 
-                                className="status-tab font-black uppercase text-[10px] tracking-widest px-4 h-9"
+                                className="status-tab font-black uppercase text-[10px] tracking-widest px-4 h-9 border border-transparent data-[state=active]:bg-background"
                                 style={colorValue ? { '--status-color': colorValue } as any : {}}
                             >
                                 {s}
@@ -263,7 +268,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         <Card className="proposals-table border-border/50 shadow-md rounded-xl overflow-hidden bg-card">
             <div className="p-0">
                 <div className="overflow-x-auto">
-                    <Table>
+                    <Table style={{ width: table.getTotalSize() }}>
                         <TableHeader className="bg-muted/20">
                             {table.getHeaderGroups().map(hg => (
                                 <TableRow key={hg.id} className="hover:bg-transparent border-b-2">
@@ -286,7 +291,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                                             style={colorValue ? { '--status-color': colorValue } as any : {}}
                                         >
                                             {row.getVisibleCells().map(cell => (
-                                                <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                                                <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                                             ))}
                                         </TableRow>
                                     )

@@ -86,7 +86,6 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   rowSelection,
   setRowSelection,
 }, ref) => {
-  // FIX: ID alterado de 'numericId' para 'ID' para bater com a definição em columns.tsx
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'ID', desc: true }]);
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [globalFilter, setGlobalFilter] = React.useState('');
@@ -247,7 +246,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
       onDragEnd={handleDragEnd}
       sensors={sensors}
     >
-      <Card className="customers-table">
+      <Card className="customers-table border-border/50 shadow-sm">
         <div className="p-4">
           <div className="flex items-center justify-between py-4">
             <div className='relative w-full max-w-sm'>
@@ -263,7 +262,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-auto rounded-full font-bold h-11 border-primary/10">
+                <Button variant="outline" className="ml-auto rounded-full font-bold h-11 border-primary/10 bg-card">
                   Colunas <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -290,9 +289,9 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <div className="rounded-md border">
-          <Table>
-            <TableHeader>
+          <div className="rounded-xl border overflow-hidden">
+          <Table style={{ width: table.getTotalSize() }}>
+            <TableHeader className="bg-muted/30">
                 {table.getHeaderGroups().map(headerGroup => (
                 <TableRow key={headerGroup.id}>
                     <SortableContext
@@ -322,9 +321,10 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
                     <TableRow
                       key={row.id}
                       data-state={row.getIsSelected() && 'selected'}
+                      className="hover:bg-muted/10 transition-colors"
                     >
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
+                        <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>
                           {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext()
@@ -347,20 +347,20 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
             </Table>
           </div>
           <div className="flex items-center justify-between py-4">
-            <div className="flex-1 text-sm text-muted-foreground">
+            <div className="flex-1 text-xs text-muted-foreground font-medium">
               {table.getFilteredSelectedRowModel().rows.length} de{' '}
-              {table.getFilteredRowModel().rows.length} linha(s) selecionadas.
+              {table.getFilteredRowModel().rows.length} cliente(s) selecionados.
             </div>
             <div className="flex items-center space-x-6 lg:space-x-8">
                 <div className="flex items-center space-x-2">
-                    <p className="text-sm font-medium">Linhas por página</p>
+                    <p className="text-xs font-bold uppercase text-muted-foreground">Linhas</p>
                     <Select
                         value={`${table.getState().pagination.pageSize}`}
                         onValueChange={(value) => {
                             table.setPageSize(Number(value))
                         }}
                     >
-                        <SelectTrigger className="h-8 w-[70px]">
+                        <SelectTrigger className="h-8 w-[70px] bg-card border-primary/10">
                             <SelectValue placeholder={table.getState().pagination.pageSize} />
                         </SelectTrigger>
                         <SelectContent side="top">
@@ -372,45 +372,41 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
                         </SelectContent>
                     </Select>
                 </div>
-                <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+                <div className="flex w-[100px] items-center justify-center text-xs font-bold uppercase text-muted-foreground">
                     Página {table.getState().pagination.pageIndex + 1} de{" "}
                     {table.getPageCount()}
                 </div>
                 <div className="flex items-center space-x-2">
                     <Button
                         variant="outline"
-                        className="hidden h-8 w-8 p-0 lg:flex"
+                        className="hidden h-8 w-8 p-0 lg:flex border-primary/10"
                         onClick={() => table.setPageIndex(0)}
                         disabled={!table.getCanPreviousPage()}
                     >
-                        <span className="sr-only">Primeira página</span>
                         <ChevronsLeft className="h-4 w-4" />
                     </Button>
                     <Button
                         variant="outline"
-                        className="h-8 w-8 p-0"
+                        className="h-8 w-8 p-0 border-primary/10"
                         onClick={() => table.previousPage()}
                         disabled={!table.getCanPreviousPage()}
                     >
-                        <span className="sr-only">Página anterior</span>
                         <ChevronLeft className="h-4 w-4" />
                     </Button>
                     <Button
                         variant="outline"
-                        className="h-8 w-8 p-0"
+                        className="h-8 w-8 p-0 border-primary/10"
                         onClick={() => table.nextPage()}
                         disabled={!table.getCanNextPage()}
                     >
-                        <span className="sr-only">Próxima página</span>
                         <ChevronRight className="h-4 w-4" />
                     </Button>
                     <Button
                         variant="outline"
-                        className="hidden h-8 w-8 p-0 lg:flex"
+                        className="hidden h-8 w-8 p-0 lg:flex border-primary/10"
                         onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                         disabled={!table.getCanNextPage()}
                     >
-                        <span className="sr-only">Última página</span>
                         <ChevronsRight className="h-4 w-4" />
                     </Button>
                 </div>

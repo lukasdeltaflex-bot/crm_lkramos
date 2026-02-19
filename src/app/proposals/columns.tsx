@@ -136,7 +136,7 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
             ref={setNodeRef}
             colSpan={header.colSpan}
             style={style}
-            className={cn('relative p-0 h-12')}
+            className={cn('relative p-0 h-12 border-r last:border-r-0')}
         >
             <div
                 className={cn(
@@ -153,10 +153,22 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
                 >
                     <GripVertical className="h-4 w-4 opacity-30" />
                 </button>
-                <div className="flex-1">
+                <div className="flex-1 overflow-hidden">
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                 </div>
             </div>
+
+            {/* RESIZER HANDLE */}
+            {header.column.getCanResize() && (
+                <div
+                    onMouseDown={header.getResizeHandler()}
+                    onTouchStart={header.getResizeHandler()}
+                    className={cn(
+                        "absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none hover:bg-primary/30 z-10",
+                        header.column.getIsResizing() ? "bg-primary opacity-100" : "opacity-0"
+                    )}
+                />
+            )}
         </TableHead>
     )
 }
@@ -189,6 +201,7 @@ export const getColumns = (
     ),
     enableSorting: false,
     enableHiding: false,
+    size: 40,
   },
   {
     accessorKey: 'promoter',
@@ -203,10 +216,11 @@ export const getColumns = (
         return (
             <div className="flex items-center gap-2">
                 <BankIcon bankName={promoter} domain={domain} showLogo={showLogos} className="h-4 w-4" />
-                <span className="truncate max-w-[100px]">{promoter}</span>
+                <span className="truncate">{promoter}</span>
             </div>
         )
-    }
+    },
+    size: 150,
   },
   {
     accessorKey: 'proposalNumber',
@@ -220,7 +234,8 @@ export const getColumns = (
                 <CopyButton text={num} label="Proposta" />
             </div>
         )
-    }
+    },
+    size: 150,
   },
   {
     id: 'Cliente',
@@ -230,18 +245,21 @@ export const getColumns = (
         <div className="flex items-center gap-2 font-medium">
             {row.original.customer?.name || '---'}
         </div>
-    )
+    ),
+    size: 200,
   },
   {
     accessorKey: 'product',
     id: 'Produto',
     header: 'Produto',
+    size: 120,
   },
   {
     accessorKey: 'grossAmount',
     id: 'Valor Bruto',
     header: () => <div className="text-right">Valor Bruto</div>,
     cell: ({ row }) => <div className="text-right font-medium">{formatCurrency(row.original.grossAmount)}</div>,
+    size: 120,
   },
   {
     accessorKey: 'bank',
@@ -259,14 +277,15 @@ export const getColumns = (
                 <span className="truncate">{cleanBankName(bankRaw)}</span>
             </div>
         )
-    }
+    },
+    size: 150,
   },
   {
     accessorKey: 'status',
     id: 'Status',
     header: 'Status',
     cell: ({ row }) => (
-        <div className="w-28">
+        <div className="w-full">
             <StatusCell
                 proposalId={row.original.id}
                 currentStatus={row.original.status}
@@ -275,16 +294,19 @@ export const getColumns = (
             />
         </div>
     ),
+    size: 140,
   },
   {
     accessorKey: 'dateDigitized',
     id: 'Data Digitação',
     header: 'Data Digitação',
     cell: ({ row }) => formatDate(row.original.dateDigitized),
+    size: 120,
   },
   {
     id: 'Ações',
     cell: (props) => <ActionsCell {...props} onEdit={onEdit} onView={onView} onDelete={onDelete} onDuplicate={onDuplicate} />,
     enableHiding: false,
+    size: 80,
   },
 ].map(column => ({ ...column, id: column.id || column.accessorKey as string}));

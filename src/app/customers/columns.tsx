@@ -70,7 +70,7 @@ export const DraggableHeader = ({ header }: { header: Header<Customer, unknown> 
             ref={setNodeRef}
             colSpan={header.colSpan}
             style={style}
-            className={cn('relative p-0 h-12')}
+            className={cn('relative p-0 h-12 border-r last:border-r-0')}
         >
             <div
                 className={cn(
@@ -92,7 +92,7 @@ export const DraggableHeader = ({ header }: { header: Header<Customer, unknown> 
                     <GripVertical className={cn("h-4 w-4", !isDraggable && "opacity-30")} />
                 </button>
 
-                <div className="flex-1">
+                <div className="flex-1 overflow-hidden">
                     {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -106,6 +106,18 @@ export const DraggableHeader = ({ header }: { header: Header<Customer, unknown> 
                     </div>
                 )}
             </div>
+
+            {/* RESIZER HANDLE */}
+            {header.column.getCanResize() && (
+                <div
+                    onMouseDown={header.getResizeHandler()}
+                    onTouchStart={header.getResizeHandler()}
+                    className={cn(
+                        "absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none hover:bg-primary/30 z-10",
+                        header.column.getIsResizing() ? "bg-primary opacity-100" : "opacity-0"
+                    )}
+                />
+            )}
         </TableHead>
     )
 }
@@ -182,11 +194,13 @@ export const getColumns = (
     ),
     enableSorting: false,
     enableHiding: false,
+    size: 40,
   },
   {
     accessorKey: 'numericId',
     id: 'ID',
     header: 'ID',
+    size: 80,
   },
   {
     accessorKey: 'name',
@@ -200,6 +214,7 @@ export const getColumns = (
             </Link>
         )
     },
+    size: 250,
   },
   {
     accessorKey: 'cpf',
@@ -214,6 +229,7 @@ export const getColumns = (
           </div>
         );
       },
+    size: 150,
   },
   {
     accessorKey: 'phone',
@@ -233,26 +249,31 @@ export const getColumns = (
           </div>
         );
       },
+    size: 150,
   },
   {
     accessorKey: 'city',
     id: 'Cidade',
     header: 'Cidade',
+    size: 150,
   },
   {
     accessorKey: 'state',
     id: 'Estado',
     header: 'Estado',
+    size: 80,
   },
   {
     accessorKey: 'observations',
     id: 'Observações',
     header: 'Observações',
-    cell: ({ row }) => <div className="truncate max-w-[200px]">{row.original.observations}</div>
+    cell: ({ row }) => <div className="truncate max-w-[200px]">{row.original.observations}</div>,
+    size: 200,
   },
   {
     id: 'Ações',
     cell: (props) => <ActionsCell {...props} onEdit={onEdit} onDelete={onDelete} />,
     enableHiding: false,
+    size: 80,
   },
 ].map(column => ({ ...column, id: column.id || column.accessorKey as string}));

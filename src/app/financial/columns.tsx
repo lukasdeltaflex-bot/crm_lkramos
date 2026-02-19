@@ -63,7 +63,7 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
             ref={setNodeRef}
             colSpan={header.colSpan}
             style={style}
-            className={cn('relative p-0 h-12')}
+            className={cn('relative p-0 h-12 border-r last:border-r-0')}
         >
             <div className="flex items-center gap-1 h-full px-4">
                 <button
@@ -74,10 +74,22 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
                 >
                     <GripVertical className="h-4 w-4 opacity-30" />
                 </button>
-                <div className="flex-1">
+                <div className="flex-1 overflow-hidden">
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                 </div>
             </div>
+
+            {/* RESIZER HANDLE */}
+            {header.column.getCanResize() && (
+                <div
+                    onMouseDown={header.getResizeHandler()}
+                    onTouchStart={header.getResizeHandler()}
+                    className={cn(
+                        "absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none hover:bg-primary/30 z-10",
+                        header.column.getIsResizing() ? "bg-primary opacity-100" : "opacity-0"
+                    )}
+                />
+            )}
         </TableHead>
     )
 }
@@ -109,16 +121,19 @@ export const getColumns = (
     ),
     enableSorting: false,
     enableHiding: false,
+    size: 40,
   },
   {
     id: 'Promotora',
     accessorFn: (row) => row.promoter,
     header: 'Promotora',
+    size: 150,
   },
   {
     id: 'Cliente',
     accessorFn: (row) => row.customer?.name,
     header: 'Cliente',
+    size: 200,
   },
   {
     id: 'CPF',
@@ -133,6 +148,7 @@ export const getColumns = (
             </div>
         );
     },
+    size: 150,
   },
   {
     id: 'Nº Proposta',
@@ -145,12 +161,14 @@ export const getColumns = (
             </Link>
             <CopyButton text={row.original.proposalNumber} label="Proposta" />
         </div>
-    )
+    ),
+    size: 150,
   },
   {
     id: 'Produto',
     accessorFn: (row) => row.product,
     header: 'Produto',
+    size: 120,
   },
   {
     id: 'Banco',
@@ -165,7 +183,8 @@ export const getColumns = (
                 <span className="truncate">{cleanBankName(bankRaw)}</span>
             </div>
         )
-    }
+    },
+    size: 150,
   },
   {
     id: 'Valor Bruto',
@@ -176,12 +195,14 @@ export const getColumns = (
       if (isPrivacyMode) return <div className="text-left font-medium">•••••</div>;
       return <div className="text-right font-medium">{formatCurrency(row.original.grossAmount)}</div>;
     },
+    size: 120,
   },
   {
     id: 'Comissão (%)',
     accessorFn: (row) => row.commissionPercentage,
     header: 'Comissão (%)',
     cell: ({ row }) => `${row.original.commissionPercentage.toFixed(2)}%`,
+    size: 100,
   },
   {
     id: 'Valor Comissão',
@@ -191,23 +212,27 @@ export const getColumns = (
         const isPrivacyMode = (table.options.meta as {isPrivacyMode?: boolean})?.isPrivacyMode;
         return isPrivacyMode ? '•••••' : formatCurrency(row.original.commissionValue);
     },
+    size: 120,
   },
   {
     id: 'Status Comissão',
     accessorFn: (row) => row.commissionStatus,
     header: 'Status Comissão',
     cell: ({ row }) => <CommissionStatusCell proposal={row.original} onStatusUpdate={onStatusUpdate} onEdit={onEdit} />,
+    size: 140,
   },
   {
     id: 'Data Pagamento',
     accessorFn: (row) => row.commissionPaymentDate,
     header: 'Data Pagamento',
     cell: ({ row }) => formatDateSafe(row.original.commissionPaymentDate),
+    size: 120,
   },
   {
     id: 'Status Proposta',
     header: 'Status Proposta',
-    cell: ({ row }) => <div className="w-28"><StatusCell proposalId={row.original.id} currentStatus={row.original.status} /></div>,
+    cell: ({ row }) => <div className="w-full"><StatusCell proposalId={row.original.id} currentStatus={row.original.status} /></div>,
+    size: 140,
   },
   {
     id: 'Ações',
@@ -222,5 +247,6 @@ export const getColumns = (
         </div>
     ),
     enableHiding: false,
+    size: 80,
   },
 ].map(column => ({ ...column, id: column.id || (column as any).accessorKey }));

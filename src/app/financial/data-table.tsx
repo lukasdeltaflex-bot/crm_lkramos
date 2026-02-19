@@ -13,6 +13,7 @@ import {
   Table as ReactTable,
   VisibilityState,
   SortingState,
+  ColumnSizingState,
 } from '@tanstack/react-table';
 import { format, parse, isValid, startOfDay, endOfDay, subDays, startOfMonth } from 'date-fns';
 import { DateRange } from 'react-day-picker';
@@ -94,6 +95,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [bankFilter, setBankFilter] = React.useState('all');
   const [promoterFilter, setPromoterFilter] = React.useState('all');
+  const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   
   const [startDateInput, setStartDateInput] = React.useState('');
   const [endDateInput, setEndDateInput] = React.useState('');
@@ -146,7 +148,10 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     getSortedRowModel: getSortedRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    state: { sorting, globalFilter, rowSelection, columnVisibility },
+    onColumnSizingChange: setColumnSizing,
+    enableColumnResizing: true,
+    columnResizeMode: 'onChange',
+    state: { sorting, globalFilter, rowSelection, columnVisibility, columnSizing },
     meta: { isPrivacyMode, userSettings },
   });
 
@@ -197,7 +202,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                             <TabsTrigger 
                                 key={s} 
                                 value={s} 
-                                className="status-tab font-black uppercase text-[10px] tracking-widest px-4 h-9"
+                                className="status-tab font-black uppercase text-[10px] tracking-widest px-4 h-9 border border-transparent data-[state=active]:bg-background"
                                 style={colorValue ? { '--status-color': colorValue } as any : {}}
                             >
                                 {label}
@@ -209,7 +214,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
             <div className="flex items-center gap-2 ml-auto">
                 <Select value={bankFilter} onValueChange={setBankFilter}>
-                    <SelectTrigger className="h-9 min-w-[180px] bg-card rounded-full text-xs font-bold uppercase px-4">
+                    <SelectTrigger className="h-9 min-w-[180px] bg-card rounded-full text-xs font-bold uppercase px-4 border-primary/10">
                         <SelectValue placeholder="TODOS OS BANCOS" />
                     </SelectTrigger>
                     <SelectContent>
@@ -221,7 +226,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 </Select>
 
                 <Select value={promoterFilter} onValueChange={setPromoterFilter}>
-                    <SelectTrigger className="h-9 min-w-[180px] bg-card rounded-full text-xs font-bold uppercase px-4">
+                    <SelectTrigger className="h-9 min-w-[180px] bg-card rounded-full text-xs font-bold uppercase px-4 border-primary/10">
                         <SelectValue placeholder="TODAS PROMOTORAS" />
                     </SelectTrigger>
                     <SelectContent>
@@ -234,7 +239,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 bg-muted/5 p-2 rounded-xl">
+        <div className="flex flex-wrap items-center gap-3 bg-muted/5 p-2 rounded-xl border border-border/50">
             <div className="flex items-center gap-2 bg-card border rounded-full px-3 py-1 shadow-sm">
                 <Select onValueChange={(val) => {
                     const now = new Date();
@@ -257,9 +262,9 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 </Select>
                 <Separator orientation="vertical" className="h-4 mx-1" />
                 <div className="flex items-center gap-1">
-                    <Input placeholder="De" value={startDateInput} onChange={(e) => handleDateInputChange(e.target.value, 'start')} className="h-7 w-20 border-none bg-muted/30 text-[10px] text-center font-bold" />
+                    <Input placeholder="De" value={startDateInput} onChange={(e) => setStartDateInput(handleDateMask(e))} className="h-7 w-20 border-none bg-muted/30 text-[10px] text-center font-bold" />
                     <span className="text-muted-foreground">-</span>
-                    <Input placeholder="Até" value={endDateInput} onChange={(e) => handleDateInputChange(e.target.value, 'end')} className="h-7 w-20 border-none bg-muted/30 text-[10px] text-center font-bold" />
+                    <Input placeholder="Até" value={endDateInput} onChange={(e) => setEndDateInput(handleDateMask(e))} className="h-7 w-20 border-none bg-muted/30 text-[10px] text-center font-bold" />
                 </div>
             </div>
             <Button size="sm" onClick={handleApplyFilter} className="h-9 bg-primary hover:bg-primary/90 rounded-full px-6 text-xs font-bold uppercase shadow-md gap-2">
@@ -293,7 +298,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
         <div className="rounded-2xl border shadow-xl overflow-hidden bg-card financial-table">
             <div className="overflow-x-auto">
-                <Table>
+                <Table style={{ width: table.getTotalSize() }}>
                     <TableHeader className="bg-muted/20">
                         {table.getHeaderGroups().map(hg => (
                             <TableRow key={hg.id} className="border-b-2">
@@ -307,9 +312,13 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                                 const status = row.original.commissionStatus;
                                 const colorValue = statusColors[status?.toUpperCase()] || statusColors[status || ''];
                                 return (
-                                    <TableRow key={row.id} className={cn("transition-colors border-b", colorValue && "status-row-custom")} style={colorValue ? { '--status-color': colorValue } as any : {}}>
+                                    <TableRow 
+                                        key={row.id} 
+                                        className={cn("transition-colors border-b hover:bg-muted/5", colorValue && "status-row-custom")} 
+                                        style={colorValue ? { '--status-color': colorValue } as any : {}}
+                                    >
                                         {row.getVisibleCells().map(cell => (
-                                            <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                                            <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                                         ))}
                                     </TableRow>
                                 )
@@ -326,3 +335,12 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 });
 
 FinancialDataTable.displayName = 'FinancialDataTable';
+
+const handleDateMask = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 8) value = value.substring(0, 8);
+    value = value.replace(/(\d{2})(\d)/, '$1/$2');
+    value = value.replace(/(\d{2})(\d)/, '$1/$2');
+    e.target.value = value;
+    return value;
+};
