@@ -106,7 +106,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   }, []);
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor)
   );
 
@@ -153,7 +153,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         if (!searchTerm) return true;
         const customer = row.original;
 
-        // 🛡️ BUSCA POR ID EXATO (Prioridade Máxima e Absoluta)
+        // 🛡️ BUSCA POR ID EXATO (Rigor Máximo)
         if (/^\d+$/.test(searchTerm)) {
             return customer.numericId.toString() === searchTerm;
         }
@@ -186,7 +186,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
             <div className='relative w-full max-w-md group'>
                 <Search className='absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80 group-focus-within:opacity-100 transition-opacity' />
                 <Input
-                    placeholder="Busca Inteligente (Nome, CPF ou ID Exato...)"
+                    placeholder="Busca por Nome, CPF ou ID Exato..."
                     value={globalFilter ?? ''}
                     onChange={(event) => setGlobalFilter(event.target.value)}
                     className="pl-11 w-full bg-background border-2 border-zinc-300 dark:border-primary/40 h-11 rounded-full shadow-md focus-visible:ring-primary/20 transition-all font-bold text-sm"
@@ -251,7 +251,8 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
                             className="hover:bg-primary/[0.03] transition-colors border-b h-12 cursor-pointer"
                             onClick={(e) => {
                                 const target = e.target as HTMLElement;
-                                if (target.closest('a') || target.closest('button')) return;
+                                // Impede seleção ao clicar em links, botões ou checkboxes da própria célula
+                                if (target.closest('a') || target.closest('button') || target.closest('[role="checkbox"]')) return;
                                 row.toggleSelected();
                             }}
                             >

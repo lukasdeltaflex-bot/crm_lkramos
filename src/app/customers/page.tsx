@@ -7,11 +7,11 @@ import { PageHeader } from '@/components/page-header';
 import { CustomerDataTable, type CustomerDataTableHandle } from './data-table';
 import { getColumns } from './columns';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Sparkles, FileDown, UserCheck, UserX } from 'lucide-react';
+import { PlusCircle, Sparkles, FileDown, UserCheck, UserX, Trash2 } from 'lucide-react';
 import { CustomerForm } from './customer-form';
 import type { Customer } from '@/lib/types';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, updateDoc, setDoc, query, where } from 'firebase/firestore';
+import { collection, doc, updateDoc, setDoc, query, where, writeBatch } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -19,6 +19,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { CustomerAiForm } from '@/components/customers/customer-ai-form';
 import {
     DropdownMenu,
@@ -56,7 +67,7 @@ function CustomersPageContent() {
   const [selectedCustomer, setSelectedCustomer] = React.useState<Customer | undefined>(undefined);
   const [defaultValues, setDefaultValues] = React.useState<any | undefined>(undefined);
   const [sheetMode, setSheetMode] = React.useState<'new' | 'edit'>('new');
-  const [rowSelection, setRowSelection] = React.useState({});
+  const [rowSelection, setRowSelection] = React.useState<Record<string, boolean>>({});
   const [isSaving, setIsSaving] = React.useState(false);
   const tableRef = React.useRef<CustomerDataTableHandle>(null);
   const [filter, setFilter] = React.useState('active');
@@ -86,6 +97,34 @@ function CustomersPageContent() {
     setSheetMode('new');
     setIsDialog(true);
   }, []);
+
+  const selectedCount = React.useMemo(() => Object.keys(rowSelection).length, [rowSelection]);
+
+  const handleBulkAnonymize = async () => {
+    if (!firestore || !user || selectedCount === 0) return;
+    setIsSaving(true);
+    try {
+        const batch = writeBatch(firestore);
+        const selectedIds = Object.keys(rowSelection);
+        
+        selectedIds.forEach(id => {
+            const docRef = doc(firestore, 'customers', id);
+            batch.update(docRef, { 
+                name: 'Cliente Removido', 
+                cpf: '000.000.000-00', 
+                status: 'inactive' 
+            });
+        });
+
+        await batch.commit();
+        toast({ title: 'Ação Concluída', description: `${selectedIds.length} registros foram anonimizados.` });
+        setRowSelection({});
+    } catch (e) {
+        toast({ variant: 'destructive', title: 'Erro na operação em massa' });
+    } finally {
+        setIsSaving(false);
+    }
+  };
 
   React.useEffect(() => {
     const action = searchParams.get('action');
@@ -168,6 +207,32 @@ function CustomersPageContent() {
                     <DropdownMenuItem onSelect={handleExportToExcel}>Excel (.xlsx)</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
+            
+            {selectedCount > 0 && (
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button 
+                            variant="destructive" 
+                            className="h-10 px-6 rounded-full font-bold shadow-lg animate-in zoom-in slide-in-from-right-2"
+                        >
+                            <Trash2 className="mr-2 h-4 w-4" /> Remover ({selectedCount})
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Inativar {selectedCount} Clientes?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Esta ação irá anonimizar os dados dos registros selecionados. Os nomes serão substituídos por "Cliente Removido" e o CPF zerado por segurança.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Voltar</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleBulkAnonymize} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Confirmar Remoção</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            )}
+
             <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
                 <Button 
                     variant="outline" 
