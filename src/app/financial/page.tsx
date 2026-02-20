@@ -116,7 +116,9 @@ export default function FinancialPage() {
   const { data: proposals, isLoading: proposalsLoading } = useCollection<Proposal>(proposalsQuery);
   const { data: customers, isLoading: customersLoading } = useCollection<Customer>(customersQuery);
   const { data: expenses, isLoading: expensesLoading } = useCollection<Expense>(expensesQuery);
-  const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
+  const { data: userSettings, isLoading: settingsLoading } = useDoc<UserSettings>(settingsDocRef);
+
+  const isLoading = proposalsLoading || customersLoading || expensesLoading || isUserLoading || settingsLoading;
 
   const { proposalsWithCustomerData, summaryProposals, currentMonthRange, operatorStats } = React.useMemo(() => {
     if (!proposals || !customers || !isClient) return { proposalsWithCustomerData: [], summaryProposals: [], currentMonthRange: { from: new Date(), to: new Date() }, operatorStats: [] };
