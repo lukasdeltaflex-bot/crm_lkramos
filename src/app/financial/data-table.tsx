@@ -412,11 +412,10 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                                             key={row.id} 
                                             data-state={row.getIsSelected() && 'selected'} 
                                             className={cn(
-                                                "transition-colors border-b h-14 hover:bg-primary/[0.03] cursor-pointer",
+                                                "transition-colors border-b h-14 hover:bg-primary/[0.03]",
                                                 colorValue && "status-row-custom"
                                             )}
                                             style={colorValue ? { '--status-color': colorValue } as any : {}} 
-                                            onClick={() => row.toggleSelected()}
                                         >
                                             {row.getVisibleCells().map(cell => (<TableCell key={cell.id} style={{ width: cell.column.getSize() }} className="p-3 text-sm border-none">{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>))}
                                         </TableRow>
