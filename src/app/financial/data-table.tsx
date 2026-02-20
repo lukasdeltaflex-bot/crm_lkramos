@@ -120,7 +120,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const [endDateInput, setEndDateInput] = React.useState('');
   const [appliedDateRange, setAppliedDateRange] = React.useState<DateRange | undefined>(undefined);
 
-  // 🛡️ HIDRATAÇÃO SEGURA
   React.useEffect(() => {
     setIsClient(true);
     try {
@@ -144,7 +143,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         try { localStorage.setItem('lk-financial-pageSize', String(next.pageSize)); } catch(e) {}
       }
       
-      // 🛡️ UX REFINEMENT: Volta o scroll para o topo da tabela ao mudar de página
       const tableElement = document.querySelector('.financial-table');
       if (tableElement) {
           tableElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -175,6 +173,20 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
       });
     }
   };
+
+  /**
+   * 🛡️ LÓGICA DE RESUMO BLINDADA:
+   * Expande o range dos cards de topo para o Mês Completo, mesmo se o filtro da tabela for de apenas um dia.
+   */
+  const summaryRange = React.useMemo(() => {
+    if (appliedDateRange?.from) {
+      return {
+        from: startOfMonth(appliedDateRange.from),
+        to: endOfMonth(appliedDateRange.to || appliedDateRange.from),
+      };
+    }
+    return currentMonthRange;
+  }, [appliedDateRange, currentMonthRange]);
 
   const filteredData = React.useMemo(() => {
     const today = new Date();
@@ -225,7 +237,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     if (globalFilter) {
         const searchTerm = String(globalFilter).trim();
         
-        // 🛡️ BUSCA NUCLEAR V2: Prioridade Zero para ID ou Proposta Exatos
         if (/^\d+$/.test(searchTerm)) {
             return list.filter(p => 
                 p.customer?.numericId.toString() === searchTerm || 
@@ -313,7 +324,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         <div className="space-y-4 w-full">
             <FinancialSummary 
                 rows={data} 
-                currentMonthRange={appliedDateRange || currentMonthRange}
+                currentMonthRange={summaryRange}
                 isPrivacyMode={isPrivacyMode}
                 isFiltered={!!globalFilter || statusFilter !== 'Todos'}
                 onShowDetails={onShowDetails}
