@@ -129,21 +129,36 @@ html, body, *, [data-sidebar="inset"] {
   background-attachment: fixed !important;
 }
 
+/* 🌌 MOTOR DE AURAS (ATMOSFÉRICOS) */
+.aura-nebula { background: radial-gradient(circle at 20% 30%, hsla(280, 80%, 50%, 0.1), transparent 50%), radial-gradient(circle at 80% 70%, hsla(200, 80%, 50%, 0.1), transparent 50%) !important; }
+.aura-aurora { background: linear-gradient(120deg, hsla(160, 80%, 50%, 0.05) 0%, hsla(200, 80%, 50%, 0.05) 50%, hsla(280, 80%, 50%, 0.05) 100%) !important; }
+.aura-sunset { background: linear-gradient(0deg, hsla(30, 100%, 50%, 0.05) 0%, hsla(330, 80%, 50%, 0.05) 100%) !important; }
+.aura-ocean { background: radial-gradient(circle at bottom, hsla(200, 100%, 50%, 0.08), transparent 70%) !important; }
+.aura-lavender { background: linear-gradient(180deg, hsla(270, 50%, 50%, 0.05) 0%, hsla(300, 50%, 50%, 0.05) 100%) !important; }
+.aura-mint { background: radial-gradient(circle at top right, hsla(150, 60%, 50%, 0.08), transparent 60%) !important; }
+.aura-pearl { background: radial-gradient(circle at center, hsla(0, 0%, 80%, 0.05), transparent 80%) !important; }
+.aura-desert { background: linear-gradient(45deg, hsla(40, 80%, 50%, 0.05) 0%, hsla(20, 80%, 50%, 0.05) 100%) !important; }
+
 /* 🛡️ FIX SIDEBAR (CONTRASTE) */
 .sidebar-dark {
     --sidebar-background: 240 5.9% 5% !important;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-foreground: 240 4.8% 95.9% !important;
+    --sidebar-border: 240 3.7% 15.9% !important;
+    --sidebar-accent: 217 33% 25% !important;
+    --sidebar-accent-foreground: 0 0% 100% !important;
 }
 .sidebar-light {
     --sidebar-background: 0 0% 100% !important;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-border: 220 13% 91%;
+    --sidebar-foreground: 240 5.3% 26.1% !important;
+    --sidebar-border: 220 13% 91% !important;
+    --sidebar-accent: 217 33% 25% !important;
+    --sidebar-accent-foreground: 0 0% 100% !important;
 }
 
 /* Garante que o texto do menu ativo seja branco */
-[data-active="true"] span, [data-active="true"] svg {
+[data-active="true"], [data-active="true"] span, [data-active="true"] svg {
     color: white !important;
+    opacity: 1 !important;
 }
 
 /* 🏛️ ESTILOS DE CONTAINER */
