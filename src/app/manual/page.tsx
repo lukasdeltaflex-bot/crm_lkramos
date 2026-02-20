@@ -23,7 +23,8 @@ import {
     MessageSquareText,
     History,
     Printer,
-    Timer
+    Timer,
+    Check
 } from 'lucide-react';
 
 export default function ManualPage() {
@@ -135,8 +136,8 @@ export default function ManualPage() {
                     <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
                         <ul className="list-disc pl-5 space-y-2 text-xs">
                             <li><strong>Fundos Atmosféricos (Aura)</strong>: Ative gradientes de profundidade que brilham sob a interface (Nebula, Ocean, etc.).</li>
-                            <li><strong>Transparência Industrial</strong>: A interface agora utiliza opacidade de 0.70 com 16px de desfoque, permitindo que o fundo atmosférico atravesse os componentes.</li>
-                            <li><strong>Textura de Linhas</strong>: A opção de linhas horizontais foi restaurada para quem busca um visual técnico estruturado.</li>
+                            <li><strong>Transparência Industrial (0.70)</strong>: A interface agora utiliza opacidade estratégica com desfoque de fundo, permitindo que as Auras brilhem através dos componentes.</li>
+                            <li><strong>Textura de Linhas</strong>: A opção técnica de linhas horizontais está disponível para um visual estruturado.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
@@ -209,7 +210,7 @@ export default function ManualPage() {
                         <span className="text-[10px] font-black uppercase">Blindagem Nuclear V5 Ativa</span>
                     </div>
                     <p className="text-[9px] text-muted-foreground mt-2 leading-tight">
-                        Versão 2.8.0 - Motor visual e lógico otimizados para alta performance.
+                        Versão 2.9.0 - Motor visual e lógico otimizados para alta performance.
                     </p>
                 </CardContent>
             </Card>
