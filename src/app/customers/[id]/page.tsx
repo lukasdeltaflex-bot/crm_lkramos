@@ -29,7 +29,8 @@ import {
     BadgePercent,
     ArrowRight,
     MapPin,
-    Home
+    Home,
+    Map
 } from 'lucide-react';
 import { format, parse, differenceInMonths, isValid as isValidDate } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -95,19 +96,63 @@ const CustomerInfoCard = ({ customer, onExportDossier, onToggleStatus, onGenerat
             </CardHeader>
             <CardContent className="space-y-8">
                 <div className="bg-muted/30 p-6 rounded-2xl border border-border/50">
-                    <h4 className="font-black text-[10px] uppercase tracking-[0.25em] text-primary/60 mb-6 flex items-center gap-2"><UserRound className="h-3 w-3" /> Informações Cadastrais</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8 text-sm">
+                    {/* SEÇÃO 1: CADASTRO */}
+                    <h4 className="font-black text-[10px] uppercase tracking-[0.25em] text-primary/60 mb-6 flex items-center gap-2">
+                        <UserRound className="h-3.5 w-3.5" /> Informações Cadastrais
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8 text-sm mb-10">
                         <div className="flex flex-col gap-1"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">ID do Cliente</span><div className="flex items-center gap-2 font-black text-foreground"><Hash className="h-3.5 w-3.5 text-primary opacity-40" /><span>{customer.numericId}</span></div></div>
                         <div className="flex flex-col gap-1"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Documento (CPF)</span><div className="flex items-center gap-2 font-black text-foreground"><FileText className="h-3.5 w-3.5 text-primary opacity-40" /><span>{customer.cpf}</span><CopyButton text={customer.cpf} label="CPF" /></div></div>
                         <div className="flex flex-col gap-1"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Data de Nascimento</span><div className="flex items-center gap-2 font-bold text-foreground"><Calendar className="h-3.5 w-3.5 text-primary opacity-40" /><span>{customer.birthDate ? format(parse(customer.birthDate, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy') : '-'}</span><Badge variant="secondary" className="text-[9px] bg-primary/10 text-primary border-none">{age} ANOS</Badge></div></div>
                         <div className="flex flex-col gap-1"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Contato Principal</span><div className="flex items-center gap-2 font-black text-foreground"><Phone className="h-3.5 w-3.5 text-primary opacity-40" /><span>{customer.phone}</span><div className="flex items-center gap-1"><CopyButton text={customer.phone} label="Telefone" />{isWhatsApp(customer.phone) && <a href={getWhatsAppUrl(customer.phone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:scale-110 transition-transform"><WhatsAppIcon className="h-4 w-4" /></a>}</div></div></div>
-                        
-                        {/* ENDEREÇO COMPLETO */}
-                        <div className="flex flex-col gap-1"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Localização (Cidade/UF)</span><div className="flex items-center gap-2 font-black text-foreground"><MapPin className="h-3.5 w-3.5 text-primary opacity-40" /><span>{customer.city || '-'} / {customer.state || '-'}</span></div></div>
-                        <div className="flex flex-col gap-1"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Logradouro</span><div className="flex items-center gap-2 font-bold text-foreground truncate"><Home className="h-3.5 w-3.5 text-primary opacity-40" /><span>{customer.street || '-'} {customer.number && `, ${customer.number}`} {customer.complement && ` (${customer.complement})`}</span></div></div>
-                        <div className="flex flex-col gap-1"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Bairro</span><div className="flex items-center gap-2 font-bold text-foreground"><span>{customer.neighborhood || '-'}</span></div></div>
-                        <div className="flex flex-col gap-1"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">CEP</span><div className="flex items-center gap-2 font-bold text-foreground"><span>{customer.cep || '-'}</span><CopyButton text={customer.cep} label="CEP" /></div></div>
                     </div>
+
+                    {/* SEÇÃO 2: ENDEREÇO */}
+                    <h4 className="font-black text-[10px] uppercase tracking-[0.25em] text-primary/60 mb-6 flex items-center gap-2 border-t border-border/50 pt-8">
+                        <MapPin className="h-3.5 w-3.5" /> Endereço Residencial
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8 text-sm mb-10">
+                        <div className="flex flex-col gap-1 md:col-span-2 lg:col-span-1">
+                            <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Logradouro</span>
+                            <div className="flex items-center gap-2 font-bold text-foreground truncate">
+                                <Home className="h-3.5 w-3.5 text-primary opacity-40" />
+                                <span>{customer.street || '-'} {customer.number && `, ${customer.number}`} {customer.complement && ` (${customer.complement})`}</span>
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Bairro</span>
+                            <div className="flex items-center gap-2 font-bold text-foreground">
+                                <span>{customer.neighborhood || '-'}</span>
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Localização (Cidade/UF)</span>
+                            <div className="flex items-center gap-2 font-black text-foreground">
+                                <Map className="h-3.5 w-3.5 text-primary opacity-40" />
+                                <span>{customer.city || '-'} / {customer.state || '-'}</span>
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">CEP</span>
+                            <div className="flex items-center gap-2 font-bold text-foreground">
+                                <span>{customer.cep || '-'}</span>
+                                <CopyButton text={customer.cep} label="CEP" />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* SEÇÃO 3: OBSERVAÇÕES */}
+                    {customer.observations && (
+                        <div className="mt-10 pt-8 border-t border-border/50">
+                            <h4 className="font-black text-[10px] uppercase tracking-[0.25em] text-primary/60 mb-6 flex items-center gap-2">
+                                <MessageSquareText className="h-3.5 w-3.5" /> Observações Internas
+                            </h4>
+                            <div className="p-5 bg-background/50 rounded-2xl border border-border/50 text-xs text-muted-foreground leading-relaxed italic relative overflow-hidden shadow-inner">
+                                <div className="absolute top-0 left-0 w-1 h-full bg-primary/20" />
+                                "{customer.observations}"
+                            </div>
+                        </div>
+                    )}
                 </div>
             </CardContent>
         </Card>
@@ -132,13 +177,8 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
   const businessStats = React.useMemo(() => {
     if (!proposals) return { count: 0, volume: 0, commission: 0, proposalsByCommission: [] };
     
-    // Contagem inclui reprovadas/canceladas conforme solicitado
     const count = proposals.length;
-    
-    // Volume Bruto total do histórico
     const volume = proposals.reduce((s, p) => s + (p.grossAmount || 0), 0);
-    
-    // Comissão recebida apenas de propostas que não foram canceladas/reprovadas
     const validCommissionProposals = proposals.filter(p => (p.commissionStatus === 'Paga' || p.commissionStatus === 'Parcial') && p.status !== 'Reprovado');
     const commission = validCommissionProposals.reduce((s, p) => s + (p.amountPaid || 0), 0);
 
@@ -172,14 +212,12 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
     const doc = new jsPDF();
     const primaryColor = [40, 74, 127];
     
-    // Header
     doc.setFontSize(22); doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]); doc.setFont("helvetica", "bold"); doc.text("DOSSIÊ OFICIAL DO CLIENTE", 14, 20);
     doc.setFontSize(10); doc.setTextColor(100); doc.setFont("helvetica", "normal");
     doc.text(`Responsável: ${user.displayName || user.email}`, 14, 28);
     doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 14, 33);
     doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]); doc.setLineWidth(0.5); doc.line(14, 38, 196, 38);
     
-    // Cadastro Table
     autoTable(doc, { 
         startY: 45, 
         body: [
@@ -202,7 +240,6 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
         return last ? last.finalY : 50;
     };
     
-    // Benefícios
     if (customer.benefits && customer.benefits.length > 0) {
         doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(0); doc.text("BENEFÍCIOS ATIVOS", 14, getFinalY() + 15);
         autoTable(doc, { 
@@ -213,7 +250,6 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
         });
     }
 
-    // Histórico
     doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(0); doc.text("HISTÓRICO DE OPERAÇÕES", 14, getFinalY() + 15);
     autoTable(doc, { 
         startY: getFinalY() + 18, 
@@ -223,7 +259,6 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
         styles: { fontSize: 9 } 
     });
 
-    // Formalização (LGPD) com calculo de quebra de página robusto
     const pageHeight = doc.internal.pageSize.height;
     const decText = `Eu, ${customer.name}, portador do CPF ${customer.cpf}, declaro verdadeiras as informações acima e autorizo expressamente o processamento dos meus dados para fins de simulação e contratação bancária, conforme as diretrizes da LGPD (Lei Geral de Proteção de Dados).`;
     const wrappedDecText = doc.splitTextToSize(decText, 180);
@@ -231,7 +266,6 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
     
     let currentY = getFinalY() + 20;
     
-    // 🛡️ ENGENHARIA DE PDF: Garante que o bloco de assinatura não quebre no meio
     if (currentY + textHeight + 50 > pageHeight) { 
         doc.addPage(); 
         currentY = 25;
@@ -243,7 +277,6 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
     
     const signatureY = currentY + 10 + textHeight + 25;
     
-    // Check again before drawing signatures to be absolutely sure
     if (signatureY + 10 > pageHeight) {
         doc.addPage();
         const newSigY = 40;
