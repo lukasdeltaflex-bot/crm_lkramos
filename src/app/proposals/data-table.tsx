@@ -102,7 +102,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
 
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
       'Promotora': true,
-      'No Proposta': true,
+      'N° PROPOSTA': true,
       'Cliente': true,
       'CPF': true,
       'Produto': true,

@@ -218,9 +218,9 @@ export const getColumns = (
     size: 150,
   },
   {
-    id: 'No Proposta',
+    id: 'N° PROPOSTA',
     accessorKey: 'proposalNumber',
-    header: 'No Proposta',
+    header: 'N° PROPOSTA',
     cell: ({ row }) => {
         const num = row.original.proposalNumber;
         return (
