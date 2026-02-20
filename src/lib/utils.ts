@@ -27,9 +27,6 @@ export function getAge(birthDate: string): number {
   return age;
 }
 
-/**
- * Normalizes a string for searching by removing accents and converting to lowercase.
- */
 export function normalizeString(str: string): string {
   if (!str) return '';
   return str
@@ -38,52 +35,35 @@ export function normalizeString(str: string): string {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
-/**
- * Checks if a phone number is likely a WhatsApp number.
- */
 export function isWhatsApp(phone: string): boolean {
     if (!phone) return false;
     const digitsOnly = phone.replace(/\D/g, '');
     return digitsOnly.length === 11;
 }
 
-/**
- * Generates a WhatsApp click-to-chat URL.
- */
 export function getWhatsAppUrl(phone: string): string {
     const digitsOnly = phone.replace(/\D/g, '');
     return `https://wa.me/55${digitsOnly}`;
 }
 
-/**
- * Robust date formatting that ignores timezone offsets for YYYY-MM-DD strings.
- */
 export function formatDateSafe(dateString?: string, formatStr: string = "dd/MM/yyyy"): string {
     if (!dateString) return '-';
     try {
-        // If it's a ISO string with time, parse normally
         if (dateString.includes('T')) {
             const date = parseISO(dateString);
             return isValid(date) ? format(date, formatStr, { locale: ptBR }) : '-';
         }
-        
-        // If it's pure YYYY-MM-DD, parse manually to avoid TZ shift
         const parts = dateString.split('-');
         if (parts.length === 3) {
             const date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
             return format(date, formatStr, { locale: ptBR });
         }
-        
         return '-';
     } catch (e) {
         return '-';
     }
 }
 
-/**
- * Calculates the number of business days (Mon-Fri) between a start date and now.
- * Start counting from the NEXT business day.
- */
 export function calculateBusinessDays(startDateStr: string | Date): number {
     const start = typeof startDateStr === 'string' 
         ? (startDateStr.includes('T') ? parseISO(startDateStr) : new Date(startDateStr + 'T00:00:00'))
@@ -95,14 +75,12 @@ export function calculateBusinessDays(startDateStr: string | Date): number {
     const curDate = new Date(start);
     const now = new Date();
     
-    // Regra: Começa a contagem somente no próximo dia útil
     curDate.setDate(curDate.getDate() + 1);
     curDate.setHours(0, 0, 0, 0);
     now.setHours(0, 0, 0, 0);
 
     while (curDate <= now) {
         const dayOfWeek = curDate.getDay();
-        // 0 = Sunday, 6 = Saturday
         if (dayOfWeek !== 0 && dayOfWeek !== 6) {
             count++;
         }
@@ -111,9 +89,6 @@ export function calculateBusinessDays(startDateStr: string | Date): number {
     return count;
 }
 
-/**
- * Validates a Brazilian CPF using the official mathematical algorithm.
- */
 export function validateCPF(cpf: string): boolean {
     const cleanCPF = cpf.replace(/[^\d]+/g, '');
     if (cleanCPF.length !== 11) return false;
@@ -142,10 +117,6 @@ export function validateCPF(cpf: string): boolean {
     return true;
 }
 
-/**
- * Removes the numerical code from a bank name if present.
- * Handles formats like "001 - Banco", "001-Banco", "001 Banco".
- */
 export function cleanBankName(name?: string): string {
   if (!name) return '';
   const cleaned = name.replace(/^\d+[\s-]*[-]*[\s]*/, '').trim();

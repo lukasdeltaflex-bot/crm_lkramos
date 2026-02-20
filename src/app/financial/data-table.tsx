@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -386,9 +385,9 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 <div className="flex items-center justify-between px-6 py-4 border-t-2 bg-muted/10 font-black text-[11px] uppercase tracking-[0.1em] text-foreground/60">
                     <div className="flex items-center gap-4">
                         <div>{table.getFilteredSelectedRowModel().rows.length} DE {table.getFilteredRowModel().rows.length} SELECIONADOS.</div>
-                        <Separator orientation="vertical" className="h-4 bg-zinc-300 dark:bg-zinc-700" />
+                        <Separator orientation="vertical" className="h-4 mx-2 bg-zinc-300 dark:bg-zinc-700" />
                         <div className="text-[#00AEEF] font-black">VALOR BRUTO: <span className="text-foreground">{formatCurrency(totalGross)}</span></div>
-                        <Separator orientation="vertical" className="h-4 bg-zinc-300 dark:bg-zinc-700" />
+                        <Separator orientation="vertical" className="h-4 mx-2 bg-zinc-300 dark:bg-zinc-700" />
                         <div className="text-[#00AEEF] font-black">COMISSÃO: <span className="text-foreground">{formatCurrency(totalCommission)}</span></div>
                     </div>
                     <div className="flex items-center gap-6">

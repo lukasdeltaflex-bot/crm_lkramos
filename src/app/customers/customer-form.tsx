@@ -142,12 +142,10 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
           } catch (e) {}
       }
       
-      const genderValue = source.gender || '';
-
       form.reset({
         name: source.name || '',
         cpf: source.cpf || '',
-        gender: genderValue,
+        gender: source.gender || '',
         status: source.status || 'active',
         benefits: source.benefits || [],
         phone: source.phone || '',
@@ -386,11 +384,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Gênero</FormLabel>
-                          <Select 
-                            key={`gender-sync-${currentCustomerId}`}
-                            onValueChange={field.onChange} 
-                            value={field.value || ""}
-                          >
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Selecione o gênero" />
