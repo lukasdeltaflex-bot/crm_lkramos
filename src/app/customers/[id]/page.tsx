@@ -27,7 +27,9 @@ import {
     MessageSquareText,
     TrendingUp,
     BadgePercent,
-    ArrowRight
+    ArrowRight,
+    MapPin,
+    Home
 } from 'lucide-react';
 import { format, parse, differenceInMonths, isValid as isValidDate } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -94,11 +96,17 @@ const CustomerInfoCard = ({ customer, onExportDossier, onToggleStatus, onGenerat
             <CardContent className="space-y-8">
                 <div className="bg-muted/30 p-6 rounded-2xl border border-border/50">
                     <h4 className="font-black text-[10px] uppercase tracking-[0.25em] text-primary/60 mb-6 flex items-center gap-2"><UserRound className="h-3 w-3" /> Informações Cadastrais</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8 text-sm">
                         <div className="flex flex-col gap-1"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">ID do Cliente</span><div className="flex items-center gap-2 font-black text-foreground"><Hash className="h-3.5 w-3.5 text-primary opacity-40" /><span>{customer.numericId}</span></div></div>
                         <div className="flex flex-col gap-1"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Documento (CPF)</span><div className="flex items-center gap-2 font-black text-foreground"><FileText className="h-3.5 w-3.5 text-primary opacity-40" /><span>{customer.cpf}</span><CopyButton text={customer.cpf} label="CPF" /></div></div>
                         <div className="flex flex-col gap-1"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Data de Nascimento</span><div className="flex items-center gap-2 font-bold text-foreground"><Calendar className="h-3.5 w-3.5 text-primary opacity-40" /><span>{customer.birthDate ? format(parse(customer.birthDate, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy') : '-'}</span><Badge variant="secondary" className="text-[9px] bg-primary/10 text-primary border-none">{age} ANOS</Badge></div></div>
                         <div className="flex flex-col gap-1"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Contato Principal</span><div className="flex items-center gap-2 font-black text-foreground"><Phone className="h-3.5 w-3.5 text-primary opacity-40" /><span>{customer.phone}</span><div className="flex items-center gap-1"><CopyButton text={customer.phone} label="Telefone" />{isWhatsApp(customer.phone) && <a href={getWhatsAppUrl(customer.phone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:scale-110 transition-transform"><WhatsAppIcon className="h-4 w-4" /></a>}</div></div></div>
+                        
+                        {/* ENDEREÇO COMPLETO */}
+                        <div className="flex flex-col gap-1"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Localização (Cidade/UF)</span><div className="flex items-center gap-2 font-black text-foreground"><MapPin className="h-3.5 w-3.5 text-primary opacity-40" /><span>{customer.city || '-'} / {customer.state || '-'}</span></div></div>
+                        <div className="flex flex-col gap-1"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Logradouro</span><div className="flex items-center gap-2 font-bold text-foreground truncate"><Home className="h-3.5 w-3.5 text-primary opacity-40" /><span>{customer.street || '-'} {customer.number && `, ${customer.number}`} {customer.complement && ` (${customer.complement})`}</span></div></div>
+                        <div className="flex flex-col gap-1"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Bairro</span><div className="flex items-center gap-2 font-bold text-foreground"><span>{customer.neighborhood || '-'}</span></div></div>
+                        <div className="flex flex-col gap-1"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">CEP</span><div className="flex items-center gap-2 font-bold text-foreground"><span>{customer.cep || '-'}</span><CopyButton text={customer.cep} label="CEP" /></div></div>
                     </div>
                 </div>
             </CardContent>
@@ -174,7 +182,16 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
     // Cadastro Table
     autoTable(doc, { 
         startY: 45, 
-        body: [['Nome', customer.name], ['CPF', customer.cpf], ['Nascimento', customer.birthDate], ['Telefone', customer.phone], ['Cidade/UF', `${customer.city || '-'} / ${customer.state || '-'}`]], 
+        body: [
+            ['Nome', customer.name], 
+            ['CPF', customer.cpf], 
+            ['Nascimento', customer.birthDate], 
+            ['Telefone', customer.phone], 
+            ['Endereço', `${customer.street || ''}, ${customer.number || ''} ${customer.complement || ''}`],
+            ['Bairro', customer.neighborhood || '-'],
+            ['Cidade/UF', `${customer.city || '-'} / ${customer.state || '-'}`],
+            ['CEP', customer.cep || '-']
+        ], 
         theme: 'plain', 
         styles: { fontSize: 10 }, 
         columnStyles: { 0: { fontStyle: 'bold', width: 40 } } 
