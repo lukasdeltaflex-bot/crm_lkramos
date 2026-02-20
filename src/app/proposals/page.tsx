@@ -332,7 +332,7 @@ function ProposalsPageContent() {
             data={proposalsWithCustomerData}
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
-            onBulkStatusChange={(s) => {}} 
+            onBulkStatusChange={handleBulkStatusChange} 
             userSettings={userSettings || null}
         />
       )}

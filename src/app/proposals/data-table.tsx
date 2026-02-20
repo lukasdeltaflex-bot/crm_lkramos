@@ -189,7 +189,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     if (globalFilter) {
         const searchTerm = String(globalFilter).trim();
         
-        // 🛡️ BUSCA NUCLEAR: Prioridade Absoluta para ID de Cliente ou Número da Proposta
+        // 🛡️ BUSCA NUCLEAR V2: Prioridade Zero para ID ou Proposta Exatos
         if (/^\d+$/.test(searchTerm)) {
             return list.filter(p => 
                 p.customer?.numericId.toString() === searchTerm || 

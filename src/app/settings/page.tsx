@@ -144,7 +144,7 @@ export default function SettingsPage() {
     statusColors: {} as Record<string, string>
   });
 
-  const [previewStatus, setPreviewStatus] = useState("EM ANDAMENTO");
+  const [previewStatus, setPreviewStatus] = setPreviewStatus || useState("EM ANDAMENTO");
   const [hasLoadedSettings, setHasLoadedSettings] = useState(false);
 
   useEffect(() => {
@@ -567,9 +567,9 @@ export default function SettingsPage() {
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2"><Layout className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Textura de Fundo</h4></div>
                                         <RadioGroup value={preview.backgroundTexture} onValueChange={(val) => setPreview(p => ({ ...p, backgroundTexture: val }))} className="grid grid-cols-2 gap-2">
-                                            {['none', 'dots', 'grid'].map((t) => (
+                                            {['none', 'dots', 'grid', 'lines'].map((t) => (
                                                 <Label key={t} htmlFor={`t-${t}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold", preview.backgroundTexture === t ? "border-primary bg-primary/5" : "border-muted")}>
-                                                    <RadioGroupItem value={t} id={`t-${t}`} className="sr-only" />{t === 'none' ? 'Liso' : t === 'dots' ? 'Pontos' : 'Grade'}
+                                                    <RadioGroupItem value={t} id={`t-${t}`} className="sr-only" />{t === 'none' ? 'Liso' : t === 'dots' ? 'Pontos' : t === 'grid' ? 'Grade' : 'Linhas'}
                                                 </Label>
                                             ))}
                                         </RadioGroup>

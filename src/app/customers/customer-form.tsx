@@ -129,7 +129,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     name: "benefits"
   });
 
-  // 🛡️ BLINDAGEM NUCLEAR V4: Sanitização e Sincronização Forçada de Gênero
+  // 🛡️ BLINDAGEM NUCLEAR V5: Sanitização e Sincronização Forçada
   useEffect(() => {
     const source = customer || defaultValues;
     if (source) {
@@ -361,9 +361,9 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Gênero</FormLabel>
-                          {/* 🛡️ KEY DINÂMICA: Força remontagem para exibir valor salvo do Firebase */}
+                          {/* 🛡️ KEY DINÂMICA V5: Força remontagem para exibir valor salvo do Firebase */}
                           <Select 
-                            key={customer?.id || tempCustomerId || 'new'} 
+                            key={`gender-select-${customer?.id || tempCustomerId || 'new'}-${field.value}`} 
                             onValueChange={field.onChange} 
                             value={field.value || ""}
                           >

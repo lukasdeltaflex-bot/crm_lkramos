@@ -178,7 +178,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
       columnSizing,
       pagination,
     },
-    // 🛡️ BUSCA NUCLEAR: Prioridade Absoluta para ID Numérico Exato
+    // 🛡️ BUSCA NUCLEAR V2: Prioridade Zero para ID Numérico Exato
     globalFilterFn: (row, columnId, filterValue) => {
         const searchTerm = String(filterValue ?? '').trim();
         if (!searchTerm) return true;
