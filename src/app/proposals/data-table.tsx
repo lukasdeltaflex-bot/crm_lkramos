@@ -122,12 +122,33 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         const savedVisibility = localStorage.getItem('lk-proposals-visibility');
         if (savedVisibility) setColumnVisibility(JSON.parse(savedVisibility));
 
+        const savedSizing = localStorage.getItem('lk-proposals-sizing');
+        if (savedSizing) setColumnSizing(JSON.parse(savedSizing));
+
+        // 🛡️ BLINDAGEM DE MEMÓRIA: Sincroniza colunas novas
         const savedOrder = localStorage.getItem('lk-proposals-order');
-        if (savedOrder) setColumnOrder(JSON.parse(savedOrder));
+        if (savedOrder) {
+            const parsedOrder = JSON.parse(savedOrder) as string[];
+            const missingColumns = initialColumns.filter(id => !parsedOrder.includes(id));
+            if (missingColumns.length > 0) {
+                const newOrder = [...parsedOrder];
+                const actionsIdx = newOrder.indexOf('Actions');
+                if (actionsIdx !== -1) {
+                    newOrder.splice(actionsIdx, 0, ...missingColumns);
+                } else {
+                    newOrder.push(...missingColumns);
+                }
+                setColumnOrder(newOrder);
+            } else {
+                setColumnOrder(parsedOrder);
+            }
+        } else {
+            setColumnOrder([...initialColumns]);
+        }
     } catch (e) {
         console.warn("LK Ramos: Erro ao carregar visão personalizada.");
     }
-  }, []);
+  }, [initialColumns]);
 
   const handlePaginationChange = (updater: any) => {
     setPagination((old) => {
@@ -135,24 +156,22 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
       if (typeof window !== 'undefined') {
         try { localStorage.setItem('lk-proposals-pageSize', String(next.pageSize)); } catch(e) {}
       }
-      
-      // 🛡️ UX REFINEMENT: Volta o scroll para o topo da tabela ao mudar de página
       if (tableContainerRef.current) {
           tableContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-      
       return next;
     });
   };
 
   React.useEffect(() => {
-    if (isClient) {
+    if (isClient && columnOrder.length > 0) {
       try {
         localStorage.setItem('lk-proposals-visibility', JSON.stringify(columnVisibility));
         localStorage.setItem('lk-proposals-order', JSON.stringify(columnOrder));
+        localStorage.setItem('lk-proposals-sizing', JSON.stringify(columnSizing));
       } catch(e) {}
     }
-  }, [columnVisibility, columnOrder, isClient]);
+  }, [columnVisibility, columnOrder, columnSizing, isClient]);
 
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
 

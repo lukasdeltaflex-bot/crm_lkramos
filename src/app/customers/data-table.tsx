@@ -105,12 +105,33 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         const savedVisibility = localStorage.getItem('lk-customers-visibility');
         if (savedVisibility) setColumnVisibility(JSON.parse(savedVisibility));
 
+        const savedSizing = localStorage.getItem('lk-customers-sizing');
+        if (savedSizing) setColumnSizing(JSON.parse(savedSizing));
+
+        // 🛡️ BLINDAGEM DE MEMÓRIA: Sincroniza colunas novas com o estado salvo
         const savedOrder = localStorage.getItem('lk-customers-order');
-        if (savedOrder) setColumnOrder(JSON.parse(savedOrder));
+        if (savedOrder) {
+            const parsedOrder = JSON.parse(savedOrder) as string[];
+            const missingColumns = initialColumns.filter(id => !parsedOrder.includes(id));
+            if (missingColumns.length > 0) {
+                const newOrder = [...parsedOrder];
+                const actionsIdx = newOrder.indexOf('Ações');
+                if (actionsIdx !== -1) {
+                    newOrder.splice(actionsIdx, 0, ...missingColumns);
+                } else {
+                    newOrder.push(...missingColumns);
+                }
+                setColumnOrder(newOrder);
+            } else {
+                setColumnOrder(parsedOrder);
+            }
+        } else {
+            setColumnOrder([...initialColumns]);
+        }
     } catch (e) {
         console.warn("LK Ramos: Erro ao carregar visão personalizada.");
     }
-  }, []);
+  }, [initialColumns]);
 
   const handlePaginationChange = (updater: any) => {
     setPagination((old) => {
@@ -118,24 +139,22 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
       if (typeof window !== 'undefined') {
         try { localStorage.setItem('lk-customers-pageSize', String(next.pageSize)); } catch(e) {}
       }
-      
-      // 🛡️ UX REFINEMENT: Volta o scroll para o topo da tabela ao mudar de página
       if (tableContainerRef.current) {
           tableContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-      
       return next;
     });
   };
 
   React.useEffect(() => {
-    if (isClient) {
+    if (isClient && columnOrder.length > 0) {
       try {
         localStorage.setItem('lk-customers-visibility', JSON.stringify(columnVisibility));
         localStorage.setItem('lk-customers-order', JSON.stringify(columnOrder));
+        localStorage.setItem('lk-customers-sizing', JSON.stringify(columnSizing));
       } catch(e) {}
     }
-  }, [columnVisibility, columnOrder, isClient]);
+  }, [columnVisibility, columnOrder, columnSizing, isClient]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
