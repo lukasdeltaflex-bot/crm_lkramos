@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -154,20 +153,24 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     }
 
     if (globalFilter) {
-        const searchTerm = normalizeString(globalFilter).trim();
+        const searchTerm = String(globalFilter).trim();
+        const normalizedSearch = normalizeString(searchTerm);
+
         list = list.filter(p => {
+            // 🛡️ BUSCA POR ID EXATO (Prioridade Máxima)
+            if (/^\d+$/.test(searchTerm)) {
+                return p.customer?.numericId.toString() === searchTerm;
+            }
+
             const customerName = normalizeString(p.customer?.name || '');
             const customerCpf = p.customer?.cpf?.replace(/\D/g, '') || '';
             const proposalNum = normalizeString(p.proposalNumber);
             const cleanSearch = searchTerm.replace(/\D/g, '');
 
-            if (p.customer?.numericId?.toString() === searchTerm) return true;
-
-            return customerName.includes(searchTerm) ||
+            return customerName.includes(normalizedSearch) ||
                    (cleanSearch !== '' && customerCpf.includes(cleanSearch)) ||
-                   proposalNum.includes(searchTerm) ||
-                   normalizeString(p.bank).includes(searchTerm) ||
-                   normalizeString(p.promoter).includes(searchTerm);
+                   proposalNum.includes(normalizedSearch) ||
+                   normalizeString(p.bank).includes(normalizedSearch);
         });
     }
 

@@ -34,11 +34,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </SidebarContent>
             </Sidebar>
             <SidebarInset className={cn(
-                "print:m-0 print:p-0 flex flex-col relative transition-all duration-1000 min-w-0",
+                "print:m-0 print:p-0 flex flex-col relative transition-all duration-1000 min-w-0 h-full",
                 auraStyle !== 'limpo' && `aura-${auraStyle}`
             )}>
             <Header className="print:hidden z-20" />
-            <main className="flex-1 p-4 sm:p-6 print:p-0 z-10 w-full">
+            <main className="flex-1 p-4 sm:p-6 print:p-0 z-10 w-full overflow-y-auto">
                 <div className="max-w-full">
                     {children}
                 </div>

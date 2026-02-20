@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -153,9 +152,9 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         const normalizedSearch = normalizeString(searchTerm);
 
         list = list.filter(p => {
-            // 1. Prioridade ID Exato
+            // 🛡️ BUSCA POR ID EXATO (Prioridade Máxima)
             if (/^\d+$/.test(searchTerm)) {
-                if (p.customer?.numericId.toString() === searchTerm) return true;
+                return p.customer?.numericId.toString() === searchTerm;
             }
 
             const proposalNum = normalizeString(p.proposalNumber);

@@ -19,6 +19,17 @@ const ANIMATION_OPTIONS = ["instantaneo", "sutil", "atmosferico", "cinematografi
 const SIDEBAR_OPTIONS = ["padrão", "dark", "light"];
 const AURA_OPTIONS = ["limpo", "nebula", "aurora", "sunset", "ocean", "lavender", "mint", "pearl", "desert"];
 
+const DEFAULT_STATUS_COLORS: Record<string, string> = {
+    "PAGO": "142 76% 36%",
+    "SALDO PAGO": "24 95% 53%",
+    "EM ANDAMENTO": "45 93% 47%",
+    "AGUARDANDO SALDO": "217 91% 60%",
+    "REPROVADO": "0 72% 50%",
+    "PENDENTE": "280 78% 51%",
+    "PAGA": "142 76% 36%",
+    "PARCIAL": "199 89% 48%"
+};
+
 type ColorThemeContextType = {
   colorTheme: string;
   setColorTheme: (theme: string) => void;
@@ -54,7 +65,7 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
   const [fontStyle, setFontStyle] = React.useState('moderno');
   const [sidebarStyle, setSidebarStyle] = React.useState('padrão');
   const [auraStyle, setAuraStyle] = React.useState('limpo');
-  const [statusColors, setStatusColors] = React.useState<Record<string, string>>({});
+  const [statusColors, setStatusColors] = React.useState<Record<string, string>>(DEFAULT_STATUS_COLORS);
   const [isMounted, setIsMounted] = React.useState(false);
   const { resolvedTheme } = useNextTheme();
 
@@ -77,7 +88,10 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
     
     const savedStatusColors = localStorage.getItem("lk-status-colors");
     if (savedStatusColors) {
-        try { setStatusColors(JSON.parse(savedStatusColors)); } catch(e) {}
+        try { 
+            const parsed = JSON.parse(savedStatusColors);
+            setStatusColors({ ...DEFAULT_STATUS_COLORS, ...parsed }); 
+        } catch(e) {}
     }
   }, []);
 
