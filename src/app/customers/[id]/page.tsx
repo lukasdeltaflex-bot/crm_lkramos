@@ -5,14 +5,12 @@ import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
 import { useDoc, useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { doc, collection, query, where, updateDoc } from 'firebase/firestore';
-import type { Customer, Proposal, Attachment, ProposalHistoryEntry } from '@/lib/types';
+import type { Customer, Proposal } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Phone, Mail, Calendar, FileText, CircleDollarSign, BadgePercent, MapPin, Hash, Copy, Printer, FileBadge, FolderLock, Sparkles, UserRound, UserX, UserCheck, History, MessageSquareQuote, Zap, Loader2, MessageSquareText } from 'lucide-react';
-import { format, parse, differenceInMonths, parseISO, isValid as isValidDate } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { User, Phone, Calendar, FileText, Hash, Copy, Printer, FileBadge, FolderLock, Sparkles, UserRound, UserX, UserCheck, Zap, Loader2, MessageSquareText } from 'lucide-react';
+import { format, parse, differenceInMonths, isValid as isValidDate } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { StatsCard } from '@/components/dashboard/stats-card';
 import { formatCurrency, getAge, cn, getWhatsAppUrl, isWhatsApp } from '@/lib/utils';
 import { SimpleProposalsTable } from '@/components/customers/simple-proposals-table';
 import { CustomerAiSummary } from '@/components/customers/customer-ai-summary';
@@ -21,8 +19,6 @@ import { toast } from '@/hooks/use-toast';
 import { CustomerAttachmentUploader } from '@/components/customers/customer-attachment-uploader';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { ProposalsStatusTable } from '@/components/dashboard/proposals-status-table';
 import {
     Dialog,
     DialogContent,
@@ -37,11 +33,11 @@ const CopyButton = ({ text, label }: { text: string | undefined; label: string }
     const handleCopy = (e: React.MouseEvent) => {
         e.preventDefault(); e.stopPropagation();
         navigator.clipboard.writeText(text);
-        toast({ title: `${label} copiado!`, description: `O valor "${text}" foi copiado.` });
+        toast({ title: `${label} copiado!` });
     };
     return (
         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopy}>
-            <Copy className="h-3.5 w-3.5" /><span className="sr-only">Copiar {label}</span>
+            <Copy className="h-3.5 w-3.5" />
         </Button>
     );
 }
@@ -50,7 +46,7 @@ const CustomerInfoCard = ({ customer, onExportDossier, onToggleStatus, onGenerat
     const age = getAge(customer.birthDate);
     const isInactive = customer.status === 'inactive';
     return (
-        <Card className={cn("transition-all duration-500 overflow-hidden", isInactive ? "opacity-80 bg-zinc-50 dark:bg-zinc-900/40" : "bg-card shadow-xl")}>
+        <Card className={cn("transition-all overflow-hidden", isInactive ? "opacity-80 bg-zinc-50 dark:bg-zinc-900/40" : "bg-card shadow-xl")}>
             <CardHeader>
                 <div className='flex items-center justify-between flex-wrap gap-4'>
                     <div className='flex items-center gap-4'>
@@ -64,9 +60,9 @@ const CustomerInfoCard = ({ customer, onExportDossier, onToggleStatus, onGenerat
                         </div>
                     </div>
                     <div className="flex items-center gap-2 print:hidden">
-                        <Button variant="outline" size="sm" className="h-10 px-4 rounded-full font-bold bg-orange-500/10 border-orange-500/20 text-orange-600 hover:bg-orange-500/20" onClick={onGeneratePitch}><Zap className="mr-2 h-4 w-4 fill-current" />Smart Pitch IA</Button>
-                        <Button variant="outline" size="sm" className={cn("h-10 px-4 rounded-full font-bold transition-all", isInactive ? "text-green-600 border-green-200 hover:bg-green-50" : "text-destructive border-destructive/20 hover:bg-destructive/5")} onClick={onToggleStatus}>{isInactive ? <><UserCheck className="mr-2 h-4 w-4" /> Reativar</> : <><UserX className="mr-2 h-4 w-4" /> Inativar</>}</Button>
-                        <Button variant="outline" size="sm" className="h-10 px-4 rounded-full bg-primary/5 border-primary/20 text-primary hover:bg-primary/10 font-bold" onClick={onExportDossier}><FileBadge className="mr-2 h-4 w-4" />Dossiê (PDF)</Button>
+                        <Button variant="outline" size="sm" className="h-10 px-4 rounded-full font-bold bg-orange-500/10 border-orange-500/20 text-orange-600" onClick={onGeneratePitch}><Zap className="mr-2 h-4 w-4 fill-current" />Smart Pitch IA</Button>
+                        <Button variant="outline" size="sm" className={cn("h-10 px-4 rounded-full font-bold", isInactive ? "text-green-600" : "text-destructive")} onClick={onToggleStatus}>{isInactive ? <><UserCheck className="mr-2 h-4 w-4" /> Reativar</> : <><UserX className="mr-2 h-4 w-4" /> Inativar</>}</Button>
+                        <Button variant="outline" size="sm" className="h-10 px-4 rounded-full bg-primary/5 border-primary/20 text-primary font-bold" onClick={onExportDossier}><FileBadge className="mr-2 h-4 w-4" />Dossiê (PDF)</Button>
                         <Button variant="outline" size="sm" className="h-10 px-4 rounded-full font-bold" onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" />Imprimir</Button>
                         <Link href="/customers"><Button variant="ghost" size="sm" className="h-10 px-4 rounded-full font-bold">Voltar</Button></Link>
                     </div>
@@ -128,11 +124,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
         columnStyles: { 0: { fontStyle: 'bold', width: 40 } } 
     });
     
-    // 🛡️ ENGENHARIA DE PDF: Cálculo Seguro de Posição Final
-    const getFinalY = () => {
-        const last = (doc as any).lastAutoTable;
-        return last ? last.finalY : 100;
-    };
+    const getFinalY = () => (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY : 100;
     
     if (customer.benefits && customer.benefits.length > 0) {
         doc.setFont("helvetica", "bold"); doc.text("BENEFÍCIOS ATIVOS", 14, getFinalY() + 15);
@@ -153,24 +145,24 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
         styles: { fontSize: 9 } 
     });
 
-    // 🛡️ REFINAMENTO DE QUEBRA DE PÁGINA: Zona de Proteção de 80mm
     const pageHeight = doc.internal.pageSize.height;
-    if (getFinalY() > pageHeight - 80) { 
+    const decText = `Eu, ${customer.name}, portador do CPF ${customer.cpf}, declaro verdadeiras as informações acima e autorizo expressamente o processamento dos meus dados para fins de simulação e contratação bancária, conforme as diretrizes da LGPD (Lei Geral de Proteção de Dados).`;
+    const wrappedDecText = doc.splitTextToSize(decText, 180);
+    const textHeight = (wrappedDecText.length * 5);
+
+    if (getFinalY() + textHeight + 40 > pageHeight - 20) { 
         doc.addPage(); 
         doc.setFont("helvetica", "bold"); doc.text("DECLARAÇÃO E FORMALIZAÇÃO", 14, 25); 
+        autoTable(doc, { startY: 30, theme: 'plain' }); // Dummy table to update getFinalY
     } else { 
         doc.setFont("helvetica", "bold"); doc.text("DECLARAÇÃO E FORMALIZAÇÃO", 14, getFinalY() + 20); 
     }
 
-    // Posição final recalculada para assinaturas
-    const currentY = getFinalY();
-    const signatureY = currentY + 40 > pageHeight - 20 ? pageHeight - 40 : currentY + 40;
-    
-    const decText = `Eu, ${customer.name}, portador do CPF ${customer.cpf}, declaro verdadeiras as informações acima e autorizo expressamente o processamento dos meus dados para fins de simulação e contratação bancária, conforme as diretrizes da LGPD.`;
-    
+    const currentY = getFinalY() + 10;
     doc.setFontSize(9); doc.setTextColor(80); doc.setFont("helvetica", "normal");
-    doc.text(doc.splitTextToSize(decText, 180), 14, signatureY - 20);
+    doc.text(wrappedDecText, 14, currentY + 5);
     
+    const signatureY = currentY + textHeight + 25;
     doc.setDrawColor(150);
     doc.line(14, signatureY, 90, signatureY); doc.line(110, signatureY, 186, signatureY);
     doc.setFontSize(8); 
@@ -184,7 +176,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
   const handleToggleStatus = async () => {
     if (!firestore || !customerId || !customer) return;
     const newStatus = customer.status === 'inactive' ? 'active' : 'inactive';
-    await updateDoc(doc(firestore, 'customers', customerId), { status: newStatus });
+    updateDoc(doc(firestore, 'customers', customerId), { status: newStatus });
     toast({ title: `Cliente ${newStatus === 'active' ? 'Ativado' : 'Inativado'}` });
   };
 

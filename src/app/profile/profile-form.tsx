@@ -15,7 +15,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Upload, User, X } from 'lucide-react';
 import { format, parse } from 'date-fns';
-import { cn } from '@/lib/utils';
 import type { UserProfile } from '@/lib/types';
 import { useEffect, useRef, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -105,12 +104,11 @@ export function ProfileForm({ userProfile, onSubmit }: ProfileFormProps) {
 
   const handleFormSubmit = (data: ProfileFormValues) => {
     const dataToSubmit: Partial<UserProfile> = {
-      // Use || null to convert empty strings to null for clearing fields in Firestore
       displayName: data.displayName || null,
       fullName: data.fullName || null,
       photoURL: data.photoURL || null,
       phone: data.phone || null,
-      email: data.email, // email is required
+      email: data.email.trim(), 
       birthDate: data.birthDate ? format(parse(data.birthDate, 'dd/MM/yyyy', new Date()), 'yyyy-MM-dd') : null,
     };
     onSubmit(dataToSubmit);
@@ -128,7 +126,6 @@ export function ProfileForm({ userProfile, onSubmit }: ProfileFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
-        
         <FormField
           control={form.control}
           name="photoURL"
@@ -138,34 +135,13 @@ export function ProfileForm({ userProfile, onSubmit }: ProfileFormProps) {
               <div className="flex items-center gap-4">
                 <Avatar className="h-24 w-24">
                   <AvatarImage src={photoPreview || undefined} alt="Foto de perfil"/>
-                  <AvatarFallback className="text-3xl">
-                    <User />
-                  </AvatarFallback>
+                  <AvatarFallback className="text-3xl"><User /></AvatarFallback>
                 </Avatar>
                 <div className='flex items-center gap-2'>
-                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
-                        <Upload className="mr-2 h-4 w-4" />
-                        Carregar Foto
-                    </Button>
-                    {photoPreview && (
-                        <Button type="button" variant="ghost" size="icon" onClick={() => {
-                            setPhotoPreview(null);
-                            form.setValue('photoURL', '', { shouldValidate: true });
-                        }}>
-                           <X className='h-4 w-4' />
-                        </Button>
-                    )}
+                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}><Upload className="mr-2 h-4 w-4" /> Carregar Foto</Button>
+                    {photoPreview && <Button type="button" variant="ghost" size="icon" onClick={() => { setPhotoPreview(null); form.setValue('photoURL', '', { shouldValidate: true }); }}><X className='h-4 w-4' /></Button>}
                 </div>
-
-                <FormControl>
-                  <Input 
-                    type="file"
-                    className="hidden"
-                    ref={fileInputRef}
-                    onChange={handlePhotoUpload}
-                    accept="image/png, image/jpeg, image/gif"
-                    />
-                </FormControl>
+                <FormControl><Input type="file" className="hidden" ref={fileInputRef} onChange={handlePhotoUpload} accept="image/*" /></FormControl>
               </div>
               <FormMessage />
             </FormItem>
@@ -173,87 +149,23 @@ export function ProfileForm({ userProfile, onSubmit }: ProfileFormProps) {
         />
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <FormField
-            control={form.control}
-            name="fullName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nome Completo</FormLabel>
-                <FormControl>
-                  <Input placeholder="Seu nome completo" {...field} value={field.value || ''}/>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="displayName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Como quer ser chamado</FormLabel>
-                <FormControl>
-                  <Input placeholder="Seu apelido" {...field} value={field.value || ''} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="seu@email.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Telefone</FormLabel>
-                <FormControl>
-                  <Input placeholder="(00) 90000-0000" {...field} value={field.value || ''} onChange={handlePhoneChange} maxLength={15} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="birthDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Data de Nascimento</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="dd/mm/aaaa"
-                    {...field}
-                    value={field.value || ''}
-                    onChange={handleBirthDateChange}
-                    maxLength={10}
-                    className="w-[240px]"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <FormField control={form.control} name="fullName" render={({ field }) => (
+              <FormItem><FormLabel>Nome Completo</FormLabel><FormControl><Input placeholder="Seu nome completo" {...field} value={field.value || ''}/></FormControl><FormMessage /></FormItem>
+          )} />
+          <FormField control={form.control} name="displayName" render={({ field }) => (
+              <FormItem><FormLabel>Como quer ser chamado</FormLabel><FormControl><Input placeholder="Seu apelido" {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem>
+          )} />
+          <FormField control={form.control} name="email" render={({ field }) => (
+              <FormItem><FormLabel>Email</FormLabel><FormControl><Input placeholder="seu@email.com" {...field} /></FormControl><FormMessage /></FormItem>
+          )} />
+          <FormField control={form.control} name="phone" render={({ field }) => (
+              <FormItem><FormLabel>Telefone</FormLabel><FormControl><Input placeholder="(00) 90000-0000" {...field} value={field.value || ''} onChange={handlePhoneChange} maxLength={15} /></FormControl><FormMessage /></FormItem>
+          )} />
+          <FormField control={form.control} name="birthDate" render={({ field }) => (
+              <FormItem><FormLabel>Data de Nascimento</FormLabel><FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value || ''} onChange={handleBirthDateChange} maxLength={10} className="w-[240px]" /></FormControl><FormMessage /></FormItem>
+          )} />
         </div>
-
-        <div className="flex justify-end">
-          <Button type="submit">Salvar Alterações</Button>
-        </div>
+        <div className="flex justify-end"><Button type="submit">Salvar Alterações</Button></div>
       </form>
     </Form>
   );

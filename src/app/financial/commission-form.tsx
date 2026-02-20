@@ -20,16 +20,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
 import { format, parse } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 import { commissionStatuses } from '@/lib/config-data';
 import type { Proposal } from '@/lib/types';
 import { useEffect } from 'react';
-import { Textarea } from '@/components/ui/textarea';
 
 const commissionSchema = z.object({
   commissionStatus: z.string({ required_error: 'Selecione um status.' }),

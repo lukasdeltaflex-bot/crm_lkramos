@@ -60,8 +60,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { X, Filter, Search, Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Landmark, Building2, Check } from 'lucide-react';
-import { cn, cleanBankName, formatCurrency, normalizeString } from '@/lib/utils';
+import { X, Filter, Search, Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Landmark, Building2 } from 'lucide-react';
+import { cn, cleanBankName, normalizeString } from '@/lib/utils';
 import type { Proposal, Customer, UserSettings } from '@/lib/types';
 import { FinancialSummary } from '@/components/financial/financial-summary';
 import { DraggableHeader } from './columns';
@@ -126,42 +126,28 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     try {
         const savedPageSize = localStorage.getItem('lk-financial-pageSize');
         if (savedPageSize) setPagination(p => ({ ...p, pageSize: Number(savedPageSize) }));
-
         const savedVisibility = localStorage.getItem('lk-financial-visibility');
         if (savedVisibility) setColumnVisibility(JSON.parse(savedVisibility));
-
         const savedOrder = localStorage.getItem('lk-financial-order');
         if (savedOrder) setColumnOrder(JSON.parse(savedOrder));
-    } catch (e) {
-        console.warn("LK Ramos: Erro ao carregar visão personalizada.");
-    }
+    } catch (e) {}
   }, []);
 
   const handlePaginationChange = (updater: any) => {
     setPagination((old) => {
       const next = typeof updater === 'function' ? updater(old) : updater;
-      if (typeof window !== 'undefined') {
-        try { localStorage.setItem('lk-financial-pageSize', String(next.pageSize)); } catch(e) {}
-      }
-      
-      if (tableContainerRef.current) {
-          tableContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-      
+      if (typeof window !== 'undefined') localStorage.setItem('lk-financial-pageSize', String(next.pageSize));
+      if (tableContainerRef.current) tableContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return next;
     });
   };
 
   React.useEffect(() => {
     if (isClient) {
-      try {
-        localStorage.setItem('lk-financial-visibility', JSON.stringify(columnVisibility));
-        localStorage.setItem('lk-financial-order', JSON.stringify(columnOrder));
-      } catch(e) {}
+      localStorage.setItem('lk-financial-visibility', JSON.stringify(columnVisibility));
+      localStorage.setItem('lk-financial-order', JSON.stringify(columnOrder));
     }
   }, [columnVisibility, columnOrder, isClient]);
-
-  const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -176,10 +162,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
   const summaryRange = React.useMemo(() => {
     if (appliedDateRange?.from) {
-      return {
-        from: startOfMonth(appliedDateRange.from),
-        to: endOfMonth(appliedDateRange.to || appliedDateRange.from),
-      };
+      return { from: startOfMonth(appliedDateRange.from), to: endOfMonth(appliedDateRange.to || appliedDateRange.from) };
     }
     return currentMonthRange;
   }, [appliedDateRange, currentMonthRange]);
@@ -188,38 +171,22 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     const today = new Date();
     const startOfThisMonth = startOfMonth(today);
     const endOfThisMonth = endOfMonth(today);
-    
-    const isSpecificSearch = !!globalFilter.trim() || !!appliedDateRange;
+    const isSpecificSearch = !!appliedDateRange;
 
     let list = data;
 
     if (statusFilter === 'Todos') {
         list = list.filter(p => p.status !== 'Reprovado');
-        if (!isSpecificSearch) {
-            list = list.filter(p => {
-                const d = p.dateDigitized ? new Date(p.dateDigitized) : null;
-                return d && d >= startOfThisMonth && d <= endOfThisMonth;
-            });
-        }
+        if (!isSpecificSearch) list = list.filter(p => { const d = p.dateDigitized ? new Date(p.dateDigitized) : null; return d && d >= startOfThisMonth && d <= endOfThisMonth; });
     } else if (statusFilter === 'Paga') {
         list = list.filter(p => p.commissionStatus === 'Paga');
-        if (!isSpecificSearch) {
-            list = list.filter(p => {
-                const d = p.commissionPaymentDate ? new Date(p.commissionPaymentDate) : null;
-                return d && d >= startOfThisMonth && d <= endOfThisMonth;
-            });
-        }
+        if (!isSpecificSearch) list = list.filter(p => { const d = p.commissionPaymentDate ? new Date(p.commissionPaymentDate) : null; return d && d >= startOfThisMonth && d <= endOfThisMonth; });
     } else if (statusFilter === 'Pendente' || statusFilter === 'Parcial') {
         list = list.filter(p => p.commissionStatus === statusFilter);
     }
 
-    if (bankFilter !== 'all') {
-        list = list.filter(p => p.bank === bankFilter);
-    }
-
-    if (promoterFilter !== 'all') {
-        list = list.filter(p => p.promoter === promoterFilter);
-    }
+    if (bankFilter !== 'all') list = list.filter(p => p.bank === bankFilter);
+    if (promoterFilter !== 'all') list = list.filter(p => p.promoter === promoterFilter);
 
     if (appliedDateRange && appliedDateRange.from) {
         const fromDate = appliedDateRange.from;
@@ -230,34 +197,8 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         });
     }
 
-    if (globalFilter) {
-        const searchTerm = String(globalFilter).trim();
-        
-        if (/^\d+$/.test(searchTerm)) {
-            return list.filter(p => 
-                p.customer?.numericId.toString() === searchTerm || 
-                p.proposalNumber === searchTerm
-            );
-        }
-
-        const normalizedSearch = normalizeString(searchTerm);
-        list = list.filter(p => {
-            const customerName = normalizeString(p.customer?.name || '');
-            const customerCpf = p.customer?.cpf?.replace(/\D/g, '') || '';
-            const proposalNum = normalizeString(p.proposalNumber);
-            const cleanSearch = searchTerm.replace(/\D/g, '');
-            const operatorName = normalizeString(p.operator || '');
-
-            return customerName.includes(normalizedSearch) ||
-                   (cleanSearch !== '' && customerCpf.includes(cleanSearch)) ||
-                   proposalNum.includes(normalizedSearch) ||
-                   normalizeString(p.bank).includes(normalizedSearch) ||
-                   operatorName.includes(normalizedSearch);
-        });
-    }
-
     return list;
-  }, [data, statusFilter, bankFilter, promoterFilter, appliedDateRange, globalFilter]);
+  }, [data, statusFilter, bankFilter, promoterFilter, appliedDateRange]);
 
   const table = useReactTable({
     data: filteredData,
@@ -266,85 +207,43 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    onGlobalFilterChange: setGlobalFilter,
     onColumnSizingChange: setColumnSizing,
     onColumnOrderChange: setColumnOrder,
     onPaginationChange: handlePaginationChange,
     enableColumnResizing: true,
     columnResizeMode: 'onChange',
-    state: { sorting, rowSelection, columnVisibility, columnSizing, columnOrder, pagination },
+    state: { sorting, rowSelection, columnVisibility, columnSizing, columnOrder, pagination, globalFilter },
+    globalFilterFn: (row, columnId, filterValue) => {
+        const searchTerm = normalizeString(String(filterValue));
+        const customer = row.original.customer;
+        const p = row.original;
+        return normalizeString(customer?.name || '').includes(searchTerm) || 
+               customer?.cpf?.replace(/\D/g, '').includes(searchTerm) ||
+               normalizeString(p.proposalNumber).includes(searchTerm) ||
+               normalizeString(p.operator || '').includes(searchTerm) ||
+               normalizeString(p.bank).includes(searchTerm);
+    },
     meta: { isPrivacyMode, userSettings }
   });
 
   React.useImperativeHandle(ref, () => ({ table }));
 
-  const selectedRows = table.getFilteredSelectedRowModel().rows;
-  const numSelected = selectedRows.length;
-
-  const totalGross = React.useMemo(() => 
-    selectedRows.reduce((acc, row) => acc + (row.original.grossAmount || 0), 0),
-  [selectedRows]);
-
-  const totalCommission = React.useMemo(() => 
-    selectedRows.reduce((acc, row) => acc + (row.original.commissionValue || 0), 0),
-  [selectedRows]);
-
-  const handleApplyFilter = () => {
-    const startDate = parse(startDateInput, 'dd/MM/yyyy', new Date());
-    const endDate = parse(endDateInput, 'dd/MM/yyyy', new Date());
-    if (isValid(startDate) && isValid(endDate)) {
-        setAppliedDateRange({ from: startOfDay(startDate), to: endOfDay(endDate) });
-    } else if (isValid(startDate)) {
-        setAppliedDateRange({ from: startOfDay(startDate), to: endOfDay(startDate) });
-    } else {
-        setAppliedDateRange(undefined);
-    }
-  };
-
-  const handleDateMask = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, "");
-    if (value.length > 8) value = value.substring(0, 8);
-    value = value.replace(/(\d{2})(\d)/, '$1/$2');
-    value = value.replace(/(\d{2})(\d)/, '$1/$2');
-    e.target.value = value;
-    return value;
-  };
-
-  const banksList = React.useMemo(() => Array.from(new Set(data.map(p => p.bank))).sort(), [data]);
-  const promotersList = React.useMemo(() => Array.from(new Set(data.map(p => p.promoter))).sort(), [data]);
-
   return (
-    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
+    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor))}>
         <div className="space-y-4 w-full">
-            <FinancialSummary 
-                rows={data} 
-                currentMonthRange={summaryRange}
-                isPrivacyMode={isPrivacyMode}
-                isFiltered={!!globalFilter || statusFilter !== 'Todos'}
-                onShowDetails={onShowDetails}
-                userSettings={userSettings}
-            />
+            <FinancialSummary rows={data} currentMonthRange={summaryRange} isPrivacyMode={isPrivacyMode} isFiltered={!!globalFilter || statusFilter !== 'Todos'} onShowDetails={onShowDetails} userSettings={userSettings} />
 
             <div className="flex flex-wrap items-center justify-between gap-4 bg-muted/10 dark:bg-zinc-900/30 p-2 rounded-xl border-2 border-zinc-200 dark:border-primary/20 shadow-sm">
                 <Tabs value={statusFilter} onValueChange={setStatusFilter}>
                     <TabsList className="bg-transparent p-0 gap-1 h-auto flex-wrap">
                         <TabsTrigger value="Todos" className="font-bold px-4 h-9">Todos</TabsTrigger>
-                        {['Paga', 'Pendente', 'Parcial'].map(s => {
-                            const label = s === 'Paga' ? 'PAGAS' : s === 'Pendente' ? 'PENDENTES' : 'PARCIAIS';
-                            const statusKey = s.toUpperCase();
-                            const colorValue = statusColors[statusKey] || statusColors[s];
-                            return (
-                                <TabsTrigger 
-                                    key={s} 
-                                    value={s} 
-                                    className="status-tab font-black uppercase text-[10px] tracking-widest px-4 h-9 border-2 border-transparent data-[state=active]:bg-background"
-                                    style={colorValue ? { '--status-color': colorValue } as any : {}}
-                                >
-                                    {label}
-                                </TabsTrigger>
-                            );
-                        })}
+                        {['Paga', 'Pendente', 'Parcial'].map(s => (
+                            <TabsTrigger key={s} value={s} className="status-tab font-black uppercase text-[10px] tracking-widest px-4 h-9 border-2 border-transparent data-[state=active]:bg-background" style={{ '--status-color': statusColors[s.toUpperCase()] || statusColors[s] } as any}>{s === 'Paga' ? 'PAGAS' : s === 'Pendente' ? 'PENDENTES' : 'PARCIAIS'}</TabsTrigger>
+                        ))}
                     </TabsList>
                 </Tabs>
 
@@ -358,7 +257,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                         </SelectTrigger>
                         <SelectContent className="rounded-xl border-2">
                             <SelectItem value="all" className="font-black text-[10px] uppercase">Todos os Bancos</SelectItem>
-                            {banksList.map(b => (
+                            {Array.from(new Set(data.map(p => p.bank))).sort().map(b => (
                                 <SelectItem key={b} value={b} className="font-bold text-[11px] uppercase">
                                     <div className="flex items-center gap-3">
                                         <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogo={userSettings?.showBankLogos ?? true} className="h-4 w-4" />
@@ -378,160 +277,88 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                         </SelectTrigger>
                         <SelectContent className="rounded-xl border-2">
                             <SelectItem value="all" className="font-black text-[10px] uppercase">Todas Promotoras</SelectItem>
-                            {promotersList.map(p => {
-                                const promoterDomain = userSettings?.promoterDomains?.[p];
-                                return (
-                                    <SelectItem key={p} value={p} className="font-bold text-[11px] uppercase">
-                                        <div className="flex items-center gap-3">
-                                            <BankIcon bankName={p} domain={promoterDomain} showLogo={userSettings?.showPromoterLogos ?? true} className="h-4 w-4" />
-                                            <span>{p}</span>
-                                        </div>
-                                    </SelectItem>
-                                );
-                            })}
+                            {Array.from(new Set(data.map(p => p.promoter))).sort().map(p => (
+                                <SelectItem key={p} value={p} className="font-bold text-[11px] uppercase">
+                                    <div className="flex items-center gap-3">
+                                        <BankIcon bankName={p} domain={userSettings?.promoterDomains?.[p]} showLogo={userSettings?.showPromoterLogos ?? true} className="h-4 w-4" />
+                                        <span>{p}</span>
+                                    </div>
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 bg-muted/5 p-2 rounded-xl border-2 border-zinc-200 dark:border-border/50">
-                <div className="flex items-center gap-2 bg-background border-2 border-zinc-300 dark:border-primary/20 rounded-full px-3 py-1 shadow-sm">
+            <div className="flex flex-wrap items-center gap-3 bg-muted/5 p-2 rounded-xl border-2 border-zinc-200">
+                <div className="flex items-center gap-2 bg-background border-2 border-zinc-300 rounded-full px-3 py-1">
                     <Select onValueChange={(val) => {
                         const now = new Date();
                         let from = startOfMonth(now);
                         if(val === 'today') from = startOfDay(now);
                         if(val === 'yesterday') from = startOfDay(subDays(now, 1));
-                        setStartDateInput(format(from, 'dd/MM/yyyy'));
-                        setEndDateInput(format(now, 'dd/MM/yyyy'));
+                        setStartDateInput(format(from, 'dd/MM/yyyy')); setEndDateInput(format(now, 'dd/MM/yyyy'));
                         setAppliedDateRange({ from, to: now });
                     }}>
-                        <SelectTrigger className="h-7 w-[110px] border-none bg-transparent focus:ring-0 text-xs font-black uppercase p-0">
-                            <CalendarIcon className="mr-2 h-3.5 w-3.5 text-primary" />
-                            <SelectValue placeholder="PERÍODO" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="today">Hoje</SelectItem>
-                            <SelectItem value="yesterday">Ontem</SelectItem>
-                            <SelectItem value="month">Mês Atual</SelectItem>
-                        </SelectContent>
+                        <SelectTrigger className="h-7 w-[110px] border-none bg-transparent focus:ring-0 text-xs font-black uppercase p-0"><CalendarIcon className="mr-2 h-3.5 w-3.5 text-primary" /><SelectValue placeholder="PERÍODO" /></SelectTrigger>
+                        <SelectContent><SelectItem value="today">Hoje</SelectItem><SelectItem value="yesterday">Ontem</SelectItem><SelectItem value="month">Mês Atual</SelectItem></SelectContent>
                     </Select>
                     <Separator orientation="vertical" className="h-4 mx-1 bg-zinc-300" />
-                    <div className="flex items-center gap-1">
-                        <Input placeholder="De" value={startDateInput} onChange={(e) => setStartDateInput(handleDateMask(e))} className="h-7 w-28 border-none bg-muted/40 text-[11px] text-center font-black rounded-full" />
-                        <span className="text-muted-foreground font-black">-</span>
-                        <Input placeholder="Até" value={endDateInput} onChange={(e) => setEndDateInput(handleDateMask(e))} className="h-7 w-28 border-none bg-muted/40 text-[11px] text-center font-black rounded-full" />
-                    </div>
+                    <Input placeholder="De" value={startDateInput} onChange={(e) => setStartDateInput(e.target.value)} className="h-7 w-28 border-none bg-muted/40 text-[11px] text-center font-black rounded-full" />
+                    <Input placeholder="Até" value={endDateInput} onChange={(e) => setEndDateInput(e.target.value)} className="h-7 w-28 border-none bg-muted/40 text-[11px] text-center font-black rounded-full" />
                 </div>
-                <Button size="sm" onClick={handleApplyFilter} className="h-9 bg-primary text-white hover:bg-primary/90 rounded-full px-6 text-xs font-black uppercase shadow-lg gap-2">
-                    <Filter className="h-3.5 w-3.5" /> Aplicar
-                </Button>
+                <Button size="sm" onClick={() => { const s = parse(startDateInput, 'dd/MM/yyyy', new Date()); const e = parse(endDateInput, 'dd/MM/yyyy', new Date()); setAppliedDateRange(isValid(s) ? { from: startOfDay(s), to: isValid(e) ? endOfDay(e) : endOfDay(s) } : undefined); }} className="h-9 bg-primary text-white rounded-full px-6 text-xs font-black uppercase shadow-lg gap-2"><Filter className="h-3.5 w-3.5" /> Aplicar</Button>
                 {appliedDateRange && <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => { setStartDateInput(''); setEndDateInput(''); setAppliedDateRange(undefined); }}><X className="h-4 w-4" /></Button>}
             </div>
 
-            <Card className="rounded-[1.5rem] border-2 border-zinc-200 dark:border-primary/30 bg-card shadow-xl overflow-hidden p-1">
+            <Card className="rounded-[1.5rem] border-2 border-zinc-200 bg-card shadow-xl overflow-hidden p-1">
                 <div className="flex items-center justify-between px-4 py-2 gap-4">
                     <div className='relative w-full max-md group'>
                         <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80 group-focus-within:opacity-100 transition-opacity' />
-                        <Input 
-                            placeholder="Busca Inteligente (Nome, CPF, Banco, Operador ou ID Exato...)" 
-                            value={globalFilter} 
-                            onChange={(e) => setGlobalFilter(e.target.value)} 
-                            className="pl-10 h-11 bg-background border-2 border-zinc-300 dark:border-primary/40 rounded-full text-base font-bold shadow-md focus-visible:ring-primary/20 transition-all placeholder:text-muted-foreground/80" 
-                        />
+                        <Input placeholder="Busca Inteligente (Nome, CPF, Banco, Operador...)" value={globalFilter} onChange={(e) => setGlobalFilter(e.target.value)} className="pl-10 h-11 bg-background border-2 border-zinc-300 rounded-full text-base font-bold shadow-md" />
                     </div>
                     <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="h-11 rounded-full px-6 font-black border-2 border-zinc-300 dark:border-primary/20 bg-background shadow-md gap-2 text-[10px] uppercase tracking-widest">
-                                Colunas <ChevronDown className="h-4 w-4 opacity-50" />
-                            </Button>
-                        </DropdownMenuTrigger>
+                        <DropdownMenuTrigger asChild><Button variant="outline" className="h-11 rounded-full px-6 font-black border-2 border-zinc-300 bg-background shadow-md gap-2 text-[10px] uppercase tracking-widest">Colunas <ChevronDown className="h-4 w-4 opacity-50" /></Button></DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56 shadow-2xl border-2">
                             <DropdownMenuLabel>Exibir/Ocultar</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             {table.getAllColumns().filter(c => c.getCanHide()).map(column => (
-                                <DropdownMenuCheckboxItem key={column.id} className="capitalize text-xs font-bold" checked={column.getIsVisible()} onCheckedChange={v => column.toggleVisibility(!!v)}>
-                                    {column.id}
-                                </DropdownMenuCheckboxItem>
+                                <DropdownMenuCheckboxItem key={column.id} className="capitalize text-xs font-bold" checked={column.getIsVisible()} onCheckedChange={v => column.toggleVisibility(!!v)}>{column.id}</DropdownMenuCheckboxItem>
                             ))}
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
 
-                <div className="financial-table">
-                    <div className="overflow-x-auto">
-                        <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
-                            <TableHeader className="bg-muted/40 dark:bg-zinc-900/60 border-b-2">
-                                {table.getHeaderGroups().map(hg => (
-                                    <TableRow key={hg.id} className="border-b hover:bg-transparent">
-                                        <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
-                                            {hg.headers.map(h => <DraggableHeader key={h.id} header={h as any} />)}
-                                        </SortableContext>
+                <div className="overflow-x-auto">
+                    <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
+                        <TableHeader className="bg-muted/40 border-b-2">
+                            {table.getHeaderGroups().map(hg => (
+                                <TableRow key={hg.id} className="border-b hover:bg-transparent">
+                                    <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
+                                        {hg.headers.map(h => <DraggableHeader key={h.id} header={h as any} />)}
+                                    </SortableContext>
+                                </TableRow>
+                            ))}
+                        </TableHeader>
+                        <TableBody>
+                            {table.getRowModel().rows.length > 0 ? (
+                                table.getRowModel().rows.map(row => (
+                                    <TableRow key={row.id} className="transition-colors border-b h-14 hover:bg-primary/[0.03] cursor-pointer" style={row.original.commissionStatus ? { '--status-color': statusColors[row.original.commissionStatus.toUpperCase()] || statusColors[row.original.commissionStatus] } as any : {}} onClick={() => row.toggleSelected()}>
+                                        {row.getVisibleCells().map(cell => (<TableCell key={cell.id} style={{ width: cell.column.getSize() }} className="p-3 text-sm border-none">{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>))}
                                     </TableRow>
-                                ))}
-                            </TableHeader>
-                            <TableBody>
-                                {table.getRowModel().rows.length > 0 ? (
-                                    table.getRowModel().rows.map(row => {
-                                        const status = row.original.commissionStatus;
-                                        const statusKey = status?.toUpperCase() || '';
-                                        const colorValue = statusColors[statusKey] || statusColors[status || ''];
-                                        return (
-                                            <TableRow 
-                                                key={row.id} 
-                                                className={cn(
-                                                    "transition-colors border-b h-14 hover:bg-primary/[0.03] dark:hover:bg-primary/5 cursor-pointer", 
-                                                    colorValue && "status-row-custom"
-                                                )} 
-                                                style={colorValue ? { '--status-color': colorValue } as any : {}}
-                                                onClick={(e) => {
-                                                    const target = e.target as HTMLElement;
-                                                    if (target.closest('a') || target.closest('button')) return;
-                                                    row.toggleSelected();
-                                                }}
-                                            >
-                                                {row.getVisibleCells().map(cell => (
-                                                    <TableCell 
-                                                        key={cell.id} 
-                                                        style={{ width: cell.column.getSize() }} 
-                                                        className="p-3 text-sm border-none"
-                                                    >
-                                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                    </TableCell>
-                                                ))}
-                                            </TableRow>
-                                        )
-                                    })
-                                ) : (
-                                    <TableRow><TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground font-black uppercase text-[10px] tracking-widest opacity-40">Sem registros para este período.</TableCell></TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
+                                ))
+                            ) : (
+                                <TableRow><TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground font-black uppercase text-[10px] tracking-widest opacity-40">Sem registros.</TableCell></TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
                 </div>
 
                 <div className="flex items-center justify-between px-6 py-4 border-t-2 bg-muted/10 font-black text-[11px] uppercase tracking-[0.1em] text-foreground/60 min-h-[64px]">
                     <div className="flex items-center gap-4">
-                        <div>{numSelected} DE {table.getFilteredRowModel().rows.length} SELECIONADOS.</div>
-                        
-                        {numSelected > 0 && (
-                            <>
-                                <Separator orientation="vertical" className="h-4 mx-2 bg-zinc-300 dark:bg-zinc-700" />
-                                <div className="text-[#00AEEF] font-black animate-in fade-in slide-in-from-left-2">VALOR BRUTO: <span className="text-foreground">{formatCurrency(totalGross)}</span></div>
-                                <Separator orientation="vertical" className="h-4 mx-2 bg-zinc-300 dark:bg-zinc-700" />
-                                <div className="text-[#00AEEF] font-black animate-in fade-in slide-in-from-left-2">COMISSÃO: <span className="text-foreground">{formatCurrency(totalCommission)}</span></div>
-                            </>
-                        )}
+                        <div>{table.getFilteredSelectedRowModel().rows.length} DE {table.getFilteredRowModel().rows.length} SELECIONADOS.</div>
                     </div>
                     <div className="flex items-center gap-6">
-                        <div className="flex items-center gap-2">
-                            <span>LINHAS</span>
-                            <Select value={`${table.getState().pagination.pageSize}`} onValueChange={(value) => table.setPageSize(Number(value))}>
-                                <SelectTrigger className="h-8 w-[70px] bg-background border-2 border-zinc-200 dark:border-zinc-800 rounded-full text-[10px] font-black shadow-sm"><SelectValue placeholder={table.getState().pagination.pageSize} /></SelectTrigger>
-                                <SelectContent side="top">
-                                    {[10, 20, 50, 100].map((pageSize) => (<SelectItem key={pageSize} value={`${pageSize}`} className="text-[10px] font-black uppercase">{pageSize}</SelectItem>))}
-                                </SelectContent>
-                            </Select>
-                        </div>
                         <div className="text-primary font-black">PÁG {table.getState().pagination.pageIndex + 1} DE {table.getPageCount()}</div>
                         <div className="flex items-center gap-1">
                             <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-2" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}><ChevronsLeft className="h-4 w-4" /></Button>
