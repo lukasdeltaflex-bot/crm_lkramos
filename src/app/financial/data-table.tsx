@@ -142,12 +142,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
       if (typeof window !== 'undefined') {
         try { localStorage.setItem('lk-financial-pageSize', String(next.pageSize)); } catch(e) {}
       }
-      
-      const tableElement = document.querySelector('.financial-table');
-      if (tableElement) {
-          tableElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-      
       return next;
     });
   };
@@ -174,10 +168,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     }
   };
 
-  /**
-   * 🛡️ LÓGICA DE RESUMO BLINDADA:
-   * Expande o range dos cards de topo para o Mês Completo, mesmo se o filtro da tabela for de apenas um dia.
-   */
   const summaryRange = React.useMemo(() => {
     if (appliedDateRange?.from) {
       return {
@@ -357,17 +347,13 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                     <Select value={bankFilter} onValueChange={setBankFilter}>
                         <SelectTrigger className="h-10 min-w-[200px] bg-background border-2 border-zinc-300 dark:border-primary/20 rounded-full text-[11px] font-black uppercase px-6 shadow-sm">
                             <div className="flex items-center gap-2">
-                                <Landmark className="h-4 w-4 text-primary" />
+                                {/* 🛡️ BRANDING REATIVO: Ícone muda ao selecionar banco */}
+                                {bankFilter === 'all' ? <Landmark className="h-4 w-4 text-primary" /> : <BankIcon bankName={bankFilter} domain={userSettings?.bankDomains?.[bankFilter]} className="h-4 w-4" />}
                                 <SelectValue placeholder="TODOS OS BANCOS" />
                             </div>
                         </SelectTrigger>
                         <SelectContent className="rounded-xl border-2">
-                            <SelectItem value="all" className="font-black text-[10px] uppercase">
-                                <div className="flex items-center gap-2">
-                                    <Check className="h-3 w-3 opacity-0" />
-                                    <span>Todos os Bancos</span>
-                                </div>
-                            </SelectItem>
+                            <SelectItem value="all" className="font-black text-[10px] uppercase">Todos os Bancos</SelectItem>
                             {banksList.map(b => (
                                 <SelectItem key={b} value={b} className="font-bold text-[11px] uppercase">
                                     <div className="flex items-center gap-3">
@@ -382,17 +368,13 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                     <Select value={promoterFilter} onValueChange={setPromoterFilter}>
                         <SelectTrigger className="h-10 min-w-[200px] bg-background border-2 border-zinc-300 dark:border-primary/20 rounded-full text-[11px] font-black uppercase px-6 shadow-sm">
                             <div className="flex items-center gap-2">
-                                <Building2 className="h-4 w-4 text-primary" />
+                                {/* 🛡️ BRANDING REATIVO: Ícone muda ao selecionar promotora */}
+                                {promoterFilter === 'all' ? <Building2 className="h-4 w-4 text-primary" /> : <BankIcon bankName={promoterFilter} domain={userSettings?.promoterDomains?.[promoterFilter]} className="h-4 w-4" />}
                                 <SelectValue placeholder="TODAS PROMOTORAS" />
                             </div>
                         </SelectTrigger>
                         <SelectContent className="rounded-xl border-2">
-                            <SelectItem value="all" className="font-black text-[10px] uppercase">
-                                <div className="flex items-center gap-2">
-                                    <Check className="h-3 w-3 opacity-0" />
-                                    <span>Todas Promotoras</span>
-                                </div>
-                            </SelectItem>
+                            <SelectItem value="all" className="font-black text-[10px] uppercase">Todas Promotoras</SelectItem>
                             {promotersList.map(p => {
                                 const promoterDomain = userSettings?.promoterDomains?.[p];
                                 return (

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -359,7 +358,8 @@ export function ProposalForm({
     try {
         await updateDoc(doc(firestore, 'loanProposals', proposal.id), {
             history: arrayUnion(entry),
-            statusUpdatedAt: now // ⚡ RESET DE OCIOSIDADE: Atualiza o monitor de esteira parada
+            // 🛡️ RESET DE OCIOSIDADE: Atualiza o monitor de esteira parada
+            statusUpdatedAt: now 
         });
         setNewHistoryEntry('');
         toast({ title: "Histórico Atualizado", description: "O trâmite foi registrado e o cronômetro de ociosidade foi reiniciado." });

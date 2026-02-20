@@ -234,6 +234,9 @@ export default function FinancialPage() {
         headStyles: { fillColor: [40, 74, 127] },
     });
 
+    // 🛡️ HELPER DE PDF: Cálculo dinâmico para evitar crash em seções vazias
+    const getSafeY = () => (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY : 100;
+
     // Ranking de Operadores
     const operatorRanking: Record<string, { count: number; volume: number }> = {};
     reportProposals.forEach(p => {
@@ -247,11 +250,10 @@ export default function FinancialPage() {
         .sort((a, b) => b[1].volume - a[1].volume)
         .map(([name, stats]) => [name, stats.count, formatCurrency(stats.volume)]);
 
-    // 🛡️ GUARD: Só renderiza ranking se houver dados
     if (rankingRows.length > 0) {
-        doc.text("Ranking de Performance (Mês)", 14, (doc as any).lastAutoTable.finalY + 15);
+        doc.text("Ranking de Performance (Mês)", 14, getSafeY() + 15);
         autoTable(doc, {
-            startY: (doc as any).lastAutoTable.finalY + 20,
+            startY: getSafeY() + 20,
             head: [['Operador', 'Qtd. Contratos', 'Volume Bruto']],
             body: rankingRows,
             theme: 'grid',
@@ -282,22 +284,40 @@ export default function FinancialPage() {
         });
     }
 
-    // 🛡️ GUARD: Só renderiza despesas se houver dados
     if (reportExpenses.length > 0) {
-        const lastY = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY : 20;
-        doc.text("Detalhamento de Despesas", 14, lastY + 15);
-        autoTable(doc, {
-            startY: lastY + 20,
-            head: [['Data', 'Descrição', 'Categoria', 'Valor']],
-            body: reportExpenses.map(e => [
-                format(new Date(e.date), 'dd/MM/yyyy'),
-                e.description,
-                e.category,
-                formatCurrency(e.amount)
-            ]),
-            styles: { fontSize: 8 },
-            headStyles: { fillColor: [185, 28, 28] }, 
-        });
+        const lastY = getSafeY();
+        const pageHeight = doc.internal.pageSize.height;
+        
+        if (lastY > pageHeight - 60) {
+            doc.addPage();
+            doc.text("Detalhamento de Despesas", 14, 20);
+            autoTable(doc, {
+                startY: 25,
+                head: [['Data', 'Descrição', 'Categoria', 'Valor']],
+                body: reportExpenses.map(e => [
+                    format(new Date(e.date), 'dd/MM/yyyy'),
+                    e.description,
+                    e.category,
+                    formatCurrency(e.amount)
+                ]),
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [185, 28, 28] }, 
+            });
+        } else {
+            doc.text("Detalhamento de Despesas", 14, lastY + 15);
+            autoTable(doc, {
+                startY: lastY + 20,
+                head: [['Data', 'Descrição', 'Categoria', 'Valor']],
+                body: reportExpenses.map(e => [
+                    format(new Date(e.date), 'dd/MM/yyyy'),
+                    e.description,
+                    e.category,
+                    formatCurrency(e.amount)
+                ]),
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [185, 28, 28] }, 
+            });
+        }
     }
 
     doc.save(`Balanco_${monthYear.replace(/\s+/g, '_')}.pdf`);
@@ -339,7 +359,6 @@ export default function FinancialPage() {
         proposalToUpdate.amountPaid = proposal.commissionValue;
         proposalToUpdate.commissionPaymentDate = new Date().toISOString();
     } else if (newStatus === 'Pendente') {
-        // 🛡️ FIX FINANCEIRO: Reseta valores ao voltar para pendente
         proposalToUpdate.amountPaid = 0;
         proposalToUpdate.commissionPaymentDate = deleteField() as any;
     }

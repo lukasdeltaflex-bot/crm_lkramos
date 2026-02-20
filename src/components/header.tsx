@@ -68,7 +68,8 @@ export function Header({ className }: { className?: string }) {
     <header className={cn("flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6", className)}>
       <SidebarTrigger />
       <div className="flex-1 flex items-center gap-4">
-        <div className="hidden md:block">
+        {/* 🛡️ RESPONSIVIDADE HEADER: Esconde relógio em telas muito pequenas para evitar colisão */}
+        <div className="hidden lg:block">
             <LiveClock />
         </div>
         <div className="flex-1 flex justify-center max-w-md mx-auto">
