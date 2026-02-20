@@ -33,11 +33,14 @@ export default function ProfilePage() {
             return;
         }
 
+        // 🛡️ HIGIENE DE LOGIN: Limpa espaços em branco no e-mail
+        const emailToUpdate = data.email?.trim();
+
         // Check if email is being changed
-        if (data.email && data.email !== user.email) {
+        if (emailToUpdate && emailToUpdate !== user.email) {
             try {
                 // First, try to update the sensitive auth email
-                await updateEmail(user, data.email);
+                await updateEmail(user, emailToUpdate);
             } catch (error: any) {
                 console.error("Error updating email:", error);
                 let description = 'Ocorreu um erro ao tentar atualizar seu e-mail. Nenhuma informação foi salva.';
@@ -56,7 +59,11 @@ export default function ProfilePage() {
         }
         
         try {
-            await setDoc(userProfileDocRef, data, { merge: true });
+            const finalData = {
+                ...data,
+                email: emailToUpdate || user.email
+            };
+            await setDoc(userProfileDocRef, finalData, { merge: true });
             toast({
                 title: 'Perfil Atualizado!',
                 description: 'Suas informações foram salvas com sucesso.',

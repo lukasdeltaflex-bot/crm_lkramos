@@ -186,6 +186,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const filteredData = React.useMemo(() => {
     let list = data;
     
+    // Filtros CUMULATIVOS
     if (statusFilter !== 'Todos') {
         list = list.filter(p => p.status === statusFilter);
     }
@@ -202,8 +203,9 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         const fromDate = appliedDateRange.from;
         const toDate = appliedDateRange.to ? endOfDay(appliedDateRange.to) : endOfDay(appliedDateRange.from);
         list = list.filter(p => {
+            if (!p.dateDigitized) return false;
             const d = new Date(p.dateDigitized);
-            return d >= fromDate && d <= toDate;
+            return isValid(d) && d >= fromDate && d <= toDate;
         });
     }
     
@@ -233,7 +235,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         const customer = row.original.customer;
         const p = row.original;
 
-        // 1. Busca Nuclear (ID ou Proposta Exatos)
+        // Busca Nuclear (ID ou Proposta Exatos)
         if (/^\d+$/.test(searchTerm)) {
             if (p.proposalNumber === searchTerm) return true;
             if (customer?.numericId?.toString() === searchTerm) return true;
@@ -490,7 +492,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                                 ) : (
                                     <TableRow>
                                         <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground font-black uppercase text-[10px] tracking-widest opacity-40">
-                                            Nenhuma proposta encontrada.
+                                            Nenhuma proposta encontrada com os filtros atuais.
                                         </TableCell>
                                     </TableRow>
                                 )}

@@ -103,7 +103,9 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
     return proposals.find(p => {
         if ((p.status === 'Pago' || p.status === 'Saldo Pago') && p.datePaidToClient) {
             try {
-                return differenceInMonths(now, new Date(p.datePaidToClient)) >= 12;
+                const paidDate = new Date(p.datePaidToClient);
+                if (!isValidDate(paidDate)) return false;
+                return differenceInMonths(now, paidDate) >= 12;
             } catch (e) { return false; }
         }
         return false;
@@ -168,18 +170,27 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
     let currentY = getFinalY() + 20;
     
     // 🛡️ ENGENHARIA DE PDF: Garante que o bloco de assinatura não quebre no meio
-    if (currentY + textHeight + 40 > pageHeight) { 
+    if (currentY + textHeight + 50 > pageHeight) { 
         doc.addPage(); 
         currentY = 25;
     }
 
-    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("DECLARAÇÃO E FORMALIZAÇÃO", 14, currentY); 
+    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(0); doc.text("DECLARAÇÃO E FORMALIZAÇÃO", 14, currentY); 
     doc.setFontSize(9); doc.setTextColor(80); doc.setFont("helvetica", "normal");
     doc.text(wrappedDecText, 14, currentY + 10);
     
-    const signatureY = currentY + 10 + textHeight + 20;
-    doc.setDrawColor(150); doc.line(14, signatureY, 90, signatureY); doc.line(110, signatureY, 186, signatureY);
-    doc.setFontSize(8); doc.text("ASSINATURA DO CLIENTE", 52, signatureY + 5, { align: 'center' }); doc.text("AGENTE RESPONSÁVEL", 148, signatureY + 5, { align: 'center' });
+    const signatureY = currentY + 10 + textHeight + 25;
+    
+    // Check again before drawing signatures to be absolutely sure
+    if (signatureY + 10 > pageHeight) {
+        doc.addPage();
+        const newSigY = 40;
+        doc.setDrawColor(150); doc.line(14, newSigY, 90, newSigY); doc.line(110, newSigY, 186, newSigY);
+        doc.setFontSize(8); doc.text("ASSINATURA DO CLIENTE", 52, newSigY + 5, { align: 'center' }); doc.text("AGENTE RESPONSÁVEL", 148, newSigY + 5, { align: 'center' });
+    } else {
+        doc.setDrawColor(150); doc.line(14, signatureY, 90, signatureY); doc.line(110, signatureY, 186, signatureY);
+        doc.setFontSize(8); doc.text("ASSINATURA DO CLIENTE", 52, signatureY + 5, { align: 'center' }); doc.text("AGENTE RESPONSÁVEL", 148, signatureY + 5, { align: 'center' });
+    }
     
     doc.save(`Dossie_${customer.name.replace(/\s+/g, '_')}.pdf`);
     toast({ title: "Dossiê Gerado!" });

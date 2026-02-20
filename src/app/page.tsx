@@ -164,22 +164,23 @@ export default function DashboardPage() {
 
     const safeVal = (v: any) => (v === null || v === undefined || isNaN(v)) ? 0 : Number(v);
 
+    // BLINDAGEM DE DATAS: Filtra registros com datas corrompidas para evitar crash
     const digitizedInPeriod = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
-        return d >= fromDate && d <= effectiveToDate;
+        return isValid(d) && d >= fromDate && d <= effectiveToDate;
     });
 
     const digitizedInPrevPeriod = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
-        return d >= prevMonthStart && d <= prevMonthEnd;
+        return isValid(d) && d >= prevMonthStart && d <= prevMonthEnd;
     });
 
     const digitizedInExtendedPeriod = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         const d = new Date(p.dateDigitized);
-        return d >= prevMonthStart && d <= effectiveToDate;
+        return isValid(d) && d >= prevMonthStart && d <= effectiveToDate;
     });
 
     const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + safeVal(p.grossAmount), 0);
@@ -197,8 +198,9 @@ export default function DashboardPage() {
         const dayEnd = endOfDay(day);
         return proposals
             .filter(p => {
+                if (!p.dateDigitized) return false;
                 const d = new Date(p.dateDigitized);
-                return d >= dayStart && d <= dayEnd;
+                return isValid(d) && d >= dayStart && d <= dayEnd;
             })
             .reduce((sum, p) => sum + safeVal(p.grossAmount), 0);
     });
@@ -214,7 +216,11 @@ export default function DashboardPage() {
             const dayStart = startOfDay(day);
             const dayEnd = endOfDay(day);
             return sourceList
-                .filter(p => p.status === status && new Date(p.dateDigitized) >= dayStart && new Date(p.dateDigitized) <= dayEnd)
+                .filter(p => {
+                    if (!p.dateDigitized) return false;
+                    const d = new Date(p.dateDigitized);
+                    return p.status === status && isValid(d) && d >= dayStart && d <= dayEnd;
+                })
                 .length;
         });
 
@@ -231,14 +237,14 @@ export default function DashboardPage() {
         if (p.status !== 'Pago') return false;
         if (!p.datePaidToClient) return false;
         const d = new Date(p.datePaidToClient);
-        return d >= fromDate && d <= effectiveToDate;
+        return isValid(d) && d >= fromDate && d <= effectiveToDate;
     });
 
     const paidInPrevPeriod = proposals.filter(p => {
         if (p.status !== 'Pago') return false;
         if (!p.datePaidToClient) return false;
         const d = new Date(p.datePaidToClient);
-        return d >= prevMonthStart && d <= prevMonthEnd;
+        return isValid(d) && d >= prevMonthStart && d <= prevMonthEnd;
     });
 
     const totalPaidCurrent = getSum(paidInPeriod);

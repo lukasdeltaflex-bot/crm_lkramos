@@ -184,12 +184,23 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
     let list = data;
 
+    // Filtros CUMULATIVOS
     if (statusFilter === 'Todos') {
         list = list.filter(p => p.status !== 'Reprovado');
-        if (!isSpecificSearch) list = list.filter(p => { const d = p.dateDigitized ? new Date(p.dateDigitized) : null; return d && d >= startOfThisMonth && d <= endOfThisMonth; });
+        if (!isSpecificSearch) {
+            list = list.filter(p => {
+                const d = p.dateDigitized ? new Date(p.dateDigitized) : null;
+                return d && isValid(d) && d >= startOfThisMonth && d <= endOfThisMonth;
+            });
+        }
     } else if (statusFilter === 'Paga') {
         list = list.filter(p => p.commissionStatus === 'Paga');
-        if (!isSpecificSearch) list = list.filter(p => { const d = p.commissionPaymentDate ? new Date(p.commissionPaymentDate) : null; return d && d >= startOfThisMonth && d <= endOfThisMonth; });
+        if (!isSpecificSearch) {
+            list = list.filter(p => {
+                const d = p.commissionPaymentDate ? new Date(p.commissionPaymentDate) : null;
+                return d && isValid(d) && d >= startOfThisMonth && d <= endOfThisMonth;
+            });
+        }
     } else if (statusFilter === 'Pendente' || statusFilter === 'Parcial') {
         list = list.filter(p => p.commissionStatus === statusFilter);
     }
@@ -202,7 +213,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         const toDate = appliedDateRange.to ? endOfDay(appliedDateRange.to) : endOfDay(appliedDateRange.from);
         list = list.filter(p => {
             const d = p.commissionPaymentDate ? new Date(p.commissionPaymentDate) : (p.dateDigitized ? new Date(p.dateDigitized) : null);
-            return d && d >= fromDate && d <= toDate;
+            return d && isValid(d) && d >= fromDate && d <= toDate;
         });
     }
 
@@ -412,7 +423,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                                     )
                                 })
                             ) : (
-                                <TableRow><TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground font-black uppercase text-[10px] tracking-widest opacity-40">Sem registros.</TableCell></TableRow>
+                                <TableRow><TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground font-black uppercase text-[10px] tracking-widest opacity-40">Nenhum registro encontrado para os filtros atuais.</TableCell></TableRow>
                             )}
                         </TableBody>
                     </Table>
