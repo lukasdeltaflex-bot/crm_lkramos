@@ -1,3 +1,4 @@
+
 'use client';
 import React from 'react';
 import { useParams } from 'next/navigation';
@@ -576,9 +577,11 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
 
     // Section: Benefits
     if (customer.benefits && customer.benefits.length > 0) {
-        doc.text("BENEFÍCIOS ATIVOS", 14, (doc as any).lastAutoTable.finalY + 15);
+        // 🛡️ BLINDAGEM DE PDF: Garante que a posição Y seja válida antes de renderizar texto
+        const finalY = (doc as any).lastAutoTable?.finalY || 100;
+        doc.text("BENEFÍCIOS ATIVOS", 14, finalY + 15);
         autoTable(doc, {
-            startY: (doc as any).lastAutoTable.finalY + 18,
+            startY: finalY + 18,
             head: [['Número do Benefício', 'Espécie / Categoria']],
             body: customer.benefits.map(b => [b.number, b.species || '-']),
             headStyles: { fillColor: primaryColor, fontSize: 10, fontStyle: 'bold' },
@@ -587,9 +590,11 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
     }
 
     // Section: Proposal History
-    doc.text("HISTÓRICO DE OPERAÇÕES BANCÁRIAS", 14, (doc as any).lastAutoTable.finalY + 15);
+    // 🛡️ BLINDAGEM DE PDF: Recalcula posição Y para histórico
+    const finalYProp = (doc as any).lastAutoTable?.finalY || 150;
+    doc.text("HISTÓRICO DE OPERAÇÕES BANCÁRIAS", 14, finalYProp + 15);
     autoTable(doc, {
-        startY: (doc as any).lastAutoTable.finalY + 18,
+        startY: finalYProp + 18,
         head: [['Nº Proposta', 'Produto', 'Status Final', 'Valor Bruto', 'Data']],
         body: proposals.map(p => [
             p.proposalNumber,
@@ -603,21 +608,21 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
     });
 
     // Final Section: Declaration and Signature
-    const finalY = (doc as any).lastAutoTable.finalY;
+    const lastFinalY = (doc as any).lastAutoTable?.finalY || 200;
     const pageHeight = doc.internal.pageSize.height;
 
     // Check if we need a new page for signatures
-    if (finalY > pageHeight - 80) {
+    if (lastFinalY > pageHeight - 80) {
         doc.addPage();
         doc.setFontSize(14);
         doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
         doc.setFont("helvetica", "bold");
         doc.text("DECLARAÇÃO E FORMALIZAÇÃO", 14, 25);
     } else {
-        doc.text("DECLARAÇÃO E FORMALIZAÇÃO", 14, finalY + 20);
+        doc.text("DECLARAÇÃO E FORMALIZAÇÃO", 14, lastFinalY + 20);
     }
 
-    const startSignatureY = doc.lastAutoTable ? Math.max(finalY + 25, 25) : 50;
+    const startSignatureY = (doc as any).lastAutoTable ? Math.max(lastFinalY + 25, 25) : 50;
     
     doc.setFontSize(9);
     doc.setTextColor(80);

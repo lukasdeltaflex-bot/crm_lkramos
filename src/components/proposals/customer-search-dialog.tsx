@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -12,6 +13,7 @@ import {
 } from '@/components/ui/command';
 import type { Customer } from '@/lib/types';
 import { ScrollArea } from '../ui/scroll-area';
+import { normalizeString } from '@/lib/utils';
 
 interface CustomerSearchDialogProps {
   open: boolean;
@@ -38,20 +40,26 @@ export function CustomerSearchDialog({
             <CommandList>
               <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
               <CommandGroup>
-                {customers.map((customer) => (
-                  <CommandItem
-                    value={`${customer.name} ${customer.cpf}`}
-                    key={customer.id}
-                    onSelect={() => {
-                      onSelectCustomer(customer);
-                    }}
-                  >
-                    <div>
-                      <p>{customer.name}</p>
-                      <p className="text-xs text-muted-foreground">{customer.cpf}</p>
-                    </div>
-                  </CommandItem>
-                ))}
+                {customers.map((customer) => {
+                  // 🛡️ BUSCA NORMALIZADA: Inclui versão numérica do CPF para facilitar localização
+                  const cpfNumeric = customer.cpf?.replace(/\D/g, '') || '';
+                  const searchIndex = normalizeString(`${customer.name} ${customer.cpf} ${cpfNumeric}`);
+                  
+                  return (
+                    <CommandItem
+                      value={searchIndex}
+                      key={customer.id}
+                      onSelect={() => {
+                        onSelectCustomer(customer);
+                      }}
+                    >
+                      <div className="flex flex-col">
+                        <p className="font-bold text-sm uppercase">{customer.name}</p>
+                        <p className="text-xs text-muted-foreground">CPF: {customer.cpf} | ID: {customer.numericId}</p>
+                      </div>
+                    </CommandItem>
+                  );
+                })}
               </CommandGroup>
             </CommandList>
           </ScrollArea>

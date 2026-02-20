@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -407,6 +408,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                         <Input
                                             placeholder="(11) 98765-4321"
                                             {...field}
+                                            // 🛡️ SANITIZAÇÃO ATÔMICA: Garante formatação instantânea
                                             onChange={(e) => form.setValue('phone', handlePhoneMask(e.target.value), { shouldValidate: true })}
                                             maxLength={15}
                                         />
@@ -431,6 +433,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                             placeholder="(11) 98765-4321"
                                             {...field}
                                             value={field.value || ''}
+                                            // 🛡️ SANITIZAÇÃO ATÔMICA: Garante formatação no contato secundário também
                                             onChange={(e) => form.setValue('phone2', handlePhoneMask(e.target.value), { shouldValidate: true })}
                                             maxLength={15}
                                         />

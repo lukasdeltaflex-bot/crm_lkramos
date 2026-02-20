@@ -1,3 +1,4 @@
+
 'use client';
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -14,10 +15,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { ProposalForm } from './proposal-form';
-import type { Proposal, Customer, ProposalStatus, UserSettings } from '@/lib/types';
+import type { Proposal, Customer, ProposalStatus, UserSettings, ProposalHistoryEntry } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, doc, query, where, setDoc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { collection, doc, updateDoc, setDoc, query, where, writeBatch, arrayUnion } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CustomerSearchDialog } from '@/components/proposals/customer-search-dialog';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -154,10 +155,37 @@ function ProposalsPageContent() {
     try {
         const batch = writeBatch(firestore);
         const selectedIds = Object.keys(rowSelection);
+        const now = new Date().toISOString();
+        
         selectedIds.forEach(id => {
+            const proposal = proposals?.find(p => p.id === id);
+            if (!proposal) return;
+
             const docRef = doc(firestore, 'loanProposals', id);
-            batch.update(docRef, { status: newStatus, statusUpdatedAt: new Date().toISOString() });
+            const dataToUpdate: any = { 
+                status: newStatus, 
+                statusUpdatedAt: now 
+            };
+
+            if (newStatus === 'Pago') {
+                dataToUpdate.dateApproved = now;
+                dataToUpdate.datePaidToClient = now;
+                if (!proposal.commissionStatus) dataToUpdate.commissionStatus = 'Pendente';
+            } else if (newStatus === 'Saldo Pago' && proposal.product === 'Portabilidade') {
+                dataToUpdate.debtBalanceArrivalDate = now;
+            }
+
+            const historyEntry: ProposalHistoryEntry = {
+                id: crypto.randomUUID(),
+                date: now,
+                message: `Status alterado em massa para "${newStatus}"`,
+                userName: user.displayName || user.email || 'Sistema'
+            };
+            dataToUpdate.history = arrayUnion(historyEntry);
+
+            batch.update(docRef, dataToUpdate);
         });
+
         await batch.commit();
         toast({ title: 'Status Atualizado em Massa', description: `${selectedCount} propostas alteradas para "${newStatus}".` });
         setRowSelection({});
@@ -214,10 +242,27 @@ function ProposalsPageContent() {
     const proposal = proposals?.find(p => p.id === proposalId);
     if (!proposal || proposal.status === newStatus) return;
 
+    const now = new Date().toISOString();
     const dataToUpdate: any = { 
         status: newStatus,
-        statusUpdatedAt: new Date().toISOString()
+        statusUpdatedAt: now
     };
+
+    if (newStatus === 'Pago') {
+        dataToUpdate.dateApproved = now;
+        dataToUpdate.datePaidToClient = now;
+        if (!proposal.commissionStatus) dataToUpdate.commissionStatus = 'Pendente';
+    } else if (newStatus === 'Saldo Pago' && (productType === 'Portabilidade' || proposal.product === 'Portabilidade')) {
+        dataToUpdate.debtBalanceArrivalDate = now;
+    }
+
+    const historyEntry: ProposalHistoryEntry = {
+        id: crypto.randomUUID(),
+        date: now,
+        message: `Status alterado de "${proposal.status}" para "${newStatus}"`,
+        userName: user.displayName || user.email || 'Sistema'
+    };
+    dataToUpdate.history = arrayUnion(historyEntry);
     
     const docRef = doc(firestore, 'loanProposals', proposalId);
     updateDoc(docRef, dataToUpdate)

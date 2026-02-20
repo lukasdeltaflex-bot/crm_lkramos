@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -245,6 +246,8 @@ export function ProposalForm({
   useEffect(() => {
     if (selectedCustomerFromSearch) {
         setValue('customerId', selectedCustomerFromSearch.id, { shouldValidate: true });
+        // 🛡️ RESET ATÔMICO DE BENEFÍCIO: Limpa valor anterior imediatamente ao trocar cliente
+        setValue('selectedBenefitNumber', '');
         trigger('customerId');
         onCustomerSearchSelectionHandled();
     }
