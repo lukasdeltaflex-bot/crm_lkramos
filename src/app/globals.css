@@ -191,6 +191,23 @@ html, body {
     text-shadow: 0 0 8px hsl(var(--status-color) / 0.5);
 }
 
+/* 🏁 MOTOR DE TEXTURAS GLOBAIS */
+.texture-dots body, .texture-dots {
+  background-image: radial-gradient(hsl(var(--foreground) / 0.05) 1px, transparent 1px) !important;
+  background-size: 20px 20px !important;
+}
+
+.texture-grid body, .texture-grid {
+  background-image: 
+    linear-gradient(to right, hsl(var(--foreground) / 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--foreground) / 0.03) 1px, transparent 1px) !important;
+  background-size: 30px 30px !important;
+}
+
+.texture-lines body, .texture-lines {
+  background-image: repeating-linear-gradient(0deg, hsl(var(--foreground) / 0.02), hsl(var(--foreground) / 0.02) 1px, transparent 1px, transparent 20px) !important;
+}
+
 @layer base {
   * { @apply border-border; }
   body { @apply bg-background text-foreground antialiased transition-colors duration-500; }
