@@ -58,8 +58,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Filter, X, Search, Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Filter, X, Search, Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import type { ProposalStatus, UserSettings } from '@/lib/types';
 import { DraggableHeader } from './columns';
 import type { ProposalWithCustomer } from './page';
@@ -186,7 +186,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const selectedRows = table.getFilteredSelectedRowModel().rows;
   const allFilteredRows = table.getFilteredRowModel().rows;
   
-  // Lógica Inteligente: Se houver seleção, mostra o total da seleção. Se não, mostra o total da lista filtrada.
+  // Totais Inteligentes: Se houver seleção, mostra o total da seleção. Se não, mostra o total da lista filtrada.
   const displayRows = selectedRows.length > 0 ? selectedRows : allFilteredRows;
 
   const totalGross = React.useMemo(() => 
@@ -300,7 +300,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="h-11 rounded-full px-6 font-black border-2 border-zinc-300 dark:border-primary/20 bg-background shadow-md gap-2 text-xs uppercase tracking-widest">
-                            Colunas <ChevronDown className="h-4 w-4" />
+                            Colunas <ChevronDown className="h-4 w-4 opacity-50" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56 shadow-2xl border-2">

@@ -47,6 +47,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
 import { X, Filter, Search, Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
 import { cn, cleanBankName } from '@/lib/utils';
 import type { Proposal, Customer, UserSettings } from '@/lib/types';

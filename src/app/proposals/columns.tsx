@@ -136,7 +136,7 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
                         </div>
                     )}
                     <div className={cn(
-                        "overflow-hidden font-black text-xs uppercase tracking-wider text-foreground leading-tight flex items-center gap-1",
+                        "overflow-hidden font-black text-[12px] uppercase tracking-wider text-foreground leading-tight flex items-center gap-1",
                         isActions && "text-right pr-2",
                         isSelect && "justify-center w-full pr-0"
                     )}>
@@ -240,7 +240,7 @@ export const getColumns = (
         const hasWhatsApp = customer?.phone && isWhatsApp(customer.phone);
         return (
             <div className="flex items-center gap-2 font-black text-primary uppercase text-sm tracking-tight w-full">
-                <span className="truncate flex-1">{customer?.name || '---'}</span>
+                <span className="truncate flex-1 block w-full">{customer?.name || '---'}</span>
                 {hasWhatsApp && (
                     <a 
                         href={getWhatsAppUrl(customer.phone)} 
@@ -299,7 +299,7 @@ export const getColumns = (
         return (
             <div className="flex items-center gap-2 w-full">
                 <BankIcon bankName={bankRaw} domain={customDomain} showLogo={showLogos} />
-                <span className="truncate text-sm font-bold text-foreground/90 flex-1">{cleanBankName(bankRaw)}</span>
+                <span className="truncate text-sm font-bold text-foreground/90 flex-1 block w-full">{cleanBankName(bankRaw)}</span>
             </div>
         )
     },
@@ -325,7 +325,7 @@ export const getColumns = (
     id: 'Operador',
     accessorKey: 'operator',
     header: 'Operador',
-    cell: ({ row }) => <span className="text-sm font-bold text-foreground/70 w-full truncate">{row.original.operator || '-'}</span>,
+    cell: ({ row }) => <span className="text-sm font-bold text-foreground/70 w-full truncate block">{row.original.operator || '-'}</span>,
     size: 150,
   },
   {

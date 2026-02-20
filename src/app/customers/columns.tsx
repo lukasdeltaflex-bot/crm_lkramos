@@ -1,4 +1,3 @@
-
 'use client';
 
 import { ColumnDef, Header, flexRender } from '@tanstack/react-table';
@@ -98,7 +97,7 @@ export const DraggableHeader = ({ header }: { header: Header<Customer, unknown> 
                     )}
 
                     <div className={cn(
-                        "overflow-hidden font-black text-xs uppercase tracking-widest text-foreground leading-tight flex items-center gap-1",
+                        "overflow-hidden font-black text-[12px] uppercase tracking-widest text-foreground leading-tight flex items-center gap-1",
                         isActions && "text-right pr-2",
                         isSelect && "justify-center w-full pr-0"
                     )}>
@@ -300,7 +299,7 @@ export const getColumns = (
     id: 'Observações',
     accessorFn: (row) => row.observations,
     header: 'Observações',
-    cell: ({ row }) => <div className="truncate w-full text-muted-foreground italic text-xs">{row.original.observations}</div>,
+    cell: ({ row }) => <div className="truncate w-full text-muted-foreground italic text-xs block">{row.original.observations}</div>,
     size: 200,
   },
   {
