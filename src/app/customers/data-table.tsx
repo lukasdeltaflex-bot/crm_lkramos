@@ -79,15 +79,13 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   rowSelection,
   setRowSelection,
 }, ref) => {
+  const tableContainerRef = React.useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'ID', desc: true }]);
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [isClient, setIsClient] = React.useState(false);
 
-  // 💾 PERSISTÊNCIA BLINDADA: Linhas por Página
   const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
-
-  // 💾 PERSISTÊNCIA BLINDADA: Visibilidade das Colunas
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
     'Telefone 2': true,
     'Cidade': true,
@@ -95,11 +93,9 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     'Observações': false,
   });
 
-  // 💾 PERSISTÊNCIA BLINDADA: Ordem das Colunas
   const initialColumns = React.useMemo(() => columns.map(c => c.id!).filter(Boolean), [columns]);
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>([...initialColumns]);
 
-  // 🛡️ HIDRATAÇÃO SEGURA: Carrega preferências apenas no cliente
   React.useEffect(() => {
     setIsClient(true);
     try {
@@ -122,6 +118,12 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
       if (typeof window !== 'undefined') {
         try { localStorage.setItem('lk-customers-pageSize', String(next.pageSize)); } catch(e) {}
       }
+      
+      // 🛡️ UX REFINEMENT: Volta o scroll para o topo da tabela ao mudar de página
+      if (tableContainerRef.current) {
+          tableContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      
       return next;
     });
   };
@@ -178,13 +180,11 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
       columnSizing,
       pagination,
     },
-    // 🛡️ BUSCA NUCLEAR V2: Prioridade Zero para ID Numérico Exato
     globalFilterFn: (row, columnId, filterValue) => {
         const searchTerm = String(filterValue ?? '').trim();
         if (!searchTerm) return true;
         const customer = row.original;
 
-        // PRIORIDADE ZERO: Se for apenas número, busca exclusivamente pelo Match Exato do ID
         if (/^\d+$/.test(searchTerm)) {
             return customer.numericId.toString() === searchTerm;
         }
@@ -210,7 +210,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
 
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
-      <Card className="rounded-[1.5rem] border-2 border-zinc-200 dark:border-primary/30 bg-card shadow-xl overflow-hidden p-1">
+      <Card ref={tableContainerRef} className="rounded-[1.5rem] border-2 border-zinc-200 dark:border-primary/30 bg-card shadow-xl overflow-hidden p-1">
         <div className="py-2">
           <div className="flex items-center justify-between px-4 py-2 gap-4">
             <div className='relative w-full max-w-md group'>

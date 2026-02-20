@@ -90,6 +90,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   onBulkStatusChange,
   userSettings,
 }, ref) => {
+  const tableContainerRef = React.useRef<HTMLDivElement>(null);
   const { statusColors } = useTheme();
   const [statusFilter, setStatusFilter] = React.useState('Todos');
   const [globalFilter, setGlobalFilter] = React.useState('');
@@ -102,7 +103,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'Data Digitação', desc: true }]);
   const [isClient, setIsClient] = React.useState(false);
 
-  // 💾 PERSISTÊNCIA BLINDADA
   const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
     'Operador': false,
@@ -113,7 +113,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const initialColumns = React.useMemo(() => columns.map(c => c.id!).filter(Boolean), [columns]);
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>([...initialColumns]);
 
-  // 🛡️ HIDRATAÇÃO SEGURA: Carrega preferências
   React.useEffect(() => {
     setIsClient(true);
     try {
@@ -136,6 +135,12 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
       if (typeof window !== 'undefined') {
         try { localStorage.setItem('lk-proposals-pageSize', String(next.pageSize)); } catch(e) {}
       }
+      
+      // 🛡️ UX REFINEMENT: Volta o scroll para o topo da tabela ao mudar de página
+      if (tableContainerRef.current) {
+          tableContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      
       return next;
     });
   };
@@ -189,7 +194,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     if (globalFilter) {
         const searchTerm = String(globalFilter).trim();
         
-        // 🛡️ BUSCA NUCLEAR V2: Prioridade Zero para ID ou Proposta Exatos
         if (/^\d+$/.test(searchTerm)) {
             return list.filter(p => 
                 p.customer?.numericId.toString() === searchTerm || 
@@ -411,7 +415,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                 </DropdownMenu>
             </div>
 
-            <Card className="proposals-table border-2 border-zinc-300 dark:border-primary/30 shadow-xl rounded-xl overflow-hidden bg-card p-1">
+            <Card ref={tableContainerRef} className="proposals-table border-2 border-zinc-300 dark:border-primary/30 shadow-xl rounded-xl overflow-hidden bg-card p-1">
                 <div className="p-0">
                     <div className="overflow-x-auto">
                         <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>

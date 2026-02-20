@@ -1,4 +1,3 @@
-
 'use client';
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -18,7 +17,7 @@ import { ProposalForm } from './proposal-form';
 import type { Proposal, Customer, ProposalStatus, UserSettings, ProposalHistoryEntry } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, doc, updateDoc, setDoc, query, where, writeBatch, arrayUnion } from 'firebase/firestore';
+import { collection, doc, updateDoc, setDoc, query, where, writeBatch, arrayUnion, deleteDoc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CustomerSearchDialog } from '@/components/proposals/customer-search-dialog';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -281,17 +280,25 @@ function ProposalsPageContent() {
   const handleFormSubmit = async (data: any) => {
     if (!firestore || !user) return;
     setIsSaving(true);
-    try {
-        const docRef = sheetMode === 'edit' && selectedProposal ? doc(firestore, 'loanProposals', selectedProposal.id) : doc(collection(firestore, 'loanProposals'));
-        const finalData = { ...data, id: docRef.id, ownerId: user.uid };
-        setDoc(docRef, finalData, { merge: true })
-            .then(() => {
-                toast({ title: 'Proposta Salva!' });
-                setIsDialogOpen(false);
-            });
-    } finally {
-        setIsSaving(false);
-    }
+    const docRef = sheetMode === 'edit' && selectedProposal ? doc(firestore, 'loanProposals', selectedProposal.id) : doc(collection(firestore, 'loanProposals'));
+    const finalData = { ...data, id: docRef.id, ownerId: user.uid };
+    
+    setDoc(docRef, finalData, { merge: true })
+        .then(() => {
+            toast({ title: 'Proposta Salva!' });
+            setIsDialogOpen(false);
+        })
+        .catch(async (error) => {
+            if (error.code === 'permission-denied') {
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: docRef.path,
+                    operation: 'write',
+                    requestResourceData: finalData
+                }));
+            }
+            toast({ variant: 'destructive', title: 'Erro ao salvar proposta' });
+        })
+        .finally(() => setIsSaving(false));
   };
 
   const columns = React.useMemo(() => getColumns(
