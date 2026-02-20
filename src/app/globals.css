@@ -166,7 +166,7 @@ html, body, *, [data-sidebar="inset"] {
 .aura-active .bg-background,
 .aura-active [data-sidebar="inset"] {
     background-color: hsla(var(--background) / 0.70) !important;
-    backdrop-blur: blur(16px) !important;
+    backdrop-filter: blur(16px) !important;
 }
 
 .style-moderno { @apply border-2 border-border shadow-sm; }

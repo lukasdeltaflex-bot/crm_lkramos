@@ -17,3 +17,4 @@ import '@/ai/flows/partial-commission-reminder-flow.ts';
 import '@/ai/flows/send-summary-email-flow.ts';
 import '@/ai/flows/generate-birthday-message-flow.ts';
 import '@/ai/flows/get-bank-domain-flow.ts';
+import '@/ai/flows/generate-sales-pitch-flow.ts';

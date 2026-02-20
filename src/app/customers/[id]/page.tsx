@@ -8,16 +8,16 @@ import { doc, collection, query, where, updateDoc } from 'firebase/firestore';
 import type { Customer, Proposal, Attachment, ProposalHistoryEntry } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Phone, Mail, Calendar, FileText, CircleDollarSign, BadgePercent, MapPin, Hash, Copy, Printer, FileBadge, FolderLock, Sparkles, UserRound, UserX, UserCheck, History, MessageSquareQuote } from 'lucide-react';
+import { User, Phone, Mail, Calendar, FileText, CircleDollarSign, BadgePercent, MapPin, Hash, Copy, Printer, FileBadge, FolderLock, Sparkles, UserRound, UserX, UserCheck, History, MessageSquareQuote, Zap, Loader2, MessageSquareText } from 'lucide-react';
 import { format, parse, differenceInMonths, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { StatsCard } from '@/components/dashboard/stats-card';
-import { formatCurrency, getAge, cn } from '@/lib/utils';
+import { formatCurrency, getAge, cn, getWhatsAppUrl } from '@/lib/utils';
 import { SimpleProposalsTable } from '@/components/customers/simple-proposals-table';
 import { CustomerAiSummary } from '@/components/customers/customer-ai-summary';
-import { isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
+import { isWhatsApp } from '@/lib/utils';
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
 import { toast } from '@/hooks/use-toast';
 import { CustomerAttachmentUploader } from '@/components/customers/customer-attachment-uploader';
@@ -30,7 +30,9 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogFooter,
 } from '@/components/ui/dialog';
+import { generateSalesPitch } from '@/ai/flows/generate-sales-pitch-flow';
 
 
 const CopyButton = ({ text, label }: { text: string | undefined; label: string }) => {
@@ -55,11 +57,13 @@ const CopyButton = ({ text, label }: { text: string | undefined; label: string }
 const CustomerInfoCard = ({ 
     customer, 
     onExportDossier, 
-    onToggleStatus 
+    onToggleStatus,
+    onGeneratePitch
 }: { 
     customer: Customer; 
     onExportDossier: () => void;
     onToggleStatus: () => void;
+    onGeneratePitch: () => void;
 }) => {
     const [age, setAge] = React.useState<number | null>(null);
 
@@ -93,6 +97,15 @@ const CustomerInfoCard = ({
                         </div>
                     </div>
                     <div className="flex items-center gap-2 print:hidden">
+                        <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="h-10 px-4 rounded-full font-bold bg-orange-500/10 border-orange-500/20 text-orange-600 hover:bg-orange-500/20"
+                            onClick={onGeneratePitch}
+                        >
+                            <Zap className="mr-2 h-4 w-4 fill-current" />
+                            Smart Pitch IA
+                        </Button>
                         <Button 
                             variant="outline" 
                             size="sm"
@@ -412,6 +425,9 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
   const { user } = useUser();
 
   const [dialogData, setDialogData] = React.useState<{ title: string; proposals: Proposal[] } | null>(null);
+  const [isPitchModalOpen, setIsPitchModalOpen] = React.useState(false);
+  const [isGeneratingPitch, setIsGeneratingPitch] = React.useState(false);
+  const [generatedPitch, setGeneratedPitch] = React.useState('');
 
   const customerDocRef = useMemoFirebase(() => {
     if (!firestore || !customerId) return null;
@@ -455,6 +471,41 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
     } catch (e) {
         toast({ variant: "destructive", title: "Erro ao atualizar status", description: "Tente novamente." });
     }
+  };
+
+  const handleGeneratePitch = async () => {
+    if (!customer) return;
+    
+    setIsGeneratingPitch(true);
+    setGeneratedPitch('');
+    setIsPitchModalOpen(true);
+
+    try {
+        const lastProp = proposals && proposals.length > 0 ? proposals[0] : undefined;
+        const totalVol = proposals?.reduce((sum, p) => sum + (p.grossAmount || 0), 0) || 0;
+
+        const { pitch } = await generateSalesPitch({
+            customerName: customer.name,
+            lastProduct: lastProp?.product,
+            totalVolume: totalVol,
+            observations: customer.observations
+        });
+
+        setGeneratedPitch(pitch);
+    } catch (e) {
+        toast({ variant: 'destructive', title: 'Erro ao gerar pitch' });
+        setIsPitchModalOpen(false);
+    } finally {
+        setIsGeneratingPitch(false);
+    }
+  };
+
+  const handleSendToWhatsApp = () => {
+    if (!customer || !generatedPitch) return;
+    const url = getWhatsAppUrl(customer.phone);
+    const encodedMsg = encodeURIComponent(generatedPitch);
+    window.open(`${url}&text=${encodedMsg}`, '_blank');
+    setIsPitchModalOpen(false);
   };
 
   const handleDocumentsChange = async (docs: Attachment[]) => {
@@ -660,6 +711,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
             customer={customer} 
             onExportDossier={handleExportDossier} 
             onToggleStatus={handleToggleStatus}
+            onGeneratePitch={handleGeneratePitch}
         />
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -712,6 +764,45 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
             <div className="flex-1 overflow-y-auto p-6">
                 <ProposalsStatusTable proposals={dialogData?.proposals || []} customers={customer ? [customer] : []} />
             </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isPitchModalOpen} onOpenChange={setIsPitchModalOpen}>
+        <DialogContent className="max-w-md rounded-[2rem]">
+            <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-xl font-black uppercase tracking-tight">
+                    <MessageSquareText className="h-5 w-5 text-orange-500" />
+                    Smart Pitch IA
+                </DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+                {isGeneratingPitch ? (
+                    <div className="flex flex-col items-center justify-center py-10 gap-4">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <p className="text-xs text-muted-foreground animate-pulse font-black uppercase tracking-widest text-center">Analizando perfil e criando script magnético...</p>
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        <textarea 
+                            className="w-full min-h-[200px] p-4 rounded-2xl border-2 bg-muted/30 text-sm focus:ring-2 focus:ring-primary outline-none font-medium leading-relaxed"
+                            value={generatedPitch}
+                            onChange={(e) => setGeneratedPitch(e.target.value)}
+                        />
+                        <p className="text-[10px] text-muted-foreground text-center font-bold uppercase tracking-tighter">Você pode editar o texto antes de enviar.</p>
+                    </div>
+                )}
+            </div>
+            <DialogFooter className="flex gap-2">
+                <Button variant="ghost" className="rounded-full font-bold" onClick={() => setIsPitchModalOpen(false)}>Cancelar</Button>
+                <Button 
+                    className="flex-1 rounded-full font-bold bg-[#25D366] hover:bg-[#128C7E] text-white gap-2 shadow-lg shadow-[#25D366]/20" 
+                    onClick={handleSendToWhatsApp}
+                    disabled={isGeneratingPitch || !generatedPitch}
+                >
+                    <WhatsAppIcon className="h-4 w-4" />
+                    Enviar para WhatsApp
+                </Button>
+            </DialogFooter>
         </DialogContent>
       </Dialog>
     </AppLayout>
