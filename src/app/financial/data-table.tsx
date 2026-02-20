@@ -27,7 +27,7 @@ import {
     DragEndEvent,
 } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
-import { format, parse, isValid, startOfDay, endOfDay, subDays, startOfMonth } from 'date-fns';
+import { format, parse, isValid, startOfDay, endOfDay, subDays, startOfMonth, endOfMonth } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 
 import {
@@ -185,12 +185,42 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   };
 
   const filteredData = React.useMemo(() => {
+    const today = new Date();
+    const startOfThisMonth = startOfMonth(today);
+    const endOfThisMonth = endOfMonth(today);
+    
+    // 🛡️ INTELIGÊNCIA DE PESQUISA: Identifica se o usuário está buscando algo específico
+    const isSpecificSearch = !!globalFilter.trim() || !!appliedDateRange;
+
     let list = data;
 
-    if (statusFilter !== 'Todos') {
+    // 1. 🔍 LÓGICA DE FILTROS SOLICITADA (TODOS / PAGAS / PENDENTES / PARCIAIS)
+    if (statusFilter === 'Todos') {
+        // "SOMENTE PROPOSTA DO MÊS VIGENTE (MENOS AS REPROVADAS). OUTROS MESES SÓ SE PESQUISAR"
+        list = list.filter(p => p.status !== 'Reprovado');
+        
+        if (!isSpecificSearch) {
+            list = list.filter(p => {
+                const d = p.dateDigitized ? new Date(p.dateDigitized) : null;
+                return d && d >= startOfThisMonth && d <= endOfThisMonth;
+            });
+        }
+    } else if (statusFilter === 'Paga') {
+        // "SOMENTE PROPOSTA DO MÊS VIGENTE. OUTROS MESES SÓ SE PESQUISAR"
+        list = list.filter(p => p.commissionStatus === 'Paga');
+        
+        if (!isSpecificSearch) {
+            list = list.filter(p => {
+                const d = p.commissionPaymentDate ? new Date(p.commissionPaymentDate) : null;
+                return d && d >= startOfThisMonth && d <= endOfThisMonth;
+            });
+        }
+    } else if (statusFilter === 'Pendente' || statusFilter === 'Parcial') {
+        // "PODE APARECER PROPOSTAS DE QUALQUER MES"
         list = list.filter(p => p.commissionStatus === statusFilter);
     }
 
+    // 2. 🏦 FILTROS DE ENTIDADE
     if (bankFilter !== 'all') {
         list = list.filter(p => p.bank === bankFilter);
     }
@@ -199,19 +229,21 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         list = list.filter(p => p.promoter === promoterFilter);
     }
 
+    // 3. 📅 FILTRO DE DATA EXPLÍCITO (SOBREPÕE O FILTRO VIGENTE)
     if (appliedDateRange && appliedDateRange.from) {
         const fromDate = appliedDateRange.from;
         const toDate = appliedDateRange.to ? endOfDay(appliedDateRange.to) : endOfDay(appliedDateRange.from);
         list = list.filter(p => {
-            const d = p.commissionPaymentDate ? new Date(p.commissionPaymentDate) : null;
+            const d = p.commissionPaymentDate ? new Date(p.commissionPaymentDate) : (p.dateDigitized ? new Date(p.dateDigitized) : null);
             return d && d >= fromDate && d <= toDate;
         });
     }
 
+    // 4. ☢️ BUSCA NUCLEAR (ID, NOME, CPF)
     if (globalFilter) {
         const searchTerm = String(globalFilter).trim();
         
-        // 🛡️ BUSCA NUCLEAR: Prioridade para ID Numérico do Cliente
+        // PRIORIDADE ZERO: Busca exclusiva pelo ID
         if (/^\d+$/.test(searchTerm)) {
             return list.filter(p => p.customer?.numericId.toString() === searchTerm);
         }
