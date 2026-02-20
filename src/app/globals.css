@@ -79,7 +79,7 @@
   }
 }
 
-/* 🎨 MOTOR DE TIPOGRAFIA LK RAMOS */
+/* 🎨 MOTOR DE TIPOGRAFIA LK RAMOS - CLASSES UNIVERSAIS */
 .font-moderno { --font-main: 'Inter', sans-serif; }
 .font-classico { --font-main: 'Playfair Display', serif; }
 .font-mono { --font-main: 'JetBrains Mono', monospace; }
@@ -100,6 +100,35 @@
 .font-corp { --font-main: 'Manrope', sans-serif; }
 .font-sharp { --font-main: 'Roboto Condensed', sans-serif; }
 .font-script { --font-main: 'Cormorant Garamond', serif; }
+
+/* 📏 MOTOR DE ARREDONDAMENTO - CLASSES UNIVERSAIS */
+.radius-reto { --radius: 0rem; }
+.radius-extra-discreto { --radius: 0.125rem; }
+.radius-discreto { --radius: 0.25rem; }
+.radius-suave { --radius: 0.5rem; }
+.radius-moderno { --radius: 1rem; }
+.radius-amigavel { --radius: 1.5rem; }
+.radius-organico { --radius: 2rem; }
+.radius-capsula { --radius: 9999px; }
+
+/* 🌌 MOTOR ATMOSFÉRICO (AURA) - CORES REAIS E VIBRANTES */
+.aura-nebula { background: radial-gradient(circle at 50% 50%, hsla(280, 80%, 85%, 0.8), hsla(260, 80%, 90%, 0.5), transparent 80%) !important; }
+.aura-aurora { background: linear-gradient(135deg, hsla(160, 80%, 85%, 0.7) 0%, hsla(200, 80%, 85%, 0.7) 50%, hsla(240, 80%, 90%, 0.5) 100%) !important; }
+.aura-sunset { background: radial-gradient(circle at 0% 0%, hsla(20, 100%, 85%, 0.8), transparent 60%), radial-gradient(circle at 100% 100%, hsla(340, 100%, 85%, 0.8), transparent 60%) !important; }
+.aura-ocean { background: linear-gradient(to bottom, hsla(210, 100%, 90%, 0.8), hsla(190, 80%, 85%, 0.6)) !important; }
+.aura-lavender { background: radial-gradient(circle at 50% 0%, hsla(260, 70%, 88%, 0.8), transparent 80%) !important; }
+.aura-mint { background: radial-gradient(circle at 100% 0%, hsla(150, 60%, 88%, 0.8), transparent 70%) !important; }
+.aura-pearl { background: linear-gradient(45deg, hsla(0, 0%, 92%, 0.9) 0%, hsla(240, 20% ,92%, 0.9) 100%) !important; }
+.aura-desert { background: radial-gradient(circle at 50% 100%, hsla(40, 80%, 85%, 0.8), transparent 70%) !important; }
+
+.dark .aura-nebula { background: radial-gradient(circle at 50% 50%, hsla(280, 50%, 15%, 0.8), transparent 70%) !important; }
+.dark .aura-aurora { background: linear-gradient(135deg, hsla(160, 50%, 12%, 0.7) 0%, hsla(200, 50%, 12%, 0.7) 100%) !important; }
+.dark .aura-sunset { background: radial-gradient(circle at 0% 0%, hsla(20, 60%, 15%, 0.8), transparent 60%), radial-gradient(circle at 100% 100%, hsla(340, 60%, 15%, 0.8), transparent 60%) !important; }
+.dark .aura-ocean { background: linear-gradient(to bottom, hsla(210, 60%, 10%, 0.8), hsla(190, 50%, 12%, 0.6)) !important; }
+.dark .aura-lavender { background: radial-gradient(circle at 50% 0%, hsla(260, 50%, 15%, 0.8), transparent 80%) !important; }
+.dark .aura-mint { background: radial-gradient(circle at 100% 0%, hsla(150, 50%, 15%, 0.8), transparent 70%) !important; }
+.dark .aura-pearl { background: linear-gradient(45deg, hsla(0, 0%, 10%, 0.9) 0%, hsla(240, 10% ,12%, 0.9) 100%) !important; }
+.dark .aura-desert { background: radial-gradient(circle at 50% 100%, hsla(40, 50%, 15%, 0.8), transparent 70%) !important; }
 
 /* 🛡️ ESTILOS DA BARRA LATERAL */
 .sidebar-dark {
@@ -189,25 +218,6 @@
 .dark .customers-table tr td:first-child {
     background-color: #050505 !important;
 }
-
-/* 🌌 MOTOR ATMOSFÉRICO (AURA) - CORES REAIS E VIBRANTES */
-.aura-nebula { background: radial-gradient(circle at 50% 50%, hsla(280, 80%, 90%, 0.6), hsla(260, 80%, 95%, 0.3), transparent 80%) !important; }
-.aura-aurora { background: linear-gradient(135deg, hsla(160, 80%, 90%, 0.5) 0%, hsla(200, 80%, 90%, 0.5) 50%, hsla(240, 80%, 95%, 0.3) 100%) !important; }
-.aura-sunset { background: radial-gradient(circle at 0% 0%, hsla(20, 100%, 90%, 0.6), transparent 60%), radial-gradient(circle at 100% 100%, hsla(340, 100%, 90%, 0.6), transparent 60%) !important; }
-.aura-ocean { background: linear-gradient(to bottom, hsla(210, 100%, 95%, 0.7), hsla(190, 80%, 90%, 0.5)) !important; }
-.aura-lavender { background: radial-gradient(circle at 50% 0%, hsla(260, 70%, 92%, 0.7), transparent 80%) !important; }
-.aura-mint { background: radial-gradient(circle at 100% 0%, hsla(150, 60%, 92%, 0.6), transparent 70%) !important; }
-.aura-pearl { background: linear-gradient(45deg, hsla(0, 0%, 95%, 0.8) 0%, hsla(240, 20% ,95%, 0.8) 100%) !important; }
-.aura-desert { background: radial-gradient(circle at 50% 100%, hsla(40, 80%, 90%, 0.6), transparent 70%) !important; }
-
-.dark .aura-nebula { background: radial-gradient(circle at 50% 50%, hsla(280, 50%, 15%, 0.6), transparent 70%) !important; }
-.dark .aura-aurora { background: linear-gradient(135deg, hsla(160, 50%, 12%, 0.5) 0%, hsla(200, 50%, 12%, 0.5) 100%) !important; }
-.dark .aura-sunset { background: radial-gradient(circle at 0% 0%, hsla(20, 60%, 15%, 0.6), transparent 60%), radial-gradient(circle at 100% 100%, hsla(340, 60%, 15%, 0.6), transparent 60%) !important; }
-.dark .aura-ocean { background: linear-gradient(to bottom, hsla(210, 60%, 10%, 0.7), hsla(190, 50%, 12%, 0.5)) !important; }
-.dark .aura-lavender { background: radial-gradient(circle at 50% 0%, hsla(260, 50%, 15%, 0.7), transparent 80%) !important; }
-.dark .aura-mint { background: radial-gradient(circle at 100% 0%, hsla(150, 50%, 15%, 0.6), transparent 70%) !important; }
-.dark .aura-pearl { background: linear-gradient(45deg, hsla(0, 0%, 10%, 0.8) 0%, hsla(240, 10% ,12%, 0.8) 100%) !important; }
-.dark .aura-desert { background: radial-gradient(circle at 50% 100%, hsla(40, 50%, 15%, 0.6), transparent 70%) !important; }
 
 @keyframes alert-pulse {
   0% { transform: scale(1); opacity: 1; }

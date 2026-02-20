@@ -366,7 +366,7 @@ export default function SettingsPage() {
             </TabsList>
 
             <TabsContent value="appearance">
-                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative items-start">
+                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start min-h-[2000px]">
                     <div className="lg:col-span-2 space-y-8">
                         <Card className="border-border/50 shadow-sm">
                             <CardHeader className="flex flex-row items-center justify-between">
@@ -392,17 +392,16 @@ export default function SettingsPage() {
                                 <Separator />
 
                                 <div className="space-y-4">
-                                    <div className="flex items-center gap-2"><CloudSun className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Fundos Atmosféricos (Aura) - Coleção Clara & Equilibrada</h4></div>
+                                    <div className="flex items-center gap-2"><CloudSun className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Fundos Atmosféricos (Aura)</h4></div>
                                     <RadioGroup value={preview.auraStyle} onValueChange={(val) => setPreview(p => ({ ...p, auraStyle: val }))} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                                         {Object.keys(auraLabels).map((a) => (
-                                            <Label key={a} htmlFor={`aura-${a}`} className={cn("flex flex-col items-center justify-center rounded-xl border-2 p-4 cursor-pointer text-center gap-2 transition-all", preview.auraStyle === a ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-muted hover:border-primary/30")}>
+                                            <Label key={a} htmlFor={`aura-${a}`} className={cn("flex flex-col items-center justify-center rounded-xl border-2 p-4 cursor-pointer text-center gap-2 transition-all", preview.auraStyle === a ? "border-primary bg-primary/10 ring-2 ring-primary/20" : "border-muted hover:border-primary/30")}>
                                                 <RadioGroupItem value={a} id={`aura-${a}`} className="sr-only" />
                                                 <div className={cn("h-10 w-10 rounded-full border shadow-inner", a === 'limpo' ? 'bg-background' : `aura-${a}`)} />
                                                 <span className="text-[10px] font-black uppercase tracking-tighter leading-tight">{auraLabels[a]}</span>
                                             </Label>
                                         ))}
                                     </RadioGroup>
-                                    <p className="text-[10px] text-muted-foreground text-center font-bold uppercase tracking-widest animate-pulse mt-2">✨ Atmosferas otimizadas para visibilidade total em qualquer tema.</p>
                                 </div>
 
                                 <Separator />
@@ -581,8 +580,8 @@ export default function SettingsPage() {
                         </Card>
                     </div>
 
-                    <div className="lg:col-span-1 h-full min-h-[600px]">
-                        <div className="sticky top-20 z-30">
+                    <div className="lg:col-span-1 h-full">
+                        <div className="sticky top-24 z-30 transition-all duration-500">
                             <Card className="border-primary/20 bg-primary/[0.02] shadow-xl overflow-hidden">
                                 <CardHeader className="bg-primary/5 border-b border-primary/10">
                                     <CardTitle className="text-lg font-bold flex items-center gap-2">
@@ -594,7 +593,7 @@ export default function SettingsPage() {
                                 <CardContent className="p-0">
                                     <div 
                                         className={cn(
-                                            "p-8 min-h-[500px] flex flex-col gap-8 items-center justify-center transition-all",
+                                            "p-8 min-h-[500px] flex flex-col gap-8 items-center justify-center transition-all duration-500",
                                             `texture-${preview.backgroundTexture}`,
                                             `radius-${preview.radius}`,
                                             `font-${preview.fontStyle}`,
@@ -653,7 +652,10 @@ export default function SettingsPage() {
                                             <div className="flex justify-center">
                                                 <Button 
                                                     variant="outline" 
-                                                    className="status-tab font-black uppercase text-[10px] tracking-widest px-6 h-9 border-2"
+                                                    className={cn(
+                                                        "status-tab font-black uppercase text-[10px] tracking-widest px-6 h-9 border-2",
+                                                        `radius-${preview.radius}`
+                                                    )}
                                                     data-state="active"
                                                     style={{ '--status-color': preview.statusColors[previewStatus] || '217 33% 25%' } as any}
                                                 >
@@ -700,8 +702,8 @@ export default function SettingsPage() {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="p-4 bg-muted/30 border-t border-primary/10">
-                                        <p className="text-[10px] font-black uppercase text-center text-primary tracking-widest animate-pulse">Laboratório de Visualização Ativo</p>
+                                    <div className="p-4 bg-muted/30 border-t border-primary/10 text-center">
+                                        <p className="text-[10px] font-black uppercase text-primary tracking-widest animate-pulse">Laboratório LK RAMOS</p>
                                     </div>
                                 </CardContent>
                             </Card>
