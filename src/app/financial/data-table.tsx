@@ -61,7 +61,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { X, Filter, Search, Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Landmark, Building2 } from 'lucide-react';
-import { cn, cleanBankName, normalizeString } from '@/lib/utils';
+import { cn, cleanBankName, normalizeString, formatCurrency } from '@/lib/utils';
 import type { Proposal, Customer, UserSettings } from '@/lib/types';
 import { FinancialSummary } from '@/components/financial/financial-summary';
 import { DraggableHeader } from './columns';
@@ -115,7 +115,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     'Operador': true
   });
   
-  // 🛡️ SINCRONIZAÇÃO NUCLEAR: Garante que TODAS as colunas definidas estejam no motor de ordenação
   const initialColumns = React.useMemo(() => columns.map(c => c.id!).filter(Boolean), [columns]);
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>([...initialColumns]);
 
@@ -128,14 +127,14 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         const savedVisibility = localStorage.getItem('lk-financial-visibility');
         if (savedVisibility) setColumnVisibility(JSON.parse(savedVisibility));
 
-        // 🛡️ BLINDAGEM DE MEMÓRIA: Crucial para o arraste de colunas novas
+        const savedSizing = localStorage.getItem('lk-financial-sizing');
+        if (savedSizing) setColumnSizing(JSON.parse(savedSizing));
+
         const savedOrder = localStorage.getItem('lk-financial-order');
         if (savedOrder) {
             const parsedOrder = JSON.parse(savedOrder) as string[];
-            // Identifica se alguma coluna nova (ex: Operador) não está na memória salva
             const missingColumns = initialColumns.filter(id => !parsedOrder.includes(id));
             if (missingColumns.length > 0) {
-                // Injeta as colunas faltantes antes da coluna de Ações
                 const newOrder = [...parsedOrder];
                 const actionsIdx = newOrder.indexOf('Ações');
                 if (actionsIdx !== -1) {
@@ -168,8 +167,9 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     if (isClient && columnOrder.length > 0) {
       localStorage.setItem('lk-financial-visibility', JSON.stringify(columnVisibility));
       localStorage.setItem('lk-financial-order', JSON.stringify(columnOrder));
+      localStorage.setItem('lk-financial-sizing', JSON.stringify(columnSizing));
     }
-  }, [columnVisibility, columnOrder, isClient]);
+  }, [columnVisibility, columnOrder, columnSizing, isClient]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -255,6 +255,17 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     },
     meta: { isPrivacyMode, userSettings }
   });
+
+  const selectedRows = table.getFilteredSelectedRowModel().rows;
+  const numSelected = selectedRows.length;
+
+  const totalGross = React.useMemo(() => 
+    selectedRows.reduce((acc, row) => acc + (row.original.grossAmount || 0), 0),
+  [selectedRows]);
+
+  const totalCommission = React.useMemo(() => 
+    selectedRows.reduce((acc, row) => acc + (row.original.commissionValue || 0), 0),
+  [selectedRows]);
 
   React.useImperativeHandle(ref, () => ({ table }));
 
@@ -369,7 +380,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                         <TableBody>
                             {table.getRowModel().rows.length > 0 ? (
                                 table.getRowModel().rows.map(row => (
-                                    <TableRow key={row.id} className="transition-colors border-b h-14 hover:bg-primary/[0.03] cursor-pointer" style={row.original.commissionStatus ? { '--status-color': statusColors[row.original.commissionStatus.toUpperCase()] || statusColors[row.original.commissionStatus] } as any : {}} onClick={() => row.toggleSelected()}>
+                                    <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className="transition-colors border-b h-14 hover:bg-primary/[0.03] cursor-pointer" style={row.original.commissionStatus ? { '--status-color': statusColors[row.original.commissionStatus.toUpperCase()] || statusColors[row.original.commissionStatus] } as any : {}} onClick={() => row.toggleSelected()}>
                                         {row.getVisibleCells().map(cell => (<TableCell key={cell.id} style={{ width: cell.column.getSize() }} className="p-3 text-sm border-none">{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>))}
                                     </TableRow>
                                 ))
@@ -382,9 +393,39 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
                 <div className="flex items-center justify-between px-6 py-4 border-t-2 bg-muted/10 font-black text-[11px] uppercase tracking-[0.1em] text-foreground/60 min-h-[64px]">
                     <div className="flex items-center gap-4">
-                        <div>{table.getFilteredSelectedRowModel().rows.length} DE {table.getFilteredRowModel().rows.length} SELECIONADOS.</div>
+                        <div>{numSelected} DE {table.getFilteredRowModel().rows.length} SELECIONADOS.</div>
+                        
+                        {numSelected > 0 && (
+                            <>
+                                <Separator orientation="vertical" className="h-4 bg-zinc-300 dark:bg-zinc-700" />
+                                <div className="text-primary font-black animate-in fade-in slide-in-from-left-2">
+                                    VALOR BRUTO: <span className="text-foreground">{isPrivacyMode ? '•••••' : formatCurrency(totalGross)}</span>
+                                </div>
+                                <Separator orientation="vertical" className="h-4 bg-zinc-300 dark:bg-zinc-700" />
+                                <div className="text-primary font-black animate-in fade-in slide-in-from-left-2">
+                                    COMISSÃO: <span className="text-foreground">{isPrivacyMode ? '•••••' : formatCurrency(totalCommission)}</span>
+                                </div>
+                            </>
+                        )}
                     </div>
+
                     <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-2">
+                            <span>LINHAS</span>
+                            <Select
+                                value={`${table.getState().pagination.pageSize}`}
+                                onValueChange={(value) => table.setPageSize(Number(value))}
+                            >
+                                <SelectTrigger className="h-8 w-[70px] bg-background border-2 border-zinc-200 dark:border-zinc-800 rounded-full text-[10px] font-black shadow-sm">
+                                    <SelectValue placeholder={table.getState().pagination.pageSize} />
+                                </SelectTrigger>
+                                <SelectContent side="top">
+                                    {[10, 20, 50, 100].map((pageSize) => (
+                                        <SelectItem key={pageSize} value={`${pageSize}`} className="text-[10px] font-black uppercase">{pageSize}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                         <div className="text-primary font-black">PÁG {table.getState().pagination.pageIndex + 1} DE {table.getPageCount()}</div>
                         <div className="flex items-center gap-1">
                             <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-2" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}><ChevronsLeft className="h-4 w-4" /></Button>
