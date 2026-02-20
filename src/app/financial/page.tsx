@@ -5,11 +5,26 @@ import { PageHeader } from '@/components/page-header';
 import { FinancialDataTable, type FinancialDataTableHandle } from './data-table';
 import { getColumns } from './columns';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, where, doc, setDoc, deleteField, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, doc, setDoc, deleteField, deleteDoc, writeBatch } from 'firebase/firestore';
 import type { Proposal, Customer, CommissionStatus, UserSettings, Expense } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Eye, EyeOff, Printer, FileCheck2, FileDown, FileBadge, BarChart3, Users2, CircleDollarSign, PlusCircle, Wallet, ReceiptText } from 'lucide-react';
+import { 
+    Eye, 
+    EyeOff, 
+    Printer, 
+    FileCheck2, 
+    FileDown, 
+    FileBadge, 
+    BarChart3, 
+    Users2, 
+    CircleDollarSign, 
+    PlusCircle, 
+    Wallet, 
+    CheckCircle2,
+    Trash2,
+    ChevronDown
+} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,46 +42,25 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogFooter,
-    DialogDescription,
-    DialogTrigger,
   } from '@/components/ui/dialog';
 import { CommissionForm, type CommissionFormValues } from './commission-form';
 import { toast } from '@/hooks/use-toast';
 import { format, startOfMonth, endOfMonth, parse, getYear, getMonth, isSameMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CommissionReconciliation } from '@/components/financial/commission-reconciliation';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cleanBankName } from '@/lib/utils';
 import { ProposalsStatusTable } from '@/components/dashboard/proposals-status-table';
 import { PromoterEfficiencyReport } from '@/components/financial/promoter-efficiency-report';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { StatsCard } from '@/components/dashboard/stats-card';
 import { ExpenseForm } from '@/components/financial/expense-form';
 import { ExpenseTable } from '@/components/financial/expense-table';
 import { expenseCategories as initialExpenseCategories } from '@/lib/config-data';
-import { StatsCard } from '@/components/dashboard/stats-card';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export type ProposalWithCustomer = Proposal & { customer: Customer | undefined };
-
-const MONTHS = [
-    { value: "0", label: "Janeiro" },
-    { value: "1", label: "Fevereiro" },
-    { value: "2", label: "Março" },
-    { value: "3", label: "Abril" },
-    { value: "4", label: "Maio" },
-    { value: "5", label: "Junho" },
-    { value: "6", label: "Julho" },
-    { value: "7", label: "Agosto" },
-    { value: "8", label: "Setembro" },
-    { value: "9", label: "Outubro" },
-    { value: "10", label: "Novembro" },
-    { value: "11", label: "Dezembro" },
-];
 
 export default function FinancialPage() {
   const { user, isUserLoading } = useUser();
@@ -75,7 +69,6 @@ export default function FinancialPage() {
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
   const [isReconciliationOpen, setIsReconciliationOpen] = React.useState(false);
   const [isEfficiencyOpen, setIsEfficiencyOpen] = React.useState(false);
-  const [isReportDialogOpen, setIsReportDialogOpen] = React.useState(false);
   const [isOperatorsDialogOpen, setIsOperatorsDialogOpen] = React.useState(false);
   const [isExpenseFormOpen, setIsExpenseFormOpen] = React.useState(false);
   
@@ -85,7 +78,8 @@ export default function FinancialPage() {
   const [selectedProposal, setSelectedProposal] = React.useState<ProposalWithCustomer | undefined>(undefined);
   const [selectedExpense, setSelectedExpense] = React.useState<Expense | undefined>(undefined);
   const [isClient, setIsClient] = React.useState(false);
-  const [rowSelection, setRowSelection] = React.useState({});
+  const [rowSelection, setRowSelection] = React.useState<Record<string, boolean>>({});
+  const [isSaving, setIsSaving] = React.useState(false);
   const tableRef = React.useRef<FinancialDataTableHandle>(null);
   const [dialogData, setDialogData] = React.useState<{ title: string; proposals: ProposalWithCustomer[] } | null>(null);
 
@@ -159,70 +153,62 @@ export default function FinancialPage() {
     };
   }, [proposals, customers, isClient]);
 
-  const totalExpensesAmount = React.useMemo(() => {
-    if (!expenses) return 0;
-    const now = new Date();
-    return expenses
-      .filter(e => {
-          const d = new Date(e.date);
-          return isSameMonth(d, now) && d.getFullYear() === now.getFullYear();
-      })
-      .reduce((sum, e) => sum + e.amount, 0);
-  }, [expenses]);
+  const selectedCount = React.useMemo(() => Object.keys(rowSelection).length, [rowSelection]);
 
-  const handleGenerateMonthlyReport = async () => {
-    const targetMonth = parseInt(reportMonth);
-    const targetYear = parseInt(reportYear);
+  const handleBulkCommissionUpdate = async (newStatus: CommissionStatus) => {
+    if (!firestore || !user || selectedCount === 0) return;
+    setIsSaving(true);
+    try {
+        const batch = writeBatch(firestore);
+        const selectedIds = Object.keys(rowSelection);
+        const now = new Date().toISOString();
+        
+        selectedIds.forEach(id => {
+            const proposal = proposals?.find(p => p.id === id);
+            if (!proposal) return;
 
-    const reportProposals = summaryProposals.filter(p => {
-        const d = new Date(p.dateDigitized);
-        return d.getMonth() === targetMonth && d.getFullYear() === targetYear;
-    });
+            const docRef = doc(firestore, 'loanProposals', id);
+            const dataToUpdate: any = { 
+                commissionStatus: newStatus,
+                ownerId: user.uid
+            };
 
-    const reportExpenses = (expenses || []).filter(e => {
-        const d = new Date(e.date);
-        return d.getMonth() === targetMonth && d.getFullYear() === targetYear;
-    });
+            if (newStatus === 'Paga') {
+                dataToUpdate.amountPaid = proposal.commissionValue;
+                dataToUpdate.commissionPaymentDate = now;
+            } else if (newStatus === 'Pendente') {
+                dataToUpdate.amountPaid = 0;
+                dataToUpdate.commissionPaymentDate = deleteField();
+            }
 
-    if (reportProposals.length === 0 && reportExpenses.length === 0) {
-        toast({ variant: "destructive", title: "Sem dados para o período" });
-        return;
+            batch.update(docRef, dataToUpdate);
+        });
+
+        await batch.commit();
+        toast({ title: 'Comissões Atualizadas', description: `${selectedCount} registros alterados para "${newStatus}".` });
+        setRowSelection({});
+    } catch (e: any) {
+        if (e.code === 'permission-denied') {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: 'loanProposals',
+                operation: 'update',
+                requestResourceData: { commissionStatus: newStatus }
+            }));
+        }
+        toast({ variant: 'destructive', title: 'Erro na operação em massa' });
+    } finally {
+        setIsSaving(false);
     }
-
-    const { default: jsPDF } = await import('jspdf');
-    const { default: autoTable } = await import('jspdf-autotable');
-
-    const doc = new jsPDF();
-    const targetDate = new Date(targetYear, targetMonth, 1);
-    const monthYear = format(targetDate, "MMMM 'de' yyyy", { locale: ptBR });
-
-    doc.setFontSize(20); doc.setTextColor(40, 74, 127); doc.text("Balanço Empresarial", 14, 20);
-    doc.setFontSize(10); doc.setTextColor(100); doc.text(`Período: ${monthYear}`, 14, 28);
-
-    const recebido = reportProposals.filter(p => p.commissionStatus === 'Paga' || p.commissionStatus === 'Parcial').reduce((sum, p) => sum + (p.amountPaid || 0), 0);
-    const totalDespesas = reportExpenses.reduce((sum, e) => sum + e.amount, 0);
-    const lucroLiquido = recebido - totalDespesas;
-
-    autoTable(doc, {
-        startY: 45,
-        body: [
-            ['Entradas (Comissões)', formatCurrency(recebido)],
-            ['Saídas (Despesas)', formatCurrency(totalDespesas)],
-            ['LUCRO LÍQUIDO', { content: formatCurrency(lucroLiquido), styles: { fontStyle: 'bold', textColor: lucroLiquido >= 0 ? [22, 101, 52] : [185, 28, 28] } }],
-        ],
-        theme: 'striped',
-    });
-
-    doc.save(`Balanco_${monthYear.replace(/\s+/g, '_')}.pdf`);
-    setIsReportDialogOpen(false);
   };
 
-  const handleExportToExcel = async () => {
+  const handleExportToExcel = async (onlySelected = false) => {
     const table = tableRef.current?.table;
     if (!table) return;
     const { utils, writeFile } = await import('xlsx');
     
-    const rows = table.getFilteredRowModel().rows.map(r => {
+    const rowsSource = onlySelected ? table.getFilteredSelectedRowModel().rows : table.getFilteredRowModel().rows;
+    
+    const dataToExport = rowsSource.map(r => {
         const p = r.original;
         return {
             'Cliente': p.customer?.name,
@@ -239,10 +225,18 @@ export default function FinancialPage() {
         };
     });
 
-    const ws = utils.json_to_sheet(rows);
+    const ws = utils.json_to_sheet(dataToExport);
     const wb = utils.book_new();
     utils.book_append_sheet(wb, ws, 'Financeiro');
-    writeFile(wb, 'financeiro_lk_ramos.xlsx');
+    writeFile(wb, onlySelected ? 'financeiro_selecionado.xlsx' : 'financeiro_lk_ramos.xlsx');
+  };
+
+  const handlePrintSelection = () => {
+    document.body.classList.add('print-selection');
+    window.print();
+    window.addEventListener('afterprint', () => {
+        document.body.classList.remove('print-selection');
+    }, { once: true });
   };
 
   const handleEditCommission = React.useCallback((proposal: ProposalWithCustomer) => {
@@ -286,13 +280,48 @@ export default function FinancialPage() {
     toast({ title: 'Salvo!' });
   };
 
+  const totalExpensesAmount = React.useMemo(() => {
+    if (!expenses) return 0;
+    const now = new Date();
+    return expenses
+      .filter(e => {
+          const d = new Date(e.date);
+          return isSameMonth(d, now) && d.getFullYear() === now.getFullYear();
+      })
+      .reduce((sum, e) => sum + e.amount, 0);
+  }, [expenses]);
+
   return (
     <AppLayout>
-      <div className="flex items-center justify-between print:hidden">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 print:hidden">
         <PageHeader title="Controle Financeiro & Fluxo" />
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+            {selectedCount > 0 && (
+                <div className="flex items-center gap-2 animate-in slide-in-from-right-2 duration-300">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="h-10 px-6 rounded-full font-bold border-green-500/30 bg-green-500/5 text-green-600 text-xs">
+                                <CheckCircle2 className="mr-2 h-4 w-4" /> Baixa Coletiva ({selectedCount}) <ChevronDown className="ml-2 h-3 w-3" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onSelect={() => handleBulkCommissionUpdate('Paga')} className="font-bold text-green-600">Marcar como PAGAS</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleBulkCommissionUpdate('Pendente')} className="text-destructive">Estornar para PENDENTE</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button variant="outline" className="h-10 px-6 rounded-full font-bold text-xs" onClick={() => handleExportToExcel(true)}>
+                        <FileDown className="mr-2 h-4 w-4" /> Exportar Seleção
+                    </Button>
+                    <Button variant="outline" className="h-10 px-6 rounded-full font-bold text-xs" onClick={handlePrintSelection}>
+                        <Printer className="mr-2 h-4 w-4" /> Borderô (Imprimir)
+                    </Button>
+                </div>
+            )}
+
             <Dialog open={isOperatorsDialogOpen} onOpenChange={setIsOperatorsDialogOpen}>
-                <DialogTrigger asChild><Button variant="outline"><Users2 className="mr-2 h-4 w-4" /> Performance Operadores</Button></DialogTrigger>
+                <Button variant="outline" className="h-10 px-6 rounded-full font-bold text-xs" onClick={() => setIsOperatorsDialogOpen(true)}>
+                    <Users2 className="mr-2 h-4 w-4" /> Performance
+                </Button>
                 <DialogContent className="max-w-3xl">
                     <DialogHeader><DialogTitle>Comissões por Operador</DialogTitle></DialogHeader>
                     <div className="py-4"><ScrollArea className="h-[400px]"><div className="space-y-4">{operatorStats.map((op) => (
@@ -305,27 +334,33 @@ export default function FinancialPage() {
             </Dialog>
 
             <Dialog open={isEfficiencyOpen} onOpenChange={setIsEfficiencyOpen}>
-                <DialogTrigger asChild><Button variant="outline"><BarChart3 className="mr-2 h-4 w-4" /> Eficiência</Button></DialogTrigger>
+                <Button variant="outline" className="h-10 px-6 rounded-full font-bold text-xs" onClick={() => setIsEfficiencyOpen(true)}>
+                    <BarChart3 className="mr-2 h-4 w-4" /> Eficiência
+                </Button>
                 <DialogContent className="max-w-5xl h-[90vh] flex flex-col">
-                    <DialogHeader><DialogTitle>Análise de Eficiência</DialogTitle></DialogHeader>
+                    <DialogHeader><DialogTitle>Análise de Eficiência dos Parceiros</DialogTitle></DialogHeader>
                     <div className="flex-1 overflow-y-auto"><PromoterEfficiencyReport proposals={summaryProposals} /></div>
                 </DialogContent>
             </Dialog>
 
-            <Button variant="outline" onClick={handleExportToExcel}><FileDown className="mr-2 h-4 w-4" /> Excel</Button>
+            <Button variant="outline" className="h-10 px-6 rounded-full font-bold text-xs" onClick={() => handleExportToExcel(false)}>
+                <FileDown className="mr-2 h-4 w-4" /> Excel Completo
+            </Button>
             
             <Dialog open={isReconciliationOpen} onOpenChange={setIsReconciliationOpen}>
-                <DialogTrigger asChild><Button variant="outline"><FileCheck2 /> Conciliar IA</Button></DialogTrigger>
-                <DialogContent className="max-w-4xl"><DialogHeader><DialogTitle>Conciliação IA</DialogTitle></DialogHeader><CommissionReconciliation proposals={summaryProposals} onFinished={() => setIsReconciliationOpen(false)} /></DialogContent>
+                <Button variant="outline" className="h-10 px-6 rounded-full font-bold text-xs" onClick={() => setIsReconciliationOpen(true)}>
+                    <FileCheck2 className="mr-2 h-4 w-4" /> Conciliar IA
+                </Button>
+                <DialogContent className="max-w-4xl"><DialogHeader><DialogTitle>Conciliação Financeira IA</DialogTitle></DialogHeader><CommissionReconciliation proposals={summaryProposals} onFinished={() => setIsReconciliationOpen(false)} /></DialogContent>
             </Dialog>
-            <Button variant="ghost" size="icon" onClick={() => setIsPrivacyMode(!isPrivacyMode)}>{isPrivacyMode ? <EyeOff /> : <Eye />}</Button>
-            <Button onClick={() => window.print()}><Printer /> Imprimir</Button>
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsPrivacyMode(!isPrivacyMode)}>{isPrivacyMode ? <EyeOff /> : <Eye />}</Button>
+            <Button className="h-10 px-6 rounded-full font-bold text-xs" onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" /> Imprimir</Button>
         </div>
       </div>
 
        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetContent className="w-full max-w-md">
-          <SheetHeader><SheetTitle>Editar Comissão</SheetTitle></SheetHeader>
+          <SheetHeader><SheetTitle>Editar Lançamento de Comissão</SheetTitle></SheetHeader>
           <CommissionForm proposal={selectedProposal} onSubmit={handleFormSubmit} />
         </SheetContent>
       </Sheet>
@@ -335,9 +370,9 @@ export default function FinancialPage() {
       ) : (
         <div className="space-y-8">
             <Tabs defaultValue="commissions" className="w-full">
-                <TabsList className="bg-muted/50 mb-4">
-                    <TabsTrigger value="commissions" className="gap-2"><CircleDollarSign className="h-4 w-4" /> Comissões</TabsTrigger>
-                    <TabsTrigger value="expenses" className="gap-2"><Wallet className="h-4 w-4" /> Despesas</TabsTrigger>
+                <TabsList className="bg-muted/30 p-1 rounded-full mb-6 border w-fit">
+                    <TabsTrigger value="commissions" className="gap-2 rounded-full px-6 data-[state=active]:bg-primary data-[state=active]:text-white font-bold transition-all"><CircleDollarSign className="h-4 w-4" /> Comissões</TabsTrigger>
+                    <TabsTrigger value="expenses" className="gap-2 rounded-full px-6 data-[state=active]:bg-red-600 data-[state=active]:text-white font-bold transition-all"><Wallet className="h-4 w-4" /> Despesas</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="commissions">
@@ -355,9 +390,9 @@ export default function FinancialPage() {
                 </TabsContent>
 
                 <TabsContent value="expenses" className="space-y-6">
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center bg-muted/10 p-4 rounded-2xl border">
                         <StatsCard title="Total Despesas (Mês)" value={isPrivacyMode ? '•••••' : formatCurrency(totalExpensesAmount)} icon={Wallet} className="bg-red-50/10 border-red-200" />
-                        <Button onClick={() => { setSelectedExpense(undefined); setIsExpenseFormOpen(true); }}><PlusCircle className="mr-2 h-4 w-4" /> Lançar Despesa</Button>
+                        <Button className="rounded-full font-bold bg-red-600 hover:bg-red-700" onClick={() => { setSelectedExpense(undefined); setIsExpenseFormOpen(true); }}><PlusCircle className="mr-2 h-4 w-4" /> Lançar Despesa</Button>
                     </div>
                     <ExpenseTable expenses={expenses || []} onEdit={(e) => { setSelectedExpense(e); setIsExpenseFormOpen(true); }} onDelete={(id) => deleteDoc(doc(firestore!, 'users', user!.uid, 'expenses', id))} />
                 </TabsContent>
