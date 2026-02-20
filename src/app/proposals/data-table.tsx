@@ -177,6 +177,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
@@ -188,6 +189,28 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     columnResizeMode: 'onChange',
     state: { sorting, globalFilter, rowSelection, columnVisibility, columnSizing, columnOrder },
     meta: { userSettings },
+    globalFilterFn: (row, columnId, filterValue) => {
+        const searchTerm = String(filterValue ?? '').trim();
+        if (!searchTerm) return true;
+        
+        // 🛡️ BUSCA POR ID EXATO (Prioridade Máxima)
+        if (/^\d+$/.test(searchTerm)) {
+            return row.original.customer?.numericId.toString() === searchTerm;
+        }
+
+        const normalizedSearch = normalizeString(searchTerm);
+        const proposal = row.original;
+        
+        const searchableFields = [
+            proposal.proposalNumber,
+            proposal.customer?.name,
+            proposal.customer?.cpf,
+            proposal.bank,
+            proposal.product
+        ];
+
+        return searchableFields.some(field => field && normalizeString(field).includes(normalizedSearch));
+    }
   });
 
   React.useImperativeHandle(ref, () => ({ table }));
@@ -202,6 +225,27 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const totalCommission = React.useMemo(() => 
     selectedRows.reduce((acc, row) => acc + (row.original.commissionValue || 0), 0),
   [selectedRows]);
+
+  const handleApplyFilter = () => {
+    const startDate = parse(startDateInput, 'dd/MM/yyyy', new Date());
+    const endDate = parse(endDateInput, 'dd/MM/yyyy', new Date());
+    if (isValid(startDate) && isValid(endDate)) {
+        setAppliedDateRange({ from: startOfDay(startDate), to: endOfDay(endDate) });
+    } else if (isValid(startDate)) {
+        setAppliedDateRange({ from: startOfDay(startDate), to: endOfDay(startDate) });
+    } else {
+        setAppliedDateRange(undefined);
+    }
+  };
+
+  const handleDateMask = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 8) value = value.substring(0, 8);
+    value = value.replace(/(\d{2})(\d)/, '$1/$2');
+    value = value.replace(/(\d{2})(\d)/, '$1/$2');
+    e.target.value = value;
+    return value;
+  };
 
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
@@ -251,6 +295,20 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                             <SelectItem value="month">Mês Atual</SelectItem>
                         </SelectContent>
                     </Select>
+                    <Separator orientation="vertical" className="h-4 mx-1 bg-zinc-300" />
+                    <div className="flex items-center gap-1">
+                        <Input placeholder="De" value={startDateInput} onChange={(e) => setStartDateInput(handleDateMask(e))} className="h-7 w-28 border-none bg-muted/40 text-[11px] text-center font-black rounded-full" />
+                        <span className="text-muted-foreground font-black">-</span>
+                        <Input placeholder="Até" value={endDateInput} onChange={(e) => setEndDateInput(handleDateMask(e))} className="h-7 w-28 border-none bg-muted/40 text-[11px] text-center font-black rounded-full" />
+                    </div>
+                    <Button size="sm" onClick={handleApplyFilter} className="h-7 bg-primary text-white hover:bg-primary/90 rounded-full px-4 text-[10px] font-black uppercase shadow-sm gap-1.5">
+                        <Filter className="h-3 w-3" /> Aplicar
+                    </Button>
+                    {appliedDateRange && (
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => { setStartDateInput(''); setEndDateInput(''); setAppliedDateRange(undefined); }}>
+                            <X className="h-3.5 w-3.5" />
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -258,7 +316,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                 <div className='relative w-full max-w-md group'>
                     <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80 group-focus-within:opacity-100 transition-opacity' />
                     <Input
-                        placeholder="Busca por Nome, CPF, Proposta ou ID Exato..."
+                        placeholder="Busca Inteligente (Nome, CPF, Proposta ou ID...)"
                         value={globalFilter ?? ''}
                         onChange={(e) => setGlobalFilter(e.target.value)}
                         className="pl-10 h-11 bg-background border-2 border-zinc-300 dark:border-primary/40 rounded-full text-base font-bold shadow-md"

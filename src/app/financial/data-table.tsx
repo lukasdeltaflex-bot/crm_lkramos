@@ -193,6 +193,28 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     columnResizeMode: 'onChange',
     state: { sorting, globalFilter, rowSelection, columnVisibility, columnSizing, columnOrder },
     meta: { isPrivacyMode, userSettings },
+    globalFilterFn: (row, columnId, filterValue) => {
+        const searchTerm = String(filterValue ?? '').trim();
+        if (!searchTerm) return true;
+        
+        // 🛡️ BUSCA POR ID EXATO (Prioridade Máxima)
+        if (/^\d+$/.test(searchTerm)) {
+            return row.original.customer?.numericId.toString() === searchTerm;
+        }
+
+        const normalizedSearch = normalizeString(searchTerm);
+        const proposal = row.original;
+        
+        const searchableFields = [
+            proposal.proposalNumber,
+            proposal.customer?.name,
+            proposal.customer?.cpf,
+            proposal.bank,
+            proposal.product
+        ];
+
+        return searchableFields.some(field => field && normalizeString(field).includes(normalizedSearch));
+    }
   });
 
   React.useImperativeHandle(ref, () => ({ table }));
@@ -218,6 +240,15 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     } else {
         setAppliedDateRange(undefined);
     }
+  };
+
+  const handleDateMask = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 8) value = value.substring(0, 8);
+    value = value.replace(/(\d{2})(\d)/, '$1/$2');
+    value = value.replace(/(\d{2})(\d)/, '$1/$2');
+    e.target.value = value;
+    return value;
   };
 
   const banksList = Array.from(new Set(data.map(p => p.bank))).sort();
@@ -431,12 +462,3 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 });
 
 FinancialDataTable.displayName = 'FinancialDataTable';
-
-const handleDateMask = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, "");
-    if (value.length > 8) value = value.substring(0, 8);
-    value = value.replace(/(\d{2})(\d)/, '$1/$2');
-    value = value.replace(/(\d{2})(\d)/, '$1/$2');
-    e.target.value = value;
-    return value;
-};
