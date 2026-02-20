@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -186,7 +187,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const selectedRows = table.getFilteredSelectedRowModel().rows;
   const allFilteredRows = table.getFilteredRowModel().rows;
   
-  // Totais Inteligentes: Se houver seleção, mostra o total da seleção. Se não, mostra o total da lista filtrada.
+  // Totais Inteligentes
   const displayRows = selectedRows.length > 0 ? selectedRows : allFilteredRows;
 
   const totalGross = React.useMemo(() => 

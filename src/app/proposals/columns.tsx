@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ColumnDef, Header, flexRender } from '@tanstack/react-table';
@@ -21,9 +22,9 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { MoreHorizontal, GripVertical, ArrowUp, ArrowDown, Copy } from 'lucide-react';
+import { MoreHorizontal, GripVertical, ArrowUp, ArrowDown, Copy, AlertTriangle } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { formatCurrency, cleanBankName, cn, formatDateSafe, isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
+import { formatCurrency, cleanBankName, cn, formatDateSafe, isWhatsApp, getWhatsAppUrl, calculateBusinessDays } from '@/lib/utils';
 import React from 'react';
 import { StatusCell } from './status-cell';
 import { useSortable } from '@dnd-kit/sortable';
@@ -32,6 +33,7 @@ import { TableHead } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
 import { BankIcon } from '@/components/bank-icon';
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const CopyButton = ({ text, label }: { text: string | undefined; label: string }) => {
     if (!text) return null;
@@ -309,17 +311,41 @@ export const getColumns = (
     id: 'Status',
     accessorKey: 'status',
     header: 'Status',
-    cell: ({ row }) => (
-        <div className="w-full">
-            <StatusCell
-                proposalId={row.original.id}
-                currentStatus={row.original.status}
-                product={row.original.product}
-                onStatusChange={onStatusChange}
-            />
-        </div>
-    ),
-    size: 140,
+    cell: ({ row }) => {
+        const p = row.original;
+        const isPortAwaitingBalance = p.product === 'Portabilidade' && p.status === 'Aguardando Saldo';
+        const referenceDate = p.statusAwaitingBalanceAt || p.dateDigitized;
+        const businessDays = referenceDate ? calculateBusinessDays(referenceDate) : 0;
+        const isCritical = isPortAwaitingBalance && businessDays >= 5;
+
+        return (
+            <div className="flex items-center gap-2 w-full">
+                <div className="flex-1">
+                    <StatusCell
+                        proposalId={p.id}
+                        currentStatus={p.status}
+                        product={p.product}
+                        onStatusChange={onStatusChange}
+                    />
+                </div>
+                {isCritical && (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div className="shrink-0 text-red-600 animate-pulse">
+                                    <AlertTriangle className="h-4 w-4 fill-current" />
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                Prazo Crítico: {businessDays} dias úteis aguardando saldo.
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                )}
+            </div>
+        );
+    },
+    size: 160,
   },
   {
     id: 'Operador',

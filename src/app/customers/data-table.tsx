@@ -54,17 +54,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DraggableHeader } from './columns';
 import type { Customer } from '@/lib/types';
 import { normalizeString, cn } from '@/lib/utils';
 
-const STORAGE_KEY_VISIBILITY = 'lk-ramos-customer-columns-visibility-v12';
-const STORAGE_KEY_ORDER = 'lk-ramos-customer-columns-order-v12';
-const STORAGE_KEY_SIZING = 'lk-ramos-customer-columns-sizing-v12';
-const STORAGE_KEY_PAGESIZE = 'lk-ramos-customer-page-size-v12';
+const STORAGE_KEY_VISIBILITY = 'lk-ramos-customer-columns-visibility-v13';
+const STORAGE_KEY_ORDER = 'lk-ramos-customer-columns-order-v13';
+const STORAGE_KEY_SIZING = 'lk-ramos-customer-columns-sizing-v13';
+const STORAGE_KEY_PAGESIZE = 'lk-ramos-customer-page-size-v13';
 
 interface DataTableProps {
   columns: ColumnDef<Customer, unknown>[];
@@ -210,7 +210,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
                     placeholder="Busca Inteligente (Nome, CPF, ID...)"
                     value={globalFilter ?? ''}
                     onChange={(event) => setGlobalFilter(event.target.value)}
-                    className="pl-11 w-full bg-background border-2 border-zinc-300 dark:border-primary/40 h-11 rounded-full focus-visible:ring-primary/20 shadow-md transition-all font-bold text-sm placeholder:text-muted-foreground/80"
+                    className="pl-11 w-full bg-background border-2 border-zinc-300 dark:border-primary/40 h-11 rounded-full shadow-md focus-visible:ring-primary/20 transition-all font-bold text-sm placeholder:text-muted-foreground/80"
                 />
             </div>
             <DropdownMenu>
@@ -295,32 +295,36 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
             </div>
           </div>
 
-          <div className="flex items-center justify-between px-6 py-3 border-t-2 bg-muted/10">
-            <div className="flex-1 text-[10px] font-black uppercase text-foreground/40 tracking-widest">
-              {table.getFilteredSelectedRowModel().rows.length} de{' '}
-              {table.getFilteredRowModel().rows.length} selecionados
+          <div className="flex items-center justify-between px-6 py-4 border-t-2 bg-muted/10 font-black text-[11px] uppercase tracking-[0.1em] text-foreground/60">
+            <div className="flex-1">
+              {table.getFilteredSelectedRowModel().rows.length} DE{' '}
+              {table.getFilteredRowModel().rows.length} SELECIONADOS.
             </div>
-            <div className="flex items-center space-x-6 lg:space-x-8">
-                <div className="flex items-center space-x-2">
-                    <p className="text-[10px] font-black uppercase text-foreground/40">Linhas</p>
+            <div className="flex items-center gap-6 lg:gap-8">
+                <div className="flex items-center gap-2">
+                    <p>LINHAS</p>
                     <Select
                         value={`${table.getState().pagination.pageSize}`}
                         onValueChange={(value) => table.setPageSize(Number(value))}
                     >
-                        <SelectTrigger className="h-8 w-[70px] bg-background border-2 border-zinc-200 rounded-md text-xs font-bold">
+                        <SelectTrigger className="h-8 w-[70px] bg-background border-2 border-zinc-200 dark:border-zinc-800 rounded-full text-[10px] font-black shadow-sm">
                             <SelectValue placeholder={table.getState().pagination.pageSize} />
                         </SelectTrigger>
                         <SelectContent side="top">
-                            {[10, 20, 50].map((pageSize) => (
-                                <SelectItem key={pageSize} value={`${pageSize}`}>{pageSize}</SelectItem>
+                            {[10, 20, 50, 100].map((pageSize) => (
+                                <SelectItem key={pageSize} value={`${pageSize}`} className="text-[10px] font-black uppercase">{pageSize}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
                 </div>
-                <div className="flex items-center space-x-2">
-                    <Button variant="outline" className="h-8 w-8 p-0 border-2" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}><ChevronLeft className="h-4 w-4" /></Button>
-                    <div className="flex w-[80px] items-center justify-center text-[10px] font-black uppercase text-foreground/60 tracking-tighter">Pág {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}</div>
-                    <Button variant="outline" className="h-8 w-8 p-0 border-2" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}><ChevronRight className="h-4 w-4" /></Button>
+                <div className="text-primary font-black">
+                    PÁG {table.getState().pagination.pageIndex + 1} DE {table.getPageCount()}
+                </div>
+                <div className="flex items-center gap-1">
+                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-2" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}><ChevronsLeft className="h-4 w-4" /></Button>
+                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-2" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}><ChevronLeft className="h-4 w-4" /></Button>
+                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-2" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}><ChevronRight className="h-4 w-4" /></Button>
+                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-2" onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}><ChevronsRight className="h-4 w-4" /></Button>
                 </div>
             </div>
           </div>
