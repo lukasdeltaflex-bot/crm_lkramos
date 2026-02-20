@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Sparkles, AlertCircle, Loader2, PlusCircle, Trash2, FileText as FileIcon, UserCheck, UserX, AlertTriangle } from 'lucide-react';
+import { Sparkles, AlertCircle, Loader2, PlusCircle, Trash2, FileText as FileIcon, UserCheck, UserX, AlertTriangle, Phone } from 'lucide-react';
 import { format, parse, isValid } from 'date-fns';
 import { cn, getAge, validateCPF } from '@/lib/utils';
 import type { Customer, Benefit, Attachment } from '@/lib/types';
@@ -174,6 +175,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   const cpfValue = form.watch('cpf');
   const birthDateValue = form.watch('birthDate');
   const phone1Value = form.watch('phone');
+  const phone2Value = form.watch('phone2');
 
   const duplicateCpfCustomer = useMemo(() => {
     if (!cpfValue || cpfValue.length < 14) return null;
@@ -400,12 +402,12 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                       )}
                     />
                 </div>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
                     <FormField
                     control={form.control}
                     name="email"
                     render={({ field }) => (
-                        <FormItem>
+                        <FormItem className='md:col-span-1'>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
                             <Input placeholder="joao.silva@example.com" {...field} value={field.value ?? ''}/>
@@ -419,7 +421,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         name="phone"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Telefone</FormLabel>
+                                <FormLabel>Telefone Principal</FormLabel>
                                 <FormControl>
                                     <div className="relative flex items-center">
                                         <Input
@@ -431,6 +433,33 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                         />
                                         {isWhatsApp(phone1Value) && (
                                             <a href={getWhatsAppUrl(phone1Value)} target="_blank" rel="noopener noreferrer" className="absolute right-3 text-green-500 hover:text-green-600">
+                                                <WhatsAppIcon />
+                                            </a>
+                                        )}
+                                    </div>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="phone2"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Telefone 2</FormLabel>
+                                <FormControl>
+                                    <div className="relative flex items-center">
+                                        <Input
+                                            placeholder="(11) 98765-4321"
+                                            {...field}
+                                            value={field.value || ''}
+                                            onChange={(e) => handlePhoneChange(e, 'phone2')}
+                                            maxLength={15}
+                                            className="pr-10"
+                                        />
+                                        {field.value && isWhatsApp(field.value) && (
+                                            <a href={getWhatsAppUrl(field.value)} target="_blank" rel="noopener noreferrer" className="absolute right-3 text-green-500 hover:text-green-600">
                                                 <WhatsAppIcon />
                                             </a>
                                         )}
@@ -490,15 +519,28 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                 </div>
                 <div className="space-y-4">
                 {fields.map((field, index) => (
-                    <div key={field.id} className="flex items-center gap-2 p-3 border rounded-md bg-secondary/30">
+                    <div key={field.id} className="flex items-start gap-2 p-3 border rounded-md bg-secondary/30 relative group">
                         <FormField
                             control={form.control}
                             name={`benefits.${index}.number`}
                             render={({ field }) => (
                                 <FormItem className="flex-1">
-                                    <FormLabel className='text-xs'>Número</FormLabel>
+                                    <FormLabel className='text-xs'>Número do Benefício</FormLabel>
                                     <FormControl>
                                         <Input placeholder='000.000.000-0' {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name={`benefits.${index}.species`}
+                            render={({ field }) => (
+                                <FormItem className="flex-1">
+                                    <FormLabel className='text-xs'>Espécie / Nome</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder='Ex: Aposentadoria...' {...field} value={field.value || ''} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -508,7 +550,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="self-center mt-5"
+                            className="self-end mb-1"
                             onClick={() => remove(index)}
                         >
                             <Trash2 className="h-4 w-4 text-destructive" />
@@ -530,8 +572,8 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         <FormLabel>CEP</FormLabel>
                         <FormControl>
                             <div className='relative'>
-                                <Input placeholder="00000-000" {...field} onChange={handleCepChange} onBlur={handleCepBlur} maxLength={9} className="max-w-xs" value={field.value || ''} />
-                                {isFetchingCep && <Loader2 className="absolute right-3 top-2.5 h-5 w-5 animate-spin text-muted-foreground" />}
+                                <Input placeholder="00000-000" {...field} onChange={handleCepChange} onBlur={handleCepBlur} maxLength={9} className="max-w-[240px]" value={field.value || ''} />
+                                {isFetchingCep && <Loader2 className="absolute left-[210px] top-2.5 h-5 w-5 animate-spin text-muted-foreground" />}
                             </div>
                         </FormControl>
                         <FormMessage />
@@ -560,6 +602,62 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                             <FormLabel>Número</FormLabel>
                             <FormControl>
                                 <Input placeholder="123" {...field} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                    <FormField
+                        control={form.control}
+                        name="complement"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Complemento</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Apto 45" {...field} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="neighborhood"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Bairro</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Centro" {...field} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                    <FormField
+                        control={form.control}
+                        name="city"
+                        render={({ field }) => (
+                            <FormItem className='col-span-2'>
+                            <FormLabel>Cidade</FormLabel>
+                            <FormControl>
+                                <Input placeholder="São Paulo" {...field} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="state"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Estado (UF)</FormLabel>
+                            <FormControl>
+                                <Input placeholder="SP" {...field} value={field.value || ''} maxLength={2} className="uppercase" />
                             </FormControl>
                             <FormMessage />
                             </FormItem>
