@@ -112,6 +112,20 @@ export default function SettingsPage() {
   const [testAnimation, setTestAnimation] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [previewStatus, setPreviewStatus] = useState("EM ANDAMENTO");
+  const [preview, setPreview] = useState({
+    radius: 'moderno',
+    containerStyle: 'moderno',
+    backgroundTexture: 'none',
+    colorIntensity: 'equilibrada',
+    animationStyle: 'sutil',
+    fontStyle: 'moderno',
+    sidebarStyle: 'padrão',
+    colorTheme: 'padrão',
+    auraStyle: 'limpo',
+    statusColors: {} as Record<string, string>
+  });
+
   const settingsDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return doc(firestore, 'userSettings', user.uid);
@@ -131,20 +145,6 @@ export default function SettingsPage() {
   const { data: customers } = useCollection<Customer>(customersQuery);
   const { data: proposals } = useCollection<Proposal>(proposalsQuery);
 
-  const [preview, setPreview] = useState({
-    radius: 'moderno',
-    containerStyle: 'moderno',
-    backgroundTexture: 'none',
-    colorIntensity: 'equilibrada',
-    animationStyle: 'sutil',
-    fontStyle: 'moderno',
-    sidebarStyle: 'padrão',
-    colorTheme: 'padrão',
-    auraStyle: 'limpo',
-    statusColors: {} as Record<string, string>
-  });
-
-  const [previewStatus, setPreviewStatus] = useState("EM ANDAMENTO");
   const [hasLoadedSettings, setHasLoadedSettings] = useState(false);
 
   useEffect(() => {
