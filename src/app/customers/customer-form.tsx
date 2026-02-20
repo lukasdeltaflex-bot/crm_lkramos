@@ -20,9 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Sparkles, Loader2, PlusCircle, Trash2, FileText as FileIcon, UserCheck, UserX, FolderLock } from 'lucide-react';
+import { Sparkles, Loader2, PlusCircle, Trash2, FileText as FileIcon, UserCheck, UserX } from 'lucide-react';
 import { format, parse, isValid } from 'date-fns';
-import { cn, getAge, validateCPF } from '@/lib/utils';
+import { getAge, validateCPF, handlePhoneMask, isWhatsApp } from '@/lib/utils';
 import type { Customer, Attachment } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
@@ -30,7 +30,6 @@ import { useEffect, useState, useMemo } from 'react';
 import { summarizeNotes } from '@/ai/flows/summarize-notes-flow';
 import { toast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
-import { isWhatsApp, handlePhoneMask } from '@/lib/utils';
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
 import { CustomerAttachmentUploader } from '@/components/customers/customer-attachment-uploader';
 import { useUser, useFirestore } from '@/firebase';
@@ -130,7 +129,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     name: "benefits"
   });
 
-  // 🛡️ BLINDAGEM NUCLEAR: Sincronização atômica e forçada do formulário
+  // 🛡️ BLINDAGEM NUCLEAR V2: Sincronização forçada e isolamento de estado para o Gênero
   useEffect(() => {
     const source = customer || defaultValues;
     if (source) {
@@ -165,11 +164,12 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         documents: source.documents || [],
       });
 
-      // Trava de segurança extra para garantir o Gênero
+      // Trava de segurança atômica: força o valor do gênero após o reset do formulário
       if (source.gender) {
-          setTimeout(() => {
+          const timeoutId = setTimeout(() => {
             form.setValue('gender', source.gender, { shouldValidate: true, shouldDirty: true });
-          }, 10);
+          }, 50);
+          return () => clearTimeout(timeoutId);
       }
     }
   }, [customer, defaultValues, form]);
@@ -180,10 +180,10 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     }
   }, [firestore, customer, tempCustomerId]);
 
-  const cpfValue = form.watch('cpf');
   const birthDateValue = form.watch('birthDate');
-  const phone1Value = form.watch('phone');
   const currentStatusValue = form.watch('status');
+  const phoneValue = form.watch('phone');
+  const cpfValue = form.watch('cpf');
 
   const duplicateCpfCustomer = useMemo(() => {
     if (!cpfValue || cpfValue.length < 14) return null;
@@ -224,28 +224,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     }
   };
 
-  function handleFormSubmit(data: CustomerFormValues) {
-    if (duplicateCpfCustomer) {
-        toast({ variant: 'destructive', title: 'CPF Duplicado' });
-        return;
-    }
-
-    const parsedDate = parse(data.birthDate, 'dd/MM/yyyy', new Date());
-    if (!isValid(parsedDate)) {
-        toast({ variant: 'destructive', title: 'Data de Nascimento inválida' });
-        return;
-    }
-
-    const newCustomerData: FormCustomer = {
-      ...data,
-      birthDate: format(parsedDate, 'yyyy-MM-dd'),
-      benefits: data.benefits || [],
-      documents: data.documents || [],
-      gender: data.gender as any || null 
-    };
-    onSubmit(newCustomerData);
-  }
-  
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, "");
     if (value.length > 11) value = value.substring(0, 11);
@@ -284,9 +262,27 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     }
   }
 
-  const handleAttachmentsChange = (docs: Attachment[]) => {
-    form.setValue('documents', docs, { shouldValidate: true });
-  };
+  function handleFormSubmit(data: CustomerFormValues) {
+    if (duplicateCpfCustomer) {
+        toast({ variant: 'destructive', title: 'CPF Duplicado' });
+        return;
+    }
+
+    const parsedDate = parse(data.birthDate, 'dd/MM/yyyy', new Date());
+    if (!isValid(parsedDate)) {
+        toast({ variant: 'destructive', title: 'Data de Nascimento inválida' });
+        return;
+    }
+
+    const newCustomerData: FormCustomer = {
+      ...data,
+      birthDate: format(parsedDate, 'yyyy-MM-dd'),
+      benefits: data.benefits || [],
+      documents: data.documents || [],
+      gender: data.gender as any || null 
+    };
+    onSubmit(newCustomerData);
+  }
 
   const statusColor = currentStatusValue === 'active' 
     ? (statusColors['ATIVO'] || '142 76% 36%') 
@@ -362,8 +358,9 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Gênero</FormLabel>
+                          {/* 🛡️ KEY DINÂMICA: Força remontagem para exibir valor salvo do Firebase */}
                           <Select 
-                            key={customer?.id || 'new-customer-select'} 
+                            key={customer?.id || tempCustomerId || 'new'} 
                             onValueChange={field.onChange} 
                             value={field.value || ""}
                           >
@@ -410,7 +407,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                             onChange={(e) => form.setValue('phone', handlePhoneMask(e.target.value), { shouldValidate: true })}
                                             maxLength={15}
                                         />
-                                        {isWhatsApp(phone1Value) && (
+                                        {isWhatsApp(phoneValue) && (
                                             <WhatsAppIcon className="absolute right-3 top-2.5" />
                                         )}
                                     </div>
@@ -635,7 +632,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                     userId={user?.uid || ''}
                     customerId={customer?.id || tempCustomerId || ''}
                     initialAttachments={form.getValues('documents') || []}
-                    onAttachmentsChange={handleAttachmentsChange}
+                    onAttachmentsChange={(docs) => form.setValue('documents', docs, { shouldValidate: true })}
                     isReadOnly={isSaving}
                 />
                 <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">

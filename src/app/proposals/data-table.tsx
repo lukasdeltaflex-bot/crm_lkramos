@@ -60,7 +60,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Card } from '@/components/ui/card';
-import { Filter, X, Search, Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Landmark, Building2, Check } from 'lucide-react';
+import { Filter, X, Search, Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Landmark, Building2 } from 'lucide-react';
 import type { ProposalStatus, UserSettings } from '@/lib/types';
 import { DraggableHeader } from './columns';
 import type { ProposalWithCustomer } from './page';
@@ -102,13 +102,12 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'Data Digitação', desc: true }]);
   const [isClient, setIsClient] = React.useState(false);
 
-  // 💾 PERSISTÊNCIA BLINDADA: Linhas por Página
   const [pagination, setPagination] = React.useState<PaginationState>(() => {
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem('lk-proposals-pageSize');
         if (saved) return { pageIndex: 0, pageSize: Number(saved) };
-      } catch (e) { console.warn("Memory Fail: PageSize"); }
+      } catch (e) {}
     }
     return { pageIndex: 0, pageSize: 10 };
   });
@@ -123,41 +122,28 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     });
   };
 
-  // 💾 PERSISTÊNCIA BLINDADA: Visibilidade das Colunas
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(() => {
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem('lk-proposals-visibility');
         if (saved) return JSON.parse(saved);
-      } catch (e) { console.warn("Memory Fail: Visibility"); }
+      } catch (e) {}
     }
     return {
-      'Promotora': true,
-      'N° PROPOSTA': true,
-      'Cliente': true,
-      'CPF': true,
-      'Produto': true,
-      'Valor Bruto': true,
-      'Banco Digitado': true,
-      'Status': true,
       'Operador': false,
-      'Comissão': true,
-      'Data Digitação': true,
       'Data Averbação': false,
       'Data Pgto. Cliente': false,
       'Chegada Saldo': false,
-      'Actions': true
     };
   });
 
-  // 💾 PERSISTÊNCIA BLINDADA: Ordem das Colunas
   const initialColumns = React.useMemo(() => columns.map(c => c.id!).filter(Boolean), [columns]);
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(() => {
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem('lk-proposals-order');
         if (saved) return JSON.parse(saved);
-      } catch (e) { console.warn("Memory Fail: Order"); }
+      } catch (e) {}
     }
     return initialColumns;
   });
@@ -215,9 +201,12 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     if (globalFilter) {
         const searchTerm = String(globalFilter).trim();
         
-        // 🛡️ BUSCA NUCLEAR: Prioridade para ID Numérico do Cliente
+        // 🛡️ BUSCA NUCLEAR V2: Prioridade para ID Numérico do Cliente OU Número da Proposta
         if (/^\d+$/.test(searchTerm)) {
-            return list.filter(p => p.customer?.numericId.toString() === searchTerm);
+            return list.filter(p => 
+                p.customer?.numericId.toString() === searchTerm || 
+                p.proposalNumber.includes(searchTerm)
+            );
         }
 
         const normalizedSearch = normalizeString(searchTerm);

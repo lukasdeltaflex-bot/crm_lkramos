@@ -15,12 +15,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, cn, calculateBusinessDays, cleanBankName } from '@/lib/utils';
 import type { Proposal, Customer, UserSettings } from '@/lib/types';
 import { useMemo, useState, useEffect } from 'react';
-import { AlertCircle, ArrowRight, User, TrendingUp, Zap } from 'lucide-react';
+import { ArrowRight, Zap, Clock } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from "@/components/ui/tooltip";
 import Link from 'next/link';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { BankIcon } from '@/components/bank-icon';
@@ -54,7 +55,7 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
 
   const recentProposals = useMemo(() => {
     const customerMap = new Map(customers.map(c => [c.id, c]));
-    return proposals
+    return [...proposals]
         .sort((a, b) => new Date(b.dateDigitized).getTime() - new Date(a.dateDigitized).getTime())
         .slice(0, 10)
         .map(p => ({...p, customer: customerMap.get(p.customerId)}))
@@ -120,8 +121,7 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                             key={proposal.id} 
                             className={cn(
                                 "hover:bg-primary/[0.02] border-b border-border/30 transition-all group",
-                                colorValue && "status-row-custom",
-                                isBigWin && "big-win-row"
+                                colorValue && "status-row-custom"
                             )}
                             style={colorValue ? { '--status-color': colorValue } as any : {}}
                         >
@@ -164,31 +164,33 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                                         {proposal.status}
                                     </Badge>
                                     {isPortAwaitingBalance && hasMounted && (
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <div className={cn(
-                                                    "flex items-center justify-center h-5 w-5 rounded-full border cursor-help transition-all shadow-sm",
-                                                    businessDays >= 5 
-                                                        ? "bg-red-50 border-red-200 text-red-600 animate-alert-pulse" 
-                                                        : "bg-blue-50 border-blue-200 text-blue-500"
-                                                )}>
-                                                    <span className="text-[10px] font-black">!</span>
-                                                </div>
-                                            </TooltipTrigger>
-                                            <TooltipContent side="top" className="bg-white text-zinc-950 border shadow-2xl p-4 rounded-[2rem] min-w-[200px]">
-                                                <div className="space-y-1 text-center">
-                                                    <p className="font-bold text-sm text-blue-600">Monitoramento de Saldo</p>
-                                                    <p className="text-xs font-medium text-muted-foreground">Prazo decorrido: <span className="font-bold text-zinc-900">{businessDays} dia(s) úteis.</span></p>
-                                                </div>
-                                            </TooltipContent>
-                                        </Tooltip>
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <div className={cn(
+                                                        "flex items-center justify-center h-5 w-5 rounded-full border cursor-help transition-all shadow-sm",
+                                                        businessDays >= 5 
+                                                            ? "bg-red-50 border-red-200 text-red-600 animate-alert-pulse" 
+                                                            : "bg-blue-50 border-blue-200 text-blue-500"
+                                                    )}>
+                                                        <Clock className="h-3 w-3" />
+                                                    </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="top" className="bg-white text-zinc-950 border shadow-2xl p-4 rounded-xl min-w-[200px]">
+                                                    <div className="space-y-1 text-center">
+                                                        <p className="font-bold text-sm text-blue-600">Monitoramento de Saldo</p>
+                                                        <p className="text-xs font-medium text-muted-foreground">Prazo decorrido: <span className="font-bold text-zinc-900">{businessDays} dia(s) úteis.</span></p>
+                                                    </div>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
                                     )}
                                 </div>
                             </TableCell>
                             <TableCell className="px-6 py-5 text-right font-normal text-primary">
                                 <div className="flex flex-col items-end">
                                     <span className={cn(isBigWin && "font-bold text-orange-600")}>{formatCurrency(proposal.grossAmount)}</span>
-                                    {isBigWin && <span className="text-[8px] font-black uppercase text-orange-500 tracking-tighter">Big Win</span>}
+                                    {isBigWin && <span className="text-[8px] font-black uppercase text-orange-500 tracking-tighter">Alto Volume</span>}
                                 </div>
                             </TableCell>
                         </TableRow>

@@ -208,6 +208,14 @@ html, body, *, [data-sidebar="inset"] {
     text-shadow: 0 0 8px hsl(var(--status-color) / 0.5);
 }
 
+/* 🛡️ BLINDAGEM DE VISIBILIDADE AURA */
+.aura-active .bg-card, 
+.aura-active .bg-background,
+.aura-active [data-sidebar="inset"] {
+    background-color: hsla(var(--background) / 0.85) !important;
+    backdrop-blur: blur(12px) !important;
+}
+
 @layer base {
   * { @apply border-border; }
   body { @apply bg-background text-foreground antialiased transition-colors duration-500; }

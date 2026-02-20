@@ -34,7 +34,7 @@ export function CommissionStatusCell({ proposal, onStatusUpdate, onEdit }: Commi
                     <Badge 
                         variant="outline" 
                         className={cn(
-                            "min-w-[80px] h-6 justify-center transition-all text-[10px] font-black uppercase tracking-tighter border-2", 
+                            "min-w-[80px] h-6 justify-center transition-all text-[10px] font-black uppercase tracking-tighter border-2 rounded-full", 
                             !commissionStatus ? 'border-dashed border-muted-foreground/20 text-transparent group-hover:text-muted-foreground/40 bg-transparent' : 'status-custom'
                         )}
                         style={colorValue ? { '--status-color': colorValue } as any : {}}
@@ -44,15 +44,15 @@ export function CommissionStatusCell({ proposal, onStatusUpdate, onEdit }: Commi
                     <ChevronsUpDown className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-40 transition-opacity print:hidden" />
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => onStatusUpdate(proposal, 'Paga')}>
-                    Paga
+            <DropdownMenuContent className="rounded-xl border-2 shadow-xl">
+                <DropdownMenuItem className="font-bold text-xs uppercase" onClick={() => onStatusUpdate(proposal, 'Paga')}>
+                    Marcar como Paga
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onEdit(proposal)}>
-                    Parcial...
+                <DropdownMenuItem className="font-bold text-xs uppercase" onClick={() => onEdit(proposal)}>
+                    Lançar Parcial...
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onStatusUpdate(proposal, 'Pendente')}>
-                    Pendente
+                <DropdownMenuItem className="font-bold text-xs uppercase text-destructive focus:text-destructive" onClick={() => onStatusUpdate(proposal, 'Pendente')}>
+                    Marcar como Pendente
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

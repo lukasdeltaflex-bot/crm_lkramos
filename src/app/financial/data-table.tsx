@@ -105,13 +105,12 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [isClient, setIsClient] = React.useState(false);
 
-  // 💾 PERSISTÊNCIA BLINDADA: Linhas por Página
   const [pagination, setPagination] = React.useState<PaginationState>(() => {
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem('lk-financial-pageSize');
         if (saved) return { pageIndex: 0, pageSize: Number(saved) };
-      } catch (e) { console.warn("Memory Fail: PageSize"); }
+      } catch (e) {}
     }
     return { pageIndex: 0, pageSize: 10 };
   });
@@ -126,13 +125,12 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     });
   };
 
-  // 💾 PERSISTÊNCIA BLINDADA: Visibilidade das Colunas
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(() => {
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem('lk-financial-visibility');
         if (saved) return JSON.parse(saved);
-      } catch (e) { console.warn("Memory Fail: Visibility"); }
+      } catch (e) {}
     }
     return {
       'Promotora': false,
@@ -142,14 +140,13 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     };
   });
 
-  // 💾 PERSISTÊNCIA BLINDADA: Ordem das Colunas
   const initialColumns = React.useMemo(() => columns.map(c => c.id!).filter(Boolean), [columns]);
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(() => {
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem('lk-financial-order');
         if (saved) return JSON.parse(saved);
-      } catch (e) { console.warn("Memory Fail: Order"); }
+      } catch (e) {}
     }
     return initialColumns;
   });
@@ -189,16 +186,12 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     const startOfThisMonth = startOfMonth(today);
     const endOfThisMonth = endOfMonth(today);
     
-    // 🛡️ INTELIGÊNCIA DE PESQUISA: Identifica se o usuário está buscando algo específico
     const isSpecificSearch = !!globalFilter.trim() || !!appliedDateRange;
 
     let list = data;
 
-    // 1. 🔍 LÓGICA DE FILTROS SOLICITADA (TODOS / PAGAS / PENDENTES / PARCIAIS)
     if (statusFilter === 'Todos') {
-        // "SOMENTE PROPOSTA DO MÊS VIGENTE (MENOS AS REPROVADAS). OUTROS MESES SÓ SE PESQUISAR"
         list = list.filter(p => p.status !== 'Reprovado');
-        
         if (!isSpecificSearch) {
             list = list.filter(p => {
                 const d = p.dateDigitized ? new Date(p.dateDigitized) : null;
@@ -206,9 +199,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             });
         }
     } else if (statusFilter === 'Paga') {
-        // "SOMENTE PROPOSTA DO MÊS VIGENTE. OUTROS MESES SÓ SE PESQUISAR"
         list = list.filter(p => p.commissionStatus === 'Paga');
-        
         if (!isSpecificSearch) {
             list = list.filter(p => {
                 const d = p.commissionPaymentDate ? new Date(p.commissionPaymentDate) : null;
@@ -216,11 +207,9 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             });
         }
     } else if (statusFilter === 'Pendente' || statusFilter === 'Parcial') {
-        // "PODE APARECER PROPOSTAS DE QUALQUER MES"
         list = list.filter(p => p.commissionStatus === statusFilter);
     }
 
-    // 2. 🏦 FILTROS DE ENTIDADE
     if (bankFilter !== 'all') {
         list = list.filter(p => p.bank === bankFilter);
     }
@@ -229,7 +218,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         list = list.filter(p => p.promoter === promoterFilter);
     }
 
-    // 3. 📅 FILTRO DE DATA EXPLÍCITO (SOBREPÕE O FILTRO VIGENTE)
     if (appliedDateRange && appliedDateRange.from) {
         const fromDate = appliedDateRange.from;
         const toDate = appliedDateRange.to ? endOfDay(appliedDateRange.to) : endOfDay(appliedDateRange.from);
@@ -239,13 +227,15 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         });
     }
 
-    // 4. ☢️ BUSCA NUCLEAR (ID, NOME, CPF)
     if (globalFilter) {
         const searchTerm = String(globalFilter).trim();
         
-        // PRIORIDADE ZERO: Busca exclusiva pelo ID
+        // 🛡️ BUSCA NUCLEAR V2: Prioridade para ID Numérico do Cliente OU Número da Proposta
         if (/^\d+$/.test(searchTerm)) {
-            return list.filter(p => p.customer?.numericId.toString() === searchTerm);
+            return list.filter(p => 
+                p.customer?.numericId.toString() === searchTerm || 
+                p.proposalNumber.includes(searchTerm)
+            );
         }
 
         const normalizedSearch = normalizeString(searchTerm);
