@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -367,7 +366,7 @@ export default function SettingsPage() {
             </TabsList>
 
             <TabsContent value="appearance">
-                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative items-start">
                     <div className="lg:col-span-2 space-y-8">
                         <Card className="border-border/50 shadow-sm">
                             <CardHeader className="flex flex-row items-center justify-between">
@@ -398,7 +397,7 @@ export default function SettingsPage() {
                                         {Object.keys(auraLabels).map((a) => (
                                             <Label key={a} htmlFor={`aura-${a}`} className={cn("flex flex-col items-center justify-center rounded-xl border-2 p-4 cursor-pointer text-center gap-2 transition-all", preview.auraStyle === a ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-muted hover:border-primary/30")}>
                                                 <RadioGroupItem value={a} id={`aura-${a}`} className="sr-only" />
-                                                <div className={cn("h-8 w-8 rounded-full border shadow-inner", a === 'limpo' ? 'bg-background' : `aura-${a}`)} />
+                                                <div className={cn("h-10 w-10 rounded-full border shadow-inner", a === 'limpo' ? 'bg-background' : `aura-${a}`)} />
                                                 <span className="text-[10px] font-black uppercase tracking-tighter leading-tight">{auraLabels[a]}</span>
                                             </Label>
                                         ))}
@@ -582,8 +581,8 @@ export default function SettingsPage() {
                         </Card>
                     </div>
 
-                    <div className="lg:col-span-1">
-                        <div className="sticky top-20">
+                    <div className="lg:col-span-1 h-full min-h-[600px]">
+                        <div className="sticky top-20 z-30">
                             <Card className="border-primary/20 bg-primary/[0.02] shadow-xl overflow-hidden">
                                 <CardHeader className="bg-primary/5 border-b border-primary/10">
                                     <CardTitle className="text-lg font-bold flex items-center gap-2">
