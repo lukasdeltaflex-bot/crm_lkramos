@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -252,8 +251,14 @@ export function ProposalForm({
   }, [selectedCustomerFromSearch, setValue, trigger, onCustomerSearchSelectionHandled]);
 
 
+  // 🛡️ REFINAMENTO DE SINCRONIZAÇÃO: Limpa benefício se o cliente mudar
   useEffect(() => {
     const currentBenefit = form.getValues('selectedBenefitNumber');
+    if (!selectedCustomerId) {
+        form.setValue('selectedBenefitNumber', '');
+        return;
+    }
+    
     const isBenefitValidForCustomer = selectedCustomer?.benefits?.some(b => b.number === currentBenefit);
 
     if (selectedCustomerId && !isBenefitValidForCustomer) {

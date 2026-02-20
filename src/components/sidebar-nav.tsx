@@ -6,6 +6,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  useSidebar
 } from '@/components/ui/sidebar';
 import { LayoutDashboard, FileText, Users, CircleDollarSign, Cog, User, CalendarClock, BookOpen } from 'lucide-react';
 
@@ -26,6 +27,13 @@ const bottomLinks = [
 
 export function SidebarNav() {
   const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const handleNavClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   return (
     <>
@@ -42,6 +50,7 @@ export function SidebarNav() {
                 asChild
                 isActive={isActive}
                 tooltip={link.label}
+                onClick={handleNavClick}
             >
                 <Link href={link.href}>
                 <link.icon />
@@ -60,6 +69,7 @@ export function SidebarNav() {
                 asChild
                 isActive={pathname.startsWith(link.href)}
                 tooltip={link.label}
+                onClick={handleNavClick}
                 >
                 <Link href={link.href}>
                     <link.icon />

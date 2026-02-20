@@ -129,7 +129,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     name: "benefits"
   });
 
-  // 🛡️ BLINDAGEM NUCLEAR V5: Sanitização e Sincronização Forçada
+  // 🛡️ BLINDAGEM NUCLEAR V6: Sanitização Atômica e Reatividade de Valor
   useEffect(() => {
     const source = customer || defaultValues;
     if (source) {
@@ -143,7 +143,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
           } catch (e) {}
       }
       
-      // Sanitização: Impede que 'null' quebre o componente Select
       const sanitizedGender = (source.gender === null || source.gender === undefined) ? "" : source.gender;
 
       form.reset({
@@ -167,11 +166,10 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         documents: source.documents || [],
       });
 
-      // Trava de segurança atômica com delay para garantir que o DOM do Select esteja pronto
       if (sanitizedGender !== "") {
           const timeoutId = setTimeout(() => {
             form.setValue('gender', sanitizedGender, { shouldValidate: true, shouldDirty: true });
-          }, 100);
+          }, 10);
           return () => clearTimeout(timeoutId);
       }
     }
@@ -186,7 +184,9 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   const birthDateValue = form.watch('birthDate');
   const currentStatusValue = form.watch('status');
   const phoneValue = form.watch('phone');
+  const phone2Value = form.watch('phone2');
   const cpfValue = form.watch('cpf');
+  const genderValue = form.watch('gender');
 
   const duplicateCpfCustomer = useMemo(() => {
     if (!cpfValue || cpfValue.length < 14) return null;
@@ -361,9 +361,9 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Gênero</FormLabel>
-                          {/* 🛡️ KEY DINÂMICA V5: Força remontagem para exibir valor salvo do Firebase */}
+                          {/* 🛡️ KEY DINÂMICA V6: Dependência de valor forçada para garantir sincronização visual */}
                           <Select 
-                            key={`gender-select-${customer?.id || tempCustomerId || 'new'}-${field.value || 'none'}`} 
+                            key={`gender-select-${customer?.id || tempCustomerId || 'new'}-${genderValue || 'none'}`} 
                             onValueChange={field.onChange} 
                             value={field.value || ""}
                           >
@@ -426,13 +426,18 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                             <FormItem>
                                 <FormLabel>Telefone 2</FormLabel>
                                 <FormControl>
-                                    <Input
-                                        placeholder="(11) 98765-4321"
-                                        {...field}
-                                        value={field.value || ''}
-                                        onChange={(e) => form.setValue('phone2', handlePhoneMask(e.target.value), { shouldValidate: true })}
-                                        maxLength={15}
-                                    />
+                                    <div className="relative">
+                                        <Input
+                                            placeholder="(11) 98765-4321"
+                                            {...field}
+                                            value={field.value || ''}
+                                            onChange={(e) => form.setValue('phone2', handlePhoneMask(e.target.value), { shouldValidate: true })}
+                                            maxLength={15}
+                                        />
+                                        {isWhatsApp(phone2Value || '') && (
+                                            <WhatsAppIcon className="absolute right-3 top-2.5" />
+                                        )}
+                                    </div>
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

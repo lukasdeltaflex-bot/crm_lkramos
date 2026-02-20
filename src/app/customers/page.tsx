@@ -1,4 +1,3 @@
-
 'use client';
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -41,6 +40,8 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getAge, cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 function cleanCustomerData(data: any): any {
     if (data === null || data === undefined) return null;
@@ -120,7 +121,14 @@ function CustomersPageContent() {
         await batch.commit();
         toast({ title: 'Ação Concluída', description: `${selectedIds.length} registros foram anonimizados.` });
         setRowSelection({});
-    } catch (e) {
+    } catch (e: any) {
+        if (e.code === 'permission-denied') {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: 'customers',
+                operation: 'update',
+                requestResourceData: { status: 'inactive' }
+            }));
+        }
         toast({ variant: 'destructive', title: 'Erro na operação em massa' });
     } finally {
         setIsSaving(false);
@@ -164,8 +172,19 @@ function CustomersPageContent() {
   const handleAnonymizeCustomer = async (customerId: string) => {
     if (!firestore) return;
     const docRef = doc(firestore, 'customers', customerId);
-    updateDoc(docRef, { name: 'Cliente Removido', cpf: '000.000.000-00', status: 'inactive' })
-        .then(() => toast({ title: 'Cliente Anonimizado' }));
+    const dataToUpdate = { name: 'Cliente Removido', cpf: '000.000.000-00', status: 'inactive' };
+    
+    updateDoc(docRef, dataToUpdate)
+        .then(() => toast({ title: 'Cliente Anonimizado' }))
+        .catch(async (error) => {
+            if (error.code === 'permission-denied') {
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: docRef.path,
+                    operation: 'update',
+                    requestResourceData: dataToUpdate
+                }));
+            }
+        });
   };
 
   const handleFormSubmit = async (formData: any) => {
@@ -185,6 +204,15 @@ function CustomersPageContent() {
             .then(() => {
                 toast({ title: 'Cliente Salvo!' });
                 setIsDialog(false);
+            })
+            .catch(async (error) => {
+                if (error.code === 'permission-denied') {
+                    errorEmitter.emit('permission-error', new FirestorePermissionError({
+                        path: docRef.path,
+                        operation: 'write',
+                        requestResourceData: finalData
+                    }));
+                }
             });
     } finally {
         setIsSaving(false);
