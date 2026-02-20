@@ -150,24 +150,25 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
     const wrappedDecText = doc.splitTextToSize(decText, 180);
     const textHeight = (wrappedDecText.length * 5);
 
-    if (getFinalY() + textHeight + 40 > pageHeight - 20) { 
+    // 🛡️ ENGENHARIA DE PDF: Cálculo dinâmico para evitar quebras feias ou sobreposições
+    const currentY = getFinalY();
+    if (currentY + textHeight + 50 > pageHeight) { 
         doc.addPage(); 
-        doc.setFont("helvetica", "bold"); doc.text("DECLARAÇÃO E FORMALIZAÇÃO", 14, 25); 
-        autoTable(doc, { startY: 30, theme: 'plain' }); // Dummy table to update getFinalY
+        doc.setFont("helvetica", "bold"); 
+        doc.text("DECLARAÇÃO E FORMALIZAÇÃO", 14, 25); 
+        doc.setFontSize(9); doc.setTextColor(80); doc.setFont("helvetica", "normal");
+        doc.text(wrappedDecText, 14, 35);
+        const signatureY = 35 + textHeight + 25;
+        doc.setDrawColor(150); doc.line(14, signatureY, 90, signatureY); doc.line(110, signatureY, 186, signatureY);
+        doc.setFontSize(8); doc.text("ASSINATURA DO CLIENTE", 52, signatureY + 5, { align: 'center' }); doc.text("AGENTE RESPONSÁVEL", 148, signatureY + 5, { align: 'center' });
     } else { 
-        doc.setFont("helvetica", "bold"); doc.text("DECLARAÇÃO E FORMALIZAÇÃO", 14, getFinalY() + 20); 
+        doc.setFont("helvetica", "bold"); doc.text("DECLARAÇÃO E FORMALIZAÇÃO", 14, currentY + 20); 
+        doc.setFontSize(9); doc.setTextColor(80); doc.setFont("helvetica", "normal");
+        doc.text(wrappedDecText, 14, currentY + 30);
+        const signatureY = currentY + 30 + textHeight + 25;
+        doc.setDrawColor(150); doc.line(14, signatureY, 90, signatureY); doc.line(110, signatureY, 186, signatureY);
+        doc.setFontSize(8); doc.text("ASSINATURA DO CLIENTE", 52, signatureY + 5, { align: 'center' }); doc.text("AGENTE RESPONSÁVEL", 148, signatureY + 5, { align: 'center' });
     }
-
-    const currentY = getFinalY() + 10;
-    doc.setFontSize(9); doc.setTextColor(80); doc.setFont("helvetica", "normal");
-    doc.text(wrappedDecText, 14, currentY + 5);
-    
-    const signatureY = currentY + textHeight + 25;
-    doc.setDrawColor(150);
-    doc.line(14, signatureY, 90, signatureY); doc.line(110, signatureY, 186, signatureY);
-    doc.setFontSize(8); 
-    doc.text("ASSINATURA DO CLIENTE", 52, signatureY + 5, { align: 'center' }); 
-    doc.text("AGENTE RESPONSÁVEL", 148, signatureY + 5, { align: 'center' });
     
     doc.save(`Dossie_${customer.name.replace(/\s+/g, '_')}.pdf`);
     toast({ title: "Dossiê Gerado!" });

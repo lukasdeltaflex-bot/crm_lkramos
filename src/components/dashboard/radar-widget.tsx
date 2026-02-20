@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Zap, ChevronRight, User, TrendingUp } from 'lucide-react';
 import type { Customer, Proposal } from '@/lib/types';
-import { differenceInMonths } from 'date-fns';
+import { differenceInMonths, isValid, parseISO } from 'date-fns';
 import Link from 'next/link';
 import { formatCurrency, getAge } from '@/lib/utils';
 import { Badge } from '../ui/badge';
@@ -30,13 +30,19 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
           if (p.customerId !== customer.id) return false;
           if (p.status !== 'Pago' && p.status !== 'Saldo Pago') return false;
           if (!p.datePaidToClient) return false;
-          return differenceInMonths(now, new Date(p.datePaidToClient)) >= 12;
+          
+          // 🛡️ BLINDAGEM: Valida a data antes de processar para evitar crash no dashboard
+          const paidDate = parseISO(p.datePaidToClient);
+          if (!isValid(paidDate)) return false;
+          
+          return differenceInMonths(now, paidDate) >= 12;
         });
 
         if (maturedProposals.length === 0) return null;
 
-        const oldest = [...maturedProposals].sort((a,b) => a.datePaidToClient!.localeCompare(b.datePaidToClient!))[0];
-        const months = differenceInMonths(now, new Date(oldest.datePaidToClient!));
+        const oldest = [...maturedProposals].sort((a,b) => (a.datePaidToClient || '').localeCompare(b.datePaidToClient || ''))[0];
+        const paidDate = parseISO(oldest.datePaidToClient!);
+        const months = differenceInMonths(now, paidDate);
 
         return {
           customer,

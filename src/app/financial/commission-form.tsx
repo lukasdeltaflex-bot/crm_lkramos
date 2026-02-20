@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { format, parse } from 'date-fns';
+import { format, parse, isValid } from 'date-fns';
 import { commissionStatuses } from '@/lib/config-data';
 import type { Proposal } from '@/lib/types';
 import { useEffect } from 'react';
@@ -28,8 +28,12 @@ import { useEffect } from 'react';
 const commissionSchema = z.object({
   commissionStatus: z.string({ required_error: 'Selecione um status.' }),
   amountPaid: z.coerce.number().min(0, 'O valor pago é obrigatório.'),
-  commissionPaymentDate: z.string().optional().refine(val => !val || !isNaN(parse(val, 'dd/MM/yyyy', new Date()).getTime()), {
-    message: "Data inválida. Use o formato dd/mm/aaaa.",
+  commissionPaymentDate: z.string().optional().refine(val => {
+    if (!val) return true;
+    const parsed = parse(val, 'dd/MM/yyyy', new Date());
+    return isValid(parsed);
+  }, {
+    message: "Data inválida. Use o formato dd/MM/aaaa.",
   }),
 });
 

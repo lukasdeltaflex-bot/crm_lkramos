@@ -114,12 +114,10 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     'Status Proposta': false,
     'Operador': true
   });
+  
+  // 🛡️ FIX: Garante que todas as colunas, incluindo 'Operador', existam no columnOrder
   const initialColumns = React.useMemo(() => columns.map(c => c.id!).filter(Boolean), [columns]);
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>([...initialColumns]);
-
-  const [startDateInput, setStartDateInput] = React.useState('');
-  const [endDateInput, setEndDateInput] = React.useState('');
-  const [appliedDateRange, setAppliedDateRange] = React.useState<DateRange | undefined>(undefined);
 
   React.useEffect(() => {
     setIsClient(true);
@@ -130,8 +128,9 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         if (savedVisibility) setColumnVisibility(JSON.parse(savedVisibility));
         const savedOrder = localStorage.getItem('lk-financial-order');
         if (savedOrder) setColumnOrder(JSON.parse(savedOrder));
+        else setColumnOrder([...initialColumns]);
     } catch (e) {}
-  }, []);
+  }, [initialColumns]);
 
   const handlePaginationChange = (updater: any) => {
     setPagination((old) => {
@@ -159,6 +158,10 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
       });
     }
   };
+
+  const [startDateInput, setStartDateInput] = React.useState('');
+  const [endDateInput, setEndDateInput] = React.useState('');
+  const [appliedDateRange, setAppliedDateRange] = React.useState<DateRange | undefined>(undefined);
 
   const summaryRange = React.useMemo(() => {
     if (appliedDateRange?.from) {
