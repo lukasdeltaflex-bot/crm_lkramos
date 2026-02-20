@@ -155,6 +155,9 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         // 🛡️ BUSCA POR ID EXATO (Prioridade Máxima)
         if (/^\d+$/.test(searchTerm)) {
             if (customer.numericId.toString() === searchTerm) return true;
+            // Se for número, retornamos falso para outros campos para evitar ruído, 
+            // a menos que seja um CPF (número longo)
+            if (searchTerm.length < 6) return false;
         }
 
         const normalizedSearch = normalizeString(searchTerm);

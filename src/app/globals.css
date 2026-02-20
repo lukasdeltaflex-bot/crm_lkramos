@@ -81,7 +81,7 @@
 
 /* 🌑 MOTOR DE BARRA LATERAL (Overrides) */
 .sidebar-dark {
-  --sidebar-background: 240 5.9% 10% !important;
+  --sidebar-background: 240 5.9% 5% !important;
   --sidebar-foreground: 240 4.8% 95.9% !important;
   --sidebar-primary: 224.3 76.3% 48% !important;
   --sidebar-primary-foreground: 0 0% 100% !important;
@@ -135,23 +135,23 @@
 .radius-capsula { --radius: 9999px !important; }
 
 /* 🌌 MOTOR ATMOSFÉRICO (AURA) - CALIBRAGEM VIBRANTE */
-.aura-nebula { background: radial-gradient(circle at 50% 50%, hsla(280, 85%, 65%, 0.55), hsla(260, 85%, 70%, 0.45), transparent 90%) !important; }
-.aura-aurora { background: linear-gradient(135deg, hsla(160, 85%, 65%, 0.45) 0%, hsla(200, 85%, 65%, 0.45) 50%, hsla(240, 85%, 70%, 0.35) 100%) !important; }
-.aura-sunset { background: radial-gradient(circle at 0% 0%, hsla(20, 90%, 65%, 0.55), transparent 70%), radial-gradient(circle at 100% 100%, hsla(340, 90%, 65%, 0.55), transparent 70%) !important; }
-.aura-ocean { background: linear-gradient(to bottom, hsla(210, 90%, 70%, 0.55), hsla(190, 90%, 65%, 0.45)) !important; }
-.aura-lavender { background: radial-gradient(circle at 50% 0%, hsla(260, 85%, 70%, 0.55), transparent 85%) !important; }
-.aura-mint { background: radial-gradient(circle at 100% 0%, hsla(150, 85%, 70%, 0.55), transparent 75%) !important; }
-.aura-pearl { background: linear-gradient(45deg, hsla(0, 0%, 80%, 0.6) 0%, hsla(240, 25% ,80%, 0.6) 100%) !important; }
-.aura-desert { background: radial-gradient(circle at 50% 100%, hsla(40, 90%, 65%, 0.55), transparent 75%) !important; }
+.aura-nebula { background: radial-gradient(circle at 50% 50%, hsla(280, 85%, 65%, 0.65), hsla(260, 85%, 70%, 0.55), transparent 90%) !important; }
+.aura-aurora { background: linear-gradient(135deg, hsla(160, 85%, 65%, 0.55) 0%, hsla(200, 85%, 65%, 0.55) 50%, hsla(240, 85%, 70%, 0.45) 100%) !important; }
+.aura-sunset { background: radial-gradient(circle at 0% 0%, hsla(20, 90%, 65%, 0.65), transparent 70%), radial-gradient(circle at 100% 100%, hsla(340, 90%, 65%, 0.65), transparent 70%) !important; }
+.aura-ocean { background: linear-gradient(to bottom, hsla(210, 90%, 70%, 0.65), hsla(190, 90%, 65%, 0.55)) !important; }
+.aura-lavender { background: radial-gradient(circle at 50% 0%, hsla(260, 85%, 70%, 0.65), transparent 85%) !important; }
+.aura-mint { background: radial-gradient(circle at 100% 0%, hsla(150, 85%, 70%, 0.65), transparent 75%) !important; }
+.aura-pearl { background: linear-gradient(45deg, hsla(0, 0%, 80%, 0.7) 0%, hsla(240, 25% ,80%, 0.7) 100%) !important; }
+.aura-desert { background: radial-gradient(circle at 50% 100%, hsla(40, 90%, 65%, 0.65), transparent 75%) !important; }
 
-.dark .aura-nebula { background: radial-gradient(circle at 50% 50%, hsla(280, 70%, 20%, 0.9), transparent 80%) !important; }
-.dark .aura-aurora { background: linear-gradient(135deg, hsla(160, 70%, 15%, 0.8) 0%, hsla(200, 70%, 15%, 0.8) 100%) !important; }
-.dark .aura-sunset { background: radial-gradient(circle at 0% 0%, hsla(20, 80%, 20%, 0.9), transparent 70%), radial-gradient(circle at 100% 100%, hsla(340, 80%, 20%, 0.9), transparent 70%) !important; }
-.dark .aura-ocean { background: linear-gradient(to bottom, hsla(210, 80%, 15%, 0.9), hsla(190, 70%, 15%, 0.7)) !important; }
-.dark .aura-lavender { background: radial-gradient(circle at 50% 0%, hsla(260, 70%, 20%, 0.9), transparent 85%) !important; }
-.dark .aura-mint { background: radial-gradient(circle at 100% 0%, hsla(150, 70%, 20%, 0.9), transparent 75%) !important; }
-.dark .aura-pearl { background: linear-gradient(45deg, hsla(0, 0%, 15%, 0.95) 0%, hsla(240, 15% ,18%, 0.95) 100%) !important; }
-.dark .aura-desert { background: radial-gradient(circle at 50% 100%, hsla(40, 70%, 20%, 0.9), transparent 75%) !important; }
+.dark .aura-nebula { background: radial-gradient(circle at 50% 50%, hsla(280, 70%, 20%, 0.95), transparent 80%) !important; }
+.dark .aura-aurora { background: linear-gradient(135deg, hsla(160, 70%, 15%, 0.9) 0%, hsla(200, 70%, 15%, 0.9) 100%) !important; }
+.dark .aura-sunset { background: radial-gradient(circle at 0% 0%, hsla(20, 80%, 20%, 0.95), transparent 70%), radial-gradient(circle at 100% 100%, hsla(340, 80%, 20%, 0.95), transparent 70%) !important; }
+.dark .aura-ocean { background: linear-gradient(to bottom, hsla(210, 80%, 15%, 0.95), hsla(190, 70%, 15%, 0.8)) !important; }
+.dark .aura-lavender { background: radial-gradient(circle at 50% 0%, hsla(260, 70%, 20%, 0.95), transparent 85%) !important; }
+.dark .aura-mint { background: radial-gradient(circle at 100% 0%, hsla(150, 70%, 20%, 0.95), transparent 75%) !important; }
+.dark .aura-pearl { background: linear-gradient(45deg, hsla(0, 0%, 15%, 0.98) 0%, hsla(240, 15% ,18%, 0.98) 100%) !important; }
+.dark .aura-desert { background: radial-gradient(circle at 50% 100%, hsla(40, 70%, 20%, 0.95), transparent 75%) !important; }
 
 /* STATUS E LINHAS */
 .status-custom {
@@ -173,9 +173,9 @@
 }
 
 @keyframes alert-pulse {
-  0% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-  50% { transform: scale(1.1); opacity: 0.8; box-shadow: 0 0 15px 5px rgba(239, 68, 68, 0.2); }
-  100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+  50% { transform: scale(1.1); box-shadow: 0 0 15px 5px rgba(239, 68, 68, 0.3); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
 }
 .animate-alert-pulse {
   animation: alert-pulse 2s infinite ease-in-out;
