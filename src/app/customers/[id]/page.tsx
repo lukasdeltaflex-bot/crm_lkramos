@@ -467,7 +467,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
         toast({ title: "Central Atualizada", description: "O documento foi vinculado ao cliente com sucesso." });
     } catch (e) {
         console.error("Error updating customer documents:", e);
-        toast({ variant: "destructive", title: "Erro ao atualizar", description: "Não foi possível salvar a alteração." });
+        toast({ variant: "destructive", title: "Erro ao atualizar", description: "Não foi possível salvar a alteration." });
     }
   };
 

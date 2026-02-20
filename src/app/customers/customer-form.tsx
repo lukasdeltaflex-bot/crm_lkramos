@@ -21,16 +21,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Sparkles, Loader2, PlusCircle, Trash2, FileText as FileIcon, UserCheck, UserX, Phone, UploadCloud, FolderLock, Info } from 'lucide-react';
+import { Sparkles, Loader2, PlusCircle, Trash2, FileText as FileIcon, UserCheck, UserX, Phone, FolderLock, Info } from 'lucide-react';
 import { format, parse, isValid } from 'date-fns';
 import { cn, getAge, validateCPF } from '@/lib/utils';
-import type { Customer, Benefit, Attachment } from '@/lib/types';
+import type { Customer, Attachment } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { useEffect, useState, useMemo } from 'react';
 import { summarizeNotes } from '@/ai/flows/summarize-notes-flow';
 import { toast } from '@/hooks/use-toast';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
@@ -132,6 +131,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     name: "benefits"
   });
 
+  // 🛡️ BLINDAGEM DE RESET: Garante que o Gênero e outros campos sejam carregados sem perdas
   useEffect(() => {
     const source = customer || defaultValues;
     if (source) {
@@ -189,7 +189,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       try {
         const parsedDate = parse(birthDateValue, 'dd/MM/yyyy', new Date());
         if (isValid(parsedDate)) {
-          const formattedForUtil = format(parsedDate, 'yyyy-MM-md');
+          const formattedForUtil = format(parsedDate, 'yyyy-MM-dd');
           setAge(getAge(formattedForUtil));
         }
       } catch {
@@ -235,6 +235,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       birthDate: format(parsedDate, 'yyyy-MM-dd'),
       benefits: data.benefits || [],
       documents: data.documents || [],
+      gender: data.gender || null // 🛡️ Garantia de persistência do gênero
     };
     onSubmit(newCustomerData);
   }
@@ -381,8 +382,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                           <FormLabel>Gênero</FormLabel>
                           <Select 
                             onValueChange={field.onChange} 
-                            value={field.value || ""} 
-                            defaultValue={field.value || ""}
+                            value={field.value || ""}
                           >
                             <FormControl>
                               <SelectTrigger>
