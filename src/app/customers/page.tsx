@@ -49,6 +49,7 @@ function cleanCustomerData(data: any): any {
         const cleaned: any = {};
         Object.keys(data).forEach(key => {
             const val = data[key];
+            // Mantém strings vazias e nulls explicitamente se forem campos de formulário, exceto undefined
             if (val !== undefined) cleaned[key] = cleanCustomerData(val);
         });
         return cleaned;

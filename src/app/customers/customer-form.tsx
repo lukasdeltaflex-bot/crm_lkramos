@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Sparkles, AlertCircle, Loader2, PlusCircle, Trash2, FileText as FileIcon, UserCheck, UserX, AlertTriangle, Phone, UploadCloud, FolderLock, Info } from 'lucide-react';
+import { Sparkles, Loader2, PlusCircle, Trash2, FileText as FileIcon, UserCheck, UserX, Phone, UploadCloud, FolderLock, Info } from 'lucide-react';
 import { format, parse, isValid } from 'date-fns';
 import { cn, getAge, validateCPF } from '@/lib/utils';
 import type { Customer, Benefit, Attachment } from '@/lib/types';
@@ -138,7 +138,9 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       let formattedBirthDate = '';
       if (source.birthDate) {
           try {
-              const date = parse(source.birthDate, 'yyyy-MM-dd', new Date());
+              const date = source.birthDate.includes('-') 
+                ? parse(source.birthDate, 'yyyy-MM-dd', new Date())
+                : parse(source.birthDate, 'dd/MM/yyyy', new Date());
               if (isValid(date)) formattedBirthDate = format(date, 'dd/MM/yyyy');
           } catch (e) {}
       }
@@ -187,7 +189,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       try {
         const parsedDate = parse(birthDateValue, 'dd/MM/yyyy', new Date());
         if (isValid(parsedDate)) {
-          const formattedForUtil = format(parsedDate, 'yyyy-MM-dd');
+          const formattedForUtil = format(parsedDate, 'yyyy-MM-md');
           setAge(getAge(formattedForUtil));
         }
       } catch {
@@ -312,7 +314,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
           <div className="space-y-8">
             <div className='space-y-4'>
                 <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-medium">Dados Pessoais</h3>
+                    <h3 className="text-lg font-black uppercase tracking-widest text-primary/60">Dados Pessoais</h3>
                     <FormField
                       control={form.control}
                       name="status"
@@ -377,7 +379,11 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Gênero</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <Select 
+                            onValueChange={field.onChange} 
+                            value={field.value || ""} 
+                            defaultValue={field.value || ""}
+                          >
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Selecione o gênero" />
@@ -469,7 +475,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
             
             <div>
                 <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-medium">Benefícios INSS</h3>
+                    <h3 className="text-lg font-black uppercase tracking-widest text-primary/60">Benefícios INSS</h3>
                     <Button type="button" variant="outline" size="sm" onClick={() => append({ number: "", species: "" })}>
                         <PlusCircle className="mr-2 h-4 w-4" /> Adicionar
                     </Button>
@@ -510,7 +516,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
             <Separator />
 
             <div className='space-y-4'>
-                <h3 className="text-lg font-medium">Endereço Completo</h3>
+                <h3 className="text-lg font-black uppercase tracking-widest text-primary/60">Endereço Completo</h3>
                 <FormField
                     control={form.control}
                     name="cep"
@@ -599,7 +605,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
 
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-medium">Observações</h3>
+                    <h3 className="text-lg font-black uppercase tracking-widest text-primary/60">Observações</h3>
                     <Button 
                         type="button" 
                         variant="ghost" 
@@ -636,7 +642,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
             <div className="space-y-4">
                 <div className="flex items-center gap-2">
                     <FileIcon className="h-5 w-5 text-primary" />
-                    <h3 className="text-lg font-medium">Central de Documentos Fixos</h3>
+                    <h3 className="text-lg font-black uppercase tracking-widest text-primary/60">Central de Documentos Fixos</h3>
                 </div>
                 <CustomerAttachmentUploader 
                     userId={user?.uid || ''}

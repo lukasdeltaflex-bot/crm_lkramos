@@ -9,7 +9,7 @@ import { doc, collection, query, where, updateDoc } from 'firebase/firestore';
 import type { Customer, Proposal, Attachment, ProposalHistoryEntry } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Phone, Mail, Calendar, FileText, CircleDollarSign, BadgePercent, MapPin, Hash, Copy, Printer, FileBadge, FolderLock, Sparkles, AlertTriangle, UserRound, UserX, UserCheck, ShieldCheck, History, MessageSquareQuote } from 'lucide-react';
+import { User, Phone, Mail, Calendar, FileText, CircleDollarSign, BadgePercent, MapPin, Hash, Copy, Printer, FileBadge, FolderLock, Sparkles, UserRound, UserX, UserCheck, History, MessageSquareQuote } from 'lucide-react';
 import { format, parse, differenceInMonths, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,6 @@ import Link from 'next/link';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { formatCurrency, getAge, cn } from '@/lib/utils';
 import { SimpleProposalsTable } from '@/components/customers/simple-proposals-table';
-import { Separator } from '@/components/ui/separator';
 import { CustomerAiSummary } from '@/components/customers/customer-ai-summary';
 import { isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
@@ -156,7 +155,7 @@ const CustomerInfoCard = ({
                             <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Data de Nascimento</span>
                             <div className="flex items-center gap-2 font-bold text-foreground">
                                 <Calendar className="h-3.5 w-3.5 text-primary opacity-40" />
-                                <span>{format(parse(customer.birthDate, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy', { locale: ptBR })}</span>
+                                <span>{customer.birthDate ? format(parse(customer.birthDate, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy', { locale: ptBR }) : '-'}</span>
                                 <Badge variant="secondary" className="text-[9px] bg-primary/10 text-primary border-none">
                                     {age !== null && age > 0 ? `${age} ANOS` : '...'}
                                 </Badge>
@@ -484,7 +483,6 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
 
     const doc = new jsPDF();
     const primaryColor = [40, 74, 127];
-    const accentColor = [212, 175, 55]; // Gold
     
     // Header
     doc.setFontSize(22);
@@ -515,7 +513,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
             ['CPF', customer.cpf],
             ['Status no Sistema', customer.status === 'inactive' ? 'Inativo' : 'Ativo'],
             ['Gênero', customer.gender || 'Não informado'],
-            ['Data de Nascimento', format(parse(customer.birthDate, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy')],
+            ['Data de Nascimento', customer.birthDate ? format(parse(customer.birthDate, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy') : '-'],
             ['Telefone Principal', customer.phone],
             ['E-mail', customer.email || 'N/A'],
             ['Cidade/UF', `${customer.city || '-'} / ${customer.state || '-'}`],
@@ -548,7 +546,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
             p.product,
             p.status,
             formatCurrency(p.grossAmount),
-            format(new Date(p.dateDigitized), 'dd/MM/yyyy')
+            p.dateDigitized ? format(new Date(p.dateDigitized), 'dd/MM/yyyy') : '-'
         ]),
         headStyles: { fillColor: [70, 70, 70], fontSize: 9 },
         styles: { fontSize: 9 }
