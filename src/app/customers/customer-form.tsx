@@ -130,7 +130,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     name: "benefits"
   });
 
-  // 🛡️ BLINDAGEM DE RESET: Força a carga do Gênero sem perdas usando Key Dinâmica no Select
+  // 🛡️ BLINDAGEM DE RESET: Sincronização atômica do Gênero e dados salvos
   useEffect(() => {
     const source = customer || defaultValues;
     if (source) {
@@ -164,6 +164,11 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         state: source.state || '',
         documents: source.documents || [],
       });
+
+      // Trava de segurança extra para o Gênero
+      if (source.gender) {
+          form.setValue('gender', source.gender, { shouldValidate: true });
+      }
     }
   }, [customer, defaultValues, form]);
 
