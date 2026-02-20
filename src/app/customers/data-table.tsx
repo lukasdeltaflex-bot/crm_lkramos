@@ -203,6 +203,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         if (!searchTerm) return true;
         const customer = row.original;
 
+        // 1. Busca Nuclear (ID Exato)
         if (/^\d+$/.test(searchTerm)) {
             if (customer.numericId.toString() === searchTerm) return true;
         }
@@ -221,8 +222,9 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
 
         return fieldsToSearch.some(field => {
             if (!field) return false;
-            const normField = normalizeString(field);
-            const fieldDigits = field.replace(/\D/g, '');
+            const fieldStr = String(field);
+            const normField = normalizeString(fieldStr);
+            const fieldDigits = fieldStr.replace(/\D/g, '');
             
             return normField.includes(normalizedSearch) || 
                    (searchDigits && searchDigits.length >= 3 && fieldDigits.includes(searchDigits));
@@ -240,7 +242,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
             <div className='relative w-full max-w-md group'>
                 <Search className='absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80 group-focus-within:opacity-100 transition-opacity' />
                 <Input
-                    placeholder="Busca por Nome, CPF ou ID Exato..."
+                    placeholder="Busca Inteligente (Nome, CPF ou ID Exato...)"
                     value={globalFilter ?? ''}
                     onChange={(event) => setGlobalFilter(event.target.value)}
                     className="pl-11 w-full bg-background border-2 border-zinc-300 dark:border-primary/40 h-11 rounded-full shadow-md focus-visible:ring-primary/20 transition-all font-bold text-sm"

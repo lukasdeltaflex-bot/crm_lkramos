@@ -232,6 +232,12 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         const customer = row.original.customer;
         const p = row.original;
 
+        // 1. Busca Nuclear (ID ou Proposta Exatos)
+        if (/^\d+$/.test(searchTerm)) {
+            if (p.proposalNumber === searchTerm) return true;
+            if (customer?.numericId?.toString() === searchTerm) return true;
+        }
+
         const normalizedSearch = normalizeString(searchTerm);
         const searchDigits = searchTerm.replace(/\D/g, '');
 
@@ -246,8 +252,10 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
         return searchableFields.some(field => {
             if (!field) return false;
-            const normField = normalizeString(field);
-            const fieldDigits = field.replace(/\D/g, '');
+            const fieldStr = String(field);
+            const normField = normalizeString(fieldStr);
+            const fieldDigits = fieldStr.replace(/\D/g, '');
+            
             return normField.includes(normalizedSearch) || 
                    (searchDigits && searchDigits.length >= 3 && fieldDigits.includes(searchDigits));
         });

@@ -125,7 +125,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         const savedSizing = localStorage.getItem('lk-proposals-sizing');
         if (savedSizing) setColumnSizing(JSON.parse(savedSizing));
 
-        // 🛡️ BLINDAGEM DE MEMÓRIA: Sincroniza colunas novas
         const savedOrder = localStorage.getItem('lk-proposals-order');
         if (savedOrder) {
             const parsedOrder = JSON.parse(savedOrder) as string[];
@@ -145,9 +144,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         } else {
             setColumnOrder([...initialColumns]);
         }
-    } catch (e) {
-        console.warn("LK Ramos: Erro ao carregar visão personalizada.");
-    }
+    } catch (e) {}
   }, [initialColumns]);
 
   const handlePaginationChange = (updater: any) => {
@@ -209,33 +206,9 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
             return d >= fromDate && d <= toDate;
         });
     }
-
-    if (globalFilter) {
-        const searchTerm = String(globalFilter).trim();
-        
-        if (/^\d+$/.test(searchTerm)) {
-            return list.filter(p => 
-                p.customer?.numericId.toString() === searchTerm || 
-                p.proposalNumber === searchTerm
-            );
-        }
-
-        const normalizedSearch = normalizeString(searchTerm);
-        list = list.filter(p => {
-            const proposalNum = normalizeString(p.proposalNumber);
-            const customerName = normalizeString(p.customer?.name || '');
-            const customerCpf = p.customer?.cpf?.replace(/\D/g, '') || '';
-            const cleanSearchNum = searchTerm.replace(/\D/g, '');
-            
-            return proposalNum.includes(normalizedSearch) || 
-                   customerName.includes(normalizedSearch) || 
-                   (cleanSearchNum && cleanSearchNum.length >= 3 && customerCpf.includes(cleanSearchNum)) ||
-                   normalizeString(p.bank).includes(normalizedSearch);
-        });
-    }
     
     return list;
-  }, [data, statusFilter, bankFilter, promoterFilter, globalFilter, appliedDateRange]);
+  }, [data, statusFilter, bankFilter, promoterFilter, appliedDateRange]);
 
   const table = useReactTable({
     data: filteredData,
@@ -250,9 +223,44 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     onColumnSizingChange: setColumnSizing,
     onColumnOrderChange: setColumnOrder,
     onPaginationChange: handlePaginationChange,
+    onGlobalFilterChange: setGlobalFilter,
     enableColumnResizing: true,
     columnResizeMode: 'onChange',
     state: { sorting, globalFilter, rowSelection, columnVisibility, columnSizing, columnOrder, pagination },
+    globalFilterFn: (row, columnId, filterValue) => {
+        const searchTerm = String(filterValue ?? '').trim();
+        if (!searchTerm) return true;
+        const customer = row.original.customer;
+        const p = row.original;
+
+        // 1. Busca Nuclear (ID ou Proposta Exatos)
+        if (/^\d+$/.test(searchTerm)) {
+            if (p.proposalNumber === searchTerm) return true;
+            if (customer?.numericId?.toString() === searchTerm) return true;
+        }
+
+        const normalizedSearch = normalizeString(searchTerm);
+        const searchDigits = searchTerm.replace(/\D/g, '');
+
+        const searchableFields = [
+            customer?.name,
+            customer?.cpf,
+            p.proposalNumber,
+            p.operator,
+            p.bank,
+            p.promoter
+        ];
+
+        return searchableFields.some(field => {
+            if (!field) return false;
+            const fieldStr = String(field);
+            const normField = normalizeString(fieldStr);
+            const fieldDigits = fieldStr.replace(/\D/g, '');
+            
+            return normField.includes(normalizedSearch) || 
+                   (searchDigits && searchDigits.length >= 3 && fieldDigits.includes(searchDigits));
+        });
+    },
     meta: { userSettings }
   });
 
