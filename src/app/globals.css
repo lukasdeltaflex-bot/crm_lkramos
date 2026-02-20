@@ -165,7 +165,7 @@ html, body, *, [data-sidebar="inset"] {
 .aura-active .bg-card, 
 .aura-active .bg-background,
 .aura-active [data-sidebar="inset"] {
-    background-color: hsla(var(--background) / 0.75) !important;
+    background-color: hsla(var(--background) / 0.70) !important;
     backdrop-blur: blur(16px) !important;
 }
 

@@ -144,7 +144,7 @@ export default function SettingsPage() {
     statusColors: {} as Record<string, string>
   });
 
-  const [previewStatus, setPreviewStatus] = setPreviewStatus || useState("EM ANDAMENTO");
+  const [previewStatus, setPreviewStatus] = useState("EM ANDAMENTO");
   const [hasLoadedSettings, setHasLoadedSettings] = useState(false);
 
   useEffect(() => {

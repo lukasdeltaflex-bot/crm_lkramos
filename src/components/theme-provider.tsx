@@ -7,7 +7,7 @@ import { THEMES } from "@/lib/themes"
 
 const RADIUS_OPTIONS = ["reto", "extra-discreto", "discreto", "suave", "moderno", "amigavel", "organico", "capsula"];
 const CONTAINER_STYLES = ["moderno", "glass", "deep", "flat", "glow", "geometrico"];
-const TEXTURE_OPTIONS = ["none", "dots", "grid"];
+const TEXTURE_OPTIONS = ["none", "dots", "grid", "lines"];
 const INTENSITY_OPTIONS = ["minima", "equilibrada", "impactante", "neon"];
 const FONT_OPTIONS = [
     "moderno", "classico", "mono", "arredondado", "industrial", 

@@ -363,7 +363,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                           <FormLabel>Gênero</FormLabel>
                           {/* 🛡️ KEY DINÂMICA V5: Força remontagem para exibir valor salvo do Firebase */}
                           <Select 
-                            key={`gender-select-${customer?.id || tempCustomerId || 'new'}-${field.value}`} 
+                            key={`gender-select-${customer?.id || tempCustomerId || 'new'}-${field.value || 'none'}`} 
                             onValueChange={field.onChange} 
                             value={field.value || ""}
                           >
