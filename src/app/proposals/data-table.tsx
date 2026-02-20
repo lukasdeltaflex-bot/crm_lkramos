@@ -184,7 +184,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     onRowSelectionChange: setRowSelection,
     onColumnSizingChange: setColumnSizing,
     onColumnOrderChange: setColumnOrder,
-    onSortingChange: setSorting,
     enableColumnResizing: true,
     columnResizeMode: 'onChange',
     state: { sorting, globalFilter, rowSelection, columnVisibility, columnSizing, columnOrder },

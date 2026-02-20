@@ -167,6 +167,23 @@
     background-color: hsl(var(--status-color) / 0.1) !important;
 }
 
+/* REFINAMENTO DOS BOTOES DE STATUS (TABS) */
+.status-tab[data-state=active] {
+    color: hsl(var(--status-color)) !important;
+    border-color: hsl(var(--status-color) / 0.4) !important;
+    background-color: hsl(var(--status-color) / 0.1) !important;
+    box-shadow: 0 0 15px -5px hsl(var(--status-color) / 0.3);
+}
+
+.status-tab {
+    transition: all 0.3s ease;
+}
+
+.status-tab:hover:not([data-state=active]) {
+    border-color: hsl(var(--status-color) / 0.2);
+    background-color: hsl(var(--status-color) / 0.05);
+}
+
 @layer base {
   * { @apply border-border; }
   body { @apply bg-background text-foreground antialiased; }
