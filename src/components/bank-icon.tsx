@@ -1,7 +1,9 @@
 'use client';
 
-import { Landmark } from 'lucide-react';
+import React, { useState } from 'react';
+import { Landmark, Loader2 } from 'lucide-react';
 import { cn, cleanBankName } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Mapeamento padrão para os nomes LIMPOS dos bancos
 const domainMap: Record<string, string> = {
@@ -49,30 +51,34 @@ interface BankIconProps {
 }
 
 export function BankIcon({ bankName, domain, className, showLogo = true }: BankIconProps) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
   if (!showLogo || !bankName) {
     return <Landmark className={cn("h-4 w-4 text-muted-foreground/40", className)} />;
   }
   
-  // 1. Limpa o nome do banco para garantir o match (ex: "001 - Banco" -> "Banco")
   const cleanedName = cleanBankName(bankName);
-
-  // 2. Tenta encontrar o domínio no mapa padrão ou usa o configurado manualmente
   const finalDomain = domain || domainMap[cleanedName] || domainMap[bankName] || null;
 
-  if (!finalDomain) {
+  if (!finalDomain || hasError) {
     return <Landmark className={cn("h-4 w-4 text-muted-foreground/40", className)} />;
   }
 
-  // Usamos o serviço de favicon do Google para buscar o ícone oficial
   return (
     <div className={cn("relative flex items-center justify-center overflow-hidden rounded bg-white border border-border/50 shrink-0", className || "h-5 w-5")}>
+      {isLoading && (
+        <Skeleton className="absolute inset-0 h-full w-full bg-muted animate-pulse" />
+      )}
       <img
         src={`https://www.google.com/s2/favicons?domain=${finalDomain}&sz=64`}
         alt={bankName}
-        className="h-full w-full object-contain p-0.5"
+        className={cn("h-full w-full object-contain p-0.5 transition-opacity duration-300", isLoading ? "opacity-0" : "opacity-100")}
         loading="lazy"
-        onError={(e) => {
-          (e.target as any).style.display = 'none';
+        onLoad={() => setIsLoading(false)}
+        onError={() => {
+          setHasError(true);
+          setIsLoading(false);
         }}
       />
     </div>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -103,11 +102,13 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'Data Digitação', desc: true }]);
   const [isClient, setIsClient] = React.useState(false);
 
-  // 💾 PERSISTÊNCIA: Linhas por Página
+  // 💾 PERSISTÊNCIA BLINDADA: Linhas por Página
   const [pagination, setPagination] = React.useState<PaginationState>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('lk-proposals-pageSize');
-      if (saved) return { pageIndex: 0, pageSize: Number(saved) };
+      try {
+        const saved = localStorage.getItem('lk-proposals-pageSize');
+        if (saved) return { pageIndex: 0, pageSize: Number(saved) };
+      } catch (e) { console.warn("Memory Fail: PageSize"); }
     }
     return { pageIndex: 0, pageSize: 10 };
   });
@@ -115,16 +116,20 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const handlePaginationChange = (updater: any) => {
     setPagination((old) => {
       const next = typeof updater === 'function' ? updater(old) : updater;
-      if (typeof window !== 'undefined') localStorage.setItem('lk-proposals-pageSize', String(next.pageSize));
+      if (typeof window !== 'undefined') {
+        try { localStorage.setItem('lk-proposals-pageSize', String(next.pageSize)); } catch(e) {}
+      }
       return next;
     });
   };
 
-  // 💾 PERSISTÊNCIA: Visibilidade das Colunas
+  // 💾 PERSISTÊNCIA BLINDADA: Visibilidade das Colunas
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('lk-proposals-visibility');
-      if (saved) return JSON.parse(saved);
+      try {
+        const saved = localStorage.getItem('lk-proposals-visibility');
+        if (saved) return JSON.parse(saved);
+      } catch (e) { console.warn("Memory Fail: Visibility"); }
     }
     return {
       'Promotora': true,
@@ -145,12 +150,14 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     };
   });
 
-  // 💾 PERSISTÊNCIA: Ordem das Colunas
+  // 💾 PERSISTÊNCIA BLINDADA: Ordem das Colunas
   const initialColumns = React.useMemo(() => columns.map(c => c.id!).filter(Boolean), [columns]);
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('lk-proposals-order');
-      if (saved) return JSON.parse(saved);
+      try {
+        const saved = localStorage.getItem('lk-proposals-order');
+        if (saved) return JSON.parse(saved);
+      } catch (e) { console.warn("Memory Fail: Order"); }
     }
     return initialColumns;
   });
@@ -159,11 +166,12 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     setIsClient(true);
   }, []);
 
-  // Salva preferências no localStorage
   React.useEffect(() => {
     if (isClient) {
-      localStorage.setItem('lk-proposals-visibility', JSON.stringify(columnVisibility));
-      localStorage.setItem('lk-proposals-order', JSON.stringify(columnOrder));
+      try {
+        localStorage.setItem('lk-proposals-visibility', JSON.stringify(columnVisibility));
+        localStorage.setItem('lk-proposals-order', JSON.stringify(columnOrder));
+      } catch(e) {}
     }
   }, [columnVisibility, columnOrder, isClient]);
 
@@ -207,7 +215,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     if (globalFilter) {
         const searchTerm = String(globalFilter).trim();
         
-        // 🛡️ BUSCA POR ID EXATO (Prioridade Absoluta)
+        // 🛡️ BUSCA NUCLEAR: Prioridade para ID Numérico do Cliente
         if (/^\d+$/.test(searchTerm)) {
             return list.filter(p => p.customer?.numericId.toString() === searchTerm);
         }
@@ -245,29 +253,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     enableColumnResizing: true,
     columnResizeMode: 'onChange',
     state: { sorting, globalFilter, rowSelection, columnVisibility, columnSizing, columnOrder, pagination },
-    meta: { userSettings },
-    globalFilterFn: (row, columnId, filterValue) => {
-        const searchTerm = String(filterValue ?? '').trim();
-        if (!searchTerm) return true;
-        
-        // 🛡️ BUSCA POR ID EXATO
-        if (/^\d+$/.test(searchTerm)) {
-            return row.original.customer?.numericId.toString() === searchTerm;
-        }
-
-        const normalizedSearch = normalizeString(searchTerm);
-        const proposal = row.original;
-        
-        const searchableFields = [
-            proposal.proposalNumber,
-            proposal.customer?.name,
-            proposal.customer?.cpf,
-            proposal.bank,
-            proposal.product
-        ];
-
-        return searchableFields.some(field => field && normalizeString(field).includes(normalizedSearch));
-    }
+    meta: { userSettings }
   });
 
   React.useImperativeHandle(ref, () => ({ table }));

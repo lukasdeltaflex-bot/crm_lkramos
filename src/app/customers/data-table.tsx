@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -85,11 +84,13 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [isClient, setIsClient] = React.useState(false);
 
-  // 💾 PERSISTÊNCIA: Linhas por Página
+  // 💾 PERSISTÊNCIA BLINDADA: Linhas por Página
   const [pagination, setPagination] = React.useState<PaginationState>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('lk-customers-pageSize');
-      if (saved) return { pageIndex: 0, pageSize: Number(saved) };
+      try {
+        const saved = localStorage.getItem('lk-customers-pageSize');
+        if (saved) return { pageIndex: 0, pageSize: Number(saved) };
+      } catch (e) { console.warn("Memory Fail: PageSize"); }
     }
     return { pageIndex: 0, pageSize: 10 };
   });
@@ -97,16 +98,20 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   const handlePaginationChange = (updater: any) => {
     setPagination((old) => {
       const next = typeof updater === 'function' ? updater(old) : updater;
-      if (typeof window !== 'undefined') localStorage.setItem('lk-customers-pageSize', String(next.pageSize));
+      if (typeof window !== 'undefined') {
+        try { localStorage.setItem('lk-customers-pageSize', String(next.pageSize)); } catch(e) {}
+      }
       return next;
     });
   };
 
-  // 💾 PERSISTÊNCIA: Visibilidade das Colunas
+  // 💾 PERSISTÊNCIA BLINDADA: Visibilidade das Colunas
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('lk-customers-visibility');
-      if (saved) return JSON.parse(saved);
+      try {
+        const saved = localStorage.getItem('lk-customers-visibility');
+        if (saved) return JSON.parse(saved);
+      } catch (e) { console.warn("Memory Fail: Visibility"); }
     }
     return {
       'Telefone 2': true,
@@ -116,12 +121,14 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     };
   });
 
-  // 💾 PERSISTÊNCIA: Ordem das Colunas
+  // 💾 PERSISTÊNCIA BLINDADA: Ordem das Colunas
   const initialColumns = React.useMemo(() => columns.map(c => c.id!).filter(Boolean), [columns]);
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('lk-customers-order');
-      if (saved) return JSON.parse(saved);
+      try {
+        const saved = localStorage.getItem('lk-customers-order');
+        if (saved) return JSON.parse(saved);
+      } catch (e) { console.warn("Memory Fail: Order"); }
     }
     return [...initialColumns];
   });
@@ -130,11 +137,12 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     setIsClient(true);
   }, []);
 
-  // Salva no localStorage sempre que mudar
   React.useEffect(() => {
     if (isClient) {
-      localStorage.setItem('lk-customers-visibility', JSON.stringify(columnVisibility));
-      localStorage.setItem('lk-customers-order', JSON.stringify(columnOrder));
+      try {
+        localStorage.setItem('lk-customers-visibility', JSON.stringify(columnVisibility));
+        localStorage.setItem('lk-customers-order', JSON.stringify(columnOrder));
+      } catch(e) {}
     }
   }, [columnVisibility, columnOrder, isClient]);
 
@@ -181,12 +189,13 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
       columnSizing,
       pagination,
     },
+    // 🛡️ BUSCA NUCLEAR: Prioridade Absoluta para ID Numérico
     globalFilterFn: (row, columnId, filterValue) => {
         const searchTerm = String(filterValue ?? '').trim();
         if (!searchTerm) return true;
         const customer = row.original;
 
-        // 🛡️ BUSCA POR ID EXATO (Prioridade Absoluta)
+        // PRIORIDADE ZERO: Se for apenas número, busca exclusivamente pelo ID
         if (/^\d+$/.test(searchTerm)) {
             return customer.numericId.toString() === searchTerm;
         }

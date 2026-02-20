@@ -36,7 +36,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <SidebarInset className={cn(
                 "print:m-0 print:p-0 flex flex-col relative transition-all duration-1000 min-w-0 min-h-screen",
                 auraStyle !== 'limpo' && `aura-${auraStyle}`,
-                auraStyle !== 'limpo' && "bg-transparent"
+                // 🛡️ BLINDAGEM DE AURA: Torna o fundo transparente para permitir a visão do gradiente atmosférico
+                auraStyle !== 'limpo' && "bg-transparent/0 backdrop-blur-none"
             )}>
             <Header className="print:hidden z-20" />
             <main className="flex-1 p-4 sm:p-6 print:p-0 z-10 w-full relative">
