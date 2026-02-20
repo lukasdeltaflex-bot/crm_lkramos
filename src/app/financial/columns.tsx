@@ -1,4 +1,3 @@
-
 'use client';
 
 import { ColumnDef, flexRender, Header } from '@tanstack/react-table';
@@ -214,6 +213,13 @@ export const getColumns = (
             </div>
         )
     },
+    size: 150,
+  },
+  {
+    id: 'Operador',
+    accessorKey: 'operator',
+    header: 'Operador',
+    cell: ({ row }) => <span className="text-sm font-bold text-foreground/70 w-full truncate block">{row.original.operator || '-'}</span>,
     size: 150,
   },
   {

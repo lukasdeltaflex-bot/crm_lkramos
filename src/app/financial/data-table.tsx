@@ -110,7 +110,8 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     'Promotora': false,
     'CPF': false,
     'Comissão (%)': false,
-    'Status Proposta': false
+    'Status Proposta': false,
+    'Operador': true
   });
   const initialColumns = React.useMemo(() => columns.map(c => c.id!).filter(Boolean), [columns]);
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>([...initialColumns]);
@@ -142,6 +143,13 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
       if (typeof window !== 'undefined') {
         try { localStorage.setItem('lk-financial-pageSize', String(next.pageSize)); } catch(e) {}
       }
+      
+      // 🛡️ UX REFINEMENT: Volta o scroll para o topo da tabela ao mudar de página
+      const tableElement = document.querySelector('.financial-table');
+      if (tableElement) {
+          tableElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      
       return next;
     });
   };
@@ -231,11 +239,13 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             const customerCpf = p.customer?.cpf?.replace(/\D/g, '') || '';
             const proposalNum = normalizeString(p.proposalNumber);
             const cleanSearch = searchTerm.replace(/\D/g, '');
+            const operatorName = normalizeString(p.operator || '');
 
             return customerName.includes(normalizedSearch) ||
                    (cleanSearch !== '' && customerCpf.includes(cleanSearch)) ||
                    proposalNum.includes(normalizedSearch) ||
-                   normalizeString(p.bank).includes(normalizedSearch);
+                   normalizeString(p.bank).includes(normalizedSearch) ||
+                   operatorName.includes(normalizedSearch);
         });
     }
 
@@ -427,7 +437,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                     <div className='relative w-full max-md group'>
                         <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80 group-focus-within:opacity-100 transition-opacity' />
                         <Input 
-                            placeholder="Busca Inteligente (Nome, CPF, Banco ou ID Exato...)" 
+                            placeholder="Busca Inteligente (Nome, CPF, Banco, Operador ou ID Exato...)" 
                             value={globalFilter} 
                             onChange={(e) => setGlobalFilter(e.target.value)} 
                             className="pl-10 h-11 bg-background border-2 border-zinc-300 dark:border-primary/40 rounded-full text-base font-bold shadow-md focus-visible:ring-primary/20 transition-all placeholder:text-muted-foreground/80" 
