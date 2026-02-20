@@ -60,7 +60,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { X, Filter, Search, Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { X, Filter, Search, Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Landmark, Building2 } from 'lucide-react';
 import { cn, cleanBankName, formatCurrency, normalizeString } from '@/lib/utils';
 import type { Proposal, Customer, UserSettings } from '@/lib/types';
 import { FinancialSummary } from '@/components/financial/financial-summary';
@@ -155,14 +155,14 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
     if (globalFilter) {
         const searchTerm = String(globalFilter).trim();
+        
+        // 🛡️ BUSCA POR ID EXATO (Prioridade Máxima - Blindada)
+        if (/^\d+$/.test(searchTerm)) {
+            return list.filter(p => p.customer?.numericId.toString() === searchTerm);
+        }
+
         const normalizedSearch = normalizeString(searchTerm);
-
         list = list.filter(p => {
-            // 🛡️ BUSCA POR ID EXATO (Prioridade Máxima)
-            if (/^\d+$/.test(searchTerm)) {
-                return p.customer?.numericId.toString() === searchTerm;
-            }
-
             const customerName = normalizeString(p.customer?.name || '');
             const customerCpf = p.customer?.cpf?.replace(/\D/g, '') || '';
             const proposalNum = normalizeString(p.proposalNumber);
@@ -291,7 +291,10 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 <div className="flex items-center gap-2 ml-auto">
                     <Select value={bankFilter} onValueChange={setBankFilter}>
                         <SelectTrigger className="h-9 min-w-[180px] bg-background border-2 border-zinc-300 dark:border-primary/20 rounded-full text-xs font-black uppercase px-4 shadow-sm">
-                            <SelectValue placeholder="TODOS OS BANCOS" />
+                            <div className="flex items-center gap-2">
+                                <Landmark className="h-3.5 w-3.5 text-primary" />
+                                <SelectValue placeholder="TODOS OS BANCOS" />
+                            </div>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">TODOS OS BANCOS</SelectItem>
@@ -303,7 +306,10 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
                     <Select value={promoterFilter} onValueChange={setPromoterFilter}>
                         <SelectTrigger className="h-9 min-w-[180px] bg-background border-2 border-zinc-300 dark:border-primary/20 rounded-full text-xs font-black uppercase px-4 shadow-sm">
-                            <SelectValue placeholder="TODAS PROMOTORAS" />
+                            <div className="flex items-center gap-2">
+                                <Building2 className="h-3.5 w-3.5 text-primary" />
+                                <SelectValue placeholder="TODAS PROMOTORAS" />
+                            </div>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">TODAS PROMOTORAS</SelectItem>

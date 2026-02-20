@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -569,7 +570,7 @@ export default function SettingsPage() {
                                         <RadioGroup value={preview.backgroundTexture} onValueChange={(val) => setPreview(p => ({ ...p, backgroundTexture: val }))} className="grid grid-cols-2 gap-2">
                                             {['none', 'dots', 'grid', 'lines'].map((t) => (
                                                 <Label key={t} htmlFor={`t-${t}`} className={cn("flex items-center justify-center rounded-md border-2 p-3 cursor-pointer capitalize text-xs font-bold", preview.backgroundTexture === t ? "border-primary bg-primary/5" : "border-muted")}>
-                                                    <RadioGroupItem value={t} id={`t-${t}`} className="sr-only" />{t === 'none' ? 'Liso' : t === 'dots' ? 'Pontos' : t === 'grid' ? 'Grade' : 'Linhas'}
+                                                    <RadioGroupItem value={t} id={`t-${t}`} className="sr-only" />{t === 'none' ? 'Liso' : t === 'dots' ? 'Pontos' : t === 'grid' ? 'Grade' : 'Lines'}
                                                 </Label>
                                             ))}
                                         </RadioGroup>
@@ -579,134 +580,132 @@ export default function SettingsPage() {
                         </Card>
                     </div>
 
-                    <div className="lg:col-span-1">
-                        <div className="sticky top-20 z-30 transition-all duration-500 w-full">
-                            <Card className="border-primary/20 bg-primary/[0.02] shadow-xl overflow-hidden">
-                                <CardHeader className="bg-primary/5 border-b border-primary/10">
-                                    <CardTitle className="text-lg font-bold flex items-center gap-2">
-                                        <Eye className="h-5 w-5 text-primary" />
-                                        Laboratório 360°
-                                    </CardTitle>
-                                    <CardDescription>Valide cada detalhe antes da aplicação global.</CardDescription>
-                                </CardHeader>
-                                <CardContent className="p-0">
-                                    <div 
-                                        className={cn(
-                                            "p-8 min-h-[500px] flex flex-col gap-8 items-center justify-center transition-all duration-1000",
-                                            `texture-${preview.backgroundTexture}`,
-                                            `radius-${preview.radius}`,
-                                            `font-${preview.fontStyle}`,
-                                            `anim-${preview.animationStyle}`,
-                                            preview.auraStyle !== 'limpo' && `aura-${preview.auraStyle}`
-                                        )}
-                                        style={{ '--primary': previewPrimaryColor } as any}
-                                    >
-                                        <div className="w-full max-w-sm space-y-2">
-                                            <p className="text-[9px] font-black uppercase text-center text-muted-foreground tracking-[0.2em]">Preview de Interface</p>
+                    <div className="lg:col-span-1 self-start sticky top-24 z-30">
+                        <Card className="border-primary/20 bg-primary/[0.02] shadow-xl overflow-hidden">
+                            <CardHeader className="bg-primary/5 border-b border-primary/10">
+                                <CardTitle className="text-lg font-bold flex items-center gap-2">
+                                    <Eye className="h-5 w-5 text-primary" />
+                                    Laboratório 360°
+                                </CardTitle>
+                                <CardDescription>Valide cada detalhe antes da aplicação global.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                <div 
+                                    className={cn(
+                                        "p-8 min-h-[500px] flex flex-col gap-8 items-center justify-center transition-all duration-1000",
+                                        `texture-${preview.backgroundTexture}`,
+                                        `radius-${preview.radius}`,
+                                        `font-${preview.fontStyle}`,
+                                        `anim-${preview.animationStyle}`,
+                                        preview.auraStyle !== 'limpo' && `aura-${preview.auraStyle}`
+                                    )}
+                                    style={{ '--primary': previewPrimaryColor } as any}
+                                >
+                                    <div className="w-full max-w-sm space-y-2">
+                                        <p className="text-[9px] font-black uppercase text-center text-muted-foreground tracking-[0.2em]">Preview de Interface</p>
+                                        <div className={cn(
+                                            "flex gap-3 p-3 border-2 rounded-xl shadow-sm transition-colors duration-500",
+                                            preview.sidebarStyle === 'dark' ? "bg-zinc-900 border-zinc-800 text-white" : 
+                                            preview.sidebarStyle === 'light' ? "bg-white border-zinc-200 text-zinc-900" :
+                                            "bg-muted/50 border-border text-foreground"
+                                        )}>
+                                            <div className="flex flex-col gap-2 flex-1">
+                                                <div className="h-2 w-12 rounded bg-primary/40" />
+                                                <div className="h-2 w-full rounded bg-primary/20" />
+                                                <div className="h-2 w-full rounded bg-primary/20" />
+                                            </div>
+                                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                                <PanelLeft className="h-5 w-5 text-primary" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="w-full max-w-sm space-y-4">
+                                        <div className="flex items-center gap-2 bg-background/80 backdrop-blur p-2 rounded-lg border shadow-sm">
+                                            <Settings2 className="h-3 w-3 text-muted-foreground" />
+                                            <Select value={previewStatus} onValueChange={setPreviewStatus}>
+                                                <SelectTrigger className="h-7 text-[10px] font-bold uppercase border-none bg-transparent focus:ring-0">
+                                                    <SelectValue placeholder="Escolher Status para Teste" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {colorableStatuses.map(s => (
+                                                        <SelectItem key={s} value={s} className="text-[10px] font-bold uppercase">{s}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <StatsCard 
+                                            title={previewStatus} 
+                                            value="R$ 150.000,00" 
+                                            icon={Zap} 
+                                            description={`SIMULAÇÃO: ${previewStatus}`}
+                                            isHot={preview.containerStyle === 'glow' || preview.colorIntensity === 'neon'}
+                                            sparklineData={[10, 40, 20, 80, 50, 90, 70]}
+                                            overrideStatusColors={preview.statusColors}
+                                            overrideContainerStyle={preview.containerStyle}
+                                            overrideIntensity={preview.colorIntensity}
+                                            overrideRadius={preview.radius}
+                                            overrideAnimationStyle={preview.animationStyle}
+                                            style={testAnimation ? { transform: 'translateX(20px)' } : {}}
+                                        />
+                                        <div className="flex justify-center">
+                                            <Button 
+                                                variant="outline" 
+                                                className={cn(
+                                                    "status-tab font-black uppercase text-[10px] tracking-widest px-6 h-9 border-2",
+                                                    `radius-${preview.radius}`
+                                                )}
+                                                data-state="active"
+                                                style={{ '--status-color': preview.statusColors[previewStatus] || '217 33% 25%' } as any}
+                                            >
+                                                Botão de Filtro {previewStatus}
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    <div className="w-full max-w-sm space-y-4">
+                                        <p className="text-[9px] font-black uppercase text-center text-muted-foreground tracking-[0.2em] mb-4">Painel de Teste de Ritmo</p>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <Button 
+                                                className={cn(
+                                                    "group relative overflow-hidden transition-all border-2 h-12 font-bold",
+                                                    `radius-${preview.radius}`,
+                                                    `anim-${preview.animationStyle}`,
+                                                    testAnimation && "scale-110 rotate-2"
+                                                )}
+                                                onClick={handleTriggerTestAnimation}
+                                            >
+                                                <Play className="mr-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                                                TESTAR RITMO
+                                            </Button>
+                                            <Button 
+                                                variant="outline"
+                                                className={cn(
+                                                    "border-2 h-12 font-bold hover:bg-primary hover:text-white transition-all",
+                                                    `radius-${preview.radius}`,
+                                                    `anim-${preview.animationStyle}`,
+                                                    testAnimation && "-translate-y-2 opacity-50"
+                                                )}
+                                            >
+                                                INTERAÇÃO
+                                            </Button>
+                                        </div>
+                                        <div className="flex items-center justify-center gap-2 py-4">
                                             <div className={cn(
-                                                "flex gap-3 p-3 border-2 rounded-xl shadow-sm transition-colors duration-500",
-                                                preview.sidebarStyle === 'dark' ? "bg-zinc-900 border-zinc-800 text-white" : 
-                                                preview.sidebarStyle === 'light' ? "bg-white border-zinc-200 text-zinc-900" :
-                                                "bg-muted/50 border-border text-foreground"
+                                                "h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center animate-bounce",
+                                                `anim-${preview.animationStyle}`
                                             )}>
-                                                <div className="flex flex-col gap-2 flex-1">
-                                                    <div className="h-2 w-12 rounded bg-primary/40" />
-                                                    <div className="h-2 w-full rounded bg-primary/20" />
-                                                    <div className="h-2 w-full rounded bg-primary/20" />
-                                                </div>
-                                                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                                    <PanelLeft className="h-5 w-5 text-primary" />
-                                                </div>
+                                                <Bot className="h-5 w-5 text-primary" />
                                             </div>
-                                        </div>
-
-                                        <div className="w-full max-w-sm space-y-4">
-                                            <div className="flex items-center gap-2 bg-background/80 backdrop-blur p-2 rounded-lg border shadow-sm">
-                                                <Settings2 className="h-3 w-3 text-muted-foreground" />
-                                                <Select value={previewStatus} onValueChange={setPreviewStatus}>
-                                                    <SelectTrigger className="h-7 text-[10px] font-bold uppercase border-none bg-transparent focus:ring-0">
-                                                        <SelectValue placeholder="Escolher Status para Teste" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {colorableStatuses.map(s => (
-                                                            <SelectItem key={s} value={s} className="text-[10px] font-bold uppercase">{s}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                            <StatsCard 
-                                                title={previewStatus} 
-                                                value="R$ 150.000,00" 
-                                                icon={Zap} 
-                                                description={`SIMULAÇÃO: ${previewStatus}`}
-                                                isHot={preview.containerStyle === 'glow' || preview.colorIntensity === 'neon'}
-                                                sparklineData={[10, 40, 20, 80, 50, 90, 70]}
-                                                overrideStatusColors={preview.statusColors}
-                                                overrideContainerStyle={preview.containerStyle}
-                                                overrideIntensity={preview.colorIntensity}
-                                                overrideRadius={preview.radius}
-                                                overrideAnimationStyle={preview.animationStyle}
-                                                style={testAnimation ? { transform: 'translateX(20px)' } : {}}
-                                            />
-                                            <div className="flex justify-center">
-                                                <Button 
-                                                    variant="outline" 
-                                                    className={cn(
-                                                        "status-tab font-black uppercase text-[10px] tracking-widest px-6 h-9 border-2",
-                                                        `radius-${preview.radius}`
-                                                    )}
-                                                    data-state="active"
-                                                    style={{ '--status-color': preview.statusColors[previewStatus] || '217 33% 25%' } as any}
-                                                >
-                                                    Botão de Filtro {previewStatus}
-                                                </Button>
-                                            </div>
-                                        </div>
-
-                                        <div className="w-full max-w-sm space-y-4">
-                                            <p className="text-[9px] font-black uppercase text-center text-muted-foreground tracking-[0.2em] mb-4">Painel de Teste de Ritmo</p>
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <Button 
-                                                    className={cn(
-                                                        "group relative overflow-hidden transition-all border-2 h-12 font-bold",
-                                                        `radius-${preview.radius}`,
-                                                        `anim-${preview.animationStyle}`,
-                                                        testAnimation && "scale-110 rotate-2"
-                                                    )}
-                                                    onClick={handleTriggerTestAnimation}
-                                                >
-                                                    <Play className="mr-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                                                    TESTAR RITMO
-                                                </Button>
-                                                <Button 
-                                                    variant="outline"
-                                                    className={cn(
-                                                        "border-2 h-12 font-bold hover:bg-primary hover:text-white transition-all",
-                                                        `radius-${preview.radius}`,
-                                                        `anim-${preview.animationStyle}`,
-                                                        testAnimation && "-translate-y-2 opacity-50"
-                                                    )}
-                                                >
-                                                    INTERAÇÃO
-                                                </Button>
-                                            </div>
-                                            <div className="flex items-center justify-center gap-2 py-4">
-                                                <div className={cn(
-                                                    "h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center animate-bounce",
-                                                    `anim-${preview.animationStyle}`
-                                                )}>
-                                                    <Bot className="h-5 w-5 text-primary" />
-                                                </div>
-                                                <p className="text-[10px] font-bold text-muted-foreground uppercase">Animação: {preview.animationStyle}</p>
-                                            </div>
+                                            <p className="text-[10px] font-bold text-muted-foreground uppercase">Animação: {preview.animationStyle}</p>
                                         </div>
                                     </div>
-                                    <div className="p-4 bg-muted/30 border-t border-primary/10 text-center">
-                                        <p className="text-[10px] font-black uppercase text-primary tracking-widest animate-pulse">Laboratório LK RAMOS</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
+                                </div>
+                                <div className="p-4 bg-muted/30 border-t border-primary/10 text-center">
+                                    <p className="text-[10px] font-black uppercase text-primary tracking-widest animate-pulse">Laboratório LK RAMOS</p>
+                                </div>
+                            </CardContent>
+                        </Card>
                     </div>
                  </div>
             </TabsContent>
