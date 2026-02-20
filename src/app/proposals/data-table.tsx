@@ -149,15 +149,22 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     }
 
     if (globalFilter) {
-        const lower = normalizeString(globalFilter);
-        list = list.filter(p => 
-            normalizeString(p.proposalNumber).includes(lower) ||
-            normalizeString(p.customer?.name || '').includes(lower) ||
-            normalizeString(p.customer?.cpf || '').includes(lower) ||
-            normalizeString(p.bank).includes(lower) ||
-            normalizeString(p.product).includes(lower) ||
-            normalizeString(p.operator || '').includes(lower)
-        );
+        const searchTerm = normalizeString(globalFilter).trim();
+        list = list.filter(p => {
+            const proposalNum = normalizeString(p.proposalNumber);
+            const customerName = normalizeString(p.customer?.name || '');
+            const customerCpf = p.customer?.cpf?.replace(/\D/g, '') || '';
+            const cleanSearch = searchTerm.replace(/\D/g, '');
+            
+            // Busca por ID Exato
+            if (p.customer?.numericId?.toString() === searchTerm) return true;
+            
+            return proposalNum.includes(searchTerm) || 
+                   customerName.includes(searchTerm) || 
+                   (cleanSearch !== '' && customerCpf.includes(cleanSearch)) ||
+                   normalizeString(p.bank).includes(searchTerm) ||
+                   normalizeString(p.product).includes(searchTerm);
+        });
     }
     
     return list;
@@ -184,17 +191,15 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   React.useImperativeHandle(ref, () => ({ table }));
 
   const selectedRows = table.getFilteredSelectedRowModel().rows;
-  const allFilteredRows = table.getFilteredRowModel().rows;
-  
-  const displayRows = selectedRows.length > 0 ? selectedRows : allFilteredRows;
+  const numSelected = selectedRows.length;
 
   const totalGross = React.useMemo(() => 
-    displayRows.reduce((acc, row) => acc + (row.original.grossAmount || 0), 0),
-  [displayRows]);
+    selectedRows.reduce((acc, row) => acc + (row.original.grossAmount || 0), 0),
+  [selectedRows]);
 
   const totalCommission = React.useMemo(() => 
-    displayRows.reduce((acc, row) => acc + (row.original.commissionValue || 0), 0),
-  [displayRows]);
+    selectedRows.reduce((acc, row) => acc + (row.original.commissionValue || 0), 0),
+  [selectedRows]);
 
   const handleDateInputChange = (value: string, type: 'start' | 'end') => {
     let v = value.replace(/\D/g, '').slice(0, 8);
@@ -290,7 +295,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                 <div className='relative w-full max-w-md group'>
                     <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80 group-focus-within:opacity-100 transition-opacity' />
                     <Input
-                        placeholder="Busca Inteligente (Nome, CPF, Proposta...)"
+                        placeholder="Busca Inteligente (Nome, CPF, Proposta ou ID...)"
                         value={globalFilter ?? ''}
                         onChange={(e) => setGlobalFilter(e.target.value)}
                         className="pl-10 h-11 bg-background border-2 border-zinc-300 dark:border-primary/40 rounded-full text-base font-bold shadow-md focus-visible:ring-primary/20 transition-all placeholder:text-muted-foreground/80"
@@ -370,20 +375,25 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between px-6 py-4 border-t-2 bg-muted/10 font-black text-[11px] uppercase tracking-[0.1em] text-foreground/60">
+                <div className="flex items-center justify-between px-6 py-4 border-t-2 bg-muted/10 font-black text-[11px] uppercase tracking-[0.1em] text-foreground/60 min-h-[64px]">
                     <div className="flex items-center gap-4">
                         <div>
-                            {table.getFilteredSelectedRowModel().rows.length} DE{' '}
+                            {numSelected} DE{' '}
                             {table.getFilteredRowModel().rows.length} SELECIONADOS.
                         </div>
-                        <Separator orientation="vertical" className="h-4 bg-zinc-300 dark:bg-zinc-700" />
-                        <div className="text-[#00AEEF] font-black">
-                            VALOR BRUTO: <span className="text-foreground">{formatCurrency(totalGross)}</span>
-                        </div>
-                        <Separator orientation="vertical" className="h-4 bg-zinc-300 dark:bg-zinc-700" />
-                        <div className="text-[#00AEEF] font-black">
-                            COMISSÃO: <span className="text-foreground">{formatCurrency(totalCommission)}</span>
-                        </div>
+                        
+                        {numSelected > 0 && (
+                            <>
+                                <Separator orientation="vertical" className="h-4 bg-zinc-300 dark:bg-zinc-700" />
+                                <div className="text-[#00AEEF] font-black animate-in fade-in slide-in-from-left-2">
+                                    VALOR BRUTO: <span className="text-foreground">{formatCurrency(totalGross)}</span>
+                                </div>
+                                <Separator orientation="vertical" className="h-4 bg-zinc-300 dark:bg-zinc-700" />
+                                <div className="text-[#00AEEF] font-black animate-in fade-in slide-in-from-left-2">
+                                    COMISSÃO: <span className="text-foreground">{formatCurrency(totalCommission)}</span>
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     <div className="flex items-center gap-6">

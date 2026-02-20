@@ -1,4 +1,3 @@
-
 'use client';
 
 import { ColumnDef, Header, flexRender } from '@tanstack/react-table';
@@ -332,12 +331,13 @@ export const getColumns = (
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <div className="shrink-0 text-red-600 animate-pulse">
+                                <div className="shrink-0 text-red-600 animate-pulse bg-red-50 p-1 rounded-full border border-red-200">
                                     <AlertTriangle className="h-4 w-4 fill-current" />
                                 </div>
                             </TooltipTrigger>
-                            <TooltipContent>
-                                Prazo Crítico: {businessDays} dias úteis aguardando saldo.
+                            <TooltipContent side="top" className="bg-white text-zinc-950 border-2 border-red-500 shadow-2xl p-3 rounded-xl">
+                                <p className="font-bold text-red-600 uppercase text-xs">Atenção: Prazo Crítico!</p>
+                                <p className="text-[10px] font-medium text-muted-foreground mt-1">Aguardando saldo há {businessDays} dias úteis.</p>
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
