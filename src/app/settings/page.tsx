@@ -365,7 +365,7 @@ export default function SettingsPage() {
             </TabsList>
 
             <TabsContent value="appearance">
-                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start relative overflow-visible">
+                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start relative">
                     <div className="lg:col-span-2 space-y-8 pb-20">
                         <Card className="border-border/50 shadow-sm">
                             <CardHeader className="flex flex-row items-center justify-between">
@@ -579,7 +579,7 @@ export default function SettingsPage() {
                         </Card>
                     </div>
 
-                    <div className="lg:col-span-1 self-start sticky top-24 z-30">
+                    <div className="lg:col-span-1 self-start sticky top-24 z-30 overflow-visible">
                         <Card className="border-primary/20 bg-primary/[0.02] shadow-xl overflow-hidden">
                             <CardHeader className="bg-primary/5 border-b border-primary/10">
                                 <CardTitle className="text-lg font-bold flex items-center gap-2">
@@ -598,7 +598,7 @@ export default function SettingsPage() {
                                         `anim-${preview.animationStyle}`,
                                         preview.auraStyle !== 'limpo' && `aura-${preview.auraStyle}`
                                     )}
-                                    style={{ '--primary': previewPrimaryColor, '--font-main': FONT_LABELS[preview.fontStyle] } as any}
+                                    style={{ '--primary': previewPrimaryColor } as any}
                                 >
                                     <div className="w-full max-w-sm space-y-2">
                                         <p className="text-[9px] font-black uppercase text-center text-muted-foreground tracking-[0.2em]">Preview de Interface</p>
@@ -609,7 +609,7 @@ export default function SettingsPage() {
                                             "bg-muted/50 border-border text-foreground"
                                         )}>
                                             <div className="flex flex-col gap-2 flex-1">
-                                                <div className="h-2 w-12 rounded bg-primary/40" />
+                                                <div className="h-2 rounded bg-primary/40 w-1/3" />
                                                 <div className="h-2 w-full rounded bg-primary/20" />
                                                 <div className="h-2 w-full rounded bg-primary/20" />
                                             </div>
