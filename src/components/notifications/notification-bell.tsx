@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Bell, Cake, BadgePercent, X, CalendarClock, Bot, Loader2, MessageSquareText, Hourglass, Coins, Zap } from 'lucide-react';
+import { Bell, Cake, BadgePercent, X, CalendarClock, Bot, Loader2, MessageSquareText, Hourglass, Coins, Zap, AlertTriangle } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,7 +71,7 @@ export function NotificationBell() {
   const notifications = React.useMemo(() => {
     if (!isClient) return [];
     
-    const alerts: { id: string; title: string; type: 'birthday' | 'commission' | 'followup' | 'debt' | 'partial' | 'radar'; date: string; link: string; customerId?: string }[] = [];
+    const alerts: { id: string; title: string; type: 'birthday' | 'commission' | 'followup' | 'debt' | 'partial' | 'radar' | 'age'; date: string; link: string; customerId?: string }[] = [];
     const now = new Date();
     const todayStr = format(now, 'MM-dd');
     const todayIso = format(now, 'yyyy-MM-dd');
@@ -81,6 +81,18 @@ export function NotificationBell() {
       const isInactive = c.status === 'inactive' || age >= 75;
       if (isInactive) return;
       
+      // Alerta de proximidade dos 75 anos (74 anos completos)
+      if (age === 74) {
+        alerts.push({
+          id: `age-limit-${c.id}`,
+          title: `Atenção Idade: ${c.name}`,
+          type: 'age',
+          date: 'Próximo aos 75 anos',
+          link: `/customers/${c.id}`,
+          customerId: c.id
+        });
+      }
+
       if (c.birthDate && c.birthDate.substring(5) === todayStr) {
         alerts.push({
           id: `bday-${c.id}-${todayStr}`,
@@ -265,6 +277,7 @@ export function NotificationBell() {
                         <DropdownMenuItem className="cursor-pointer p-3">
                         <div className="flex items-start gap-3">
                             {n.type === 'birthday' && <Cake className="h-4 w-4 text-pink-500 mt-1" />}
+                            {n.type === 'age' && <AlertTriangle className="h-4 w-4 text-red-500 mt-1" />}
                             {n.type === 'radar' && <Zap className="h-4 w-4 text-orange-500 fill-orange-500 mt-1" />}
                             {n.type === 'commission' && <BadgePercent className="h-4 w-4 text-blue-500 mt-1" />}
                             {n.type === 'followup' && <CalendarClock className="h-4 w-4 text-purple-500 mt-1" />}

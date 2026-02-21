@@ -1,3 +1,4 @@
+
 'use client';
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -294,7 +295,7 @@ function CustomersPageContent() {
             )}
           >
             <UserCheck className="h-3.5 w-3.5" />
-            Ativos 
+            Ativos (Abaixo 75)
             <Badge variant="secondary" className="bg-green-100 text-green-700 ml-1.5 h-5 min-w-[20px] p-0 flex items-center justify-center rounded-full border-none text-[10px] font-black">{activeCustomers.length}</Badge>
           </TabsTrigger>
           <TabsTrigger 
@@ -305,7 +306,7 @@ function CustomersPageContent() {
             )}
           >
             <UserX className="h-3.5 w-3.5" />
-            Inativos 
+            Inativos ou 75+ 
             <Badge variant="secondary" className="bg-zinc-200 text-zinc-700 ml-1.5 h-5 min-w-[20px] p-0 flex items-center justify-center rounded-full border-none text-[10px] font-black">{inactiveCustomers.length}</Badge>
           </TabsTrigger>
         </TabsList>

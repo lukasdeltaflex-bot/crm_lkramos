@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ColumnDef, Header, flexRender } from '@tanstack/react-table';
@@ -24,13 +25,14 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import Link from 'next/link';
-import { isWhatsApp, getWhatsAppUrl, cn } from '@/lib/utils';
+import { isWhatsApp, getWhatsAppUrl, cn, getAge } from '@/lib/utils';
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { TableHead } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
 import React, { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
 
 const CopyButton = ({ text, label }: { text: string | undefined; label: string }) => {
     if (!text) return null;
@@ -226,10 +228,16 @@ export const getColumns = (
     header: 'Nome',
     cell: ({ row }) => {
         const customer = row.original;
+        const age = getAge(customer.birthDate);
         return (
-            <Link href={`/customers/${customer.id}`} className="font-bold text-primary hover:underline uppercase text-sm tracking-tight truncate block w-full" onClick={(e) => e.stopPropagation()}>
-                {customer.name}
-            </Link>
+            <div className="flex flex-col gap-0.5">
+                <Link href={`/customers/${customer.id}`} className="font-bold text-primary hover:underline uppercase text-sm tracking-tight truncate block w-full" onClick={(e) => e.stopPropagation()}>
+                    {customer.name}
+                </Link>
+                {age >= 74 && (
+                    <Badge variant="destructive" className="w-fit h-4 text-[8px] font-black px-1.5 py-0 animate-pulse">ALERTA 75 ANOS</Badge>
+                )}
+            </div>
         )
     },
     size: 250,
