@@ -81,7 +81,10 @@ const CustomerInfoCard = ({ customer, onExportDossier, onToggleStatus, onGenerat
                          <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20"><User className="h-7 w-7 text-primary" /></div>
                         <div className="space-y-1">
                             <div className="flex items-center gap-3">
-                                <CardTitle className="text-2xl font-black uppercase tracking-tight">{customer.name}</CardTitle>
+                                <div className="flex items-center gap-2">
+                                    <CardTitle className="text-2xl font-black uppercase tracking-tight">{customer.name}</CardTitle>
+                                    <CopyButton text={customer.name} label="Nome" />
+                                </div>
                                 <Badge variant={isInactive ? "secondary" : "default"} className={isInactive ? "bg-zinc-200 text-zinc-700" : "bg-green-500 text-white"}>{isInactive ? "Inativo" : "Ativo"}</Badge>
                             </div>
                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Registro Oficial do Cliente</p>
