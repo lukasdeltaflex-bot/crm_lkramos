@@ -15,6 +15,8 @@ import { Header } from '@/components/header';
 import { AuthGuard } from './auth/auth-guard';
 import { useTheme } from './theme-provider';
 import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
+import Link from 'next/link';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const currentYear = new Date().getFullYear();
@@ -48,13 +50,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </main>
             
             <footer className={cn(
-                "mt-auto py-4 px-6 border-t bg-muted/20 text-[10px] text-muted-foreground flex flex-col sm:flex-row justify-between items-center gap-2 print:hidden z-10",
-                isAtmosphericActive && "bg-transparent/50 backdrop-blur-sm"
+                "mt-auto py-6 px-8 border-t bg-card text-[11px] text-muted-foreground flex flex-col sm:flex-row justify-between items-center gap-4 print:hidden z-10 transition-all",
+                isAtmosphericActive && "bg-card/80 backdrop-blur-xl border-t-white/10 dark:border-t-white/5"
             )}>
-                <p>© {currentYear} LK RAMOS Gestão de Propostas. Todos os direitos reservados.</p>
-                <div className="flex gap-4">
-                    <a href="/terms" className="hover:text-primary transition-colors">Termos de Uso</a>
-                    <a href="/privacy" className="hover:text-primary transition-colors">Privacidade</a>
+                <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+                    <p className="font-black uppercase tracking-widest text-foreground/40">© {currentYear} LK RAMOS</p>
+                    <Separator orientation="vertical" className="hidden sm:block h-3 bg-border/50" />
+                    <p className="font-bold uppercase tracking-tighter opacity-60">Gestão de Propostas de Alta Performance</p>
+                </div>
+                <div className="flex items-center gap-6">
+                    <Link href="/terms" className="font-black uppercase tracking-widest text-foreground/50 hover:text-primary transition-colors">Termos de Uso</Link>
+                    <Link href="/privacy" className="font-black uppercase tracking-widest text-foreground/50 hover:text-primary transition-colors">Privacidade</Link>
                 </div>
             </footer>
             </SidebarInset>
