@@ -107,9 +107,9 @@ const CustomerInfoCard = ({ customer, onExportDossier, onToggleStatus, onGenerat
                         <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Documento (CPF)</span><div className="flex items-center gap-2 font-black text-foreground"><FileText className="h-3.5 w-3.5 text-primary/40" /><span>{customer.cpf}</span><CopyButton text={customer.cpf} label="CPF" /></div></div>
                         <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Gênero</span><div className="flex items-center gap-2 font-bold text-foreground"><User className="h-3.5 w-3.5 text-primary/40" /><span>{customer.gender || '-'}</span></div></div>
                         <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Data de Nascimento</span><div className="flex items-center gap-2 font-bold text-foreground"><Calendar className="h-3.5 w-3.5 text-primary/40" /><span>{customer.birthDate ? format(parse(customer.birthDate, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy') : '-'}</span><Badge variant="secondary" className="text-[9px] bg-primary/10 text-primary border-none font-black">{age} ANOS</Badge></div></div>
-                        <div className="flex flex-col gap-1.5 lg:col-span-2"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">E-mail</span><div className="flex items-center gap-2 font-bold text-foreground"><Mail className="h-3.5 w-3.5 text-primary/40" /><span>{customer.email || '-'}</span></div></div>
+                        <div className="flex flex-col gap-1.5 lg:col-span-2"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">E-mail</span><div className="flex items-center gap-2 font-bold text-foreground"><Mail className="h-3.5 w-3.5 text-primary/40" /><span>{customer.email || '-'}</span><CopyButton text={customer.email} label="E-mail" /></div></div>
                         <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Contato Principal</span><div className="flex items-center gap-2 font-black text-foreground"><Phone className="h-3.5 w-3.5 text-primary/40" /><span>{customer.phone}</span><div className="flex items-center gap-1"><CopyButton text={customer.phone} label="Telefone" />{isWhatsApp(customer.phone) && <a href={getWhatsAppUrl(customer.phone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:scale-110 transition-transform"><WhatsAppIcon className="h-4 w-4" /></a>}</div></div></div>
-                        <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Telefone 2</span><div className="flex items-center gap-2 font-bold text-foreground"><Phone className="h-3.5 w-3.5 text-primary/40" /><span>{customer.phone2 || '-'}</span></div></div>
+                        <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Telefone 2</span><div className="flex items-center gap-2 font-bold text-foreground"><Phone className="h-3.5 w-3.5 text-primary/40" /><span>{customer.phone2 || '-'}</span><CopyButton text={customer.phone2} label="Telefone 2" /></div></div>
                     </div>
                 </div>
 
@@ -123,7 +123,10 @@ const CustomerInfoCard = ({ customer, onExportDossier, onToggleStatus, onGenerat
                             customer.benefits.map((benefit: any, idx: number) => (
                                 <div key={idx} className="p-4 rounded-2xl bg-muted/20 border border-border/50 flex flex-col gap-1.5 transition-all hover:bg-muted/30">
                                     <span className="text-[8px] font-black text-primary/60 uppercase tracking-widest">Nº do Benefício</span>
-                                    <span className="font-black text-sm text-foreground">{benefit.number}</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-black text-sm text-foreground">{benefit.number}</span>
+                                        <CopyButton text={benefit.number} label="Benefício" />
+                                    </div>
                                     {benefit.species && <span className="text-[10px] text-muted-foreground font-bold uppercase">{benefit.species}</span>}
                                 </div>
                             ))
