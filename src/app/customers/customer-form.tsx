@@ -27,10 +27,8 @@ import {
     AlertTriangle, 
     Loader2,
     Mail,
-    Phone as PhoneIcon,
     FolderLock,
     Calendar as CalendarIcon,
-    Search,
     AlertCircle,
     CheckCircle2,
     Sparkles,
@@ -38,7 +36,7 @@ import {
 } from 'lucide-react';
 import { format, parse, isValid, differenceInYears } from 'date-fns';
 import { validateCPF, handlePhoneMask, cleanFirestoreData, cn, isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
-import type { Customer, Attachment } from '@/lib/types';
+import type { Customer } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { useEffect, useState, useMemo } from 'react';
@@ -62,23 +60,23 @@ const attachmentSchema = z.object({
 });
 
 const customerSchema = z.object({
-  name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres.'),
-  cpf: z.string().min(11, 'CPF incompleto.').refine((val) => validateCPF(val), {
+  name: z.string().min(3, 'O nome é obrigatório (mín. 3 letras).'),
+  cpf: z.string().min(11, 'CPF obrigatório.').refine((val) => validateCPF(val), {
     message: "CPF Inválido - Verifique os dígitos.",
   }),
   gender: z.string().nullable().optional(),
   status: z.enum(['active', 'inactive']).default('active'),
   benefits: z.array(benefitSchema).optional(),
-  phone: z.string().min(10, 'O telefone é obrigatório.'),
+  phone: z.string().min(10, 'O telefone principal é obrigatório.'),
   phone2: z.string().nullable().optional(),
-  email: z.string().email('E-mail fora do padrão (ex: nome@email.com).').or(z.literal('')).nullable().optional(),
+  email: z.string().email('E-mail inválido.').or(z.literal('')).nullable().optional(),
   birthDate: z.string().refine((date) => {
     try {
       if (!date) return false;
       const parsedDate = parse(date, 'dd/MM/yyyy', new Date());
       return isValid(parsedDate);
     } catch { return false; }
-  }, { message: 'Data de nascimento inválida.' }),
+  }, { message: 'Data de nascimento obrigatória/inválida.' }),
   observations: z.string().nullable().optional(),
   cep: z.string().nullable().optional(),
   street: z.string().nullable().optional(),
@@ -271,15 +269,18 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         <ScrollArea className="h-[75vh] pr-4">
           <div className="space-y-10">
             {/* PAINEL DE ALERTAS NO TOPO */}
-            {hasErrors && (
+            {(hasErrors || duplicity.cpf || duplicity.phone) && (
                 <Alert variant="destructive" className="rounded-2xl border-2 animate-in slide-in-from-top-4 duration-300 bg-red-50 border-red-500">
                     <AlertCircle className="h-5 w-5 text-red-600" />
-                    <AlertTitle className="font-black uppercase text-sm tracking-widest text-red-700">Correção Obrigatória</AlertTitle>
+                    <AlertTitle className="font-black uppercase text-sm tracking-widest text-red-700">Atenção: Correção Necessária</AlertTitle>
                     <AlertDescription className="text-xs font-bold text-red-600 space-y-1 mt-2">
+                        {errors.name && <p>• O Nome Completo é obrigatório.</p>}
                         {errors.cpf && <p>• {errors.cpf.message}</p>}
-                        {errors.email && <p>• {errors.email.message}</p>}
-                        {errors.name && <p>• Nome inválido ou curto.</p>}
-                        {errors.birthDate && <p>• Data de nascimento incorreta.</p>}
+                        {duplicity.cpf && <p>• Este CPF já está cadastrado em outro cliente.</p>}
+                        {errors.phone && <p>• O Telefone Principal é obrigatório.</p>}
+                        {duplicity.phone && <p>• Este Telefone já está em uso por outro cliente.</p>}
+                        {errors.birthDate && <p>• A Data de Nascimento é obrigatória e deve ser válida.</p>}
+                        {errors.email && <p>• O formato do e-mail está incorreto.</p>}
                     </AlertDescription>
                 </Alert>
             )}
@@ -288,7 +289,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
             <div className="space-y-6 relative">
                 <div className="flex items-center justify-between">
                     <h3 className="text-xl font-bold uppercase tracking-tight text-[#00AEEF]">
-                        Dados Pessoais
+                        Dados Obrigatórios
                     </h3>
                     <FormField
                         control={form.control}
@@ -322,11 +323,11 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                     name="name"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel className="text-xs font-medium text-muted-foreground">Nome Completo</FormLabel>
+                        <FormLabel className="text-xs font-medium text-muted-foreground">Nome Completo *</FormLabel>
                         <FormControl>
                             <div className="relative">
                                 <Input 
-                                    placeholder="Nome oficial do cliente" 
+                                    placeholder="Nome completo do cliente" 
                                     {...field} 
                                     className={cn(
                                         "rounded-full h-11 px-5 border-zinc-200 font-bold",
@@ -336,7 +337,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                 {errors.name && <AlertCircle className="absolute right-4 top-3 h-5 w-5 text-red-500" />}
                             </div>
                         </FormControl>
-                        <FormMessage />
                         </FormItem>
                     )}
                 />
@@ -347,7 +347,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         name="cpf"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel className="text-xs font-medium text-muted-foreground">CPF (Validado)</FormLabel>
+                            <FormLabel className="text-xs font-medium text-muted-foreground">CPF *</FormLabel>
                             <FormControl>
                                 <div className="relative">
                                     <Input 
@@ -361,10 +361,9 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                         )}
                                     />
                                     {(duplicity.cpf || errors.cpf) && <AlertTriangle className="absolute right-4 top-3 h-5 w-5 text-red-500 animate-pulse" />}
-                                    {!errors.cpf && watchCpf.length === 14 && <CheckCircle2 className="absolute right-4 top-3 h-5 w-5 text-green-500" />}
+                                    {!errors.cpf && !duplicity.cpf && watchCpf.length === 14 && <CheckCircle2 className="absolute right-4 top-3 h-5 w-5 text-green-500" />}
                                 </div>
                             </FormControl>
-                            <FormMessage />
                             </FormItem>
                         )}
                     />
@@ -375,13 +374,12 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         <FormItem>
                           <FormLabel className="text-xs font-medium text-muted-foreground">Gênero</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value || ""}>
-                            <FormControl><SelectTrigger className="rounded-full h-11 px-5 border-zinc-200 font-bold"><SelectValue placeholder="Selecione o gênero" /></SelectTrigger></FormControl>
+                            <FormControl><SelectTrigger className="rounded-full h-11 px-5 border-zinc-200 font-bold"><SelectValue placeholder="Opcional" /></SelectTrigger></FormControl>
                             <SelectContent>
                               <SelectItem value="Masculino">Masculino</SelectItem>
                               <SelectItem value="Feminino">Feminino</SelectItem>
                             </SelectContent>
                           </Select>
-                          <FormMessage />
                         </FormItem>
                       )}
                     />
@@ -393,22 +391,20 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         name="email"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel className="text-xs font-medium text-muted-foreground">Email Principal</FormLabel>
+                            <FormLabel className="text-xs font-medium text-muted-foreground">E-mail (Opcional)</FormLabel>
                             <FormControl>
                                 <div className="relative">
-                                    <Mail className="absolute left-4 top-3.5 h-4 w-4 text-muted-foreground/40" />
                                     <Input 
-                                        placeholder="seu@exemplo.com" 
+                                        placeholder="exemplo@email.com" 
                                         {...field} 
                                         className={cn(
-                                            "rounded-full h-11 pl-11 border-zinc-200 font-bold transition-all", 
-                                            (duplicity.email || errors.email) && "border-red-500 bg-red-50 ring-1 ring-red-500"
+                                            "rounded-full h-11 px-5 border-zinc-200 font-bold transition-all", 
+                                            errors.email && "border-red-500 bg-red-50 ring-1 ring-red-500"
                                         )} 
                                     />
-                                    {(duplicity.email || errors.email) && <AlertCircle className="absolute right-4 top-3 h-5 w-5 text-red-500" />}
+                                    {errors.email && <AlertCircle className="absolute right-4 top-3 h-5 w-5 text-red-500" />}
                                 </div>
                             </FormControl>
-                            <FormMessage />
                             </FormItem>
                         )}
                     />
@@ -417,18 +413,29 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         name="phone"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel className="text-xs font-medium text-muted-foreground">Telefone Principal</FormLabel>
+                            <FormLabel className="text-xs font-medium text-muted-foreground">Telefone Principal *</FormLabel>
                             <FormControl>
                                 <div className="relative">
-                                    <Input placeholder="(11) 98765-4321" {...field} className={cn("rounded-full h-11 px-5 border-zinc-200 font-bold", duplicity.phone && "border-red-500 bg-red-50")} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} maxLength={15} />
-                                    {isWhatsApp(watchPhone) && (
-                                        <a href={getWhatsAppUrl(watchPhone)} target="_blank" rel="noopener noreferrer" className="absolute right-4 top-3.5 hover:scale-125 transition-transform" title="Abrir WhatsApp">
-                                            <WhatsAppIcon className="h-4 w-4" />
-                                        </a>
-                                    )}
+                                    <Input 
+                                        placeholder="(00) 00000-0000" 
+                                        {...field} 
+                                        className={cn(
+                                            "rounded-full h-11 px-5 border-zinc-200 font-bold", 
+                                            (duplicity.phone || errors.phone) && "border-red-500 bg-red-50"
+                                        )} 
+                                        onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} 
+                                        maxLength={15} 
+                                    />
+                                    <div className="absolute right-4 top-3 h-5 flex items-center gap-2">
+                                        {errors.phone && <AlertCircle className="h-5 w-5 text-red-500" />}
+                                        {isWhatsApp(watchPhone) && (
+                                            <a href={getWhatsAppUrl(watchPhone)} target="_blank" rel="noopener noreferrer" className="hover:scale-125 transition-transform" title="Abrir WhatsApp">
+                                                <WhatsAppIcon className="h-4 w-4" />
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
                             </FormControl>
-                            <FormMessage />
                             </FormItem>
                         )}
                     />
@@ -437,10 +444,10 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         name="phone2"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel className="text-xs font-medium text-muted-foreground">Telefone 2</FormLabel>
+                            <FormLabel className="text-xs font-medium text-muted-foreground">Telefone 2 (Opcional)</FormLabel>
                             <FormControl>
                                 <div className="relative">
-                                    <Input placeholder="(11) 98765-4321" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} maxLength={15} className="rounded-full h-11 px-5 border-zinc-200 font-bold"/>
+                                    <Input placeholder="(00) 00000-0000" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} maxLength={15} className="rounded-full h-11 px-5 border-zinc-200 font-bold"/>
                                     {isWhatsApp(watchPhone2 || '') && (
                                         <a href={getWhatsAppUrl(watchPhone2!)} target="_blank" rel="noopener noreferrer" className="absolute right-4 top-3.5 hover:scale-125 transition-transform" title="Abrir WhatsApp">
                                             <WhatsAppIcon className="h-4 w-4" />
@@ -460,7 +467,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         render={({ field }) => (
                             <FormItem>
                             <FormLabel className="text-xs font-medium text-muted-foreground flex items-center justify-between">
-                                Data de Nascimento
+                                Nascimento *
                                 {customerAge !== null && (
                                     <Badge variant="outline" className={cn(
                                         "h-5 text-[9px] font-black uppercase border-2",
@@ -487,7 +494,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                     {errors.birthDate && <AlertCircle className="absolute right-4 top-3 h-5 w-5 text-red-500" />}
                                 </div>
                             </FormControl>
-                            <FormMessage />
                             </FormItem>
                         )}
                     />
@@ -543,7 +549,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
 
             {/* SEÇÃO: ENDEREÇO */}
             <div className="space-y-6">
-                <h3 className="text-xl font-bold uppercase tracking-tight text-[#00AEEF]">Endereço Completo</h3>
+                <h3 className="text-xl font-bold uppercase tracking-tight text-[#00AEEF]">Localização (Opcional)</h3>
                 <div className='grid grid-cols-1 md:grid-cols-4 gap-6'>
                     <FormField
                         control={form.control}
@@ -557,7 +563,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                     {isFetchingCep && <Loader2 className="absolute right-4 top-3.5 h-4 w-4 animate-spin text-[#00AEEF]" />}
                                 </div>
                             </FormControl>
-                            <FormMessage />
                             </FormItem>
                         )}
                     />
@@ -588,7 +593,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
             {/* SEÇÃO: ANEXOS */}
             <div className="space-y-6">
                 <h3 className="text-xl font-bold uppercase tracking-tight text-[#00AEEF] flex items-center gap-2">
-                    <FolderLock className="h-5 w-5" /> Central de Documentos Fixos
+                    <FolderLock className="h-5 w-5" /> Documentação Fixa
                 </h3>
                 <CustomerAttachmentUploader 
                     userId={customer?.ownerId || 'system'} 
@@ -642,7 +647,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         <div className="flex justify-end pt-6 border-t mt-4 bg-white">
             <Button 
                 type="submit" 
-                disabled={isSaving || duplicity.phone || duplicity.email || duplicity.cpf || hasErrors} 
+                disabled={isSaving || duplicity.phone || duplicity.cpf || hasErrors} 
                 className="rounded-full px-12 h-12 font-bold text-white bg-[#00AEEF] hover:bg-[#0096D1] shadow-lg shadow-[#00AEEF]/20 transition-all border-none"
             >
                 {isSaving ? (
