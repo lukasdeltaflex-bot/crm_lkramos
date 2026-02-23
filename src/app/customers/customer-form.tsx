@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -130,7 +131,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     name: "benefits"
   });
 
-  // 🛡️ BLINDAGEM DE CARREGAMENTO V19: Sincronização definitiva para Gênero
+  // 🛡️ BLINDAGEM DE CARREGAMENTO V20: Sincronização definitiva para Gênero e Datas
   useEffect(() => {
     const source = customer || defaultValues;
     if (source) {
@@ -252,23 +253,20 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     form.setValue('birthDate', value, { shouldValidate: true });
   };
 
+  /**
+   * 🛡️ BUSCA DE CEP BLINDADA (PROXY INTERNO)
+   * Utiliza a API de servidor para contornar bloqueios de rede do navegador.
+   */
   const handleCepBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const cep = e.target.value.replace(/\D/g, '');
     if (cep.length !== 8) return;
     
     setIsFetchingCep(true);
     try {
-        // 🛡️ PROTEÇÃO DE FETCH V19: Captura erro de rede silenciosamente para evitar travamento NextJS
-        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`).catch(() => null);
+        const response = await fetch(`/api/cep/${cep}`).catch(() => null);
         
         if (!response || !response.ok) {
-            toast({ 
-                variant: 'destructive', 
-                title: 'Busca Indisponível', 
-                description: 'A rede bloqueou a consulta ao ViaCEP. Por favor, preencha manualmente.' 
-            });
-            setIsFetchingCep(false);
-            return;
+            throw new Error('Rede bloqueada');
         }
 
         const data = await response.json();
@@ -278,12 +276,16 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
             form.setValue('neighborhood', data.bairro || '', { shouldValidate: true });
             form.setValue('city', data.localidade || '', { shouldValidate: true });
             form.setValue('state', data.uf || '', { shouldValidate: true });
-            toast({ title: "Endereço Localizado", description: "Campos preenchidos via CEP." });
+            toast({ title: "Endereço Localizado", description: "Campos preenchidos via Proxy Seguro." });
         } else {
             toast({ variant: 'destructive', title: "CEP não encontrado", description: "Verifique o número digitado." });
         }
     } catch (error) {
-        console.warn("ViaCEP Silent Handled Error");
+        toast({ 
+            variant: 'destructive', 
+            title: 'Busca Indisponível', 
+            description: 'A rede bloqueou a consulta direta. Por favor, preencha manualmente.' 
+        });
     } finally {
         setIsFetchingCep(false);
     }
