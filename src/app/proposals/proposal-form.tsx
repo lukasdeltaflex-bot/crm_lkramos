@@ -40,7 +40,10 @@ import {
     FolderLock,
     Info,
     Percent,
-    Timer as TimerIcon
+    Timer as TimerIcon,
+    Wallet,
+    TrendingUp,
+    CircleDollarSign
 } from 'lucide-react';
 import { format, parse, parseISO, isValid } from 'date-fns';
 import { cn, formatCurrency, cleanBankName, cleanFirestoreData } from '@/lib/utils';
@@ -222,13 +225,11 @@ export function ProposalForm({
   const productValue = watch('product');
   const selectedCustomerId = watch('customerId');
   const currentStatusValue = watch('status');
-  const proposalNumberValue = watch('proposalNumber');
 
   const selectedCustomer = useMemo(() => {
     return customers.find(c => c.id === selectedCustomerId);
   }, [customers, selectedCustomerId]);
 
-  // 🛡️ INTELIGÊNCIA V11: Auto-preenchimento de NB se houver apenas um
   useEffect(() => {
     if (selectedCustomer) {
         const benefits = selectedCustomer.benefits || [];
@@ -437,7 +438,7 @@ export function ProposalForm({
 
             <div className="space-y-4">
               <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
-                <Clock className="h-4 w-4" /> Esteira Operacional V11
+                <Clock className="h-4 w-4" /> DIGITAÇÃO OFERTA CONSIGNADO
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -540,7 +541,43 @@ export function ProposalForm({
                 />
               </div>
 
-              {/* 🛠️ RESTAURAÇÃO: Prazo e Taxa de Juros */}
+              {/* REALOCAÇÃO: Valores da Proposta */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField control={form.control} name="installmentAmount" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Valor Parcela</FormLabel>
+                        <FormControl>
+                            <div className="relative">
+                                <span className="absolute left-3 top-2.5 text-[10px] font-black text-muted-foreground">R$</span>
+                                <Input type="number" step="0.01" className="pl-9 font-bold rounded-full" {...field} value={field.value ?? 0} readOnly={isReadOnly || isSaving} />
+                            </div>
+                        </FormControl>
+                    </FormItem>
+                )} />
+                <FormField control={form.control} name="netAmount" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Líquido (Cliente)</FormLabel>
+                        <FormControl>
+                            <div className="relative">
+                                <span className="absolute left-3 top-2.5 text-[10px] font-black text-muted-foreground">R$</span>
+                                <Input type="number" step="0.01" className="pl-9 font-bold rounded-full" {...field} value={field.value ?? 0} readOnly={isReadOnly || isSaving} />
+                            </div>
+                        </FormControl>
+                    </FormItem>
+                )} />
+                 <FormField control={form.control} name="grossAmount" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Bruto (Base)</FormLabel>
+                        <FormControl>
+                            <div className="relative">
+                                <span className="absolute left-3 top-2.5 text-[10px] font-black text-muted-foreground">R$</span>
+                                <Input type="number" step="0.01" className="pl-9 font-bold rounded-full" {...field} value={field.value ?? 0} readOnly={isReadOnly || isSaving} />
+                            </div>
+                        </FormControl>
+                    </FormItem>
+                )} />
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -651,44 +688,9 @@ export function ProposalForm({
 
             <div className="space-y-4">
                 <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
-                    <Check className="h-4 w-4" /> Valores Financeiros
+                    <CircleDollarSign className="h-4 w-4" /> REGRAS DE COMISSIONAMENTO
                 </h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField control={form.control} name="installmentAmount" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Valor Parcela</FormLabel>
-                            <FormControl>
-                                <div className="relative">
-                                    <span className="absolute left-3 top-2.5 text-[10px] font-black text-muted-foreground">R$</span>
-                                    <Input type="number" step="0.01" className="pl-9 font-bold" {...field} value={field.value ?? 0} readOnly={isReadOnly || isSaving} />
-                                </div>
-                            </FormControl>
-                        </FormItem>
-                    )} />
-                    <FormField control={form.control} name="netAmount" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Líquido (Cliente)</FormLabel>
-                            <FormControl>
-                                <div className="relative">
-                                    <span className="absolute left-3 top-2.5 text-[10px] font-black text-muted-foreground">R$</span>
-                                    <Input type="number" step="0.01" className="pl-9 font-bold" {...field} value={field.value ?? 0} readOnly={isReadOnly || isSaving} />
-                                </div>
-                            </FormControl>
-                        </FormItem>
-                    )} />
-                     <FormField control={form.control} name="grossAmount" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Bruto (Base)</FormLabel>
-                            <FormControl>
-                                <div className="relative">
-                                    <span className="absolute left-3 top-2.5 text-[10px] font-black text-muted-foreground">R$</span>
-                                    <Input type="number" step="0.01" className="pl-9 font-bold" {...field} value={field.value ?? 0} readOnly={isReadOnly || isSaving} />
-                                </div>
-                            </FormControl>
-                        </FormItem>
-                    )} />
-                </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <FormField control={form.control} name="commissionBase" render={({ field }) => (
                         <FormItem>
