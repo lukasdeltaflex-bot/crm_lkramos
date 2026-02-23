@@ -48,12 +48,12 @@ import { validateCPF, handlePhoneMask, cleanFirestoreData, cn, isWhatsApp, getWh
 import type { Customer } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
 import { CustomerAttachmentUploader } from '@/components/customers/customer-attachment-uploader';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { summarizeNotes } from '@/ai/flows/summarize-notes-flow';
 import { useUser } from '@/firebase';
 
@@ -113,6 +113,8 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   const { user } = useUser();
   const [isFetchingCep, setIsFetchingCep] = useState(false);
   const [isSummarizing, setIsSummarizing] = useState(false);
+  const renderCount = useRef(0);
+  renderCount.current++;
 
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
@@ -181,6 +183,9 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   useEffect(() => {
     const source = customer || defaultValues;
     if (source) {
+      console.log(`[FORM] Render #${renderCount.current} - Iniciando Reset. Customer ID: ${source.id}`);
+      console.log("DEBUG [1. Gender do Banco/Source]:", source.gender);
+
       let formattedBirthDate = '';
       if (source.birthDate) {
           try {
@@ -211,6 +216,8 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         state: source.state || '',
         documents: source.documents || [],
       });
+
+      console.log("DEBUG [2. Gender no Form após Reset]:", form.getValues("gender"));
     }
   }, [customer, defaultValues, form]);
 
@@ -274,7 +281,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       birthDate: format(parsedDate, 'yyyy-MM-dd'),
       benefits: data.benefits || [],
       documents: data.documents || [],
-      gender: data.gender
+      gender: data.gender === "Masculino" || data.gender === "Feminino" ? data.gender : undefined
     };
     onSubmit(cleanFirestoreData(newCustomerData));
   }
