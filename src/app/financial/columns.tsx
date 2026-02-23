@@ -153,7 +153,21 @@ export const getColumns = (
     id: 'Promotora',
     accessorKey: 'promoter',
     header: 'Promotora',
-    cell: ({ row }) => <span className="text-sm font-bold text-foreground/90 w-full truncate block">{row.original.promoter}</span>,
+    cell: ({ row, table }) => {
+        const promoter = row.original.promoter;
+        const settings = (table.options.meta as any)?.userSettings as UserSettings;
+        return (
+            <div className="flex items-center gap-2">
+                <BankIcon 
+                    bankName={promoter} 
+                    domain={settings?.promoterDomains?.[promoter]} 
+                    showLogo={settings?.showPromoterLogos ?? true} 
+                    className="h-4 w-4"
+                />
+                <span className="text-sm font-bold text-foreground/90 w-full truncate block">{promoter}</span>
+            </div>
+        )
+    },
     size: 150,
   },
   {
