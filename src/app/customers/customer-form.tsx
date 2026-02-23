@@ -29,7 +29,8 @@ import {
     Mail,
     Phone as PhoneIcon,
     FolderLock,
-    Calendar as CalendarIcon
+    Calendar as CalendarIcon,
+    Search
 } from 'lucide-react';
 import { format, parse, isValid, differenceInYears } from 'date-fns';
 import { validateCPF, handlePhoneMask, cleanFirestoreData, cn, isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
@@ -144,7 +145,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   const duplicity = useMemo(() => {
     const results = { phone: false, email: false, cpf: false };
     if (!allCustomers) return results;
-    const currentId = customer?.id;
+    const currentId = customer?.id || defaultValues?.id;
     const cleanPhone = watchPhone?.replace(/\D/g, '');
     const cleanEmail = watchEmail?.trim().toLowerCase();
     const cleanCpf = watchCpf?.replace(/\D/g, '');
@@ -156,7 +157,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         if (cleanCpf && c.cpf?.replace(/\D/g, '') === cleanCpf) results.cpf = true;
     });
     return results;
-  }, [allCustomers, watchPhone, watchEmail, watchCpf, customer?.id]);
+  }, [allCustomers, watchPhone, watchEmail, watchCpf, customer?.id, defaultValues?.id]);
 
   useEffect(() => {
     const source = customer || defaultValues;
@@ -233,6 +234,8 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     };
     onSubmit(cleanFirestoreData(newCustomerData));
   }
+
+  const currentCustomerId = customer?.id || defaultValues?.id;
 
   return (
     <Form {...form}>
@@ -352,7 +355,11 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                             <FormControl>
                                 <div className="relative">
                                     <Input placeholder="(11) 98765-4321" {...field} className={cn("rounded-full h-11 px-5 border-zinc-200", duplicity.phone && "border-red-500 bg-red-50")} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} maxLength={15} />
-                                    {isWhatsApp(watchPhone) && <WhatsAppIcon className="absolute right-4 top-3.5 h-4 w-4" />}
+                                    {isWhatsApp(watchPhone) && (
+                                        <a href={getWhatsAppUrl(watchPhone)} target="_blank" rel="noopener noreferrer" className="absolute right-4 top-3.5 hover:scale-110 transition-transform">
+                                            <WhatsAppIcon className="h-4 w-4" />
+                                        </a>
+                                    )}
                                 </div>
                             </FormControl>
                             <FormMessage />
@@ -368,7 +375,11 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                             <FormControl>
                                 <div className="relative">
                                     <Input placeholder="(11) 98765-4321" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} maxLength={15} className="rounded-full h-11 px-5 border-zinc-200"/>
-                                    {isWhatsApp(watchPhone2 || '') && <WhatsAppIcon className="absolute right-4 top-3.5 h-4 w-4" />}
+                                    {isWhatsApp(watchPhone2 || '') && (
+                                        <a href={getWhatsAppUrl(watchPhone2!)} target="_blank" rel="noopener noreferrer" className="absolute right-4 top-3.5 hover:scale-110 transition-transform">
+                                            <WhatsAppIcon className="h-4 w-4" />
+                                        </a>
+                                    )}
                                 </div>
                             </FormControl>
                             </FormItem>
@@ -512,12 +523,11 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                 </h3>
                 <CustomerAttachmentUploader 
                     userId={customer?.ownerId || 'system'} 
-                    customerId={customer?.id || 'new'} 
+                    customerId={currentCustomerId || 'new'} 
                     initialAttachments={form.getValues('documents') || []} 
                     onAttachmentsChange={(docs) => form.setValue('documents', docs, { shouldValidate: true })}
-                    isReadOnly={!customer?.id}
+                    isReadOnly={false}
                 />
-                {!customer?.id && <p className="text-[10px] text-muted-foreground uppercase font-bold text-center">Salve o cliente primeiro para liberar o upload de documentos.</p>}
             </div>
 
             {/* SEÇÃO: OBSERVAÇÕES */}

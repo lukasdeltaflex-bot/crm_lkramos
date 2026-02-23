@@ -79,11 +79,13 @@ function CustomersPageContent() {
   }, [filter, activeCustomers, inactiveCustomers]);
 
   const handleNewCustomer = React.useCallback(() => {
+    // 🛡️ PRE-GERAÇÃO DE ID: Permite upload de anexos antes de salvar
+    const newId = doc(collection(firestore!, 'customers')).id;
     setSelectedCustomer(undefined);
-    setDefaultValues(undefined);
+    setDefaultValues({ id: newId });
     setSheetMode('new');
     setIsDialog(true);
-  }, []);
+  }, [firestore]);
 
   const selectedCount = React.useMemo(() => Object.keys(rowSelection).length, [rowSelection]);
 
@@ -136,8 +138,9 @@ function CustomersPageContent() {
   };
 
   const handleAiFormSubmit = (aiData: any) => {
+    const newId = doc(collection(firestore!, 'customers')).id;
     setSelectedCustomer(undefined);
-    setDefaultValues(aiData);
+    setDefaultValues({ ...aiData, id: newId });
     setSheetMode('new');
     setIsAiModalOpen(false);
     setIsDialog(true);
@@ -177,11 +180,12 @@ function CustomersPageContent() {
     setIsSaving(true);
     try {
         const cleanedData = cleanFirestoreData({ ...formData, ownerId: user.uid });
-        const docRef = sheetMode === 'edit' && selectedCustomer ? doc(firestore, 'customers', selectedCustomer.id) : doc(collection(firestore, 'customers'));
+        const docId = (sheetMode === 'edit' && selectedCustomer) ? selectedCustomer.id : (defaultValues?.id || doc(collection(firestore, 'customers')).id);
+        const docRef = doc(firestore, 'customers', docId);
         
         const finalData = {
             ...cleanedData,
-            id: docRef.id,
+            id: docId,
             numericId: (sheetMode === 'edit' && selectedCustomer) ? selectedCustomer.numericId : (customers?.length ? Math.max(...customers.map(c => c.numericId || 0)) + 1 : 1)
         };
 
