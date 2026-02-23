@@ -63,7 +63,7 @@ const customerSchema = z.object({
   cpf: z.string().min(11, 'CPF obrigatório.').refine((val) => validateCPF(val), {
     message: "CPF Inválido - Verifique os dígitos.",
   }),
-  gender: z.string().default(""),
+  gender: z.string().optional().default(""),
   status: z.enum(['active', 'inactive']).default('active'),
   benefits: z.array(benefitSchema).optional(),
   phone: z.string().min(10, 'O telefone principal é obrigatório.'),
@@ -183,6 +183,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       form.reset({
         name: source.name || '',
         cpf: source.cpf || '',
+        // 🛡️ BLINDAGEM DE GÊNERO V8: Garante que o valor nunca seja nulo no reset
         gender: source.gender || '', 
         status: source.status || 'active',
         benefits: source.benefits || [],
@@ -262,7 +263,8 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       birthDate: format(parsedDate, 'yyyy-MM-dd'),
       benefits: data.benefits || [],
       documents: data.documents || [],
-      gender: (data.gender as any) || "" 
+      // 🛡️ PRESERVAÇÃO DE GÊNERO: Evita casting para strings vazias se houver valor
+      gender: (data.gender as 'Masculino' | 'Feminino') || undefined 
     };
     onSubmit(cleanFirestoreData(newCustomerData));
   }
