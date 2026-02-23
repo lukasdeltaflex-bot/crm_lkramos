@@ -27,7 +27,6 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { CustomerAiForm } from '@/components/customers/customer-ai-form';
 import {
@@ -130,7 +129,7 @@ function CustomersPageContent() {
   }, [searchParams, router, isCustomersLoading, isDialog, handleNewCustomer]);
 
   const handleEditCustomer = (customer: Customer) => {
-    setSelectedCustomer(customer);
+    setSelectedCustomer(structuredClone(customer));
     setDefaultValues(undefined);
     setSheetMode('edit');
     setIsDialog(true);
@@ -307,7 +306,7 @@ function CustomersPageContent() {
         >
           <DialogHeader><DialogTitle>{sheetMode === 'edit' ? 'Editar' : 'Novo'} Cliente</DialogTitle></DialogHeader>
           <CustomerForm
-            key="customer-form"
+            key={selectedCustomer?.id || "new"}
             onSubmit={handleFormSubmit}
             customer={selectedCustomer}
             allCustomers={customers || []}
