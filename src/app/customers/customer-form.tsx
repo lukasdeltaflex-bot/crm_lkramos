@@ -26,13 +26,12 @@ import {
     UserCheck, 
     AlertTriangle, 
     Loader2,
-    Mail,
-    FolderLock,
     Calendar as CalendarIcon,
     AlertCircle,
     CheckCircle2,
     Sparkles,
-    MessageSquareText
+    MessageSquareText,
+    FolderLock
 } from 'lucide-react';
 import { format, parse, isValid, differenceInYears } from 'date-fns';
 import { validateCPF, handlePhoneMask, cleanFirestoreData, cn, isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
@@ -105,7 +104,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
 
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
-    mode: 'onBlur',
+    mode: 'all', // Validação imediata em cada interação
     defaultValues: {
       name: '',
       cpf: '',
@@ -139,6 +138,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   const watchCpf = form.watch('cpf');
   const watchBirthDate = form.watch('birthDate');
   const watchObservations = form.watch('observations');
+  const watchCep = form.watch('cep');
 
   const customerAge = useMemo(() => {
     if (!watchBirthDate || watchBirthDate.length < 10) return null;
@@ -202,8 +202,9 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     }
   }, [customer, defaultValues, form]);
 
-  const handleCepBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
-    const cep = e.target.value.replace(/\D/g, '');
+  // Função central de busca de CEP
+  const handleCepLookup = async (rawCep: string) => {
+    const cep = rawCep.replace(/\D/g, '');
     if (cep.length !== 8) return;
     
     setIsFetchingCep(true);
@@ -220,11 +221,18 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
             toast({ title: "Endereço localizado!" });
         }
     } catch (error) {
-        toast({ variant: 'destructive', title: 'Busca Indisponível', description: 'Preencha o endereço manualmente.' });
+        console.warn("CEP Bypass falhou, permitindo manual.");
     } finally {
         setIsFetchingCep(false);
     }
-  }
+  };
+
+  // Monitoramento automático do CEP
+  useEffect(() => {
+    if (watchCep && watchCep.replace(/\D/g, '').length === 8) {
+        handleCepLookup(watchCep);
+    }
+  }, [watchCep]);
 
   const handleSummarize = async () => {
     if (!watchObservations || watchObservations.trim().length < 10) {
@@ -559,7 +567,18 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                             <FormLabel className="text-xs font-medium text-muted-foreground">CEP</FormLabel>
                             <FormControl>
                                 <div className='relative'>
-                                    <Input placeholder="00000-000" {...field} value={field.value ?? ''} onBlur={handleCepBlur} maxLength={9} className="rounded-full h-11 px-5 border-zinc-200 font-bold" />
+                                    <Input 
+                                        placeholder="00000-000" 
+                                        {...field} 
+                                        value={field.value ?? ''} 
+                                        maxLength={9} 
+                                        onChange={(e) => {
+                                            let v = e.target.value.replace(/\D/g, "");
+                                            if (v.length > 5) v = v.replace(/(\d{5})(\d)/, "$1-$2");
+                                            field.onChange(v);
+                                        }}
+                                        className="rounded-full h-11 px-5 border-zinc-200 font-bold" 
+                                    />
                                     {isFetchingCep && <Loader2 className="absolute right-4 top-3.5 h-4 w-4 animate-spin text-[#00AEEF]" />}
                                 </div>
                             </FormControl>
