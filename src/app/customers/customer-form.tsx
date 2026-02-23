@@ -48,7 +48,7 @@ import { validateCPF, handlePhoneMask, cleanFirestoreData, cn, isWhatsApp, getWh
 import type { Customer } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
-import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
@@ -211,11 +211,11 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         documents: customer.documents || [],
       });
     } else if (defaultValues) {
-        // Aplica defaultValues (como dados de IA) apenas se não for edição de cliente existente
         form.reset({
             ...form.getValues(),
             ...defaultValues,
-            birthDate: defaultValues.birthDate ? formatDateForForm(defaultValues.birthDate) : form.getValues('birthDate')
+            birthDate: defaultValues.birthDate ? formatDateForForm(defaultValues.birthDate) : form.getValues('birthDate'),
+            gender: defaultValues.gender ?? undefined
         });
     }
   }, [customer]);
@@ -291,7 +291,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       birthDate: format(parsedDate, 'yyyy-MM-dd'),
       benefits: data.benefits || [],
       documents: data.documents || [],
-      gender: data.gender || ""
+      gender: data.gender ?? undefined
     };
     onSubmit(cleanFirestoreData(newCustomerData));
   }
