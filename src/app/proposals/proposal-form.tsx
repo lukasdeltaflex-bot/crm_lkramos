@@ -495,35 +495,14 @@ export function ProposalForm({
 
             <Separator />
 
+            {/* SEÇÃO: PRAZOS E INFORMAÇÕES DA ESTEIRA (REORGANIZADA) */}
             <div className="space-y-4">
               <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
                 <Clock className="h-4 w-4" /> Prazos e Informações da Esteira
               </h3>
+              
+              {/* Linha 1: NB, Órgão, Banco Digitado */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <FormField
-                  control={form.control}
-                  name="proposalNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nº Proposta</FormLabel>
-                      <FormControl><Input placeholder="Número oficial" {...field} readOnly={(isReadOnly && sheetMode === 'edit') || isSaving} value={field.value || ''}/></FormControl>
-                      <FormMessage />
-                      {duplicateProposal && (
-                        <Alert variant="destructive" className="mt-2 py-2 px-3 border-2"><AlertTriangle className="h-4 w-4" />
-                            <AlertTitle className="text-xs font-bold uppercase">Proposta Duplicada!</AlertTitle>
-                            <AlertDescription className="text-[10px] font-medium">Já pertence a <strong>{customers.find(c => c.id === duplicateProposal.customerId)?.name}</strong>.</AlertDescription>
-                        </Alert>
-                      )}
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="table"
-                  render={({ field }) => (
-                    <FormItem><FormLabel>Tabela</FormLabel><FormControl><Input placeholder="Nome da Tabela" {...field} readOnly={isReadOnly || isSaving} value={field.value || ''} /></FormControl><FormMessage /></FormItem>
-                  )}
-                />
                 <FormField
                   control={form.control}
                   name="selectedBenefitNumber"
@@ -541,65 +520,18 @@ export function ProposalForm({
                       )}<FormMessage /></FormItem>
                   )}
                 />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <FormField
                   control={form.control}
-                  name="dateDigitized"
+                  name="approvingBody"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Data Digitação</FormLabel>
-                      <FormControl><Input placeholder="dd/mm/aaaa" {...field} onChange={(e) => field.onChange(handleDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} /></FormControl>
-                      <FormMessage />
+                        <FormLabel>Órgão</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isReadOnly || isSaving}>
+                            <FormControl><SelectTrigger><SelectValue placeholder="Órgão" /></SelectTrigger></FormControl>
+                            <SelectContent>{approvingBodies.map(body => <SelectItem key={body} value={body}>{body}</SelectItem>)}</SelectContent>
+                        </Select>
+                        <FormMessage />
                     </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="dateApproved"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data Averbação</FormLabel>
-                      <FormControl><Input placeholder="dd/mm/aaaa" {...field} onChange={(e) => field.onChange(handleDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} value={field.value || ''} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {product !== 'Portabilidade' && (
-                    <FormField
-                        control={form.control}
-                        name="datePaidToClient"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Pgto. ao Cliente</FormLabel>
-                            <FormControl><Input placeholder="dd/mm/aaaa" {...field} onChange={(e) => field.onChange(handleDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} value={field.value || ''} /></FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                )}
-                {product === 'Portabilidade' && (
-                    <FormField
-                        control={form.control}
-                        name="debtBalanceArrivalDate"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Chegada Saldo</FormLabel>
-                            <FormControl><Input placeholder="dd/mm/aaaa" {...field} onChange={(e) => field.onChange(handleDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} value={field.value || ''} /></FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <FormField
-                  control={form.control}
-                  name="promoter"
-                  render={({ field }) => (
-                    <FormItem><FormLabel>Promotora</FormLabel><FormControl><Input placeholder="Promotora" {...field} readOnly={isReadOnly || isSaving} value={field.value || ''} /></FormControl></FormItem>
                   )}
                 />
                 <FormField
@@ -632,32 +564,12 @@ export function ProposalForm({
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="approvingBody"
-                  render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Órgão</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isReadOnly || isSaving}>
-                            <FormControl><SelectTrigger><SelectValue placeholder="Órgão" /></SelectTrigger></FormControl>
-                            <SelectContent>{approvingBodies.map(body => <SelectItem key={body} value={body}>{body}</SelectItem>)}</SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="operator"
-                  render={({ field }) => (
-                    <FormItem><FormLabel>Operador</FormLabel><FormControl><Input placeholder="Nome do Agente" {...field} readOnly={isReadOnly || isSaving} value={field.value || ''} /></FormControl></FormItem>
-                  )}
-                />
               </div>
 
-              {product === 'Portabilidade' && (
-                  <div className="grid grid-cols-1 gap-4">
-                      <FormField
+              {/* Linha 2: Banco Portado (se Port), Nº Proposta, Tabela */}
+              <div className={cn("grid gap-4", product === 'Portabilidade' ? "grid-cols-1 md:grid-cols-3" : "grid-cols-1 md:grid-cols-2")}>
+                {product === 'Portabilidade' && (
+                    <FormField
                         control={form.control}
                         name="bankOrigin"
                         render={({ field }) => (
@@ -668,7 +580,7 @@ export function ProposalForm({
                                         <SelectTrigger>
                                             <div className="flex items-center gap-2">
                                                 {field.value && <BankIcon bankName={field.value} domain={userSettings?.bankDomains?.[field.value]} showLogo={showLogos} className="h-4 w-4" />}
-                                                <SelectValue placeholder="Selecione o Banco de Origem" />
+                                                <SelectValue placeholder="Origem" />
                                             </div>
                                         </SelectTrigger>
                                     </FormControl>
@@ -683,13 +595,120 @@ export function ProposalForm({
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <FormDescription>Informe a instituição onde o saldo devedor se encontra atualmente.</FormDescription>
                                 <FormMessage />
                             </FormItem>
                         )}
-                      />
-                  </div>
-              )}
+                    />
+                )}
+                <FormField
+                  control={form.control}
+                  name="proposalNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nº Proposta</FormLabel>
+                      <FormControl><Input placeholder="Número oficial" {...field} readOnly={(isReadOnly && sheetMode === 'edit') || isSaving} value={field.value || ''}/></FormControl>
+                      <FormMessage />
+                      {duplicateProposal && (
+                        <Alert variant="destructive" className="mt-2 py-2 px-3 border-2"><AlertTriangle className="h-4 w-4" />
+                            <AlertTitle className="text-xs font-bold uppercase">Proposta Duplicada!</AlertTitle>
+                            <AlertDescription className="text-[10px] font-medium">Já pertence a <strong>{customers.find(c => c.id === duplicateProposal.customerId)?.name}</strong>.</AlertDescription>
+                        </Alert>
+                      )}
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="table"
+                  render={({ field }) => (
+                    <FormItem><FormLabel>Tabela</FormLabel><FormControl><Input placeholder="Nome da Tabela" {...field} readOnly={isReadOnly || isSaving} value={field.value || ''} /></FormControl><FormMessage /></FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Linha 3: Datas (Sequência Dinâmica) */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <FormField
+                  control={form.control}
+                  name="dateDigitized"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data Digitação</FormLabel>
+                      <FormControl><Input placeholder="dd/mm/aaaa" {...field} onChange={(e) => field.onChange(handleDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {product === 'Portabilidade' ? (
+                    <>
+                        <FormField
+                            control={form.control}
+                            name="debtBalanceArrivalDate"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Retorno Saldo</FormLabel>
+                                <FormControl><Input placeholder="dd/mm/aaaa" {...field} onChange={(e) => field.onChange(handleDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} value={field.value || ''} /></FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="dateApproved"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Data Averbação</FormLabel>
+                                <FormControl><Input placeholder="dd/mm/aaaa" {...field} onChange={(e) => field.onChange(handleDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} value={field.value || ''} /></FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </>
+                ) : (
+                    <>
+                        <FormField
+                            control={form.control}
+                            name="dateApproved"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Data Averbação</FormLabel>
+                                <FormControl><Input placeholder="dd/mm/aaaa" {...field} onChange={(e) => field.onChange(handleDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} value={field.value || ''} /></FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="datePaidToClient"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Pgto. ao Cliente</FormLabel>
+                                <FormControl><Input placeholder="dd/mm/aaaa" {...field} onChange={(e) => field.onChange(handleDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} value={field.value || ''} /></FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </>
+                )}
+              </div>
+
+              {/* Linha 4: Operador e Promotora */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="operator"
+                  render={({ field }) => (
+                    <FormItem><FormLabel>Operador</FormLabel><FormControl><Input placeholder="Nome do Agente" {...field} readOnly={isReadOnly || isSaving} value={field.value || ''} /></FormControl></FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="promoter"
+                  render={({ field }) => (
+                    <FormItem><FormLabel>Promotora</FormLabel><FormControl><Input placeholder="Nome da Promotora" {...field} readOnly={isReadOnly || isSaving} value={field.value || ''} /></FormControl></FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             <Separator />
