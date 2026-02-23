@@ -46,6 +46,25 @@ export function getWhatsAppUrl(phone: string): string {
     return `https://wa.me/55${digitsOnly}`;
 }
 
+export function handlePhoneMask(value: string): string {
+    if (!value) return "";
+    let v = value.replace(/\D/g, "");
+    if (v.length > 11) v = v.substring(0, 11);
+    
+    if (v.length > 10) {
+        // Celular: (00) 00000-0000
+        v = v.replace(/^(\d{2})(\d{5})(\d{4}).*/, "($1) $2-$3");
+    } else if (v.length > 5) {
+        // Fixo: (00) 0000-0000
+        v = v.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, "($1) $2-$3");
+    } else if (v.length > 2) {
+        v = v.replace(/^(\d{2})(\d{0,5})/, "($1) $2");
+    } else if (v.length > 0) {
+        v = v.replace(/^(\d{0,2})/, "($1");
+    }
+    return v;
+}
+
 export function formatDateSafe(dateString?: string, formatStr: string = "dd/MM/yyyy"): string {
     if (!dateString) return '-';
     try {
@@ -123,21 +142,12 @@ export function cleanBankName(name?: string): string {
   return cleaned || name;
 }
 
-/**
- * 🛡️ BLINDAGEM FIRESTORE V8
- * Limpa recursivamente objetos e arrays, removendo propriedades 'undefined' 
- * que causam erros de runtime no Firebase.
- */
 export function cleanFirestoreData(data: any): any {
     if (data === null || data === undefined) return null;
-    
-    // Evita processar datas ou outros objetos especiais como objetos comuns
     if (data instanceof Date) return data.toISOString();
-    
     if (Array.isArray(data)) {
         return data.map(item => cleanFirestoreData(item)).filter(i => i !== undefined);
     }
-    
     if (typeof data === 'object') {
         const cleaned: any = {};
         Object.keys(data).forEach(key => {
@@ -148,6 +158,5 @@ export function cleanFirestoreData(data: any): any {
         });
         return cleaned;
     }
-    
     return data;
 }

@@ -37,7 +37,8 @@ import {
     AlertTriangle,
     MessageSquareQuote,
     Clock,
-    FolderLock
+    FolderLock,
+    Info
 } from 'lucide-react';
 import { format, parse, parseISO, isValid } from 'date-fns';
 import { cn, formatCurrency, cleanBankName, cleanFirestoreData } from '@/lib/utils';
@@ -418,7 +419,6 @@ export function ProposalForm({
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="py-4">
         <ScrollArea className="h-[70vh] pr-4 print:h-auto print:overflow-visible">
           <div className="space-y-8">
-            {/* SEÇÃO 1: VINCULAÇÃO */}
             <div className="space-y-4">
               <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
                 <FolderLock className="h-4 w-4" /> Vinculação do Registro
@@ -479,13 +479,11 @@ export function ProposalForm({
 
             <Separator />
 
-            {/* SEÇÃO 2: ESTEIRA (ORDEM SOLICITADA) */}
             <div className="space-y-4">
               <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
                 <Clock className="h-4 w-4" /> Prazos e Informações da Esteira
               </h3>
               
-              {/* LINHA 1: BENEFÍCIO, ÓRGÃO, BANCO DIGITADO */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
@@ -494,9 +492,9 @@ export function ProposalForm({
                     <FormItem><FormLabel>Nº do Benefício</FormLabel>
                       {selectedCustomer && selectedCustomer.benefits && selectedCustomer.benefits.length > 0 ? (
                         <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
-                          <FormControl><SelectTrigger><SelectValue placeholder="Selecione o NB" /></SelectTrigger></FormControl>
+                          <FormControl><SelectTrigger><SelectValue placeholder="NB" /></SelectTrigger></FormControl>
                           <SelectContent>{selectedCustomer.benefits.map(benefit => (
-                              <SelectItem key={benefit.number} value={benefit.number}><span className="font-medium">{benefit.number}</span></SelectItem>
+                              <SelectItem key={benefit.number} value={benefit.number}>{benefit.number}</SelectItem>
                             ))}</SelectContent>
                         </Select>
                       ) : (
@@ -541,7 +539,6 @@ export function ProposalForm({
                 />
               </div>
 
-              {/* LINHA 2: BANCO PORTADO, Nº PROPOSTA, TABELA */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {productValue === 'Portabilidade' ? (
                     <FormField
@@ -593,7 +590,6 @@ export function ProposalForm({
                 />
               </div>
 
-              {/* LINHA 3: DATAS DINÂMICAS */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
@@ -659,7 +655,6 @@ export function ProposalForm({
                 )}
               </div>
 
-              {/* LINHA 4: OPERADOR E PROMOTORA */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -680,7 +675,6 @@ export function ProposalForm({
 
             <Separator />
 
-            {/* SEÇÃO 3: VALORES */}
             <div className="space-y-4">
                 <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
                     <Check className="h-4 w-4" /> Valores e Performance Financeira
@@ -786,7 +780,6 @@ export function ProposalForm({
 
             <Separator />
 
-            {/* SEÇÃO 4: HISTÓRICO */}
             <div className="space-y-4">
                 <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
                     <History className="h-4 w-4" /> Linha do Tempo da Proposta
@@ -818,14 +811,13 @@ export function ProposalForm({
 
             <Separator />
 
-            {/* SEÇÃO 5: ANEXOS */}
             <div className="space-y-4">
                 <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
                     <FolderLock className="h-4 w-4" /> Anexos e Digitalização
                 </h3>
                 {isAttachmentSectionDisabled ? (
                     <Alert className="bg-secondary">
-                        <AlertTriangle className="h-4 w-4" />
+                        <Info className="h-4 w-4" />
                         <AlertTitle>Upload Bloqueado</AlertTitle>
                         <AlertDescription className='text-xs'>Salve a proposta pela primeira vez para liberar o upload de arquivos.</AlertDescription>
                     </Alert>
