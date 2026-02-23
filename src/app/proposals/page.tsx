@@ -156,6 +156,7 @@ function ProposalsPageContent() {
         const batch = writeBatch(firestore);
         const selectedIds = Object.keys(rowSelection);
         const now = new Date().toISOString();
+        const userName = user.displayName || user.email || 'Sistema';
         
         selectedIds.forEach(id => {
             const proposal = proposals?.find(p => p.id === id);
@@ -178,8 +179,8 @@ function ProposalsPageContent() {
             const historyEntry: ProposalHistoryEntry = {
                 id: crypto.randomUUID(),
                 date: now,
-                message: `Status alterado em massa para "${newStatus}"`,
-                userName: user.displayName || user.email || 'Sistema'
+                message: `⚙️ Status alterado em massa para "${newStatus}"`,
+                userName: userName
             };
             dataToUpdate.history = arrayUnion(historyEntry);
 
@@ -243,6 +244,7 @@ function ProposalsPageContent() {
     if (!proposal || proposal.status === newStatus) return;
 
     const now = new Date().toISOString();
+    const userName = user.displayName || user.email || 'Sistema';
     const dataToUpdate: any = { 
         status: newStatus,
         statusUpdatedAt: now
@@ -259,8 +261,8 @@ function ProposalsPageContent() {
     const historyEntry: ProposalHistoryEntry = {
         id: crypto.randomUUID(),
         date: now,
-        message: `Status alterado de "${proposal.status}" para "${newStatus}"`,
-        userName: user.displayName || user.email || 'Sistema'
+        message: `⚙️ Status alterado de "${proposal.status}" para "${newStatus}"`,
+        userName: userName
     };
     dataToUpdate.history = arrayUnion(historyEntry);
     

@@ -155,6 +155,16 @@ export function cleanFirestoreData(data: any): any {
     if (data === null) return null;
     if (data === undefined) return undefined;
     if (data instanceof Date) return data.toISOString();
+    
+    // 🛡️ PROTEÇÃO PARA FIELDVALUES (arrayUnion, deleteField, etc)
+    // Se for um objeto complexo (não literal), retornamos como está para não quebrar o Firebase.
+    if (typeof data === 'object' && !Array.isArray(data)) {
+        const proto = Object.getPrototypeOf(data);
+        if (proto !== Object.prototype && proto !== null) {
+            return data; 
+        }
+    }
+
     if (Array.isArray(data)) {
         return data.map(item => cleanFirestoreData(item)).filter(i => i !== undefined);
     }
