@@ -104,7 +104,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
 
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
-    mode: 'all', // Validação imediata em cada interação
+    mode: 'all',
     defaultValues: {
       name: '',
       cpf: '',
@@ -202,7 +202,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     }
   }, [customer, defaultValues, form]);
 
-  // Função central de busca de CEP
   const handleCepLookup = async (rawCep: string) => {
     const cep = rawCep.replace(/\D/g, '');
     if (cep.length !== 8) return;
@@ -221,16 +220,17 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
             toast({ title: "Endereço localizado!" });
         }
     } catch (error) {
-        console.warn("CEP Bypass falhou, permitindo manual.");
+        console.warn("CEP Proxy falhou, permitindo manual.");
     } finally {
         setIsFetchingCep(false);
     }
   };
 
-  // Monitoramento automático do CEP
+  // MONITORAMENTO AUTOMÁTICO: Dispara busca assim que o CEP atinge 8 dígitos
   useEffect(() => {
-    if (watchCep && watchCep.replace(/\D/g, '').length === 8) {
-        handleCepLookup(watchCep);
+    const cleanCep = (watchCep || '').replace(/\D/g, '');
+    if (cleanCep.length === 8) {
+        handleCepLookup(cleanCep);
     }
   }, [watchCep]);
 

@@ -46,7 +46,7 @@ import * as configData from '@/lib/config-data';
 import type { Proposal, Customer, Attachment, UserSettings, ProposalHistoryEntry } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { ProposalAttachmentUploader } from '@/components/proposals/proposal-attachment-uploader';
 import { useUser, useFirestore } from '@/firebase';
 import { doc, collection, updateDoc, arrayUnion } from 'firebase/firestore';
@@ -158,6 +158,9 @@ export function ProposalForm({
   const [isClient, setIsClient] = useState(false);
   const [newHistoryEntry, setNewHistoryEntry] = useState('');
   const [isAddingHistory, setIsAddingHistory] = useState(false);
+  
+  // Refs para monitorar mudanças de status e logs
+  const initialStatusRef = useRef<string | null>(null);
 
   const productTypes = userSettings?.productTypes || configData.productTypes;
   const proposalStatuses = userSettings?.proposalStatuses || configData.proposalStatuses;
@@ -288,6 +291,7 @@ export function ProposalForm({
   useEffect(() => {
     const source = proposal || defaultValues;
     if (source) {
+        initialStatusRef.current = source.status || 'Em Andamento';
         form.reset({
             proposalNumber: source.proposalNumber || '',
             customerId: source.customerId || '',
@@ -333,15 +337,28 @@ export function ProposalForm({
         } catch { return null; }
     }
 
-    const finalData = cleanFirestoreData({
+    const now = new Date().toISOString();
+    const finalData: any = {
         ...data,
-        dateDigitized: convertToIso(data.dateDigitized) || new Date().toISOString(),
+        dateDigitized: convertToIso(data.dateDigitized) || now,
         dateApproved: convertToIso(data.dateApproved),
         datePaidToClient: convertToIso(data.datePaidToClient),
         debtBalanceArrivalDate: convertToIso(data.debtBalanceArrivalDate),
-    });
+    };
 
-    onSubmit(finalData);
+    // INTELIGÊNCIA DE LINHA DO TEMPO: Registra mudança de status automaticamente ao salvar
+    if (initialStatusRef.current && initialStatusRef.current !== data.status) {
+        const historyEntry: ProposalHistoryEntry = {
+            id: crypto.randomUUID(),
+            date: now,
+            message: `Status alterado de "${initialStatusRef.current}" para "${data.status}" (Via Formulário)`,
+            userName: user?.displayName || user?.email || 'Sistema'
+        };
+        finalData.history = proposal?.history ? [...proposal.history, historyEntry] : [historyEntry];
+        finalData.statusUpdatedAt = now;
+    }
+
+    onSubmit(cleanFirestoreData(finalData));
   }
 
   const handleAttachmentsChange = (attachments: Attachment[]) => {
@@ -356,13 +373,19 @@ export function ProposalForm({
         id: crypto.randomUUID(),
         date: now,
         message: newHistoryEntry.trim(),
-        userName: user?.displayName || user?.email || 'Usuário'
+        userName: user?.displayName || user?.email || 'Agente'
     };
     const docRef = doc(firestore, 'loanProposals', proposal.id);
     const updateData = { history: arrayUnion(entry), statusUpdatedAt: now };
     updateDoc(docRef, updateData)
-        .then(() => { setNewHistoryEntry(''); toast({ title: "Histórico Atualizado" }); })
-        .catch((err) => console.error(err))
+        .then(() => { 
+            setNewHistoryEntry(''); 
+            toast({ title: "Histórico Atualizado" }); 
+        })
+        .catch((err) => {
+            console.error(err);
+            toast({ variant: 'destructive', title: "Erro ao registrar histórico" });
+        })
         .finally(() => setIsAddingHistory(false));
   };
 
@@ -710,7 +733,7 @@ export function ProposalForm({
 
             <Separator />
 
-            {/* HISTÓRICO */}
+            {/* HISTÓRICO / LINHA DO TEMPO */}
             <div className="space-y-4">
                 <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
                     <History className="h-4 w-4" /> Linha do Tempo
@@ -718,23 +741,29 @@ export function ProposalForm({
                 {proposal?.id && (
                     <div className="space-y-4">
                         <div className="flex gap-2">
-                            <Input placeholder="Nova atualização de trâmite..." value={newHistoryEntry} onChange={e => setNewHistoryEntry(e.target.value)} disabled={isAddingHistory} />
+                            <Input 
+                                placeholder="Nova atualização de trâmite..." 
+                                value={newHistoryEntry} 
+                                onChange={e => setNewHistoryEntry(e.target.value)} 
+                                disabled={isAddingHistory}
+                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddHistory())}
+                            />
                             <Button type="button" size="sm" onClick={handleAddHistory} disabled={isAddingHistory || !newHistoryEntry.trim()}>
                                 {isAddingHistory ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                             </Button>
                         </div>
-                        <div className="space-y-3 max-h-[200px] overflow-y-auto">
+                        <div className="space-y-3 max-h-[250px] overflow-y-auto">
                             {proposal.history && proposal.history.length > 0 ? (
                                 [...proposal.history].sort((a,b) => b.date.localeCompare(a.date)).map(entry => (
-                                    <div key={entry.id} className="p-3 bg-muted/30 rounded-lg border text-xs">
+                                    <div key={entry.id} className="p-3 bg-muted/30 rounded-lg border text-xs transition-colors hover:bg-muted/50">
                                         <div className="flex justify-between font-black uppercase text-primary/70 mb-1">
-                                            <span>{entry.userName}</span>
-                                            <span>{format(parseISO(entry.date), "dd/MM/yy HH:mm")}</span>
+                                            <span className="flex items-center gap-1.5"><MessageSquareQuote className="h-3 w-3" />{entry.userName || 'Agente'}</span>
+                                            <span className="opacity-60">{format(parseISO(entry.date), "dd/MM/yy HH:mm")}</span>
                                         </div>
-                                        <p className="text-foreground">{entry.message}</p>
+                                        <p className="text-foreground leading-relaxed font-medium">{entry.message}</p>
                                     </div>
                                 ))
-                            ) : <p className="text-center text-[10px] text-muted-foreground uppercase py-4">Sem trâmites registrados.</p>}
+                            ) : <p className="text-center text-[10px] text-muted-foreground uppercase py-6 border-2 border-dashed rounded-lg opacity-40">Sem trâmites registrados nesta proposta.</p>}
                         </div>
                     </div>
                 )}
@@ -767,7 +796,7 @@ export function ProposalForm({
         </ScrollArea>
         <div className="flex justify-end items-center pt-8 border-t bg-background">
             {!isReadOnly && (
-                <Button type="submit" disabled={isSaving || !!duplicateProposal} className="rounded-full px-10 font-black uppercase tracking-widest bg-[#00AEEF]">
+                <Button type="submit" disabled={isSaving || !!duplicateProposal} className="rounded-full px-10 font-black uppercase tracking-widest bg-[#00AEEF] hover:bg-[#0096D1] shadow-lg shadow-[#00AEEF]/20 transition-all border-none">
                     {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : 'Salvar Proposta'}
                 </Button>
             )}
