@@ -36,7 +36,7 @@ import {
 import { format, parse, differenceInMonths, isValid as isValidDate } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { formatCurrency, getAge, cn, getWhatsAppUrl, isWhatsApp } from '@/lib/utils';
+import { formatCurrency, getAge, cn, getWhatsAppUrl, isWhatsApp, formatDateSafe } from '@/lib/utils';
 import { SimpleProposalsTable } from '@/components/customers/simple-proposals-table';
 import { CustomerAiSummary } from '@/components/customers/customer-ai-summary';
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
@@ -84,7 +84,7 @@ const CustomerInfoCard = ({ customer, onExportDossier, onToggleStatus, onGenerat
                                     <CardTitle className="text-2xl font-black uppercase tracking-tight">{customer.name}</CardTitle>
                                     <CopyButton text={customer.name} label="Nome" />
                                 </div>
-                                <Badge variant={isInactive ? "secondary" : "default"} className={isInactive ? "bg-zinc-200 text-zinc-700" : "bg-green-500 text-white"}>{isInactive ? "Inativo" : "Ativo"}</Badge>
+                                <Badge variant={isInactive ? "secondary" : "default"} className={isInactive ? "bg-zinc-200 text-zinc-700" : "bg-green-50 text-white"}>{isInactive ? "Inativo" : "Ativo"}</Badge>
                             </div>
                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Registro Oficial do Cliente</p>
                         </div>
@@ -259,7 +259,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
         body: [
             ['Nome', customer.name], 
             ['CPF', customer.cpf], 
-            ['Nascimento', customer.birthDate], 
+            ['Nascimento', formatDateSafe(customer.birthDate)], 
             ['Telefone', customer.phone], 
             ['Endereço', `${customer.street || ''}, ${customer.number || ''} ${customer.complement || ''}`],
             ['Bairro', customer.neighborhood || '-'],
