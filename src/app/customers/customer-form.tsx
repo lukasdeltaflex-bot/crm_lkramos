@@ -11,7 +11,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
@@ -22,19 +21,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { 
-    Sparkles, 
-    Loader2, 
     PlusCircle, 
     Trash2, 
     UserCheck, 
-    UserX, 
     AlertTriangle, 
-    MapPin, 
-    Mail, 
-    Phone, 
-    Hash, 
-    MessageSquareText, 
-    Calendar as CalendarIcon 
+    Loader2,
+    Mail,
+    Phone as PhoneIcon
 } from 'lucide-react';
 import { format, parse, isValid } from 'date-fns';
 import { validateCPF, handlePhoneMask, cleanFirestoreData, cn } from '@/lib/utils';
@@ -43,7 +36,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { useEffect, useState, useMemo } from 'react';
 import { toast } from '@/hooks/use-toast';
-import { Separator } from '@/components/ui/separator';
 
 const benefitSchema = z.object({
     number: z.string().min(1, "O número do benefício é obrigatório."),
@@ -60,23 +52,21 @@ const attachmentSchema = z.object({
 const customerSchema = z.object({
   name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres.'),
   cpf: z.string().min(11, 'CPF incompleto.').refine((val) => validateCPF(val), {
-    message: "CPF inválido. Verifique se há erro de digitação.",
+    message: "CPF inválido.",
   }),
   gender: z.string().nullable().optional(),
   status: z.enum(['active', 'inactive']).default('active'),
   benefits: z.array(benefitSchema).optional(),
   phone: z.string().min(10, 'O telefone é obrigatório.'),
   phone2: z.string().nullable().optional(),
-  email: z.string().email('Formato de e-mail inválido.').or(z.literal('')).nullable().optional(),
+  email: z.string().email('E-mail inválido.').or(z.literal('')).nullable().optional(),
   birthDate: z.string().refine((date) => {
     try {
       if (!date) return false;
       const parsedDate = parse(date, 'dd/MM/yyyy', new Date());
       return isValid(parsedDate);
-    } catch {
-      return false;
-    }
-  }, { message: 'Data inválida. Use o formato dd/mm/aaaa.' }),
+    } catch { return false; }
+  }, { message: 'Data inválida.' }),
   observations: z.string().nullable().optional(),
   cep: z.string().nullable().optional(),
   street: z.string().nullable().optional(),
@@ -138,7 +128,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   const duplicity = useMemo(() => {
     const results = { phone: false, email: false, cpf: false };
     if (!allCustomers) return results;
-
     const currentId = customer?.id;
     const cleanPhone = watchPhone?.replace(/\D/g, '');
     const cleanEmail = watchEmail?.trim().toLowerCase();
@@ -150,7 +139,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         if (cleanEmail && c.email?.trim().toLowerCase() === cleanEmail && cleanEmail !== '') results.email = true;
         if (cleanCpf && c.cpf?.replace(/\D/g, '') === cleanCpf) results.cpf = true;
     });
-
     return results;
   }, [allCustomers, watchPhone, watchEmail, watchCpf, customer?.id]);
 
@@ -197,7 +185,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     setIsFetchingCep(true);
     try {
         const response = await fetch(`/api/cep/${cep}`);
-        if (!response.ok) throw new Error('Bypass falhou');
+        if (!response.ok) throw new Error('Falha');
         const data = await response.json();
         
         if (data && !data.erro) {
@@ -205,10 +193,10 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
             form.setValue('neighborhood', data.bairro || '', { shouldValidate: true });
             form.setValue('city', data.localidade || '', { shouldValidate: true });
             form.setValue('state', data.uf || '', { shouldValidate: true });
-            toast({ title: "Localização Automática", description: "Endereço preenchido via proxy seguro." });
+            toast({ title: "Endereço localizado!" });
         }
     } catch (error) {
-        toast({ variant: 'destructive', title: 'Busca Indisponível', description: 'Preencha o endereço manualmente.' });
+        toast({ variant: 'destructive', title: 'CEP não encontrado', description: 'Preencha manualmente.' });
     } finally {
         setIsFetchingCep(false);
     }
@@ -216,16 +204,10 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
 
   const handleFormSubmit = (data: CustomerFormValues) => {
     if (duplicity.phone || duplicity.email || duplicity.cpf) {
-        toast({ variant: 'destructive', title: 'Erro de Duplicidade', description: 'Corrija os campos em vermelho antes de salvar.' });
+        toast({ variant: 'destructive', title: 'Existem dados duplicados' });
         return;
     }
-
     const parsedDate = parse(data.birthDate, 'dd/MM/yyyy', new Date());
-    if (!isValid(parsedDate)) {
-        toast({ variant: 'destructive', title: 'Data de Nascimento inválida' });
-        return;
-    }
-
     const newCustomerData: FormCustomer = {
       ...data,
       birthDate: format(parsedDate, 'yyyy-MM-dd'),
@@ -238,31 +220,61 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="py-4">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="py-2">
         <ScrollArea className="h-[75vh] pr-4">
           <div className="space-y-10">
-            <div className="space-y-6">
-                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-primary/60 flex items-center gap-2">
-                    <UserCheck className="h-4 w-4" /> Dados Cadastrais
-                </h3>
+            {/* SEÇÃO: DADOS PESSOAIS */}
+            <div className="space-y-6 relative">
+                <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-bold uppercase tracking-tight text-[#00AEEF]">
+                        Dados Pessoais
+                    </h3>
+                    <FormField
+                        control={form.control}
+                        name="status"
+                        render={({ field }) => (
+                            <div className="w-32">
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger className={cn(
+                                            "rounded-full h-9 font-black text-[10px] uppercase border-2 transition-all",
+                                            field.value === 'active' ? "bg-green-50 border-green-200 text-green-600" : "bg-red-50 border-red-200 text-red-600"
+                                        )}>
+                                            <div className="flex items-center gap-2">
+                                                <UserCheck className="h-3 w-3" />
+                                                <SelectValue />
+                                            </div>
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="active">Ativo</SelectItem>
+                                        <SelectItem value="inactive">Inativo</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+                    />
+                </div>
+
                 <FormField
                     control={form.control}
                     name="name"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Nome Completo</FormLabel>
-                        <FormControl><Input placeholder="Ex: JOÃO DA SILVA" {...field} className="uppercase font-bold" /></FormControl>
+                        <FormLabel className="text-xs font-medium text-muted-foreground">Nome Completo</FormLabel>
+                        <FormControl><Input placeholder="João da Silva" {...field} className="rounded-full h-11 px-5 border-zinc-200" /></FormControl>
                         <FormMessage />
                         </FormItem>
                     )}
                 />
+
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                     <FormField
                         control={form.control}
                         name="cpf"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel>CPF (Documento)</FormLabel>
+                            <FormLabel className="text-xs font-medium text-muted-foreground">CPF</FormLabel>
                             <FormControl>
                                 <div className="relative">
                                     <Input 
@@ -270,12 +282,11 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                         {...field} 
                                         onChange={(e) => field.onChange(e.target.value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4"))} 
                                         maxLength={14}
-                                        className={cn("font-bold", duplicity.cpf && "border-red-500 bg-red-50 text-red-900")}
+                                        className={cn("rounded-full h-11 px-5 border-zinc-200", duplicity.cpf && "border-red-500 bg-red-50 text-red-900")}
                                     />
-                                    {duplicity.cpf && <AlertTriangle className="absolute right-3 top-2.5 h-5 w-5 text-red-500 animate-pulse" />}
+                                    {duplicity.cpf && <AlertTriangle className="absolute right-4 top-3 h-5 w-5 text-red-500 animate-pulse" />}
                                 </div>
                             </FormControl>
-                            {duplicity.cpf && <p className="text-[10px] font-black text-red-600 uppercase mt-1">Este CPF já está cadastrado!</p>}
                             <FormMessage />
                             </FormItem>
                         )}
@@ -285,12 +296,12 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                       name="gender"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Gênero</FormLabel>
+                          <FormLabel className="text-xs font-medium text-muted-foreground">Gênero</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value || ""}>
-                            <FormControl><SelectTrigger className="font-bold"><SelectValue placeholder="Selecione" /></SelectTrigger></FormControl>
+                            <FormControl><SelectTrigger className="rounded-full h-11 px-5 border-zinc-200"><SelectValue placeholder="Selecione o gênero" /></SelectTrigger></FormControl>
                             <SelectContent>
-                              <SelectItem value="Masculino" className="font-bold">Masculino</SelectItem>
-                              <SelectItem value="Feminino" className="font-bold">Feminino</SelectItem>
+                              <SelectItem value="Masculino">Masculino</SelectItem>
+                              <SelectItem value="Feminino">Feminino</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -298,28 +309,18 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                       )}
                     />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <FormField
                         control={form.control}
-                        name="birthDate"
+                        name="email"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel>Data de Nascimento</FormLabel>
+                            <FormLabel className="text-xs font-medium text-muted-foreground">Email</FormLabel>
                             <FormControl>
                                 <div className="relative">
-                                    <CalendarIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                    <Input 
-                                        placeholder="dd/mm/aaaa" 
-                                        {...field} 
-                                        className="pl-9 font-bold" 
-                                        maxLength={10} 
-                                        onChange={(e) => {
-                                            let v = e.target.value.replace(/\D/g, "").substring(0, 8);
-                                            if (v.length > 4) v = v.replace(/(\d{2})(\d{2})(\d)/, "$1/$2/$3");
-                                            else if (v.length > 2) v = v.replace(/(\d{2})(\d)/, "$1/$2");
-                                            field.onChange(v);
-                                        }}
-                                    />
+                                    <Mail className="absolute left-4 top-3.5 h-4 w-4 text-muted-foreground/40" />
+                                    <Input placeholder="seu@exemplo.com" {...field} className={cn("rounded-full h-11 pl-11 border-zinc-200", duplicity.email && "border-red-500 bg-red-50")} />
                                 </div>
                             </FormControl>
                             <FormMessage />
@@ -328,49 +329,15 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                     />
                     <FormField
                         control={form.control}
-                        name="status"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Situação do Registro</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl><SelectTrigger className="font-bold"><SelectValue /></SelectTrigger></FormControl>
-                                <SelectContent>
-                                    <SelectItem value="active" className="text-green-600 font-bold">Ativo (Operacional)</SelectItem>
-                                    <SelectItem value="inactive" className="text-red-600 font-bold">Inativo (Arquivado)</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            </FormItem>
-                        )}
-                    />
-                </div>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-6">
-                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-primary/60 flex items-center gap-2">
-                    <Mail className="h-4 w-4" /> Canais de Comunicação
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                        control={form.control}
                         name="phone"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel>Telefone Principal (Celular)</FormLabel>
+                            <FormLabel className="text-xs font-medium text-muted-foreground">Telefone Principal</FormLabel>
                             <FormControl>
                                 <div className="relative">
-                                    <Input 
-                                        placeholder="(00) 00000-0000" 
-                                        {...field} 
-                                        className={cn("font-bold", duplicity.phone && "border-red-500 bg-red-50")} 
-                                        onChange={(e) => field.onChange(handlePhoneMask(e.target.value))}
-                                        maxLength={15}
-                                    />
-                                    {duplicity.phone && <AlertTriangle className="absolute right-3 top-2.5 h-5 w-5 text-red-500 animate-pulse" />}
+                                    <Input placeholder="(11) 98765-4321" {...field} className={cn("rounded-full h-11 px-5 border-zinc-200", duplicity.phone && "border-red-500 bg-red-50")} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} maxLength={15} />
                                 </div>
                             </FormControl>
-                            {duplicity.phone && <p className="text-[10px] font-black text-red-600 uppercase mt-1">Telefone já pertence a outro cliente!</p>}
                             <FormMessage />
                             </FormItem>
                         )}
@@ -380,110 +347,64 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         name="phone2"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel>Telefone 2 (Recado/Fixo)</FormLabel>
-                            <FormControl><Input placeholder="(00) 0000-0000" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} maxLength={15} className="font-bold"/></FormControl>
+                            <FormLabel className="text-xs font-medium text-muted-foreground">Telefone 2</FormLabel>
+                            <FormControl><Input placeholder="(11) 98765-4321" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} maxLength={15} className="rounded-full h-11 px-5 border-zinc-200"/></FormControl>
                             </FormItem>
                         )}
                     />
                 </div>
-                <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Endereço de E-mail</FormLabel>
-                        <FormControl>
-                            <div className="relative">
-                                <Input 
-                                    placeholder="exemplo@email.com" 
-                                    {...field} 
-                                    className={cn("lowercase", duplicity.email && "border-red-500 bg-red-50")} 
-                                />
-                                {duplicity.email && <AlertTriangle className="absolute right-3 top-2.5 h-5 w-5 text-red-500 animate-pulse" />}
-                            </div>
-                        </FormControl>
-                        {duplicity.email && <p className="text-[10px] font-black text-red-600 uppercase mt-1">Este e-mail já está sendo usado!</p>}
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-            </div>
 
-            <Separator />
-
-            <div className="space-y-6">
-                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-primary/60 flex items-center gap-2">
-                    <MapPin className="h-4 w-4" /> Endereço Residencial
-                </h3>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <FormField
                         control={form.control}
-                        name="cep"
+                        name="birthDate"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel>CEP</FormLabel>
+                            <FormLabel className="text-xs font-medium text-muted-foreground">Data de Nascimento</FormLabel>
                             <FormControl>
-                                <div className='relative max-w-[200px]'>
-                                    <Input placeholder="00000-000" {...field} value={field.value ?? ''} onBlur={handleCepBlur} maxLength={9} className="font-mono font-bold" />
-                                    {isFetchingCep && <Loader2 className="absolute right-3 top-2.5 h-5 w-5 animate-spin text-primary" />}
-                                </div>
+                                <Input 
+                                    placeholder="dd/mm/aaaa" 
+                                    {...field} 
+                                    className="rounded-full h-11 px-5 border-zinc-200" 
+                                    maxLength={10} 
+                                    onChange={(e) => {
+                                        let v = e.target.value.replace(/\D/g, "").substring(0, 8);
+                                        if (v.length > 4) v = v.replace(/(\d{2})(\d{2})(\d)/, "$1/$2/$3");
+                                        else if (v.length > 2) v = v.replace(/(\d{2})(\d)/, "$1/$2");
+                                        field.onChange(v);
+                                    }}
+                                />
                             </FormControl>
                             <FormMessage />
                             </FormItem>
                         )}
                     />
-                    <div />
-                </div>
-                <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-                    <div className='md:col-span-2'>
-                        <FormField control={form.control} name="street" render={({ field }) => (
-                            <FormItem><FormLabel>Logradouro</FormLabel><FormControl><Input placeholder="Rua / Avenida" {...field} value={field.value ?? ''} /></FormControl></FormItem>
-                        )} />
-                    </div>
-                    <FormField control={form.control} name="number" render={({ field }) => (
-                        <FormItem><FormLabel>Número</FormLabel><FormControl><Input placeholder="123" {...field} value={field.value ?? ''} /></FormControl></FormItem>
-                    )} />
-                </div>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                    <FormField control={form.control} name="complement" render={({ field }) => (
-                        <FormItem><FormLabel>Complemento</FormLabel><FormControl><Input placeholder="Apto, Bloco, etc." {...field} value={field.value ?? ''} /></FormControl></FormItem>
-                    )} />
-                    <FormField control={form.control} name="neighborhood" render={({ field }) => (
-                        <FormItem><FormLabel>Bairro</FormLabel><FormControl><Input placeholder="Bairro" {...field} value={field.value ?? ''} /></FormControl></FormItem>
-                    )} />
-                </div>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                    <FormField control={form.control} name="city" render={({ field }) => (
-                        <FormItem><FormLabel>Cidade</FormLabel><FormControl><Input placeholder="Cidade" {...field} value={field.value ?? ''} /></FormControl></FormItem>
-                    )} />
-                    <FormField control={form.control} name="state" render={({ field }) => (
-                        <FormItem><FormLabel>Estado (UF)</FormLabel><FormControl><Input placeholder="SP" {...field} value={field.value ?? ''} className="uppercase" maxLength={2} /></FormControl></FormItem>
-                    )} />
                 </div>
             </div>
 
-            <Separator />
+            <div className="h-px bg-zinc-100" />
 
+            {/* SEÇÃO: BENEFÍCIOS */}
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-black uppercase tracking-[0.2em] text-primary/60 flex items-center gap-2">
-                        <Hash className="h-4 w-4" /> Benefícios Vinculados
+                    <h3 className="text-xl font-bold uppercase tracking-tight text-[#00AEEF]">
+                        Benefícios INSS
                     </h3>
-                    <Button type="button" variant="outline" size="sm" onClick={() => append({ number: '', species: '' })} className="rounded-full h-8 font-bold border-primary/30 text-primary">
-                        <PlusCircle className="h-3 w-3 mr-2" /> Novo NB
+                    <Button type="button" variant="outline" size="sm" onClick={() => append({ number: '', species: '' })} className="rounded-full h-9 px-5 border-zinc-200 hover:bg-zinc-50 font-medium">
+                        <PlusCircle className="h-4 w-4 mr-2" /> Adicionar
                     </Button>
                 </div>
                 <div className="space-y-4">
                     {fields.map((field, index) => (
-                        <div key={field.id} className="flex gap-4 items-end p-4 rounded-xl bg-muted/20 border border-border/50 group animate-in slide-in-from-left-2">
+                        <div key={field.id} className="flex gap-4 items-end animate-in fade-in slide-in-from-left-2">
                             <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField
                                     control={form.control}
                                     name={`benefits.${index}.number`}
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-[10px] font-black uppercase opacity-60">Número do Benefício</FormLabel>
-                                            <FormControl><Input placeholder="000.000.000-0" {...field} className="font-mono font-bold" /></FormControl>
+                                            <FormLabel className="text-[10px] font-bold uppercase opacity-40">Número do Benefício</FormLabel>
+                                            <FormControl><Input placeholder="000.000.000-0" {...field} className="rounded-full h-10 border-zinc-200 font-mono" /></FormControl>
                                         </FormItem>
                                     )}
                                 />
@@ -492,29 +413,67 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                     name={`benefits.${index}.species`}
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-[10px] font-black uppercase opacity-60">Espécie / Tipo</FormLabel>
-                                            <FormControl><Input placeholder="Ex: Aposentadoria Idade" {...field} value={field.value ?? ''} className="font-bold" /></FormControl>
+                                            <FormLabel className="text-[10px] font-bold uppercase opacity-40">Espécie / Tipo</FormLabel>
+                                            <FormControl><Input placeholder="Aposentadoria Idade" {...field} value={field.value ?? ''} className="rounded-full h-10 border-zinc-200" /></FormControl>
                                         </FormItem>
                                     )}
                                 />
                             </div>
-                            <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="text-destructive h-10 w-10">
+                            <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="text-red-400 h-10 w-10 hover:bg-red-50 rounded-full">
                                 <Trash2 className="h-4 w-4" />
                             </Button>
                         </div>
                     ))}
-                    {fields.length === 0 && (
-                        <div className="py-8 text-center border-2 border-dashed rounded-xl opacity-30 text-[10px] font-black uppercase tracking-[0.2em]">Nenhum benefício registrado</div>
-                    )}
                 </div>
             </div>
 
-            <Separator />
+            <div className="h-px bg-zinc-100" />
 
-            <div className="space-y-6 pb-10">
-                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-primary/60 flex items-center gap-2">
-                    <MessageSquareText className="h-4 w-4" /> Inteligência e Observações
-                </h3>
+            {/* SEÇÃO: ENDEREÇO (INTEGRADA) */}
+            <div className="space-y-6">
+                <h3 className="text-xl font-bold uppercase tracking-tight text-[#00AEEF]">Endereço</h3>
+                <div className='grid grid-cols-1 md:grid-cols-4 gap-6'>
+                    <FormField
+                        control={form.control}
+                        name="cep"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel className="text-xs font-medium text-muted-foreground">CEP</FormLabel>
+                            <FormControl>
+                                <div className='relative'>
+                                    <Input placeholder="00000-000" {...field} value={field.value ?? ''} onBlur={handleCepBlur} maxLength={9} className="rounded-full h-11 px-5 border-zinc-200" />
+                                    {isFetchingCep && <Loader2 className="absolute right-4 top-3.5 h-4 w-4 animate-spin text-[#00AEEF]" />}
+                                </div>
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <div className="md:col-span-2">
+                        <FormField control={form.control} name="street" render={({ field }) => (
+                            <FormItem><FormLabel className="text-xs font-medium text-muted-foreground">Logradouro</FormLabel><FormControl><Input placeholder="Rua / Avenida" {...field} value={field.value ?? ''} className="rounded-full h-11 px-5 border-zinc-200" /></FormControl></FormItem>
+                        )} />
+                    </div>
+                    <FormField control={form.control} name="number" render={({ field }) => (
+                        <FormItem><FormLabel className="text-xs font-medium text-muted-foreground">Número</FormLabel><FormControl><Input placeholder="123" {...field} value={field.value ?? ''} className="rounded-full h-11 px-5 border-zinc-200" /></FormControl></FormItem>
+                    )} />
+                </div>
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+                    <FormField control={form.control} name="neighborhood" render={({ field }) => (
+                        <FormItem><FormLabel className="text-xs font-medium text-muted-foreground">Bairro</FormLabel><FormControl><Input placeholder="Bairro" {...field} value={field.value ?? ''} className="rounded-full h-11 px-5 border-zinc-200" /></FormControl></FormItem>
+                    )} />
+                    <FormField control={form.control} name="city" render={({ field }) => (
+                        <FormItem><FormLabel className="text-xs font-medium text-muted-foreground">Cidade</FormLabel><FormControl><Input placeholder="Cidade" {...field} value={field.value ?? ''} className="rounded-full h-11 px-5 border-zinc-200" /></FormControl></FormItem>
+                    )} />
+                    <FormField control={form.control} name="state" render={({ field }) => (
+                        <FormItem><FormLabel className="text-xs font-medium text-muted-foreground">UF</FormLabel><FormControl><Input placeholder="SP" {...field} value={field.value ?? ''} className="rounded-full h-11 px-5 border-zinc-200 uppercase" maxLength={2} /></FormControl></FormItem>
+                    )} />
+                </div>
+            </div>
+
+            {/* SEÇÃO: OBSERVAÇÕES */}
+            <div className="space-y-4 pb-10">
+                <h3 className="text-xl font-bold uppercase tracking-tight text-[#00AEEF]">Observações</h3>
                 <FormField
                     control={form.control}
                     name="observations"
@@ -522,13 +481,12 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         <FormItem>
                         <FormControl>
                             <Textarea 
-                                placeholder="Anotações estratégicas sobre o perfil do cliente, restrições ou oportunidades..." 
+                                placeholder="Anotações estratégicas..." 
                                 {...field} 
                                 value={field.value ?? ''} 
-                                className="min-h-[120px] resize-none bg-muted/10 border-2"
+                                className="min-h-[100px] rounded-2xl border-zinc-200 bg-muted/5 p-5"
                             />
                         </FormControl>
-                        <FormDescription className="text-[10px] italic">Estas informações alimentam a IA para gerar scripts de venda mais assertivos.</FormDescription>
                         </FormItem>
                     )}
                 />
@@ -536,16 +494,16 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
           </div>
         </ScrollArea>
         
-        <div className="flex justify-end pt-8 border-t mt-4 bg-background sticky bottom-0 z-50">
+        <div className="flex justify-end pt-6 border-t mt-4 bg-white">
             <Button 
                 type="submit" 
                 disabled={isSaving || duplicity.phone || duplicity.email || duplicity.cpf} 
-                className="rounded-full px-12 h-12 font-black uppercase tracking-widest bg-[#00AEEF] hover:bg-[#0096D1] shadow-xl transition-all"
+                className="rounded-full px-12 h-12 font-bold text-white bg-[#00AEEF] hover:bg-[#0096D1] shadow-lg shadow-[#00AEEF]/20 transition-all border-none"
             >
                 {isSaving ? (
                     <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Salvando...</>
                 ) : (
-                    <><UserCheck className="mr-2 h-5 w-5" /> Salvar Cadastro</>
+                    'Salvar Cliente'
                 )}
             </Button>
         </div>
