@@ -27,15 +27,20 @@ import {
     AlertTriangle, 
     Loader2,
     Mail,
-    Phone as PhoneIcon
+    Phone as PhoneIcon,
+    FolderLock,
+    Calendar as CalendarIcon
 } from 'lucide-react';
-import { format, parse, isValid } from 'date-fns';
-import { validateCPF, handlePhoneMask, cleanFirestoreData, cn } from '@/lib/utils';
-import type { Customer } from '@/lib/types';
+import { format, parse, isValid, differenceInYears } from 'date-fns';
+import { validateCPF, handlePhoneMask, cleanFirestoreData, cn, isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
+import type { Customer, Attachment } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { useEffect, useState, useMemo } from 'react';
 import { toast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
+import { CustomerAttachmentUploader } from '@/components/customers/customer-attachment-uploader';
 
 const benefitSchema = z.object({
     number: z.string().min(1, "O número do benefício é obrigatório."),
@@ -122,8 +127,19 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   });
 
   const watchPhone = form.watch('phone');
+  const watchPhone2 = form.watch('phone2');
   const watchEmail = form.watch('email');
   const watchCpf = form.watch('cpf');
+  const watchBirthDate = form.watch('birthDate');
+
+  const customerAge = useMemo(() => {
+    if (!watchBirthDate || watchBirthDate.length < 10) return null;
+    try {
+        const parsed = parse(watchBirthDate, 'dd/MM/yyyy', new Date());
+        if (isValid(parsed)) return differenceInYears(new Date(), parsed);
+    } catch { return null; }
+    return null;
+  }, [watchBirthDate]);
 
   const duplicity = useMemo(() => {
     const results = { phone: false, email: false, cpf: false };
@@ -196,7 +212,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
             toast({ title: "Endereço localizado!" });
         }
     } catch (error) {
-        toast({ variant: 'destructive', title: 'CEP não encontrado', description: 'Preencha manualmente.' });
+        toast({ variant: 'destructive', title: 'Busca Indisponível', description: 'Preencha o endereço manualmente.' });
     } finally {
         setIsFetchingCep(false);
     }
@@ -204,7 +220,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
 
   const handleFormSubmit = (data: CustomerFormValues) => {
     if (duplicity.phone || duplicity.email || duplicity.cpf) {
-        toast({ variant: 'destructive', title: 'Existem dados duplicados' });
+        toast({ variant: 'destructive', title: 'Existem dados duplicados no sistema' });
         return;
     }
     const parsedDate = parse(data.birthDate, 'dd/MM/yyyy', new Date());
@@ -262,7 +278,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                     render={({ field }) => (
                         <FormItem>
                         <FormLabel className="text-xs font-medium text-muted-foreground">Nome Completo</FormLabel>
-                        <FormControl><Input placeholder="João da Silva" {...field} className="rounded-full h-11 px-5 border-zinc-200" /></FormControl>
+                        <FormControl><Input placeholder="João da Silva" {...field} className="rounded-full h-11 px-5 border-zinc-200 focus-visible:ring-[#00AEEF]" /></FormControl>
                         <FormMessage />
                         </FormItem>
                     )}
@@ -336,6 +352,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                             <FormControl>
                                 <div className="relative">
                                     <Input placeholder="(11) 98765-4321" {...field} className={cn("rounded-full h-11 px-5 border-zinc-200", duplicity.phone && "border-red-500 bg-red-50")} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} maxLength={15} />
+                                    {isWhatsApp(watchPhone) && <WhatsAppIcon className="absolute right-4 top-3.5 h-4 w-4" />}
                                 </div>
                             </FormControl>
                             <FormMessage />
@@ -348,7 +365,12 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         render={({ field }) => (
                             <FormItem>
                             <FormLabel className="text-xs font-medium text-muted-foreground">Telefone 2</FormLabel>
-                            <FormControl><Input placeholder="(11) 98765-4321" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} maxLength={15} className="rounded-full h-11 px-5 border-zinc-200"/></FormControl>
+                            <FormControl>
+                                <div className="relative">
+                                    <Input placeholder="(11) 98765-4321" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} maxLength={15} className="rounded-full h-11 px-5 border-zinc-200"/>
+                                    {isWhatsApp(watchPhone2 || '') && <WhatsAppIcon className="absolute right-4 top-3.5 h-4 w-4" />}
+                                </div>
+                            </FormControl>
                             </FormItem>
                         )}
                     />
@@ -360,7 +382,17 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         name="birthDate"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel className="text-xs font-medium text-muted-foreground">Data de Nascimento</FormLabel>
+                            <FormLabel className="text-xs font-medium text-muted-foreground flex items-center justify-between">
+                                Data de Nascimento
+                                {customerAge !== null && (
+                                    <Badge variant="outline" className={cn(
+                                        "h-5 text-[9px] font-black uppercase border-2",
+                                        customerAge >= 74 ? "bg-red-50 text-red-600 border-red-200" : "bg-blue-50 text-blue-600 border-blue-200"
+                                    )}>
+                                        {customerAge} ANOS
+                                    </Badge>
+                                )}
+                            </FormLabel>
                             <FormControl>
                                 <Input 
                                     placeholder="dd/mm/aaaa" 
@@ -390,8 +422,8 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                     <h3 className="text-xl font-bold uppercase tracking-tight text-[#00AEEF]">
                         Benefícios INSS
                     </h3>
-                    <Button type="button" variant="outline" size="sm" onClick={() => append({ number: '', species: '' })} className="rounded-full h-9 px-5 border-zinc-200 hover:bg-zinc-50 font-medium">
-                        <PlusCircle className="h-4 w-4 mr-2" /> Adicionar
+                    <Button type="button" variant="outline" size="sm" onClick={() => append({ number: '', species: '' })} className="rounded-full h-9 px-5 border-[#00AEEF]/30 hover:bg-[#00AEEF]/5 text-[#00AEEF] font-bold">
+                        <PlusCircle className="h-4 w-4 mr-2" /> Adicionar NB
                     </Button>
                 </div>
                 <div className="space-y-4">
@@ -429,9 +461,9 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
 
             <div className="h-px bg-zinc-100" />
 
-            {/* SEÇÃO: ENDEREÇO (INTEGRADA) */}
+            {/* SEÇÃO: ENDEREÇO */}
             <div className="space-y-6">
-                <h3 className="text-xl font-bold uppercase tracking-tight text-[#00AEEF]">Endereço</h3>
+                <h3 className="text-xl font-bold uppercase tracking-tight text-[#00AEEF]">Endereço Completo</h3>
                 <div className='grid grid-cols-1 md:grid-cols-4 gap-6'>
                     <FormField
                         control={form.control}
@@ -441,7 +473,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                             <FormLabel className="text-xs font-medium text-muted-foreground">CEP</FormLabel>
                             <FormControl>
                                 <div className='relative'>
-                                    <Input placeholder="00000-000" {...field} value={field.value ?? ''} onBlur={handleCepBlur} maxLength={9} className="rounded-full h-11 px-5 border-zinc-200" />
+                                    <Input placeholder="00000-000" {...field} value={field.value ?? ''} onBlur={handleCepBlur} maxLength={9} className="rounded-full h-11 px-5 border-zinc-200 focus-visible:ring-[#00AEEF]" />
                                     {isFetchingCep && <Loader2 className="absolute right-4 top-3.5 h-4 w-4 animate-spin text-[#00AEEF]" />}
                                 </div>
                             </FormControl>
@@ -471,9 +503,26 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                 </div>
             </div>
 
+            <div className="h-px bg-zinc-100" />
+
+            {/* SEÇÃO: ANEXOS (DOCUMENTOS FIXOS) */}
+            <div className="space-y-6">
+                <h3 className="text-xl font-bold uppercase tracking-tight text-[#00AEEF] flex items-center gap-2">
+                    <FolderLock className="h-5 w-5" /> Central de Documentos Fixos
+                </h3>
+                <CustomerAttachmentUploader 
+                    userId={customer?.ownerId || 'system'} 
+                    customerId={customer?.id || 'new'} 
+                    initialAttachments={form.getValues('documents') || []} 
+                    onAttachmentsChange={(docs) => form.setValue('documents', docs, { shouldValidate: true })}
+                    isReadOnly={!customer?.id}
+                />
+                {!customer?.id && <p className="text-[10px] text-muted-foreground uppercase font-bold text-center">Salve o cliente primeiro para liberar o upload de documentos.</p>}
+            </div>
+
             {/* SEÇÃO: OBSERVAÇÕES */}
             <div className="space-y-4 pb-10">
-                <h3 className="text-xl font-bold uppercase tracking-tight text-[#00AEEF]">Observações</h3>
+                <h3 className="text-xl font-bold uppercase tracking-tight text-[#00AEEF]">Observações Estratégicas</h3>
                 <FormField
                     control={form.control}
                     name="observations"
@@ -481,10 +530,10 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         <FormItem>
                         <FormControl>
                             <Textarea 
-                                placeholder="Anotações estratégicas..." 
+                                placeholder="Anotações internas sobre o perfil do cliente..." 
                                 {...field} 
                                 value={field.value ?? ''} 
-                                className="min-h-[100px] rounded-2xl border-zinc-200 bg-muted/5 p-5"
+                                className="min-h-[100px] rounded-2xl border-zinc-200 bg-muted/5 p-5 focus-visible:ring-[#00AEEF]"
                             />
                         </FormControl>
                         </FormItem>
@@ -503,7 +552,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                 {isSaving ? (
                     <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Salvando...</>
                 ) : (
-                    'Salvar Cliente'
+                    'Salvar Cadastro'
                 )}
             </Button>
         </div>
