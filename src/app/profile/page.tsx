@@ -11,6 +11,7 @@ import type { UserProfile } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { updateEmail } from 'firebase/auth';
+import { cleanFirestoreData } from '@/lib/utils';
 
 export default function ProfilePage() {
     const { user, auth, isUserLoading } = useFirebase();
@@ -59,10 +60,10 @@ export default function ProfilePage() {
         }
         
         try {
-            const finalData = {
+            const finalData = cleanFirestoreData({
                 ...data,
                 email: emailToUpdate || user.email
-            };
+            });
             await setDoc(userProfileDocRef, finalData, { merge: true });
             toast({
                 title: 'Perfil Atualizado!',

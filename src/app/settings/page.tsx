@@ -57,7 +57,7 @@ import { toast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { ThemeColors } from '@/components/settings/theme-colors';
-import { cn } from '@/lib/utils';
+import { cn, cleanFirestoreData } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -167,7 +167,8 @@ export default function SettingsPage() {
 
   const saveSettingsToFirebase = (updated: Partial<UserSettings>) => {
     if (settingsDocRef) {
-        setDoc(settingsDocRef, updated, { merge: true });
+        // 🛡️ BLINDAGEM DE DADOS V8
+        setDoc(settingsDocRef, cleanFirestoreData(updated), { merge: true });
         toast({ title: "Configurações Salvas!" });
     }
   };
@@ -321,6 +322,7 @@ export default function SettingsPage() {
     "lavender": "Lavanda Suave",
     "mint": "Menta Fresca",
     "pearl": "Pérola Shimmer",
+    "depth": "Profundidade 3D",
     "desert": "Dunas Douradas"
   };
 

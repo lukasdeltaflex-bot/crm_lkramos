@@ -49,7 +49,7 @@ import { toast } from '@/hooks/use-toast';
 import { format, startOfMonth, endOfMonth, parse, getYear, getMonth, isSameMonth, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CommissionReconciliation } from '@/components/financial/commission-reconciliation';
-import { formatCurrency, cleanBankName } from '@/lib/utils';
+import { formatCurrency, cleanBankName, cleanFirestoreData } from '@/lib/utils';
 import { ProposalsStatusTable } from '@/components/dashboard/proposals-status-table';
 import { PromoterEfficiencyReport } from '@/components/financial/promoter-efficiency-report';
 import { StatsCard } from '@/components/dashboard/stats-card';
@@ -182,7 +182,7 @@ export default function FinancialPage() {
                 dataToUpdate.commissionPaymentDate = deleteField();
             }
 
-            batch.update(docRef, dataToUpdate);
+            batch.update(docRef, cleanFirestoreData(dataToUpdate));
         });
 
         await batch.commit();
@@ -262,15 +262,15 @@ export default function FinancialPage() {
     }
   
     const docRef = doc(firestore, 'loanProposals', proposal.id);
-    setDoc(docRef, proposalToUpdate, { merge: true });
+    setDoc(docRef, cleanFirestoreData(proposalToUpdate), { merge: true });
     toast({ title: 'Status Atualizado!' });
   }, [firestore, user]);
 
   const handleFormSubmit = async (data: CommissionFormValues) => {
     if (!firestore || !selectedProposal || !user) return;
     
-    // 🛡️ BLINDAGEM DE PARSING V7: Valida a data manual antes de salvar
-    let paymentDateIso = undefined;
+    // 🛡️ BLINDAGEM DE PARSING V8: Valida a data manual antes de salvar
+    let paymentDateIso = null;
     if (data.commissionPaymentDate) {
         const parsed = parse(data.commissionPaymentDate, 'dd/MM/yyyy', new Date());
         if (isValid(parsed)) {
@@ -281,11 +281,11 @@ export default function FinancialPage() {
     const proposalToUpdate: Partial<Proposal> = {
       commissionStatus: data.commissionStatus as CommissionStatus,
       amountPaid: data.amountPaid,
-      commissionPaymentDate: paymentDateIso,
+      commissionPaymentDate: paymentDateIso as any,
       ownerId: user.uid
     };
     
-    setDoc(doc(firestore, 'loanProposals', selectedProposal.id), proposalToUpdate, { merge: true });
+    setDoc(doc(firestore, 'loanProposals', selectedProposal.id), cleanFirestoreData(proposalToUpdate), { merge: true });
     setIsSheetOpen(false);
     toast({ title: 'Salvo!' });
   };
@@ -415,7 +415,9 @@ export default function FinancialPage() {
             <DialogHeader><DialogTitle>Gasto Operacional</DialogTitle></DialogHeader>
             <ExpenseForm expense={selectedExpense} categories={userSettings?.expenseCategories || initialExpenseCategories} onSubmit={(data) => {
                 const id = selectedExpense?.id || doc(collection(firestore!, 'users', user!.uid, 'expenses')).id;
-                setDoc(doc(firestore!, 'users', user!.uid, 'expenses', id), { ...data, id, ownerId: user!.uid });
+                // 🛡️ BLINDAGEM DE DADOS V8
+                const finalData = cleanFirestoreData({ ...data, id, ownerId: user!.uid });
+                setDoc(doc(firestore!, 'users', user!.uid, 'expenses', id), finalData);
                 setIsExpenseFormOpen(false);
                 toast({ title: 'Gasto Salvo!' });
             }} />

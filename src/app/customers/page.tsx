@@ -1,4 +1,3 @@
-
 'use client';
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -38,26 +37,11 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getAge, cn } from '@/lib/utils';
+import { getAge, cn, cleanFirestoreData } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-
-function cleanCustomerData(data: any): any {
-    if (data === null || data === undefined) return null;
-    if (Array.isArray(data)) return data.map(item => cleanCustomerData(item)).filter(i => i !== undefined);
-    if (typeof data === 'object') {
-        const cleaned: any = {};
-        Object.keys(data).forEach(key => {
-            const val = data[key];
-            // Mantém strings vazias e nulls explicitamente se forem campos de formulário, exceto undefined
-            if (val !== undefined) cleaned[key] = cleanCustomerData(val);
-        });
-        return cleaned;
-    }
-    return data;
-}
 
 function CustomersPageContent() {
   const { user } = useUser();
@@ -192,7 +176,8 @@ function CustomersPageContent() {
     if (!firestore || !user) return;
     setIsSaving(true);
     try {
-        const cleanedData = cleanCustomerData({ ...formData, ownerId: user.uid });
+        // 🛡️ BLINDAGEM DE DADOS V8
+        const cleanedData = cleanFirestoreData({ ...formData, ownerId: user.uid });
         const docRef = sheetMode === 'edit' && selectedCustomer ? doc(firestore, 'customers', selectedCustomer.id) : doc(collection(firestore, 'customers'));
         
         const finalData = {

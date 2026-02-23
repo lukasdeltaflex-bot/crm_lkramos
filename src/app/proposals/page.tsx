@@ -28,6 +28,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cleanFirestoreData } from '@/lib/utils';
 
 export type ProposalWithCustomer = Proposal & { customer: Customer | undefined };
 type ProposalFormData = Partial<Omit<Proposal, 'id' | 'ownerId'>>;
@@ -182,7 +183,7 @@ function ProposalsPageContent() {
             };
             dataToUpdate.history = arrayUnion(historyEntry);
 
-            batch.update(docRef, dataToUpdate);
+            batch.update(docRef, cleanFirestoreData(dataToUpdate));
         });
 
         await batch.commit();
@@ -264,7 +265,7 @@ function ProposalsPageContent() {
     dataToUpdate.history = arrayUnion(historyEntry);
     
     const docRef = doc(firestore, 'loanProposals', proposalId);
-    updateDoc(docRef, dataToUpdate)
+    updateDoc(docRef, cleanFirestoreData(dataToUpdate))
         .then(() => toast({ title: 'Status Atualizado!' }))
         .catch(async (error) => {
             if (error.code === 'permission-denied') {
@@ -281,7 +282,9 @@ function ProposalsPageContent() {
     if (!firestore || !user) return;
     setIsSaving(true);
     const docRef = sheetMode === 'edit' && selectedProposal ? doc(firestore, 'loanProposals', selectedProposal.id) : doc(collection(firestore, 'loanProposals'));
-    const finalData = { ...data, id: docRef.id, ownerId: user.uid };
+    
+    // 🛡️ BLINDAGEM DE DADOS V8: Limpa undefineds antes de setDoc
+    const finalData = cleanFirestoreData({ ...data, id: docRef.id, ownerId: user.uid });
     
     setDoc(docRef, finalData, { merge: true })
         .then(() => {

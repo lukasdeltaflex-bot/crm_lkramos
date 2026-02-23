@@ -122,3 +122,32 @@ export function cleanBankName(name?: string): string {
   const cleaned = name.replace(/^\d+[\s-]*[-]*[\s]*/, '').trim();
   return cleaned || name;
 }
+
+/**
+ * 🛡️ BLINDAGEM FIRESTORE V8
+ * Limpa recursivamente objetos e arrays, removendo propriedades 'undefined' 
+ * que causam erros de runtime no Firebase.
+ */
+export function cleanFirestoreData(data: any): any {
+    if (data === null || data === undefined) return null;
+    
+    // Evita processar datas ou outros objetos especiais como objetos comuns
+    if (data instanceof Date) return data.toISOString();
+    
+    if (Array.isArray(data)) {
+        return data.map(item => cleanFirestoreData(item)).filter(i => i !== undefined);
+    }
+    
+    if (typeof data === 'object') {
+        const cleaned: any = {};
+        Object.keys(data).forEach(key => {
+            const val = data[key];
+            if (val !== undefined) {
+                cleaned[key] = cleanFirestoreData(val);
+            }
+        });
+        return cleaned;
+    }
+    
+    return data;
+}

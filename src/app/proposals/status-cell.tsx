@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -10,7 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { cn, cleanFirestoreData } from '@/lib/utils';
 import { proposalStatuses } from '@/lib/config-data';
 import type { ProposalStatus, ProposalHistoryEntry } from '@/lib/types';
 import { useFirestore, auth } from '@/firebase';
@@ -96,7 +95,8 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
 
     const docRef = doc(firestore, 'loanProposals', proposalId);
     
-    updateDoc(docRef, dataToUpdate)
+    // 🛡️ BLINDAGEM DE DADOS V8
+    updateDoc(docRef, cleanFirestoreData(dataToUpdate))
         .then(() => {
             toast({
                 title: 'Status Atualizado!',

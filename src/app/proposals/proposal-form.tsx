@@ -345,12 +345,16 @@ export function ProposalForm({
         return;
     }
 
+    /**
+     * 🛡️ BLINDAGEM DE DADOS V8
+     * Converte para ISO String ou null. O Firestore não aceita 'undefined'.
+     */
     const convertToIso = (dateStr?: string) => {
-        if (!dateStr || dateStr.trim() === '') return undefined;
+        if (!dateStr || dateStr.trim() === '') return null;
         try {
             const parsed = parse(dateStr, 'dd/MM/yyyy', new Date());
-            return isValid(parsed) ? parsed.toISOString() : undefined;
-        } catch { return undefined; }
+            return isValid(parsed) ? parsed.toISOString() : null;
+        } catch { return null; }
     }
 
     const finalData = {

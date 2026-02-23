@@ -21,7 +21,7 @@ import { Input } from '@/components/ui/input';
 import { FollowUpsWidget } from '@/components/dashboard/follow-ups-widget';
 import { FollowUpCalendar } from '@/components/follow-ups/follow-up-calendar';
 import { useTheme } from '@/components/theme-provider';
-import { cn } from '@/lib/utils';
+import { cn, cleanFirestoreData } from '@/lib/utils';
 
 export default function FollowUpsPage() {
   const { user } = useUser();
@@ -88,12 +88,12 @@ export default function FollowUpsPage() {
     if (!firestore || !selectedFollowUp || !user) return;
     setIsSaving(true);
     const docRef = doc(firestore, 'users', user.uid, 'followUps', selectedFollowUp.id);
-    const updateData = {
+    const updateData = cleanFirestoreData({
         ...extraData,
         status,
         completedAt: new Date().toISOString(),
         notes: actionNotes
-    };
+    });
 
     setDoc(docRef, updateData, { merge: true })
         .then(() => {
@@ -114,17 +114,17 @@ export default function FollowUpsPage() {
     const oldRef = doc(firestore, 'users', user.uid, 'followUps', selectedFollowUp.id);
     const newRef = doc(collection(firestore, 'users', user.uid, 'followUps'));
     
-    const newFollowUp: FollowUp = {
+    const newFollowUp = cleanFirestoreData({
         ...selectedFollowUp,
         id: newRef.id,
         ownerId: user.uid,
         dueDate: newDueDate,
         status: 'pending',
         createdAt: new Date().toISOString(),
-        completedAt: undefined,
-        notes: undefined,
+        completedAt: null,
+        notes: null,
         description: `(Reagendado) ${selectedFollowUp.description}`
-    };
+    });
 
     try {
         await setDoc(oldRef, {
@@ -154,14 +154,14 @@ export default function FollowUpsPage() {
     const customerId = data.customerId === 'none' || !data.customerId ? null : data.customerId;
     const docRef = doc(firestore, 'users', user.uid, 'followUps', id);
     
-    const finalData = {
+    const finalData = cleanFirestoreData({
         ...data,
         customerId,
         id,
         ownerId: user.uid,
         createdAt: selectedFollowUp?.createdAt || new Date().toISOString(),
         status: 'pending'
-    };
+    });
 
     setDoc(docRef, finalData, { merge: true })
         .then(() => {
