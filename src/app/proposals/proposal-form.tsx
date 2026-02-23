@@ -28,7 +28,6 @@ import {
 } from '@/components/ui/select';
 import { 
     Check, 
-    Copy, 
     Printer, 
     Loader2, 
     History, 
@@ -51,7 +50,7 @@ import * as configData from '@/lib/config-data';
 import type { Proposal, Customer, Attachment, UserSettings, ProposalHistoryEntry } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { ProposalAttachmentUploader } from '@/components/proposals/proposal-attachment-uploader';
 import { useUser, useFirestore } from '@/firebase';
 import { doc, collection, updateDoc, arrayUnion } from 'firebase/firestore';
@@ -163,8 +162,6 @@ export function ProposalForm({
   const [isClient, setIsClient] = useState(false);
   const [newHistoryEntry, setNewHistoryEntry] = useState('');
   const [isAddingHistory, setIsAddingHistory] = useState(false);
-  
-  const initialStatusRef = useRef<string | null>(null);
 
   const productTypes = userSettings?.productTypes || configData.productTypes;
   const proposalStatuses = userSettings?.proposalStatuses || configData.proposalStatuses;
@@ -281,7 +278,6 @@ export function ProposalForm({
   useEffect(() => {
     const source = proposal || defaultValues;
     if (source) {
-        initialStatusRef.current = source.status || 'Em Andamento';
         form.reset({
             proposalNumber: source.proposalNumber || '',
             customerId: source.customerId || '',
@@ -331,11 +327,13 @@ export function ProposalForm({
         debtBalanceArrivalDate: convertToIso(data.debtBalanceArrivalDate),
     };
 
-    if (initialStatusRef.current && initialStatusRef.current !== data.status) {
+    // DETECÇÃO DE MUDANÇA DE STATUS (Auditória Automática)
+    const oldStatus = proposal?.status || 'Em Andamento';
+    if (oldStatus !== data.status) {
         const historyEntry: ProposalHistoryEntry = {
             id: crypto.randomUUID(),
             date: now,
-            message: `Status alterado de "${initialStatusRef.current}" para "${data.status}" (Via Formulário)`,
+            message: `Status alterado de "${oldStatus}" para "${data.status}"`,
             userName: user?.displayName || user?.email || 'Sistema'
         };
         finalData.history = proposal?.history ? [...proposal.history, historyEntry] : [historyEntry];
@@ -541,7 +539,6 @@ export function ProposalForm({
                 />
               </div>
 
-              {/* REALOCAÇÃO: Valores da Proposta */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField control={form.control} name="installmentAmount" render={({ field }) => (
                     <FormItem>
