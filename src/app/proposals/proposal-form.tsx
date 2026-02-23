@@ -208,22 +208,31 @@ export function ProposalForm({
     return allProposals.find(p => p.proposalNumber === proposalNumberValue && p.id !== proposal?.id);
   }, [proposalNumberValue, allProposals, proposal]);
 
-  // 🛡️ LÓGICA DE BENEFÍCIO AUTOMÁTICO V2
+  // 🛡️ LÓGICA DE BENEFÍCIO AUTOMÁTICO V3
   useEffect(() => {
     if (selectedCustomer) {
         const benefits = selectedCustomer.benefits || [];
+        const currentVal = form.getValues('selectedBenefitNumber');
+        
+        // Verifica se o benefício atual pertence ao novo cliente selecionado
+        const isValidForNewCustomer = benefits.some(b => b.number === currentVal);
+        
         if (benefits.length === 1) {
+            // Seleciona automaticamente se houver apenas um
             setValue('selectedBenefitNumber', benefits[0].number, { shouldValidate: true });
-        } else if (benefits.length === 0) {
-            setValue('selectedBenefitNumber', '');
+        } else if (!isValidForNewCustomer) {
+            // Limpa se o benefício anterior não pertencer ao novo cliente e houver múltiplos (ou nenhum)
+            setValue('selectedBenefitNumber', '', { shouldValidate: true });
         }
+    } else {
+        setValue('selectedBenefitNumber', '', { shouldValidate: true });
     }
-  }, [selectedCustomer, setValue]);
+  }, [selectedCustomer, setValue, form]);
 
   useEffect(() => {
     if (selectedCustomerFromSearch) {
         setValue('customerId', selectedCustomerFromSearch.id, { shouldValidate: true });
-        setValue('selectedBenefitNumber', '');
+        // O benefício será tratado pelo useEffect acima
         trigger('customerId');
         onCustomerSearchSelectionHandled();
     }
@@ -610,7 +619,6 @@ export function ProposalForm({
                   render={({ field }) => (
                     <FormItem>
                         <FormLabel>Banco Digitado</FormLabel>
-                        {/* 🛡️ SELETOR DE BANCO PREMIUM */}
                         <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isReadOnly || isSaving}>
                             <FormControl>
                                 <SelectTrigger>
@@ -641,7 +649,6 @@ export function ProposalForm({
                   render={({ field }) => (
                     <FormItem>
                         <FormLabel>Órgão</FormLabel>
-                        {/* 🛡️ SELETOR DE ÓRGÃO APROVADOR */}
                         <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isReadOnly || isSaving}>
                             <FormControl><SelectTrigger><SelectValue placeholder="Órgão" /></SelectTrigger></FormControl>
                             <SelectContent>{approvingBodies.map(body => <SelectItem key={body} value={body}>{body}</SelectItem>)}</SelectContent>
@@ -659,7 +666,7 @@ export function ProposalForm({
                 />
               </div>
 
-              {/* 🛡️ CAMPO EXCLUSIVO: BANCO PORTADO */}
+              {/* 🛡️ CAMPO EXCLUSIVO: BANCO PORTADO - AGORA COM SELETOR VISUAL */}
               {product === 'Portabilidade' && (
                   <div className="grid grid-cols-1 gap-4">
                       <FormField
@@ -668,9 +675,26 @@ export function ProposalForm({
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Banco Portado (Origem)</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="De qual banco está vindo?" {...field} readOnly={isReadOnly || isSaving} value={field.value || ''} />
-                                </FormControl>
+                                <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isReadOnly || isSaving}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <div className="flex items-center gap-2">
+                                                {field.value && <BankIcon bankName={field.value} domain={userSettings?.bankDomains?.[field.value]} showLogo={showLogos} className="h-4 w-4" />}
+                                                <SelectValue placeholder="Selecione o Banco de Origem" />
+                                            </div>
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        {banks.map(b => (
+                                            <SelectItem key={b} value={b}>
+                                                <div className="flex items-center gap-2">
+                                                    <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogo={showLogos} className="h-4 w-4" />
+                                                    <span>{cleanBankName(b)}</span>
+                                                </div>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                                 <FormDescription>Informe a instituição onde o saldo devedor se encontra atualmente.</FormDescription>
                                 <FormMessage />
                             </FormItem>
