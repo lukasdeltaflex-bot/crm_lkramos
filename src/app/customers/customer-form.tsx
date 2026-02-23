@@ -30,7 +30,18 @@ import {
     Sparkles,
     MessageSquareText,
     FolderLock,
-    AlertTriangle
+    AlertTriangle,
+    User,
+    FileText,
+    UserRound,
+    Mail,
+    Phone,
+    Calendar,
+    CreditCard,
+    MapPin,
+    Home,
+    Map,
+    Hash
 } from 'lucide-react';
 import { format, parse, isValid, differenceInYears } from 'date-fns';
 import { validateCPF, handlePhoneMask, cleanFirestoreData, cn, isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
@@ -227,7 +238,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     }
   }, [form]);
 
-  // 🛡️ GATILHO AUTOMÁTICO DE CEP: Dispara ao digitar o 8º número
   useEffect(() => {
     const cleanCep = (watchCep || '').replace(/\D/g, '');
     if (cleanCep.length === 8) {
@@ -263,7 +273,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       birthDate: format(parsedDate, 'yyyy-MM-dd'),
       benefits: data.benefits || [],
       documents: data.documents || [],
-      // 🛡️ PRESERVAÇÃO DE GÊNERO: Evita casting para strings vazias se houver valor
       gender: (data.gender as 'Masculino' | 'Feminino') || undefined 
     };
     onSubmit(cleanFirestoreData(newCustomerData));
@@ -331,7 +340,9 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                     name="name"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel className="text-xs font-medium text-muted-foreground">Nome Completo *</FormLabel>
+                        <FormLabel className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                            <User className="h-3.5 w-3.5 text-[#00AEEF]" /> Nome Completo *
+                        </FormLabel>
                         <FormControl>
                             <div className="relative">
                                 <Input 
@@ -355,7 +366,9 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         name="cpf"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel className="text-xs font-medium text-muted-foreground">CPF *</FormLabel>
+                            <FormLabel className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                                <FileText className="h-3.5 w-3.5 text-[#00AEEF]" /> CPF *
+                            </FormLabel>
                             <FormControl>
                                 <div className="relative">
                                     <Input 
@@ -380,7 +393,9 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                       name="gender"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs font-medium text-muted-foreground">Gênero</FormLabel>
+                          <FormLabel className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                            <UserRound className="h-3.5 w-3.5 text-[#00AEEF]" /> Gênero
+                          </FormLabel>
                           <Select onValueChange={field.onChange} value={field.value || ""}>
                             <FormControl><SelectTrigger className="rounded-full h-11 px-5 border-zinc-200 font-bold"><SelectValue placeholder="Opcional" /></SelectTrigger></FormControl>
                             <SelectContent>
@@ -399,7 +414,9 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         name="email"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel className="text-xs font-medium text-muted-foreground">E-mail (Opcional)</FormLabel>
+                            <FormLabel className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                                <Mail className="h-3.5 w-3.5 text-[#00AEEF]" /> E-mail (Opcional)
+                            </FormLabel>
                             <FormControl>
                                 <div className="relative">
                                     <Input 
@@ -421,7 +438,9 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         name="phone"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel className="text-xs font-medium text-muted-foreground">Telefone Principal *</FormLabel>
+                            <FormLabel className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                                <Phone className="h-3.5 w-3.5 text-[#00AEEF]" /> Telefone Principal *
+                            </FormLabel>
                             <FormControl>
                                 <div className="relative">
                                     <Input 
@@ -452,7 +471,9 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         name="phone2"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel className="text-xs font-medium text-muted-foreground">Telefone 2 (Opcional)</FormLabel>
+                            <FormLabel className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                                <Phone className="h-3.5 w-3.5 text-[#00AEEF]" /> Telefone 2 (Opcional)
+                            </FormLabel>
                             <FormControl>
                                 <div className="relative">
                                     <Input placeholder="(00) 00000-0000" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} maxLength={15} className="rounded-full h-11 px-5 border-zinc-200 font-bold"/>
@@ -475,7 +496,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         render={({ field }) => (
                             <FormItem>
                             <FormLabel className="text-xs font-medium text-muted-foreground flex items-center justify-between">
-                                Nascimento *
+                                <div className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5 text-[#00AEEF]" /> Nascimento *</div>
                                 {customerAge !== null && (
                                     <Badge variant="outline" className={cn(
                                         "h-5 text-[9px] font-black uppercase border-2",
@@ -523,7 +544,9 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                     name={`benefits.${index}.number`}
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-[10px] font-bold uppercase opacity-40">Número do Benefício</FormLabel>
+                                            <FormLabel className="text-[10px] font-bold uppercase opacity-40 flex items-center gap-2">
+                                                <CreditCard className="h-3 w-3" /> Número do Benefício
+                                            </FormLabel>
                                             <FormControl><Input placeholder="000.000.000-0" {...field} className="rounded-full h-10 border-zinc-200 font-mono font-bold" /></FormControl>
                                         </FormItem>
                                     )}
@@ -533,7 +556,9 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                     name={`benefits.${index}.species`}
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-[10px] font-bold uppercase opacity-40">Espécie / Tipo</FormLabel>
+                                            <FormLabel className="text-[10px] font-bold uppercase opacity-40 flex items-center gap-2">
+                                                <FileText className="h-3 w-3" /> Espécie / Tipo
+                                            </FormLabel>
                                             <FormControl><Input placeholder="Aposentadoria Idade" {...field} value={field.value ?? ''} className="rounded-full h-10 border-zinc-200 font-bold" /></FormControl>
                                         </FormItem>
                                     )}
@@ -550,14 +575,16 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
             <div className="h-px bg-zinc-100" />
 
             <div className="space-y-6">
-                <h3 className="text-xl font-bold uppercase tracking-tight text-[#00AEEF]">Localização (Opcional)</h3>
+                <h3 className="text-xl font-bold uppercase tracking-tight text-[#00AEEF]">Localização</h3>
                 <div className='grid grid-cols-1 md:grid-cols-4 gap-6'>
                     <FormField
                         control={form.control}
                         name="cep"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel className="text-xs font-medium text-muted-foreground">CEP</FormLabel>
+                            <FormLabel className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                                <MapPin className="h-3.5 w-3.5 text-[#00AEEF]" /> CEP
+                            </FormLabel>
                             <FormControl>
                                 <div className='relative'>
                                     <Input 
@@ -580,22 +607,22 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                     />
                     <div className="md:col-span-2">
                         <FormField control={form.control} name="street" render={({ field }) => (
-                            <FormItem><FormLabel className="text-xs font-medium text-muted-foreground">Logradouro</FormLabel><FormControl><Input placeholder="Rua / Avenida" {...field} value={field.value ?? ''} className="rounded-full h-11 px-5 border-zinc-200 font-bold" /></FormControl></FormItem>
+                            <FormItem><FormLabel className="text-xs font-medium text-muted-foreground flex items-center gap-2"><Home className="h-3.5 w-3.5 text-[#00AEEF]" /> Logradouro</FormLabel><FormControl><Input placeholder="Rua / Avenida" {...field} value={field.value ?? ''} className="rounded-full h-11 px-5 border-zinc-200 font-bold" /></FormControl></FormItem>
                         )} />
                     </div>
                     <FormField control={form.control} name="number" render={({ field }) => (
-                        <FormItem><FormLabel className="text-xs font-medium text-muted-foreground">Número</FormLabel><FormControl><Input placeholder="123" {...field} value={field.value ?? ''} className="rounded-full h-11 px-5 border-zinc-200 font-bold" /></FormControl></FormItem>
+                        <FormItem><FormLabel className="text-xs font-medium text-muted-foreground flex items-center gap-2"><Hash className="h-3.5 w-3.5 text-[#00AEEF]" /> Número</FormLabel><FormControl><Input placeholder="123" {...field} value={field.value ?? ''} className="rounded-full h-11 px-5 border-zinc-200 font-bold" /></FormControl></FormItem>
                     )} />
                 </div>
                 <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
                     <FormField control={form.control} name="neighborhood" render={({ field }) => (
-                        <FormItem><FormLabel className="text-xs font-medium text-muted-foreground">Bairro</FormLabel><FormControl><Input placeholder="Bairro" {...field} value={field.value ?? ''} className="rounded-full h-11 px-5 border-zinc-200 font-bold" /></FormControl></FormItem>
+                        <FormItem><FormLabel className="text-xs font-medium text-muted-foreground flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-[#00AEEF]" /> Bairro</FormLabel><FormControl><Input placeholder="Bairro" {...field} value={field.value ?? ''} className="rounded-full h-11 px-5 border-zinc-200 font-bold" /></FormControl></FormItem>
                     )} />
                     <FormField control={form.control} name="city" render={({ field }) => (
-                        <FormItem><FormLabel className="text-xs font-medium text-muted-foreground">Cidade</FormLabel><FormControl><Input placeholder="Cidade" {...field} value={field.value ?? ''} className="rounded-full h-11 px-5 border-zinc-200 font-bold" /></FormControl></FormItem>
+                        <FormItem><FormLabel className="text-xs font-medium text-muted-foreground flex items-center gap-2"><Map className="h-3.5 w-3.5 text-[#00AEEF]" /> Cidade</FormLabel><FormControl><Input placeholder="Cidade" {...field} value={field.value ?? ''} className="rounded-full h-11 px-5 border-zinc-200 font-bold" /></FormControl></FormItem>
                     )} />
                     <FormField control={form.control} name="state" render={({ field }) => (
-                        <FormItem><FormLabel className="text-xs font-medium text-muted-foreground">UF</FormLabel><FormControl><Input placeholder="SP" {...field} value={field.value ?? ''} className="rounded-full h-11 px-5 border-zinc-200 uppercase font-bold" maxLength={2} /></FormControl></FormItem>
+                        <FormItem><FormLabel className="text-xs font-medium text-muted-foreground flex items-center gap-2"><Map className="h-3.5 w-3.5 text-[#00AEEF]" /> UF</FormLabel><FormControl><Input placeholder="SP" {...field} value={field.value ?? ''} className="rounded-full h-11 px-5 border-zinc-200 uppercase font-bold" maxLength={2} /></FormControl></FormItem>
                     )} />
                 </div>
             </div>

@@ -198,7 +198,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         if (!searchTerm) return true;
         const customer = row.original;
 
-        // 🛡️ MOTOR DE BUSCA NUCLEAR V8: Prioridade de Exatidão Numérica
+        // 🛡️ BUSCA NUCLEAR V8: Prioridade de Exatidão Numérica
         if (/^\d+$/.test(searchTerm)) {
             // Comparação estrita para IDs: Digitar "10" traz apenas o ID 10
             if (customer.numericId?.toString() === searchTerm) return true;
@@ -210,11 +210,9 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
                 if (cpfDigits.includes(searchTerm) || phoneDigits.includes(searchTerm)) return true;
             }
             
-            // Se for número e não deu match exato no ID nem parcial nos outros, bloqueia
             return false;
         }
 
-        // Busca por texto (Nomes, Cidades, Emails)
         const normalizedSearch = normalizeString(searchTerm);
         const searchableFields = [
             customer.name,
