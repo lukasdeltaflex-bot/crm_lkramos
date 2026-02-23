@@ -24,14 +24,14 @@ import {
     PlusCircle, 
     Trash2, 
     UserCheck, 
-    AlertTriangle, 
     Loader2,
-    Calendar as CalendarIcon,
     AlertCircle,
     CheckCircle2,
     Sparkles,
     MessageSquareText,
-    FolderLock
+    FolderLock,
+    Info,
+    AlertTriangle
 } from 'lucide-react';
 import { format, parse, isValid, differenceInYears } from 'date-fns';
 import { validateCPF, handlePhoneMask, cleanFirestoreData, cn, isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
@@ -182,7 +182,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       form.reset({
         name: source.name || '',
         cpf: source.cpf || '',
-        gender: source.gender || '',
+        gender: source.gender || '', // 🛡️ BLINDAGEM: Se vier null do banco, Select assume ""
         status: source.status || 'active',
         benefits: source.benefits || [],
         phone: source.phone || '',
@@ -209,7 +209,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     setIsFetchingCep(true);
     try {
         const response = await fetch(`/api/cep/${cep}`);
-        if (!response.ok) throw new Error('Falha');
+        if (!response.ok) throw new Error('Falha no proxy');
         const data = await response.json();
         
         if (data && !data.erro) {
@@ -220,13 +220,13 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
             toast({ title: "Endereço localizado!" });
         }
     } catch (error) {
-        console.warn("CEP Proxy falhou, permitindo manual.");
+        console.warn("Busca automática de CEP indisponível.");
     } finally {
         setIsFetchingCep(false);
     }
   };
 
-  // MONITORAMENTO AUTOMÁTICO: Dispara busca assim que o CEP atinge 8 dígitos
+  // MONITORAMENTO NUCLEAR: Dispara busca assim que o CEP atinge 8 dígitos reais
   useEffect(() => {
     const cleanCep = (watchCep || '').replace(/\D/g, '');
     if (cleanCep.length === 8) {
