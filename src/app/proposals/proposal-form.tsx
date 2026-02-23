@@ -1,5 +1,10 @@
 'use client';
 
+/**
+ * @fileOverview Formulário mestre para criação e edição de propostas.
+ * Centraliza toda a lógica de esteira, cálculos de comissão e histórico.
+ */
+
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -30,7 +35,6 @@ import {
     Download, 
     FolderLock, 
     Loader2, 
-    MessageSquareWarning, 
     History, 
     FileBadge,
     Calendar as CalendarIcon,
@@ -136,7 +140,6 @@ const handleDateMask = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (value.length > 8) value = value.substring(0, 8);
     value = value.replace(/(\d{2})(\d)/, '$1/$2');
     value = value.replace(/(\d{2})(\d)/, '$1/$2');
-    e.target.value = value;
     return value;
 };
 
@@ -182,6 +185,34 @@ export function ProposalForm({
 
   const form = useForm<ProposalFormValues>({
     resolver: zodResolver(proposalSchema),
+    defaultValues: {
+      proposalNumber: '',
+      customerId: '',
+      product: '',
+      status: 'Em Andamento',
+      commissionStatus: 'Pendente',
+      selectedBenefitNumber: '',
+      table: '',
+      term: 84,
+      interestRate: 0,
+      grossAmount: 0,
+      netAmount: 0,
+      installmentAmount: 0,
+      commissionBase: 'gross',
+      commissionPercentage: 0,
+      commissionValue: 0,
+      promoter: '',
+      bank: '',
+      bankOrigin: '',
+      approvingBody: 'INSS',
+      operator: '',
+      dateDigitized: format(new Date(), 'dd/MM/yyyy'),
+      dateApproved: '',
+      datePaidToClient: '',
+      debtBalanceArrivalDate: '',
+      attachments: [],
+      observations: '',
+    },
   });
 
   const { watch, setValue, trigger } = form;
@@ -260,58 +291,52 @@ export function ProposalForm({
   }, [status, product, setValue, isReadOnly, form]);
 
   const formatDateForForm = (dateString?: string) => {
-    if (!dateString) return undefined;
+    if (!dateString) return '';
     try {
         if (dateString.includes('T')) {
             const date = parseISO(dateString);
-            return isValid(date) ? format(date, 'dd/MM/yyyy') : undefined;
+            return isValid(date) ? format(date, 'dd/MM/yyyy') : '';
         }
         const parts = dateString.split('-');
         if (parts.length === 3) {
             return `${parts[2]}/${parts[1]}/${parts[0]}`;
         }
-        return undefined;
-    } catch { return undefined; }
+        return '';
+    } catch { return ''; }
   }
 
   useEffect(() => {
-    const initialValues: Partial<ProposalFormValues> = {
-        proposalNumber: '',
-        customerId: '',
-        product: '',
-        status: 'Em Andamento',
-        commissionStatus: undefined,
-        selectedBenefitNumber: '',
-        table: '',
-        term: undefined,
-        interestRate: undefined,
-        grossAmount: undefined,
-        netAmount: undefined,
-        installmentAmount: undefined,
-        commissionBase: 'gross',
-        commissionPercentage: undefined,
-        commissionValue: undefined,
-        promoter: '',
-        bank: '',
-        bankOrigin: '',
-        approvingBody: '',
-        operator: '',
-        dateDigitized: isClient ? format(new Date(), 'dd/MM/yyyy') : '',
-        attachments: [],
-        observations: '',
-    };
     const source = proposal || defaultValues;
     if (source) {
-        const sourceData = {
-            ...initialValues,
-            ...source,
+        form.reset({
+            proposalNumber: source.proposalNumber || '',
+            customerId: source.customerId || '',
+            product: source.product || '',
+            status: source.status || 'Em Andamento',
+            commissionStatus: source.commissionStatus || 'Pendente',
+            selectedBenefitNumber: source.selectedBenefitNumber || '',
+            table: source.table || '',
+            term: source.term ?? 84,
+            interestRate: source.interestRate ?? 0,
+            grossAmount: source.grossAmount ?? 0,
+            netAmount: source.netAmount ?? 0,
+            installmentAmount: source.installmentAmount ?? 0,
+            commissionBase: source.commissionBase || 'gross',
+            commissionPercentage: source.commissionPercentage ?? 0,
+            commissionValue: source.commissionValue ?? 0,
+            promoter: source.promoter || '',
+            bank: source.bank || '',
+            bankOrigin: source.bankOrigin || '',
+            approvingBody: source.approvingBody || 'INSS',
+            operator: source.operator || '',
             dateDigitized: source.dateDigitized ? formatDateForForm(source.dateDigitized) : (isClient ? format(new Date(), 'dd/MM/yyyy') : ''),
             dateApproved: formatDateForForm(source.dateApproved),
             datePaidToClient: formatDateForForm(source.datePaidToClient),
             debtBalanceArrivalDate: formatDateForForm(source.debtBalanceArrivalDate),
-        }
-        form.reset(sourceData);
-    } else form.reset(initialValues);
+            attachments: source.attachments || [],
+            observations: source.observations || '',
+        });
+    }
   }, [proposal, defaultValues, form, isClient]);
 
   function handleFormSubmit(data: ProposalFormValues) {
@@ -321,7 +346,7 @@ export function ProposalForm({
     }
 
     const convertToIso = (dateStr?: string) => {
-        if (!dateStr) return undefined;
+        if (!dateStr || dateStr.trim() === '') return undefined;
         try {
             const parsed = parse(dateStr, 'dd/MM/yyyy', new Date());
             return isValid(parsed) ? parsed.toISOString() : undefined;
@@ -451,19 +476,6 @@ export function ProposalForm({
                     </FormItem>
                 )}
                 />
-              {selectedCustomer && selectedCustomer.documents && selectedCustomer.documents.length > 0 && (
-                <Alert className="bg-primary/5 border-primary/20">
-                    <FolderLock className="h-4 w-4 text-primary" />
-                    <AlertTitle className="text-xs font-bold text-primary">Documentos Permanentes Disponíveis</AlertTitle>
-                    <AlertDescription className="mt-2 flex flex-wrap gap-2">
-                        {selectedCustomer.documents.map((doc, i) => (
-                            <a key={i} href={doc.url} target="_blank" rel="noopener noreferrer" className="px-2 py-1 bg-background border rounded text-[10px] font-medium hover:bg-accent flex items-center gap-1">
-                                <Download className="h-2.5 w-2.5" />{doc.name}
-                            </a>
-                        ))}
-                    </AlertDescription>
-                </Alert>
-              )}
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
@@ -472,7 +484,7 @@ export function ProposalForm({
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Produto</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isReadOnly || isSaving}>
+                        <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
                         <FormControl><SelectTrigger><SelectValue placeholder="Selecione o Produto" /></SelectTrigger></FormControl>
                         <SelectContent>{productTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}</SelectContent>
                         </Select><FormMessage /></FormItem>
@@ -484,7 +496,7 @@ export function ProposalForm({
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Status Atual</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isReadOnly || isSaving}>
+                        <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
                         <FormControl><SelectTrigger><SelectValue placeholder="Selecione o Status" /></SelectTrigger></FormControl>
                         <SelectContent>{proposalStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                         </Select><FormMessage /></FormItem>
@@ -495,13 +507,12 @@ export function ProposalForm({
 
             <Separator />
 
-            {/* SEÇÃO: PRAZOS E INFORMAÇÕES DA ESTEIRA (REORGANIZADA V8) */}
             <div className="space-y-4">
               <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
                 <Clock className="h-4 w-4" /> Prazos e Informações da Esteira
               </h3>
               
-              {/* Linha 1: NB, Órgão, Banco Digitado */}
+              {/* LINHA 1: BENEFÍCIO, ÓRGÃO E BANCO */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
@@ -509,14 +520,14 @@ export function ProposalForm({
                   render={({ field }) => (
                     <FormItem><FormLabel>Nº do Benefício</FormLabel>
                       {selectedCustomer && selectedCustomer.benefits && selectedCustomer.benefits.length > 0 ? (
-                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value || ''} disabled={isReadOnly || isSaving}>
-                          <FormControl><SelectTrigger><SelectValue placeholder="Selecione um benefício..." /></SelectTrigger></FormControl>
+                        <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
+                          <FormControl><SelectTrigger><SelectValue placeholder="Selecione o NB" /></SelectTrigger></FormControl>
                           <SelectContent>{selectedCustomer.benefits.map(benefit => (
                               <SelectItem key={benefit.number} value={benefit.number}><span className="font-medium">{benefit.number}</span></SelectItem>
                             ))}</SelectContent>
                         </Select>
                       ) : (
-                        <FormControl><Input placeholder="Sem benefícios cadastrados" {...field} readOnly={isReadOnly || isSaving} value={field.value || ''} disabled={isReadOnly || !selectedCustomerId || isSaving}/></FormControl>
+                        <FormControl><Input placeholder="Sem benefícios" {...field} value={field.value ?? ''} readOnly={isReadOnly || isSaving} disabled={isReadOnly || !selectedCustomerId || isSaving}/></FormControl>
                       )}<FormMessage /></FormItem>
                   )}
                 />
@@ -526,7 +537,7 @@ export function ProposalForm({
                   render={({ field }) => (
                     <FormItem>
                         <FormLabel>Órgão</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isReadOnly || isSaving}>
+                        <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
                             <FormControl><SelectTrigger><SelectValue placeholder="Órgão" /></SelectTrigger></FormControl>
                             <SelectContent>{approvingBodies.map(body => <SelectItem key={body} value={body}>{body}</SelectItem>)}</SelectContent>
                         </Select>
@@ -540,10 +551,10 @@ export function ProposalForm({
                   render={({ field }) => (
                     <FormItem>
                         <FormLabel>Banco Digitado</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isReadOnly || isSaving}>
+                        <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
                             <FormControl>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Selecione o Banco" />
+                                    <SelectValue placeholder="Banco Digitado" />
                                 </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -563,7 +574,7 @@ export function ProposalForm({
                 />
               </div>
 
-              {/* Linha 2: Banco Portado (se Port), Nº Proposta, Tabela */}
+              {/* LINHA 2: BANCO PORTADO (IF), Nº PROPOSTA, TABELA */}
               <div className={cn("grid gap-4", product === 'Portabilidade' ? "grid-cols-1 md:grid-cols-3" : "grid-cols-1 md:grid-cols-2")}>
                 {product === 'Portabilidade' && (
                     <FormField
@@ -572,7 +583,7 @@ export function ProposalForm({
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Banco Portado (Origem)</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isReadOnly || isSaving}>
+                                <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
                                     <FormControl>
                                         <SelectTrigger>
                                             <SelectValue placeholder="Origem" />
@@ -600,7 +611,7 @@ export function ProposalForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Nº Proposta</FormLabel>
-                      <FormControl><Input placeholder="Número oficial" {...field} readOnly={(isReadOnly && sheetMode === 'edit') || isSaving} value={field.value || ''}/></FormControl>
+                      <FormControl><Input placeholder="Número oficial" {...field} value={field.value ?? ''} readOnly={(isReadOnly && sheetMode === 'edit') || isSaving}/></FormControl>
                       <FormMessage />
                       {duplicateProposal && (
                         <Alert variant="destructive" className="mt-2 py-2 px-3 border-2"><AlertTriangle className="h-4 w-4" />
@@ -615,20 +626,20 @@ export function ProposalForm({
                   control={form.control}
                   name="table"
                   render={({ field }) => (
-                    <FormItem><FormLabel>Tabela</FormLabel><FormControl><Input placeholder="Nome da Tabela" {...field} readOnly={isReadOnly || isSaving} value={field.value || ''} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel>Tabela</FormLabel><FormControl><Input placeholder="Nome da Tabela" {...field} value={field.value ?? ''} readOnly={isReadOnly || isSaving} /></FormControl><FormMessage /></FormItem>
                   )}
                 />
               </div>
 
-              {/* Linha 3: Datas (Sequência Dinâmica V8) */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* LINHA 3: DATAS DINÂMICAS */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="dateDigitized"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Data Digitação</FormLabel>
-                      <FormControl><Input placeholder="dd/mm/aaaa" {...field} onChange={(e) => field.onChange(handleDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} /></FormControl>
+                      <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(handleDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -640,8 +651,8 @@ export function ProposalForm({
                             name="debtBalanceArrivalDate"
                             render={({ field }) => (
                                 <FormItem>
-                                <FormLabel>Retorno Saldo</FormLabel>
-                                <FormControl><Input placeholder="dd/mm/aaaa" {...field} onChange={(e) => field.onChange(handleDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} value={field.value || ''} /></FormControl>
+                                <FormLabel>Data Retorno Saldo</FormLabel>
+                                <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(handleDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} /></FormControl>
                                 <FormMessage />
                                 </FormItem>
                             )}
@@ -652,7 +663,7 @@ export function ProposalForm({
                             render={({ field }) => (
                                 <FormItem>
                                 <FormLabel>Data Averbação</FormLabel>
-                                <FormControl><Input placeholder="dd/mm/aaaa" {...field} onChange={(e) => field.onChange(handleDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} value={field.value || ''} /></FormControl>
+                                <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(handleDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} /></FormControl>
                                 <FormMessage />
                                 </FormItem>
                             )}
@@ -666,7 +677,7 @@ export function ProposalForm({
                             render={({ field }) => (
                                 <FormItem>
                                 <FormLabel>Data Averbação</FormLabel>
-                                <FormControl><Input placeholder="dd/mm/aaaa" {...field} onChange={(e) => field.onChange(handleDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} value={field.value || ''} /></FormControl>
+                                <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(handleDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} /></FormControl>
                                 <FormMessage />
                                 </FormItem>
                             )}
@@ -677,7 +688,7 @@ export function ProposalForm({
                             render={({ field }) => (
                                 <FormItem>
                                 <FormLabel>Pgto. ao Cliente</FormLabel>
-                                <FormControl><Input placeholder="dd/mm/aaaa" {...field} onChange={(e) => field.onChange(handleDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} value={field.value || ''} /></FormControl>
+                                <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(handleDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} /></FormControl>
                                 <FormMessage />
                                 </FormItem>
                             )}
@@ -686,20 +697,20 @@ export function ProposalForm({
                 )}
               </div>
 
-              {/* Linha 4: Operador e Promotora */}
+              {/* LINHA 4: OPERADOR E PROMOTORA */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="operator"
                   render={({ field }) => (
-                    <FormItem><FormLabel>Operador</FormLabel><FormControl><Input placeholder="Nome do Agente" {...field} readOnly={isReadOnly || isSaving} value={field.value || ''} /></FormControl></FormItem>
+                    <FormItem><FormLabel>Operador</FormLabel><FormControl><Input placeholder="Nome do Agente" {...field} value={field.value ?? ''} readOnly={isReadOnly || isSaving} /></FormControl></FormItem>
                   )}
                 />
                 <FormField
                   control={form.control}
                   name="promoter"
                   render={({ field }) => (
-                    <FormItem><FormLabel>Promotora</FormLabel><FormControl><Input placeholder="Nome da Promotora" {...field} readOnly={isReadOnly || isSaving} value={field.value || ''} /></FormControl></FormItem>
+                    <FormItem><FormLabel>Promotora</FormLabel><FormControl><Input placeholder="Nome da Promotora" {...field} value={field.value ?? ''} readOnly={isReadOnly || isSaving} /></FormControl></FormItem>
                   )}
                 />
               </div>
@@ -718,7 +729,7 @@ export function ProposalForm({
                             <FormControl>
                                 <div className="relative">
                                     <span className="absolute left-3 top-2.5 text-[10px] font-black text-muted-foreground">R$</span>
-                                    <Input type="number" step="0.01" className="pl-9" {...field} readOnly={isReadOnly || isSaving} value={field.value || ''} />
+                                    <Input type="number" step="0.01" className="pl-9" {...field} value={field.value ?? 0} readOnly={isReadOnly || isSaving} />
                                 </div>
                             </FormControl>
                         </FormItem>
@@ -729,7 +740,7 @@ export function ProposalForm({
                             <FormControl>
                                 <div className="relative">
                                     <span className="absolute left-3 top-2.5 text-[10px] font-black text-muted-foreground">R$</span>
-                                    <Input type="number" step="0.01" className="pl-9" {...field} readOnly={isReadOnly || isSaving} value={field.value || ''} />
+                                    <Input type="number" step="0.01" className="pl-9" {...field} value={field.value ?? 0} readOnly={isReadOnly || isSaving} />
                                 </div>
                             </FormControl>
                         </FormItem>
@@ -740,7 +751,7 @@ export function ProposalForm({
                             <FormControl>
                                 <div className="relative">
                                     <span className="absolute left-3 top-2.5 text-[10px] font-black text-muted-foreground">R$</span>
-                                    <Input type="number" step="0.01" className="pl-9" {...field} readOnly={isReadOnly || isSaving} value={field.value || ''} />
+                                    <Input type="number" step="0.01" className="pl-9" {...field} value={field.value ?? 0} readOnly={isReadOnly || isSaving} />
                                 </div>
                             </FormControl>
                         </FormItem>
@@ -750,7 +761,7 @@ export function ProposalForm({
                     <FormField control={form.control} name="commissionBase" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Base do Cálculo</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly || isSaving}>
+                            <Select onValueChange={field.onChange} value={field.value ?? 'gross'} disabled={isReadOnly || isSaving}>
                                 <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                                 <SelectContent>
                                     <SelectItem value="gross">Sobre o Bruto</SelectItem>
@@ -764,7 +775,7 @@ export function ProposalForm({
                             <FormLabel>Comissão (%)</FormLabel>
                             <FormControl>
                                 <div className="relative">
-                                    <Input type="number" step="0.01" className="pr-8" {...field} readOnly={isReadOnly || isSaving} value={field.value || ''} />
+                                    <Input type="number" step="0.01" className="pr-8" {...field} value={field.value ?? 0} readOnly={isReadOnly || isSaving} />
                                     <span className="absolute right-3 top-2.5 text-[10px] font-black text-muted-foreground">%</span>
                                 </div>
                             </FormControl>
@@ -776,7 +787,7 @@ export function ProposalForm({
                             <FormControl>
                                 <div className="relative">
                                     <span className="absolute left-3 top-2.5 text-[10px] font-black text-muted-foreground">R$</span>
-                                    <Input type="number" step="0.01" className="pl-9 font-bold text-primary" {...field} readOnly={isReadOnly || isSaving} value={field.value || ''} />
+                                    <Input type="number" step="0.01" className="pl-9 font-bold text-primary" {...field} value={field.value ?? 0} readOnly={isReadOnly || isSaving} />
                                 </div>
                             </FormControl>
                         </FormItem>
@@ -793,7 +804,7 @@ export function ProposalForm({
                 {proposal?.id && (
                     <div className="space-y-4">
                         <div className="flex gap-2">
-                            <Input placeholder="Registrar nova atualização de trâmite..." value={newHistoryEntry} onChange={e => setNewHistoryEntry(e.target.value)} disabled={isAddingHistory} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddHistory())} />
+                            <Input placeholder="Nova atualização de trâmite..." value={newHistoryEntry} onChange={e => setNewHistoryEntry(e.target.value)} disabled={isAddingHistory} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddHistory())} />
                             <Button type="button" size="sm" onClick={handleAddHistory} disabled={isAddingHistory || !newHistoryEntry.trim()}>
                                 {isAddingHistory ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                             </Button>

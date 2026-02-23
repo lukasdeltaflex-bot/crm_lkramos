@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -101,6 +100,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   const [age, setAge] = useState<number | null>(null);
   const [tempCustomerId, setTempCustomerId] = useState<string | undefined>(undefined);
 
+  // 🛡️ BLINDAGEM NUCLEAR V8: Garantindo defaultValues em todos os campos para evitar uncontrolled inputs
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
     defaultValues: {
@@ -130,7 +130,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     name: "benefits"
   });
 
-  // 🛡️ BLINDAGEM NUCLEAR V6: Sanitização Atômica e Reatividade de Valor
   useEffect(() => {
     const source = customer || defaultValues;
     if (source) {
@@ -311,15 +310,16 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                 className="h-9 text-[10px] font-black uppercase tracking-widest border-2 status-custom rounded-full transition-all shadow-sm"
                                 style={{ '--status-color': statusColor } as any}
                               >
-                                <div className="flex items-center gap-2">
-                                    {field.value === 'active' ? <UserCheck className="h-3.5 w-3.5" /> : <UserX className="h-3.5 w-3.5" />}
-                                    <SelectValue placeholder="Status" />
-                                </div>
+                                <SelectValue placeholder="Status" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="active" className="text-[10px] font-black uppercase">Ativo</SelectItem>
-                              <SelectItem value="inactive" className="text-[10px] font-black uppercase">Inativo</SelectItem>
+                              <SelectItem value="active" className="text-[10px] font-black uppercase">
+                                <div className="flex items-center gap-2"><UserCheck className="h-3.5 w-3.5" /> Ativo</div>
+                              </SelectItem>
+                              <SelectItem value="inactive" className="text-[10px] font-black uppercase">
+                                <div className="flex items-center gap-2"><UserX className="h-3.5 w-3.5" /> Inativo</div>
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </FormItem>
@@ -333,7 +333,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                     <FormItem>
                     <FormLabel>Nome Completo</FormLabel>
                     <FormControl>
-                        <Input placeholder="João da Silva" {...field} />
+                        <Input placeholder="João da Silva" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -347,7 +347,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         <FormItem>
                         <FormLabel>CPF</FormLabel>
                         <FormControl>
-                            <Input placeholder="000.000.000-00" {...field} onChange={handleCpfChange} maxLength={14}/>
+                            <Input placeholder="000.000.000-00" {...field} value={field.value ?? ''} onChange={handleCpfChange} maxLength={14}/>
                         </FormControl>
                         <FormMessage />
                         {duplicateCpfCustomer && (
@@ -362,7 +362,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Gênero</FormLabel>
-                          {/* 🛡️ KEY DINÂMICA V6: Dependência de valor forçada para garantir sincronização visual */}
                           <Select 
                             key={`gender-select-${customer?.id || tempCustomerId || 'new'}-${genderValue || 'none'}`} 
                             onValueChange={field.onChange} 
@@ -408,7 +407,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                         <Input
                                             placeholder="(11) 98765-4321"
                                             {...field}
-                                            // 🛡️ SANITIZAÇÃO ATÔMICA: Garante formatação instantânea
+                                            value={field.value ?? ''}
                                             onChange={(e) => form.setValue('phone', handlePhoneMask(e.target.value), { shouldValidate: true })}
                                             maxLength={15}
                                         />
@@ -432,8 +431,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                         <Input
                                             placeholder="(11) 98765-4321"
                                             {...field}
-                                            value={field.value || ''}
-                                            // 🛡️ SANITIZAÇÃO ATÔMICA: Garante formatação no contato secundário também
+                                            value={field.value ?? ''}
                                             onChange={(e) => form.setValue('phone2', handlePhoneMask(e.target.value), { shouldValidate: true })}
                                             maxLength={15}
                                         />
@@ -454,7 +452,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                     <FormItem>
                         <FormLabel>Data de Nascimento {age !== null && <span className="text-muted-foreground">({age} anos)</span>}</FormLabel>
                         <FormControl>
-                            <Input placeholder="dd/mm/aaaa" {...field} onChange={handleBirthDateChange} maxLength={10} className="w-[240px]"/>
+                            <Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={handleBirthDateChange} maxLength={10} className="w-[240px]"/>
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -480,7 +478,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                             render={({ field }) => (
                                 <FormItem className="flex-1">
                                     <FormLabel className='text-xs'>Número do Benefício</FormLabel>
-                                    <FormControl><Input placeholder='000.000.000-0' {...field} /></FormControl>
+                                    <FormControl><Input placeholder='000.000.000-0' {...field} value={field.value ?? ''} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -491,7 +489,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                             render={({ field }) => (
                                 <FormItem className="flex-1">
                                     <FormLabel className='text-xs'>Espécie / Nome</FormLabel>
-                                    <FormControl><Input placeholder='Ex: Aposentadoria...' {...field} value={field.value || ''} /></FormControl>
+                                    <FormControl><Input placeholder='Ex: Aposentadoria...' {...field} value={field.value ?? ''} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -516,7 +514,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         <FormLabel>CEP</FormLabel>
                         <FormControl>
                             <div className='relative max-w-[240px]'>
-                                <Input placeholder="00000-000" {...field} onBlur={handleCepBlur} maxLength={9} value={field.value || ''} onChange={(e) => {
+                                <Input placeholder="00000-000" {...field} value={field.value ?? ''} onBlur={handleCepBlur} maxLength={9} onChange={(e) => {
                                     let v = e.target.value.replace(/\D/g, "").substring(0, 8);
                                     if (v.length > 5) v = v.replace(/(\d{5})(\d)/, "$1-$2");
                                     form.setValue('cep', v, { shouldValidate: true });
@@ -535,7 +533,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         render={({ field }) => (
                             <FormItem className='col-span-2'>
                             <FormLabel>Logradouro</FormLabel>
-                            <FormControl><Input placeholder="Rua das Flores" {...field} value={field.value || ''} /></FormControl>
+                            <FormControl><Input placeholder="Rua das Flores" {...field} value={field.value ?? ''} /></FormControl>
                             </FormItem>
                         )}
                     />
@@ -545,7 +543,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         render={({ field }) => (
                             <FormItem>
                             <FormLabel>Número</FormLabel>
-                            <FormControl><Input placeholder="123" {...field} value={field.value || ''} /></FormControl>
+                            <FormControl><Input placeholder="123" {...field} value={field.value ?? ''} /></FormControl>
                             </FormItem>
                         )}
                     />
@@ -557,7 +555,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         render={({ field }) => (
                             <FormItem>
                             <FormLabel>Complemento</FormLabel>
-                            <FormControl><Input placeholder="Apto 45" {...field} value={field.value || ''} /></FormControl>
+                            <FormControl><Input placeholder="Apto 45" {...field} value={field.value ?? ''} /></FormControl>
                             </FormItem>
                         )}
                     />
@@ -567,7 +565,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         render={({ field }) => (
                             <FormItem>
                             <FormLabel>Bairro</FormLabel>
-                            <FormControl><Input placeholder="Centro" {...field} value={field.value || ''} /></FormControl>
+                            <FormControl><Input placeholder="Centro" {...field} value={field.value ?? ''} /></FormControl>
                             </FormItem>
                         )}
                     />
@@ -579,7 +577,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         render={({ field }) => (
                             <FormItem className='col-span-2'>
                             <FormLabel>Cidade</FormLabel>
-                            <FormControl><Input placeholder="Sua Cidade" {...field} value={field.value || ''} /></FormControl>
+                            <FormControl><Input placeholder="Sua Cidade" {...field} value={field.value ?? ''} /></FormControl>
                             </FormItem>
                         )}
                     />
@@ -589,7 +587,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         render={({ field }) => (
                             <FormItem>
                             <FormLabel>Estado (UF)</FormLabel>
-                            <FormControl><Input placeholder="UF" {...field} value={field.value || ''} maxLength={2} className="uppercase" /></FormControl>
+                            <FormControl><Input placeholder="UF" {...field} value={field.value ?? ''} maxLength={2} className="uppercase" /></FormControl>
                             </FormItem>
                         )}
                     />
@@ -623,7 +621,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                     placeholder="Anotações sobre o cliente..." 
                                     className="min-h-[120px] resize-none" 
                                     {...field} 
-                                    value={field.value || ''} 
+                                    value={field.value ?? ''} 
                                 />
                             </FormControl>
                             <FormMessage />

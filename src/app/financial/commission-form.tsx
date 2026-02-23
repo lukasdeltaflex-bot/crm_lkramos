@@ -53,18 +53,24 @@ const applyDateMask = (value: string) => {
 
 
 export function CommissionForm({ proposal, onSubmit }: CommissionFormProps) {
+  // 🛡️ BLINDAGEM NUCLEAR V8: Garantindo defaultValues em todos os campos para evitar uncontrolled inputs
   const form = useForm<CommissionFormValues>({
     resolver: zodResolver(commissionSchema),
+    defaultValues: {
+      commissionStatus: 'Pendente',
+      amountPaid: 0,
+      commissionPaymentDate: '',
+    },
   });
 
   useEffect(() => {
     if (proposal) {
       form.reset({
-        commissionStatus: proposal.commissionStatus,
+        commissionStatus: proposal.commissionStatus || 'Pendente',
         amountPaid: proposal.amountPaid || 0,
         commissionPaymentDate: proposal.commissionPaymentDate
           ? format(new Date(proposal.commissionPaymentDate), 'dd/MM/yyyy')
-          : undefined,
+          : '',
       });
     }
   }, [proposal, form]);
@@ -85,7 +91,7 @@ export function CommissionForm({ proposal, onSubmit }: CommissionFormProps) {
                 render={({ field }) => (
                 <FormItem>
                     <FormLabel>Status da Comissão</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value ?? ''}>
                     <FormControl>
                         <SelectTrigger>
                         <SelectValue placeholder="Selecione o status" />
@@ -115,7 +121,7 @@ export function CommissionForm({ proposal, onSubmit }: CommissionFormProps) {
                             <FormControl>
                                 <div className="relative">
                                     <span className="absolute left-3 top-2.5 text-[10px] font-black text-muted-foreground">R$</span>
-                                    <Input type="number" step="0.01" className="pl-9 font-bold text-primary" placeholder="0.00" {...field} />
+                                    <Input type="number" step="0.01" className="pl-9 font-bold text-primary" placeholder="0.00" {...field} value={field.value ?? 0} />
                                 </div>
                             </FormControl>
                             <FormMessage />
@@ -132,8 +138,8 @@ export function CommissionForm({ proposal, onSubmit }: CommissionFormProps) {
                                 <Input
                                     placeholder="dd/mm/aaaa"
                                     {...field}
+                                    value={field.value ?? ''}
                                     onChange={(e) => field.onChange(applyDateMask(e.target.value))}
-                                    value={field.value || ''}
                                     maxLength={10}
                                     className="w-full"
                                 />

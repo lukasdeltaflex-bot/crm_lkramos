@@ -39,6 +39,7 @@ interface ProfileFormProps {
 }
 
 export function ProfileForm({ userProfile, onSubmit }: ProfileFormProps) {
+  // 🛡️ BLINDAGEM NUCLEAR V8: Garantindo defaultValues em todos os campos para evitar uncontrolled inputs
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -64,6 +65,7 @@ export function ProfileForm({ userProfile, onSubmit }: ProfileFormProps) {
         displayName: userProfile.displayName || '',
         fullName: userProfile.fullName || '',
         photoURL: userProfile.photoURL || '',
+        email: userProfile.email || '',
       });
       setPhotoPreview(userProfile.photoURL || null);
     }
@@ -89,7 +91,6 @@ export function ProfileForm({ userProfile, onSubmit }: ProfileFormProps) {
     if (value.length > 9) {
         value = value.replace(/(\d{5})(\d)/, "$1-$2");
     }
-    e.target.value = value;
     form.setValue('phone', value, { shouldValidate: true });
   };
 
@@ -98,7 +99,6 @@ export function ProfileForm({ userProfile, onSubmit }: ProfileFormProps) {
     if (value.length > 8) value = value.substring(0, 8);
     value = value.replace(/(\d{2})(\d)/, '$1/$2');
     value = value.replace(/(\d{2})(\d)/, '$1/$2');
-    e.target.value = value;
     form.setValue('birthDate', value, { shouldValidate: true });
   };
 
@@ -150,19 +150,19 @@ export function ProfileForm({ userProfile, onSubmit }: ProfileFormProps) {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <FormField control={form.control} name="fullName" render={({ field }) => (
-              <FormItem><FormLabel>Nome Completo</FormLabel><FormControl><Input placeholder="Seu nome completo" {...field} value={field.value || ''}/></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel>Nome Completo</FormLabel><FormControl><Input placeholder="Seu nome completo" {...field} value={field.value ?? ''}/></FormControl><FormMessage /></FormItem>
           )} />
           <FormField control={form.control} name="displayName" render={({ field }) => (
-              <FormItem><FormLabel>Como quer ser chamado</FormLabel><FormControl><Input placeholder="Seu apelido" {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel>Como quer ser chamado</FormLabel><FormControl><Input placeholder="Seu apelido" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
           )} />
           <FormField control={form.control} name="email" render={({ field }) => (
-              <FormItem><FormLabel>Email</FormLabel><FormControl><Input placeholder="seu@email.com" {...field} /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel>Email</FormLabel><FormControl><Input placeholder="seu@email.com" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
           )} />
           <FormField control={form.control} name="phone" render={({ field }) => (
-              <FormItem><FormLabel>Telefone</FormLabel><FormControl><Input placeholder="(00) 90000-0000" {...field} value={field.value || ''} onChange={handlePhoneChange} maxLength={15} /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel>Telefone</FormLabel><FormControl><Input placeholder="(00) 90000-0000" {...field} value={field.value ?? ''} onChange={handlePhoneChange} maxLength={15} /></FormControl><FormMessage /></FormItem>
           )} />
           <FormField control={form.control} name="birthDate" render={({ field }) => (
-              <FormItem><FormLabel>Data de Nascimento</FormLabel><FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value || ''} onChange={handleBirthDateChange} maxLength={10} className="w-[240px]" /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel>Data de Nascimento</FormLabel><FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={handleBirthDateChange} maxLength={10} className="w-[240px]" /></FormControl><FormMessage /></FormItem>
           )} />
         </div>
         <div className="flex justify-end"><Button type="submit">Salvar Alterações</Button></div>
