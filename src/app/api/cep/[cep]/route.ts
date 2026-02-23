@@ -1,9 +1,9 @@
-
 import { NextResponse } from 'next/server';
 
 /**
- * 🛡️ PROXY SEGURO VIACEP (Next.js 15 Compatible)
- * Bypassa bloqueios de CORS e restrições de rede do navegador fazendo a chamada pelo servidor.
+ * 🛡️ BACKEND PROXY (Node.js / Next.js API Route)
+ * Esta função roda no servidor, não no navegador do usuário.
+ * Ela é imune a bloqueios de rede do browser (CORS) e extensões.
  */
 export async function GET(
   request: Request,
@@ -21,7 +21,7 @@ export async function GET(
       headers: {
         'Accept': 'application/json',
       },
-      next: { revalidate: 3600 } // Cache de 1 hora
+      next: { revalidate: 3600 } // Cache de 1 hora no servidor
     });
 
     if (!response.ok) {
