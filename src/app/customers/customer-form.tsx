@@ -54,7 +54,7 @@ const customerSchema = z.object({
   cpf: z.string().min(11, 'CPF incompleto.').refine((val) => validateCPF(val), {
     message: "CPF inválido. Verifique se há erro de digitação.",
   }),
-  gender: z.string().optional().nullable(),
+  gender: z.string().nullable().optional(),
   status: z.enum(['active', 'inactive']).default('active'),
   benefits: z.array(benefitSchema).optional(),
   phone: z.string().min(10, 'O telefone é obrigatório.'),
@@ -130,6 +130,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     name: "benefits"
   });
 
+  // 🛡️ BLINDAGEM DE CARREGAMENTO V14: Garante que Gênero e outros campos persistam na edição
   useEffect(() => {
     const source = customer || defaultValues;
     if (source) {
@@ -257,6 +258,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     setIsFetchingCep(true);
     try {
         const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        if (!response.ok) throw new Error('Falha na rede');
         const data = await response.json();
         if (!data.erro) {
             form.setValue('street', data.logradouro || '', { shouldValidate: true });
@@ -269,7 +271,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         }
     } catch (error) {
         console.error("ViaCEP Error:", error);
-        toast({ variant: 'destructive', title: 'Aviso de CEP', description: 'Preenchimento automático indisponível.' });
+        toast({ variant: 'destructive', title: 'Aviso de CEP', description: 'Serviço temporariamente indisponível. Preencha manualmente.' });
     } finally {
         setIsFetchingCep(false);
     }
