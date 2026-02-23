@@ -202,7 +202,7 @@ export function ProposalForm({
       customerId: source?.customerId || '',
       product: source?.product || '',
       status: source?.status || 'Em Andamento',
-      commissionStatus: source?.commissionStatus || 'Pendente',
+      commissionStatus: source?.commissionStatus || '',
       selectedBenefitNumber: source?.selectedBenefitNumber || '',
       table: source?.table || '',
       term: source?.term ?? 84,
