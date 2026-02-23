@@ -214,6 +214,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const table = useReactTable({
     data: filteredData,
     columns,
+    getRowId: (row) => row.id, // 🛡️ CRÍTICO: Mapeia IDs reais do Firestore
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,

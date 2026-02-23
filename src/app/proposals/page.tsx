@@ -94,7 +94,12 @@ function ProposalsPageContent() {
 
   const isLoading = proposalsLoading || customersLoading || isUserLoading || settingsLoading;
 
-  const selectedCount = React.useMemo(() => Object.keys(rowSelection).length, [rowSelection]);
+  // 🛡️ CORREÇÃO DE SELEÇÃO: Filtra IDs que estão efetivamente marcados como true
+  const selectedIds = React.useMemo(() => 
+    Object.keys(rowSelection).filter(id => rowSelection[id]),
+  [rowSelection]);
+
+  const selectedCount = selectedIds.length;
 
   const proposalsWithCustomerData: ProposalWithCustomer[] = React.useMemo(() => {
     if (!proposals || !customers) return [];
@@ -154,7 +159,6 @@ function ProposalsPageContent() {
     setIsSaving(true);
     try {
         const batch = writeBatch(firestore);
-        const selectedIds = Object.keys(rowSelection);
         const now = new Date().toISOString();
         const userName = user.displayName || user.email || 'Sistema';
         
@@ -184,7 +188,7 @@ function ProposalsPageContent() {
             };
             dataToUpdate.history = arrayUnion(historyEntry);
 
-            batch.update(docRef, cleanFirestoreData(dataToUpdate));
+            batch.set(docRef, cleanFirestoreData(dataToUpdate), { merge: true });
         });
 
         await batch.commit();

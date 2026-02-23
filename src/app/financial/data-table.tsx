@@ -188,7 +188,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     const startOfThisMonth = startOfMonth(today);
     const endOfThisMonth = endOfMonth(today);
     
-    // 🛡️ LÓGICA DE BUSCA GLOBAL: Se estiver digitando ou tiver filtro de data, ignora o mês atual.
     const isSearching = globalFilter.trim().length > 0;
     const isSpecificSearch = !!appliedDateRange || isSearching;
 
@@ -211,7 +210,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             });
         }
     } else if (statusFilter === 'Pendente' || statusFilter === 'Parcial') {
-        // Pendentes e Parciais sempre mostram todo o acumulado histórico por padrão
         list = list.filter(p => p.commissionStatus === statusFilter);
     }
 
@@ -233,6 +231,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const table = useReactTable({
     data: filteredData,
     columns,
+    getRowId: (row) => row.id, // 🛡️ CRÍTICO: Mapeia IDs reais do Firestore
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,

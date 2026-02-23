@@ -154,14 +154,18 @@ export default function FinancialPage() {
     };
   }, [proposals, customers, isClient]);
 
-  const selectedCount = React.useMemo(() => Object.keys(rowSelection).length, [rowSelection]);
+  // 🛡️ CORREÇÃO DE SELEÇÃO: Filtra IDs que estão efetivamente marcados como true
+  const selectedIds = React.useMemo(() => 
+    Object.keys(rowSelection).filter(id => rowSelection[id]),
+  [rowSelection]);
+
+  const selectedCount = selectedIds.length;
 
   const handleBulkCommissionUpdate = async (newStatus: CommissionStatus) => {
     if (!firestore || !user || selectedCount === 0) return;
     setIsSaving(true);
     try {
         const batch = writeBatch(firestore);
-        const selectedIds = Object.keys(rowSelection);
         const now = new Date().toISOString();
         
         selectedIds.forEach(id => {
@@ -175,14 +179,15 @@ export default function FinancialPage() {
             };
 
             if (newStatus === 'Paga') {
-                dataToUpdate.amountPaid = proposal.commissionValue;
+                dataToUpdate.amountPaid = proposal.commissionValue || 0;
                 dataToUpdate.commissionPaymentDate = now;
             } else if (newStatus === 'Pendente') {
                 dataToUpdate.amountPaid = 0;
                 dataToUpdate.commissionPaymentDate = deleteField();
             }
 
-            batch.update(docRef, cleanFirestoreData(dataToUpdate));
+            // Usamos set com merge para garantir a escrita caso o docRef tenha sido recuperado por ID
+            batch.set(docRef, cleanFirestoreData(dataToUpdate), { merge: true });
         });
 
         await batch.commit();
@@ -269,7 +274,6 @@ export default function FinancialPage() {
   const handleFormSubmit = async (data: CommissionFormValues) => {
     if (!firestore || !selectedProposal || !user) return;
     
-    // 🛡️ BLINDAGEM DE PARSING V8: Valida a data manual antes de salvar
     let paymentDateIso = null;
     if (data.commissionPaymentDate) {
         const parsed = parse(data.commissionPaymentDate, 'dd/MM/yyyy', new Date());
@@ -415,7 +419,6 @@ export default function FinancialPage() {
             <DialogHeader><DialogTitle>Gasto Operacional</DialogTitle></DialogHeader>
             <ExpenseForm expense={selectedExpense} categories={userSettings?.expenseCategories || initialExpenseCategories} onSubmit={(data) => {
                 const id = selectedExpense?.id || doc(collection(firestore!, 'users', user!.uid, 'expenses')).id;
-                // 🛡️ BLINDAGEM DE DADOS V8
                 const finalData = cleanFirestoreData({ ...data, id, ownerId: user!.uid });
                 setDoc(doc(firestore!, 'users', user!.uid, 'expenses', id), finalData);
                 setIsExpenseFormOpen(false);
