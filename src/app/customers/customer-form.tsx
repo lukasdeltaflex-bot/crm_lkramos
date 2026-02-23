@@ -130,7 +130,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     name: "benefits"
   });
 
-  // 🛡️ BLINDAGEM DE CARREGAMENTO V18: Sincronização forçada para Gênero e outros campos
+  // 🛡️ BLINDAGEM DE CARREGAMENTO V19: Sincronização definitiva para Gênero
   useEffect(() => {
     const source = customer || defaultValues;
     if (source) {
@@ -258,14 +258,14 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     
     setIsFetchingCep(true);
     try {
-        // 🛡️ PROTEÇÃO DE FETCH V18: Captura falha de rede silenciosamente
+        // 🛡️ PROTEÇÃO DE FETCH V19: Captura erro de rede silenciosamente para evitar travamento NextJS
         const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`).catch(() => null);
         
         if (!response || !response.ok) {
             toast({ 
                 variant: 'destructive', 
                 title: 'Busca Indisponível', 
-                description: 'Erro de conexão ao buscar o CEP. Por favor, preencha manualmente.' 
+                description: 'A rede bloqueou a consulta ao ViaCEP. Por favor, preencha manualmente.' 
             });
             setIsFetchingCep(false);
             return;
