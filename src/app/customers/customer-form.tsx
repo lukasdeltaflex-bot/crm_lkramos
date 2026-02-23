@@ -130,7 +130,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     name: "benefits"
   });
 
-  // 🛡️ BLINDAGEM DE RESET V13: Correção atômica do Gênero e Dados
   useEffect(() => {
     const source = customer || defaultValues;
     if (source) {
@@ -260,16 +259,17 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
         const data = await response.json();
         if (!data.erro) {
-            form.setValue('street', data.logradouro, { shouldValidate: true });
-            form.setValue('neighborhood', data.bairro, { shouldValidate: true });
-            form.setValue('city', data.localidade, { shouldValidate: true });
-            form.setValue('state', data.uf, { shouldValidate: true });
+            form.setValue('street', data.logradouro || '', { shouldValidate: true });
+            form.setValue('neighborhood', data.bairro || '', { shouldValidate: true });
+            form.setValue('city', data.localidade || '', { shouldValidate: true });
+            form.setValue('state', data.uf || '', { shouldValidate: true });
             toast({ title: "Endereço Localizado", description: "Campos preenchidos via CEP." });
         } else {
             toast({ variant: 'destructive', title: "CEP não encontrado" });
         }
     } catch (error) {
-        toast({ variant: 'destructive', title: 'Erro ao buscar CEP' });
+        console.error("ViaCEP Error:", error);
+        toast({ variant: 'destructive', title: 'Aviso de CEP', description: 'Preenchimento automático indisponível.' });
     } finally {
         setIsFetchingCep(false);
     }
@@ -555,11 +555,21 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         <FormLabel>CEP</FormLabel>
                         <FormControl>
                             <div className='relative max-w-[240px]'>
-                                <Input placeholder="00000-000" {...field} value={field.value ?? ''} onBlur={handleCepBlur} maxLength={9} onChange={(e) => {
-                                    let v = e.target.value.replace(/\D/g, "").substring(0, 8);
-                                    if (v.length > 5) v = v.replace(/(\d{5})(\d)/, "$1-$2");
-                                    field.onChange(v);
-                                }} />
+                                <Input 
+                                    placeholder="00000-000" 
+                                    {...field} 
+                                    value={field.value ?? ''} 
+                                    onBlur={(e) => {
+                                        field.onBlur();
+                                        handleCepBlur(e);
+                                    }} 
+                                    maxLength={9} 
+                                    onChange={(e) => {
+                                        let v = e.target.value.replace(/\D/g, "").substring(0, 8);
+                                        if (v.length > 5) v = v.replace(/(\d{5})(\d)/, "$1-$2");
+                                        field.onChange(v);
+                                    }} 
+                                />
                                 {isFetchingCep ? (
                                     <Loader2 className="absolute right-3 top-2.5 h-5 w-5 animate-spin text-primary" />
                                 ) : (
