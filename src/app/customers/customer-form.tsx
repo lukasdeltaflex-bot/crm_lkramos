@@ -120,7 +120,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     defaultValues: {
       name: '',
       cpf: '',
-      gender: null,
+      gender: undefined,
       status: 'active',
       benefits: [],
       phone: '',
@@ -145,8 +145,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   });
 
   const watchPhone = form.watch('phone');
-  const watchPhone2 = form.watch('phone2');
-  const watchEmail = form.watch('email');
   const watchCpf = form.watch('cpf');
   const watchBirthDate = form.watch('birthDate');
   const watchObservations = form.watch('observations');
@@ -166,17 +164,15 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     if (!allCustomers) return results;
     const currentId = customer?.id || defaultValues?.id;
     const cleanPhone = watchPhone?.replace(/\D/g, '');
-    const cleanEmail = watchEmail?.trim().toLowerCase();
     const cleanCpf = watchCpf?.replace(/\D/g, '');
 
     allCustomers.forEach(c => {
         if (c.id === currentId) return;
         if (cleanPhone && c.phone?.replace(/\D/g, '') === cleanPhone) results.phone = true;
-        if (cleanEmail && c.email?.trim().toLowerCase() === cleanEmail && cleanEmail !== '') results.email = true;
         if (cleanCpf && c.cpf?.replace(/\D/g, '') === cleanCpf) results.cpf = true;
     });
     return results;
-  }, [allCustomers, watchPhone, watchEmail, watchCpf, customer?.id, defaultValues?.id]);
+  }, [allCustomers, watchPhone, watchCpf, customer?.id, defaultValues?.id]);
 
   useEffect(() => {
     if (customer) {
@@ -193,7 +189,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       form.reset({
         name: customer.name || '',
         cpf: customer.cpf || '',
-        gender: customer.gender ?? null, 
+        gender: customer.gender ?? undefined, 
         status: customer.status || 'active',
         benefits: customer.benefits || [],
         phone: customer.phone || '',
@@ -210,26 +206,8 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         state: customer.state || '',
         documents: customer.documents || [],
       });
-    } else if (defaultValues) {
-        form.reset({
-            ...form.getValues(),
-            ...defaultValues,
-            birthDate: defaultValues.birthDate ? formatDateForForm(defaultValues.birthDate) : form.getValues('birthDate'),
-            gender: defaultValues.gender ?? null
-        });
     }
   }, [customer]);
-
-  const formatDateForForm = (dateString?: string) => {
-    if (!dateString) return '';
-    try {
-        if (dateString.includes('-')) {
-            const date = parse(dateString, 'yyyy-MM-dd', new Date());
-            return isValid(date) ? format(date, 'dd/MM/yyyy') : '';
-        }
-        return dateString;
-    } catch { return ''; }
-  }
 
   const handleCepLookup = useCallback(async (cleanCep: string) => {
     if (cleanCep.length !== 8) return;
@@ -281,7 +259,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   };
 
   const handleFormSubmit = (data: CustomerFormValues) => {
-    if (duplicity.phone || duplicity.email || duplicity.cpf) {
+    if (duplicity.phone || duplicity.cpf) {
         toast({ variant: 'destructive', title: 'Dados duplicados detectados', description: 'Corrija campos em vermelho.' });
         return;
     }
@@ -306,7 +284,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         <ScrollArea className="h-[75vh] pr-4">
           <div className="space-y-10">
             {(hasErrors || duplicity.cpf || duplicity.phone) && (
-                <Alert variant="destructive" className="rounded-2xl border-2 animate-in slide-in-from-top-4 duration-300 bg-red-50 border-red-500">
+                <Alert variant="destructive" className="rounded-2xl border-2 bg-red-50 border-red-500">
                     <AlertCircle className="h-5 w-5 text-red-600" />
                     <AlertTitle className="font-black uppercase text-sm tracking-widest text-red-700">Atenção: Correção Necessária</AlertTitle>
                     <AlertDescription className="text-xs font-bold text-red-600 space-y-1 mt-2">
@@ -316,7 +294,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         {errors.phone && <p>• O Telefone Principal é obrigatório.</p>}
                         {duplicity.phone && <p>• Este Telefone já está em uso por outro cliente.</p>}
                         {errors.birthDate && <p>• A Data de Nascimento é obrigatória e deve ser válida.</p>}
-                        {errors.email && <p>• O formato do e-mail está incorreto.</p>}
                     </AlertDescription>
                 </Alert>
             )}
@@ -362,17 +339,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                             <User className="h-3.5 w-3.5 text-[#00AEEF]" /> Nome Completo *
                         </FormLabel>
                         <FormControl>
-                            <div className="relative">
-                                <Input 
-                                    placeholder="Nome completo do cliente" 
-                                    {...field} 
-                                    className={cn(
-                                        "rounded-full h-11 px-5 border-zinc-200 font-bold",
-                                        errors.name && "border-red-500 bg-red-50"
-                                    )} 
-                                />
-                                {errors.name && <AlertCircle className="absolute right-4 top-3 h-5 w-5 text-red-500" />}
-                            </div>
+                            <Input placeholder="Nome completo do cliente" {...field} className={cn("rounded-full h-11 px-5 border-zinc-200 font-bold", errors.name && "border-red-500 bg-red-50")} />
                         </FormControl>
                         </FormItem>
                     )}
@@ -394,10 +361,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                         {...field} 
                                         onChange={(e) => field.onChange(e.target.value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4"))} 
                                         maxLength={14}
-                                        className={cn(
-                                            "rounded-full h-11 px-5 border-zinc-200 font-bold transition-all", 
-                                            (duplicity.cpf || errors.cpf) && "border-red-500 bg-red-50 text-red-900 ring-1 ring-red-500"
-                                        )}
+                                        className={cn("rounded-full h-11 px-5 border-zinc-200 font-bold", (duplicity.cpf || errors.cpf) && "border-red-500 bg-red-50")}
                                     />
                                     {(duplicity.cpf || errors.cpf) && <AlertTriangle className="absolute right-4 top-3 h-5 w-5 text-red-500 animate-pulse" />}
                                     {!errors.cpf && !duplicity.cpf && watchCpf.length === 14 && <CheckCircle2 className="absolute right-4 top-3 h-5 w-5 text-green-500" />}
@@ -433,20 +397,10 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         render={({ field }) => (
                             <FormItem>
                             <FormLabel className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-                                <Mail className="h-3.5 w-3.5 text-[#00AEEF]" /> E-mail (Opcional)
+                                <Mail className="h-3.5 w-3.5 text-[#00AEEF]" /> E-mail
                             </FormLabel>
                             <FormControl>
-                                <div className="relative">
-                                    <Input 
-                                        placeholder="exemplo@email.com" 
-                                        {...field} 
-                                        className={cn(
-                                            "rounded-full h-11 px-5 border-zinc-200 font-bold transition-all", 
-                                            errors.email && "border-red-500 bg-red-50 ring-1 ring-red-500"
-                                        )} 
-                                    />
-                                    {errors.email && <AlertCircle className="absolute right-4 top-3 h-5 w-5 text-red-500" />}
-                                </div>
+                                <Input placeholder="exemplo@email.com" {...field} value={field.value ?? ''} className="rounded-full h-11 px-5 border-zinc-200 font-bold" />
                             </FormControl>
                             </FormItem>
                         )}
@@ -464,21 +418,15 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                     <Input 
                                         placeholder="(00) 00000-0000" 
                                         {...field} 
-                                        className={cn(
-                                            "rounded-full h-11 px-5 border-zinc-200 font-bold", 
-                                            (duplicity.phone || errors.phone) && "border-red-500 bg-red-50"
-                                        )} 
+                                        className={cn("rounded-full h-11 px-5 border-zinc-200 font-bold", (duplicity.phone || errors.phone) && "border-red-500 bg-red-50")} 
                                         onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} 
                                         maxLength={15} 
                                     />
-                                    <div className="absolute right-4 top-3 h-5 flex items-center gap-2">
-                                        {errors.phone && <AlertCircle className="h-5 w-5 text-red-500" />}
-                                        {isWhatsApp(watchPhone) && (
-                                            <a href={getWhatsAppUrl(watchPhone)} target="_blank" rel="noopener noreferrer" className="hover:scale-125 transition-transform" title="Abrir WhatsApp">
-                                                <WhatsAppIcon className="h-4 w-4" />
-                                            </a>
-                                        )}
-                                    </div>
+                                    {isWhatsApp(watchPhone) && (
+                                        <a href={getWhatsAppUrl(watchPhone)} target="_blank" rel="noopener noreferrer" className="absolute right-4 top-3 h-5 hover:scale-125 transition-transform" title="Abrir WhatsApp">
+                                            <WhatsAppIcon className="h-4 w-4" />
+                                        </a>
+                                    )}
                                 </div>
                             </FormControl>
                             </FormItem>
@@ -490,17 +438,10 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                         render={({ field }) => (
                             <FormItem>
                             <FormLabel className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-                                <Phone className="h-3.5 w-3.5 text-[#00AEEF]" /> Telefone 2 (Opcional)
+                                <Phone className="h-3.5 w-3.5 text-[#00AEEF]" /> Telefone 2
                             </FormLabel>
                             <FormControl>
-                                <div className="relative">
-                                    <Input placeholder="(00) 00000-0000" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} maxLength={15} className="rounded-full h-11 px-5 border-zinc-200 font-bold"/>
-                                    {isWhatsApp(watchPhone2 || '') && (
-                                        <a href={getWhatsAppUrl(watchPhone2!)} target="_blank" rel="noopener noreferrer" className="absolute right-4 top-3.5 hover:scale-125 transition-transform" title="Abrir WhatsApp">
-                                            <WhatsAppIcon className="h-4 w-4" />
-                                        </a>
-                                    )}
-                                </div>
+                                <Input placeholder="(00) 00000-0000" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} maxLength={15} className="rounded-full h-11 px-5 border-zinc-200 font-bold"/>
                             </FormControl>
                             </FormItem>
                         )}
@@ -525,16 +466,13 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                 )}
                             </FormLabel>
                             <FormControl>
-                                <div className="relative">
-                                    <Input 
-                                        placeholder="dd/mm/aaaa" 
-                                        {...field} 
-                                        className={cn("rounded-full h-11 px-5 border-zinc-200 font-bold", errors.birthDate && "border-red-500 bg-red-50")} 
-                                        maxLength={10} 
-                                        onChange={(e) => field.onChange(e.target.value.replace(/\D/g, "").replace(/(\d{2})(\d)/, "$1/$2").replace(/(\d{2})(\d)/, "$1/$2").substring(0, 10))}
-                                    />
-                                    {errors.birthDate && <AlertCircle className="absolute right-4 top-3 h-5 w-5 text-red-500" />}
-                                </div>
+                                <Input 
+                                    placeholder="dd/mm/aaaa" 
+                                    {...field} 
+                                    className={cn("rounded-full h-11 px-5 border-zinc-200 font-bold", errors.birthDate && "border-red-500 bg-red-50")} 
+                                    maxLength={10} 
+                                    onChange={(e) => field.onChange(e.target.value.replace(/\D/g, "").replace(/(\d{2})(\d)/, "$1/$2").replace(/(\d{2})(\d)/, "$1/$2").substring(0, 10))}
+                                />
                             </FormControl>
                             </FormItem>
                         )}
