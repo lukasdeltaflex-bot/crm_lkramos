@@ -31,7 +31,8 @@ import {
     FolderLock,
     Calendar as CalendarIcon,
     Search,
-    AlertCircle
+    AlertCircle,
+    CheckCircle2
 } from 'lucide-react';
 import { format, parse, isValid, differenceInYears } from 'date-fns';
 import { validateCPF, handlePhoneMask, cleanFirestoreData, cn, isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
@@ -60,21 +61,21 @@ const attachmentSchema = z.object({
 const customerSchema = z.object({
   name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres.'),
   cpf: z.string().min(11, 'CPF incompleto.').refine((val) => validateCPF(val), {
-    message: "CPF inválido - Correção necessária.",
+    message: "CPF Inválido - Verifique os dígitos.",
   }),
   gender: z.string().nullable().optional(),
   status: z.enum(['active', 'inactive']).default('active'),
   benefits: z.array(benefitSchema).optional(),
   phone: z.string().min(10, 'O telefone é obrigatório.'),
   phone2: z.string().nullable().optional(),
-  email: z.string().email('E-mail inválido - Formato incorreto.').or(z.literal('')).nullable().optional(),
+  email: z.string().email('E-mail fora do padrão (ex: nome@email.com).').or(z.literal('')).nullable().optional(),
   birthDate: z.string().refine((date) => {
     try {
       if (!date) return false;
       const parsedDate = parse(date, 'dd/MM/yyyy', new Date());
       return isValid(parsedDate);
     } catch { return false; }
-  }, { message: 'Data inválida.' }),
+  }, { message: 'Data de nascimento inválida.' }),
   observations: z.string().nullable().optional(),
   cep: z.string().nullable().optional(),
   street: z.string().nullable().optional(),
@@ -102,6 +103,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
 
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
+    mode: 'onBlur', // 🛡️ VALIDAÇÃO IMEDIATA AO SAIR DO CAMPO
     defaultValues: {
       name: '',
       cpf: '',
@@ -238,23 +240,24 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   }
 
   const currentCustomerId = customer?.id || defaultValues?.id;
-  const hasErrors = Object.keys(form.formState.errors).length > 0;
+  const errors = form.formState.errors;
+  const hasErrors = Object.keys(errors).length > 0;
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="py-2">
         <ScrollArea className="h-[75vh] pr-4">
           <div className="space-y-10">
-            {/* ALERTAS DE ERRO NO TOPO */}
+            {/* 🛡️ PAINEL DE ALERTAS CRÍTICOS NO TOPO */}
             {hasErrors && (
-                <Alert variant="destructive" className="rounded-2xl border-2 animate-in slide-in-from-top-4 duration-300">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle className="font-black uppercase text-xs tracking-widest">Correção Necessária</AlertTitle>
-                    <AlertDescription className="text-[10px] font-bold">
-                        {form.formState.errors.cpf && "• CPF inválido ou mal formatado. "}
-                        {form.formState.errors.email && "• E-mail fora do padrão oficial. "}
-                        {form.formState.errors.name && "• Nome muito curto. "}
-                        {form.formState.errors.birthDate && "• Data de nascimento inválida."}
+                <Alert variant="destructive" className="rounded-2xl border-2 animate-in slide-in-from-top-4 duration-300 bg-red-50 border-red-500">
+                    <AlertCircle className="h-5 w-5 text-red-600" />
+                    <AlertTitle className="font-black uppercase text-sm tracking-widest text-red-700">Correção Obrigatória Necessária</AlertTitle>
+                    <AlertDescription className="text-xs font-bold text-red-600 space-y-1 mt-2">
+                        {errors.cpf && <p>• {errors.cpf.message}</p>}
+                        {errors.email && <p>• {errors.email.message}</p>}
+                        {errors.name && <p>• O nome informado é inválido ou muito curto.</p>}
+                        {errors.birthDate && <p>• A data de nascimento está incorreta.</p>}
                     </AlertDescription>
                 </Alert>
             )}
@@ -298,7 +301,19 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                     render={({ field }) => (
                         <FormItem>
                         <FormLabel className="text-xs font-medium text-muted-foreground">Nome Completo</FormLabel>
-                        <FormControl><Input placeholder="Nome oficial do cliente" {...field} className="rounded-full h-11 px-5 border-zinc-200 focus-visible:ring-[#00AEEF] font-bold" /></FormControl>
+                        <FormControl>
+                            <div className="relative">
+                                <Input 
+                                    placeholder="Nome oficial do cliente" 
+                                    {...field} 
+                                    className={cn(
+                                        "rounded-full h-11 px-5 border-zinc-200 focus-visible:ring-[#00AEEF] font-bold",
+                                        errors.name && "border-red-500 bg-red-50"
+                                    )} 
+                                />
+                                {errors.name && <AlertCircle className="absolute right-4 top-3 h-5 w-5 text-red-500" />}
+                            </div>
+                        </FormControl>
                         <FormMessage />
                         </FormItem>
                     )}
@@ -318,12 +333,16 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                         {...field} 
                                         onChange={(e) => field.onChange(e.target.value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4"))} 
                                         maxLength={14}
-                                        className={cn("rounded-full h-11 px-5 border-zinc-200 font-bold", (duplicity.cpf || form.formState.errors.cpf) && "border-red-500 bg-red-50 text-red-900")}
+                                        className={cn(
+                                            "rounded-full h-11 px-5 border-zinc-200 font-bold transition-all", 
+                                            (duplicity.cpf || errors.cpf) && "border-red-500 bg-red-50 text-red-900 ring-1 ring-red-500"
+                                        )}
                                     />
-                                    {(duplicity.cpf || form.formState.errors.cpf) && <AlertTriangle className="absolute right-4 top-3 h-5 w-5 text-red-500 animate-pulse" />}
+                                    {(duplicity.cpf || errors.cpf) && <AlertTriangle className="absolute right-4 top-3 h-5 w-5 text-red-500 animate-pulse" />}
+                                    {!errors.cpf && watchCpf.length === 14 && <CheckCircle2 className="absolute right-4 top-3 h-5 w-5 text-green-500" />}
                                 </div>
                             </FormControl>
-                            <FormMessage className="text-[10px] font-black uppercase" />
+                            <FormMessage className="text-[10px] font-black uppercase text-red-600 bg-red-50 px-2 py-0.5 rounded w-fit mt-1" />
                             </FormItem>
                         )}
                     />
@@ -356,10 +375,18 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                             <FormControl>
                                 <div className="relative">
                                     <Mail className="absolute left-4 top-3.5 h-4 w-4 text-muted-foreground/40" />
-                                    <Input placeholder="seu@exemplo.com" {...field} className={cn("rounded-full h-11 pl-11 border-zinc-200 font-bold", (duplicity.email || form.formState.errors.email) && "border-red-500 bg-red-50")} />
+                                    <Input 
+                                        placeholder="seu@exemplo.com" 
+                                        {...field} 
+                                        className={cn(
+                                            "rounded-full h-11 pl-11 border-zinc-200 font-bold transition-all", 
+                                            (duplicity.email || errors.email) && "border-red-500 bg-red-50 ring-1 ring-red-500"
+                                        )} 
+                                    />
+                                    {(duplicity.email || errors.email) && <AlertCircle className="absolute right-4 top-3 h-5 w-5 text-red-500" />}
                                 </div>
                             </FormControl>
-                            <FormMessage className="text-[10px] font-black uppercase" />
+                            <FormMessage className="text-[10px] font-black uppercase text-red-600 bg-red-50 px-2 py-0.5 rounded w-fit mt-1" />
                             </FormItem>
                         )}
                     />
@@ -373,7 +400,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                 <div className="relative">
                                     <Input placeholder="(11) 98765-4321" {...field} className={cn("rounded-full h-11 px-5 border-zinc-200 font-bold", duplicity.phone && "border-red-500 bg-red-50")} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} maxLength={15} />
                                     {isWhatsApp(watchPhone) && (
-                                        <a href={getWhatsAppUrl(watchPhone)} target="_blank" rel="noopener noreferrer" className="absolute right-4 top-3.5 hover:scale-125 transition-transform">
+                                        <a href={getWhatsAppUrl(watchPhone)} target="_blank" rel="noopener noreferrer" className="absolute right-4 top-3.5 hover:scale-125 transition-transform" title="Abrir WhatsApp">
                                             <WhatsAppIcon className="h-4 w-4" />
                                         </a>
                                     )}
@@ -393,7 +420,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                 <div className="relative">
                                     <Input placeholder="(11) 98765-4321" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} maxLength={15} className="rounded-full h-11 px-5 border-zinc-200 font-bold"/>
                                     {isWhatsApp(watchPhone2 || '') && (
-                                        <a href={getWhatsAppUrl(watchPhone2!)} target="_blank" rel="noopener noreferrer" className="absolute right-4 top-3.5 hover:scale-125 transition-transform">
+                                        <a href={getWhatsAppUrl(watchPhone2!)} target="_blank" rel="noopener noreferrer" className="absolute right-4 top-3.5 hover:scale-125 transition-transform" title="Abrir WhatsApp">
                                             <WhatsAppIcon className="h-4 w-4" />
                                         </a>
                                     )}
@@ -415,25 +442,28 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                 {customerAge !== null && (
                                     <Badge variant="outline" className={cn(
                                         "h-5 text-[9px] font-black uppercase border-2",
-                                        customerAge >= 74 ? "bg-red-50 text-red-600 border-red-200" : "bg-blue-50 text-blue-600 border-blue-200"
+                                        customerAge >= 74 ? "bg-red-50 text-red-600 border-red-200 animate-pulse" : "bg-blue-50 text-blue-600 border-blue-200"
                                     )}>
                                         {customerAge} ANOS
                                     </Badge>
                                 )}
                             </FormLabel>
                             <FormControl>
-                                <Input 
-                                    placeholder="dd/mm/aaaa" 
-                                    {...field} 
-                                    className="rounded-full h-11 px-5 border-zinc-200 font-bold" 
-                                    maxLength={10} 
-                                    onChange={(e) => {
-                                        let v = e.target.value.replace(/\D/g, "").substring(0, 8);
-                                        if (v.length > 4) v = v.replace(/(\d{2})(\d{2})(\d)/, "$1/$2/$3");
-                                        else if (v.length > 2) v = v.replace(/(\d{2})(\d)/, "$1/$2");
-                                        field.onChange(v);
-                                    }}
-                                />
+                                <div className="relative">
+                                    <Input 
+                                        placeholder="dd/mm/aaaa" 
+                                        {...field} 
+                                        className={cn("rounded-full h-11 px-5 border-zinc-200 font-bold", errors.birthDate && "border-red-500 bg-red-50")} 
+                                        maxLength={10} 
+                                        onChange={(e) => {
+                                            let v = e.target.value.replace(/\D/g, "").substring(0, 8);
+                                            if (v.length > 4) v = v.replace(/(\d{2})(\d{2})(\d)/, "$1/$2/$3");
+                                            else if (v.length > 2) v = v.replace(/(\d{2})(\d)/, "$1/$2");
+                                            field.onChange(v);
+                                        }}
+                                    />
+                                    {errors.birthDate && <AlertCircle className="absolute right-4 top-3 h-5 w-5 text-red-500" />}
+                                </div>
                             </FormControl>
                             <FormMessage />
                             </FormItem>
