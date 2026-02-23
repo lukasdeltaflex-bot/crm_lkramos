@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/page-header';
 import { CustomerDataTable, type CustomerDataTableHandle } from './data-table';
 import { getColumns } from './columns';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Sparkles, FileDown, UserCheck, UserX, Trash2 } from 'lucide-react';
+import { PlusCircle, FileDown, UserCheck, UserX, Trash2 } from 'lucide-react';
 import { CustomerForm } from './customer-form';
 import type { Customer } from '@/lib/types';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -27,6 +27,7 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
+    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { CustomerAiForm } from '@/components/customers/customer-ai-form';
 import {
@@ -36,7 +37,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getAge, cn, cleanFirestoreData } from '@/lib/utils';
+import { getAge, cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -129,7 +130,7 @@ function CustomersPageContent() {
   }, [searchParams, router, isCustomersLoading, isDialog, handleNewCustomer]);
 
   const handleEditCustomer = (customer: Customer) => {
-    setSelectedCustomer(structuredClone(customer));
+    setSelectedCustomer(customer);
     setDefaultValues(undefined);
     setSheetMode('edit');
     setIsDialog(true);
@@ -177,13 +178,13 @@ function CustomersPageContent() {
     if (!firestore || !user) return;
     setIsSaving(true);
     try {
-        const cleanedData = cleanFirestoreData({ ...formData, ownerId: user.uid });
         const docId = (sheetMode === 'edit' && selectedCustomer) ? selectedCustomer.id : (defaultValues?.id || doc(collection(firestore, 'customers')).id);
         const docRef = doc(firestore, 'customers', docId);
         
         const finalData = {
-            ...cleanedData,
+            ...formData,
             id: docId,
+            ownerId: user.uid,
             numericId: (sheetMode === 'edit' && selectedCustomer) ? selectedCustomer.numericId : (customers?.length ? Math.max(...customers.map(c => c.numericId || 0)) + 1 : 1)
         };
 

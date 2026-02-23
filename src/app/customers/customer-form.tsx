@@ -44,7 +44,7 @@ import {
     Hash
 } from 'lucide-react';
 import { format, parse, isValid, differenceInYears } from 'date-fns';
-import { validateCPF, handlePhoneMask, cleanFirestoreData, cn, isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
+import { validateCPF, handlePhoneMask, cn, isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
 import type { Customer } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
@@ -114,29 +114,44 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   const [isFetchingCep, setIsFetchingCep] = useState(false);
   const [isSummarizing, setIsSummarizing] = useState(false);
 
+  // Inicialização de valores padrão com props (Essencial para Key Remounting)
+  const initialValues = useMemo(() => {
+    let formattedBirthDate = '';
+    if (customer?.birthDate) {
+        try {
+            const date = customer.birthDate.includes('-') 
+              ? parse(customer.birthDate, 'yyyy-MM-dd', new Date())
+              : parse(customer.birthDate, 'dd/MM/yyyy', new Date());
+            if (isValid(date)) formattedBirthDate = format(date, 'dd/MM/yyyy');
+        } catch (e) {}
+    }
+
+    return {
+      name: customer?.name || '',
+      cpf: customer?.cpf || '',
+      gender: customer?.gender || '',
+      status: customer?.status || 'active',
+      benefits: customer?.benefits || [],
+      phone: customer?.phone || '',
+      phone2: customer?.phone2 || '',
+      email: customer?.email || '',
+      birthDate: formattedBirthDate,
+      observations: customer?.observations || '',
+      cep: customer?.cep || '',
+      street: customer?.street || '',
+      number: customer?.number || '',
+      complement: customer?.complement || '',
+      neighborhood: customer?.neighborhood || '',
+      city: customer?.city || '',
+      state: customer?.state || '',
+      documents: customer?.documents || [],
+    };
+  }, [customer]);
+
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
     mode: 'all',
-    defaultValues: {
-      name: '',
-      cpf: '',
-      gender: '',
-      status: 'active',
-      benefits: [],
-      phone: '',
-      phone2: '',
-      email: '',
-      birthDate: '',
-      observations: '',
-      cep: '',
-      street: '',
-      number: '',
-      complement: '',
-      neighborhood: '',
-      city: '',
-      state: '',
-      documents: [],
-    },
+    defaultValues: initialValues,
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -173,41 +188,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     });
     return results;
   }, [allCustomers, watchPhone, watchCpf, customer?.id, defaultValues?.id]);
-
-  useEffect(() => {
-    if (customer) {
-      let formattedBirthDate = '';
-      if (customer.birthDate) {
-          try {
-              const date = customer.birthDate.includes('-') 
-                ? parse(customer.birthDate, 'yyyy-MM-dd', new Date())
-                : parse(customer.birthDate, 'dd/MM/yyyy', new Date());
-              if (isValid(date)) formattedBirthDate = format(date, 'dd/MM/yyyy');
-          } catch (e) {}
-      }
-      
-      form.reset({
-        name: customer.name || '',
-        cpf: customer.cpf || '',
-        gender: customer.gender ?? '',
-        status: customer.status || 'active',
-        benefits: customer.benefits || [],
-        phone: customer.phone || '',
-        phone2: customer.phone2 || '',
-        email: customer.email || '',
-        birthDate: formattedBirthDate,
-        observations: customer.observations || '',
-        cep: customer.cep || '',
-        street: customer.street || '',
-        number: customer.number || '',
-        complement: customer.complement || '',
-        neighborhood: customer.neighborhood || '',
-        city: customer.city || '',
-        state: customer.state || '',
-        documents: customer.documents || [],
-      });
-    }
-  }, [customer, form]);
 
   const handleCepLookup = useCallback(async (cleanCep: string) => {
     if (cleanCep.length !== 8) return;
@@ -271,7 +251,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       benefits: data.benefits || [],
       documents: data.documents || [],
     };
-    onSubmit(cleanFirestoreData(newCustomerData));
+    onSubmit(newCustomerData);
   }
 
   const currentCustomerId = customer?.id || defaultValues?.id;
@@ -445,7 +425,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                 <Phone className="h-3.5 w-3.5 text-[#00AEEF]" /> Telefone 2
                             </FormLabel>
                             <FormControl>
-                                <Input placeholder="(00) 00000-0000" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} maxLength={15} className="rounded-full h-11 px-5 border-zinc-200 font-bold"/>
+                                <Input placeholder="(00) 00000-0000" {...field} value={field.value ?? ''} onChange={(e) => handlePhoneMask(e.target.value)} maxLength={15} className="rounded-full h-11 px-5 border-zinc-200 font-bold"/>
                             </FormControl>
                             </FormItem>
                         )}
