@@ -75,18 +75,17 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
     };
     dataToUpdate.history = arrayUnion(historyEntry);
 
-    // 🛡️ BLINDAGEM FINANCEIRA ESTRITA: 
-    // Ativa comissão pendente APENAS se houver Data de Averbação (existente ou nova)
+    // 🤖 AUXÍLIO OPERACIONAL:
+    // Define como Pendente apenas para facilitar o fluxo se houver averbação, mas sem bloqueios.
     try {
         const docRef = doc(firestore, 'loanProposals', proposalId);
         const snap = await getDoc(docRef);
         if (snap.exists()) {
             const proposal = snap.data();
             const hasAverbacao = !!(dataToUpdate.dateApproved || proposal.dateApproved);
-            const isNotReprovado = newStatus !== 'Reprovado';
             
-            if (isNotReprovado && hasAverbacao) {
-                if (!proposal.commissionStatus || proposal.commissionStatus === '') {
+            if (newStatus !== 'Reprovado' && hasAverbacao) {
+                if (!proposal.commissionStatus) {
                     dataToUpdate.commissionStatus = 'Pendente';
                 }
             }

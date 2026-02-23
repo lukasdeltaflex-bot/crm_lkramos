@@ -23,55 +23,51 @@ interface CommissionStatusCellProps {
 
 export function CommissionStatusCell({ proposal, onStatusUpdate, onEdit }: CommissionStatusCellProps) {
     const { statusColors } = useTheme();
-    const { commissionStatus, dateApproved, status } = proposal;
+    const { commissionStatus, status } = proposal;
 
-    // 🛡️ REGRA DE QUALIFICAÇÃO ESTRITA: Apenas propostas AVERBADAS são consideradas "Saldo a Receber"
-    // conforme solicitação: data de averbação preenchida é o único gatilho para o botão de recebimento.
-    const isQualified = !!dateApproved;
+    // 🔓 AUTONOMIA TOTAL: Removida a trava de averbação.
+    // O usuário agora tem liberdade para definir a comissão em qualquer fase.
     const isReprovado = status === 'Reprovado';
-    
-    // O botão fica "ativado" apenas para as qualificadas (Averbadas) e não reprovadas.
-    const canInteract = isQualified && !isReprovado;
+    const canInteract = !isReprovado;
 
     const colorValue = commissionStatus ? (statusColors[commissionStatus.toUpperCase()] || statusColors[commissionStatus]) : undefined;
     
     return (
         <DropdownMenu>
-            <DropdownMenuTrigger asChild disabled={!canInteract && !commissionStatus}>
+            <DropdownMenuTrigger asChild disabled={!canInteract}>
                 <Button 
                     variant="ghost" 
                     className={cn(
                         "group w-full justify-start p-0 h-auto font-normal hover:bg-transparent",
-                        (!canInteract && !commissionStatus) && "opacity-40 cursor-not-allowed"
+                        !canInteract && "opacity-40 cursor-not-allowed"
                     )}
                 >
                     <Badge 
                         variant="outline" 
                         className={cn(
                             "min-w-[80px] h-6 justify-center transition-all text-[10px] font-black uppercase tracking-tighter border-2 rounded-full", 
-                            !commissionStatus ? 'border-dashed border-muted-foreground/20 text-transparent group-hover:text-muted-foreground/40 bg-transparent' : 'status-custom',
-                            (!canInteract && commissionStatus === 'Pendente') && "opacity-50 grayscale"
+                            !commissionStatus ? 'border-dashed border-muted-foreground/40 text-muted-foreground/60 bg-transparent' : 'status-custom'
                         )}
                         style={colorValue ? { '--status-color': colorValue } as any : {}}
                     >
-                        {commissionStatus || (canInteract ? 'Definir' : 'Esteira')}
+                        {commissionStatus || 'Definir'}
                     </Badge>
-                    {(canInteract || commissionStatus) && (
+                    {canInteract && (
                         <ChevronsUpDown className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-40 transition-opacity print:hidden" />
                     )}
-                    {!canInteract && !commissionStatus && (
+                    {!canInteract && (
                         <Lock className="h-2.5 w-2.5 ml-1 text-muted-foreground/30" />
                     )}
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="rounded-xl border-2 shadow-xl">
+            <DropdownMenuContent className="rounded-xl border-2 shadow-xl" align="start">
                 <DropdownMenuItem className="font-bold text-xs uppercase" onClick={() => onStatusUpdate(proposal, 'Paga')}>
                     Marcar como Paga
                 </DropdownMenuItem>
                 <DropdownMenuItem className="font-bold text-xs uppercase" onClick={() => onEdit(proposal)}>
                     Lançar Parcial...
                 </DropdownMenuItem>
-                <DropdownMenuItem className="font-bold text-xs uppercase text-destructive focus:text-destructive" onClick={() => onStatusUpdate(proposal, 'Pendente')}>
+                <DropdownMenuItem className="font-bold text-xs uppercase text-blue-600 focus:text-blue-600" onClick={() => onStatusUpdate(proposal, 'Pendente')}>
                     Marcar como Pendente
                 </DropdownMenuItem>
             </DropdownMenuContent>
