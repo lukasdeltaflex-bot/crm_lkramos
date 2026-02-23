@@ -203,6 +203,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         if (!searchTerm) return true;
         const customer = row.original;
 
+        // PRIORIDADE ZERO: Busca por ID numérico exato
         if (/^\d+$/.test(searchTerm)) {
             if (customer.numericId.toString() === searchTerm) return true;
         }
