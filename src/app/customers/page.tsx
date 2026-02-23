@@ -1,3 +1,4 @@
+
 'use client';
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -129,6 +130,13 @@ function CustomersPageContent() {
   }, [searchParams, router, isCustomersLoading, isDialog, handleNewCustomer]);
 
   const handleEditCustomer = (customer: Customer) => {
+    // DIAGNÓSTICO DE LEITURA
+    console.log("DEBUG [3. Dados crus vindo do Firestore via useCollection]:", {
+        id: customer.id,
+        name: customer.name,
+        gender: customer.gender
+    });
+    
     setSelectedCustomer(structuredClone(customer));
     setDefaultValues(undefined);
     setSheetMode('edit');
@@ -177,7 +185,14 @@ function CustomersPageContent() {
     if (!firestore || !user) return;
     setIsSaving(true);
     try {
+        // DIAGNÓSTICO DE ESCRITA - ETAPA 1: Dados do Form
+        console.log("DEBUG [4. formData recebido do formulário]:", formData);
+
         const cleanedData = cleanFirestoreData({ ...formData, ownerId: user.uid });
+        
+        // DIAGNÓSTICO DE ESCRITA - ETAPA 2: Dados após limpeza
+        console.log("DEBUG [5. cleanedData após utilitário de limpeza]:", cleanedData);
+
         const docId = (sheetMode === 'edit' && selectedCustomer) ? selectedCustomer.id : (defaultValues?.id || doc(collection(firestore, 'customers')).id);
         const docRef = doc(firestore, 'customers', docId);
         
@@ -186,6 +201,9 @@ function CustomersPageContent() {
             id: docId,
             numericId: (sheetMode === 'edit' && selectedCustomer) ? selectedCustomer.numericId : (customers?.length ? Math.max(...customers.map(c => c.numericId || 0)) + 1 : 1)
         };
+
+        // DIAGNÓSTICO DE ESCRITA - ETAPA 3: Objeto final enviado ao setDoc
+        console.log("DEBUG [6. Objeto final enviado ao setDoc (merge:true)]:", finalData);
 
         setDoc(docRef, finalData, { merge: true })
             .then(() => {
