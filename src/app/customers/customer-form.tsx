@@ -74,7 +74,7 @@ const customerSchema = z.object({
   cpf: z.string().min(11, 'CPF obrigatório.').refine((val) => validateCPF(val), {
     message: "CPF Inválido - Verifique os dígitos.",
   }),
-  gender: z.string().optional(),
+  gender: z.string().default(""),
   status: z.enum(['active', 'inactive']).default('active'),
   benefits: z.array(benefitSchema).optional(),
   phone: z.string().min(10, 'O telefone principal é obrigatório.'),
@@ -266,10 +266,10 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     const parsedDate = parse(data.birthDate, 'dd/MM/yyyy', new Date());
     const newCustomerData: FormCustomer = {
       ...data,
+      gender: data.gender,
       birthDate: format(parsedDate, 'yyyy-MM-dd'),
       benefits: data.benefits || [],
       documents: data.documents || [],
-      gender: data.gender || ''
     };
     onSubmit(cleanFirestoreData(newCustomerData));
   }
