@@ -294,13 +294,12 @@ export function ProposalForm({
         debtBalanceArrivalDate: convertToIso(data.debtBalanceArrivalDate),
     };
 
-    // 🛡️ BLINDAGEM FINANCEIRA (SALDO A RECEBER): 
-    // Ativa Pendente apenas se houver Averbação ou for Pago, e não for Reprovado
+    // 🛡️ BLINDAGEM FINANCEIRA ESTRITA (SALDO A RECEBER): 
+    // Ativa Pendente APENAS se houver Averbação preenchida, conforme nova regra.
     const isAverbado = !!finalData.dateApproved;
     const isNotReprovado = finalData.status !== 'Reprovado';
-    const isPaid = finalData.status === 'Pago';
 
-    if (isNotReprovado && (isAverbado || isPaid)) {
+    if (isNotReprovado && isAverbado) {
         if (!finalData.commissionStatus || finalData.commissionStatus === '') {
             finalData.commissionStatus = 'Pendente';
         }

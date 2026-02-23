@@ -25,13 +25,12 @@ export function CommissionStatusCell({ proposal, onStatusUpdate, onEdit }: Commi
     const { statusColors } = useTheme();
     const { commissionStatus, dateApproved, status } = proposal;
 
-    // 🛡️ REGRA DE QUALIFICAÇÃO: Apenas propostas Averbadas ou Pagas são consideradas "Saldo a Receber"
-    // Caso contrário, o botão de recebimento fica desativado para evitar baixas em contratos não formalizados.
-    const isQualified = !!dateApproved || status === 'Pago' || status === 'Saldo Pago';
+    // 🛡️ REGRA DE QUALIFICAÇÃO ESTRITA: Apenas propostas AVERBADAS são consideradas "Saldo a Receber"
+    // conforme solicitação: data de averbação preenchida é o único gatilho para o botão de recebimento.
+    const isQualified = !!dateApproved;
     const isReprovado = status === 'Reprovado';
     
-    // O botão fica "ativado por padrão" apenas para as qualificadas. 
-    // Para as outras, deixamos o dropdown bloqueado se não houver status manual prévio.
+    // O botão fica "ativado" apenas para as qualificadas (Averbadas) e não reprovadas.
     const canInteract = isQualified && !isReprovado;
 
     const colorValue = commissionStatus ? (statusColors[commissionStatus.toUpperCase()] || statusColors[commissionStatus]) : undefined;
@@ -78,4 +77,4 @@ export function CommissionStatusCell({ proposal, onStatusUpdate, onEdit }: Commi
             </DropdownMenuContent>
         </DropdownMenu>
     );
-};
+}
