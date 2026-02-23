@@ -113,8 +113,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   const { user } = useUser();
   const [isFetchingCep, setIsFetchingCep] = useState(false);
   const [isSummarizing, setIsSummarizing] = useState(false);
-  const renderCount = useRef(0);
-  renderCount.current++;
 
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
@@ -181,45 +179,57 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   }, [allCustomers, watchPhone, watchEmail, watchCpf, customer?.id, defaultValues?.id]);
 
   useEffect(() => {
-    const source = customer || defaultValues;
-    if (source) {
-      console.log(`[FORM] Render #${renderCount.current} - Iniciando Reset. Customer ID: ${source.id}`);
-      console.log("DEBUG [1. Gender do Banco/Source]:", source.gender);
-
+    if (customer) {
       let formattedBirthDate = '';
-      if (source.birthDate) {
+      if (customer.birthDate) {
           try {
-              const date = source.birthDate.includes('-') 
-                ? parse(source.birthDate, 'yyyy-MM-dd', new Date())
-                : parse(source.birthDate, 'dd/MM/yyyy', new Date());
+              const date = customer.birthDate.includes('-') 
+                ? parse(customer.birthDate, 'yyyy-MM-dd', new Date())
+                : parse(customer.birthDate, 'dd/MM/yyyy', new Date());
               if (isValid(date)) formattedBirthDate = format(date, 'dd/MM/yyyy');
           } catch (e) {}
       }
       
       form.reset({
-        name: source.name || '',
-        cpf: source.cpf || '',
-        gender: source.gender ?? undefined, 
-        status: source.status || 'active',
-        benefits: source.benefits || [],
-        phone: source.phone || '',
-        phone2: source.phone2 || '',
-        email: source.email || '',
+        name: customer.name || '',
+        cpf: customer.cpf || '',
+        gender: customer.gender ?? undefined, 
+        status: customer.status || 'active',
+        benefits: customer.benefits || [],
+        phone: customer.phone || '',
+        phone2: customer.phone2 || '',
+        email: customer.email || '',
         birthDate: formattedBirthDate,
-        observations: source.observations || '',
-        cep: source.cep || '',
-        street: source.street || '',
-        number: source.number || '',
-        complement: source.complement || '',
-        neighborhood: source.neighborhood || '',
-        city: source.city || '',
-        state: source.state || '',
-        documents: source.documents || [],
+        observations: customer.observations || '',
+        cep: customer.cep || '',
+        street: customer.street || '',
+        number: customer.number || '',
+        complement: customer.complement || '',
+        neighborhood: customer.neighborhood || '',
+        city: customer.city || '',
+        state: customer.state || '',
+        documents: customer.documents || [],
       });
-
-      console.log("DEBUG [2. Gender no Form após Reset]:", form.getValues("gender"));
+    } else if (defaultValues) {
+        // Aplica defaultValues (como dados de IA) apenas se não for edição de cliente existente
+        form.reset({
+            ...form.getValues(),
+            ...defaultValues,
+            birthDate: defaultValues.birthDate ? formatDateForForm(defaultValues.birthDate) : form.getValues('birthDate')
+        });
     }
-  }, [customer, defaultValues, form]);
+  }, [customer]);
+
+  const formatDateForForm = (dateString?: string) => {
+    if (!dateString) return '';
+    try {
+        if (dateString.includes('-')) {
+            const date = parse(dateString, 'yyyy-MM-dd', new Date());
+            return isValid(date) ? format(date, 'dd/MM/yyyy') : '';
+        }
+        return dateString;
+    } catch { return ''; }
+  }
 
   const handleCepLookup = useCallback(async (cleanCep: string) => {
     if (cleanCep.length !== 8) return;
@@ -281,7 +291,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       birthDate: format(parsedDate, 'yyyy-MM-dd'),
       benefits: data.benefits || [],
       documents: data.documents || [],
-      gender: data.gender === "Masculino" || data.gender === "Feminino" ? data.gender : undefined
+      gender: data.gender || ""
     };
     onSubmit(cleanFirestoreData(newCustomerData));
   }
