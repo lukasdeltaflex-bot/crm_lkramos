@@ -37,7 +37,7 @@ import {
     Calendar as CalendarIcon 
 } from 'lucide-react';
 import { format, parse, isValid } from 'date-fns';
-import { validateCPF, handlePhoneMask, cleanFirestoreData } from '@/lib/utils';
+import { validateCPF, handlePhoneMask, cleanFirestoreData, cn } from '@/lib/utils';
 import type { Customer } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
@@ -170,7 +170,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       form.reset({
         name: source.name || '',
         cpf: source.cpf || '',
-        gender: source.gender || null,
+        gender: source.gender || '',
         status: source.status || 'active',
         benefits: source.benefits || [],
         phone: source.phone || '',
