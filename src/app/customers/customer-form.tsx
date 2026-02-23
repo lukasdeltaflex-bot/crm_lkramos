@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/select';
 import { Sparkles, Loader2, PlusCircle, Trash2, FileText as FileIcon, UserCheck, UserX, AlertTriangle, MapPin, Mail } from 'lucide-react';
 import { format, parse, isValid } from 'date-fns';
-import { getAge, validateCPF, handlePhoneMask, isWhatsApp, cleanFirestoreData } from '@/lib/utils';
+import { getAge, validateCPF, handlePhoneMask, isWhatsApp, cleanFirestoreData, getWhatsAppUrl } from '@/lib/utils';
 import type { Customer, Attachment } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
@@ -130,7 +130,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     name: "benefits"
   });
 
-  // 🛡️ BLINDAGEM DE RESET V12: Corrige o bug do gênero resetando ao carregar
+  // 🛡️ BLINDAGEM DE RESET V13: Correção atômica do Gênero e Dados
   useEffect(() => {
     const source = customer || defaultValues;
     if (source) {
@@ -180,15 +180,15 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   const cpfValue = form.watch('cpf');
   const emailValue = form.watch('email');
 
-  // 🛡️ DETECÇÃO DE DUPLICIDADE NUCLEAR
   const duplicateCpfCustomer = useMemo(() => {
     if (!cpfValue || cpfValue.length < 14) return null;
     return allCustomers.find(c => c.cpf === cpfValue && c.id !== customer?.id);
   }, [cpfValue, allCustomers, customer]);
 
   const duplicatePhoneCustomer = useMemo(() => {
-    if (!phoneValue || phoneValue.replace(/\D/g, '').length < 10) return null;
+    if (!phoneValue) return null;
     const cleanPhone = phoneValue.replace(/\D/g, '');
+    if (cleanPhone.length < 10) return null;
     return allCustomers.find(c => {
         const otherPhone = c.phone?.replace(/\D/g, '');
         return otherPhone === cleanPhone && c.id !== customer?.id;
@@ -433,7 +433,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                         />
                                         {isWhatsApp(phoneValue || '') && (
                                             <a 
-                                                href={getAge(birthDateValue) < 150 ? `https://wa.me/55${phoneValue.replace(/\D/g, '')}` : '#'} 
+                                                href={getWhatsAppUrl(phoneValue)} 
                                                 target="_blank" 
                                                 rel="noopener noreferrer"
                                                 className="absolute right-3 top-2.5 hover:scale-110 transition-transform"
@@ -471,7 +471,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                         />
                                         {isWhatsApp(phone2Value || '') && (
                                             <a 
-                                                href={`https://wa.me/55${phone2Value!.replace(/\D/g, '')}`} 
+                                                href={getWhatsAppUrl(phone2Value!)} 
                                                 target="_blank" 
                                                 rel="noopener noreferrer"
                                                 className="absolute right-3 top-2.5 hover:scale-110 transition-transform"

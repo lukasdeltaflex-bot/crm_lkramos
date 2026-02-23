@@ -38,8 +38,17 @@ export function normalizeString(str: string): string {
 export function isWhatsApp(phone: string): boolean {
     if (!phone) return false;
     const digitsOnly = phone.replace(/\D/g, '');
-    // WhatsApp brasileiro exige 11 dígitos (DDD + 9 + 8 dígitos)
-    return digitsOnly.length === 11;
+    
+    // Requisitos LK RAMOS para ser WhatsApp (Celular Brasileiro):
+    // 1. Deve ter 11 dígitos (DDD + 9 + 8 dígitos)
+    // 2. O terceiro dígito (início do número) deve ser '9'
+    // 3. Não deve ser uma sequência de números repetidos (ex: 11111...)
+    
+    const isValidLength = digitsOnly.length === 11;
+    const startsWithNine = digitsOnly[2] === '9';
+    const isNotRepeated = !/^(\d)\1+$/.test(digitsOnly);
+
+    return isValidLength && startsWithNine && isNotRepeated;
 }
 
 export function getWhatsAppUrl(phone: string): string {
