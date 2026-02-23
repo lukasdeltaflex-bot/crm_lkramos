@@ -356,7 +356,17 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                                 </div>
                             </SelectItem>
                             {Array.from(new Set(data.map(p => p.promoter))).sort().map(p => (
-                                <SelectItem key={p} value={p} className="font-bold text-[11px] uppercase">{p}</SelectItem>
+                                <SelectItem key={p} value={p} className="font-bold text-[11px] uppercase">
+                                    <div className="flex items-center gap-3">
+                                        <BankIcon 
+                                            bankName={p} 
+                                            domain={userSettings?.promoterDomains?.[p]} 
+                                            showLogo={userSettings?.showPromoterLogos ?? true} 
+                                            className="h-4 w-4" 
+                                        />
+                                        <span>{p}</span>
+                                    </div>
+                                </SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
