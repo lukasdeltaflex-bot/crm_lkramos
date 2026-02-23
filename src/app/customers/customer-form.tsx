@@ -21,7 +21,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Sparkles, Loader2, PlusCircle, Trash2, UserCheck, UserX, AlertTriangle, MapPin, Mail, Phone, Hash } from 'lucide-react';
+import { 
+    Sparkles, 
+    Loader2, 
+    PlusCircle, 
+    Trash2, 
+    UserCheck, 
+    UserX, 
+    AlertTriangle, 
+    MapPin, 
+    Mail, 
+    Phone, 
+    Hash, 
+    MessageSquareText, 
+    Calendar as CalendarIcon 
+} from 'lucide-react';
 import { format, parse, isValid } from 'date-fns';
 import { validateCPF, handlePhoneMask, cleanFirestoreData } from '@/lib/utils';
 import type { Customer } from '@/lib/types';
@@ -30,7 +44,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useEffect, useState, useMemo } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const benefitSchema = z.object({
     number: z.string().min(1, "O número do benefício é obrigatório."),
@@ -122,7 +135,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   const watchEmail = form.watch('email');
   const watchCpf = form.watch('cpf');
 
-  // 🛡️ DETECTOR DE DUPLICIDADE PROATIVO
   const duplicity = useMemo(() => {
     const results = { phone: false, email: false, cpf: false };
     if (!allCustomers) return results;
@@ -135,14 +147,13 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     allCustomers.forEach(c => {
         if (c.id === currentId) return;
         if (cleanPhone && c.phone?.replace(/\D/g, '') === cleanPhone) results.phone = true;
-        if (cleanEmail && c.email?.trim().toLowerCase() === cleanEmail) results.email = true;
+        if (cleanEmail && c.email?.trim().toLowerCase() === cleanEmail && cleanEmail !== '') results.email = true;
         if (cleanCpf && c.cpf?.replace(/\D/g, '') === cleanCpf) results.cpf = true;
     });
 
     return results;
   }, [allCustomers, watchPhone, watchEmail, watchCpf, customer?.id]);
 
-  // 🛡️ SINCRONIZAÇÃO ATÔMICA V21 (Persistência de Gênero)
   useEffect(() => {
     const source = customer || defaultValues;
     if (source) {
@@ -159,7 +170,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       form.reset({
         name: source.name || '',
         cpf: source.cpf || '',
-        gender: source.gender || null, // Força o valor ou null para o seletor
+        gender: source.gender || null,
         status: source.status || 'active',
         benefits: source.benefits || [],
         phone: source.phone || '',
@@ -230,7 +241,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="py-4">
         <ScrollArea className="h-[75vh] pr-4">
           <div className="space-y-10">
-            {/* SEÇÃO 1: DADOS PESSOAIS */}
             <div className="space-y-6">
                 <h3 className="text-sm font-black uppercase tracking-[0.2em] text-primary/60 flex items-center gap-2">
                     <UserCheck className="h-4 w-4" /> Dados Cadastrais
@@ -337,7 +347,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
 
             <Separator />
 
-            {/* SEÇÃO 2: CONTATOS */}
             <div className="space-y-6">
                 <h3 className="text-sm font-black uppercase tracking-[0.2em] text-primary/60 flex items-center gap-2">
                     <Mail className="h-4 w-4" /> Canais de Comunicação
@@ -402,7 +411,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
 
             <Separator />
 
-            {/* SEÇÃO 3: ENDEREÇO */}
             <div className="space-y-6">
                 <h3 className="text-sm font-black uppercase tracking-[0.2em] text-primary/60 flex items-center gap-2">
                     <MapPin className="h-4 w-4" /> Endereço Residencial
@@ -456,7 +464,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
 
             <Separator />
 
-            {/* SEÇÃO 4: BENEFÍCIOS */}
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <h3 className="text-sm font-black uppercase tracking-[0.2em] text-primary/60 flex items-center gap-2">
@@ -504,7 +511,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
 
             <Separator />
 
-            {/* SEÇÃO 5: ANOTAÇÕES ESTRATÉGICAS */}
             <div className="space-y-6 pb-10">
                 <h3 className="text-sm font-black uppercase tracking-[0.2em] text-primary/60 flex items-center gap-2">
                     <MessageSquareText className="h-4 w-4" /> Inteligência e Observações

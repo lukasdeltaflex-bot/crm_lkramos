@@ -39,13 +39,12 @@ export function isWhatsApp(phone: string): boolean {
     if (!phone) return false;
     const digitsOnly = phone.replace(/\D/g, '');
     
-    // Requisitos LK RAMOS para ser WhatsApp (Celular Brasileiro):
-    // 1. Deve ter 11 dígitos (DDD + 9 + 8 dígitos)
-    // 2. O terceiro dígito (início do número) deve ser '9'
-    // 3. Não deve ser uma sequência de números repetidos (ex: 11111...)
-    
+    // Requisitos LK RAMOS para ser WhatsApp (Celular Brasileiro Real):
+    // 1. Deve ter exatamente 11 dígitos (DDD + 9 + 8 dígitos)
     const isValidLength = digitsOnly.length === 11;
+    // 2. O terceiro dígito (início do número) deve ser '9'
     const startsWithNine = digitsOnly[2] === '9';
+    // 3. Não deve ser uma sequência de números idênticos (ex: 11111111111)
     const isNotRepeated = !/^(\d)\1+$/.test(digitsOnly);
 
     return isValidLength && startsWithNine && isNotRepeated;
