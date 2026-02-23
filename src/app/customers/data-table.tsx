@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -304,7 +305,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
                             <TableRow
                             key={row.id}
                             data-state={row.getIsSelected() && 'selected'}
-                            className="hover:bg-primary/[0.03] transition-colors border-b h-12"
+                            className="hover:bg-primary/[0.03] transition-colors border-b h-12 cursor-default"
                             >
                             {row.getVisibleCells().map((cell) => (
                                 <TableCell 

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -130,7 +131,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     name: "benefits"
   });
 
-  // 🛡️ BLINDAGEM DE CARREGAMENTO V14: Garante que Gênero e outros campos persistam na edição
+  // 🛡️ BLINDAGEM DE CARREGAMENTO V15: Sincronização forçada do Gênero e datas
   useEffect(() => {
     const source = customer || defaultValues;
     if (source) {
@@ -257,8 +258,13 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     if (cep.length !== 8) return;
     setIsFetchingCep(true);
     try {
-        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-        if (!response.ok) throw new Error('Falha na rede');
+        // 🛡️ REFORÇO DE FETCH: Tratamento robusto para evitar travamento em falhas de rede
+        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`).catch(() => null);
+        
+        if (!response || !response.ok) {
+            throw new Error('Falha na comunicação com serviço de CEP');
+        }
+
         const data = await response.json();
         if (!data.erro) {
             form.setValue('street', data.logradouro || '', { shouldValidate: true });
@@ -270,8 +276,12 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
             toast({ variant: 'destructive', title: "CEP não encontrado" });
         }
     } catch (error) {
-        console.error("ViaCEP Error:", error);
-        toast({ variant: 'destructive', title: 'Aviso de CEP', description: 'Serviço temporariamente indisponível. Preencha manualmente.' });
+        console.warn("ViaCEP Silent Error:", error);
+        toast({ 
+            variant: 'destructive', 
+            title: 'Busca Indisponível', 
+            description: 'Não foi possível buscar o CEP automaticamente. Por favor, preencha manualmente.' 
+        });
     } finally {
         setIsFetchingCep(false);
     }
