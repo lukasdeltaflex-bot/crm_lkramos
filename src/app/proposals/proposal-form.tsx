@@ -43,7 +43,8 @@ import {
     Building2,
     Clock,
     UserCog,
-    Landmark
+    Landmark,
+    FileText
 } from 'lucide-react';
 import { format, parse, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -55,13 +56,11 @@ import { Separator } from '@/components/ui/separator';
 import { useEffect, useState, useMemo } from 'react';
 import { ProposalAttachmentUploader } from '@/components/proposals/proposal-attachment-uploader';
 import { useUser, useFirestore } from '@/firebase';
-import { doc, collection, updateDoc, arrayUnion } from 'firebase/firestore';
+import { doc, collection, updateDoc, arrayUnion, setDoc } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { BankIcon } from '@/components/bank-icon';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 import { useTheme } from '@/components/theme-provider';
 
 const attachmentSchema = z.object({
@@ -184,6 +183,7 @@ export function ProposalForm({
   }, [firestore, proposal, tempProposalId]);
   
   const currentProposalId = proposal?.id || tempProposalId;
+  const isAttachmentSectionDisabled = !currentProposalId;
 
   const form = useForm<ProposalFormValues>({
     resolver: zodResolver(proposalSchema),
@@ -371,6 +371,52 @@ export function ProposalForm({
         .finally(() => setIsAddingHistory(false));
   };
 
+  const handleExportCover = async () => {
+    if (!proposal || !selectedCustomer || !user) return;
+    const { default: jsPDF } = await import('jspdf');
+    const doc = new jsPDF();
+    const primaryColor = [0, 174, 239];
+    
+    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255);
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.text("CAPA DE PROPOSTA", 14, 25);
+    
+    doc.setTextColor(0);
+    doc.setFontSize(10);
+    doc.text(`Gerado por: ${user.displayName || user.email}`, 14, 50);
+    doc.text(`Data: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 14, 55);
+    
+    doc.setDrawColor(200);
+    doc.line(14, 60, 196, 60);
+    
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("DADOS DO CLIENTE", 14, 75);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Nome: ${selectedCustomer.name}`, 14, 85);
+    doc.text(`CPF: ${selectedCustomer.cpf}`, 14, 92);
+    doc.text(`Telefone: ${selectedCustomer.phone}`, 14, 99);
+    
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("DADOS DA OPERAÇÃO", 14, 115);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Nº Proposta: ${proposal.proposalNumber}`, 14, 125);
+    doc.text(`Produto: ${proposal.product}`, 14, 132);
+    doc.text(`Banco: ${cleanBankName(proposal.bank)}`, 14, 139);
+    doc.text(`Valor Bruto: ${formatCurrency(proposal.grossAmount)}`, 14, 146);
+    doc.text(`Valor Líquido: ${formatCurrency(proposal.netAmount)}`, 14, 153);
+    doc.text(`Prazo: ${proposal.term} meses`, 14, 160);
+    
+    doc.save(`Capa_Proposta_${proposal.proposalNumber}.pdf`);
+    toast({ title: "Capa Gerada!" });
+  };
+
   const statusColor = currentStatusValue ? (statusColors[currentStatusValue.toUpperCase()] || statusColors[currentStatusValue]) : undefined;
 
   return (
@@ -443,6 +489,7 @@ export function ProposalForm({
                 <Clock className="h-4 w-4" /> Prazos e Informações da Esteira
               </h3>
               
+              {/* LINHA 1: BENEFÍCIO, ÓRGÃO, BANCO DIGITADO */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
@@ -498,6 +545,7 @@ export function ProposalForm({
                 />
               </div>
 
+              {/* LINHA 2: BANCO PORTADO, Nº PROPOSTA, TABELA */}
               <div className={cn("grid gap-4", productValue === 'Portabilidade' ? "grid-cols-1 md:grid-cols-3" : "grid-cols-1 md:grid-cols-2")}>
                 {productValue === 'Portabilidade' && (
                     <FormField
@@ -548,6 +596,7 @@ export function ProposalForm({
                 />
               </div>
 
+              {/* LINHA 3: DATAS DINÂMICAS */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
@@ -613,6 +662,7 @@ export function ProposalForm({
                 )}
               </div>
 
+              {/* LINHA 4: OPERADOR E PROMOTORA */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -747,7 +797,7 @@ export function ProposalForm({
                 <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
                     <FolderLock className="h-4 w-4" /> Anexos e Digitalização
                 </h3>
-                {isAttachmentSectionDisabled ? <Alert className="bg-secondary"><Info className="h-4 w-4" /><AlertTitle>Upload Bloqueado</AlertTitle></Alert> : (
+                {isAttachmentSectionDisabled ? <Alert className="bg-secondary"><Info className="h-4 w-4" /><AlertTitle>Upload Bloqueado</AlertTitle><AlertDescription className='text-xs'>Salve a proposta pela primeira vez para liberar o upload de arquivos.</AlertDescription></Alert> : (
                     <ProposalAttachmentUploader userId={user!.uid} proposalId={currentProposalId!} initialAttachments={form.getValues('attachments') || []} onAttachmentsChange={handleAttachmentsChange} isReadOnly={isReadOnly || isSaving} />
                 )}
             </div>

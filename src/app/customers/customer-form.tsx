@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/select';
 import { Sparkles, Loader2, PlusCircle, Trash2, FileText as FileIcon, UserCheck, UserX } from 'lucide-react';
 import { format, parse, isValid } from 'date-fns';
-import { getAge, validateCPF, handlePhoneMask, isWhatsApp } from '@/lib/utils';
+import { getAge, validateCPF, handlePhoneMask, isWhatsApp, cleanFirestoreData } from '@/lib/utils';
 import type { Customer, Attachment } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
@@ -100,7 +100,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   const [age, setAge] = useState<number | null>(null);
   const [tempCustomerId, setTempCustomerId] = useState<string | undefined>(undefined);
 
-  // 🛡️ BLINDAGEM NUCLEAR V8: Garantindo defaultValues em todos os campos para evitar uncontrolled inputs
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
     defaultValues: {
@@ -143,12 +142,10 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
           } catch (e) {}
       }
       
-      const sanitizedGender = (source.gender === null || source.gender === undefined) ? "" : source.gender;
-
       form.reset({
         name: source.name || '',
         cpf: source.cpf || '',
-        gender: sanitizedGender,
+        gender: source.gender || '',
         status: source.status || 'active',
         benefits: source.benefits || [],
         phone: source.phone || '',
@@ -165,13 +162,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
         state: source.state || '',
         documents: source.documents || [],
       });
-
-      if (sanitizedGender !== "") {
-          const timeoutId = setTimeout(() => {
-            form.setValue('gender', sanitizedGender, { shouldValidate: true, shouldDirty: true });
-          }, 10);
-          return () => clearTimeout(timeoutId);
-      }
     }
   }, [customer, defaultValues, form]);
 
@@ -186,7 +176,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
   const phoneValue = form.watch('phone');
   const phone2Value = form.watch('phone2');
   const cpfValue = form.watch('cpf');
-  const genderValue = form.watch('gender');
 
   const duplicateCpfCustomer = useMemo(() => {
     if (!cpfValue || cpfValue.length < 14) return null;
@@ -284,7 +273,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       documents: data.documents || [],
       gender: data.gender as any || null 
     };
-    onSubmit(newCustomerData);
+    onSubmit(cleanFirestoreData(newCustomerData));
   }
 
   const statusColor = currentStatusValue === 'active' 
@@ -362,11 +351,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Gênero</FormLabel>
-                          <Select 
-                            key={`gender-select-${customer?.id || tempCustomerId || 'new'}-${genderValue || 'none'}`} 
-                            onValueChange={field.onChange} 
-                            value={field.value || ""}
-                          >
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Selecione o gênero" />
