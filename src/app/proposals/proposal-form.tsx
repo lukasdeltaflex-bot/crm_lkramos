@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -28,29 +27,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { 
-    Info, 
+    Check, 
     Copy, 
     Printer, 
-    Check, 
-    Download, 
-    FolderLock, 
     Loader2, 
     History, 
     FileBadge,
     Calendar as CalendarIcon,
     AlertTriangle,
     MessageSquareQuote,
-    Building2,
     Clock,
-    UserCog,
-    Landmark,
-    FileText,
-    Zap,
-    Percent,
-    Wallet
+    FolderLock
 } from 'lucide-react';
 import { format, parse, parseISO, isValid } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { cn, formatCurrency, cleanBankName, cleanFirestoreData } from '@/lib/utils';
 import * as configData from '@/lib/config-data';
 import type { Proposal, Customer, Attachment, UserSettings, ProposalHistoryEntry } from '@/lib/types';
@@ -59,7 +48,7 @@ import { Separator } from '@/components/ui/separator';
 import { useEffect, useState, useMemo } from 'react';
 import { ProposalAttachmentUploader } from '@/components/proposals/proposal-attachment-uploader';
 import { useUser, useFirestore } from '@/firebase';
-import { doc, collection, updateDoc, arrayUnion, setDoc } from 'firebase/firestore';
+import { doc, collection, updateDoc, arrayUnion } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
@@ -241,22 +230,24 @@ export function ProposalForm({
 
   const duplicateProposal = useMemo(() => {
     if (!proposalNumberValue || proposalNumberValue.length < 3) return null;
-    return allProposals.find(p => p.proposalNumber === proposalNumberValue && p.id !== proposal?.id);
-  }, [proposalNumberValue, allProposals, proposal]);
+    return allProposals.find(p => 
+        p.proposalNumber.trim() === proposalNumberValue.trim() && 
+        p.id !== (proposal?.id || "")
+    );
+  }, [proposalNumberValue, allProposals, proposal?.id]);
 
   useEffect(() => {
     if (selectedCustomer) {
         const benefits = selectedCustomer.benefits || [];
-        const currentVal = form.getValues('selectedBenefitNumber');
         if (benefits.length === 1) {
             setValue('selectedBenefitNumber', benefits[0].number, { shouldValidate: true });
-        } else if (!benefits.some(b => b.number === currentVal)) {
+        } else if (!benefits.some(b => b.number === form.getValues('selectedBenefitNumber'))) {
             setValue('selectedBenefitNumber', '', { shouldValidate: true });
         }
     } else {
         setValue('selectedBenefitNumber', '', { shouldValidate: true });
     }
-  }, [selectedCustomer, setValue, form]);
+  }, [selectedCustomer, setValue]);
 
   useEffect(() => {
     if (selectedCustomerFromSearch) {
@@ -278,7 +269,7 @@ export function ProposalForm({
             setValue('commissionValue', calculatedCommission, { shouldValidate: true });
         }
     }
-  }, [commissionBase, commissionPercentage, grossAmount, netAmount, setValue, isReadOnly, form]);
+  }, [commissionBase, commissionPercentage, grossAmount, netAmount, setValue, isReadOnly]);
 
   const formatDateForForm = (dateString?: string) => {
     if (!dateString) return '';
@@ -427,6 +418,7 @@ export function ProposalForm({
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="py-4">
         <ScrollArea className="h-[70vh] pr-4 print:h-auto print:overflow-visible">
           <div className="space-y-8">
+            {/* SEÇÃO 1: VINCULAÇÃO */}
             <div className="space-y-4">
               <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
                 <FolderLock className="h-4 w-4" /> Vinculação do Registro
@@ -487,6 +479,7 @@ export function ProposalForm({
 
             <Separator />
 
+            {/* SEÇÃO 2: ESTEIRA (ORDEM SOLICITADA) */}
             <div className="space-y-4">
               <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
                 <Clock className="h-4 w-4" /> Prazos e Informações da Esteira
@@ -549,8 +542,8 @@ export function ProposalForm({
               </div>
 
               {/* LINHA 2: BANCO PORTADO, Nº PROPOSTA, TABELA */}
-              <div className={cn("grid gap-4", productValue === 'Portabilidade' ? "grid-cols-1 md:grid-cols-3" : "grid-cols-1 md:grid-cols-2")}>
-                {productValue === 'Portabilidade' && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {productValue === 'Portabilidade' ? (
                     <FormField
                         control={form.control}
                         name="bankOrigin"
@@ -572,14 +565,15 @@ export function ProposalForm({
                             </FormItem>
                         )}
                     />
-                )}
+                ) : <div />}
+                
                 <FormField
                   control={form.control}
                   name="proposalNumber"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Nº Proposta</FormLabel>
-                      <FormControl><Input placeholder="Número oficial" {...field} value={field.value ?? ''} readOnly={(isReadOnly && sheetMode === 'edit') || isSaving}/></FormControl>
+                      <FormControl><Input placeholder="Número oficial" {...field} value={field.value ?? ''} readOnly={isReadOnly || isSaving}/></FormControl>
                       <FormMessage />
                       {duplicateProposal && (
                         <Alert variant="destructive" className="mt-2 py-2 px-3 border-2 border-red-500 bg-red-50 animate-bounce"><AlertTriangle className="h-4 w-4" />
@@ -686,19 +680,19 @@ export function ProposalForm({
 
             <Separator />
 
+            {/* SEÇÃO 3: VALORES */}
             <div className="space-y-4">
                 <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
                     <Check className="h-4 w-4" /> Valores e Performance Financeira
                 </h3>
                 
-                {/* LINHA DE PRAZO E TAXA */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField control={form.control} name="term" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Prazo</FormLabel>
                             <FormControl>
                                 <div className="relative">
-                                    <Input type="number" {...field} value={field.value ?? ''} readOnly={isReadOnly || isSaving} />
+                                    <Input type="number" {...field} value={field.value ?? 84} readOnly={isReadOnly || isSaving} />
                                     <span className="absolute right-3 top-2.5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Meses</span>
                                 </div>
                             </FormControl>
@@ -709,7 +703,7 @@ export function ProposalForm({
                             <FormLabel>Taxa de Juros (%)</FormLabel>
                             <FormControl>
                                 <div className="relative">
-                                    <Input type="number" step="0.01" {...field} value={field.value ?? ''} readOnly={isReadOnly || isSaving} />
+                                    <Input type="number" step="0.01" {...field} value={field.value ?? 0} readOnly={isReadOnly || isSaving} />
                                     <span className="absolute right-3 top-2.5 text-[10px] font-black text-muted-foreground">%</span>
                                 </div>
                             </FormControl>
@@ -792,6 +786,7 @@ export function ProposalForm({
 
             <Separator />
 
+            {/* SEÇÃO 4: HISTÓRICO */}
             <div className="space-y-4">
                 <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
                     <History className="h-4 w-4" /> Linha do Tempo da Proposta
@@ -823,19 +818,44 @@ export function ProposalForm({
 
             <Separator />
 
+            {/* SEÇÃO 5: ANEXOS */}
             <div className="space-y-4">
                 <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
                     <FolderLock className="h-4 w-4" /> Anexos e Digitalização
                 </h3>
-                {isAttachmentSectionDisabled ? <Alert className="bg-secondary"><Info className="h-4 w-4" /><AlertTitle>Upload Bloqueado</AlertTitle><AlertDescription className='text-xs'>Salve a proposta pela primeira vez para liberar o upload de arquivos.</AlertDescription></Alert> : (
-                    <ProposalAttachmentUploader userId={user!.uid} proposalId={currentProposalId!} initialAttachments={form.getValues('attachments') || []} onAttachmentsChange={handleAttachmentsChange} isReadOnly={isReadOnly || isSaving} />
+                {isAttachmentSectionDisabled ? (
+                    <Alert className="bg-secondary">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>Upload Bloqueado</AlertTitle>
+                        <AlertDescription className='text-xs'>Salve a proposta pela primeira vez para liberar o upload de arquivos.</AlertDescription>
+                    </Alert>
+                ) : (
+                    <ProposalAttachmentUploader 
+                        userId={user!.uid} 
+                        proposalId={currentProposalId!} 
+                        initialAttachments={form.getValues('attachments') || []} 
+                        onAttachmentsChange={handleAttachmentsChange} 
+                        isReadOnly={isReadOnly || isSaving} 
+                    />
                 )}
             </div>
           </div>
         </ScrollArea>
         <div className="flex justify-between items-center pt-8 print:hidden">
-            <div className="flex items-center gap-2">{sheetMode !== 'new' && proposal && (<><Button type="button" variant="outline" onClick={() => onDuplicate(proposal)} disabled={isSaving}><Copy /> Duplicar</Button><Button type="button" variant="outline" onClick={() => window.print()} disabled={isSaving}><Printer /> Imprimir</Button><Button type="button" variant="outline" onClick={handleExportCover} disabled={isSaving} className="bg-primary/5 border-primary/20 text-primary"><FileBadge className="mr-2 h-4 w-4" /> Capa PDF</Button></>)}</div>
-            {!isReadOnly && <Button type="submit" disabled={isSaving || !!duplicateProposal}>{isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : 'Salvar Proposta'}</Button>}
+            <div className="flex items-center gap-2">
+                {sheetMode !== 'new' && proposal && (
+                    <>
+                        <Button type="button" variant="outline" onClick={() => onDuplicate(proposal)} disabled={isSaving}><Copy /> Duplicar</Button>
+                        <Button type="button" variant="outline" onClick={() => window.print()} disabled={isSaving}><Printer /> Imprimir</Button>
+                        <Button type="button" variant="outline" onClick={handleExportCover} disabled={isSaving} className="bg-primary/5 border-primary/20 text-primary"><FileBadge className="mr-2 h-4 w-4" /> Capa PDF</Button>
+                    </>
+                )}
+            </div>
+            {!isReadOnly && (
+                <Button type="submit" disabled={isSaving || !!duplicateProposal}>
+                    {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : 'Salvar Proposta'}
+                </Button>
+            )}
         </div>
       </form>
     </Form>
