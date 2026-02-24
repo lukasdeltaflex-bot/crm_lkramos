@@ -24,7 +24,10 @@ import {
     History,
     Printer,
     Timer,
-    Check
+    Check,
+    CreditCard,
+    Landmark,
+    FileBadge
 } from 'lucide-react';
 
 export default function ManualPage() {
@@ -67,13 +70,45 @@ export default function ManualPage() {
                     </AccordionContent>
                 </AccordionItem>
 
-                {/* 2. AGILIDADE OPERACIONAL */}
+                {/* 2. GESTÃO DE CARTÕES E PROSPECÇÃO */}
+                <AccordionItem value="card-management" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
+                    <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-blue-100 text-blue-600"><CreditCard className="h-5 w-5" /></div>
+                            <div className="text-left">
+                                <p className="font-bold text-sm">2. Gestão de Cartões (RMC/RCC)</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Saque Complementar e Campanhas</p>
+                            </div>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
+                        <div className="space-y-4">
+                            <p>O sistema agora permite um mapeamento cirúrgico para campanhas de saque complementar:</p>
+                            <ul className="space-y-3">
+                                <li className="flex gap-3">
+                                    <div className="h-5 w-5 rounded-full bg-blue-500 text-white flex items-center justify-center shrink-0"><Check className="h-3 w-3" /></div>
+                                    <p><strong>Vínculo por Benefício</strong>: Cada Número de Benefício (NB) pode ter seus bancos de RMC e RCC cadastrados individualmente.</p>
+                                </li>
+                                <li className="flex gap-3">
+                                    <div className="h-5 w-5 rounded-full bg-orange-500 text-white flex items-center justify-center shrink-0"><Landmark className="h-3 w-3" /></div>
+                                    <p><strong>Filtros Estratégicos</strong>: Na tela de Clientes, use os novos filtros de Banco RMC e RCC para listar apenas o público-alvo de um banco específico.</p>
+                                </li>
+                                <li className="flex gap-3">
+                                    <div className="h-5 w-5 rounded-full bg-green-500 text-white flex items-center justify-center shrink-0"><FileBadge className="h-3 w-3" /></div>
+                                    <p><strong>Dossiê Premium</strong>: O PDF oficial agora inclui a <strong>Idade Atual</strong> do cliente e o <strong>Mapa de Reservas</strong> completo dos cartões.</p>
+                                </li>
+                            </ul>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+
+                {/* 3. AGILIDADE OPERACIONAL */}
                 <AccordionItem value="operational-agility" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-blue-100 text-blue-600"><ListChecks className="h-5 w-5" /></div>
+                            <div className="p-2 rounded-xl bg-purple-100 text-purple-600"><ListChecks className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">2. Agilidade Operacional</p>
+                                <p className="font-bold text-sm">3. Agilidade Operacional</p>
                                 <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Ações em Massa e Busca Nuclear</p>
                             </div>
                         </div>
@@ -86,7 +121,7 @@ export default function ManualPage() {
                             </li>
                             <li className="flex gap-3">
                                 <div className="h-5 w-5 rounded-full bg-green-500 text-white flex items-center justify-center shrink-0"><Check className="h-3 w-3" /></div>
-                                <p><strong>Ações em Massa (Propostas)</strong>: Selecione várias propostas para alterar status, cancelar ou imprimir em bloco, reduzindo o tempo de gestão da esteira.</p>
+                                <p><strong>Baixa Coletiva (Financeiro)</strong>: Selecione múltiplos contratos e dê baixa total em comissões com um único clique.</p>
                             </li>
                             <li className="flex gap-3">
                                 <div className="h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center shrink-0"><Timer className="h-3 w-3" /></div>
@@ -96,39 +131,39 @@ export default function ManualPage() {
                     </AccordionContent>
                 </AccordionItem>
 
-                {/* 3. FLUXO FINANCEIRO INTELIGENTE */}
+                {/* 4. FLUXO FINANCEIRO INTELIGENTE */}
                 <AccordionItem value="financial-logic" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-green-100 text-green-600"><Wallet className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">3. Fluxo Financeiro Inteligente</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Filtros de Competência e Cobrança</p>
+                                <p className="font-bold text-sm">4. Fluxo Financeiro Inteligente</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Gatilhos Automáticos e Visibilidade</p>
                             </div>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
-                        <p>O módulo financeiro agora opera com lógica de timing:</p>
+                        <p>O módulo financeiro opera com gatilhos automáticos para precisão de caixa:</p>
                         <div className="grid gap-3 md:grid-cols-2">
                             <div className="p-3 rounded-lg bg-muted/20 border-dashed border-2">
-                                <h4 className="text-[10px] font-black uppercase mb-1">Visão do Mês Vigente</h4>
-                                <p className="text-xs text-muted-foreground">Filtros "Todos" e "Pagas" mostram apenas o mês atual. Histórico antigo é exibido apenas via busca específica.</p>
+                                <h4 className="text-[10px] font-black uppercase mb-1">Gatilho de Averbação</h4>
+                                <p className="text-xs text-muted-foreground">Ao preencher a <strong>Data de Averbação</strong>, o sistema marca a comissão como "Pendente" automaticamente, alimentando seu saldo a receber.</p>
                             </div>
                             <div className="p-3 rounded-lg bg-muted/20 border-dashed border-2">
-                                <h4 className="text-[10px] font-black uppercase mb-1">Radar de Inadimplência</h4>
-                                <p className="text-xs text-muted-foreground">Filtros "Pendentes" e "Parciais" mostram todos os meses acumulados até que a comissão seja baixada.</p>
+                                <h4 className="text-[10px] font-black uppercase mb-1">Radar de Busca Retroativa</h4>
+                                <p className="text-xs text-muted-foreground">Ao pesquisar na barra de busca do Financeiro, o sistema libera automaticamente a visão de todos os meses, ignorando a trava do mês vigente.</p>
                             </div>
                         </div>
                     </AccordionContent>
                 </AccordionItem>
 
-                {/* 4. BRANDING E APARÊNCIA PREMIUM */}
+                {/* 5. BRANDING E APARÊNCIA PREMIUM */}
                 <AccordionItem value="branding-studio" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-primary/10 text-primary"><Palette className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">4. Branding e Estética Industrial</p>
+                                <p className="font-bold text-sm">5. Branding e Estética Industrial</p>
                                 <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Auras Atmosféricas e Transparência</p>
                             </div>
                         </div>
@@ -137,36 +172,36 @@ export default function ManualPage() {
                         <ul className="list-disc pl-5 space-y-2 text-xs">
                             <li><strong>Fundos Atmosféricos (Aura)</strong>: Ative gradientes de profundidade que brilham sob a interface (Nebula, Ocean, etc.).</li>
                             <li><strong>Transparência Industrial (0.70)</strong>: A interface agora utiliza opacidade estratégica com desfoque de fundo, permitindo que as Auras brilhem através dos componentes.</li>
-                            <li><strong>Textura de Linhas</strong>: A opção técnica de linhas horizontais está disponível para um visual estruturado.</li>
+                            <li><strong>Logotipos Inteligentes</strong>: Promotoras e Bancos exibem ícones oficiais buscados via IA para agilizar a leitura visual da esteira.</li>
                         </ul>
                     </AccordionContent>
                 </AccordionItem>
 
-                {/* 5. SEGURANÇA E BLINDAGEM NUCLEAR */}
+                {/* 6. SEGURANÇA E BLINDAGEM NUCLEAR */}
                 <AccordionItem value="security-blind" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-purple-100 text-purple-600"><ShieldCheck className="h-5 w-5" /></div>
+                            <div className="p-2 rounded-xl bg-zinc-100 text-zinc-600"><ShieldCheck className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">5. Blindagem Nuclear de Dados</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Integridade V5 e Persistência</p>
+                                <p className="font-bold text-sm">6. Blindagem Nuclear de Dados</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Integridade V8 e Persistência</p>
                             </div>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
                         <ul className="space-y-3">
                             <li className="flex items-start gap-2">
-                                <UserCheck className="h-4 w-4 text-purple-600 shrink-0" />
+                                <UserCheck className="h-4 w-4 text-emerald-600 shrink-0" />
                                 <div>
-                                    <p className="font-bold">Campo Gênero Blindado (V5)</p>
-                                    <p className="text-xs text-muted-foreground">Utiliza sincronização atômica para garantir que o valor salvo nunca seja perdido durante a edição.</p>
+                                    <p className="font-bold">Validação Semântica de Status</p>
+                                    <p className="text-xs text-muted-foreground">Selos de status Ativo/Inativo otimizados para alto contraste em temas claros e escuros.</p>
                                 </div>
                             </li>
                             <li className="flex items-start gap-2">
                                 <Layout className="h-4 w-4 text-blue-600 shrink-0" />
                                 <div>
-                                    <p className="font-bold">Persistência de Visão</p>
-                                    <p className="text-xs text-muted-foreground">Sua configuração de colunas, ordem e paginação é salva automaticamente no navegador com proteção contra erros de hidratação.</p>
+                                    <p className="font-bold">Persistência de Visão (DataTable)</p>
+                                    <p className="text-xs text-muted-foreground">Sua configuração de colunas, ordem e paginação é salva automaticamente com proteção total contra erros de hidratação.</p>
                                 </div>
                             </li>
                         </ul>
@@ -194,8 +229,8 @@ export default function ManualPage() {
                         <p className="text-xs font-bold">CTRL + B</p>
                     </div>
                     <div className="space-y-1">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase">Imprimir Registro</p>
-                        <p className="text-xs font-bold">Botão na Ficha ou Tabela</p>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase">Imprimir Seleção</p>
+                        <p className="text-xs font-bold">Borderô Coletivo</p>
                     </div>
                 </CardContent>
             </Card>
@@ -207,10 +242,10 @@ export default function ManualPage() {
                 <CardContent>
                     <div className="flex items-center gap-2 text-green-600">
                         <div className="h-2 w-2 rounded-full bg-current animate-pulse" />
-                        <span className="text-[10px] font-black uppercase">Blindagem Nuclear V5 Ativa</span>
+                        <span className="text-[10px] font-black uppercase">Blindagem Nuclear V8 Ativa</span>
                     </div>
                     <p className="text-[9px] text-muted-foreground mt-2 leading-tight">
-                        Versão 2.9.0 - Motor visual e lógico otimizados para alta performance.
+                        Versão 3.1.0 - Motor de prospecção e gestão de cartões otimizado.
                     </p>
                 </CardContent>
             </Card>
