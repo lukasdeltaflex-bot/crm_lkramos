@@ -45,6 +45,7 @@ import {
     CircleDollarSign,
     Tag,
     X,
+    Info,
     CreditCard as CardIcon
 } from 'lucide-react';
 import { format, parse, isValid, differenceInYears } from 'date-fns';
@@ -604,7 +605,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                                                 <FormControl>
                                                     <div className="relative">
                                                         <span className="absolute left-3 top-2.5 text-[10px] font-black text-muted-foreground">R$</span>
-                                                        <Input type="number" step="0.01" placeholder="0,00" {...field} className="rounded-full h-10 border-green-200 bg-green-50/10 pl-9 font-bold" />
+                                                        <Input type="number" step="0.01" className="rounded-full h-10 border-green-200 bg-green-50/10 pl-9 font-bold" />
                                                     </div>
                                                 </FormControl>
                                             </FormItem>
