@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -43,6 +42,7 @@ import {
     Home,
     Map,
     Hash,
+    CircleDollarSign,
     CreditCard as CardIcon
 } from 'lucide-react';
 import { format, parse, isValid, differenceInYears } from 'date-fns';
@@ -64,6 +64,7 @@ import * as configData from '@/lib/config-data';
 const benefitSchema = z.object({
     number: z.string().min(1, "O Nº do benefício é obrigatório."),
     species: z.string().nullable().optional(),
+    salary: z.coerce.number().min(0, "Valor inválido.").optional(),
     rmcBank: z.string().optional(),
     rccBank: z.string().optional(),
 });
@@ -494,7 +495,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                     <h3 className="text-xl font-bold uppercase tracking-tight text-[#00AEEF]">
                         Benefícios e Cartões Vincualdos
                     </h3>
-                    <Button type="button" variant="outline" size="sm" onClick={() => appendBenefit({ number: '', species: '', rmcBank: '', rccBank: '' })} className="rounded-full h-9 px-5 border-[#00AEEF]/30 hover:bg-[#00AEEF]/5 text-[#00AEEF] font-bold">
+                    <Button type="button" variant="outline" size="sm" onClick={() => appendBenefit({ number: '', species: '', salary: 0, rmcBank: '', rccBank: '' })} className="rounded-full h-9 px-5 border-[#00AEEF]/30 hover:bg-[#00AEEF]/5 text-[#00AEEF] font-bold">
                         <PlusCircle className="h-4 w-4 mr-2" /> Adicionar NB
                     </Button>
                 </div>
@@ -502,7 +503,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                     {benefitFields.map((field, index) => (
                         <div key={field.id} className="p-6 rounded-3xl bg-muted/10 border border-border/50 space-y-6 animate-in fade-in slide-in-from-left-2">
                             <div className="flex justify-between items-start">
-                                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <FormField
                                         control={form.control}
                                         name={`benefits.${index}.number`}
@@ -524,6 +525,23 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                                                     <FileText className="h-3 w-3" /> Espécie / Tipo
                                                 </FormLabel>
                                                 <FormControl><Input placeholder="Aposentadoria Idade" {...field} value={field.value ?? ''} className="rounded-full h-10 border-zinc-200 font-bold" /></FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name={`benefits.${index}.salary`}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-[10px] font-black uppercase text-green-600 flex items-center gap-2">
+                                                    <CircleDollarSign className="h-3 w-3" /> Valor do Salário (R$)
+                                                </FormLabel>
+                                                <FormControl>
+                                                    <div className="relative">
+                                                        <span className="absolute left-3 top-2.5 text-[10px] font-black text-muted-foreground">R$</span>
+                                                        <Input type="number" step="0.01" placeholder="0,00" {...field} className="rounded-full h-10 border-green-200 bg-green-50/10 pl-9 font-bold" />
+                                                    </div>
+                                                </FormControl>
                                             </FormItem>
                                         )}
                                     />

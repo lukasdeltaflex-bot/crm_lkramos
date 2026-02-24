@@ -1,7 +1,7 @@
-
 export type Benefit = {
   number: string;
   species?: string;
+  salary?: number; // Valor do benefício/salário mensal
   rmcBank?: string; // Banco do cartão RMC vinculado a este NB
   rccBank?: string; // Banco do cartão RCC vinculado a este NB
 };

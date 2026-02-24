@@ -13,6 +13,7 @@ import { z } from 'zod';
 const BenefitSchema = z.object({
     number: z.string().describe("O número do benefício INSS do cliente."),
     species: z.string().optional().describe("A espécie do benefício (ex: Aposentadoria por Idade, Pensão por Morte)."),
+    salary: z.number().optional().describe("O valor do salário/benefício mensal."),
     rmcBank: z.string().optional().describe("Nome do banco onde o cliente possui reserva de Cartão RMC."),
     rccBank: z.string().optional().describe("Nome do banco onde o cliente possui reserva de Cartão RCC (Cartão Benefício)."),
 });
@@ -20,7 +21,7 @@ const BenefitSchema = z.object({
 const ExtractCustomerDataOutputSchema = z.object({
     name: z.string().optional().describe('O nome completo do cliente.'),
     cpf: z.string().optional().describe('O CPF do cliente (formato 000.000.000-00).'),
-    benefits: z.array(BenefitSchema).optional().describe('Uma lista de benefícios do cliente, cada um com número, espécie e bancos de cartões.'),
+    benefits: z.array(BenefitSchema).optional().describe('Uma lista de benefícios do cliente, cada um com número, espécie, salário e bancos de cartões.'),
     phone: z.string().optional().describe('O número de telefone principal do cliente (formato (00) 90000-0000).'),
     phone2: z.string().optional().describe('Um segundo número de telefone do cliente, se houver (formato (00) 90000-0000).'),
     email: z.string().optional().describe('O endereço de e-mail do cliente.'),
@@ -48,19 +49,20 @@ const prompt = ai.definePrompt({
 ### REGRAS CRÍTICAS DE NEGÓCIO:
 
 1.  **CPF / Benefício**: Extraia da primeira linha ou campos identificados. 
-2.  **Cartões RMC/RCC**: Se identificar bancos vinculados a reservas de cartão (RMC ou RCC/Benefício), inclua no objeto do benefício correspondente.
-3.  **Data de Nascimento**: Converta para YYYY-MM-DD.
-4.  **OMISSÃO**: Se um campo não existir, NÃO o invente.
+2.  **Salário**: Identifique o valor bruto ou líquido do benefício se disponível.
+3.  **Cartões RMC/RCC**: Se identificar bancos vinculados a reservas de cartão (RMC ou RCC/Benefício), inclua no objeto do benefício correspondente.
+4.  **Data de Nascimento**: Converta para YYYY-MM-DD.
+5.  **OMISSÃO**: Se um campo não existir, NÃO o invente.
 
 ### EXEMPLO DE EXTRATO:
 *Entrada:*
 Nome: JOAO SILVA
 CPF: 123.456.789-00
-NB: 158.806.323-0 - RMC: BANCO PAN / RCC: BANCO ITAU
+NB: 158.806.323-0 - Salário: R$ 1.412,00 - RMC: BANCO PAN / RCC: BANCO ITAU
 Endereço: RUA TESTE 100 - SP
 
 *Saída:*
-{"name":"JOAO SILVA","cpf":"123.456.789-00","benefits":[{"number":"1588063230","rmcBank":"PAN S.A.","rccBank":"Itaú Unibanco S.A."}],"street":"RUA TESTE","number":"100","state":"SP"}
+{"name":"JOAO SILVA","cpf":"123.456.789-00","benefits":[{"number":"1588063230","salary":1412,"rmcBank":"PAN S.A.","rccBank":"Itaú Unibanco S.A."}],"street":"RUA TESTE","number":"100","state":"SP"}
 
 ### TEXTO PARA PROCESSAR:
 \`\`\`

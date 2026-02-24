@@ -1,4 +1,3 @@
-
 'use client';
 import React from 'react';
 import { useParams } from 'next/navigation';
@@ -33,6 +32,7 @@ import {
     Map,
     Mail,
     CreditCard,
+    CircleDollarSign,
     CreditCard as CardIcon
 } from 'lucide-react';
 import { format, parse, differenceInMonths, isValid as isValidDate } from 'date-fns';
@@ -145,7 +145,14 @@ const CustomerInfoCard = ({ customer, onExportDossier, onToggleStatus, onGenerat
                                                 <span className="font-black text-lg text-foreground">{benefit.number}</span>
                                                 <CopyButton text={benefit.number} label="Benefício" />
                                             </div>
-                                            {benefit.species && <span className="text-[10px] text-muted-foreground font-bold uppercase">{benefit.species}</span>}
+                                            <div className='flex items-center gap-2'>
+                                                {benefit.species && <span className="text-[10px] text-muted-foreground font-bold uppercase">{benefit.species}</span>}
+                                                {benefit.salary > 0 && (
+                                                    <Badge variant="outline" className="h-5 bg-green-50 border-green-200 text-green-600 text-[9px] font-black uppercase">
+                                                        <CircleDollarSign className="h-2.5 w-2.5 mr-1" /> {formatCurrency(benefit.salary)}
+                                                    </Badge>
+                                                )}
+                                            </div>
                                         </div>
                                         <Badge variant="outline" className="h-6 text-[9px] font-black uppercase tracking-widest border-2 bg-background">
                                             Vínculo Oficial
@@ -321,10 +328,11 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
         doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(0); doc.text("BENEFÍCIOS E RESERVAS DE CARTÃO", 14, getFinalY() + 15);
         autoTable(doc, { 
             startY: getFinalY() + 18, 
-            head: [['Número', 'Espécie', 'Cartão RMC', 'Cartão RCC']], 
+            head: [['Número', 'Espécie', 'Salário', 'Cartão RMC', 'Cartão RCC']], 
             body: customer.benefits.map(b => [
                 b.number, 
                 b.species || '-',
+                b.salary > 0 ? formatCurrency(b.salary) : '-',
                 cleanBankName(b.rmcBank) || '-',
                 cleanBankName(b.rccBank) || '-'
             ]), 
