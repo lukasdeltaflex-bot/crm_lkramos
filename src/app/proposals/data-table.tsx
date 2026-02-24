@@ -214,7 +214,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const table = useReactTable({
     data: filteredData,
     columns,
-    getRowId: (row) => row.id, // 🛡️ CRÍTICO: Mapeia IDs reais do Firestore
+    getRowId: (row) => row.id,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
@@ -235,17 +235,24 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         const customer = row.original.customer;
         const p = row.original;
 
+        const searchDigits = searchTerm.replace(/\D/g, '');
+        const normalizedSearch = normalizeString(searchTerm);
+
+        // 🛡️ BUSCA NUCLEAR V9: Comparação robusta para IDs e Documentos
+        // 1. ID ou Proposta Exatos
         if (/^\d+$/.test(searchTerm)) {
             if (p.proposalNumber === searchTerm) return true;
             if (customer?.numericId?.toString() === searchTerm) return true;
         }
 
-        const normalizedSearch = normalizeString(searchTerm);
-        const searchDigits = searchTerm.replace(/\D/g, '');
+        // 2. CPF ou Telefone por dígitos (aceita com pontuação no input)
+        if (searchDigits.length >= 3) {
+            const cpfDigits = customer?.cpf?.replace(/\D/g, '') || '';
+            if (cpfDigits.includes(searchDigits)) return true;
+        }
 
         const searchableFields = [
             customer?.name,
-            customer?.cpf,
             p.proposalNumber,
             p.operator,
             p.bank,
@@ -254,12 +261,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
 
         return searchableFields.some(field => {
             if (!field) return false;
-            const fieldStr = String(field);
-            const normField = normalizeString(fieldStr);
-            const fieldDigits = fieldStr.replace(/\D/g, '');
-            
-            return normField.includes(normalizedSearch) || 
-                   (searchDigits && searchDigits.length >= 3 && fieldDigits.includes(searchDigits));
+            return normalizeString(String(field)).includes(normalizedSearch);
         });
     },
     meta: { userSettings }

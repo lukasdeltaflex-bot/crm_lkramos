@@ -198,22 +198,29 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         if (!searchTerm) return true;
         const customer = row.original;
 
-        // 🛡️ BUSCA NUCLEAR V8: Prioridade de Exatidão Numérica
-        if (/^\d+$/.test(searchTerm)) {
-            // Comparação estrita para IDs: Digitar "10" traz apenas o ID 10
-            if (customer.numericId?.toString() === searchTerm) return true;
-            
-            // Permite busca parcial apenas se o termo tiver mais de 3 dígitos (para CPF/Telefone)
-            if (searchTerm.length >= 3) {
-                const cpfDigits = customer.cpf?.replace(/\D/g, '') || '';
-                const phoneDigits = customer.phone?.replace(/\D/g, '') || '';
-                if (cpfDigits.includes(searchTerm) || phoneDigits.includes(searchTerm)) return true;
-            }
-            
-            return false;
+        const searchDigits = searchTerm.replace(/\D/g, '');
+        const normalizedSearch = normalizeString(searchTerm);
+
+        // 🛡️ BUSCA NUCLEAR V9: Comparação robusta para IDs e Documentos
+        // 1. ID Exato (apenas se o input for puramente número)
+        if (/^\d+$/.test(searchTerm) && customer.numericId?.toString() === searchTerm) {
+            return true;
         }
 
-        const normalizedSearch = normalizeString(searchTerm);
+        // 2. Busca por dígitos (CPF ou Telefone) - Aceita com ou sem pontuação
+        if (searchDigits.length >= 3) {
+            const cpfDigits = customer.cpf?.replace(/\D/g, '') || '';
+            const phoneDigits = customer.phone?.replace(/\D/g, '') || '';
+            const phone2Digits = customer.phone2?.replace(/\D/g, '') || '';
+            
+            if (cpfDigits.includes(searchDigits) || 
+                phoneDigits.includes(searchDigits) || 
+                phone2Digits.includes(searchDigits)) {
+                return true;
+            }
+        }
+
+        // 3. Busca por texto normalizado
         const searchableFields = [
             customer.name,
             customer.city,
@@ -277,7 +284,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
                 <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
                     <TableHeader>
                         {table.getHeaderGroups().map(headerGroup => (
-                        <TableRow key={headerGroup.id} className="hover:bg-transparent border-b-2 bg-muted/40 dark:bg-zinc-900/60">
+                        <TableRow key={headerGroup.id} className="hover:bg-transparent border-b-2 border-zinc-200 dark:border-zinc-800 bg-muted/40 dark:bg-zinc-900/60">
                             <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
                             {headerGroup.headers.map(header => (
                                 <DraggableHeader key={header.id} header={header as Header<Customer, unknown>} />

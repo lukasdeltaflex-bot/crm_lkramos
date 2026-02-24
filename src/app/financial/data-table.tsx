@@ -254,17 +254,23 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         const customer = row.original.customer;
         const p = row.original;
 
+        const searchDigits = searchTerm.replace(/\D/g, '');
+        const normalizedSearch = normalizeString(searchTerm);
+
+        // 🛡️ BUSCA NUCLEAR V9: Comparação robusta para IDs e Documentos
         if (/^\d+$/.test(searchTerm)) {
             if (p.proposalNumber === searchTerm) return true;
             if (customer?.numericId?.toString() === searchTerm) return true;
         }
 
-        const normalizedSearch = normalizeString(searchTerm);
-        const searchDigits = searchTerm.replace(/\D/g, '');
+        // Busca por dígitos (CPF) aceitando pontuação no input
+        if (searchDigits.length >= 3) {
+            const cpfDigits = customer?.cpf?.replace(/\D/g, '') || '';
+            if (cpfDigits.includes(searchDigits)) return true;
+        }
 
         const searchableFields = [
             customer?.name,
-            customer?.cpf,
             p.proposalNumber,
             p.operator,
             p.bank,
@@ -273,12 +279,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
         return searchableFields.some(field => {
             if (!field) return false;
-            const fieldStr = String(field);
-            const normField = normalizeString(fieldStr);
-            const fieldDigits = fieldStr.replace(/\D/g, '');
-            
-            return normField.includes(normalizedSearch) || 
-                   (searchDigits && searchDigits.length >= 3 && fieldDigits.includes(searchDigits));
+            return normalizeString(String(field)).includes(normalizedSearch);
         });
     },
     meta: { isPrivacyMode, userSettings }

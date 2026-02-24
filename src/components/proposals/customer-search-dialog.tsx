@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -41,9 +40,9 @@ export function CustomerSearchDialog({
               <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
               <CommandGroup>
                 {customers.map((customer) => {
-                  // 🛡️ BUSCA NORMALIZADA: Inclui versão numérica do CPF para facilitar localização
+                  // 🛡️ BUSCA ROBUSTA V9: Inclui todas as variações de documento no índice de busca
                   const cpfNumeric = customer.cpf?.replace(/\D/g, '') || '';
-                  const searchIndex = normalizeString(`${customer.name} ${customer.cpf} ${cpfNumeric}`);
+                  const searchIndex = normalizeString(`${customer.name} ${customer.cpf} ${cpfNumeric} ID${customer.numericId}`);
                   
                   return (
                     <CommandItem
