@@ -189,7 +189,8 @@ export const getColumns = (
     onView: any,
     onDelete: any,
     onStatusChange: any,
-    onDuplicate: any
+    onDuplicate: any,
+    onToggleChecklist: (proposalId: string, stepId: string, currentValue: boolean) => void
     ): ColumnDef<Proposal & { customer: any }>[] => [
   {
     id: 'Selecionar',
@@ -222,26 +223,48 @@ export const getColumns = (
     id: 'Etapas',
     header: 'Etapas',
     cell: ({ row }) => {
-        const checklist = row.original.checklist || {};
+        const proposal = row.original;
+        const checklist = proposal.checklist || {};
+        
+        const steps = [
+            { id: 'formalization', label: 'Formalização', icon: Send, activeColor: 'text-blue-500 fill-blue-500/20' },
+            { id: 'documentation', label: 'Documentação', icon: FileCheck, activeColor: 'text-orange-500 fill-orange-500/20' },
+            { id: 'signature', label: 'Checklist Promotora', icon: PenTool, activeColor: 'text-purple-500 fill-purple-500/20' },
+            { id: 'approval', label: 'Averbação', icon: ShieldCheck, activeColor: 'text-green-500 fill-green-500/20' }
+        ];
+
         return (
             <div className="flex items-center gap-1.5">
                 <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger><Send className={cn("h-3.5 w-3.5 transition-colors", checklist.formalization ? "text-blue-500 fill-blue-500/20" : "text-muted-foreground/30")} /></TooltipTrigger>
-                        <TooltipContent><p className="text-[10px] font-bold uppercase">Formalização</p></TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                        <TooltipTrigger><FileCheck className={cn("h-3.5 w-3.5 transition-colors", checklist.documentation ? "text-orange-500 fill-orange-500/20" : "text-muted-foreground/30")} /></TooltipTrigger>
-                        <TooltipContent><p className="text-[10px] font-bold uppercase">Documentação</p></TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                        <TooltipTrigger><PenTool className={cn("h-3.5 w-3.5 transition-colors", checklist.signature ? "text-purple-500 fill-purple-500/20" : "text-muted-foreground/30")} /></TooltipTrigger>
-                        <TooltipContent><p className="text-[10px] font-bold uppercase">Checklist Promotora</p></TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                        <TooltipTrigger><ShieldCheck className={cn("h-3.5 w-3.5 transition-colors", checklist.approval ? "text-green-500 fill-green-500/20" : "text-muted-foreground/30")} /></TooltipTrigger>
-                        <TooltipContent><p className="text-[10px] font-bold uppercase">Averbação</p></TooltipContent>
-                    </Tooltip>
+                    {steps.map((step) => {
+                        const isActive = !!checklist[step.id];
+                        return (
+                            <Tooltip key={step.id}>
+                                <TooltipTrigger asChild>
+                                    <button
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            onToggleChecklist(proposal.id, step.id, isActive);
+                                        }}
+                                        className="hover:scale-125 transition-transform p-0.5 rounded hover:bg-muted/50"
+                                    >
+                                        <step.icon 
+                                            className={cn(
+                                                "h-3.5 w-3.5 transition-colors", 
+                                                isActive ? step.activeColor : "text-muted-foreground/30"
+                                            )} 
+                                        />
+                                    </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">
+                                    <p className="text-[10px] font-black uppercase tracking-tight">
+                                        {step.label}: <span className={isActive ? "text-green-500" : "text-muted-foreground"}>{isActive ? 'CONCLUÍDO' : 'PENDENTE'}</span>
+                                    </p>
+                                </TooltipContent>
+                            </Tooltip>
+                        );
+                    })}
                 </TooltipProvider>
             </div>
         )
@@ -386,7 +409,7 @@ export const getColumns = (
                         proposalId={p.id}
                         currentStatus={p.status}
                         product={p.product}
-                        onStatusChange={onStatusChange}
+                        onStatusChange={(table.options.meta as any)?.onStatusChange}
                     />
                 </div>
                 {isCritical && (

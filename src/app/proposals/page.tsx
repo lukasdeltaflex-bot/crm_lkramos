@@ -1,3 +1,4 @@
+
 'use client';
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -94,7 +95,6 @@ function ProposalsPageContent() {
 
   const isLoading = proposalsLoading || customersLoading || isUserLoading || settingsLoading;
 
-  // 🛡️ CORREÇÃO DE SELEÇÃO: Filtra IDs que estão efetivamente marcados como true
   const selectedIds = React.useMemo(() => 
     Object.keys(rowSelection).filter(id => rowSelection[id]),
   [rowSelection]);
@@ -284,6 +284,16 @@ function ProposalsPageContent() {
         });
   };
 
+  const handleToggleChecklist = async (proposalId: string, stepId: string, currentValue: boolean) => {
+    if (!firestore || !user) return;
+    const docRef = doc(firestore, 'loanProposals', proposalId);
+    const updatePath = `checklist.${stepId}`;
+    
+    updateDoc(docRef, { [updatePath]: !currentValue })
+        .then(() => toast({ title: "Etapa atualizada!" }))
+        .catch(() => toast({ variant: 'destructive', title: "Erro na atualização" }));
+  };
+
   const handleFormSubmit = async (data: any) => {
     if (!firestore || !user) return;
     setIsSaving(true);
@@ -314,7 +324,8 @@ function ProposalsPageContent() {
     handleViewProposal, 
     (id: string) => deleteDoc(doc(firestore!, 'loanProposals', id)), 
     handleStatusChange, 
-    handleDuplicateProposal
+    handleDuplicateProposal,
+    handleToggleChecklist
   ), [firestore, handleEditProposal, handleViewProposal, handleStatusChange, handleDuplicateProposal]);
 
   return (
