@@ -27,7 +27,11 @@ import {
     FileBadge,
     FileCheck2,
     Database,
-    Binary
+    Binary,
+    Tags,
+    Trophy,
+    Share2,
+    SmilePlus
 } from 'lucide-react';
 
 export default function ManualPage() {
@@ -125,13 +129,70 @@ export default function ManualPage() {
                     </AccordionContent>
                 </AccordionItem>
 
-                {/* 4. AUTOMATIZAÇÕES DE ESTEIRA */}
+                {/* 4. CLASSIFICAÇÃO INTELIGENTE (TAGS) */}
+                <AccordionItem value="tags-management" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
+                    <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-pink-100 text-pink-600"><Tags className="h-5 w-5" /></div>
+                            <div className="text-left">
+                                <p className="font-bold text-sm">4. Gestão de Relacionamento (Tags)</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Segmentação e Símbolos Visuais</p>
+                            </div>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
+                        <p>Organize sua base de clientes com etiquetas coloridas e símbolos:</p>
+                        <ul className="space-y-3">
+                            <li className="flex gap-3">
+                                <div className="h-5 w-5 rounded-full bg-pink-500 text-white flex items-center justify-center shrink-0"><SmilePlus className="h-3 w-3" /></div>
+                                <p><strong>Atalho de Símbolos</strong>: Ao criar tags em "Configurações", use <kbd className="bg-muted px-1 rounded border">Win + .</kbd> (Windows) ou <kbd className="bg-muted px-1 rounded border">Cmd+Ctrl+Espaço</kbd> (Mac) para adicionar emojis como 💎, ✅ ou ⚠️.</p>
+                            </li>
+                            <li className="flex gap-3">
+                                <div className="h-5 w-5 rounded-full bg-blue-500 text-white flex items-center justify-center shrink-0"><Check className="h-3 w-3" /></div>
+                                <p><strong>Filtros Cirúrgicos</strong>: Na tela de Clientes, você pode filtrar instantaneamente por etiquetas para focar suas campanhas apenas no perfil desejado (ex: apenas Clientes VIP).</p>
+                            </li>
+                        </ul>
+                    </AccordionContent>
+                </AccordionItem>
+
+                {/* 5. MARKETING PESSOAL E PERFORMANCE */}
+                <AccordionItem value="personal-branding" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
+                    <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-purple-100 text-purple-600"><UserCheck className="h-5 w-5" /></div>
+                            <div className="text-left">
+                                <p className="font-bold text-sm">5. Perfil de Elite e Autoridade</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Recordes e Identidade Profissional</p>
+                            </div>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Trophy className="h-4 w-4 text-amber-600" />
+                                    <h4 className="font-bold">Hall da Fama Profissional</h4>
+                                </div>
+                                <p className="text-xs text-muted-foreground">O menu "Meu Perfil" agora destaca seus maiores recordes: Maior Contrato Pago, Melhor Mês de Produção e Comissões Acumuladas.</p>
+                            </div>
+                            <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Share2 className="h-4 w-4 text-purple-600" />
+                                    <h4 className="font-bold">Assinatura Profissional</h4>
+                                </div>
+                                <p className="text-xs text-muted-foreground">Gere assinaturas automáticas para E-mail e WhatsApp com seus dados e a marca da LK RAMOS com um único clique.</p>
+                            </div>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+
+                {/* 6. AUTOMATIZAÇÕES DE ESTEIRA */}
                 <AccordionItem value="automations" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-purple-100 text-purple-600"><Bot className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">4. Automatizações de Esteira</p>
+                                <p className="font-bold text-sm">6. Automatizações de Esteira</p>
                                 <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Redução de Cliques e Digitação</p>
                             </div>
                         </div>
@@ -154,33 +215,13 @@ export default function ManualPage() {
                     </AccordionContent>
                 </AccordionItem>
 
-                {/* 5. GESTÃO DE CARTÕES */}
-                <AccordionItem value="card-management" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
-                    <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-blue-100 text-blue-600"><CreditCard className="h-5 w-5" /></div>
-                            <div className="text-left">
-                                <p className="font-bold text-sm">5. Gestão de Cartões (RMC/RCC)</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Saque Complementar e Campanhas</p>
-                            </div>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
-                        <p>Mapeamento cirúrgico para campanhas de saque complementar:</p>
-                        <ul className="list-disc pl-5 space-y-2 text-xs">
-                            <li><strong>Vínculo por NB</strong>: Cada benefício armazena seus bancos de reserva individualmente.</li>
-                            <li><strong>Filtros de Prospecção</strong>: Na tela de Clientes, use os filtros de banco RMC/RCC para isolar quem tem reserva em bancos específicos.</li>
-                        </ul>
-                    </AccordionContent>
-                </AccordionItem>
-
-                {/* 6. SEGURANÇA E BRANDING */}
+                {/* 7. SEGURANÇA E BRANDING */}
                 <AccordionItem value="branding-security" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-zinc-100 text-zinc-600"><ShieldCheck className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">6. Branding e Segurança V8</p>
+                                <p className="font-bold text-sm">7. Branding e Segurança V8</p>
                                 <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Identidade Visual e Blindagem de Dados</p>
                             </div>
                         </div>
@@ -211,12 +252,12 @@ export default function ManualPage() {
                         <p className="text-xs font-bold">CTRL + K</p>
                     </div>
                     <div className="space-y-1">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase">Recolher Menu</p>
-                        <p className="text-xs font-bold">CTRL + B</p>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase">Símbolos/Emojis</p>
+                        <p className="text-xs font-bold">Win + .</p>
                     </div>
                     <div className="space-y-1">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase">Exportar Backup</p>
-                        <p className="text-xs font-bold">Aba Dados & Backup</p>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase">Recolher Menu</p>
+                        <p className="text-xs font-bold">CTRL + B</p>
                     </div>
                 </CardContent>
             </Card>
@@ -231,7 +272,7 @@ export default function ManualPage() {
                         <span className="text-[10px] font-black uppercase">Blindagem Nuclear V8 Ativa</span>
                     </div>
                     <p className="text-[9px] text-muted-foreground mt-2 leading-tight">
-                        Versão 3.2.0 - Motor de Conciliação e Busca Nuclear aprimorados.
+                        Versão 3.5.0 - Motor de Tags e Marketing Pessoal integrados.
                     </p>
                 </CardContent>
             </Card>
