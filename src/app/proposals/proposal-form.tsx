@@ -1,4 +1,3 @@
-
 'use client';
 
 /**
@@ -350,7 +349,9 @@ export function ProposalForm({
         });
     }
 
-    finalData.history = proposal?.history ? [...proposal.history, ...auditEntries] : auditEntries;
+    // 🛡️ FIX: Garantindo que proposal.history seja um array antes do spread
+    const existingHistory = Array.isArray(proposal?.history) ? proposal!.history : [];
+    finalData.history = [...existingHistory, ...auditEntries];
     
     if (proposal?.status !== finalData.status) {
         finalData.statusUpdatedAt = now;
@@ -802,7 +803,7 @@ export function ProposalForm({
                             </Button>
                         </div>
                         <div className="space-y-3 max-h-[250px] overflow-y-auto">
-                            {proposal.history && proposal.history.length > 0 ? (
+                            {proposal.history && Array.isArray(proposal.history) && proposal.history.length > 0 ? (
                                 [...proposal.history].sort((a,b) => b.date.localeCompare(a.date)).map(entry => (
                                     <div key={entry.id} className={cn(
                                         "p-3 rounded-lg border text-xs transition-colors hover:bg-muted/50",
