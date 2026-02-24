@@ -6,10 +6,10 @@ import { PageHeader } from '@/components/page-header';
 import { CustomerDataTable, type CustomerDataTableHandle } from './data-table';
 import { getColumns } from './columns';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, FileDown, UserCheck, UserX, Trash2, Sparkles } from 'lucide-react';
+import { PlusCircle, FileDown, UserCheck, UserX, Trash2, Sparkles, Landmark, X } from 'lucide-react';
 import { CustomerForm } from './customer-form';
-import type { Customer } from '@/lib/types';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import type { Customer, UserSettings } from '@/lib/types';
+import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, doc, updateDoc, setDoc, query, where, writeBatch } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -36,11 +36,20 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getAge, cn } from '@/lib/utils';
+import { getAge, cn, cleanBankName } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { BankIcon } from '@/components/bank-icon';
+import * as configData from '@/lib/config-data';
 
 function CustomersPageContent() {
   const { user } = useUser();
@@ -57,25 +66,65 @@ function CustomersPageContent() {
   const [isSaving, setIsSaving] = React.useState(false);
   const tableRef = React.useRef<CustomerDataTableHandle>(null);
   const [filter, setFilter] = React.useState('active');
+  
+  // Filtros de Cartão
+  const [rmcFilter, setRmcFilter] = React.useState('all');
+  const [rccFilter, setRccFilter] = React.useState('all');
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid));
   }, [firestore, user]);
 
+  const settingsDocRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'userSettings', user.uid);
+  }, [firestore, user]);
+
   const { data: customers, isLoading: isCustomersLoading } = useCollection<Customer>(customersQuery);
+  const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
 
-  const activeCustomers = React.useMemo(() => {
-    return (customers || []).filter(c => c.name !== 'Cliente Removido' && (c.status !== 'inactive' && getAge(c.birthDate) < 75));
-  }, [customers]);
+  const banks = userSettings?.banks || configData.banks;
+  const showLogos = userSettings?.showBankLogos ?? true;
 
-  const inactiveCustomers = React.useMemo(() => {
-    return (customers || []).filter(c => c.name !== 'Cliente Removido' && (c.status === 'inactive' || getAge(c.birthDate) >= 75));
-  }, [customers]);
+  const filteredCustomers = React.useMemo(() => {
+    if (!customers) return [];
+    
+    return customers.filter(c => {
+        // Filtro de Anonimização
+        if (c.name === 'Cliente Removido') return false;
 
-  const displayedCustomers = React.useMemo(() => {
-    return filter === 'active' ? activeCustomers : inactiveCustomers;
-  }, [filter, activeCustomers, inactiveCustomers]);
+        // Filtro de Aba (Ativo/Inativo)
+        const age = getAge(c.birthDate);
+        const isStatusMatch = filter === 'active' 
+            ? (c.status !== 'inactive' && age < 75)
+            : (c.status === 'inactive' || age >= 75);
+        
+        if (!isStatusMatch) return false;
+
+        // Filtro de Banco RMC
+        if (rmcFilter !== 'all') {
+            const hasRmc = c.benefits?.some(b => b.rmcBank === rmcFilter);
+            if (!hasRmc) return false;
+        }
+
+        // Filtro de Banco RCC
+        if (rccFilter !== 'all') {
+            const hasRcc = c.benefits?.some(b => b.rccBank === rccFilter);
+            if (!hasRcc) return false;
+        }
+
+        return true;
+    });
+  }, [customers, filter, rmcFilter, rccFilter]);
+
+  const activeCount = React.useMemo(() => 
+    (customers || []).filter(c => c.name !== 'Cliente Removido' && (c.status !== 'inactive' && getAge(c.birthDate) < 75)).length,
+  [customers]);
+
+  const inactiveCount = React.useMemo(() => 
+    (customers || []).filter(c => c.name !== 'Cliente Removido' && (c.status === 'inactive' || getAge(c.birthDate) >= 75)).length,
+  [customers]);
 
   const handleNewCustomer = React.useCallback(() => {
     setSelectedCustomer(undefined);
@@ -84,14 +133,14 @@ function CustomersPageContent() {
     setIsDialog(true);
   }, []);
 
-  const selectedCount = React.useMemo(() => Object.keys(rowSelection).length, [rowSelection]);
+  const selectedCount = React.useMemo(() => Object.keys(rowSelection).filter(id => rowSelection[id]).length, [rowSelection]);
 
   const handleBulkAnonymize = async () => {
     if (!firestore || !user || selectedCount === 0) return;
     setIsSaving(true);
     try {
         const batch = writeBatch(firestore);
-        const selectedIds = Object.keys(rowSelection);
+        const selectedIds = Object.keys(rowSelection).filter(id => rowSelection[id]);
         
         selectedIds.forEach(id => {
             const docRef = doc(firestore, 'customers', id);
@@ -270,32 +319,82 @@ function CustomersPageContent() {
         </div>
       </div>
 
-      <Tabs value={filter} onValueChange={setFilter} className="mb-6">
-        <TabsList className="bg-transparent p-0 flex w-fit gap-3">
-          <TabsTrigger 
-            value="active" 
-            className={cn(
-                "gap-2 rounded-full font-bold px-6 h-9 transition-all border border-border/50 text-xs",
-                "data-[state=active]:bg-green-50 data-[state=active]:text-green-600 data-[state=active]:border-green-200"
-            )}
-          >
-            <UserCheck className="h-3.5 w-3.5" />
-            Ativos
-            <Badge variant="secondary" className="bg-green-100 text-green-700 ml-1.5 h-5 min-w-[20px] p-0 flex items-center justify-center rounded-full border-none text-[10px] font-black">{activeCustomers.length}</Badge>
-          </TabsTrigger>
-          <TabsTrigger 
-            value="inactive" 
-            className={cn(
-                "gap-2 rounded-full font-bold px-6 h-9 transition-all border border-border/50 text-xs",
-                "data-[state=active]:bg-zinc-100 data-[state=active]:text-zinc-600 data-[state=active]:border-zinc-300"
-            )}
-          >
-            <UserX className="h-3.5 w-3.5" />
-            Inativos
-            <Badge variant="secondary" className="bg-zinc-200 text-zinc-700 ml-1.5 h-5 min-w-[20px] p-0 flex items-center justify-center rounded-full border-none text-[10px] font-black">{inactiveCustomers.length}</Badge>
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6 bg-muted/10 p-3 rounded-2xl border border-border/50 shadow-sm">
+        <Tabs value={filter} onValueChange={setFilter} className="shrink-0">
+            <TabsList className="bg-background/50 p-1 flex w-fit gap-2 border shadow-inner rounded-full h-11">
+            <TabsTrigger 
+                value="active" 
+                className={cn(
+                    "gap-2 rounded-full font-bold px-6 h-9 transition-all text-xs",
+                    "data-[state=active]:bg-green-500 data-[state=active]:text-white shadow-none"
+                )}
+            >
+                <UserCheck className="h-3.5 w-3.5" />
+                Ativos
+                <Badge variant="secondary" className="bg-white/20 text-white border-none ml-1.5 h-5 min-w-[20px] p-0 flex items-center justify-center rounded-full text-[10px] font-black">{activeCount}</Badge>
+            </TabsTrigger>
+            <TabsTrigger 
+                value="inactive" 
+                className={cn(
+                    "gap-2 rounded-full font-bold px-6 h-9 transition-all text-xs",
+                    "data-[state=active]:bg-zinc-600 data-[state=active]:text-white shadow-none"
+                )}
+            >
+                <UserX className="h-3.5 w-3.5" />
+                Inativos
+                <Badge variant="secondary" className="bg-white/20 text-white border-none ml-1.5 h-5 min-w-[20px] p-0 flex items-center justify-center rounded-full text-[10px] font-black">{inactiveCount}</Badge>
+            </TabsTrigger>
+            </TabsList>
+        </Tabs>
+
+        <div className="flex items-center gap-3 flex-1 justify-end flex-wrap">
+            <div className="flex items-center gap-2">
+                <Select value={rmcFilter} onValueChange={setRmcFilter}>
+                    <SelectTrigger className="h-10 min-w-[180px] bg-background rounded-full text-[10px] font-black uppercase px-5 border-orange-200 text-orange-600 shadow-sm hover:bg-orange-50 transition-colors">
+                        <div className="flex items-center gap-2">
+                            <Landmark className="h-3.5 w-3.5 opacity-50" />
+                            <SelectValue placeholder="BANCO RMC" />
+                        </div>
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-2">
+                        <SelectItem value="all" className="font-black text-[10px] uppercase">Todos os Bancos RMC</SelectItem>
+                        {banks.map(b => (
+                            <SelectItem key={b} value={b} className="font-bold text-[11px] uppercase">
+                                <div className="flex items-center gap-3">
+                                    <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogo={showLogos} className="h-4 w-4" />
+                                    <span>{cleanBankName(b)}</span>
+                                </div>
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+                {rmcFilter !== 'all' && <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-orange-600" onClick={() => setRmcFilter('all')}><X className="h-4 w-4" /></Button>}
+            </div>
+
+            <div className="flex items-center gap-2">
+                <Select value={rccFilter} onValueChange={setRccFilter}>
+                    <SelectTrigger className="h-10 min-w-[180px] bg-background rounded-full text-[10px] font-black uppercase px-5 border-blue-200 text-blue-600 shadow-sm hover:bg-blue-50 transition-colors">
+                        <div className="flex items-center gap-2">
+                            <Landmark className="h-3.5 w-3.5 opacity-50" />
+                            <SelectValue placeholder="BANCO RCC" />
+                        </div>
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-2">
+                        <SelectItem value="all" className="font-black text-[10px] uppercase">Todos os Bancos RCC</SelectItem>
+                        {banks.map(b => (
+                            <SelectItem key={b} value={b} className="font-bold text-[11px] uppercase">
+                                <div className="flex items-center gap-3">
+                                    <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogo={showLogos} className="h-4 w-4" />
+                                    <span>{cleanBankName(b)}</span>
+                                </div>
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+                {rccFilter !== 'all' && <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-blue-600" onClick={() => setRccFilter('all')}><X className="h-4 w-4" /></Button>}
+            </div>
+        </div>
+      </div>
 
       <Dialog open={isDialog} onOpenChange={setIsDialog}>
         <DialogContent 
@@ -309,6 +408,7 @@ function CustomersPageContent() {
             onSubmit={handleFormSubmit}
             customer={selectedCustomer}
             allCustomers={customers || []}
+            userSettings={userSettings}
             defaultValues={defaultValues}
             isSaving={isSaving}
           />
@@ -317,7 +417,7 @@ function CustomersPageContent() {
 
       <CustomerDataTable 
         columns={columns} 
-        data={displayedCustomers} 
+        data={filteredCustomers} 
         isLoading={isCustomersLoading}
         rowSelection={rowSelection}
         setRowSelection={setRowSelection}
