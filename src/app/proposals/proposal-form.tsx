@@ -349,7 +349,6 @@ export function ProposalForm({
         });
     }
 
-    // 🛡️ FIX: Garantindo que proposal.history seja um array antes do spread
     const existingHistory = Array.isArray(proposal?.history) ? proposal!.history : [];
     finalData.history = [...existingHistory, ...auditEntries];
     
@@ -465,7 +464,7 @@ export function ProposalForm({
                     {[
                         { id: 'formalization', label: 'Formalização', icon: Send },
                         { id: 'documentation', label: 'Documentos', icon: FileCheck },
-                        { id: 'signature', label: 'Assinatura', icon: PenTool },
+                        { id: 'signature', label: 'Outro', icon: PenTool },
                         { id: 'approval', label: 'Averbação', icon: ShieldCheck }
                     ].map((step) => (
                         <Button
