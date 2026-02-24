@@ -8,11 +8,18 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
+const BenefitFromImageSchema = z.object({
+    number: z.string().optional().describe('Número do benefício INSS.'),
+    species: z.string().optional().describe('Espécie do benefício.'),
+    rmcBank: z.string().optional().describe('Banco da reserva RMC identificado.'),
+    rccBank: z.string().optional().describe('Banco da reserva RCC identificado.'),
+});
+
 const ExtractFromImageOutputSchema = z.object({
     name: z.string().optional().describe('Nome completo do cliente.'),
     cpf: z.string().optional().describe('CPF formatado 000.000.000-00.'),
     birthDate: z.string().optional().describe('Data de nascimento no formato YYYY-MM-DD.'),
-    benefitNumber: z.string().optional().describe('Número do benefício INSS principal.'),
+    benefits: z.array(BenefitFromImageSchema).optional().describe('Lista de benefícios e cartões identificados no extrato ou documento.'),
     city: z.string().optional().describe('Cidade do endereço.'),
     state: z.string().optional().describe('Estado (UF) do endereço.'),
     phone: z.string().optional().describe('Telefone de contato encontrado.'),
@@ -36,14 +43,13 @@ const extractDataFromImageFlow = ai.defineFlow(
     const { output } = await ai.generate({
       prompt: [
         { text: `Você é um assistente de elite para correspondentes bancários.
-        Sua tarefa é ler esta imagem (que pode ser um RG, CNH, Comprovante de Residência ou Extrato de Empréstimos) e extrair os dados do cliente para um JSON estruturado.
+        Analise esta imagem (RG, CNH, Extrato de Empréstimos ou Ficha) e extraia os dados estruturados.
         
         REGRAS:
-        1. Identifique Nome, CPF e Data de Nascimento com prioridade.
-        2. Se houver número de benefício (NB), extraia-o.
+        1. Identifique Nome, CPF e Nascimento.
+        2. EXTRATOS: Se houver lista de benefícios ou reservas de cartão (RMC/RCC), mapeie os bancos correspondentes para cada NB.
         3. Formate a data de nascimento como YYYY-MM-DD.
-        4. Se não encontrar um campo, deixe-o vazio.
-        5. Seja preciso nos caracteres para evitar erros de digitação.` },
+        4. Seja preciso nos caracteres para evitar erros de digitação.` },
         { media: { url: input.photoDataUri, contentType: 'image/jpeg' } }
       ],
       output: { schema: ExtractFromImageOutputSchema }
