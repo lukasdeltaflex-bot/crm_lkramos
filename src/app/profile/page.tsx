@@ -5,13 +5,32 @@ import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProfileForm } from './profile-form';
-import { useFirebase, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
-import type { UserProfile } from '@/lib/types';
+import { useFirebase, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { doc, setDoc, query, collection, where } from 'firebase/firestore';
+import type { UserProfile, Proposal } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { updateEmail } from 'firebase/auth';
-import { cleanFirestoreData } from '@/lib/utils';
+import { cleanFirestoreData, formatCurrency } from '@/lib/utils';
+import { Trophy, Star, Crown, Medal, TrendingUp, Wallet, Target } from 'lucide-react';
+import { startOfMonth, format, parseISO, isValid } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
+const RecordCard = ({ title, value, subValue, icon: Icon, colorClass }: any) => (
+    <Card className="relative overflow-hidden border-2 bg-card/50 shadow-sm transition-all hover:scale-[1.02] hover:shadow-md">
+        <div className={`absolute top-0 left-0 w-1 h-full ${colorClass}`} />
+        <CardContent className="p-5 flex items-center gap-4">
+            <div className={`p-3 rounded-2xl bg-muted/50 ${colorClass.replace('bg-', 'text-')}`}>
+                <Icon className="h-6 w-6" />
+            </div>
+            <div className="space-y-0.5 overflow-hidden">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{title}</p>
+                <p className="text-xl font-black text-foreground truncate">{value}</p>
+                {subValue && <p className="text-[9px] font-bold text-muted-foreground uppercase opacity-60 truncate">{subValue}</p>}
+            </div>
+        </CardContent>
+    </Card>
+);
 
 export default function ProfilePage() {
     const { user, auth, isUserLoading } = useFirebase();
@@ -22,8 +41,52 @@ export default function ProfilePage() {
         return doc(firestore, 'users', user.uid);
     }, [firestore, user]);
 
+    const proposalsQuery = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid));
+    }, [firestore, user]);
+
     const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileDocRef);
+    const { data: proposals, isLoading: isProposalsLoading } = useCollection<Proposal>(proposalsQuery);
     
+    const achievements = React.useMemo(() => {
+        if (!proposals) return null;
+
+        const paidProposals = proposals.filter(p => p.status === 'Pago' || p.status === 'Saldo Pago');
+        
+        // 1. Maior Contrato
+        const biggestOne = [...paidProposals].sort((a,b) => (b.grossAmount || 0) - (a.grossAmount || 0))[0];
+
+        // 2. Comissões Totais
+        const totalCommissions = proposals.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
+
+        // 3. Volume Total Pago
+        const totalVolume = paidProposals.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
+
+        // 4. Recorde Mensal (Volume)
+        const monthlyStats: Record<string, { volume: number, label: string }> = {};
+        paidProposals.forEach(p => {
+            if (!p.dateDigitized) return;
+            const d = parseISO(p.dateDigitized);
+            if (!isValid(d)) return;
+            const key = format(d, 'yyyy-MM');
+            const label = format(d, 'MMMM/yyyy', { locale: ptBR });
+            if (!monthlyStats[key]) monthlyStats[key] = { volume: 0, label };
+            monthlyStats[key].volume += (p.grossAmount || 0);
+        });
+
+        const bestMonth = Object.values(monthlyStats).sort((a,b) => b.volume - a.volume)[0];
+
+        return {
+            biggest: biggestOne?.grossAmount || 0,
+            biggestDate: biggestOne?.dateDigitized ? format(parseISO(biggestOne.dateDigitized), 'dd/MM/yyyy') : null,
+            totalCommissions,
+            totalVolume,
+            bestMonth: bestMonth?.volume || 0,
+            bestMonthLabel: bestMonth?.label || '---'
+        };
+    }, [proposals]);
+
     const handleProfileUpdate = async (data: Partial<UserProfile>) => {
         if (!user || !auth || !userProfileDocRef) {
              toast({
@@ -34,13 +97,10 @@ export default function ProfilePage() {
             return;
         }
 
-        // 🛡️ HIGIENE DE LOGIN: Limpa espaços em branco no e-mail
         const emailToUpdate = data.email?.trim();
 
-        // Check if email is being changed
         if (emailToUpdate && emailToUpdate !== user.email) {
             try {
-                // First, try to update the sensitive auth email
                 await updateEmail(user, emailToUpdate);
             } catch (error: any) {
                 console.error("Error updating email:", error);
@@ -55,7 +115,7 @@ export default function ProfilePage() {
                     title: 'Falha na atualização do e-mail',
                     description: description,
                 });
-                return; // IMPORTANT: Stop execution to prevent partial update
+                return;
             }
         }
         
@@ -79,37 +139,93 @@ export default function ProfilePage() {
         }
     };
 
-    const isLoading = isUserLoading || isProfileLoading;
+    const isLoading = isUserLoading || isProfileLoading || isProposalsLoading;
 
     return (
         <AppLayout>
-            <PageHeader title="Meu Perfil" />
-            <Card>
-                <CardHeader>
-                    <CardTitle>Informações Pessoais</CardTitle>
-                    <CardDescription>
-                        Gerencie suas informações pessoais e como você é exibido no sistema.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {isLoading ? (
-                         <div className="space-y-4">
-                            <div className="flex items-center space-x-4">
-                                <Skeleton className="h-24 w-24 rounded-full" />
-                                <div className="space-y-2">
-                                    <Skeleton className="h-4 w-[250px]" />
-                                    <Skeleton className="h-4 w-[200px]" />
+            <div className="flex items-center justify-between mb-8">
+                <PageHeader title="Meu Perfil" />
+                <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-full border border-primary/10">
+                    <Crown className="h-4 w-4 text-primary animate-pulse" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-primary">Agente de Elite LK RAMOS</span>
+                </div>
+            </div>
+
+            <div className="space-y-10 pb-20">
+                {/* 🏆 HALL DA FAMA - RECORDES */}
+                <div className="space-y-4">
+                    <h3 className="text-sm font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
+                        <Trophy className="h-4 w-4" /> Hall da Fama Profissional
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {isLoading ? (
+                            Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-xl" />)
+                        ) : (
+                            <>
+                                <RecordCard 
+                                    title="Maior Contrato Pago" 
+                                    value={formatCurrency(achievements?.biggest || 0)} 
+                                    subValue={achievements?.biggestDate ? `Batido em: ${achievements.biggestDate}` : "Aguardando recorde"}
+                                    icon={Crown} 
+                                    colorClass="bg-amber-500"
+                                />
+                                <RecordCard 
+                                    title="Recorde de Produção Mensal" 
+                                    value={formatCurrency(achievements?.bestMonth || 0)} 
+                                    subValue={`Referência: ${achievements?.bestMonthLabel}`}
+                                    icon={Star} 
+                                    colorClass="bg-blue-500"
+                                />
+                                <RecordCard 
+                                    title="Volume Total de Negócios" 
+                                    value={formatCurrency(achievements?.totalVolume || 0)} 
+                                    subValue="Somatória de operações pagas"
+                                    icon={TrendingUp} 
+                                    colorClass="bg-emerald-500"
+                                />
+                                <RecordCard 
+                                    title="Comissões Acumuladas" 
+                                    value={formatCurrency(achievements?.totalCommissions || 0)} 
+                                    subValue="Ganho líquido total no sistema"
+                                    icon={Wallet} 
+                                    colorClass="bg-purple-500"
+                                />
+                            </>
+                        )}
+                    </div>
+                </div>
+
+                {/* FORMULÁRIO DE PERFIL */}
+                <Card className="border-border/50 shadow-lg rounded-2xl overflow-hidden">
+                    <CardHeader className="bg-muted/10 border-b border-border/50">
+                        <CardTitle className="text-xl font-bold flex items-center gap-2">
+                            <Medal className="h-5 w-5 text-primary" />
+                            Informações Pessoais
+                        </CardTitle>
+                        <CardDescription>
+                            Gerencie suas informações de acesso e como você é exibido para a equipe.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-8">
+                        {isLoading ? (
+                            <div className="space-y-4">
+                                <div className="flex items-center space-x-4">
+                                    <Skeleton className="h-24 w-24 rounded-full" />
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-4 w-[250px]" />
+                                        <Skeleton className="h-4 w-[200px]" />
+                                    </div>
                                 </div>
+                                <Skeleton className="h-10 w-full" />
+                                <Skeleton className="h-10 w-full" />
+                                <Skeleton className="h-10 w-full" />
                             </div>
-                            <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-10 w-full" />
-                         </div>
-                    ) : (
-                        <ProfileForm userProfile={userProfile} onSubmit={handleProfileUpdate} />
-                    )}
-                </CardContent>
-            </Card>
+                        ) : (
+                            <ProfileForm userProfile={userProfile} onSubmit={handleProfileUpdate} />
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
         </AppLayout>
     );
 }
