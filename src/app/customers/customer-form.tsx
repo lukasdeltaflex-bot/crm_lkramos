@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -41,11 +42,12 @@ import {
     MapPin,
     Home,
     Map,
-    Hash
+    Hash,
+    CreditCard as CardIcon
 } from 'lucide-react';
 import { format, parse, isValid, differenceInYears } from 'date-fns';
-import { validateCPF, handlePhoneMask, cn, isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
-import type { Customer } from '@/lib/types';
+import { validateCPF, handlePhoneMask, cn, isWhatsApp, getWhatsAppUrl, cleanBankName } from '@/lib/utils';
+import type { Customer, UserSettings } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { useEffect, useState, useMemo, useCallback } from 'react';
@@ -56,10 +58,17 @@ import { CustomerAttachmentUploader } from '@/components/customers/customer-atta
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { summarizeNotes } from '@/ai/flows/summarize-notes-flow';
 import { useUser } from '@/firebase';
+import { BankIcon } from '@/components/bank-icon';
+import * as configData from '@/lib/config-data';
 
 const benefitSchema = z.object({
     number: z.string().min(1, "O Nº do benefício é obrigatório."),
     species: z.string().nullable().optional(),
+});
+
+const cardSchema = z.object({
+    type: z.enum(['RMC', 'RCC']),
+    bank: z.string().min(1, "O banco do cartão é obrigatório."),
 });
 
 const attachmentSchema = z.object({
@@ -77,6 +86,7 @@ const customerSchema = z.object({
   gender: z.string().default(""),
   status: z.enum(['active', 'inactive']).default('active'),
   benefits: z.array(benefitSchema).optional(),
+  cards: z.array(cardSchema).optional(),
   phone: z.string().min(10, 'O telefone principal é obrigatório.'),
   phone2: z.string().nullable().optional(),
   email: z.string().email('E-mail inválido.').or(z.literal('')).nullable().optional(),
@@ -106,15 +116,19 @@ type FormCustomer = Omit<Customer, 'id' | 'ownerId' | 'numericId'>;
 interface CustomerFormProps {
   customer?: Customer;
   allCustomers: Customer[];
+  userSettings?: UserSettings | null;
   defaultValues?: any;
   onSubmit: (data: FormCustomer) => void;
   isSaving?: boolean;
 }
 
-export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, isSaving = false }: CustomerFormProps) {
+export function CustomerForm({ customer, allCustomers, userSettings, defaultValues, onSubmit, isSaving = false }: CustomerFormProps) {
   const { user } = useUser();
   const [isFetchingCep, setIsFetchingCep] = useState(false);
   const [isSummarizing, setIsSummarizing] = useState(false);
+
+  const banks = userSettings?.banks || configData.banks;
+  const showLogos = userSettings?.showBankLogos ?? true;
 
   const initialValues = useMemo(() => {
     const source = customer || defaultValues;
@@ -135,6 +149,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       gender: source?.gender || '',
       status: source?.status || 'active',
       benefits: source?.benefits || [],
+      cards: source?.cards || [],
       phone: source?.phone || '',
       phone2: source?.phone2 || '',
       email: source?.email || '',
@@ -157,9 +172,14 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     defaultValues: initialValues,
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields: benefitFields, append: appendBenefit, remove: removeBenefit } = useFieldArray({
     control: form.control,
     name: "benefits"
+  });
+
+  const { fields: cardFields, append: appendCard, remove: removeCard } = useFieldArray({
+    control: form.control,
+    name: "cards"
   });
 
   const watchPhone = form.watch('phone');
@@ -192,7 +212,6 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
     return results;
   }, [allCustomers, watchPhone, watchCpf, customer?.id, defaultValues?.id]);
 
-  // Alerta de CPF Duplicado
   useEffect(() => {
     if (duplicity.cpf && watchCpf.length === 14) {
         toast({
@@ -263,6 +282,7 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
       gender: data.gender as any,
       birthDate: format(parsedDate, 'yyyy-MM-dd'),
       benefits: data.benefits || [],
+      cards: data.cards || [],
       documents: data.documents || [],
     };
     onSubmit(newCustomerData);
@@ -485,12 +505,12 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                     <h3 className="text-xl font-bold uppercase tracking-tight text-[#00AEEF]">
                         Benefícios INSS
                     </h3>
-                    <Button type="button" variant="outline" size="sm" onClick={() => append({ number: '', species: '' })} className="rounded-full h-9 px-5 border-[#00AEEF]/30 hover:bg-[#00AEEF]/5 text-[#00AEEF] font-bold">
+                    <Button type="button" variant="outline" size="sm" onClick={() => appendBenefit({ number: '', species: '' })} className="rounded-full h-9 px-5 border-[#00AEEF]/30 hover:bg-[#00AEEF]/5 text-[#00AEEF] font-bold">
                         <PlusCircle className="h-4 w-4 mr-2" /> Adicionar NB
                     </Button>
                 </div>
                 <div className="space-y-4">
-                    {fields.map((field, index) => (
+                    {benefitFields.map((field, index) => (
                         <div key={field.id} className="flex gap-4 items-end animate-in fade-in slide-in-from-left-2">
                             <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField
@@ -518,11 +538,90 @@ export function CustomerForm({ customer, allCustomers, defaultValues, onSubmit, 
                                     )}
                                 />
                             </div>
-                            <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="text-red-400 h-10 w-10 hover:bg-red-50 rounded-full">
+                            <Button type="button" variant="ghost" size="icon" onClick={() => removeBenefit(index)} className="text-red-400 h-10 w-10 hover:bg-red-50 rounded-full">
                                 <Trash2 className="h-4 w-4" />
                             </Button>
                         </div>
                     ))}
+                </div>
+            </div>
+
+            <div className="h-px bg-zinc-100" />
+
+            <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-bold uppercase tracking-tight text-[#00AEEF]">
+                        Cartões Consignados (RMC/RCC)
+                    </h3>
+                    <Button type="button" variant="outline" size="sm" onClick={() => appendCard({ type: 'RMC', bank: '' })} className="rounded-full h-9 px-5 border-[#00AEEF]/30 hover:bg-[#00AEEF]/5 text-[#00AEEF] font-bold">
+                        <PlusCircle className="h-4 w-4 mr-2" /> Vincular Cartão
+                    </Button>
+                </div>
+                <div className="space-y-4">
+                    {cardFields.map((field, index) => (
+                        <div key={field.id} className="flex gap-4 items-end animate-in fade-in slide-in-from-left-2 p-4 bg-muted/5 rounded-2xl border border-border/40">
+                            <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name={`cards.${index}.type`}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-[10px] font-bold uppercase opacity-40 flex items-center gap-2">
+                                                Tipo de Reserva
+                                            </FormLabel>
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger className="rounded-full h-10 border-zinc-200 font-black text-[10px] uppercase">
+                                                        <SelectValue placeholder="Selecione" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="RMC" className="text-[10px] font-black uppercase">Cartão RMC</SelectItem>
+                                                    <SelectItem value="RCC" className="text-[10px] font-black uppercase">Cartão RCC (Benefício)</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name={`cards.${index}.bank`}
+                                    render={({ field }) => (
+                                        <FormItem className="md:col-span-2">
+                                            <FormLabel className="text-[10px] font-bold uppercase opacity-40 flex items-center gap-2">
+                                                Banco Emissor / Portador
+                                            </FormLabel>
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger className="rounded-full h-10 border-zinc-200 font-bold text-sm">
+                                                        <SelectValue placeholder="Selecione o Banco" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {banks.map(b => (
+                                                        <SelectItem key={b} value={b}>
+                                                            <div className="flex items-center gap-2">
+                                                                <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogo={showLogos} className="h-4 w-4" />
+                                                                <span>{cleanBankName(b)}</span>
+                                                            </div>
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                            <Button type="button" variant="ghost" size="icon" onClick={() => removeCard(index)} className="text-red-400 h-10 w-10 hover:bg-red-50 rounded-full">
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    ))}
+                    {cardFields.length === 0 && (
+                        <div className="py-6 text-center border-2 border-dashed rounded-2xl opacity-20 text-[10px] font-black uppercase tracking-widest">
+                            Nenhum cartão ou reserva cadastrada
+                        </div>
+                    )}
                 </div>
             </div>
 

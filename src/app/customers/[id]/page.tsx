@@ -1,3 +1,4 @@
+
 'use client';
 import React from 'react';
 import { useParams } from 'next/navigation';
@@ -5,7 +6,7 @@ import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
 import { useDoc, useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { doc, collection, query, where, updateDoc } from 'firebase/firestore';
-import type { Customer, Proposal } from '@/lib/types';
+import type { Customer, Proposal, UserSettings } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
     User, 
@@ -31,12 +32,13 @@ import {
     Home,
     Map,
     Mail,
-    CreditCard
+    CreditCard,
+    CreditCard as CardIcon
 } from 'lucide-react';
 import { format, parse, differenceInMonths, isValid as isValidDate } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { formatCurrency, getAge, cn, getWhatsAppUrl, isWhatsApp, formatDateSafe } from '@/lib/utils';
+import { formatCurrency, getAge, cn, getWhatsAppUrl, isWhatsApp, formatDateSafe, cleanBankName } from '@/lib/utils';
 import { SimpleProposalsTable } from '@/components/customers/simple-proposals-table';
 import { CustomerAiSummary } from '@/components/customers/customer-ai-summary';
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
@@ -54,6 +56,7 @@ import {
 import { generateSalesPitch } from '@/ai/flows/generate-sales-pitch-flow';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { ProposalsStatusTable } from '@/components/dashboard/proposals-status-table';
+import { BankIcon } from '@/components/bank-icon';
 
 const CopyButton = ({ text, label }: { text: string | undefined; label: string }) => {
     if (!text) return null;
@@ -69,9 +72,11 @@ const CopyButton = ({ text, label }: { text: string | undefined; label: string }
     );
 }
 
-const CustomerInfoCard = ({ customer, onExportDossier, onToggleStatus, onGeneratePitch }: any) => {
+const CustomerInfoCard = ({ customer, onExportDossier, onToggleStatus, onGeneratePitch, userSettings }: any) => {
     const age = getAge(customer.birthDate);
     const isInactive = customer.status === 'inactive';
+    const showLogos = userSettings?.showBankLogos ?? true;
+
     return (
         <Card className={cn("transition-all overflow-hidden border-none shadow-none", isInactive ? "opacity-80 grayscale-[0.5]" : "bg-card")}>
             <CardHeader className="px-0 pb-8">
@@ -85,11 +90,10 @@ const CustomerInfoCard = ({ customer, onExportDossier, onToggleStatus, onGenerat
                                     <CopyButton text={customer.name} label="Nome" />
                                 </div>
                                 <Badge 
-                                    variant={isInactive ? "secondary" : "default"} 
                                     className={cn(
                                         "rounded-full px-3 py-0.5 font-black uppercase text-[10px] tracking-widest border-2 transition-all",
                                         isInactive 
-                                            ? "bg-zinc-100 text-zinc-500 border-zinc-200 dark:bg-zinc-800/50 dark:text-zinc-400 dark:border-zinc-700" 
+                                            ? "bg-zinc-500 text-white border-zinc-600 shadow-sm" 
                                             : "bg-emerald-500 text-white border-emerald-600 shadow-sm hover:bg-emerald-600"
                                     )}
                                 >
@@ -144,6 +148,41 @@ const CustomerInfoCard = ({ customer, onExportDossier, onToggleStatus, onGenerat
                             ))
                         ) : (
                             <div className="col-span-full p-8 text-center border-2 border-dashed rounded-2xl opacity-30 text-[10px] font-black uppercase tracking-[0.3em]">Nenhum benefício vinculado</div>
+                        )}
+                    </div>
+                </div>
+
+                {/* SEÇÃO 1.2: CARTÕES RMC/RCC */}
+                <div className="space-y-6 pt-8 border-t border-border/40">
+                    <h4 className="font-black text-[11px] uppercase tracking-[0.25em] text-[#00AEEF] flex items-center gap-2">
+                        <CardIcon className="h-4 w-4" /> Cartões e Reservas (RMC/RCC)
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {customer.cards && customer.cards.length > 0 ? (
+                            customer.cards.map((card: any, idx: number) => (
+                                <div key={idx} className="p-4 rounded-2xl bg-primary/[0.03] border border-primary/10 flex flex-col gap-3 transition-all hover:bg-primary/[0.05] hover:border-primary/20">
+                                    <div className="flex items-center justify-between">
+                                        <Badge variant="outline" className={cn(
+                                            "text-[10px] font-black px-2 py-0 h-5 border-2",
+                                            card.type === 'RMC' ? "bg-orange-50 text-orange-600 border-orange-200" : "bg-blue-50 text-blue-600 border-blue-200"
+                                        )}>
+                                            {card.type}
+                                        </Badge>
+                                        <BankIcon 
+                                            bankName={card.bank} 
+                                            domain={userSettings?.bankDomains?.[card.bank]} 
+                                            showLogo={showLogos} 
+                                            className="h-5 w-5" 
+                                        />
+                                    </div>
+                                    <div className="space-y-0.5">
+                                        <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Banco Emissor</span>
+                                        <p className="font-bold text-xs text-foreground truncate">{cleanBankName(card.bank)}</p>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="col-span-full p-8 text-center border-2 border-dashed rounded-2xl opacity-30 text-[10px] font-black uppercase tracking-[0.3em]">Nenhuma reserva de cartão identificada</div>
                         )}
                     </div>
                 </div>
@@ -216,9 +255,11 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
 
   const customerDocRef = useMemoFirebase(() => customerId && firestore ? doc(firestore, 'customers', customerId) : null, [firestore, customerId]);
   const proposalsQuery = useMemoFirebase(() => user && firestore && customerId ? query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), where('customerId', '==', customerId)) : null, [firestore, user, customerId]);
+  const settingsDocRef = useMemoFirebase(() => user && firestore ? doc(firestore, 'userSettings', user.uid) : null, [firestore, user]);
 
   const { data: customer, isLoading: isCustomerLoading } = useDoc<Customer>(customerDocRef);
   const { data: proposals, isLoading: areProposalsLoading } = useCollection<Proposal>(proposalsQuery);
+  const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
 
   const businessStats = React.useMemo(() => {
     if (!proposals) return { count: 0, volume: 0, commission: 0, proposalsByCommission: [] };
@@ -367,7 +408,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
             <Alert className="bg-amber-50 border-amber-200 animate-in slide-in-from-top duration-500 rounded-2xl"><Sparkles className="h-5 w-5 text-amber-600" /><AlertTitle className="text-amber-800 font-bold uppercase">Oportunidade Identificada!</AlertTitle><AlertDescription className="text-amber-700 text-sm">Contratos pagos há mais de 12 meses. Momento ideal para Refinanciamento.</AlertDescription></Alert>
         )}
         
-        <CustomerInfoCard customer={customer} onExportDossier={handleExportDossier} onToggleStatus={handleToggleStatus} onGeneratePitch={handleGeneratePitch} />
+        <CustomerInfoCard customer={customer} onExportDossier={handleExportDossier} onToggleStatus={handleToggleStatus} onGeneratePitch={handleGeneratePitch} userSettings={userSettings} />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="cursor-pointer" onClick={() => setDialogData({ title: "Histórico Total de Contratos", proposals: proposals || [] })}>

@@ -20,6 +20,11 @@ export type ProposalHistoryEntry = {
 
 export type CustomerStatus = 'active' | 'inactive';
 
+export type CustomerCard = {
+  type: 'RMC' | 'RCC';
+  bank: string;
+};
+
 export type Customer = {
   id: string;
   numericId: number;
@@ -28,6 +33,7 @@ export type Customer = {
   gender?: 'Masculino' | 'Feminino';
   status?: CustomerStatus;
   benefits?: Benefit[];
+  cards?: CustomerCard[]; // Lista de cartões RMC/RCC
   phone: string;
   phone2?: string;
   email?: string;
