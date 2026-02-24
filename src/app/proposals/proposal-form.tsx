@@ -1,4 +1,3 @@
-
 'use client';
 
 /**
@@ -260,6 +259,7 @@ export function ProposalForm({
     return customers.find(c => c.id === selectedCustomerId);
   }, [customers, selectedCustomerId]);
 
+  // AUTOMATIZAÇÃO: Seleção de Benefício Único
   useEffect(() => {
     if (selectedCustomer) {
         const benefits = selectedCustomer.benefits || [];
@@ -268,6 +268,13 @@ export function ProposalForm({
         }
     }
   }, [selectedCustomer, setValue]);
+
+  // AUTOMATIZAÇÃO: Data de Digitação Vigente para Novas Propostas
+  useEffect(() => {
+    if (sheetMode === 'new' && !watch('dateDigitized')) {
+        setValue('dateDigitized', format(new Date(), 'dd/MM/yyyy'), { shouldValidate: true });
+    }
+  }, [sheetMode, setValue, watch]);
 
   useEffect(() => {
     if (selectedCustomerFromSearch) {
