@@ -1,4 +1,3 @@
-
 'use client';
 import React from 'react';
 import { useParams } from 'next/navigation';
@@ -152,7 +151,7 @@ const CustomerInfoCard = ({ customer, onExportDossier, onToggleStatus, onGenerat
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {customer.benefits && customer.benefits.length > 0 ? (
                             customer.benefits.map((benefit: any, idx: number) => (
-                                <div key={idx} className="p-6 rounded-3xl bg-muted/20 border border-border/50 space-y-6 transition-all hover:bg-muted/30">
+                                <div key={idx} className="p-7 rounded-3xl bg-muted/20 border border-border/50 space-y-7 transition-all hover:bg-muted/30">
                                     <div className="flex items-start justify-between">
                                         <div className="space-y-1">
                                             <span className="text-[8px] font-black text-primary/60 uppercase tracking-widest">Nº do Benefício</span>
@@ -162,9 +161,9 @@ const CustomerInfoCard = ({ customer, onExportDossier, onToggleStatus, onGenerat
                                             </div>
                                             <div className='flex items-center gap-2'>
                                                 {benefit.species && <span className="text-[10px] text-muted-foreground font-bold uppercase">{benefit.species}</span>}
-                                                {benefit.salary > 0 && (
+                                                {benefit.salary !== undefined && benefit.salary !== null && Number(benefit.salary) > 0 && (
                                                     <Badge variant="outline" className="h-5 bg-green-50 border-green-200 text-green-600 text-[9px] font-black uppercase">
-                                                        <CircleDollarSign className="h-2.5 w-2.5 mr-1" /> {formatCurrency(benefit.salary)}
+                                                        <CircleDollarSign className="h-2.5 w-2.5 mr-1" /> {formatCurrency(Number(benefit.salary))}
                                                     </Badge>
                                                 )}
                                             </div>
