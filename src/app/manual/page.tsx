@@ -8,23 +8,17 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { 
     Palette, 
     ShieldCheck, 
-    Wallet, 
     Bot,
     Camera,
     Sparkles,
     Search,
-    ListChecks,
     Zap,
     Layout,
     UserCheck,
     CloudSun,
     MessageSquareText,
-    Printer,
-    Timer,
     Check,
-    CreditCard,
     Landmark,
-    FileBadge,
     FileCheck2,
     Database,
     Binary,
@@ -269,11 +263,11 @@ export default function ManualPage() {
                     <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
                         <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
                             <h4 className="font-bold mb-2">Monitoramento de Performance</h4>
-                            <p className="text-xs text-muted-foreground">O Dashboard agora apresenta seus recordes do mês vigente em tempo real:</p>
+                            <p className="text-xs text-muted-foreground">O Dashboard apresenta seus recordes do mês vigente em tempo real para manter a motivação em alta:</p>
                             <ul className="mt-3 space-y-2">
                                 <li className="flex items-center gap-2 text-xs"><Trophy className="h-3 w-3 text-amber-600" /> <strong>Contrato Ouro</strong>: O maior valor de proposta paga até agora no mês.</li>
                                 <li className="flex items-center gap-2 text-xs"><Zap className="h-3 w-3 text-blue-600" /> <strong>Pico de Produção</strong>: O maior volume financeiro digitado em um único dia.</li>
-                                <li className="flex items-center gap-2 text-xs"><Star className="h-3 w-3 text-purple-600" /> <strong>Estrela da Base</strong>: O cliente que mais gerou volume de contratos PAGOS no período (Exibe Nome e Sobrenome).</li>
+                                <li className="flex items-center gap-2 text-xs"><Star className="h-3 w-3 text-purple-600" /> <strong>Estrela da Base</strong>: O cliente que mais gerou volume de contratos **PAGOS** no período (Exibe Nome e Sobrenome).</li>
                             </ul>
                         </div>
                     </AccordionContent>
@@ -292,20 +286,20 @@ export default function ManualPage() {
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
                         <div className="space-y-4">
-                            <p>Esta ferramenta transfere a digitação de dados básicos e o envio de documentos para o próprio cliente.</p>
+                            <p>Esta ferramenta transfere a digitação de dados básicos e o envio de documentos para o próprio cliente, garantindo 100% de precisão.</p>
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
                                     <h4 className="font-bold text-xs uppercase mb-2">Como usar o Link</h4>
-                                    <p className="text-xs text-muted-foreground">No Dashboard, clique em **"Copiar Link de Envio"**. Mande este link pelo WhatsApp para o interessado. Ele verá uma página com a sua logomarca para preencher os dados.</p>
+                                    <p className="text-xs text-muted-foreground">No Dashboard, logo abaixo dos Rankings, clique em **"Copiar Link de Envio"**. Mande este link pelo WhatsApp para o interessado. Ele verá uma página com a sua logomarca para preencher os dados.</p>
                                 </div>
                                 <div className="p-4 rounded-xl bg-green-500/5 border border-green-500/20">
                                     <h4 className="font-bold text-xs uppercase mb-2">Revisão e Aprovação</h4>
-                                    <p className="text-xs text-muted-foreground">Quando o cliente envia, um alerta aparece no seu Dashboard. Clique em **"Fichas Recebidas"**, veja as fotos do RG/Extrato e clique em **"Aprovar"** para criar o cliente automaticamente.</p>
+                                    <p className="text-xs text-muted-foreground">Quando o cliente envia, um alerta piscante aparece no seu Dashboard. Clique em **"Fichas Recebidas"**, veja as fotos do RG/Extrato e clique em **"Aprovar"** para criar o cliente automaticamente.</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 p-3 bg-muted/20 rounded-lg border-2 border-dashed">
                                 <ArrowRight className="h-4 w-4 text-primary" />
-                                <p className="text-[10px] font-black uppercase text-muted-foreground">Isso garante 100% de precisão nos dados e economiza tempo operacional precioso.</p>
+                                <p className="text-[10px] font-black uppercase text-muted-foreground">Isso economiza tempo operacional precioso e evita erros de digitação de CPF ou NB.</p>
                             </div>
                         </div>
                     </AccordionContent>
@@ -348,7 +342,7 @@ export default function ManualPage() {
                         <span className="text-[10px] font-black uppercase">Blindagem Nuclear Ativa</span>
                     </div>
                     <p className="text-[9px] text-muted-foreground mt-2 leading-tight">
-                        Versão 4.0.0 - Portal de Leads e Automação de Cadastro.
+                        Versão 4.1.0 - Dashboard Estratégico e Portal de Leads.
                     </p>
                 </CardContent>
             </Card>
