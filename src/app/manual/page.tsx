@@ -33,7 +33,8 @@ import {
     Share2,
     SmilePlus,
     Pencil,
-    Star
+    Star,
+    Cake
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -92,7 +93,7 @@ export default function ManualPage() {
                         <div className="space-y-4">
                             <div>
                                 <h4 className="font-bold mb-1">Score de Estrelas (Lucratividade)</h4>
-                                <p className="text-xs text-muted-foreground">Atribuído de 1 a 5 estrelas baseadas no **Lucro Líquido** gerado. Clientes 5 Estrelas são Diamante VIP (Mais de R$ 10.000 em comissões).</p>
+                                <p className="text-xs text-muted-foreground">Atribuído de 1 a 5 estrelas baseadas no **Lucro Líquido** gerado. Clientes 5 Estrelas são Diamante VIP (Mais de R$ 5.000 em comissões).</p>
                             </div>
                             <div className="p-4 rounded-xl bg-muted/20 border-2 border-dashed">
                                 <h4 className="font-bold mb-2">Smart Tags (Etiquetas de IA)</h4>
@@ -177,13 +178,32 @@ export default function ManualPage() {
                     </AccordionContent>
                 </AccordionItem>
 
-                {/* 6. CLASSIFICAÇÃO INTELIGENTE (TAGS) */}
+                {/* 6. AGENDA DE ANIVERSÁRIOS */}
+                <AccordionItem value="birthday-calendar" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
+                    <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-pink-100 text-pink-600"><Cake className="h-5 w-5" /></div>
+                            <div className="text-left">
+                                <p className="font-bold text-sm">6. Agenda de Aniversários Consolidada</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Planejamento Mensal de Relacionamento</p>
+                            </div>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
+                        <div className="p-4 rounded-xl bg-pink-500/5 border border-pink-500/20">
+                            <h4 className="font-bold mb-2">Visão Mensal de Parabéns</h4>
+                            <p className="text-xs text-muted-foreground">Acesse o menu <strong>"Aniversariantes"</strong> para ver o calendário completo do mês. Clique em qualquer nome para gerar uma mensagem personalizada com IA e enviar direto pelo WhatsApp.</p>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+
+                {/* 7. CLASSIFICAÇÃO INTELIGENTE (TAGS) */}
                 <AccordionItem value="tags-management" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-pink-100 text-pink-600"><Tags className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">6. Gestão de Relacionamento (Tags)</p>
+                                <p className="font-bold text-sm">7. Gestão de Relacionamento (Tags)</p>
                                 <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Segmentação e Símbolos Visuais</p>
                             </div>
                         </div>
@@ -203,13 +223,13 @@ export default function ManualPage() {
                     </AccordionContent>
                 </AccordionItem>
 
-                {/* 7. MARKETING PESSOAL E PERFORMANCE */}
+                {/* 8. MARKETING PESSOAL E PERFORMANCE */}
                 <AccordionItem value="personal-branding" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-purple-100 text-purple-600"><UserCheck className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">7. Perfil de Elite e Autoridade</p>
+                                <p className="font-bold text-sm">8. Perfil de Elite e Autoridade</p>
                                 <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Recordes e Identidade Profissional</p>
                             </div>
                         </div>
