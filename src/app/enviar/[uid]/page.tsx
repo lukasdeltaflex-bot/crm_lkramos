@@ -32,7 +32,7 @@ import {
     AlertTriangle
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { validateCPF, handlePhoneMask, cleanFirestoreData } from '@/lib/utils';
+import { validateCPF, handlePhoneMask, cleanFirestoreData, cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
@@ -125,7 +125,7 @@ export default function LeadCapturePage() {
 
     setIsUploading(true);
     const newAttachments: Attachment[] = [...attachments];
-    const MAX_SIZE = 15 * 1024 * 1024;
+    const MAX_SIZE = 15 * 1024 * 1024; // Atualizado para 15MB conforme solicitado
 
     for (const file of Array.from(files)) {
         if (file.size > MAX_SIZE) {
@@ -390,7 +390,7 @@ export default function LeadCapturePage() {
                                 <p className="font-bold text-sm">RG, CNH ou Extrato</p>
                                 <p className="text-[10px] text-muted-foreground uppercase mt-1">Toque para anexar documentos</p>
                             </div>
-                            <input type="file" ref={fileInputRef} multiple className="hidden" accept="image/*,application/pdf" onChange={handleFileUpload} />
+                            <input type="file" fileInputRef={fileInputRef} multiple className="hidden" accept="image/*,application/pdf" onChange={handleFileUpload} />
                         </div>
 
                         {isUploading && (
