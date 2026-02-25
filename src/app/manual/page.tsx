@@ -35,6 +35,7 @@ import {
     Pencil,
     Star
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 export default function ManualPage() {
   return (
@@ -96,7 +97,7 @@ export default function ManualPage() {
                             <div className="p-4 rounded-xl bg-muted/20 border-2 border-dashed">
                                 <h4 className="font-bold mb-2">Smart Tags (Etiquetas de IA)</h4>
                                 <ul className="grid gap-2 md:grid-cols-2">
-                                    <li className="flex items-center gap-2 text-xs"><Badge className="bg-amber-500 h-4 text-[8px]">💎 ELITE</Badge> Comissões > R$ 5.000</li>
+                                    <li className="flex items-center gap-2 text-xs"><Badge className="bg-amber-500 h-4 text-[8px]">💎 ELITE</Badge> Comissões &gt; R$ 5.000</li>
                                     <li className="flex items-center gap-2 text-xs"><Badge className="bg-orange-600 h-4 text-[8px]">🔥 ATIVO</Badge> Proposta nos últimos 30 dias</li>
                                     <li className="flex items-center gap-2 text-xs"><Badge className="bg-blue-400 h-4 text-[8px]">🧊 REATIVAR</Badge> Sem produção há 180 dias</li>
                                     <li className="flex items-center gap-2 text-xs"><Badge className="bg-purple-500 h-4 text-[8px]">⚖️ EM ESTEIRA</Badge> Contrato em andamento</li>
