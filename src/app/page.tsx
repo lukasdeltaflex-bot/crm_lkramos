@@ -37,6 +37,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { ProposalsStatusTable } from '@/components/dashboard/proposals-status-table';
 import { DateRange } from 'react-day-picker';
 import { Input } from '@/components/ui/input';
