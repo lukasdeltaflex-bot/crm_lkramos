@@ -21,9 +21,13 @@ if (typeof window !== "undefined") {
         db = getFirestore(app);
         auth = getAuth(app);
         
-        // Inicialização padrão do Storage (usa o bucket da config automaticamente)
-        storage = getStorage(app);
-        console.log("💎 LK RAMOS: Núcleo Firebase inicializado.");
+        // Inicialização explícita com a URL do bucket para evitar falhas de "default bucket"
+        const bucketUrl = firebaseConfig.storageBucket ? `gs://${firebaseConfig.storageBucket}` : undefined;
+        storage = getStorage(app, bucketUrl);
+        
+        console.log("💎 LK RAMOS: Núcleo Firebase inicializado.", {
+            bucket: firebaseConfig.storageBucket || "PENDENTE"
+        });
     } catch (error) {
         console.error("❌ Falha crítica ao inicializar Firebase:", error);
     }

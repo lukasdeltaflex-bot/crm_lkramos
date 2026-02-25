@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { 
     CheckCircle2, 
     Upload, 
@@ -32,7 +33,6 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { validateCPF, handlePhoneMask, cleanFirestoreData, cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 
 export default function LeadCapturePage() {
@@ -119,8 +119,8 @@ export default function LeadCapturePage() {
 
   const uploadFile = async (file: File): Promise<Attachment | null> => {
     if (!storage) {
-        console.error("❌ Storage não instanciado.");
-        throw new Error('Storage não configurado');
+        console.error("❌ STORAGE ERROR: O objeto storage está nulo ou indefinido.");
+        throw new Error('storage-not-configured');
     }
 
     const timestamp = Date.now();
@@ -128,6 +128,7 @@ export default function LeadCapturePage() {
     const filePath = `leads_temp/${uid}/${timestamp}_${cleanName}`;
     const storageRef = ref(storage, filePath);
     
+    console.log(`🚀 Iniciando upload de: ${file.name} para ${filePath}`);
     const uploadTask = uploadBytesResumable(storageRef, file);
 
     return new Promise((resolve, reject) => {
@@ -135,14 +136,20 @@ export default function LeadCapturePage() {
             (snapshot) => {
                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
                 setUploadProgress(progress || 0);
+                console.log(`📊 Progresso de ${file.name}: ${progress.toFixed(2)}%`);
             },
             (error) => {
-                console.error("❌ Erro no upload:", error.code, error.message);
+                console.error("❌ ERRO NO UPLOAD FIREBASE:", {
+                    code: error.code,
+                    message: error.message,
+                    serverResponse: (error as any).serverResponse
+                });
                 reject(error);
             },
             async () => {
                 try {
                     const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                    console.log(`✅ Upload concluído: ${file.name}`);
                     resolve({
                         name: file.name,
                         url: downloadURL,
@@ -150,6 +157,7 @@ export default function LeadCapturePage() {
                         size: file.size
                     });
                 } catch (err) {
+                    console.error("❌ Erro ao obter URL de download:", err);
                     reject(err);
                 }
             }
@@ -165,7 +173,7 @@ export default function LeadCapturePage() {
         toast({ 
             variant: 'destructive', 
             title: 'Erro de Configuração', 
-            description: 'O servidor de arquivos não está respondendo. Verifique o console (F12).' 
+            description: 'O servidor de arquivos não está respondendo. Verifique se o Storage está ativo no Console do Firebase.' 
         });
         return;
     }
@@ -187,11 +195,22 @@ export default function LeadCapturePage() {
                 setAttachments(prev => [...prev, attachment]);
             }
         } catch (err: any) {
-            let msg = "Falha na conexão com o servidor.";
-            if (err.code === 'storage/unauthorized') {
-                msg = "Acesso Negado (Rules). O administrador precisa liberar o Storage para gravação pública.";
+            console.error("HandleFileUpload Exception:", err);
+            let msg = "Falha na conexão com o servidor de arquivos.";
+            
+            if (err.code === 'storage/unauthorized' || err.message === 'storage/unauthorized') {
+                msg = "Acesso Negado (Rules). No Firebase Console -> Storage -> Rules, altere para 'allow write: if true;'.";
+            } else if (err.message === 'storage-not-configured') {
+                msg = "O Storage não está ativo no seu projeto Firebase.";
+            } else if (err.code === 'storage/retry-limit-exceeded') {
+                msg = "Tempo limite excedido. Tente um arquivo menor ou uma conexão mais rápida.";
             }
-            toast({ variant: 'destructive', title: 'Erro de Anexo', description: msg });
+
+            toast({ 
+                variant: 'destructive', 
+                title: 'Erro no Envio', 
+                description: msg 
+            });
             break; 
         }
     }
