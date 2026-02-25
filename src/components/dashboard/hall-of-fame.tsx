@@ -42,19 +42,19 @@ export function HallOfFame({ proposals, customers, isLoading }: HallOfFameProps)
     });
     const peakDay = Object.entries(dailyVolume).sort((a,b) => b[1] - a[1])[0];
 
-    // 3. Melhor Cliente (Volume Digitado no Mês)
-    const customerVolume: Record<string, number> = {};
-    currentMonthProposals.forEach(p => {
-        customerVolume[p.customerId] = (customerVolume[p.customerId] || 0) + (p.grossAmount || 0);
+    // 3. Melhor Cliente (Volume PAGO no Mês)
+    const customerPaidVolume: Record<string, number> = {};
+    paidThisMonth.forEach(p => {
+        customerPaidVolume[p.customerId] = (customerPaidVolume[p.customerId] || 0) + (p.grossAmount || 0);
     });
-    const bestCustomerId = Object.entries(customerVolume).sort((a,b) => b[1] - a[1])[0]?.[0];
+    const bestCustomerId = Object.entries(customerPaidVolume).sort((a,b) => b[1] - a[1])[0]?.[0];
     const bestCustomer = customers.find(c => c.id === bestCustomerId);
 
     return {
         biggestPaid,
         peakDay,
         bestCustomer,
-        bestCustomerVolume: bestCustomerId ? customerVolume[bestCustomerId] : 0
+        bestCustomerVolume: bestCustomerId ? customerPaidVolume[bestCustomerId] : 0
     };
   }, [proposals, customers]);
 
@@ -123,7 +123,7 @@ export function HallOfFame({ proposals, customers, isLoading }: HallOfFameProps)
                         {stats.bestCustomer ? stats.bestCustomer.name.split(' ')[0] : '---'}
                     </p>
                     <p className="text-[9px] font-bold text-muted-foreground uppercase opacity-60 truncate">
-                        {stats.bestCustomer ? `Total: ${formatCurrency(stats.bestCustomerVolume)}` : "Quem será o próximo?"}
+                        {stats.bestCustomer ? `Pagos: ${formatCurrency(stats.bestCustomerVolume)}` : "Quem será o próximo?"}
                     </p>
                 </div>
             </CardContent>

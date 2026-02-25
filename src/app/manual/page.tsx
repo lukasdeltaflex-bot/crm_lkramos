@@ -271,7 +271,7 @@ export default function ManualPage() {
                             <ul className="mt-3 space-y-2">
                                 <li className="flex items-center gap-2 text-xs"><Trophy className="h-3 w-3 text-amber-600" /> <strong>Contrato Ouro</strong>: O maior valor de proposta paga até agora no mês.</li>
                                 <li className="flex items-center gap-2 text-xs"><Zap className="h-3 w-3 text-blue-600" /> <strong>Pico de Produção</strong>: O maior volume financeiro digitado em um único dia.</li>
-                                <li className="flex items-center gap-2 text-xs"><Star className="h-3 w-3 text-purple-600" /> <strong>Estrela da Base</strong>: O cliente que mais gerou volume de negócios no período.</li>
+                                <li className="flex items-center gap-2 text-xs"><Star className="h-3 w-3 text-purple-600" /> <strong>Estrela da Base</strong>: O cliente que mais gerou volume de contratos PAGOS no período.</li>
                             </ul>
                         </div>
                     </AccordionContent>
