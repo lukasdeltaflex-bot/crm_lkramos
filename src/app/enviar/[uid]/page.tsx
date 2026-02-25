@@ -118,6 +118,38 @@ export default function LeadCapturePage() {
     }
   }, [formData.cep]);
 
+  const uploadFile = async (file: File): Promise<Attachment | null> => {
+    if (!storage) {
+        throw new Error('Storage não configurado');
+    }
+
+    const filePath = `leads_temp/${uid}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+    const storageRef = ref(storage, filePath);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    return new Promise((resolve, reject) => {
+        uploadTask.on('state_changed', 
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                setUploadProgress(progress);
+            },
+            (error) => {
+                console.error("❌ Erro no upload do arquivo:", file.name, error);
+                reject(error);
+            },
+            async () => {
+                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                resolve({
+                    name: file.name,
+                    url: downloadURL,
+                    type: file.type,
+                    size: file.size
+                });
+            }
+        );
+    });
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || !uid || files.length === 0) return;
@@ -126,7 +158,7 @@ export default function LeadCapturePage() {
         toast({ 
             variant: 'destructive', 
             title: 'Sistema Indisponível', 
-            description: 'O serviço de armazenamento de arquivos (Storage) não está configurado no seu Firebase. Ative-o no console.' 
+            description: 'O serviço de armazenamento de arquivos (Storage) não está configurado. Verifique as configurações do Firebase.' 
         });
         return;
     }
@@ -136,63 +168,37 @@ export default function LeadCapturePage() {
     const MAX_SIZE = 15 * 1024 * 1024; // 15MB
 
     try {
-        const uploadPromises = Array.from(files).map(async (file) => {
+        const fileList = Array.from(files);
+        const results: Attachment[] = [];
+
+        for (const file of fileList) {
             if (file.size > MAX_SIZE) {
                 toast({ 
                     variant: 'destructive', 
                     title: 'Arquivo ignorado', 
                     description: `${file.name} ultrapassa o limite de 15MB.` 
                 });
-                return null;
+                continue;
             }
 
-            // Pasta organizada para evitar conflitos
-            const filePath = `leads_temp/${uid}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
-            const storageRef = ref(storage, filePath);
-            const uploadTask = uploadBytesResumable(storageRef, file);
+            try {
+                const attachment = await uploadFile(file);
+                if (attachment) {
+                    results.push(attachment);
+                    setAttachments(prev => [...prev, attachment]);
+                }
+            } catch (err: any) {
+                let msg = "Falha ao subir arquivo.";
+                if (err.code === 'storage/unauthorized') {
+                    msg = "Permissão negada. Verifique as regras do Storage.";
+                }
+                toast({ variant: 'destructive', title: 'Erro no Upload', description: msg });
+            }
+        }
 
-            return new Promise<Attachment | null>((resolve, reject) => {
-                uploadTask.on('state_changed', 
-                    (snap) => {
-                        const prog = (snap.bytesTransferred / snap.totalBytes) * 100;
-                        setUploadProgress(prog);
-                    },
-                    (err) => {
-                        console.error("❌ FIREBASE STORAGE ERROR:", err.code, err.message);
-                        let msg = "Falha ao subir arquivo.";
-                        
-                        if (err.code === 'storage/unauthorized') {
-                            msg = "Permissão Negada. Verifique as 'Rules' do Storage no console do Firebase.";
-                        } else if (err.code === 'storage/retry-limit-exceeded') {
-                            msg = "Conexão instável. Tente novamente.";
-                        }
-                        
-                        toast({ variant: 'destructive', title: 'Erro no Upload', description: msg });
-                        reject(err);
-                    },
-                    async () => {
-                        try {
-                            const url = await getDownloadURL(uploadTask.snapshot.ref);
-                            const newAtt: Attachment = {
-                                name: file.name,
-                                url,
-                                type: file.type,
-                                size: file.size
-                            };
-                            setAttachments(prev => [...prev, newAtt]);
-                            resolve(newAtt);
-                        } catch (urlErr) {
-                            reject(urlErr);
-                        }
-                    }
-                );
-            });
-        });
-
-        await Promise.allSettled(uploadPromises);
-        toast({ title: "Arquivos processados!" });
-    } catch (err: any) {
-        console.error("❌ FILE PROCESS ERROR:", err);
+        if (results.length > 0) {
+            toast({ title: "Arquivos processados!" });
+        }
     } finally {
         setIsUploading(false);
         setUploadProgress(0);
