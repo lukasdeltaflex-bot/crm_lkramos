@@ -34,6 +34,7 @@ import { toast } from '@/hooks/use-toast';
 import { validateCPF, handlePhoneMask, cleanFirestoreData, cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 export default function LeadCapturePage() {
   const { uid } = useParams() as { uid: string };
@@ -64,6 +65,7 @@ export default function LeadCapturePage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [corsErrorBucket, setCorsErrorBucket] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const settingsDocRef = useMemoFirebase(() => {
@@ -145,12 +147,14 @@ export default function LeadCapturePage() {
                     fullError: error
                 });
 
-                // Alerta específico de CORS
+                // Alerta específico de CORS / Preflight
                 if (error.message.includes('CORS') || error.code === 'storage/unknown') {
+                    const bucketName = storage.app.options.storageBucket || "seu-projeto.appspot.com";
+                    setCorsErrorBucket(bucketName);
                     toast({
                         variant: 'destructive',
-                        title: 'Falha de Conexão (CORS)',
-                        description: 'O servidor do Google bloqueou o upload. Rode o comando gsutil CORS no terminal com o bucket correto.'
+                        title: 'Conexão Bloqueada (CORS)',
+                        description: 'O servidor recusou a conexão. Verifique as instruções no alerta acima.'
                     });
                 }
                 
@@ -312,6 +316,20 @@ export default function LeadCapturePage() {
             </CardHeader>
             <CardContent className="p-8">
                 <form onSubmit={handleSubmit} className="space-y-10">
+                    {corsErrorBucket && (
+                        <Alert variant="destructive" className="border-2 animate-pulse">
+                            <AlertTriangle className="h-5 w-5" />
+                            <AlertTitle className="font-bold">Ação Necessária no Console Google Cloud</AlertTitle>
+                            <AlertDescription className="text-xs space-y-2">
+                                <p>O servidor de arquivos está bloqueando a conexão do seu navegador (Erro de Preflight/CORS).</p>
+                                <p className="font-bold">Rode este comando no Cloud Shell para liberar:</p>
+                                <code className="block bg-black text-white p-3 rounded mt-2 text-[10px] break-all">
+                                    gsutil cors set cors.json gs://{corsErrorBucket}
+                                </code>
+                            </AlertDescription>
+                        </Alert>
+                    )}
+
                     <div className="space-y-6">
                         <h3 className="text-sm font-black uppercase text-primary flex items-center gap-2">
                             <User className="h-4 w-4" /> Dados Pessoais
