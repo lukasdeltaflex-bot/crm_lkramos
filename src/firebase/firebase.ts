@@ -1,3 +1,4 @@
+
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
@@ -20,13 +21,15 @@ if (typeof window !== "undefined") {
         const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
         db = getFirestore(app);
         auth = getAuth(app);
-        storage = getStorage(app);
         
-        if (!firebaseConfig.storageBucket || firebaseConfig.storageBucket === "") {
-            console.warn("LK RAMOS AVISO: O campo 'storageBucket' está ausente na configuração. Os anexos não funcionarão.");
+        // Inicialização explícita do Storage com log de verificação
+        if (firebaseConfig.storageBucket) {
+            storage = getStorage(app);
+        } else {
+            console.warn("⚠️ LK RAMOS AVISO: Variável de ambiente 'storageBucket' não detectada. Uploads de arquivos não funcionarão.");
         }
     } catch (error) {
-        console.error("Falha crítica ao inicializar Firebase:", error);
+        console.error("❌ Falha crítica ao inicializar Firebase:", error);
     }
 }
 

@@ -120,13 +120,13 @@ export default function LeadCapturePage() {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || !uid) return;
+    if (!files || !uid || files.length === 0) return;
 
     if (!storage) {
         toast({ 
             variant: 'destructive', 
-            title: 'Configuração Incompleta', 
-            description: 'O Storage do Firebase não foi detectado. Verifique se as chaves no seu arquivo .env estão corretas.' 
+            title: 'Sistema Indisponível', 
+            description: 'O serviço de armazenamento de arquivos (Storage) não está configurado no seu Firebase. Ative-o no console.' 
         });
         return;
     }
@@ -146,7 +146,8 @@ export default function LeadCapturePage() {
                 return null;
             }
 
-            const filePath = `leads_temp/${uid}/${Date.now()}_${file.name}`;
+            // Pasta organizada para evitar conflitos
+            const filePath = `leads_temp/${uid}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
             const storageRef = ref(storage, filePath);
             const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -157,11 +158,15 @@ export default function LeadCapturePage() {
                         setUploadProgress(prog);
                     },
                     (err) => {
-                        console.error("Storage Error:", err.code, err.message);
+                        console.error("❌ FIREBASE STORAGE ERROR:", err.code, err.message);
                         let msg = "Falha ao subir arquivo.";
+                        
                         if (err.code === 'storage/unauthorized') {
-                            msg = "Permissão Negada. Você precisa habilitar 'Acesso Público' nas regras do Storage no Firebase Console.";
+                            msg = "Permissão Negada. Verifique as 'Rules' do Storage no console do Firebase.";
+                        } else if (err.code === 'storage/retry-limit-exceeded') {
+                            msg = "Conexão instável. Tente novamente.";
                         }
+                        
                         toast({ variant: 'destructive', title: 'Erro no Upload', description: msg });
                         reject(err);
                     },
@@ -184,10 +189,10 @@ export default function LeadCapturePage() {
             });
         });
 
-        await Promise.all(uploadPromises);
-        toast({ title: "Arquivos anexados!" });
+        await Promise.allSettled(uploadPromises);
+        toast({ title: "Arquivos processados!" });
     } catch (err: any) {
-        console.error("Process Error:", err);
+        console.error("❌ FILE PROCESS ERROR:", err);
     } finally {
         setIsUploading(false);
         setUploadProgress(0);
