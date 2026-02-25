@@ -26,6 +26,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { validateCPF, handlePhoneMask, cleanFirestoreData } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
 
 export default function LeadCapturePage() {
   const { uid } = useParams() as { uid: string };
