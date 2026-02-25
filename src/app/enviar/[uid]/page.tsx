@@ -1,10 +1,11 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useFirestore, useDoc, useMemoFirebase, useFirebase } from '@/firebase';
 import { doc, collection, setDoc } from 'firebase/firestore';
-import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import type { UserSettings, Attachment } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,8 +25,6 @@ import {
     Info,
     X,
     MapPin,
-    Home,
-    Map,
     Hash,
     CreditCard,
     MessageSquareText,
@@ -124,40 +123,63 @@ export default function LeadCapturePage() {
     if (!files || !storage || !uid) return;
 
     setIsUploading(true);
-    const newAttachments: Attachment[] = [...attachments];
     const MAX_SIZE = 15 * 1024 * 1024; // 15MB
 
-    for (const file of Array.from(files)) {
-        if (file.size > MAX_SIZE) {
-            toast({ variant: 'destructive', title: 'Arquivo muito grande', description: `O limite é 15MB por arquivo. O arquivo ${file.name} excedeu este limite.` });
-            continue;
+    try {
+        for (const file of Array.from(files)) {
+            if (file.size > MAX_SIZE) {
+                toast({ 
+                    variant: 'destructive', 
+                    title: 'Arquivo muito grande', 
+                    description: `O limite é 15MB. O arquivo ${file.name} foi ignorado.` 
+                });
+                continue;
+            }
+
+            const filePath = `leads_temp/${uid}/${Date.now()}_${file.name}`;
+            const storageRef = ref(storage, filePath);
+            const uploadTask = uploadBytesResumable(storageRef, file);
+
+            await new Promise((resolve, reject) => {
+                uploadTask.on('state_changed', 
+                    (snap) => setUploadProgress((snap.bytesTransferred / snap.totalBytes) * 100),
+                    (err) => {
+                        console.error("Firebase Storage Upload Error:", err);
+                        reject(err);
+                    },
+                    async () => {
+                        try {
+                            const url = await getDownloadURL(uploadTask.snapshot.ref);
+                            const newAttachment: Attachment = {
+                                name: file.name,
+                                url,
+                                type: file.type,
+                                size: file.size
+                            };
+                            // Atualiza o estado imediatamente após cada sucesso
+                            setAttachments(prev => [...prev, newAttachment]);
+                            resolve(true);
+                        } catch (urlErr) {
+                            reject(urlErr);
+                        }
+                    }
+                );
+            });
         }
-
-        const filePath = `leads_temp/${uid}/${Date.now()}_${file.name}`;
-        const storageRef = ref(storage, filePath);
-        const uploadTask = uploadBytesResumable(storageRef, file);
-
-        await new Promise((resolve, reject) => {
-            uploadTask.on('state_changed', 
-                (snap) => setUploadProgress((snap.bytesTransferred / snap.totalBytes) * 100),
-                (err) => reject(err),
-                async () => {
-                    const url = await getDownloadURL(uploadTask.snapshot.ref);
-                    newAttachments.push({
-                        name: file.name,
-                        url,
-                        type: file.type,
-                        size: file.size
-                    });
-                    resolve(true);
-                }
-            );
+        toast({ title: "Arquivos anexados com sucesso!" });
+    } catch (err: any) {
+        console.error("Failed to complete upload process:", err);
+        toast({ 
+            variant: 'destructive', 
+            title: 'Erro no Upload', 
+            description: 'Não foi possível subir seus documentos. Verifique sua conexão ou tente novamente.' 
         });
+    } finally {
+        setIsUploading(false);
+        setUploadProgress(0);
+        // Reseta o input para permitir selecionar o mesmo arquivo novamente se desejar
+        if (fileInputRef.current) fileInputRef.current.value = '';
     }
-
-    setAttachments(newAttachments);
-    setIsUploading(false);
-    setUploadProgress(0);
   };
 
   const removeAttachment = (index: number) => {
@@ -168,7 +190,6 @@ export default function LeadCapturePage() {
     e.preventDefault();
     if (!firestore || !uid) return;
 
-    // 🛡️ VALIDAÇÃO ESTRITA DE CAMPOS OBRIGATÓRIOS
     if (!formData.name.trim() || formData.name.split(' ').length < 2) {
         toast({ variant: 'destructive', title: 'Nome Incompleto', description: 'Por favor, digite seu nome e sobrenome.' });
         return;
@@ -384,19 +405,36 @@ export default function LeadCapturePage() {
                             <Badge variant="outline" className="text-[9px] font-bold">LIMITE 15MB</Badge>
                         </div>
                         
-                        <div className="border-2 border-dashed rounded-3xl p-10 flex flex-col items-center justify-center text-center gap-4 bg-muted/10 hover:bg-muted/20 transition-all cursor-pointer relative" onClick={() => fileInputRef.current?.click()}>
+                        <div 
+                            className={cn(
+                                "border-2 border-dashed rounded-3xl p-10 flex flex-col items-center justify-center text-center gap-4 bg-muted/10 hover:bg-muted/20 transition-all cursor-pointer relative",
+                                isUploading && "pointer-events-none opacity-50"
+                            )} 
+                            onClick={() => fileInputRef.current?.click()}
+                        >
                             <Upload className="h-10 w-10 text-muted-foreground opacity-40" />
                             <div>
                                 <p className="font-bold text-sm">RG, CNH ou Extrato</p>
                                 <p className="text-[10px] text-muted-foreground uppercase mt-1">Toque para anexar documentos</p>
                             </div>
-                            <input type="file" ref={fileInputRef} multiple className="hidden" accept="image/*,application/pdf" onChange={handleFileUpload} />
+                            <input 
+                                type="file" 
+                                ref={fileInputRef} 
+                                multiple 
+                                className="hidden" 
+                                accept="image/*,application/pdf" 
+                                onChange={handleFileUpload} 
+                                disabled={isUploading}
+                            />
                         </div>
 
                         {isUploading && (
-                            <div className="space-y-2">
+                            <div className="space-y-2 animate-in fade-in">
                                 <div className="flex justify-between text-[10px] font-black uppercase">
-                                    <span>Enviando arquivos...</span>
+                                    <span className="flex items-center gap-2">
+                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                        Subindo arquivos...
+                                    </span>
                                     <span>{Math.round(uploadProgress)}%</span>
                                 </div>
                                 <Progress value={uploadProgress} className="h-1.5" />
