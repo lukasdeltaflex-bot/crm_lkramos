@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -120,17 +119,15 @@ export default function LeadCapturePage() {
 
   const uploadFile = async (file: File): Promise<Attachment | null> => {
     if (!storage) {
-        console.error("❌ Firebase Storage não inicializado no cliente.");
+        console.error("❌ Storage não instanciado.");
         throw new Error('Storage não configurado');
     }
 
-    // Garante um nome de arquivo limpo e único
     const timestamp = Date.now();
     const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
     const filePath = `leads_temp/${uid}/${timestamp}_${cleanName}`;
     const storageRef = ref(storage, filePath);
     
-    console.log(`📤 Iniciando upload de: ${file.name}`);
     const uploadTask = uploadBytesResumable(storageRef, file);
 
     return new Promise((resolve, reject) => {
@@ -138,16 +135,14 @@ export default function LeadCapturePage() {
             (snapshot) => {
                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
                 setUploadProgress(progress || 0);
-                console.log(`⏳ Progresso ${file.name}: ${Math.round(progress)}%`);
             },
             (error) => {
-                console.error("❌ Erro fatal no Firebase Storage:", error.code, error.message);
+                console.error("❌ Erro no upload:", error.code, error.message);
                 reject(error);
             },
             async () => {
                 try {
                     const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                    console.log(`✅ Upload concluído: ${file.name}`);
                     resolve({
                         name: file.name,
                         url: downloadURL,
@@ -164,13 +159,13 @@ export default function LeadCapturePage() {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || !uid || files.length === 0) return;
+    if (!files || files.length === 0) return;
 
     if (!storage) {
         toast({ 
             variant: 'destructive', 
-            title: 'Configuração Pendente', 
-            description: 'O Storage não está ativo. Verifique se a variável NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET foi configurada.' 
+            title: 'Erro de Configuração', 
+            description: 'O servidor de arquivos não está respondendo. Verifique o console (F12).' 
         });
         return;
     }
@@ -179,37 +174,30 @@ export default function LeadCapturePage() {
     setUploadProgress(0);
     const MAX_SIZE = 15 * 1024 * 1024; // 15MB
 
-    try {
-        const fileList = Array.from(files);
-        for (const file of fileList) {
-            if (file.size > MAX_SIZE) {
-                toast({ 
-                    variant: 'destructive', 
-                    title: 'Arquivo muito grande', 
-                    description: `${file.name} ultrapassa 15MB.` 
-                });
-                continue;
-            }
-
-            try {
-                const attachment = await uploadFile(file);
-                if (attachment) {
-                    setAttachments(prev => [...prev, attachment]);
-                }
-            } catch (err: any) {
-                console.error("Erro no processamento do arquivo:", err);
-                let msg = "Erro na comunicação com o servidor.";
-                if (err.code === 'storage/unauthorized') msg = "Permissão negada no Firebase Storage. Verifique as Rules.";
-                if (err.code === 'storage/retry-limit-exceeded') msg = "Conexão instável. Tente novamente.";
-                
-                toast({ variant: 'destructive', title: 'Falha no Anexo', description: msg });
-            }
+    const fileList = Array.from(files);
+    for (const file of fileList) {
+        if (file.size > MAX_SIZE) {
+            toast({ variant: 'destructive', title: 'Arquivo Excedido', description: `${file.name} é maior que 15MB.` });
+            continue;
         }
-    } finally {
-        setIsUploading(false);
-        setUploadProgress(0);
-        if (fileInputRef.current) fileInputRef.current.value = '';
+
+        try {
+            const attachment = await uploadFile(file);
+            if (attachment) {
+                setAttachments(prev => [...prev, attachment]);
+            }
+        } catch (err: any) {
+            let msg = "Falha na conexão com o servidor.";
+            if (err.code === 'storage/unauthorized') {
+                msg = "Acesso Negado (Rules). O administrador precisa liberar o Storage para gravação pública.";
+            }
+            toast({ variant: 'destructive', title: 'Erro de Anexo', description: msg });
+            break; 
+        }
     }
+    setIsUploading(false);
+    setUploadProgress(0);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const removeAttachment = (index: number) => {
@@ -378,7 +366,7 @@ export default function LeadCapturePage() {
                                     <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">CEP *</Label>
                                     <div className="relative">
                                         <Input name="cep" required placeholder="00000-000" className="h-12 rounded-xl font-bold" value={formData.cep} onChange={handleInputChange} />
-                                        {isFetchingCep && <Loader2 className="absolute right-4 top-3.5 h-5 w-5 animate-spin text-primary" />}
+                                        {isFetchingCep && <Loader2 className="absolute right-4 top-3.5 h-5 w-5 animate-spin text-[#00AEEF]" />}
                                     </div>
                                 </div>
                                 <div className="space-y-2">

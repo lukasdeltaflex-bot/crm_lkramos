@@ -1,4 +1,3 @@
-
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
@@ -22,16 +21,9 @@ if (typeof window !== "undefined") {
         db = getFirestore(app);
         auth = getAuth(app);
         
-        // Inicialização explícita do Storage com log de verificação
-        // Garante que o bucket seja injetado corretamente na instância
-        const bucketName = firebaseConfig.storageBucket?.replace(/^gs:\/\//, '');
-        
-        if (bucketName) {
-            storage = getStorage(app, bucketName);
-            console.log("💎 LK RAMOS: Firebase Storage inicializado com sucesso.");
-        } else {
-            console.error("❌ LK RAMOS ERRO: Variável 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET' não encontrada ou vazia no arquivo .env");
-        }
+        // Inicialização padrão do Storage (usa o bucket da config automaticamente)
+        storage = getStorage(app);
+        console.log("💎 LK RAMOS: Núcleo Firebase inicializado.");
     } catch (error) {
         console.error("❌ Falha crítica ao inicializar Firebase:", error);
     }
