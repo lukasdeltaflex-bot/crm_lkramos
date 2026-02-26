@@ -62,7 +62,6 @@ export default function LeadCapturePage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [infraError, setInfraError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const settingsDocRef = useMemoFirebase(() => {
@@ -118,7 +117,6 @@ export default function LeadCapturePage() {
 
   const uploadFile = async (file: File): Promise<Attachment | null> => {
     if (!storage) {
-        setInfraError("STORAGE_NOT_READY");
         throw new Error('storage-not-ready');
     }
 
@@ -137,9 +135,6 @@ export default function LeadCapturePage() {
             },
             (error) => {
                 console.error("Upload error:", error);
-                if (error.code === 'storage/retry-limit-exceeded' || error.code === 'storage/unauthorized') {
-                    setInfraError("CORS_OR_PERMISSION");
-                }
                 reject(error);
             },
             async () => {
@@ -165,12 +160,11 @@ export default function LeadCapturePage() {
 
     setIsUploading(true);
     setUploadProgress(0);
-    setInfraError(null);
-    const MAX_SIZE = 4 * 1024 * 1024; // 4MB para garantir sucesso na transmissão
+    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 
     for (const file of Array.from(files)) {
         if (file.size > MAX_SIZE) {
-            toast({ variant: 'destructive', title: 'Arquivo Excedido', description: `${file.name} é maior que 4MB.` });
+            toast({ variant: 'destructive', title: 'Arquivo muito grande', description: `${file.name} excede 10MB.` });
             continue;
         }
 
@@ -180,7 +174,7 @@ export default function LeadCapturePage() {
                 setAttachments(prev => [...prev, attachment]);
             }
         } catch (err: any) {
-            toast({ variant: 'destructive', title: 'Erro de Conexão', description: "Não foi possível enviar o arquivo para o servidor." });
+            toast({ variant: 'destructive', title: 'Falha no envio', description: "Verifique sua conexão e tente novamente." });
             break;
         }
     }
@@ -198,7 +192,7 @@ export default function LeadCapturePage() {
     if (!firestore || !uid) return;
 
     if (!formData.name.trim() || formData.name.split(' ').length < 2) {
-        toast({ variant: 'destructive', title: 'Nome Incompleto', description: 'Por favour, digite seu nome completo.' });
+        toast({ variant: 'destructive', title: 'Nome Incompleto', description: 'Por favor, digite seu nome completo.' });
         return;
     }
 
@@ -294,21 +288,6 @@ export default function LeadCapturePage() {
             <CardContent className="p-8">
                 <form onSubmit={handleSubmit} className="space-y-10">
                     
-                    {infraError && (
-                        <Alert variant="destructive" className="border-2 animate-pulse rounded-xl">
-                            <AlertTriangle className="h-5 w-5" />
-                            <AlertTitle className="font-bold uppercase text-xs">Atenção: Erro de Conexão</AlertTitle>
-                            <AlertDescription className="text-xs space-y-2 mt-2">
-                                <p>O servidor está recusando a conexão segura (Erro CORS).</p>
-                                <p className="font-bold">Rode estes comandos no terminal para liberar:</p>
-                                <code className="block bg-black text-white p-3 rounded mt-2 text-[10px] break-all leading-relaxed font-mono">
-                                    {"echo '[{\"origin\": [\"*\"],\"method\": [\"GET\", \"POST\", \"PUT\", \"DELETE\", \"OPTIONS\"],\"responseHeader\": [\"Content-Type\", \"Authorization\", \"x-goog-resumable\"],\"maxAgeSeconds\": 3600}]' > cors.json"}<br/><br/>
-                                    {"gsutil cors set cors.json gs://studio-248448941-9c1c2.firebasestorage.app"}
-                                </code>
-                            </AlertDescription>
-                        </Alert>
-                    )}
-
                     <div className="space-y-6">
                         <h3 className="text-sm font-black uppercase text-primary flex items-center gap-2">
                             <User className="h-4 w-4" /> Informações do Cliente
@@ -365,7 +344,7 @@ export default function LeadCapturePage() {
                             <Upload className="h-10 w-10 text-muted-foreground opacity-40" />
                             <div>
                                 <p className="font-bold text-sm">Clique para anexar</p>
-                                <p className="text-[10px] text-muted-foreground uppercase mt-1">Máximo de 4MB por arquivo</p>
+                                <p className="text-[10px] text-muted-foreground uppercase mt-1">Máximo de 10MB por arquivo</p>
                             </div>
                             <input 
                                 type="file" 
