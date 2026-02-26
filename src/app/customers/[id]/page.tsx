@@ -197,10 +197,10 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                                                 <CopyButton text={benefit.number} label="Benefício" />
                                             </div>
                                             <div className='flex items-center gap-2'>
-                                                {benefit.species && <span className="text-[10px] text-muted-foreground font-bold uppercase">{benefit.species}</span>}
+                                                {benefit.species && <span className="text-[11px] text-muted-foreground font-bold uppercase">{benefit.species}</span>}
                                                 {benefit.salary !== undefined && benefit.salary !== null && Number(benefit.salary) > 0 && (
-                                                    <Badge variant="outline" className="h-5 bg-green-50 border-green-200 text-green-600 text-[9px] font-black uppercase">
-                                                        <CircleDollarSign className="h-2.5 w-2.5 mr-1" /> {formatCurrency(Number(benefit.salary))}
+                                                    <Badge variant="outline" className="h-6 bg-green-50 border-green-200 text-green-600 text-[10px] font-black uppercase">
+                                                        <CircleDollarSign className="h-3 w-3 mr-1" /> {formatCurrency(Number(benefit.salary))}
                                                     </Badge>
                                                 )}
                                             </div>
