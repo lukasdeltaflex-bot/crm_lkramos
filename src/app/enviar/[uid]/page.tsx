@@ -66,7 +66,7 @@ export default function LeadCapturePage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [corsErrorBucket, setCorsErrorBucket] = useState<string | null>(null);
+  const [corsError, setCorsError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const settingsDocRef = useMemoFirebase(() => {
@@ -139,9 +139,10 @@ export default function LeadCapturePage() {
                 setUploadProgress(progress || 0);
             },
             (error) => {
-                console.error("Upload error:", error);
+                console.error("Upload error details:", error);
+                // Detecta erro de CORS (geralmente erro de rede ou preflight)
                 if (error.code === 'storage/unknown' || error.message.includes('CORS')) {
-                    setCorsErrorBucket("studio-248448941-9c1c2.firebasestorage.app");
+                    setCorsError(true);
                 }
                 reject(error);
             },
@@ -168,6 +169,7 @@ export default function LeadCapturePage() {
 
     setIsUploading(true);
     setUploadProgress(0);
+    setCorsError(false);
     const MAX_SIZE = 15 * 1024 * 1024;
 
     for (const file of Array.from(files)) {
@@ -182,7 +184,7 @@ export default function LeadCapturePage() {
                 setAttachments(prev => [...prev, attachment]);
             }
         } catch (err: any) {
-            toast({ variant: 'destructive', title: 'Falha no Upload', description: "Erro de conexão con o servidor." });
+            toast({ variant: 'destructive', title: 'Falha no Upload', description: "Erro de conexão com o servidor de arquivos." });
             break;
         }
     }
@@ -296,17 +298,20 @@ export default function LeadCapturePage() {
             </CardHeader>
             <CardContent className="p-8">
                 <form onSubmit={handleSubmit} className="space-y-10">
-                    {corsErrorBucket && (
+                    {corsError && (
                         <Alert variant="destructive" className="border-2 animate-pulse mb-6">
                             <AlertTriangle className="h-5 w-5" />
-                            <AlertTitle className="font-bold">Ação Necessária</AlertTitle>
-                            <AlertDescription className="text-xs space-y-2">
-                                <p>O servidor está recusando a conexão segura (Erro CORS).</p>
-                                <p className="font-bold">Rode estes comandos no terminal para liberar:</p>
-                                <div className="block bg-black text-white p-3 rounded mt-2 text-[10px] break-all leading-relaxed font-mono">
-                                    {"echo '[{\"origin\": [\"*\"],\"method\": [\"GET\", \"POST\", \"PUT\", \"DELETE\", \"OPTIONS\"],\"responseHeader\": [\"Content-Type\", \"Authorization\", \"x-goog-resumable\"],\"maxAgeSeconds\": 3600}]' > cors.json"}
-                                    <br /><br />
-                                    {`gsutil cors set cors.json gs://${corsErrorBucket}`}
+                            <AlertTitle className="font-bold">Ação Necessária no Servidor</AlertTitle>
+                            <AlertDescription className="text-xs space-y-3">
+                                <p>O upload falhou porque o servidor do Google está recusando a conexão (CORS).</p>
+                                <p>No terminal (Cloud Shell), rode estes 2 comandos:</p>
+                                <div className="space-y-2">
+                                    <code className="block bg-black text-white p-3 rounded text-[10px] break-all font-mono">
+                                        {"echo '[{\"origin\": [\"*\"],\"method\": [\"GET\", \"POST\", \"PUT\", \"DELETE\", \"OPTIONS\"],\"responseHeader\": [\"Content-Type\", \"Authorization\", \"x-goog-resumable\"],\"maxAgeSeconds\": 3600}]' > cors.json"}
+                                    </code>
+                                    <code className="block bg-black text-white p-3 rounded text-[10px] break-all font-mono">
+                                        {"gsutil cors set cors.json gs://studio-248448941-9c1c2.appspot.com"}
+                                    </code>
                                 </div>
                             </AlertDescription>
                         </Alert>
