@@ -182,7 +182,7 @@ export default function LeadCapturePage() {
                 setAttachments(prev => [...prev, attachment]);
             }
         } catch (err: any) {
-            toast({ variant: 'destructive', title: 'Falha no Upload', description: "Erro de conexão com o servidor." });
+            toast({ variant: 'destructive', title: 'Falha no Upload', description: "Erro de conexão con o servidor." });
             break;
         }
     }
@@ -304,7 +304,7 @@ export default function LeadCapturePage() {
                                 <p>O servidor está recusando a conexão segura (Erro CORS).</p>
                                 <p className="font-bold">Rode estes comandos no terminal para liberar:</p>
                                 <div className="block bg-black text-white p-3 rounded mt-2 text-[10px] break-all leading-relaxed font-mono">
-                                    {`echo '[{"origin": ["*"],"method": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],"responseHeader": ["Content-Type", "Authorization", "x-goog-resumable"],"maxAgeSeconds": 3600}]' > cors.json`}
+                                    {"echo '[{\"origin\": [\"*\"],\"method\": [\"GET\", \"POST\", \"PUT\", \"DELETE\", \"OPTIONS\"],\"responseHeader\": [\"Content-Type\", \"Authorization\", \"x-goog-resumable\"],\"maxAgeSeconds\": 3600}]' > cors.json"}
                                     <br /><br />
                                     {`gsutil cors set cors.json gs://${corsErrorBucket}`}
                                 </div>
@@ -373,7 +373,7 @@ export default function LeadCapturePage() {
                                     <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">CEP *</Label>
                                     <div className="relative">
                                         <Input name="cep" required placeholder="00000-000" className="h-12 rounded-xl font-bold" value={formData.cep} onChange={handleInputChange} />
-                                        {isFetchingCep && <Loader2 className="absolute right-4 top-3.5 h-5 w-5 animate-spin text-[#00AEEF]" />}
+                                        {isFetchingCep && <Loader2 className="absolute right-4 top-3.5 h-4 w-4 animate-spin text-[#00AEEF]" />}
                                     </div>
                                 </div>
                                 <div className="space-y-2">
@@ -485,7 +485,7 @@ export default function LeadCapturePage() {
                     <div className="bg-orange-50/5 p-4 rounded-2xl border border-orange-500/10 flex items-start gap-3">
                         <Info className="h-4 w-4 text-orange-600 mt-0.5 shrink-0" />
                         <p className="text-[10px] text-orange-700 leading-relaxed font-medium">
-                            <strong>Segurança LGPD:</strong> Seus dados are protected by end-to-end encryption and intended solely for credit analysis at LK Ramos.
+                            <strong>Segurança LGPD:</strong> Seus dados estão protegidos por criptografia de ponta a ponta e destinados exclusivamente para análise de crédito na LK Ramos.
                         </p>
                     </div>
 
