@@ -216,7 +216,6 @@ export function ProposalForm({
   }
 
   const initialValues = useMemo(() => {
-    // 🛡️ Lógica de merge: Se houver defaultValues (ex: vindo do trigger de Reprova), eles sobrescrevem o registro original para facilitar a ação rápida
     const base = proposal || {};
     const overrides = defaultValues || {};
     const source = { ...base, ...overrides };
@@ -283,19 +282,30 @@ export function ProposalForm({
 
   const historicalRejection = useMemo(() => {
     if (!watchOriginalContract || watchOriginalContract.trim() === '' || productValue !== 'Portabilidade') return null;
+    const cleanCurrent = watchOriginalContract.trim().toUpperCase();
+    
     return allProposals.find(p => 
-        p.originalContractNumber === watchOriginalContract.trim() && 
+        p.originalContractNumber?.trim().toUpperCase() === cleanCurrent && 
         p.status === 'Reprovado' &&
         p.id !== proposal?.id
     );
   }, [watchOriginalContract, allProposals, proposal?.id, productValue]);
 
+  /**
+   * 🛡️ MOTOR DE AUDITORIA DE DUPLICIDADE V2
+   * Verifica se o número da proposta já existe em qualquer outro registro da base.
+   */
   const isDuplicateProposal = useMemo(() => {
-    if (!watchProposalNumber || watchProposalNumber.trim() === '') return false;
-    return allProposals.some(p => 
-        p.proposalNumber === watchProposalNumber.trim() && 
-        p.id !== proposal?.id
-    );
+    const cleanNum = watchProposalNumber?.trim().toUpperCase();
+    if (!cleanNum || cleanNum === '') return false;
+    
+    return allProposals.some(p => {
+        // Ignora o próprio documento se estivermos editando
+        if (proposal?.id && p.id === proposal.id) return false;
+        
+        // Compara números de forma normalizada
+        return p.proposalNumber?.trim().toUpperCase() === cleanNum;
+    });
   }, [watchProposalNumber, allProposals, proposal?.id]);
 
   useEffect(() => {
@@ -339,8 +349,8 @@ export function ProposalForm({
     if (isDuplicateProposal) {
         toast({
             variant: 'destructive',
-            title: '⚠️ IMPOSSÍVEL SALVAR',
-            description: 'Já existe uma proposta cadastrada com este número.'
+            title: '⚠️ BLOQUEIO DE SEGURANÇA',
+            description: 'Já existe uma proposta cadastrada com este número exato. Verifique os dados.'
         });
         return;
     }
