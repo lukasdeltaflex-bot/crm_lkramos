@@ -291,8 +291,8 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
     )
 }
 
-export default function CustomerDetailPage({ params }: { params: { id: string } }) {
-  const { id: customerId } = useParams() as { id: string };
+export default function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: customerId } = React.use(params);
   const firestore = useFirestore();
   const { user } = useUser();
   const [isPitchModalOpen, setIsPitchModalOpen] = React.useState(false);

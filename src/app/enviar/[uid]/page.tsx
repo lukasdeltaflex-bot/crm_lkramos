@@ -24,13 +24,11 @@ import {
     Camera,
     Info,
     X,
-    AlertTriangle,
-    CreditCard
+    AlertTriangle
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { validateCPF, handlePhoneMask, cleanFirestoreData, cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 export default function LeadCapturePage() {
   const params = useParams();
@@ -160,11 +158,11 @@ export default function LeadCapturePage() {
 
     setIsUploading(true);
     setUploadProgress(0);
-    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+    const MAX_SIZE = 15 * 1024 * 1024; // 15MB
 
     for (const file of Array.from(files)) {
         if (file.size > MAX_SIZE) {
-            toast({ variant: 'destructive', title: 'Arquivo muito grande', description: `${file.name} excede 10MB.` });
+            toast({ variant: 'destructive', title: 'Arquivo muito grande', description: `${file.name} excede 15MB.` });
             continue;
         }
 
@@ -348,7 +346,7 @@ export default function LeadCapturePage() {
                             <Upload className="h-10 w-10 text-muted-foreground opacity-40" />
                             <div>
                                 <p className="font-bold text-sm">Clique para anexar</p>
-                                <p className="text-[10px] text-muted-foreground uppercase mt-1">Máximo de 10MB por arquivo</p>
+                                <p className="text-[10px] text-muted-foreground uppercase mt-1">Máximo de 15MB por arquivo</p>
                             </div>
                             <input 
                                 type="file" 
