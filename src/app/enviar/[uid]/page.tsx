@@ -180,7 +180,7 @@ export default function LeadCapturePage() {
             toast({ 
                 variant: 'destructive', 
                 title: 'Falha no envio', 
-                description: "Verifique as 'Rules' do Storage no console do Firebase e certifique-se de que estão públicas para teste." 
+                description: "Verifique as 'Rules' do Storage no console do Firebase e certifique-se de que estão públicas (allow write: if true)." 
             });
             break;
         }
@@ -331,6 +331,16 @@ export default function LeadCapturePage() {
                         </div>
                     </div>
 
+                    {errorDetails && (
+                        <Alert variant="destructive" className="rounded-2xl border-2">
+                            <AlertTriangle className="h-4 w-4" />
+                            <AlertTitle className="font-bold uppercase text-xs">Bloqueio de Permissão</AlertTitle>
+                            <AlertDescription className="text-[10px]">
+                                O servidor recusou o envio. Certifique-se de que as <strong>Rules</strong> do Storage no console estão como <code>allow read, write: if true;</code> e que você clicou em <strong>Publish</strong>.
+                            </AlertDescription>
+                        </Alert>
+                    )}
+
                     <Separator />
 
                     <div className="space-y-6">
@@ -341,16 +351,6 @@ export default function LeadCapturePage() {
                             <Badge variant="outline" className="text-[9px] font-bold">PDF, JPG ou PNG</Badge>
                         </div>
                         
-                        {errorDetails && (
-                            <Alert variant="destructive" className="mb-4">
-                                <AlertTriangle className="h-4 w-4" />
-                                <AlertTitle>Erro de Permissão</AlertTitle>
-                                <AlertDescription>
-                                    O upload falhou. Certifique-se de que as <strong>Storage Rules</strong> no console do Firebase permitem gravação pública (<code>allow read, write: if true;</code>).
-                                </AlertDescription>
-                            </Alert>
-                        )}
-
                         <div 
                             className={cn(
                                 "border-2 border-dashed rounded-3xl p-10 flex flex-col items-center justify-center text-center gap-4 bg-muted/10 hover:bg-muted/20 transition-all cursor-pointer relative",
@@ -396,9 +396,9 @@ export default function LeadCapturePage() {
                                         </div>
                                         <span className="text-[10px] font-bold truncate pr-2 uppercase">{doc.name}</span>
                                     </div>
-                                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:bg-red-50 rounded-full" onClick={() => removeAttachment(idx)}>
+                                    <button type="button" className="h-8 w-8 text-red-500 hover:bg-red-50 rounded-full flex items-center justify-center transition-colors" onClick={() => removeAttachment(idx)}>
                                         <X className="h-4 w-4" />
-                                    </Button>
+                                    </button>
                                 </div>
                             ))}
                         </div>
