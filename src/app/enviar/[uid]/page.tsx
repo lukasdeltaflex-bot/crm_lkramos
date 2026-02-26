@@ -198,7 +198,7 @@ export default function LeadCapturePage() {
     if (!firestore || !uid) return;
 
     if (!formData.name.trim() || formData.name.split(' ').length < 2) {
-        toast({ variant: 'destructive', title: 'Nome Incompleto', description: 'Por favor, digite seu nome completo.' });
+        toast({ variant: 'destructive', title: 'Nome Incompleto', description: 'Por favour, digite seu nome completo.' });
         return;
     }
 
@@ -297,17 +297,13 @@ export default function LeadCapturePage() {
                     {infraError && (
                         <Alert variant="destructive" className="border-2 animate-pulse rounded-xl">
                             <AlertTriangle className="h-5 w-5" />
-                            <AlertTitle className="font-bold uppercase text-xs">Atenção: Erro de Configuração</AlertTitle>
+                            <AlertTitle className="font-bold uppercase text-xs">Atenção: Erro de Conexão</AlertTitle>
                             <AlertDescription className="text-xs space-y-2 mt-2">
-                                <p>O servidor de arquivos não respondeu corretamente.</p>
-                                <p className="font-bold">Como resolver:</p>
-                                <ol className="list-decimal pl-4 space-y-1">
-                                    <li>No console do Firebase, clique no menu "Criação" e depois em "Storage".</li>
-                                    <li>Clique em "Vamos começar" para ativar o serviço.</li>
-                                    <li>Se o problema persistir, rode o comando abaixo no Cloud Shell:</li>
-                                </ol>
+                                <p>O servidor está recusando a conexão segura (Erro CORS).</p>
+                                <p className="font-bold">Rode estes comandos no terminal para liberar:</p>
                                 <code className="block bg-black text-white p-3 rounded mt-2 text-[10px] break-all leading-relaxed font-mono">
-                                    {"gsutil cors set <(echo '[{\"origin\": [\"*\"], \"method\": [\"GET\", \"POST\", \"PUT\", \"DELETE\", \"OPTIONS\"], \"responseHeader\": [\"Content-Type\", \"Authorization\", \"x-goog-resumable\"], \"maxAgeSeconds\": 3600}]') gs://studio-248448941-9c1c2.firebasestorage.app"}
+                                    {"echo '[{\"origin\": [\"*\"],\"method\": [\"GET\", \"POST\", \"PUT\", \"DELETE\", \"OPTIONS\"],\"responseHeader\": [\"Content-Type\", \"Authorization\", \"x-goog-resumable\"],\"maxAgeSeconds\": 3600}]' > cors.json"}<br/><br/>
+                                    {"gsutil cors set cors.json gs://studio-248448941-9c1c2.firebasestorage.app"}
                                 </code>
                             </AlertDescription>
                         </Alert>
