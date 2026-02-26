@@ -216,7 +216,11 @@ export function ProposalForm({
   }
 
   const initialValues = useMemo(() => {
-    const source = proposal || defaultValues;
+    // 🛡️ Lógica de merge: Se houver defaultValues (ex: vindo do trigger de Reprova), eles sobrescrevem o registro original para facilitar a ação rápida
+    const base = proposal || {};
+    const overrides = defaultValues || {};
+    const source = { ...base, ...overrides };
+
     return {
       proposalNumber: source?.proposalNumber || '',
       originalContractNumber: source?.originalContractNumber || '',
@@ -277,7 +281,6 @@ export function ProposalForm({
     return customers.find(c => c.id === selectedCustomerId);
   }, [customers, selectedCustomerId]);
 
-  // 🕵️ AUDITORIA DE REPROVA ANTERIOR
   const historicalRejection = useMemo(() => {
     if (!watchOriginalContract || watchOriginalContract.trim() === '' || productValue !== 'Portabilidade') return null;
     return allProposals.find(p => 
@@ -287,7 +290,6 @@ export function ProposalForm({
     );
   }, [watchOriginalContract, allProposals, proposal?.id, productValue]);
 
-  // 🕵️ VERIFICADOR DE DUPLICIDADE EM TEMPO REAL
   const isDuplicateProposal = useMemo(() => {
     if (!watchProposalNumber || watchProposalNumber.trim() === '') return false;
     return allProposals.some(p => 
@@ -296,7 +298,6 @@ export function ProposalForm({
     );
   }, [watchProposalNumber, allProposals, proposal?.id]);
 
-  // AUTOMATIZAÇÃO: Seleção de Benefício Único
   useEffect(() => {
     if (selectedCustomer) {
         const benefits = selectedCustomer.benefits || [];
@@ -306,14 +307,12 @@ export function ProposalForm({
     }
   }, [selectedCustomer, setValue]);
 
-  // AUTOMATIZAÇÃO: Data de Digitação Vigente para Novas Propostas
   useEffect(() => {
     if (sheetMode === 'new' && !watchDateDigitized) {
         setValue('dateDigitized', format(new Date(), 'dd/MM/yyyy'), { shouldValidate: true });
     }
   }, [sheetMode, setValue, watchDateDigitized]);
 
-  // 🛡️ SINCRONIZAÇÃO DE BUSCA: Atualiza o formulário quando um novo cliente é selecionado via busca
   useEffect(() => {
     if (selectedCustomerFromSearch) {
         setValue('customerId', selectedCustomerFromSearch.id, { shouldValidate: true });
@@ -372,7 +371,6 @@ export function ProposalForm({
         debtBalanceArrivalDate: convertToIso(data.debtBalanceArrivalDate),
     };
 
-    // 🛡️ BLINDAGEM FINANCEIRA ESTRITA: Ativa Pendente apenas se houver Averbação
     const isAverbado = !!finalData.dateApproved;
     const isNotReprovado = finalData.status !== 'Reprovado';
 
@@ -985,7 +983,7 @@ export function ProposalForm({
                 {!currentProposalId ? (
                     <Alert className="bg-secondary/50 border-none">
                         <div className="flex items-center gap-3">
-                            <Info className="h-4 w-4" />
+                            <div className="mt-1 shrink-0"><Info className="h-4 w-4" /></div>
                             <div>
                                 <AlertTitle className="text-xs font-bold uppercase">Upload Bloqueado</AlertTitle>
                                 <AlertDescription className='text-[10px]'>Salve a proposta antes de anexar arquivos.</AlertDescription>
@@ -1011,7 +1009,7 @@ export function ProposalForm({
                     disabled={isSaving || isDuplicateProposal} 
                     className="rounded-full px-10 font-black uppercase tracking-widest bg-[#00AEEF] hover:bg-[#0096D1] shadow-lg shadow-[#00AEEF]/20 transition-all border-none"
                 >
-                    {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : 'Salvar Proposta'}
+                    {isSaving ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Salvando...</> : 'Salvar Proposta'}
                 </Button>
             )}
         </div>

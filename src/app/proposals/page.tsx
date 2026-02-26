@@ -1,4 +1,3 @@
-
 'use client';
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -71,7 +70,7 @@ function ProposalsPageContent() {
   const [rowSelection, setRowSelection] = React.useState<Record<string, boolean>>({});
   const [defaultValues, setDefaultValues] = React.useState<ProposalFormData | undefined>(undefined);
   const [isSaving, setIsSaving] = React.useState(false);
-  const [formKey, setFormKey] = React.useState('new'); // 🛡️ Chave estável para evitar remount
+  const [formKey, setFormKey] = React.useState('new');
   const tableRef = React.useRef<ProposalsDataTableHandle>(null);
   const [hasOpenedFromParam, setHasOpenedFromParam] = React.useState(false);
   
@@ -115,7 +114,7 @@ function ProposalsPageContent() {
     setSelectedProposal(undefined);
     setDefaultValues(undefined);
     setSheetMode('new');
-    setFormKey(`new-${Date.now()}`); // Nova chave apenas ao clicar no botão
+    setFormKey(`new-${Date.now()}`);
     setIsDialogOpen(true);
   }, []);
 
@@ -144,7 +143,7 @@ function ProposalsPageContent() {
     setNewlySelectedCustomer(null);
   }, []);
   
-  const handleDuplicateProposal = React.useCallback((proposal: ProposalWithCustomer) => {
+  const handleDuplicateProposal = React.useCallback((proposal: Proposal) => {
     const { id, proposalNumber, status, ...rest } = proposal;
     const duplicatedData: ProposalFormData = {
         ...rest,
@@ -255,6 +254,19 @@ function ProposalsPageContent() {
     if (!firestore || !user) return;
     const proposal = proposals?.find(p => p.id === proposalId);
     if (!proposal || proposal.status === newStatus) return;
+
+    // 🛡️ GATILHO INTELIGENTE: Se clicar em Reprovado fora do formulário, abre o modal de edição para colocar o motivo
+    if (newStatus === 'Reprovado') {
+        const fullProposal = proposalsWithCustomerData.find(p => p.id === proposalId);
+        if (fullProposal) {
+            setSelectedProposal(fullProposal);
+            setDefaultValues({ status: 'Reprovado' });
+            setSheetMode('edit');
+            setFormKey(`reprove-${proposalId}-${Date.now()}`);
+            setIsDialogOpen(true);
+            return;
+        }
+    }
 
     const now = new Date().toISOString();
     const userName = user.displayName || user.email || 'Sistema';

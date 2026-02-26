@@ -33,11 +33,8 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
   const handleUpdate = async (newStatus: ProposalStatus) => {
     if (newStatus === currentStatus) return;
 
-    if (newStatus === 'Reprovado') {
-        const confirmed = window.confirm("Você tem certeza que deseja marcar esta proposta como REPROVADA? Esta ação interrompe a esteira.");
-        if (!confirmed) return;
-    }
-
+    // Se houver uma função de status change (como na página de Propostas), delegamos para ela.
+    // A página de propostas agora intercepta 'Reprovado' para abrir o formulário.
     if (onStatusChange) {
         onStatusChange(proposalId, newStatus, product);
         return;
@@ -75,8 +72,6 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
     };
     dataToUpdate.history = arrayUnion(historyEntry);
 
-    // 🤖 AUXÍLIO OPERACIONAL:
-    // Define como Pendente apenas para facilitar o fluxo se houver averbação, mas sem bloqueios.
     try {
         const docRef = doc(firestore, 'loanProposals', proposalId);
         const snap = await getDoc(docRef);
