@@ -66,7 +66,7 @@ export default function LeadCapturePage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [corsError, setCorsError] = useState(false);
+  const [infraError, setInfraError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const settingsDocRef = useMemoFirebase(() => {
@@ -122,6 +122,7 @@ export default function LeadCapturePage() {
 
   const uploadFile = async (file: File): Promise<Attachment | null> => {
     if (!storage) {
+        setInfraError("STORAGE_MISSING");
         throw new Error('storage-not-configured');
     }
 
@@ -139,10 +140,9 @@ export default function LeadCapturePage() {
                 setUploadProgress(progress || 0);
             },
             (error) => {
-                console.error("Upload error details:", error);
-                // Detecta erro de CORS (geralmente erro de rede ou preflight)
-                if (error.code === 'storage/unknown' || error.message.includes('CORS')) {
-                    setCorsError(true);
+                console.error("Upload error:", error);
+                if (error.code === 'storage/retry-limit-exceeded' || error.code === 'storage/unknown') {
+                    setInfraError("CORS_OR_404");
                 }
                 reject(error);
             },
@@ -169,7 +169,7 @@ export default function LeadCapturePage() {
 
     setIsUploading(true);
     setUploadProgress(0);
-    setCorsError(false);
+    setInfraError(null);
     const MAX_SIZE = 15 * 1024 * 1024;
 
     for (const file of Array.from(files)) {
@@ -184,7 +184,7 @@ export default function LeadCapturePage() {
                 setAttachments(prev => [...prev, attachment]);
             }
         } catch (err: any) {
-            toast({ variant: 'destructive', title: 'Falha no Upload', description: "Erro de conexão com o servidor de arquivos." });
+            toast({ variant: 'destructive', title: 'Erro no Servidor', description: "Não foi possível completar o upload." });
             break;
         }
     }
@@ -294,25 +294,21 @@ export default function LeadCapturePage() {
                     <FileText className="h-5 w-5" />
                     Envio de Dados e Documentos
                 </CardTitle>
-                <CardDescription className="text-xs font-medium">Os campos marcados com * são obrigatórios para prosseguir.</CardDescription>
+                <CardDescription className="text-xs font-medium">Os campos com * são obrigatórios.</CardDescription>
             </CardHeader>
             <CardContent className="p-8">
                 <form onSubmit={handleSubmit} className="space-y-10">
-                    {corsError && (
-                        <Alert variant="destructive" className="border-2 animate-pulse mb-6">
+                    
+                    {infraError && (
+                        <Alert variant="destructive" className="border-2 animate-pulse">
                             <AlertTriangle className="h-5 w-5" />
-                            <AlertTitle className="font-bold">Ação Necessária no Servidor</AlertTitle>
-                            <AlertDescription className="text-xs space-y-3">
-                                <p>O upload falhou porque o servidor do Google está recusando a conexão (CORS).</p>
-                                <p>No terminal (Cloud Shell), rode estes 2 comandos:</p>
-                                <div className="space-y-2">
-                                    <code className="block bg-black text-white p-3 rounded text-[10px] break-all font-mono">
-                                        {"echo '[{\"origin\": [\"*\"],\"method\": [\"GET\", \"POST\", \"PUT\", \"DELETE\", \"OPTIONS\"],\"responseHeader\": [\"Content-Type\", \"Authorization\", \"x-goog-resumable\"],\"maxAgeSeconds\": 3600}]' > cors.json"}
-                                    </code>
-                                    <code className="block bg-black text-white p-3 rounded text-[10px] break-all font-mono">
-                                        {"gsutil cors set cors.json gs://studio-248448941-9c1c2.appspot.com"}
-                                    </code>
-                                </div>
+                            <AlertTitle className="font-bold">ERRO DE INFRAESTRUTURA</AlertTitle>
+                            <AlertDescription className="text-xs space-y-2">
+                                <p>O servidor de arquivos (Storage) não está respondendo ou não existe.</p>
+                                <p><strong>Como resolver:</strong> No Cloud Shell do seu projeto, rode o comando abaixo:</p>
+                                <code className="block bg-black text-white p-3 rounded text-[10px] break-all font-mono">
+                                    {"gsutil mb -p " + (userSettings?.projectId || 'ID-DO-PROJETO') + " -l us-central1 gs://studio-248448941-9c1c2.appspot.com"}
+                                </code>
                             </AlertDescription>
                         </Alert>
                     )}
@@ -326,11 +322,6 @@ export default function LeadCapturePage() {
                                 <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">Nome Completo *</Label>
                                 <Input name="name" required placeholder="Digite seu nome e sobrenome" className="h-12 rounded-xl font-bold" value={formData.name} onChange={handleInputChange} />
                             </div>
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">Nome Completo da Mãe</Label>
-                                <Input name="motherName" placeholder="Conforme seu documento" className="h-12 rounded-xl font-bold" value={formData.motherName} onChange={handleInputChange} />
-                            </div>
-                            
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">CPF *</Label>
@@ -345,23 +336,15 @@ export default function LeadCapturePage() {
                                         />
                                         {isCpfInvalid && <AlertTriangle className="absolute right-4 top-3.5 h-5 w-5 text-red-500 animate-pulse" />}
                                     </div>
-                                    {isCpfInvalid && <p className="text-[10px] font-bold text-red-600 uppercase">CPF Inválido - Verifique os números</p>}
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">Data de Nascimento *</Label>
                                     <Input name="birthDate" required placeholder="DD/MM/AAAA" className="h-12 rounded-xl font-bold" value={formData.birthDate} onChange={handleInputChange} />
                                 </div>
                             </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">WhatsApp / Telefone *</Label>
-                                    <Input name="phone" required placeholder="(00) 00000-0000" className="h-12 rounded-xl font-bold" value={formData.phone} onChange={handleInputChange} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2"><CreditCard className="h-3 w-3" /> Nº Benefício INSS (Se possuir)</Label>
-                                    <Input name="benefitNumber" placeholder="000.000.000-0" className="h-12 rounded-xl font-bold" value={formData.benefitNumber} onChange={handleInputChange} />
-                                </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">WhatsApp / Telefone *</Label>
+                                <Input name="phone" required placeholder="(00) 00000-0000" className="h-12 rounded-xl font-bold" value={formData.phone} onChange={handleInputChange} />
                             </div>
                         </div>
                     </div>
@@ -375,40 +358,25 @@ export default function LeadCapturePage() {
                         <div className="grid gap-6">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">CEP *</Label>
-                                    <div className="relative">
-                                        <Input name="cep" required placeholder="00000-000" className="h-12 rounded-xl font-bold" value={formData.cep} onChange={handleInputChange} />
-                                        {isFetchingCep && <Loader2 className="absolute right-4 top-3.5 h-4 w-4 animate-spin text-[#00AEEF]" />}
-                                    </div>
+                                    <Label className="text-[10px] font-black uppercase text-muted-foreground">CEP *</Label>
+                                    <Input name="cep" required placeholder="00000-000" className="h-12 rounded-xl font-bold" value={formData.cep} onChange={handleInputChange} />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">Logradouro (Rua/Avenida) *</Label>
-                                    <Input name="street" required placeholder="Ex: Rua das Flores" className="h-12 rounded-xl font-bold" value={formData.street} onChange={handleInputChange} />
+                                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Logradouro *</Label>
+                                    <Input name="street" required placeholder="Rua/Avenida" className="h-12 rounded-xl font-bold" value={formData.street} onChange={handleInputChange} />
                                 </div>
                             </div>
-
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">Número *</Label>
+                                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Número *</Label>
                                     <Input name="number" required placeholder="123" className="h-12 rounded-xl font-bold" value={formData.number} onChange={handleInputChange} />
                                 </div>
-                                <div className="sm:col-span-2 space-y-2">
-                                    <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">Complemento</Label>
-                                    <Input name="complement" placeholder="Apto, Bloco..." className="h-12 rounded-xl font-bold" value={formData.complement} onChange={handleInputChange} />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">Bairro *</Label>
-                                    <Input name="neighborhood" required placeholder="Bairro" className="h-12 rounded-xl font-bold" value={formData.neighborhood} onChange={handleInputChange} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">Cidade *</Label>
+                                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Cidade *</Label>
                                     <Input name="city" required placeholder="Cidade" className="h-12 rounded-xl font-bold" value={formData.city} onChange={handleInputChange} />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">UF *</Label>
+                                    <Label className="text-[10px] font-black uppercase text-muted-foreground">UF *</Label>
                                     <Input name="state" required placeholder="SP" maxLength={2} className="h-12 rounded-xl font-bold uppercase" value={formData.state} onChange={handleInputChange} />
                                 </div>
                             </div>
@@ -434,8 +402,8 @@ export default function LeadCapturePage() {
                         >
                             <Upload className="h-10 w-10 text-muted-foreground opacity-40" />
                             <div>
-                                <p className="font-bold text-sm">RG, CNH ou Extrato</p>
-                                <p className="text-[10px] text-muted-foreground uppercase mt-1">Toque para anexar documentos</p>
+                                <p className="font-bold text-sm">Anexar RG, CNH ou Extrato</p>
+                                <p className="text-[10px] text-muted-foreground uppercase mt-1">Toque para selecionar arquivos</p>
                             </div>
                             <input 
                                 type="file" 
@@ -478,32 +446,19 @@ export default function LeadCapturePage() {
                         </div>
                     </div>
 
-                    <Separator />
-
-                    <div className="space-y-4">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">
-                            <MessageSquareText className="h-3 w-3" /> Observações ou Dúvidas
-                        </Label>
-                        <Textarea name="observations" placeholder="Deixe seu recado aqui..." className="min-h-[100px] rounded-2xl p-4 font-medium" value={formData.observations} onChange={handleInputChange} />
-                    </div>
-
                     <div className="bg-orange-50/5 p-4 rounded-2xl border border-orange-500/10 flex items-start gap-3">
                         <Info className="h-4 w-4 text-orange-600 mt-0.5 shrink-0" />
                         <p className="text-[10px] text-orange-700 leading-relaxed font-medium">
-                            <strong>Segurança LGPD:</strong> Seus dados estão protegidos por criptografia de ponta a ponta e destinados exclusivamente para análise de crédito na LK Ramos.
+                            <strong>Segurança:</strong> Seus dados são protegidos por criptografia e destinados apenas para análise de crédito.
                         </p>
                     </div>
 
-                    <Button type="submit" disabled={isSubmitting || isUploading || isCpfInvalid} className="w-full h-14 rounded-full bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest shadow-xl shadow-primary/20 transition-all text-sm">
-                        {isSubmitting ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Enviando...</> : 'Confirmar Envio dos Dados'}
+                    <Button type="submit" disabled={isSubmitting || isUploading || isCpfInvalid} className="w-full h-14 rounded-full bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest shadow-xl transition-all text-sm">
+                        {isSubmitting ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Enviando...</> : 'Confirmar Envio'}
                     </Button>
                 </form>
             </CardContent>
         </Card>
-        
-        <div className="mt-10 mb-20 text-center">
-            <p className="text-[10px] font-black uppercase text-zinc-400 tracking-[0.3em]">LK RAMOS - GESTÃO DE ELITE</p>
-        </div>
     </div>
   );
 }
