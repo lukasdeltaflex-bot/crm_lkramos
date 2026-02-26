@@ -208,24 +208,24 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                                             </div>
                                         </div>
 
-                                        {/* NOVO FORMATO DUO-DOCK INTEGRADO */}
-                                        <div className="flex items-center bg-background/60 border border-border/50 rounded-2xl p-1 shadow-sm h-14 md:min-w-[400px]">
+                                        {/* NOVO FORMATO DUO-DOCK INTEGRADO - ESCALA AJUSTADA */}
+                                        <div className="flex items-center bg-background/60 border border-border/50 rounded-2xl p-1.5 shadow-sm h-16 md:min-w-[440px]">
                                             {/* SLOT RMC */}
-                                            <div className="flex-1 flex items-center gap-3 px-4 py-2 border-r border-border/30">
-                                                <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-orange-500/10 text-orange-600 font-black text-[8px] uppercase">RMC</div>
-                                                <div className="flex items-center gap-2 overflow-hidden">
-                                                    <BankIcon bankName={benefit.rmcBank} domain={userSettings?.bankDomains?.[benefit.rmcBank]} showLogo={showLogos} className="h-4 w-4" />
-                                                    <p className="text-[10px] font-bold text-foreground truncate max-w-[80px]">
+                                            <div className="flex-1 flex items-center gap-4 px-4 py-2 border-r border-border/30">
+                                                <div className="flex items-center justify-center h-9 w-9 rounded-full bg-orange-500/10 text-orange-600 font-black text-[10px] uppercase shadow-sm">RMC</div>
+                                                <div className="flex items-center gap-2.5 overflow-hidden">
+                                                    <BankIcon bankName={benefit.rmcBank} domain={userSettings?.bankDomains?.[benefit.rmcBank]} showLogo={showLogos} className="h-5 w-5" />
+                                                    <p className="text-[11px] font-black text-foreground truncate max-w-[100px] uppercase tracking-tight">
                                                         {benefit.rmcBank ? cleanBankName(benefit.rmcBank) : "Livre"}
                                                     </p>
                                                 </div>
                                             </div>
                                             {/* SLOT RCC */}
-                                            <div className="flex-1 flex items-center gap-3 px-4 py-2">
-                                                <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-blue-500/10 text-blue-600 font-black text-[8px] uppercase">RCC</div>
-                                                <div className="flex items-center gap-2 overflow-hidden">
-                                                    <BankIcon bankName={benefit.rccBank} domain={userSettings?.bankDomains?.[benefit.rccBank]} showLogo={showLogos} className="h-4 w-4" />
-                                                    <p className="text-[10px] font-bold text-foreground truncate max-w-[80px]">
+                                            <div className="flex-1 flex items-center gap-4 px-4 py-2">
+                                                <div className="flex items-center justify-center h-9 w-9 rounded-full bg-blue-500/10 text-blue-600 font-black text-[10px] uppercase shadow-sm">RCC</div>
+                                                <div className="flex items-center gap-2.5 overflow-hidden">
+                                                    <BankIcon bankName={benefit.rccBank} domain={userSettings?.bankDomains?.[benefit.rccBank]} showLogo={showLogos} className="h-5 w-5" />
+                                                    <p className="text-[11px] font-black text-foreground truncate max-w-[100px] uppercase tracking-tight">
                                                         {benefit.rccBank ? cleanBankName(benefit.rccBank) : "Livre"}
                                                     </p>
                                                 </div>

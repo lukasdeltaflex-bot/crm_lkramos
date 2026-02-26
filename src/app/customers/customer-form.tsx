@@ -625,17 +625,17 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                                 </Button>
                             </div>
 
-                            {/* NOVO FORMATO DUO-DOCK NO FORMULÁRIO */}
-                            <div className="flex items-center gap-3 bg-background/60 border border-border/50 rounded-2xl p-1 shadow-sm h-16 w-full">
-                                <div className="flex-1 flex flex-col justify-center px-4 border-r border-border/30">
-                                    <span className="text-[8px] font-black text-orange-600 uppercase tracking-widest mb-1">Reserva RMC</span>
+                            {/* NOVO FORMATO DUO-DOCK NO FORMULÁRIO - ESCALA AJUSTADA */}
+                            <div className="flex items-center gap-3 bg-background/60 border border-border/50 rounded-2xl p-1.5 shadow-sm h-20 w-full">
+                                <div className="flex-1 flex flex-col justify-center px-5 border-r border-border/30">
+                                    <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-1.5">Reserva RMC</span>
                                     <FormField
                                         control={form.control}
                                         name={`benefits.${index}.rmcBank`}
                                         render={({ field }) => (
                                             <Select onValueChange={field.onChange} value={field.value ?? ''}>
                                                 <FormControl>
-                                                    <SelectTrigger className="h-8 border-none bg-transparent shadow-none p-0 focus:ring-0 font-bold text-xs">
+                                                    <SelectTrigger className="h-9 border-none bg-transparent shadow-none p-0 focus:ring-0 font-bold text-sm">
                                                         <SelectValue placeholder="Livre / Selecione" />
                                                     </SelectTrigger>
                                                 </FormControl>
@@ -643,9 +643,9 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                                                     <SelectItem value="none">Sem Reserva</SelectItem>
                                                     {banks.map(b => (
                                                         <SelectItem key={b} value={b}>
-                                                            <div className="flex items-center gap-2">
-                                                                <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogo={showLogos} className="h-3 w-3" />
-                                                                <span>{cleanBankName(b)}</span>
+                                                            <div className="flex items-center gap-2.5">
+                                                                <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogo={showLogos} className="h-4 w-4" />
+                                                                <span className="text-xs uppercase font-bold">{cleanBankName(b)}</span>
                                                             </div>
                                                         </SelectItem>
                                                     ))}
@@ -654,15 +654,15 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                                         )}
                                     />
                                 </div>
-                                <div className="flex-1 flex flex-col justify-center px-4">
-                                    <span className="text-[8px] font-black text-blue-600 uppercase tracking-widest mb-1">Reserva RCC</span>
+                                <div className="flex-1 flex flex-col justify-center px-5">
+                                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1.5">Reserva RCC</span>
                                     <FormField
                                         control={form.control}
                                         name={`benefits.${index}.rccBank`}
                                         render={({ field }) => (
                                             <Select onValueChange={field.onChange} value={field.value ?? ''}>
                                                 <FormControl>
-                                                    <SelectTrigger className="h-8 border-none bg-transparent shadow-none p-0 focus:ring-0 font-bold text-xs">
+                                                    <SelectTrigger className="h-9 border-none bg-transparent shadow-none p-0 focus:ring-0 font-bold text-sm">
                                                         <SelectValue placeholder="Livre / Selecione" />
                                                     </SelectTrigger>
                                                 </FormControl>
@@ -670,9 +670,9 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                                                     <SelectItem value="none">Sem Reserva</SelectItem>
                                                     {banks.map(b => (
                                                         <SelectItem key={b} value={b}>
-                                                            <div className="flex items-center gap-2">
-                                                                <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogo={showLogos} className="h-3 w-3" />
-                                                                <span>{cleanBankName(b)}</span>
+                                                            <div className="flex items-center gap-2.5">
+                                                                <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogo={showLogos} className="h-4 w-4" />
+                                                                <span className="text-xs uppercase font-bold">{cleanBankName(b)}</span>
                                                             </div>
                                                         </SelectItem>
                                                     ))}
