@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams } from 'react-nest';
 import { useFirestore, useDoc, useMemoFirebase, useFirebase } from '@/firebase';
 import { doc, collection, setDoc } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
@@ -121,7 +121,6 @@ export default function LeadCapturePage() {
 
   const uploadFile = async (file: File): Promise<Attachment | null> => {
     if (!storage) {
-        console.error("❌ DIAGNÓSTICO: O objeto 'storage' não foi inicializado.");
         throw new Error('storage-not-configured');
     }
 
@@ -130,7 +129,6 @@ export default function LeadCapturePage() {
     const filePath = `leads_temp/${uid}/${timestamp}_${cleanName}`;
     const storageRef = ref(storage, filePath);
     
-    console.log(`🚀 DIAGNÓSTICO: Iniciando tentativa de upload para: ${filePath}`);
     const uploadTask = uploadBytesResumable(storageRef, file);
 
     return new Promise((resolve, reject) => {
@@ -138,31 +136,17 @@ export default function LeadCapturePage() {
             (snapshot) => {
                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
                 setUploadProgress(progress || 0);
-                console.log(`📊 DIAGNÓSTICO: Progresso de ${file.name}: ${progress.toFixed(2)}%`);
             },
             (error) => {
-                console.error("❌ ERRO FATAL NO STORAGE:", {
-                    code: error.code,
-                    message: error.message,
-                    fullError: error
-                });
-
+                console.error("Upload error:", error);
                 if (error.code === 'storage/unknown' || error.message.includes('CORS')) {
-                    const bucketName = storage.app.options.storageBucket || "studio-248448941-9c1c2.appspot.com";
-                    setCorsErrorBucket(bucketName);
-                    toast({
-                        variant: 'destructive',
-                        title: 'Conexão Bloqueada (CORS)',
-                        description: 'O servidor recusou a conexão.'
-                    });
+                    setCorsErrorBucket("studio-248448941-9c1c2.firebasestorage.app");
                 }
-                
                 reject(error);
             },
             async () => {
                 try {
                     const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                    console.log(`✅ DIAGNÓSTICO: Upload finalizado com success: ${downloadURL}`);
                     resolve({
                         name: file.name,
                         url: downloadURL,
@@ -197,7 +181,7 @@ export default function LeadCapturePage() {
                 setAttachments(prev => [...prev, attachment]);
             }
         } catch (err: any) {
-            toast({ variant: 'destructive', title: 'Falha no Upload', description: "Erro ao enviar arquivo. Verifique o console." });
+            toast({ variant: 'destructive', title: 'Falha no Upload', description: "Erro de conexão com o servidor." });
             break;
         }
     }
@@ -314,13 +298,13 @@ export default function LeadCapturePage() {
                     {corsErrorBucket && (
                         <Alert variant="destructive" className="border-2 animate-pulse mb-6">
                             <AlertTriangle className="h-5 w-5" />
-                            <AlertTitle className="font-bold">Ação Necessária para Habilitar Upload</AlertTitle>
+                            <AlertTitle className="font-bold">Ação Necessária</AlertTitle>
                             <AlertDescription className="text-xs space-y-2">
                                 <p>O servidor está recusando a conexão segura (Erro CORS).</p>
                                 <p className="font-bold">Rode estes comandos no terminal para liberar:</p>
-                                <code className="block bg-black text-white p-3 rounded mt-2 text-[10px] break-all leading-relaxed font-mono">
-                                    {"gsutil cors set cors.json gs://" + corsErrorBucket}
-                                </code>
+                                <div className="block bg-black text-white p-3 rounded mt-2 text-[10px] break-all leading-relaxed font-mono">
+                                    gsutil cors set cors.json gs://{corsErrorBucket}
+                                </div>
                             </AlertDescription>
                         </Alert>
                     )}
