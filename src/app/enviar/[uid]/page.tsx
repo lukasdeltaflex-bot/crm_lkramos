@@ -180,7 +180,7 @@ export default function LeadCapturePage() {
             toast({ 
                 variant: 'destructive', 
                 title: 'Falha no envio', 
-                description: "O upload falhou. Verifique se o CORS foi aplicado ou tente em uma aba anônima." 
+                description: "Verifique as 'Rules' do Storage no console do Firebase e certifique-se de que estão públicas para teste." 
             });
             break;
         }
@@ -344,9 +344,9 @@ export default function LeadCapturePage() {
                         {errorDetails && (
                             <Alert variant="destructive" className="mb-4">
                                 <AlertTriangle className="h-4 w-4" />
-                                <AlertTitle>Erro de Conexão</AlertTitle>
+                                <AlertTitle>Erro de Permissão</AlertTitle>
                                 <AlertDescription>
-                                    O upload está sendo bloqueado. Tente abrir esta página em modo anônimo ou limpar o cache do navegador.
+                                    O upload falhou. Certifique-se de que as <strong>Storage Rules</strong> no console do Firebase permitem gravação pública (<code>allow read, write: if true;</code>).
                                 </AlertDescription>
                             </Alert>
                         )}
