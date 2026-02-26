@@ -25,7 +25,8 @@ import {
   banks as initialBanks,
   commissionStatuses as initialCommissionStatuses,
   expenseCategories as initialExpenseCategories,
-  defaultCustomerTags as initialCustomerTags
+  defaultCustomerTags as initialCustomerTags,
+  defaultRejectionReasons as initialRejectionReasons
 } from '@/lib/config-data';
 import { 
     ListChecks, 
@@ -54,7 +55,8 @@ import {
     Settings2,
     RotateCcw,
     CloudSun,
-    Tags
+    Tags,
+    SearchX
 } from 'lucide-react';
 import { EditableList } from '@/components/settings/editable-list';
 import { BankEditableList } from '@/components/settings/bank-editable-list';
@@ -733,6 +735,20 @@ export default function SettingsPage() {
                         <EditableList title="Órgãos Aprovadores" items={userSettings?.approvingBodies || initialApprovingBodies} setItems={(n) => saveSettingsToFirebase({ approvingBodies: n as string[] })} />
                         <EditableList title="Categorias de Despesas" items={userSettings?.expenseCategories || initialExpenseCategories} setItems={(n) => saveSettingsToFirebase({ expenseCategories: n as string[] })} />
                         
+                        <AccordionItem value="reprovas" className="border-b">
+                            <AccordionTrigger className="flex items-center gap-2">
+                                <SearchX className="h-4 w-4 text-red-500" />
+                                Motivos de Reprova (Portabilidade)
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                <EditableList 
+                                    title="Tópicos de Reprova" 
+                                    items={userSettings?.rejectionReasons || initialRejectionReasons as any} 
+                                    setItems={(n) => saveSettingsToFirebase({ rejectionReasons: n as string[] })} 
+                                />
+                            </AccordionContent>
+                        </AccordionItem>
+
                         <AccordionItem value="tags-clientes" className="border-b">
                             <AccordionTrigger className="flex items-center gap-2">
                                 <Tags className="h-4 w-4 text-pink-500" />

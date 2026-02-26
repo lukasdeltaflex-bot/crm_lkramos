@@ -47,7 +47,8 @@ import {
     Send,
     FileCheck,
     PenTool,
-    ShieldCheck
+    ShieldCheck,
+    SearchX
 } from 'lucide-react';
 import { format, parse, parseISO, isValid } from 'date-fns';
 import { cn, formatCurrency, cleanBankName, cleanFirestoreData } from '@/lib/utils';
@@ -79,9 +80,11 @@ const optionalDateString = z.string().optional().refine(val => !val || !isNaN(pa
 
 const proposalSchema = z.object({
   proposalNumber: z.string().min(1, "O Nº da proposta é obrigatório."),
+  originalContractNumber: z.string().optional(),
   customerId: z.string({ required_error: 'Selecione um cliente.' }),
   product: z.string({ required_error: 'Selecione um produto.' }),
   status: z.string({ required_error: 'Selecione um status.' }),
+  rejectionReason: z.string().optional(),
   commissionStatus: z.string().optional(),
   selectedBenefitNumber: z.string().optional(),
 
@@ -173,6 +176,7 @@ export function ProposalForm({
 
   const productTypes = userSettings?.productTypes || configData.productTypes;
   const proposalStatuses = userSettings?.proposalStatuses || configData.proposalStatuses;
+  const rejectionReasons = userSettings?.rejectionReasons || configData.defaultRejectionReasons;
   const approvingBodies = userSettings?.approvingBodies || configData.approvingBodies;
   const banks = userSettings?.banks || configData.banks;
   const showLogos = userSettings?.showBankLogos ?? true;
@@ -206,9 +210,11 @@ export function ProposalForm({
     const source = proposal || defaultValues;
     return {
       proposalNumber: source?.proposalNumber || '',
+      originalContractNumber: source?.originalContractNumber || '',
       customerId: source?.customerId || '',
       product: source?.product || '',
       status: source?.status || 'Em Andamento',
+      rejectionReason: source?.rejectionReason || '',
       commissionStatus: source?.commissionStatus || '',
       selectedBenefitNumber: source?.selectedBenefitNumber || '',
       table: source?.table || '',
@@ -255,11 +261,22 @@ export function ProposalForm({
   const currentStatusValue = watch('status');
   const watchDateDigitized = watch('dateDigitized');
   const watchProposalNumber = watch('proposalNumber');
+  const watchOriginalContract = watch('originalContractNumber');
   const checklist = watch('checklist') || {};
 
   const selectedCustomer = useMemo(() => {
     return customers.find(c => c.id === selectedCustomerId);
   }, [customers, selectedCustomerId]);
+
+  // 🕵️ AUDITORIA DE REPROVA ANTERIOR
+  const historicalRejection = useMemo(() => {
+    if (!watchOriginalContract || watchOriginalContract.trim() === '' || productValue !== 'Portabilidade') return null;
+    return allProposals.find(p => 
+        p.originalContractNumber === watchOriginalContract.trim() && 
+        p.status === 'Reprovado' &&
+        p.id !== proposal?.id
+    );
+  }, [watchOriginalContract, allProposals, proposal?.id, productValue]);
 
   // 🕵️ VERIFICADOR DE DUPLICIDADE EM TEMPO REAL
   const isDuplicateProposal = useMemo(() => {
@@ -320,6 +337,15 @@ export function ProposalForm({
         return;
     }
 
+    if (data.status === 'Reprovado' && !data.rejectionReason) {
+        toast({
+            variant: 'destructive',
+            title: '⚠️ MOTIVO OBRIGATÓRIO',
+            description: 'Você deve especificar o motivo da reprova para salvar.'
+        });
+        return;
+    }
+
     const convertToIso = (dateStr?: string) => {
         if (!dateStr || dateStr.trim() === '') return null;
         try {
@@ -369,6 +395,14 @@ export function ProposalForm({
         checkChange('grossAmount', 'Valor Bruto', formatCurrency);
         checkChange('netAmount', 'Valor Líquido', formatCurrency);
         checkChange('promoter', 'Promotora');
+        if (finalData.status === 'Reprovado') {
+            auditEntries.push({
+                id: crypto.randomUUID(),
+                date: now,
+                message: `MOTIVO DA REPROVA: ${finalData.rejectionReason}`,
+                userName
+            });
+        }
     } else {
         auditEntries.push({
             id: crypto.randomUUID(),
@@ -429,6 +463,21 @@ export function ProposalForm({
               <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
                 <FolderLock className="h-4 w-4" /> Registro LK RAMOS
               </h3>
+              
+              {historicalRejection && (
+                  <Alert variant="destructive" className="border-2 animate-in slide-in-from-top-2 duration-500 rounded-2xl bg-red-50 dark:bg-red-900/20">
+                      <SearchX className="h-5 w-5 text-red-600" />
+                      <AlertTitle className="font-black uppercase text-xs tracking-widest">Contrato Já Reprovado!</AlertTitle>
+                      <AlertDescription className="text-xs font-medium">
+                          Este número de contrato foi reprovado anteriormente na <span className="font-black">Prop. {historicalRejection.proposalNumber}</span>.
+                          <div className="mt-2 p-2 bg-white/50 dark:bg-black/20 rounded border border-red-200">
+                              <span className="font-black text-[10px] uppercase text-red-700">Motivo:</span>
+                              <p className="font-bold text-red-600 italic">"{historicalRejection.rejectionReason || 'Não especificado'}"</p>
+                          </div>
+                      </AlertDescription>
+                  </Alert>
+              )}
+
               <FormField
                 control={form.control}
                 name="customerId"
@@ -481,6 +530,29 @@ export function ProposalForm({
                     )}
                 />
               </div>
+
+              {currentStatusValue === 'Reprovado' && (
+                  <FormField
+                    control={form.control}
+                    name="rejectionReason"
+                    render={({ field }) => (
+                        <FormItem className="animate-in slide-in-from-left-2 duration-300">
+                            <FormLabel className="text-red-600 font-black uppercase text-[10px] tracking-widest">Motivo Obrigatório da Reprova *</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
+                                <FormControl>
+                                    <SelectTrigger className="border-red-200 bg-red-50/50 font-bold">
+                                        <SelectValue placeholder="Selecione por que foi reprovado" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {rejectionReasons.map(reason => <SelectItem key={reason} value={reason} className="font-medium">{reason}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                  />
+              )}
             </div>
 
             <Separator />
@@ -580,39 +652,63 @@ export function ProposalForm({
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {productValue === 'Portabilidade' ? (
-                    <FormField
-                        control={form.control}
-                        name="bankOrigin"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Banco Portado (Origem)</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
-                                    <FormControl><SelectTrigger className="font-bold"><SelectValue placeholder="Origem" /></SelectTrigger></FormControl>
-                                    <SelectContent>{banks.map(b => (
-                                        <SelectItem key={b} value={b}>
-                                            <div className="flex items-center gap-2">
-                                                <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogo={showLogos} className="h-4 w-4" />
-                                                <span>{cleanBankName(b)}</span>
-                                            </div>
-                                        </SelectItem>
-                                    ))}</SelectContent>
-                                </Select>
+                    <>
+                        <FormField
+                            control={form.control}
+                            name="bankOrigin"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Banco Portado (Origem)</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
+                                        <FormControl><SelectTrigger className="font-bold"><SelectValue placeholder="Origem" /></SelectTrigger></FormControl>
+                                        <SelectContent>{banks.map(b => (
+                                            <SelectItem key={b} value={b}>
+                                                <div className="flex items-center gap-2">
+                                                    <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogo={showLogos} className="h-4 w-4" />
+                                                    <span>{cleanBankName(b)}</span>
+                                                </div>
+                                            </SelectItem>
+                                        ))}</SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="originalContractNumber"
+                            render={({ field }) => (
+                                <FormItem className="animate-in zoom-in-95 duration-300">
+                                <FormLabel className="text-primary font-black uppercase text-[10px] tracking-widest">Nº Contrato Portado (Origem)</FormLabel>
+                                <FormControl>
+                                    <div className="relative">
+                                        <Input 
+                                            placeholder="Nº Contrato Banco Origem" 
+                                            {...field} 
+                                            value={field.value ?? ''} 
+                                            readOnly={isReadOnly || isSaving} 
+                                            className={cn("font-bold border-primary/20 bg-primary/[0.02]", historicalRejection && "border-red-500 bg-red-50 ring-2 ring-red-200")}
+                                        />
+                                        {historicalRejection && <AlertTriangle className="absolute right-3 top-2.5 h-5 w-5 text-red-500 animate-pulse" />}
+                                    </div>
+                                </FormControl>
                                 <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                ) : <div />}
+                                </FormItem>
+                            )}
+                        />
+                    </>
+                ) : <div className="hidden md:block" />}
                 
                 <FormField
                   control={form.control}
                   name="proposalNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nº de Proposta *</FormLabel>
+                      <FormLabel>Nº de Proposta (Nova) *</FormLabel>
                       <FormControl>
                         <div className="relative">
                             <Input 
-                                placeholder="Contrato" 
+                                placeholder="Contrato Novo" 
                                 {...field} 
                                 value={field.value ?? ''} 
                                 readOnly={isReadOnly || isSaving} 

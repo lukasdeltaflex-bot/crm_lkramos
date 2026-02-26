@@ -115,6 +115,8 @@ export type Proposal = {
   observations?: string;
   history?: ProposalHistoryEntry[];
   checklist?: Record<string, boolean>; // Novo: Controle operacional por etapas
+  originalContractNumber?: string; // Nº do contrato que está sendo portado
+  rejectionReason?: string; // Motivo da reprova
 };
 
 export type UserSettings = {
@@ -127,6 +129,7 @@ export type UserSettings = {
   customerTags?: string[]; // Etiquetas oficiais de clientes
   tagColors?: Record<string, string>; // Cores das etiquetas
   expenseCategories: string[];
+  rejectionReasons?: string[]; // Motivos de reprova de portabilidade
   bankDomains?: Record<string, string>;
   promoterDomains?: Record<string, string>;
   showBankLogos?: boolean;

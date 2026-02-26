@@ -7,6 +7,7 @@ export const commissionStatuses: readonly CommissionStatus[] = ['Pendente', 'Pag
 export const approvingBodies: readonly string[] = ['INSS', 'SPPREV', 'Federal', 'SIAPE', 'USP', 'GOVERNO', 'CLT', 'Outro'];
 export const expenseCategories: readonly string[] = ['Aluguel', 'Internet', 'Telefonia', 'Tráfego Pago', 'Salários', 'Impostos', 'Outros'];
 export const defaultCustomerTags: readonly string[] = ['💎 VIP', '✅ Margem Livre', '⚠️ Restrição', '📞 Receptivo', '🚀 Prospecção', '👴 Aposentado', '🏦 Servidor', '💼 CLT'];
+export const defaultRejectionReasons: readonly string[] = ['Retenção do cliente', 'Contrato já liquidado', 'Contrato não encontrado', 'Saldo devedor divergente', 'Erro de averbação', 'Desistência do cliente', 'Margem excedida', 'Vínculo empregatício incompatível'];
 
 export const operationalSteps = [
   { id: 'formalization', label: 'Formalização', icon: 'send' },
