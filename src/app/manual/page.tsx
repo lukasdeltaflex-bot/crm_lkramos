@@ -33,7 +33,8 @@ import {
     AlertTriangle,
     LinkIcon,
     ArrowRight,
-    HardDrive
+    HardDrive,
+    SearchX
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -77,13 +78,50 @@ export default function ManualPage() {
                     </AccordionContent>
                 </AccordionItem>
 
-                {/* 2. FIDELIDADE E SMART TAGS */}
+                {/* 2. REGRAS DE PORTABILIDADE E AUDITORIA */}
+                <AccordionItem value="portability-rules" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-red-500/20">
+                    <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-red-100 text-red-600"><SearchX className="h-5 w-5" /></div>
+                            <div className="text-left">
+                                <p className="font-bold text-sm">2. Ferramenta de Auditoria de Portabilidade</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Blindagem contra Retrabalho</p>
+                            </div>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
+                        <div className="space-y-4">
+                            <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/20">
+                                <h4 className="font-bold text-red-700 flex items-center gap-2 mb-2">
+                                    <Check className="h-4 w-4" /> Nº de Contrato Obrigatório
+                                </h4>
+                                <p className="text-xs text-muted-foreground">Ao selecionar o produto **Portabilidade**, o campo "Nº Contrato Portado (Origem)" torna-se **obrigatório**. O sistema não permite salvar a proposta sem essa identificação única.</p>
+                            </div>
+                            
+                            <div className="p-4 rounded-xl bg-orange-500/5 border border-orange-500/20">
+                                <h4 className="font-bold text-orange-700 flex items-center gap-2 mb-2">
+                                    <AlertTriangle className="h-4 w-4" /> Alerta de Reprova Anterior
+                                </h4>
+                                <p className="text-xs text-muted-foreground">O sistema possui um **radar histórico**. Ao digitar o número do contrato, ele verifica instantaneamente se esse contrato já foi reprovado antes. Se sim, um alerta vermelho aparecerá no topo do formulário exibindo o motivo da reprova anterior (ex: Retenção ou Liquidado), evitando que você perca tempo com uma nova tentativa inútil.</p>
+                            </div>
+
+                            <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
+                                <h4 className="font-bold text-blue-700 flex items-center gap-2 mb-2">
+                                    <ListTodo className="h-4 w-4" /> Justificativa Obrigatória
+                                </h4>
+                                <p className="text-xs text-muted-foreground">Sempre que você alterar o status de uma proposta para **"Reprovado"**, o sistema exigirá que você selecione um motivo oficial. Esses motivos alimentam a inteligência do radar histórico.</p>
+                            </div>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+
+                {/* 3. FIDELIDADE E SMART TAGS */}
                 <AccordionItem value="fidelity-score" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-amber-100 text-amber-600"><Star className="h-5 w-5 fill-amber-500" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">2. Fidelidade e Smart Tags (Automáticas)</p>
+                                <p className="font-bold text-sm">3. Fidelidade e Smart Tags (Automáticas)</p>
                                 <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Inteligência de Comportamento do Cliente</p>
                             </div>
                         </div>
@@ -107,13 +145,13 @@ export default function ManualPage() {
                     </AccordionContent>
                 </AccordionItem>
 
-                {/* 3. BUSCA NUCLEAR V12 */}
+                {/* 4. BUSCA NUCLEAR V12 */}
                 <AccordionItem value="search-v12" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-blue-100 text-blue-600"><Binary className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">3. Busca Nuclear V12 (Precisão)</p>
+                                <p className="font-bold text-sm">4. Busca Nuclear V12 (Precisão)</p>
                                 <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Localização Instantânea de Registros</p>
                             </div>
                         </div>
@@ -132,13 +170,13 @@ export default function ManualPage() {
                     </AccordionContent>
                 </AccordionItem>
 
-                {/* 4. NAVEGAÇÃO E EDIÇÃO ÁGIL */}
+                {/* 5. NAVEGAÇÃO E EDIÇÃO ÁGIL */}
                 <AccordionItem value="agile-editing" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-purple-100 text-purple-600"><Pencil className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">4. Edição Contextual Direta</p>
+                                <p className="font-bold text-sm">5. Edição Contextual Direta</p>
                                 <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Velocidade em Atualização de Dados</p>
                             </div>
                         </div>
@@ -151,13 +189,13 @@ export default function ManualPage() {
                     </AccordionContent>
                 </AccordionItem>
 
-                {/* 5. CONCILIAÇÃO IA V2 */}
+                {/* 6. CONCILIAÇÃO IA V2 */}
                 <AccordionItem value="finance-v2" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-green-100 text-green-600"><FileCheck2 className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">5. Conciliação Financeira IA V2</p>
+                                <p className="font-bold text-sm">6. Conciliação Financeira IA V2</p>
                                 <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Conferência de Comissões por Arquivo</p>
                             </div>
                         </div>
@@ -177,13 +215,13 @@ export default function ManualPage() {
                     </AccordionContent>
                 </AccordionItem>
 
-                {/* 6. AGENDA DE ANIVERSÁRIOS */}
+                {/* 7. AGENDA DE ANIVERSÁRIOS */}
                 <AccordionItem value="birthday-calendar" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-pink-100 text-pink-600"><Cake className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">6. Agenda de Aniversários Consolidada</p>
+                                <p className="font-bold text-sm">7. Agenda de Aniversários Consolidada</p>
                                 <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Planejamento Mensal de Relacionamento</p>
                             </div>
                         </div>
@@ -192,34 +230,6 @@ export default function ManualPage() {
                         <div className="p-4 rounded-xl bg-pink-500/5 border pink-500/20">
                             <h4 className="font-bold mb-2">Visão Mensal Integrada</h4>
                             <p className="text-xs text-muted-foreground">A ferramenta de aniversariantes agora faz parte da página de **Clientes**. Basta clicar na aba **"Aniversariantes"** para ver o calendário. Clique em qualquer nome para gerar uma mensagem personalizada com IA e enviar direto pelo WhatsApp.</p>
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
-
-                {/* 7. REGRAS DE PROPOSTA */}
-                <AccordionItem value="proposal-rules" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
-                    <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-blue-100 text-blue-600"><ListTodo className="h-5 w-5" /></div>
-                            <div className="text-left">
-                                <p className="font-bold text-sm">7. Integridade de Propostas</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Campos Obrigatórios e Auditoria</p>
-                            </div>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
-                        <div className="space-y-4">
-                            <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
-                                <h4 className="font-bold mb-2">Campos Obrigatórios</h4>
-                                <p className="text-xs text-muted-foreground">Para garantir a rastreabilidade financeira, o sistema exige o preenchimento de: **Nº de Proposta**, **Banco Digitado**, **Operador** e **Promotora**. Sem estes dados, o registro não será salvo.</p>
-                            </div>
-                            <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/20">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <AlertTriangle className="h-4 w-4 text-red-600" />
-                                    <h4 className="font-bold">Verificação de Duplicidade</h4>
-                                </div>
-                                <p className="text-xs text-muted-foreground">O sistema impede o cadastro de duas propostas com o mesmo número. Caso você tente duplicar um lançamento acidentalmente, um alerta aparecerá em tempo real no campo **Nº de Proposta**.</p>
-                            </div>
                         </div>
                     </AccordionContent>
                 </AccordionItem>
@@ -255,94 +265,10 @@ export default function ManualPage() {
                                 <p className="text-xs text-muted-foreground">
                                     Para gerenciar centenas de clientes com eficiência nos 5GB gratuitos:
                                     <br /><br />
-                                    1. 📱 **Fotos de Celular**: Use a configuração de "Baixa Resolução" ou mande via WhatsApp para si mesmo antes de subir (o WhatsApp reduz o tamanho sem perder a legibilidade).
+                                    1. 📱 **Fotos de Celular**: Use a configuração de "Baixa Resolução" ou mande via WhatsApp para si mesmo antes de subir.
                                     <br />
-                                    2. 📄 **Documentos PDF**: Prefira arquivos gerados digitalmente a fotos de documentos, pois são muito mais leves.
-                                    <br />
-                                    3. 🗑️ **Limpeza**: Remova anexos de propostas muito antigas ou reprovadas que não serão mais utilizadas.
+                                    2. 📄 **Documentos PDF**: Prefira arquivos gerados digitalmente a fotos de documentos.
                                 </p>
-                            </div>
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
-
-                {/* 9. CLASSIFICAÇÃO INTELIGENTE (TAGS) */}
-                <AccordionItem value="tags-management" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
-                    <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-pink-100 text-pink-600"><Tags className="h-4 w-4" /></div>
-                            <div className="text-left">
-                                <p className="font-bold text-sm">9. Gestão de Relacionamento (Tags)</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Segmentação e Símbolos Visuais</p>
-                            </div>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
-                        <p>Organize sua base de clientes com etiquetas coloridas e símbolos:</p>
-                        <ul className="space-y-3">
-                            <li className="flex gap-3">
-                                <div className="h-5 w-5 rounded-full bg-pink-500 text-white flex items-center justify-center shrink-0"><SmilePlus className="h-3 w-3" /></div>
-                                <p><strong>Atalho de Símbolos</strong>: Use <kbd className="bg-muted px-1 rounded border">Win + .</kbd> (Windows) para adicionar emojis às suas tags.</p>
-                            </li>
-                            <li className="flex gap-3">
-                                <div className="h-5 w-5 rounded-full bg-blue-500 text-white flex items-center justify-center shrink-0"><Check className="h-3 w-3" /></div>
-                                <p><strong>Filtros Cirúrgicos</strong>: Na tela de Clientes, filtre por etiquetas para focar suas campanhas (ex: Clientes VIP).</p>
-                            </li>
-                        </ul>
-                    </AccordionContent>
-                </AccordionItem>
-
-                {/* 10. HALL DA FAMA (DASHBOARD) */}
-                <AccordionItem value="hall-of-fame" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
-                    <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-amber-100 text-amber-600"><Trophy className="h-5 w-5 fill-amber-500" /></div>
-                            <div className="text-left">
-                                <p className="font-bold text-sm">10. Hall da Fama Mensal (Dashboard)</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Recordes e Conquistas do Mês</p>
-                            </div>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
-                        <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
-                            <h4 className="font-bold mb-2">Monitoramento de Performance</h4>
-                            <p className="text-xs text-muted-foreground">O Dashboard apresenta seus recordes do mês vigente em tempo real para manter a motivação em alta:</p>
-                            <ul className="mt-3 space-y-2">
-                                <li className="flex items-center gap-2 text-xs"><Trophy className="h-3 w-3 text-amber-600" /> <strong>Contrato Ouro</strong>: O maior valor de proposta paga até agora no mês.</li>
-                                <li className="flex items-center gap-2 text-xs"><Zap className="h-3 w-3 text-blue-600" /> <strong>Pico de Produção</strong>: O maior volume financeiro digitado em um único dia.</li>
-                                <li className="flex items-center gap-2 text-xs"><Star className="h-3 w-3 text-purple-600" /> <strong>Estrela da Base</strong>: O cliente que mais gerou volume de contratos **PAGOS** no período (Exibe Nome e Sobrenome).</li>
-                            </ul>
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
-
-                {/* 11. PORTAL DE CAPTURA DE LEADS */}
-                <AccordionItem value="leads-portal" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
-                    <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-blue-100 text-blue-600"><LinkIcon className="h-5 w-5" /></div>
-                            <div className="text-left">
-                                <p className="font-bold text-sm">11. Portal de Auto-Cadastro (Leads)</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Automação de Entrada de Clientes</p>
-                            </div>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
-                        <div className="space-y-4">
-                            <p>Esta ferramenta transfere a digitação de dados básicos e o envio de documentos para o próprio cliente, garantindo 100% de precisão.</p>
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
-                                    <h4 className="font-bold text-xs uppercase mb-2">Integridade de Dados</h4>
-                                    <p className="text-xs text-muted-foreground">O portal exige obrigatoriamente **Nome, CPF (validado), Nascimento e WhatsApp**. CPFs inválidos são bloqueados automaticamente.</p>
-                                </div>
-                                <div className="p-4 rounded-xl bg-green-500/5 border border-green-500/20">
-                                    <h4 className="font-bold text-xs uppercase mb-2">Revisão e Aprovação</h4>
-                                    <p className="text-xs text-muted-foreground">Quando o cliente envia, um alerta aparece no Dashboard. Clique em **"Fichas Recebidas"** e em **"Aprovar"** para criar o cliente automaticamente.</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2 p-3 bg-muted/20 rounded-lg border-2 border-dashed">
-                                <ArrowRight className="h-4 w-4 text-primary" />
-                                <p className="text-[10px] font-black uppercase text-muted-foreground">O limite de anexo é de **15MB** por arquivo, suportando PDFs pesados e fotos 4K.</p>
                             </div>
                         </div>
                     </AccordionContent>
