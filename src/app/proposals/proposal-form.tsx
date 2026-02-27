@@ -86,7 +86,12 @@ const proposalSchema = z.object({
   product: z.string({ required_error: 'Selecione um produto.' }),
   status: z.string({ required_error: 'Selecione um status.' }),
   rejectionReason: z.string().optional(),
+  
+  // 🛡️ BLINDAGEM FINANCEIRA: Campos de comissão agora explícitos no esquema para evitar sobrescritas acidentais
   commissionStatus: z.string().optional(),
+  amountPaid: z.coerce.number().optional(),
+  commissionPaymentDate: z.string().optional(),
+  
   selectedBenefitNumber: z.string().optional(),
 
   table: z.string().min(1, 'A tabela é obrigatória.'),
@@ -227,7 +232,12 @@ export function ProposalForm({
       product: source?.product || '',
       status: source?.status || 'Em Andamento',
       rejectionReason: source?.rejectionReason || '',
+      
+      // 🛡️ PRESERVAÇÃO FINANCEIRA: Garante que dados de pagamento não se percam ou mudem sozinhos
       commissionStatus: source?.commissionStatus || '',
+      amountPaid: source?.amountPaid || 0,
+      commissionPaymentDate: source?.commissionPaymentDate ? formatDateForForm(source.commissionPaymentDate) : '',
+
       selectedBenefitNumber: source?.selectedBenefitNumber || '',
       table: source?.table || '',
       term: source?.term ?? 84,
@@ -379,11 +389,13 @@ export function ProposalForm({
         dateApproved: convertToIso(data.dateApproved),
         datePaidToClient: convertToIso(data.datePaidToClient),
         debtBalanceArrivalDate: convertToIso(data.debtBalanceArrivalDate),
+        commissionPaymentDate: convertToIso(data.commissionPaymentDate),
     };
 
     const isAverbado = !!finalData.dateApproved;
     const isNotReprovado = finalData.status !== 'Reprovado';
 
+    // 🛡️ REGRAS DE COMISSÃO: Inicializa apenas se estiver vazio. Nunca muda status 'Paga' automaticamente.
     if (isNotReprovado && isAverbado) {
         if (!finalData.commissionStatus || finalData.commissionStatus === '') {
             finalData.commissionStatus = 'Pendente';

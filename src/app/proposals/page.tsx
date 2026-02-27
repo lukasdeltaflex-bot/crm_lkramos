@@ -144,11 +144,16 @@ function ProposalsPageContent() {
   }, []);
   
   const handleDuplicateProposal = React.useCallback((proposal: Proposal) => {
-    const { id, proposalNumber, status, ...rest } = proposal;
+    const { id, proposalNumber, status, history, commissionStatus, amountPaid, commissionPaymentDate, ...rest } = proposal;
+    
+    // 🛡️ RESET FINANCEIRO NA DUPLICAÇÃO: Impede que a cópia herde o status de paga do original
     const duplicatedData: ProposalFormData = {
         ...rest,
         proposalNumber: '',
         status: 'Em Andamento',
+        commissionStatus: 'Pendente',
+        amountPaid: 0,
+        commissionPaymentDate: undefined,
         dateDigitized: new Date().toISOString(),
         dateApproved: undefined,
         datePaidToClient: undefined,
@@ -318,10 +323,18 @@ function ProposalsPageContent() {
   const handleFormSubmit = async (data: any) => {
     if (!firestore || !user) return;
     setIsSaving(true);
+    
+    // Se estivermos editando, usamos o ID existente, senão criamos um novo
     const docRef = sheetMode === 'edit' && selectedProposal ? doc(firestore, 'loanProposals', selectedProposal.id) : doc(collection(firestore, 'loanProposals'));
     
-    const finalData = cleanFirestoreData({ ...data, id: docRef.id, ownerId: user.uid });
+    // 🛡️ BLINDAGEM DE DADOS: O formulário de propostas agora preserva commissionStatus e amountPaid
+    const finalData = cleanFirestoreData({ 
+        ...data, 
+        id: docRef.id, 
+        ownerId: user.uid 
+    });
     
+    // Usamos setDoc com merge: true para garantir que outros metadados não definidos no formulário sejam mantidos
     setDoc(docRef, finalData, { merge: true })
         .then(() => {
             toast({ title: 'Proposta Salva!' });

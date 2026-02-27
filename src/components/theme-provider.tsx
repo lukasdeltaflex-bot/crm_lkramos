@@ -20,13 +20,15 @@ const SIDEBAR_OPTIONS = ["padrão", "dark", "light"];
 const AURA_OPTIONS = ["limpo", "nebula", "aurora", "sunset", "ocean", "lavender", "mint", "pearl", "desert", "velvet"];
 
 const DEFAULT_STATUS_COLORS: Record<string, string> = {
-    "PAGO": "142 76% 36%",
+    // 🛡️ DISTINÇÃO VISUAL: Diferenciamos o Contrato Pago ao Cliente da Comissão Recebida pelo Agente
+    "PAGO": "142 76% 36%", // Verde Esmeralda (Contrato Finalizado)
+    "PAGA": "173 80% 40%", // Verde Azulado/Teal (Comissão Recebida)
+    
     "SALDO PAGO": "24 95% 53%",
     "EM ANDAMENTO": "45 93% 47%",
     "AGUARDANDO SALDO": "217 91% 60%",
     "REPROVADO": "0 72% 50%",
     "PENDENTE": "280 78% 51%",
-    "PAGA": "142 76% 36%",
     "PARCIAL": "199 89% 48%",
     "ATIVO": "142 76% 36%",
     "ACTIVE": "142 76% 36%",
