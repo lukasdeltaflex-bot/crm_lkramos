@@ -13,18 +13,16 @@ import { Card } from '@/components/ui/card';
 import { 
     Eye, 
     EyeOff, 
-    Printer, 
     FileCheck2, 
     FileDown, 
-    FileBadge, 
-    BarChart3, 
     Users2, 
     CircleDollarSign, 
     PlusCircle, 
     Wallet, 
     CheckCircle2,
-    Trash2,
-    ChevronDown
+    ChevronDown,
+    FileSpreadsheet,
+    FileText as FilePdf
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -47,7 +45,6 @@ import {
 import { CommissionForm, type CommissionFormValues } from './commission-form';
 import { toast } from '@/hooks/use-toast';
 import { format, startOfMonth, endOfMonth, parse, getYear, getMonth, isSameMonth, isValid } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { CommissionReconciliation } from '@/components/financial/commission-reconciliation';
 import { formatCurrency, cleanBankName, cleanFirestoreData } from '@/lib/utils';
 import { ProposalsStatusTable } from '@/components/dashboard/proposals-status-table';
@@ -73,9 +70,6 @@ export default function FinancialPage() {
   const [isOperatorsDialogOpen, setIsOperatorsDialogOpen] = React.useState(false);
   const [isExpenseFormOpen, setIsExpenseFormOpen] = React.useState(false);
   
-  const [reportMonth, setReportMonth] = React.useState(getMonth(new Date()).toString());
-  const [reportYear, setReportYear] = React.useState(getYear(new Date()).toString());
-
   const [selectedProposal, setSelectedProposal] = React.useState<ProposalWithCustomer | undefined>(undefined);
   const [selectedExpense, setSelectedExpense] = React.useState<Expense | undefined>(undefined);
   const [isClient, setIsClient] = React.useState(false);
@@ -124,7 +118,6 @@ export default function FinancialPage() {
     const startOfCurrent = startOfMonth(today);
     const endOfCurrent = endOfMonth(today);
 
-    // 🛡️ FILTRAGEM DE ORIGEM: Remove Reprovados de todo o módulo Financeiro
     const filteredProposals = proposals.filter(p => p.status !== 'Reprovado');
 
     const tableData = filteredProposals
@@ -236,12 +229,53 @@ export default function FinancialPage() {
     writeFile(wb, onlySelected ? 'financeiro_selecionado.xlsx' : 'financeiro_lk_ramos.xlsx');
   };
 
-  const handlePrintSelection = () => {
-    document.body.classList.add('print-selection');
-    window.print();
-    window.addEventListener('afterprint', () => {
-        document.body.classList.remove('print-selection');
-    }, { once: true });
+  const handleExportToPdf = async (onlySelected = false) => {
+    const table = tableRef.current?.table;
+    if (!table || !user) return;
+
+    const { default: jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
+    
+    const rowsSource = onlySelected ? table.getFilteredSelectedRowModel().rows : table.getFilteredRowModel().rows;
+    const doc = new jsPDF('landscape');
+    
+    const title = onlySelected ? "RELATÓRIO FINANCEIRO (SELEÇÃO)" : "RELATÓRIO FINANCEIRO COMPLETO";
+    const date = format(new Date(), 'dd/MM/yyyy HH:mm');
+
+    doc.setFontSize(18);
+    doc.setTextColor(40, 74, 127);
+    doc.text(title, 14, 15);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Gerado por: ${user.displayName || user.email}`, 14, 22);
+    doc.text(`Data: ${date}`, 14, 27);
+
+    const tableData = rowsSource.map(r => {
+        const p = r.original;
+        return [
+            p.customer?.name || '-',
+            p.customer?.cpf || '-',
+            p.proposalNumber,
+            cleanBankName(p.bank),
+            p.product,
+            isPrivacyMode ? '•••••' : formatCurrency(p.grossAmount),
+            isPrivacyMode ? '•••••' : formatCurrency(p.commissionValue),
+            p.commissionStatus,
+            p.commissionPaymentDate ? format(new Date(p.commissionPaymentDate), 'dd/MM/yyyy') : '-'
+        ];
+    });
+
+    autoTable(doc, {
+        startY: 35,
+        head: [['Cliente', 'CPF', 'Proposta', 'Banco', 'Produto', 'Vlr Bruto', 'Comissão', 'Status', 'Pagamento']],
+        body: tableData,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [40, 74, 127] }
+    });
+
+    doc.save(`financeiro_${onlySelected ? 'selecao' : 'completo'}_${format(new Date(), 'dd_MM_yyyy')}.pdf`);
+    toast({ title: 'PDF Gerado!' });
   };
 
   const handleEditCommission = React.useCallback((proposal: ProposalWithCustomer) => {
@@ -322,12 +356,22 @@ export default function FinancialPage() {
                             <DropdownMenuItem onSelect={() => handleBulkCommissionUpdate('Pendente')} className="text-destructive">Estornar para PENDENTE</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
-                    <Button variant="outline" className="h-10 px-6 rounded-full font-bold text-xs" onClick={() => handleExportToExcel(true)}>
-                        <FileDown className="mr-2 h-4 w-4" /> Exportar Seleção
-                    </Button>
-                    <Button variant="outline" className="h-10 px-6 rounded-full font-bold text-xs" onClick={handlePrintSelection}>
-                        <Printer className="mr-2 h-4 w-4" /> Borderô (Imprimir)
-                    </Button>
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="h-10 px-6 rounded-full font-bold text-xs">
+                                <FileDown className="mr-2 h-4 w-4" /> Exportar Seleção <ChevronDown className="ml-2 h-3 w-3" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onSelect={() => handleExportToExcel(true)} className="gap-2">
+                                <FileSpreadsheet className="h-4 w-4 text-green-600" /> Excel (.xlsx)
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleExportToPdf(true)} className="gap-2">
+                                <FilePdf className="h-4 w-4 text-red-600" /> PDF (.pdf)
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             )}
 
@@ -356,9 +400,21 @@ export default function FinancialPage() {
                 </DialogContent>
             </Dialog>
 
-            <Button variant="outline" className="h-10 px-6 rounded-full font-bold text-xs" onClick={() => handleExportToExcel(false)}>
-                <FileDown className="mr-2 h-4 w-4" /> Excel Completo
-            </Button>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="h-10 px-6 rounded-full font-bold text-xs">
+                        <FileDown className="mr-2 h-4 w-4" /> Exportar Tudo <ChevronDown className="ml-2 h-3 w-3" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuItem onSelect={() => handleExportToExcel(false)} className="gap-2">
+                        <FileSpreadsheet className="h-4 w-4 text-green-600" /> Excel (.xlsx)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => handleExportToPdf(false)} className="gap-2">
+                        <FilePdf className="h-4 w-4 text-red-600" /> PDF (.pdf)
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
             
             <Dialog open={isReconciliationOpen} onOpenChange={setIsReconciliationOpen}>
                 <Button variant="outline" className="h-10 px-6 rounded-full font-bold text-xs" onClick={() => setIsReconciliationOpen(true)}>
@@ -367,7 +423,6 @@ export default function FinancialPage() {
                 <DialogContent className="max-w-4xl"><DialogHeader><DialogTitle>Conciliação Financeira IA</DialogTitle></DialogHeader><CommissionReconciliation proposals={summaryProposals} onFinished={() => setIsReconciliationOpen(false)} /></DialogContent>
             </Dialog>
             <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsPrivacyMode(!isPrivacyMode)}>{isPrivacyMode ? <EyeOff /> : <Eye />}</Button>
-            <Button className="h-10 px-6 rounded-full font-bold text-xs" onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" /> Imprimir</Button>
         </div>
       </div>
 
