@@ -598,13 +598,13 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                                                 control={form.control}
                                                 name={`benefits.${index}.salary`}
                                                 render={({ field }) => (
-                                                    <div className="relative">
-                                                        <span className="absolute left-0 top-1.5 text-[10px] font-black text-green-600/40">R$</span>
+                                                    <div className="relative flex items-center">
+                                                        <span className="absolute left-0 text-[10px] font-black text-green-600/40">R$</span>
                                                         <FormControl>
                                                             <Input 
                                                                 type="number" 
                                                                 step="0.01" 
-                                                                className="h-9 border-none bg-transparent shadow-none pl-6 p-0 focus:ring-0 font-bold text-sm text-green-600" 
+                                                                className="h-9 border-none bg-transparent shadow-none p-0 pl-7 focus:ring-0 font-bold text-sm text-green-600" 
                                                                 {...field} 
                                                                 value={field.value ?? 0}
                                                                 onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
