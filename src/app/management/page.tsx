@@ -47,6 +47,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn, cleanFirestoreData, isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const CopyButton = ({ text, label }: { text?: string; label: string }) => {
     if (!text) return null;
@@ -507,23 +508,41 @@ export default function ManagementPage() {
       </Dialog>
 
       <Dialog open={isPromoterModalOpen} onOpenChange={setIsPromoterModalOpen}>
-        <DialogContent className="max-w-md rounded-[2rem]">
-            <DialogHeader><DialogTitle>{selectedItem ? 'Editar Promotora' : 'Nova Promotora'}</DialogTitle></DialogHeader>
-            <PromoterForm initialData={selectedItem} onSubmit={(d) => handleSave('managementPromoters', d, selectedItem?.id)} isSaving={isSaving} />
+        <DialogContent className="max-w-md max-h-[90vh] overflow-hidden flex flex-col rounded-[2rem] p-0">
+            <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
+                <DialogTitle className="text-xl font-black uppercase tracking-tight">
+                    {selectedItem ? 'Editar Promotora' : 'Nova Promotora'}
+                </DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="flex-1 px-6 py-2">
+                <PromoterForm initialData={selectedItem} onSubmit={(d) => handleSave('managementPromoters', d, selectedItem?.id)} isSaving={isSaving} />
+            </ScrollArea>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isBankModalOpen} onOpenChange={setIsBankModalOpen}>
-        <DialogContent className="max-w-md rounded-[2rem]">
-            <DialogHeader><DialogTitle>{selectedItem ? 'Editar Login' : 'Vincular Banco'}</DialogTitle></DialogHeader>
-            <BankForm initialData={selectedItem} onSubmit={(d) => handleSaveBank(d, selectedItem?.id)} isSaving={isSaving} />
+        <DialogContent className="max-w-md max-h-[90vh] overflow-hidden flex flex-col rounded-[2rem] p-0">
+            <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
+                <DialogTitle className="text-xl font-black uppercase tracking-tight">
+                    {selectedItem ? 'Editar Login' : 'Vincular Banco'}
+                </DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="flex-1 px-6 py-2">
+                <BankForm initialData={selectedItem} onSubmit={(d) => handleSaveBank(d, selectedItem?.id)} isSaving={isSaving} />
+            </ScrollArea>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isLinkModalOpen} onOpenChange={setIsLinkModalOpen}>
-        <DialogContent className="max-w-md rounded-[2rem]">
-            <DialogHeader><DialogTitle>{selectedItem ? 'Editar Atalho' : 'Novo Link'}</DialogTitle></DialogHeader>
-            <QuickLinkForm initialData={selectedItem} onSubmit={(d) => handleSave('managementQuickLinks', d, selectedItem?.id)} isSaving={isSaving} />
+        <DialogContent className="max-w-md max-h-[90vh] overflow-hidden flex flex-col rounded-[2rem] p-0">
+            <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
+                <DialogTitle className="text-xl font-black uppercase tracking-tight">
+                    {selectedItem ? 'Editar Atalho' : 'Novo Link'}
+                </DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="flex-1 px-6 py-2">
+                <QuickLinkForm initialData={selectedItem} onSubmit={(d) => handleSave('managementQuickLinks', d, selectedItem?.id)} isSaving={isSaving} />
+            </ScrollArea>
         </DialogContent>
       </Dialog>
 

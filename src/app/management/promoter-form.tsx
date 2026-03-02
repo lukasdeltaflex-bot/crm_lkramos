@@ -79,18 +79,18 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 pb-6">
         {/* FOTO/LOGO DA PROMOTORA */}
-        <div className="flex flex-col items-center gap-4 py-2">
+        <div className="flex flex-col items-center gap-2 py-1">
             <div className="relative group">
-                <Avatar className="h-24 w-24 border-4 border-primary/10 shadow-xl">
-                    <AvatarImage src={photoPreview || undefined} />
-                    <AvatarFallback className="bg-muted text-muted-foreground">
-                        <Building2 className="h-10 w-10 opacity-20" />
+                <Avatar className="h-20 w-24 border-4 border-primary/10 shadow-xl rounded-2xl">
+                    <AvatarImage src={photoPreview || undefined} className="object-contain" />
+                    <AvatarFallback className="bg-muted text-muted-foreground rounded-2xl">
+                        <Building2 className="h-8 w-8 opacity-20" />
                     </AvatarFallback>
                 </Avatar>
-                <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                    <Camera className="text-white h-6 w-6" />
+                <div className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                    <Camera className="text-white h-5 w-5" />
                 </div>
                 {photoPreview && (
                     <button 
@@ -113,7 +113,7 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><Building2 className="h-3.5 w-3.5 text-primary" /> Nome da Promotora *</FormLabel>
-                    <FormControl><Input placeholder="Ex: Master Promotora" {...field} className="font-bold" /></FormControl>
+                    <FormControl><Input placeholder="Ex: Master Promotora" {...field} className="font-bold h-10" /></FormControl>
                     <FormMessage />
                     </FormItem>
                 )}
@@ -124,7 +124,7 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><Hash className="h-3.5 w-3.5 text-primary" /> Código de Parceiro</FormLabel>
-                    <FormControl><Input placeholder="Seu ID no sistema deles" {...field} className="font-mono font-bold" /></FormControl>
+                    <FormControl><Input placeholder="Seu ID no sistema deles" {...field} className="font-mono font-bold h-10" /></FormControl>
                     </FormItem>
                 )}
             />
@@ -137,7 +137,7 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><UserIcon className="h-3.5 w-3.5 text-primary" /> Nome do Gerente</FormLabel>
-                    <FormControl><Input placeholder="Ex: Maria Clara" {...field} /></FormControl>
+                    <FormControl><Input placeholder="Ex: Maria Clara" {...field} className="h-10" /></FormControl>
                     </FormItem>
                 )}
             />
@@ -149,9 +149,9 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
                     <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest text-blue-600"><Headset className="h-3.5 w-3.5" /> Suporte / Central</FormLabel>
                     <FormControl>
                         <div className="relative">
-                            <Input placeholder="(00) 0000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} />
+                            <Input placeholder="(00) 0000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} className="h-10" />
                             {isWhatsApp(watchSupport || '') && (
-                                <div className="absolute right-3 top-2.5 flex items-center">
+                                <div className="absolute right-3 top-2 flex items-center">
                                     <WhatsAppIcon className="h-4 w-4" />
                                 </div>
                             )}
@@ -169,7 +169,7 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><Phone className="h-3.5 w-3.5 text-primary" /> Telefone Fixo</FormLabel>
-                    <FormControl><Input placeholder="(00) 0000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} /></FormControl>
+                    <FormControl><Input placeholder="(00) 0000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} className="h-10" /></FormControl>
                     </FormItem>
                 )}
             />
@@ -181,9 +181,9 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
                     <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest text-green-600"><Phone className="h-3.5 w-3.5" /> WhatsApp Gerente</FormLabel>
                     <FormControl>
                         <div className="relative">
-                            <Input placeholder="(00) 00000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} />
+                            <Input placeholder="(00) 00000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} className="h-10" />
                             {isWhatsApp(watchWhatsapp || '') && (
-                                <div className="absolute right-3 top-2.5 flex items-center">
+                                <div className="absolute right-3 top-2 flex items-center">
                                     <WhatsAppIcon className="h-4 w-4" />
                                 </div>
                             )}
@@ -201,7 +201,7 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><Mail className="h-3.5 w-3.5 text-primary" /> E-mail Promotora</FormLabel>
-                    <FormControl><Input placeholder="contato@promotora.com" {...field} type="email" /></FormControl>
+                    <FormControl><Input placeholder="contato@promotora.com" {...field} type="email" className="h-10" /></FormControl>
                     <FormMessage />
                     </FormItem>
                 )}
@@ -212,7 +212,7 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><Mail className="h-3.5 w-3.5 text-blue-600" /> E-mail do Gerente</FormLabel>
-                    <FormControl><Input placeholder="gerente@promotora.com" {...field} type="email" /></FormControl>
+                    <FormControl><Input placeholder="gerente@promotora.com" {...field} type="email" className="h-10" /></FormControl>
                     <FormMessage />
                     </FormItem>
                 )}
@@ -225,13 +225,13 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
           render={({ field }) => (
             <FormItem>
               <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><MessageSquareText className="h-3.5 w-3.5" /> Anotações Internas</FormLabel>
-              <FormControl><Textarea placeholder="Prazos, taxas médias, horários de corte..." {...field} className="min-h-[100px]" /></FormControl>
+              <FormControl><Textarea placeholder="Prazos, taxas médias, horários de corte..." {...field} className="min-h-[80px]" /></FormControl>
             </FormItem>
           )}
         />
 
         <div className="flex justify-end pt-4 border-t">
-          <Button type="submit" disabled={isSaving} className="rounded-full px-8 h-12 font-black uppercase text-xs tracking-widest shadow-xl bg-primary">
+          <Button type="submit" disabled={isSaving} className="w-full rounded-full h-12 font-black uppercase text-xs tracking-widest shadow-xl bg-primary">
             {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Gravando...</> : <><Save className="mr-2 h-4 w-4" /> Salvar Cadastro</>}
           </Button>
         </div>
