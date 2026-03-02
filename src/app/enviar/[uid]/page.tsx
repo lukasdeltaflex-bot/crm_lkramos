@@ -261,15 +261,17 @@ export default function LeadCapturePage() {
 
   return (
     <div className="min-h-screen bg-muted/30 p-4 md:p-10 flex flex-col items-center">
-        <div className="mb-10 text-center space-y-4">
+        <div className="mb-10 text-center space-y-6 w-full max-w-sm">
             {userSettings?.customLogoURL ? (
-                <img src={userSettings.customLogoURL} alt="Logo" className="h-16 mx-auto object-contain" />
+                <div className="h-24 flex items-center justify-center animate-in fade-in zoom-in duration-700">
+                    <img src={userSettings.customLogoURL} alt="Logo" className="max-h-full max-w-full object-contain drop-shadow-xl" />
+                </div>
             ) : (
-                <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto border-2 border-primary/20"><ShieldCheck className="h-6 w-6 text-primary" /></div>
+                <div className="h-16 w-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto border-2 border-primary/20"><ShieldCheck className="h-8 w-8 text-primary" /></div>
             )}
-            <div>
-                <h1 className="text-xl font-black uppercase tracking-tighter">Portal do Cliente</h1>
-                <p className="text-xs text-muted-foreground uppercase font-bold tracking-widest opacity-60">Ambiente Seguro e Criptografado</p>
+            <div className="space-y-1">
+                <h1 className="text-2xl font-black uppercase tracking-tighter">Portal do Cliente</h1>
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.25em] opacity-60">Ambiente Seguro e Criptografado</p>
             </div>
         </div>
 

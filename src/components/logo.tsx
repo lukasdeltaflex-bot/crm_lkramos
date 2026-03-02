@@ -1,4 +1,3 @@
-
 'use client';
 
 import { cn } from '@/lib/utils';
@@ -73,60 +72,26 @@ const LogoSvg = ({ className }: { className?: string }) => (
     </svg>
 );
 
-const PrintLogo = ({ customLogo, className }: { customLogo?: string; className?: string }) => (
-     <div className={cn('flex items-center gap-4', className)}>
-        {customLogo ? (
-            <img src={customLogo} alt="Logo" className="h-12 w-auto object-contain" />
-        ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 40" className="h-10 w-auto">
-                <defs>
-                    <linearGradient id="print-gold-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#A9862E" />
-                        <stop offset="50%" stopColor="#C7A336" />
-                        <stop offset="100%" stopColor="#A9862E" />
-                    </linearGradient>
-                    <linearGradient id="print-blue-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#3C5A8A" />
-                        <stop offset="100%" stopColor="#1A3A6F" />
-                    </linearGradient>
-                </defs>
-                {/* L Shape */}
-                <path d="M5 5 L 5 25 L 17.5 25 L 17.5 21 L 9 21 L 9 5 Z" fill="url(#print-blue-gradient)" />
-                <path d="M5 5 L 6 4 L 9 7 L 9 5 Z" fill="#5B7AC0" />
-                <path d="M5 25 L 9 21 L 10 22 L 6 26 Z" fill="#1A3A6F" />
-
-                {/* K Shape */}
-                <path d="M22.5 5 L 22.5 25 L 26.5 25 L 26.5 16.5 L 35 25 L 39 22.5 L 30 15 L 39 7.5 L 35 5 L 26.5 13.5 L 26.5 5 Z" fill="url(#print-gold-gradient)" />
-
-                {/* Swoosh */}
-                <path d="M0,28 C10,23 30,23 40,28 C37.5,30.5 12.5,30.5 2.5,28 Z" fill="url(#print-blue-gradient)" transform="translate(0, -1)" />
-                <path d="M2.5,29 C12.5,24 32.5,24 42.5,29 C40,31.5 15,31.5 5,29 Z" fill="url(#print-gold-gradient)" transform="translate(0, -1)" />
-            </svg>
-        )}
-         <div>
-            <h1 className="font-bold text-lg text-black">Relatório Executivo</h1>
-            <p className="text-sm text-gray-500">{customLogo ? 'Gestão de Propostas' : 'LK RAMOS Gestão de Propostas'}</p>
-         </div>
-      </div>
-)
-
 export function Logo({ className, forPrinting = false }: { className?: string; forPrinting?: boolean }) {
   const { user } = useUser();
   const firestore = useFirestore();
   const settingsRef = useMemoFirebase(() => user && firestore ? doc(firestore, 'userSettings', user.uid) : null, [user, firestore]);
   const { data: settings } = useDoc<UserSettings>(settingsRef);
 
-  if (forPrinting) {
-    return <PrintLogo customLogo={settings?.customLogoURL} className={className} />;
-  }
-
   if (settings?.customLogoURL) {
     return (
-        <div className={cn('flex items-center justify-center p-2 group-data-[collapsible=icon]:p-1', className)}>
+        <div className={cn(
+            'flex items-center justify-center transition-all duration-500 overflow-hidden',
+            forPrinting ? 'h-16 w-auto' : 'h-14 w-full p-2 group-data-[collapsible=icon]:p-1',
+            className
+        )}>
             <img 
                 src={settings.customLogoURL} 
-                alt="Logo" 
-                className="max-h-12 w-auto object-contain transition-all"
+                alt="Logo Personalizada" 
+                className={cn(
+                    "max-h-full max-w-full object-contain drop-shadow-sm",
+                    forPrinting && "brightness-100 contrast-100"
+                )}
             />
         </div>
     )

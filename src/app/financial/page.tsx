@@ -240,17 +240,23 @@ export default function FinancialPage() {
     const rowsSource = onlySelected ? table.getFilteredSelectedRowModel().rows : table.getFilteredRowModel().rows;
     const doc = new jsPDF('landscape');
     
+    // 🛡️ LOGO NO PDF FINANCEIRO
+    if (userSettings?.customLogoURL) {
+        try {
+            doc.addImage(userSettings.customLogoURL, 'PNG', 14, 8, 35, 15, undefined, 'FAST');
+        } catch (e) { console.warn("Failed to add logo to Financial PDF"); }
+    }
+
     const title = onlySelected ? "RELATÓRIO FINANCEIRO (SELEÇÃO)" : "RELATÓRIO FINANCEIRO COMPLETO";
     const date = format(new Date(), 'dd/MM/yyyy HH:mm');
 
     doc.setFontSize(18);
     doc.setTextColor(40, 74, 127);
-    doc.text(title, 14, 15);
+    doc.text(title, 55, 15);
     
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text(`Gerado por: ${user.displayName || user.email}`, 14, 22);
-    doc.text(`Data: ${date}`, 14, 27);
+    doc.text(`Gerado por: ${user.displayName || user.email} | Data: ${date}`, 55, 22);
 
     const tableData = rowsSource.map(r => {
         const p = r.original;

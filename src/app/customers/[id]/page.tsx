@@ -372,10 +372,18 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     const doc = new jsPDF();
     const primaryColor = [40, 74, 127];
     
-    doc.setFontSize(22); doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]); doc.setFont("helvetica", "bold"); doc.text("DOSSIÊ OFICIAL DO CLIENTE", 14, 20);
+    // 🛡️ LOGO NO PDF
+    if (userSettings?.customLogoURL) {
+        try {
+            doc.addImage(userSettings.customLogoURL, 'PNG', 14, 10, 40, 20, undefined, 'FAST');
+        } catch (e) { console.warn("Failed to add logo to PDF Dossier"); }
+    }
+
+    doc.setFontSize(22); doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]); doc.setFont("helvetica", "bold"); 
+    doc.text("DOSSIÊ OFICIAL DO CLIENTE", 60, 20);
     doc.setFontSize(10); doc.setTextColor(100); doc.setFont("helvetica", "normal");
-    doc.text(`Responsável: ${user.displayName || user.email}`, 14, 28);
-    doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 14, 33);
+    doc.text(`Responsável: ${user.displayName || user.email}`, 60, 28);
+    doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 60, 33);
     doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]); doc.setLineWidth(0.5); doc.line(14, 38, 196, 38);
     
     autoTable(doc, { 

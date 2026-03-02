@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -419,15 +418,15 @@ export default function SettingsPage() {
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-2"><Monitor className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Branding (Logomarca)</h4></div>
                                     <div className="flex items-center gap-6 p-6 border rounded-xl bg-muted/20">
-                                        <div className="h-24 w-24 bg-white border flex items-center justify-center rounded-lg overflow-hidden shadow-inner">
+                                        <div className="h-24 w-24 bg-white border flex items-center justify-center rounded-lg overflow-hidden shadow-inner p-2">
                                             {userSettings?.customLogoURL ? <img src={userSettings.customLogoURL} className="max-h-full max-w-full object-contain" alt="Preview Logo" /> : <Monitor className="h-8 w-8 opacity-20" />}
                                         </div>
-                                        <div className="space-y-3">
-                                            <p className="text-xs font-medium text-muted-foreground">Sua logo será aplicada globalmente e em todos os PDFs oficiais.</p>
+                                        <div className="space-y-3 flex-1">
+                                            <p className="text-xs font-medium text-muted-foreground leading-relaxed">Sua logo será aplicada na barra lateral, no portal público de leads e em todos os documentos PDF exportados.</p>
                                             <div className="flex gap-2">
                                                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleLogoUpload} />
-                                                <Button size="sm" onClick={() => fileInputRef.current?.click()} disabled={isUploadingLogo}><Upload className="h-3 w-3 mr-2" /> Alterar Logo</Button>
-                                                {userSettings?.customLogoURL && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => saveSettingsToFirebase({ customLogoURL: '' })}><X className="h-3 w-3 mr-2" /> Remover</Button>}
+                                                <Button size="sm" onClick={() => fileInputRef.current?.click()} disabled={isUploadingLogo} className="font-bold"><Upload className="h-3 w-3 mr-2" /> Alterar Logo</Button>
+                                                {userSettings?.customLogoURL && <Button size="sm" variant="ghost" className="text-destructive font-bold" onClick={() => saveSettingsToFirebase({ customLogoURL: '' })}><X className="h-3 w-3 mr-2" /> Remover</Button>}
                                             </div>
                                         </div>
                                     </div>
