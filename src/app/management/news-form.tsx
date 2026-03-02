@@ -136,7 +136,6 @@ export function NewsForm({ initialData, onSubmit, isSaving = false }: NewsFormPr
     if (!fileToRemove) return;
 
     try {
-        // Tenta excluir do Storage para liberar espaço real
         if (storage && fileToRemove.url.includes('firebasestorage')) {
             const fileRef = ref(storage, fileToRemove.url);
             await deleteObject(fileRef);
@@ -151,7 +150,6 @@ export function NewsForm({ initialData, onSubmit, isSaving = false }: NewsFormPr
         
         toast({ title: 'Arquivo removido e espaço liberado!' });
     } catch (e) {
-        // Se falhar no storage (ex: arquivo já não existe), removemos apenas da lista
         const newList = current.filter((_, i) => i !== index);
         form.setValue('attachments', newList);
         toast({ title: 'Anexo removido da lista.' });

@@ -59,8 +59,11 @@ export default function ManagementPage() {
   const [decryptedPasswords, setDecryptedPasswords] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
 
+  // Queries globais (compartilhadas entre usuários) para notícias e links
   const newsQuery = useMemoFirebase(() => query(collection(firestore!, 'managementNews'), orderBy('date', 'desc')), []);
   const linksQuery = useMemoFirebase(() => query(collection(firestore!, 'managementQuickLinks'), orderBy('name', 'asc')), []);
+  
+  // Query privada para promotoras (logins e senhas)
   const promotersQuery = useMemoFirebase(() => user ? query(collection(firestore!, 'managementPromoters'), where('ownerId', '==', user.uid), orderBy('name', 'asc')) : null, [user]);
 
   const { data: news, isLoading: loadingNews } = useCollection(newsQuery);
@@ -93,6 +96,7 @@ export default function ManagementPage() {
     try {
         const docId = id || doc(collection(firestore!, collectionName)).id;
         const docRef = doc(firestore!, collectionName, docId);
+        // Mantém o ownerId para permissão de edição futura, mas o read é global via Rules
         await setDoc(docRef, cleanFirestoreData({ ...data, id: docId, ownerId: user.uid }), { merge: true });
         toast({ title: 'Salvo com sucesso!' });
         closeModals();
@@ -249,9 +253,7 @@ export default function ManagementPage() {
             <div className="space-y-4">
                 {promoters?.map((promoter) => {
                     const isSupportWhatsApp = promoter.supportPhone && isWhatsApp(promoter.supportPhone);
-                    const isManagerWhatsApp = promoter.whatsapp && isWhatsApp(promoter.whatsapp);
-                    const isPhoneWhatsApp = promoter.phone && isWhatsApp(promoter.phone);
-
+                    
                     return (
                         <Card key={promoter.id} className="border-2 overflow-hidden shadow-sm hover:shadow-md transition-all">
                             <div 

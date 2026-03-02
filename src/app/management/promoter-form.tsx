@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,7 +15,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Save, Building2, Phone, User as UserIcon, Headset, MessageSquareText, Mail } from 'lucide-react';
-import { handlePhoneMask } from '@/lib/utils';
+import { handlePhoneMask, isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
+import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
 
 const promoterSchema = z.object({
   name: z.string().min(2, 'O nome da promotora é obrigatório.'),
@@ -52,6 +52,9 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
     },
   });
 
+  const watchWhatsapp = form.watch('whatsapp');
+  const watchSupport = form.watch('supportPhone');
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -84,7 +87,16 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest text-blue-600"><Headset className="h-3.5 w-3.5" /> Suporte / Central</FormLabel>
-                    <FormControl><Input placeholder="(00) 0000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} /></FormControl>
+                    <FormControl>
+                        <div className="relative">
+                            <Input placeholder="(00) 0000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} />
+                            {isWhatsApp(watchSupport || '') && (
+                                <a href={getWhatsAppUrl(watchSupport!)} target="_blank" rel="noopener noreferrer" className="absolute right-3 top-2.5 hover:scale-110 transition-transform">
+                                    <WhatsAppIcon className="h-4 w-4" />
+                                </a>
+                            )}
+                        </div>
+                    </FormControl>
                     </FormItem>
                 )}
             />
@@ -107,7 +119,16 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest text-green-600"><Phone className="h-3.5 w-3.5" /> WhatsApp Gerente</FormLabel>
-                    <FormControl><Input placeholder="(00) 00000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} /></FormControl>
+                    <FormControl>
+                        <div className="relative">
+                            <Input placeholder="(00) 00000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} />
+                            {isWhatsApp(watchWhatsapp || '') && (
+                                <a href={getWhatsAppUrl(watchWhatsapp!)} target="_blank" rel="noopener noreferrer" className="absolute right-3 top-2.5 hover:scale-110 transition-transform">
+                                    <WhatsAppIcon className="h-4 w-4" />
+                                </a>
+                            )}
+                        </div>
+                    </FormControl>
                     </FormItem>
                 )}
             />
