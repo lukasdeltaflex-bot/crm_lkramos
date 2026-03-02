@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { format } from 'date-fns';
-import { Loader2, Save, ImageIcon, ScrollText } from 'lucide-react';
+import { Loader2, Save, ImageIcon, ScrollText, Link as LinkIcon, FileType } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const newsSchema = z.object({
@@ -31,6 +31,7 @@ const newsSchema = z.object({
   subtitle: z.string().optional(),
   content: z.string().min(10, 'O conteúdo deve ser mais detalhado.'),
   coverUrl: z.string().optional(),
+  externalLink: z.string().url('URL inválida.').or(z.literal('')).optional(),
   status: z.enum(['Draft', 'Published']),
   date: z.string(),
 });
@@ -51,6 +52,7 @@ export function NewsForm({ initialData, onSubmit, isSaving = false }: NewsFormPr
       subtitle: '',
       content: '',
       coverUrl: '',
+      externalLink: '',
       status: 'Draft',
       date: format(new Date(), 'yyyy-MM-dd'),
     },
@@ -118,25 +120,46 @@ export function NewsForm({ initialData, onSubmit, isSaving = false }: NewsFormPr
                         />
                     </div>
 
-                    <FormField
-                        control={form.control}
-                        name="coverUrl"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="font-bold uppercase text-[10px] tracking-widest text-primary/60">Imagem Informativa (URL)</FormLabel>
-                            <FormControl>
-                                <div className="flex items-center gap-3">
-                                    <Input placeholder="Cole o link da imagem ou print aqui..." {...field} className="h-11 rounded-xl" />
-                                    <div className="h-11 w-11 rounded-xl border-2 border-dashed bg-muted flex items-center justify-center shrink-0 overflow-hidden shadow-inner">
-                                        {field.value ? <img src={field.value} className="h-full w-full object-cover" /> : <ImageIcon className="h-5 w-5 opacity-20" />}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                            control={form.control}
+                            name="coverUrl"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="font-bold uppercase text-[10px] tracking-widest text-primary/60 flex items-center gap-2">
+                                    <ImageIcon className="h-3 w-3" /> Imagem Informativa (URL)
+                                </FormLabel>
+                                <FormControl>
+                                    <div className="flex items-center gap-3">
+                                        <Input placeholder="Link da imagem/print..." {...field} className="h-11 rounded-xl" />
+                                        <div className="h-11 w-11 rounded-xl border-2 border-dashed bg-muted flex items-center justify-center shrink-0 overflow-hidden shadow-inner">
+                                            {field.value ? <img src={field.value} className="h-full w-full object-cover" /> : <ImageIcon className="h-5 w-5 opacity-20" />}
+                                        </div>
                                     </div>
-                                </div>
-                            </FormControl>
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Dica: Use links de imagens hospedadas ou prints do WhatsApp.</p>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="externalLink"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="font-bold uppercase text-[10px] tracking-widest text-primary/60 flex items-center gap-2">
+                                    <LinkIcon className="h-3 w-3" /> Link Externo / PDF (URL)
+                                </FormLabel>
+                                <FormControl>
+                                    <div className="relative">
+                                        <Input placeholder="https://..." {...field} className="h-11 rounded-xl pr-10" />
+                                        <FileType className="absolute right-3 top-3 h-5 w-5 text-muted-foreground opacity-30" />
+                                    </div>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                    </div>
 
                     <FormField
                         control={form.control}
