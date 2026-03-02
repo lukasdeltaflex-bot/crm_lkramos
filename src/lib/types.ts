@@ -1,3 +1,4 @@
+
 export type Benefit = {
   number: string;
   species?: string;
@@ -214,3 +215,14 @@ export type Lead = {
   createdAt: string;
   documents?: Attachment[];
 };
+
+export type ManagementPromoter = {
+  id: string;
+  ownerId: string;
+  name: string;
+  contactName?: string;
+  phone?: string;
+  whatsapp?: string;
+  supportPhone?: string;
+  observations?: string;
+}

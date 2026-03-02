@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,7 +15,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Save, Building2, Phone, User as UserIcon } from 'lucide-react';
+import { Loader2, Save, Building2, Phone, User as UserIcon, Headset, MessageSquareText } from 'lucide-react';
 import { handlePhoneMask } from '@/lib/utils';
 
 const promoterSchema = z.object({
@@ -22,6 +23,7 @@ const promoterSchema = z.object({
   contactName: z.string().optional(),
   phone: z.string().optional(),
   whatsapp: z.string().optional(),
+  supportPhone: z.string().optional(),
   observations: z.string().optional(),
 });
 
@@ -41,6 +43,7 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
       contactName: '',
       phone: '',
       whatsapp: '',
+      supportPhone: '',
       observations: '',
     },
   });
@@ -53,20 +56,8 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="flex items-center gap-2"><Building2 className="h-3.5 w-3.5 text-primary" /> Nome da Promotora *</FormLabel>
-              <FormControl><Input placeholder="Ex: Master Promotora" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="contactName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="flex items-center gap-2"><UserIcon className="h-3.5 w-3.5 text-primary" /> Pessoa de Contato</FormLabel>
-              <FormControl><Input placeholder="Ex: Maria Clara (Gerente)" {...field} /></FormControl>
+              <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><Building2 className="h-3.5 w-3.5 text-primary" /> Nome da Promotora *</FormLabel>
+              <FormControl><Input placeholder="Ex: Master Promotora" {...field} className="font-bold" /></FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -75,10 +66,33 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
                 control={form.control}
+                name="contactName"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><UserIcon className="h-3.5 w-3.5 text-primary" /> Nome do Gerente</FormLabel>
+                    <FormControl><Input placeholder="Ex: Maria Clara" {...field} /></FormControl>
+                    </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="supportPhone"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest text-blue-600"><Headset className="h-3.5 w-3.5" /> Suporte / Central</FormLabel>
+                    <FormControl><Input placeholder="(00) 0000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} /></FormControl>
+                    </FormItem>
+                )}
+            />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+                control={form.control}
                 name="phone"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 text-primary" /> Telefone Fixo</FormLabel>
+                    <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><Phone className="h-3.5 w-3.5 text-primary" /> Telefone Fixo</FormLabel>
                     <FormControl><Input placeholder="(00) 0000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} /></FormControl>
                     </FormItem>
                 )}
@@ -88,7 +102,7 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
                 name="whatsapp"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 text-green-600" /> WhatsApp Direto</FormLabel>
+                    <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest text-green-600"><Phone className="h-3.5 w-3.5" /> WhatsApp Gerente</FormLabel>
                     <FormControl><Input placeholder="(00) 00000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} /></FormControl>
                     </FormItem>
                 )}
@@ -100,14 +114,14 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
           name="observations"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Anotações sobre a Promotora</FormLabel>
-              <FormControl><Textarea placeholder="Prazos, taxas médias, horários de corte..." {...field} /></FormControl>
+              <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><MessageSquareText className="h-3.5 w-3.5" /> Anotações Internas</FormLabel>
+              <FormControl><Textarea placeholder="Prazos, taxas médias, horários de corte..." {...field} className="min-h-[100px]" /></FormControl>
             </FormItem>
           )}
         />
 
         <div className="flex justify-end pt-4 border-t">
-          <Button type="submit" disabled={isSaving} className="rounded-full px-8 h-12 font-black uppercase text-xs tracking-widest shadow-xl">
+          <Button type="submit" disabled={isSaving} className="rounded-full px-8 h-12 font-black uppercase text-xs tracking-widest shadow-xl bg-primary">
             {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Gravando...</> : <><Save className="mr-2 h-4 w-4" /> Salvar Cadastro</>}
           </Button>
         </div>

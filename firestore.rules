@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -9,16 +10,26 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // 🛡️ NOVAS COLEÇÕES ISOLADAS (GESTÃO & NOTÍCIAS)
-    // Regras estritas por ownerId para garantir privacidade total
+    // 🛡️ COLEÇÕES COMPARTILHADAS (LEITURA PÚBLICA / ESCRITA PRIVADA)
     match /managementNews/{newsId} {
-      allow read, write: if isSignedIn() && (
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && (
         resource == null || resource.data.ownerId == request.auth.uid
       ) && (
         request.resource == null || request.resource.data.ownerId == request.auth.uid
       );
     }
 
+    match /managementQuickLinks/{linkId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && (
+        resource == null || resource.data.ownerId == request.auth.uid
+      ) && (
+        request.resource == null || request.resource.data.ownerId == request.auth.uid
+      );
+    }
+
+    // 🛡️ COLEÇÕES PRIVADAS (LOGINS E SENHAS)
     match /managementPromoters/{promoterId} {
       allow read, write: if isSignedIn() && (
         resource == null || resource.data.ownerId == request.auth.uid
@@ -33,14 +44,6 @@ service cloud.firestore {
           request.resource == null || request.resource.data.ownerId == request.auth.uid
         );
       }
-    }
-
-    match /managementQuickLinks/{linkId} {
-      allow read, write: if isSignedIn() && (
-        resource == null || resource.data.ownerId == request.auth.uid
-      ) && (
-        request.resource == null || request.resource.data.ownerId == request.auth.uid
-      );
     }
 
     // Perfil do Usuário e Configurações

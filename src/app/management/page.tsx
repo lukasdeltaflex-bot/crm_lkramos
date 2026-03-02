@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -15,7 +16,7 @@ import {
     ExternalLink, 
     Trash2, 
     Edit, 
-    Search,
+    Globe,
     Loader2,
     Calendar,
     Lock,
@@ -24,7 +25,10 @@ import {
     MessageSquareText,
     ChevronDown,
     ChevronUp,
-    ShieldCheck
+    ShieldCheck,
+    PhoneCall,
+    Headset,
+    EyeOff
 } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc, setDoc, deleteDoc, orderBy } from 'firebase/firestore';
@@ -44,7 +48,6 @@ export default function ManagementPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const [activeTab, setActiveTab] = useState('news');
-  const [searchTerm, setSearchTerm] = useState('');
   
   // Modals
   const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
@@ -60,15 +63,17 @@ export default function ManagementPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   // Firestore Queries
-  const newsQuery = useMemoFirebase(() => user ? query(collection(firestore!, 'managementNews'), where('ownerId', '==', user.uid), orderBy('date', 'desc')) : null, [user]);
+  // 🔓 COMPARTILHADO: Notícias e Links agora aparecem para TODOS (sem filtro de ownerId no read)
+  const newsQuery = useMemoFirebase(() => query(collection(firestore!, 'managementNews'), orderBy('date', 'desc')), []);
+  const linksQuery = useMemoFirebase(() => query(collection(firestore!, 'managementQuickLinks'), orderBy('name', 'asc')), []);
+  
+  // 🔒 PRIVADO: Promotoras permanecem individuais por segurança de senha
   const promotersQuery = useMemoFirebase(() => user ? query(collection(firestore!, 'managementPromoters'), where('ownerId', '==', user.uid), orderBy('name', 'asc')) : null, [user]);
-  const linksQuery = useMemoFirebase(() => user ? query(collection(firestore!, 'managementQuickLinks'), where('ownerId', '==', user.uid), orderBy('name', 'asc')) : null, [user]);
 
   const { data: news, isLoading: loadingNews } = useCollection(newsQuery);
   const { data: promoters, isLoading: loadingPromoters } = useCollection(promotersQuery);
   const { data: links, isLoading: loadingLinks } = useCollection(linksQuery);
 
-  // Subcoleção de bancos (Logins) - Lida dinamicamente
   const [bankLogins, setBankLogins] = useState<any[]>([]);
   const [loadingLogins, setLoadingLogins] = useState(false);
 
@@ -77,7 +82,6 @@ export default function ManagementPage() {
         setLoadingLogins(true);
         const loginsRef = collection(firestore!, 'managementPromoters', expandedPromoter, 'bankLogins');
         const q = query(loginsRef, where('ownerId', '==', user.uid));
-        // Manual implementation because useCollection expects a memoized query and we want to switch often
         const getLogins = async () => {
             const { getDocs } = await import('firebase/firestore');
             const snap = await getDocs(q);
@@ -115,14 +119,12 @@ export default function ManagementPage() {
         await setDoc(docRef, cleanFirestoreData({ ...data, id: docId, ownerId: user.uid }), { merge: true });
         toast({ title: 'Login Protegido!' });
         
-        // Refresh local logins list
         if (expandedPromoter === selectedPromoterId) {
             setBankLogins(prev => {
                 const filtered = prev.filter(b => b.id !== docId);
                 return [...filtered, { ...data, id: docId, ownerId: user.uid }];
             });
         }
-        
         closeModals();
     } catch (e) {
         toast({ variant: 'destructive', title: 'Erro ao salvar login' });
@@ -172,15 +174,14 @@ export default function ManagementPage() {
             <TabsTrigger value="links" className="rounded-full px-8 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white font-black uppercase text-[10px] tracking-widest"><LinkIcon className="h-4 w-4" /> Links Úteis</TabsTrigger>
         </TabsList>
 
-        {/* 1. MÓDULO DE NOTÍCIAS */}
         <TabsContent value="news" className="space-y-6 animate-in fade-in duration-500">
             <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                    <h2 className="text-xl font-black uppercase tracking-tight">Painel Informativo</h2>
-                    <p className="text-xs text-muted-foreground">Publique atualizações sobre o setor e o INSS.</p>
+                    <h2 className="text-xl font-black uppercase tracking-tight">Mural do Correspondente</h2>
+                    <p className="text-xs text-muted-foreground">Conteúdo compartilhado para todos os usuários do sistema.</p>
                 </div>
                 <Button onClick={() => { setSelectedItem(null); setIsNewsModalOpen(true); }} className="rounded-full bg-primary font-bold shadow-lg gap-2">
-                    <PlusCircle className="h-4 w-4" /> Nova Notícia
+                    <PlusCircle className="h-4 w-4" /> Publicar Notícia
                 </Button>
             </div>
 
@@ -190,13 +191,13 @@ export default function ManagementPage() {
                 ) : news?.length === 0 ? (
                     <div className="col-span-full py-20 text-center border-2 border-dashed rounded-[2rem] bg-muted/5 opacity-40">
                         <Newspaper className="h-12 w-12 mx-auto mb-4" />
-                        <p className="font-black uppercase tracking-widest text-xs">Nenhuma notícia publicada.</p>
+                        <p className="font-black uppercase tracking-widest text-xs">Nenhuma notícia publicada ainda.</p>
                     </div>
                 ) : (
                     news?.map((item) => (
                         <Card key={item.id} className="group overflow-hidden border-2 hover:border-primary/40 transition-all flex flex-col shadow-sm">
                             {item.coverUrl && (
-                                <div className="h-40 overflow-hidden relative">
+                                <div className="h-48 overflow-hidden relative">
                                     <img src={item.coverUrl} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" alt={item.title} />
                                     <Badge className={cn("absolute top-3 right-3 font-black text-[8px] uppercase", item.status === 'Published' ? "bg-green-600" : "bg-orange-500")}>
                                         {item.status === 'Published' ? 'Publicado' : 'Rascunho'}
@@ -208,11 +209,16 @@ export default function ManagementPage() {
                                     <Calendar className="h-3 w-3" /> {format(parseISO(item.date), 'dd/MM/yyyy')}
                                 </p>
                                 <CardTitle className="text-base font-black uppercase leading-tight line-clamp-2">{item.title}</CardTitle>
-                                <CardDescription className="text-xs line-clamp-2 mt-2 font-medium">{item.subtitle}</CardDescription>
+                                <CardDescription className="text-xs line-clamp-3 mt-2 font-medium leading-relaxed">{item.subtitle}</CardDescription>
                             </CardHeader>
                             <CardContent className="p-5 pt-0 flex gap-2">
-                                <Button variant="outline" size="sm" className="flex-1 rounded-full font-bold text-[10px] uppercase" onClick={() => { setSelectedItem(item); setIsNewsModalOpen(true); }}>Editar</Button>
-                                <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-50 rounded-full" onClick={() => handleDelete('managementNews', item.id)}><Trash2 className="h-4 w-4" /></Button>
+                                {item.ownerId === user?.uid && (
+                                    <>
+                                        <Button variant="outline" size="sm" className="flex-1 rounded-full font-bold text-[10px] uppercase" onClick={() => { setSelectedItem(item); setIsNewsModalOpen(true); }}>Editar</Button>
+                                        <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-50 rounded-full" onClick={() => handleDelete('managementNews', item.id)}><Trash2 className="h-4 w-4" /></Button>
+                                    </>
+                                )}
+                                <Button variant="secondary" size="sm" className="rounded-full text-[10px] font-bold uppercase flex-1" onClick={() => { setSelectedItem(item); setIsNewsModalOpen(true); }}>Ler Mais</Button>
                             </CardContent>
                         </Card>
                     ))
@@ -220,12 +226,11 @@ export default function ManagementPage() {
             </div>
         </TabsContent>
 
-        {/* 2. MÓDULO DE PROMOTORAS */}
         <TabsContent value="promoters" className="space-y-6 animate-in fade-in duration-500">
             <div className="flex items-center justify-between">
                 <div className="space-y-1">
                     <h2 className="text-xl font-black uppercase tracking-tight text-blue-600">Parceiros & Promotoras</h2>
-                    <p className="text-xs text-muted-foreground">Controle de acessos, telefones e bancos vinculados.</p>
+                    <p className="text-xs text-muted-foreground">Controle individual de telefones, gerentes e senhas vinculadas.</p>
                 </div>
                 <Button onClick={() => { setSelectedItem(null); setIsPromoterModalOpen(true); }} className="rounded-full bg-blue-600 hover:bg-blue-700 font-bold shadow-lg gap-2">
                     <Building2 className="h-4 w-4" /> Adicionar Promotora
@@ -248,9 +253,9 @@ export default function ManagementPage() {
                                 </div>
                                 <div>
                                     <h3 className="font-black uppercase text-sm tracking-tight">{promoter.name}</h3>
-                                    <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground uppercase mt-1">
-                                        <span className="flex items-center gap-1"><NotebookTabs className="h-3 w-3" /> {promoter.contactName || 'Sem contato'}</span>
-                                        <span className="flex items-center gap-1"><LinkIcon className="h-3 w-3" /> {promoter.whatsapp || promoter.phone || 'S/ Tel'}</span>
+                                    <div className="flex items-center gap-4 text-[10px] font-bold text-muted-foreground uppercase mt-1.5">
+                                        <span className="flex items-center gap-1.5"><NotebookTabs className="h-3.5 w-3.5 text-blue-500" /> {promoter.contactName || 'Sem gerente'}</span>
+                                        <span className="flex items-center gap-1.5"><Headset className="h-3.5 w-3.5 text-blue-500" /> Suporte: {promoter.supportPhone || 'Não inf.'}</span>
                                     </div>
                                 </div>
                             </div>
@@ -265,10 +270,10 @@ export default function ManagementPage() {
                             <div className="p-6 bg-muted/10 space-y-6 animate-in slide-in-from-top-2 duration-300">
                                 <div className="flex items-center justify-between border-b pb-4">
                                     <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground flex items-center gap-2">
-                                        <Lock className="h-3.5 w-3.5" /> Logins Bancários Blindados
+                                        <Lock className="h-3.5 w-3.5" /> Logins Bancários Vínculados
                                     </h4>
                                     <Button size="sm" variant="outline" className="rounded-full h-8 px-4 font-bold text-[10px] uppercase gap-2 border-primary/20 text-primary" onClick={() => { setSelectedPromoterId(promoter.id); setSelectedItem(null); setIsBankModalOpen(true); }}>
-                                        <PlusCircle className="h-3 w-3" /> Novo Acesso
+                                        <PlusCircle className="h-3 w-3" /> Vincular Login
                                     </Button>
                                 </div>
 
@@ -276,7 +281,7 @@ export default function ManagementPage() {
                                     {loadingLogins ? (
                                         <div className="col-span-full flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
                                     ) : bankLogins.length === 0 ? (
-                                        <div className="col-span-full py-10 text-center border-2 border-dashed rounded-2xl opacity-30 text-[10px] font-black uppercase">Nenhum login cadastrado.</div>
+                                        <div className="col-span-full py-10 text-center border-2 border-dashed rounded-2xl opacity-30 text-[10px] font-black uppercase">Nenhum login cadastrado para esta promotora.</div>
                                     ) : (
                                         bankLogins.map((bank) => (
                                             <Card key={bank.id} className="bg-background border-2 shadow-sm p-4 space-y-4 group/bank">
@@ -292,7 +297,7 @@ export default function ManagementPage() {
                                                 </div>
                                                 <div className="space-y-2 bg-muted/20 p-3 rounded-lg border">
                                                     <div className="flex flex-col">
-                                                        <span className="text-[8px] font-black uppercase text-muted-foreground">Usuário / Login</span>
+                                                        <span className="text-[8px] font-black uppercase text-muted-foreground">Usuário</span>
                                                         <span className="text-[11px] font-bold select-all">{bank.login}</span>
                                                     </div>
                                                     <div className="flex flex-col relative">
@@ -309,19 +314,13 @@ export default function ManagementPage() {
                                                 </div>
                                                 {bank.accessUrl && (
                                                     <Button variant="secondary" className="w-full h-8 rounded-full text-[10px] font-bold uppercase gap-2" asChild>
-                                                        <a href={bank.accessUrl} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-3 w-3" /> Acessar Sistema</a>
+                                                        <a href={bank.accessUrl} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-3 w-3" /> Abrir Sistema</a>
                                                     </Button>
                                                 )}
                                             </Card>
                                         ))
                                     )}
                                 </div>
-                                {promoter.observations && (
-                                    <div className="p-4 bg-white/50 border rounded-xl">
-                                        <p className="text-[9px] font-black uppercase text-muted-foreground mb-1">Notas da Promotora</p>
-                                        <p className="text-[11px] italic font-medium">"{promoter.observations}"</p>
-                                    </div>
-                                )}
                             </div>
                         )}
                     </Card>
@@ -329,12 +328,11 @@ export default function ManagementPage() {
             </div>
         </TabsContent>
 
-        {/* 3. ÁREA DE LINKS RÁPIDOS */}
         <TabsContent value="links" className="space-y-6 animate-in fade-in duration-500">
             <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                    <h2 className="text-xl font-black uppercase tracking-tight text-emerald-600">Links Rápidos</h2>
-                    <p className="text-xs text-muted-foreground">Atalhos externos para agilizar sua rotina.</p>
+                    <h2 className="text-xl font-black uppercase tracking-tight text-emerald-600">Área de Links Rápidos</h2>
+                    <p className="text-xs text-muted-foreground">Atalhos compartilhados para agilizar o acesso aos portais oficiais.</p>
                 </div>
                 <Button onClick={() => { setSelectedItem(null); setIsLinkModalOpen(true); }} className="rounded-full bg-emerald-600 hover:bg-emerald-700 font-bold shadow-lg gap-2">
                     <PlusCircle className="h-4 w-4" /> Novo Atalho
@@ -355,20 +353,21 @@ export default function ManagementPage() {
                             </div>
                             <span className="text-[10px] font-black uppercase tracking-tight leading-tight line-clamp-2">{link.name}</span>
                         </a>
-                        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => { setSelectedItem(link); setIsLinkModalOpen(true); }} className="p-1.5 bg-white shadow rounded-full text-muted-foreground hover:text-primary"><Edit className="h-3 w-3" /></button>
-                            <button onClick={() => handleDelete('managementQuickLinks', link.id)} className="p-1.5 bg-white shadow rounded-full text-red-500 hover:text-red-600"><Trash2 className="h-3 w-3" /></button>
-                        </div>
+                        {link.ownerId === user?.uid && (
+                            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onClick={() => { setSelectedItem(link); setIsLinkModalOpen(true); }} className="p-1.5 bg-white shadow rounded-full text-muted-foreground hover:text-primary"><Edit className="h-3 w-3" /></button>
+                                <button onClick={() => handleDelete('managementQuickLinks', link.id)} className="p-1.5 bg-white shadow rounded-full text-red-500 hover:text-red-600"><Trash2 className="h-3 w-3" /></button>
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>
         </TabsContent>
       </Tabs>
 
-      {/* MODALS ISOLADOS */}
       <Dialog open={isNewsModalOpen} onOpenChange={setIsNewsModalOpen}>
         <DialogContent className="max-w-3xl">
-            <DialogHeader><DialogTitle>{selectedItem ? 'Editar Notícia' : 'Publicar Nova Notícia'}</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{selectedItem ? 'Visualizar / Editar Notícia' : 'Publicar Nova Notícia'}</DialogTitle></DialogHeader>
             <NewsForm initialData={selectedItem} onSubmit={(d) => handleSave('managementNews', d, selectedItem?.id)} isSaving={isSaving} />
         </DialogContent>
       </Dialog>
@@ -382,7 +381,7 @@ export default function ManagementPage() {
 
       <Dialog open={isBankModalOpen} onOpenChange={setIsBankModalOpen}>
         <DialogContent className="max-w-md">
-            <DialogHeader><DialogTitle>{selectedItem ? 'Editar Login' : 'Novo Acesso Bancário'}</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{selectedItem ? 'Editar Login' : 'Vincular Novo Banco'}</DialogTitle></DialogHeader>
             <BankForm initialData={selectedItem} onSubmit={(d) => handleSaveBank(d, selectedItem?.id)} isSaving={isSaving} />
         </DialogContent>
       </Dialog>
