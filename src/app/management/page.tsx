@@ -63,9 +63,11 @@ export default function ManagementPage() {
   const [decryptedPasswords, setDecryptedPasswords] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
 
-  // Firestore Queries
+  // Firestore Queries - Notícias e Links Úteis são públicos (sem filtro de ownerId na leitura)
   const newsQuery = useMemoFirebase(() => query(collection(firestore!, 'managementNews'), orderBy('date', 'desc')), []);
   const linksQuery = useMemoFirebase(() => query(collection(firestore!, 'managementQuickLinks'), orderBy('name', 'asc')), []);
+  
+  // Promotoras e Logins Bancários são privados
   const promotersQuery = useMemoFirebase(() => user ? query(collection(firestore!, 'managementPromoters'), where('ownerId', '==', user.uid), orderBy('name', 'asc')) : null, [user]);
 
   const { data: news, isLoading: loadingNews } = useCollection(newsQuery);
@@ -434,6 +436,7 @@ export default function ManagementPage() {
             <DialogHeader><DialogTitle>{selectedItem ? 'Editar Atalho' : 'Novo Link Rápido'}</DialogTitle></DialogHeader>
             <QuickLinkForm initialData={selectedItem} onSubmit={(d) => handleSave('managementQuickLinks', d, selectedItem?.id)} isSaving={isSaving} />
         </DialogContent>
+      </Dialog>
 
     </AppLayout>
   );
