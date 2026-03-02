@@ -125,7 +125,6 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
   const { user } = useUser();
   const [isFetchingCep, setIsFetchingCep] = useState(false);
   const [isSummarizing, setIsSummarizing] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const banks = userSettings?.banks || configData.banks;
   const availableTags = userSettings?.customerTags || configData.defaultCustomerTags;
@@ -244,7 +243,8 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
         console.log("📦 RESPOSTA API CEP:", response.status);
         
         if (!response.ok) {
-            throw new Error('Falha na conexão com o serviço de CEP.');
+            console.warn("⚠️ Falha na conexão com o serviço de CEP.");
+            return;
         }
 
         const data = await response.json();
