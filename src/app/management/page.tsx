@@ -272,21 +272,21 @@ export default function ManagementPage() {
                         <Card key={promoter.id} className="border-2 overflow-hidden shadow-sm hover:shadow-md transition-all">
                             <div 
                                 className={cn(
-                                    "p-5 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors",
+                                    "p-6 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors",
                                     expandedPromoter === promoter.id && "bg-blue-50/20 border-b-2"
                                 )}
                                 onClick={() => setExpandedPromoter(expandedPromoter === promoter.id ? null : promoter.id)}
                             >
-                                <div className="flex items-center gap-4">
-                                    <Avatar className="h-12 w-12 rounded-2xl border-2 border-primary/10 shadow-sm">
+                                <div className="flex items-center gap-6">
+                                    <Avatar className="h-14 w-14 rounded-2xl border-2 border-primary/10 shadow-sm">
                                         <AvatarImage src={promoter.photoURL} />
                                         <AvatarFallback className="bg-blue-100 text-blue-600 font-black">
-                                            <Building2 className="h-6 w-6" />
+                                            <Building2 className="h-7 w-7" />
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="min-w-0">
                                         <div className="flex items-center gap-2">
-                                            <h3 className="font-black uppercase text-sm tracking-tight truncate">{promoter.name}</h3>
+                                            <h3 className="font-black uppercase text-base tracking-tight truncate">{promoter.name}</h3>
                                             {promoter.partnerCode && (
                                                 <div className="flex items-center gap-1 animate-in zoom-in-95">
                                                     <Badge variant="outline" className="h-5 px-2 text-[9px] font-mono font-black border-blue-200 text-blue-600 bg-blue-50 uppercase">ID: {promoter.partnerCode}</Badge>
