@@ -375,8 +375,11 @@ export function ProposalForm({
     }
 
     const now = new Date().toISOString();
+    
+    // 🛡️ CORREÇÃO DO BUG 1: Limpeza de dados fantasmas de reprova
     const finalData: any = {
         ...data,
+        rejectionReason: data.status === 'Reprovado' ? data.rejectionReason : "",
         dateDigitized: convertToIso(data.dateDigitized) || now,
         dateApproved: convertToIso(data.dateApproved),
         datePaidToClient: convertToIso(data.datePaidToClient),

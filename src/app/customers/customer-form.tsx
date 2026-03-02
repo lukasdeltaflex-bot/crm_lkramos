@@ -195,15 +195,20 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
     return null;
   }, [watchBirthDate]);
 
+  // 🛡️ CORREÇÃO DO BUG 3: Verificação de duplicidade ignorando o próprio ID na edição
   const duplicity = useMemo(() => {
     const results = { phone: false, email: false, cpf: false };
     if (!allCustomers) return results;
+    
+    // Identifica o ID atual para permitir edição sem falso positivo
     const currentId = customer?.id || defaultValues?.id;
     const cleanPhone = watchPhone?.replace(/\D/g, '');
     const cleanCpf = watchCpf?.replace(/\D/g, '');
 
     allCustomers.forEach(c => {
-        if (c.id === currentId) return;
+        // Pula o próprio registro sendo editado
+        if (currentId && c.id === currentId) return;
+
         if (cleanPhone && c.phone?.replace(/\D/g, '') === cleanPhone) results.phone = true;
         if (cleanCpf && c.cpf?.replace(/\D/g, '') === cleanCpf) results.cpf = true;
     });
@@ -215,7 +220,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
         toast({
             variant: 'destructive',
             title: '⚠️ CPF JÁ CADASTRADO',
-            description: 'Este documento já existe no sistema. Localize o cliente pela busca para evitar duplicidade.'
+            description: 'Este documento já existe no sistema em outro cadastro.'
         });
     }
   }, [duplicity.cpf, watchCpf]);
@@ -311,7 +316,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                     <AlertDescription className="text-xs font-bold text-red-600 space-y-1 mt-2">
                         {errors.name && <p>• O Nome Completo é obrigatório.</p>}
                         {errors.cpf && <p>• {errors.cpf.message}</p>}
-                        {duplicity.cpf && <p className="animate-bounce">• ESTE CPF JÁ EXISTE NA BASE DE DADOS.</p>}
+                        {duplicity.cpf && <p className="animate-bounce">• ESTE CPF JÁ EXISTE NA BASE DE DADOS EM OUTRO REGISTRO.</p>}
                         {errors.phone && <p>• O Telefone Principal é obrigatório.</p>}
                         {duplicity.phone && <p>• Este Telefone já está em uso por outro cliente.</p>}
                         {errors.birthDate && <p>• A Data de Nascimento é obrigatória e deve ser válida.</p>}

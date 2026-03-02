@@ -93,7 +93,7 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
         return 5;
     };
 
-    const score = getFidelityScore(totalCommission);
+    const score = getFidelityScore(totalCommission || 0);
     const smartTags = getSmartTags(customer, proposals);
 
     return (
@@ -105,7 +105,7 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                         <div className="space-y-1">
                             <div className="flex items-center gap-3">
                                 <div className="flex items-center gap-2">
-                                    <CardTitle className="text-2xl font-black uppercase tracking-tight">{customer.name}</CardTitle>
+                                    <CardTitle className="text-2xl font-black uppercase tracking-tight">{customer.name || 'Cliente Sem Nome'}</CardTitle>
                                     <CopyButton text={customer.name} label="Nome" />
                                 </div>
                                 <Badge 
@@ -173,23 +173,23 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                         <UserRound className="h-4 w-4" /> Informações Cadastrais
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10">
-                        <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">ID do Cliente</span><div className="flex items-center gap-2 font-black text-foreground"><Hash className="h-3.5 w-3.5 text-primary/40" /><span>{customer.numericId}</span></div></div>
-                        <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Documento (CPF)</span><div className="flex items-center gap-2 font-black text-foreground"><FileText className="h-3.5 w-3.5 text-primary/40" /><span>{customer.cpf}</span><CopyButton text={customer.cpf} label="CPF" /></div></div>
+                        <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">ID do Cliente</span><div className="flex items-center gap-2 font-black text-foreground"><Hash className="h-3.5 w-3.5 text-primary/40" /><span>{customer.numericId || '---'}</span></div></div>
+                        <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Documento (CPF)</span><div className="flex items-center gap-2 font-black text-foreground"><FileText className="h-3.5 w-3.5 text-primary/40" /><span>{customer.cpf || '---'}</span><CopyButton text={customer.cpf} label="CPF" /></div></div>
                         <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Gênero</span><div className="flex items-center gap-2 font-bold text-foreground"><User className="h-3.5 w-3.5 text-primary/40" /><span>{customer.gender || '-'}</span></div></div>
-                        <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Data de Nascimento</span><div className="flex items-center gap-2 font-bold text-foreground"><Calendar className="h-3.5 w-3.5 text-primary/40" /><span>{customer.birthDate ? format(parse(customer.birthDate, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy') : '-'}</span><Badge variant="secondary" className="text-[9px] bg-primary/10 text-primary border-none font-black">{age} ANOS</Badge></div></div>
+                        <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Data de Nascimento</span><div className="flex items-center gap-2 font-bold text-foreground"><Calendar className="h-3.5 w-3.5 text-primary/40" /><span>{customer.birthDate ? formatDateSafe(customer.birthDate) : '-'}</span><Badge variant="secondary" className="text-[9px] bg-primary/10 text-primary border-none font-black">{age || 0} ANOS</Badge></div></div>
                         <div className="flex flex-col gap-1.5 lg:col-span-2"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">E-mail</span><div className="flex items-center gap-2 font-bold text-foreground"><Mail className="h-3.5 w-3.5 text-primary/40" /><span>{customer.email || '-'}</span><CopyButton text={customer.email} label="E-mail" /></div></div>
-                        <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Contato Principal</span><div className="flex items-center gap-2 font-black text-foreground"><Phone className="h-3.5 w-3.5 text-primary/40" /><span>{customer.phone}</span><div className="flex items-center gap-1"><CopyButton text={customer.phone} label="Telefone" />{isWhatsApp(customer.phone) && <a href={getWhatsAppUrl(customer.phone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:scale-110 transition-transform"><WhatsAppIcon className="h-4 w-4" /></a>}</div></div></div>
-                        <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Telefone 2</span><div className="flex items-center gap-2 font-bold text-foreground"><Phone className="h-3.5 w-3.5 text-primary/40" /><span>{customer.phone2 || '-'}</span><div className="flex items-center gap-1"><CopyButton text={customer.phone2} label="Telefone 2" />{isWhatsApp(customer.phone2 || '') && <a href={getWhatsAppUrl(customer.phone2!)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:scale-110 transition-transform"><WhatsAppIcon className="h-4 w-4" /></a>}</div></div></div>
+                        <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Contato Principal</span><div className="flex items-center gap-2 font-black text-foreground"><Phone className="h-3.5 w-3.5 text-primary/40" /><span>{customer.phone || '---'}</span><div className="flex items-center gap-1"><CopyButton text={customer.phone} label="Telefone" />{customer.phone && isWhatsApp(customer.phone) && <a href={getWhatsAppUrl(customer.phone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:scale-110 transition-transform"><WhatsAppIcon className="h-4 w-4" /></a>}</div></div></div>
+                        <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Telefone 2</span><div className="flex items-center gap-2 font-bold text-foreground"><Phone className="h-3.5 w-3.5 text-primary/40" /><span>{customer.phone2 || '-'}</span><div className="flex items-center gap-1"><CopyButton text={customer.phone2} label="Telefone 2" />{customer.phone2 && isWhatsApp(customer.phone2) && <a href={getWhatsAppUrl(customer.phone2!)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:scale-110 transition-transform"><WhatsAppIcon className="h-4 w-4" /></a>}</div></div></div>
                     </div>
                 </div>
 
-                {/* SEÇÃO 1.1: BENEFÍCIOS E CARTÕES VINCULADOS - NOVO LAYOUT DUAL-DOCK INTEGRADO */}
+                {/* SEÇÃO 1.1: BENEFÍCIOS E CARTÕES VINCULADOS - DUAL-DOCK (🛡️ BLINDADO V2) */}
                 <div className="space-y-6 pt-8 border-t border-border/40">
                     <h4 className="font-black text-[11px] uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
                         <CreditCard className="h-4 w-4" /> Benefícios e Reservas de Cartão
                     </h4>
                     <div className="space-y-6">
-                        {customer.benefits && customer.benefits.length > 0 ? (
+                        {customer.benefits && Array.isArray(customer.benefits) && customer.benefits.length > 0 ? (
                             customer.benefits.map((benefit: any, idx: number) => (
                                 <div key={idx} className="p-6 rounded-3xl bg-muted/10 border border-border/40 space-y-6 transition-all hover:bg-muted/20">
                                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -202,7 +202,7 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                                                 <div className="flex flex-col overflow-hidden">
                                                     <span className="text-[8px] font-black text-emerald-600/60 uppercase tracking-widest leading-none mb-1">Nº do Benefício</span>
                                                     <div className="flex items-center gap-1">
-                                                        <span className="font-black text-sm text-foreground tracking-tight">{benefit.number}</span>
+                                                        <span className="font-black text-sm text-foreground tracking-tight">{benefit.number || '---'}</span>
                                                         <CopyButton text={benefit.number} label="Benefício" />
                                                     </div>
                                                 </div>
