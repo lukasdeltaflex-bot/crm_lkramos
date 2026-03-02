@@ -5,8 +5,8 @@ import type { Row } from '@tanstack/react-table';
 import type { Proposal, Customer, UserSettings } from '@/lib/types';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { formatCurrency } from '@/lib/utils';
-import { Hourglass, CircleDollarSign, Activity, Wallet, TrendingUp } from 'lucide-react';
-import { startOfMonth, endOfMonth, subMonths, eachDayOfInterval, subDays, startOfDay, endOfDay } from 'date-fns';
+import { Hourglass, CircleDollarSign, Activity, Wallet } from 'lucide-react';
+import { startOfMonth, endOfMonth, subMonths, eachDayOfInterval, subDays, startOfDay, endOfDay, isValid } from 'date-fns';
 
 type ProposalWithCustomer = Proposal & { customer: Customer };
 
@@ -42,91 +42,78 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
     const today = new Date();
     const fromDate = currentMonthRange?.from || startOfMonth(today);
     const toDate = currentMonthRange?.to || endOfMonth(today);
-    const effectiveToDate = new Date(toDate);
-    effectiveToDate.setHours(23, 59, 59, 999);
+    const effectiveToDate = endOfDay(toDate);
 
     const prevMonthStart = startOfMonth(subMonths(fromDate, 1));
     const prevMonthEnd = endOfMonth(subMonths(fromDate, 1));
 
-    // 🛡️ BLINDAGEM DE CÁLCULO: Garante que valores nulos ou indefinidos virem zero para evitar NaN
     const safeValue = (val: any) => (val === null || val === undefined || isNaN(val)) ? 0 : Number(val);
 
-    // 1. PRODUÇÃO DIGITADA
-    const digitizedInPeriod = allProposals.filter(p => {
-        if (!p.dateDigitized) return false;
-        const d = new Date(p.dateDigitized);
-        return d >= fromDate && d <= effectiveToDate;
+    // 🛡️ OTIMIZAÇÃO V14: Filtro de passagem única (Single Pass)
+    const digitizedInPeriod: ProposalWithCustomer[] = [];
+    const receivedInPeriod: ProposalWithCustomer[] = [];
+    const averbados: ProposalWithCustomer[] = [];
+    const esperados: ProposalWithCustomer[] = [];
+    
+    let digitizedPrevSum = 0;
+    let receivedPrevSum = 0;
+
+    allProposals.forEach(p => {
+        const d = p.dateDigitized ? new Date(p.dateDigitized) : null;
+        const pd = p.commissionPaymentDate ? new Date(p.commissionPaymentDate) : null;
+
+        // Produção Digitada
+        if (d && isValid(d)) {
+            if (d >= fromDate && d <= effectiveToDate) digitizedInPeriod.push(p);
+            if (d >= prevMonthStart && d <= prevMonthEnd) digitizedPrevSum += safeValue(p.commissionValue);
+        }
+
+        // Comissão Recebida
+        if (pd && isValid(pd) && (p.commissionStatus === 'Paga' || p.commissionStatus === 'Parcial')) {
+            if (pd >= fromDate && pd <= effectiveToDate) receivedInPeriod.push(p);
+            if (pd >= prevMonthStart && pd <= prevMonthEnd) receivedPrevSum += safeValue(p.amountPaid);
+        }
+
+        // Saldo a Receber (Averbados)
+        if (p.dateApproved && p.commissionStatus !== 'Paga' && p.status !== 'Reprovado') {
+            averbados.push(p);
+        }
+
+        // Comissão Esperada (Esteira)
+        if (p.status !== 'Reprovado' && p.status !== 'Pago') {
+            esperados.push(p);
+        }
     });
+
     const totalComissaoProducaoDigitada = digitizedInPeriod.reduce((sum, p) => sum + safeValue(p.commissionValue), 0);
-
-    const digitizedInPrev = allProposals.filter(p => {
-        if (!p.dateDigitized) return false;
-        const d = new Date(p.dateDigitized);
-        return d >= prevMonthStart && d <= prevMonthEnd;
-    }).reduce((sum, p) => sum + safeValue(p.commissionValue), 0);
-
-    const digitizedTrend = digitizedInPrev > 0 ? ((totalComissaoProducaoDigitada - digitizedInPrev) / digitizedInPrev) * 100 : 0;
-
-    // 2. COMISSÃO RECEBIDA
-    const receivedInPeriod = allProposals.filter(p => {
-        if (p.commissionStatus !== 'Paga' && p.commissionStatus !== 'Parcial' || !p.commissionPaymentDate) return false;
-        const d = new Date(p.commissionPaymentDate);
-        return d >= fromDate && d <= effectiveToDate;
-    });
     const totalComissaoRecebida = receivedInPeriod.reduce((sum, p) => sum + safeValue(p.amountPaid), 0);
+    
+    const digitizedTrend = digitizedPrevSum > 0 ? ((totalComissaoProducaoDigitada - digitizedPrevSum) / digitizedPrevSum) * 100 : 0;
+    const receivedTrend = receivedPrevSum > 0 ? ((totalComissaoRecebida - receivedPrevSum) / receivedPrevSum) * 100 : 0;
 
-    const receivedInPrev = allProposals.filter(p => {
-        if (p.commissionStatus !== 'Paga' && p.commissionStatus !== 'Parcial' || !p.commissionPaymentDate) return false;
-        const d = new Date(p.commissionPaymentDate);
-        return d >= prevMonthStart && d <= prevMonthEnd;
-    }).reduce((sum, p) => sum + safeValue(p.amountPaid), 0);
-
-    const receivedTrend = receivedInPrev > 0 ? ((totalComissaoRecebida - receivedInPrev) / receivedInPrev) * 100 : 0;
-
-    // 3. SALDO A RECEBER (Averbados)
-    // 🛡️ CORREÇÃO BUG #2: Abatendo o que já foi pago parcialmente
-    const averbados = allProposals.filter(p => {
-        const hasAverbacao = !!p.dateApproved;
-        const isNotFullyPaid = p.commissionStatus !== 'Paga';
-        const isNotReprovado = p.status !== 'Reprovado';
-        return hasAverbacao && isNotFullyPaid && isNotReprovado;
-    });
     const totalSaldoAReceber = averbados.reduce((sum, p) => sum + (safeValue(p.commissionValue) - safeValue(p.amountPaid)), 0);
-
-    // 4. COMISSÃO ESPERADA (Pendências)
-    const esperados = allProposals.filter(p => {
-        const isNotReprovado = p.status !== 'Reprovado';
-        const isNotPaid = p.status !== 'Pago';
-        return isNotReprovado && isNotPaid;
-    });
     const totalComissaoEsperada = esperados.reduce((sum, p) => sum + (safeValue(p.commissionValue) - safeValue(p.amountPaid)), 0);
 
-    // SPARKLINE
+    // Sparklines (Últimos 7 dias)
     const last7Days = eachDayOfInterval({ start: subDays(today, 6), end: today });
     const productionTrend = last7Days.map(day => {
-        const dStart = startOfDay(day);
-        const dEnd = endOfDay(day);
-        return allProposals
-            .filter(p => {
-                const d = new Date(p.dateDigitized);
-                return d >= dStart && d <= dEnd;
-            })
-            .reduce((sum, p) => sum + safeValue(p.commissionValue), 0);
+        const ds = startOfDay(day);
+        const de = endOfDay(day);
+        return allProposals.reduce((sum, p) => {
+            const d = p.dateDigitized ? new Date(p.dateDigitized) : null;
+            return (d && d >= ds && d <= de) ? sum + safeValue(p.commissionValue) : sum;
+        }, 0);
     });
 
     const receivedTrendData = last7Days.map(day => {
-        const dStart = startOfDay(day);
-        const dEnd = endOfDay(day);
-        return allProposals
-            .filter(p => {
-                if ((p.commissionStatus !== 'Paga' && p.commissionStatus !== 'Parcial') || !p.commissionPaymentDate) return false;
-                const d = new Date(p.commissionPaymentDate);
-                return d >= dStart && d <= dEnd;
-            })
-            .reduce((sum, p) => sum + safeValue(p.amountPaid), 0);
+        const ds = startOfDay(day);
+        const de = endOfDay(day);
+        return allProposals.reduce((sum, p) => {
+            if ((p.commissionStatus !== 'Paga' && p.commissionStatus !== 'Parcial') || !p.commissionPaymentDate) return sum;
+            const d = new Date(p.commissionPaymentDate);
+            return (d && d >= ds && d <= de) ? sum + safeValue(p.amountPaid) : sum;
+        }, 0);
     });
-
-    const hotKpi = totalComissaoRecebida > totalComissaoProducaoDigitada ? "COMISSÃO RECEBIDA" : "PRODUÇÃO DIGITADA";
 
     return {
       totalComissaoProducaoDigitada,
@@ -141,7 +128,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
       allEsperados: esperados,
       productionTrend,
       receivedTrendData,
-      metrics: { hotKpi }
+      metrics: { hotKpi: totalComissaoRecebida > totalComissaoProducaoDigitada ? "COMISSÃO RECEBIDA" : "PRODUÇÃO DIGITADA" }
     };
   }, [rows, currentMonthRange]);
   
@@ -150,51 +137,69 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
   return (
     <div className='space-y-6 mb-8'>
         <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4 print:grid-cols-4'>
-            <div className="cursor-pointer" onClick={() => onShowDetails("Produção Digitada (Comissões Mês)", allDigitizedInPeriod)}>
+            <div className="cursor-pointer" onClick={() => onShowDetails("Produção Digitada (Mês)", allDigitizedInPeriod)}>
                 <StatsCard
                     title="PRODUÇÃO DIGITADA"
                     value={isPrivacyMode ? privacyPlaceholder : formatCurrency(totalComissaoProducaoDigitada)}
                     icon={Activity}
-                    description="TOTAL EM COMISSÕES (MÊS)"
+                    description="COMISSÕES DO PERÍODO"
                     percentage={digitizedTrend}
                     sparklineData={productionTrend}
                 />
             </div>
 
-            <div className="cursor-pointer" onClick={() => onShowDetails("Comissão Recebida (Entrada de Caixa)", allReceivedInPeriod)}>
+            <div className="cursor-pointer" onClick={() => onShowDetails("Comissão Recebida (Mês)", allReceivedInPeriod)}>
                 <StatsCard
                     title="COMISSÃO RECEBIDA"
                     value={isPrivacyMode ? privacyPlaceholder : formatCurrency(totalComissaoRecebida)}
                     icon={Wallet}
-                    description="DINHEIRO EM CAIXA (MÊS)"
+                    description="DINHEIRO EM CAIXA"
                     isHot={metrics.hotKpi === "COMISSÃO RECEBIDA"}
                     percentage={receivedTrend}
                     sparklineData={receivedTrendData}
                 />
             </div>
 
-            <div className="cursor-pointer" onClick={() => onShowDetails("Saldo a Receber (Contratos Averbados)", allAverbados)}>
+            <div className="cursor-pointer" onClick={() => onShowDetails("Saldo a Receber (Averbados)", allAverbados)}>
                 <StatsCard
                     title="SALDO A RECEBER"
                     value={isPrivacyMode ? privacyPlaceholder : formatCurrency(totalSaldoAReceber)}
                     icon={Hourglass}
-                    description="COMISSÕES AVERBADAS RESTANTES"
-                    isHot={metrics.hotKpi === "SALDO A RECEBER"}
+                    description="COMISSÕES AVERBADAS"
                     sparklineData={productionTrend.map(v => v * 0.8)}
                 />
             </div>
 
-            <div className="cursor-pointer" onClick={() => onShowDetails("Comissão Esperada (Expectativa Real)", allEsperados)}>
+            <div className="cursor-pointer" onClick={() => onShowDetails("Esteira Ativa (Pendências)", allEsperados)}>
                 <StatsCard
                     title="COMISSÃO ESPERADA"
                     value={isPrivacyMode ? privacyPlaceholder : formatCurrency(totalComissaoEsperada)}
                     icon={CircleDollarSign}
-                    description="ESTEIRA ATIVA (PENDÊNCIAS)"
-                    isHot={metrics.hotKpi === "COMISSÃO ESPERADA"}
+                    description="EXPECTATIVA DE RECEBIMENTO"
                     sparklineData={productionTrend.map(v => v * 1.2)}
                 />
             </div>
         </div>
     </div>
   );
+}
+
+// Icon definition fix
+function Activity(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+    </svg>
+  )
 }

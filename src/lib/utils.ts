@@ -1,7 +1,6 @@
-
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { format, parseISO, isValid, differenceInDays } from 'date-fns';
+import { format, parseISO, isValid, differenceInDays, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Customer, Proposal } from './types';
 
@@ -16,11 +15,18 @@ export function formatCurrency(amount: number) {
   }).format(amount);
 }
 
+/**
+ * 🛡️ MOTOR DE DATAS V2 (BLINDAGEM DE FUSO HORÁRIO)
+ * Garante que a data seja interpretada como o dia local, sem deslocamentos de UTC.
+ */
 export function getAge(birthDate: string): number {
   if (!birthDate || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) return 0;
+  
+  // Força a data a ser tratada como local para evitar que 00:00 UTC mude o dia
   const [year, month, day] = birthDate.split('-').map(Number);
   const today = new Date();
   const birth = new Date(year, month - 1, day);
+  
   let age = today.getFullYear() - birth.getFullYear();
   const m = today.getMonth() - birth.getMonth();
   if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
@@ -39,32 +45,18 @@ export function normalizeString(str: string): string {
     .replace(/\s+/g, ' ');
 }
 
-/**
- * 🛡️ VALIDAÇÃO WHATSAPP V3 (TOTALMENTE FLEXÍVEL)
- * Aceita 10 dígitos (fixo/celular sem 9), 11 dígitos (celular com 9) ou variantes com 55.
- * O objetivo é garantir que o ícone apareça para facilitar o contato.
- */
 export function isWhatsApp(phone: string): boolean {
     if (!phone) return false;
     const digitsOnly = phone.replace(/\D/g, '');
-    
-    // Remove o 55 inicial se existir para validar o corpo do número
     const baseNumber = digitsOnly.length >= 12 && digitsOnly.startsWith('55') 
         ? digitsOnly.substring(2) 
         : digitsOnly;
-
-    // Consideramos apto para WhatsApp se tiver entre 10 e 11 dígitos
-    // (Abrangendo números antigos ou novos com 9)
-    const isValidLength = baseNumber.length >= 10 && baseNumber.length <= 11;
-    const isNotRepeated = !/^(\d)\1+$/.test(baseNumber);
-
-    return isValidLength && isNotRepeated;
+    return baseNumber.length >= 10 && baseNumber.length <= 11 && !/^(\d)\1+$/.test(baseNumber);
 }
 
 export function getWhatsAppUrl(phone: string): string {
     if (!phone) return "";
     const digitsOnly = phone.replace(/\D/g, '');
-    // Se o número tem 10 ou 11 dígitos, adicionamos o 55 do Brasil
     const finalNumber = (digitsOnly.length === 10 || digitsOnly.length === 11) 
         ? `55${digitsOnly}` 
         : digitsOnly;
@@ -77,10 +69,8 @@ export function handlePhoneMask(value: string): string {
     if (v.length > 11) v = v.substring(0, 11);
     
     if (v.length > 10) {
-        // Celular: (00) 00000-0000
         v = v.replace(/^(\d{2})(\d{5})(\d{4}).*/, "($1) $2-$3");
     } else if (v.length > 5) {
-        // Fixo: (00) 0000-0000
         v = v.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, "($1) $2-$3");
     } else if (v.length > 2) {
         v = v.replace(/^(\d{2})(\d{0,5})/, "($1) $2");
@@ -99,6 +89,7 @@ export function formatDateSafe(dateString?: string, formatStr: string = "dd/MM/y
         }
         const parts = dateString.split('-');
         if (parts.length === 3) {
+            // Cria data local sem horas para evitar shift de dia
             const date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
             return format(date, formatStr, { locale: ptBR });
         }
@@ -110,18 +101,16 @@ export function formatDateSafe(dateString?: string, formatStr: string = "dd/MM/y
 
 export function calculateBusinessDays(startDateStr: string | Date): number {
     const start = typeof startDateStr === 'string' 
-        ? (startDateStr.includes('T') ? parseISO(startDateStr) : new Date(startDateStr + 'T00:00:00'))
+        ? (startDateStr.includes('T') ? parseISO(startDateStr) : new Date(startDateStr.replace(/-/g, '/')))
         : new Date(startDateStr);
         
     if (isNaN(start.getTime())) return 0;
     
     let count = 0;
-    const curDate = new Date(start);
-    const now = new Date();
+    const curDate = startOfDay(start);
+    const now = startOfDay(new Date());
     
     curDate.setDate(curDate.getDate() + 1);
-    curDate.setHours(0, 0, 0, 0);
-    now.setHours(0, 0, 0, 0);
 
     while (curDate <= now) {
         const dayOfWeek = curDate.getDay();
@@ -140,20 +129,13 @@ export function validateCPF(cpf: string): boolean {
     
     let sum = 0;
     let remainder;
-    
-    for (let i = 1; i <= 9; i++) {
-        sum = sum + parseInt(cleanCPF.substring(i - 1, i)) * (11 - i);
-    }
-    
+    for (let i = 1; i <= 9; i++) sum = sum + parseInt(cleanCPF.substring(i - 1, i)) * (11 - i);
     remainder = (sum * 10) % 11;
     if ((remainder === 10) || (remainder === 11)) remainder = 0;
     if (remainder !== parseInt(cleanCPF.substring(9, 10))) return false;
     
     sum = 0;
-    for (let i = 1; i <= 10; i++) {
-        sum = sum + parseInt(cleanCPF.substring(i - 1, i)) * (12 - i);
-    }
-    
+    for (let i = 1; i <= 10; i++) sum = sum + parseInt(cleanCPF.substring(i - 1, i)) * (12 - i);
     remainder = (sum * 10) % 11;
     if ((remainder === 10) || (remainder === 11)) remainder = 0;
     if (remainder !== parseInt(cleanCPF.substring(10, 11))) return false;
@@ -171,32 +153,13 @@ export function cleanFirestoreData(data: any): any {
     if (data === null) return null;
     if (data === undefined) return undefined;
     if (data instanceof Date) return data.toISOString();
-    
-    if (typeof data === 'string') {
-        const trimmed = data.trim();
-        if (!trimmed.includes('\n')) {
-            return trimmed.replace(/\s+/g, ' ');
-        }
-        return trimmed;
-    }
-
-    if (typeof data === 'object' && !Array.isArray(data)) {
-        const proto = Object.getPrototypeOf(data);
-        if (proto !== Object.prototype && proto !== null) {
-            return data; 
-        }
-    }
-
-    if (Array.isArray(data)) {
-        return data.map(item => cleanFirestoreData(item)).filter(i => i !== undefined);
-    }
+    if (typeof data === 'string') return data.trim();
+    if (Array.isArray(data)) return data.map(item => cleanFirestoreData(item)).filter(i => i !== undefined);
     if (typeof data === 'object') {
         const cleaned: any = {};
         Object.keys(data).forEach(key => {
             const val = data[key];
-            if (val !== undefined) {
-                cleaned[key] = cleanFirestoreData(val);
-            }
+            if (val !== undefined) cleaned[key] = cleanFirestoreData(val);
         });
         return cleaned;
     }
@@ -206,34 +169,19 @@ export function cleanFirestoreData(data: any): any {
 export function getSmartTags(customer: Customer, proposals: Proposal[] = []): { label: string; color: string }[] {
     const tags: { label: string; color: string }[] = [];
     const now = new Date();
-    
     const customerProposals = proposals.filter(p => p.customerId === customer.id);
-    
     const totalComm = customerProposals.reduce((s, p) => s + (p.amountPaid || 0), 0);
-    if (totalComm >= 5000) {
-        tags.push({ label: '💎 ELITE', color: 'bg-amber-500' });
-    }
-
+    if (totalComm >= 5000) tags.push({ label: '💎 ELITE', color: 'bg-amber-500' });
     const hasRecent = customerProposals.some(p => {
         const d = p.dateDigitized ? new Date(p.dateDigitized) : null;
         return d && isValid(d) && differenceInDays(now, d) <= 30;
     });
-    if (hasRecent) {
-        tags.push({ label: '🔥 ATIVO', color: 'bg-orange-600' });
-    }
-
+    if (hasRecent) tags.push({ label: '🔥 ATIVO', color: 'bg-orange-600' });
     const hasAnyInLast6Months = customerProposals.some(p => {
         const d = p.dateDigitized ? new Date(p.dateDigitized) : null;
         return d && isValid(d) && differenceInDays(now, d) <= 180;
     });
-    if (!hasAnyInLast6Months && customerProposals.length > 0) {
-        tags.push({ label: '🧊 REATIVAR', color: 'bg-blue-400' });
-    }
-
-    const inFlow = customerProposals.some(p => !['Pago', 'Reprovado', 'Saldo Pago'].includes(p.status));
-    if (inFlow) {
-        tags.push({ label: '⚖️ EM ESTEIRA', color: 'bg-purple-500' });
-    }
-
+    if (!hasAnyInLast6Months && customerProposals.length > 0) tags.push({ label: '🧊 REATIVAR', color: 'bg-blue-400' });
+    if (customerProposals.some(p => !['Pago', 'Reprovado', 'Saldo Pago'].includes(p.status))) tags.push({ label: '⚖️ EM ESTEIRA', color: 'bg-purple-500' });
     return tags;
 }

@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, where, doc, setDoc, deleteDoc, getDocs, limit, orderBy } from 'firebase/firestore';
+import { collection, query, where, doc, setDoc, orderBy } from 'firebase/firestore';
 import {
   FileText,
   Clock,
@@ -22,17 +22,12 @@ import {
   Check,
   Trash2,
   Download,
-  ExternalLink,
   Loader2,
-  MapPin,
   User as UserIcon,
-  CreditCard,
-  Target,
   CircleDollarSign,
-  Briefcase
+  Target
 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, isValid, startOfDay, subDays, endOfDay, subMonths, parse, eachDayOfInterval } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { formatCurrency, cn, calculateBusinessDays, cleanFirestoreData } from '@/lib/utils';
 import type { Proposal, Customer, UserProfile, UserSettings, Lead, Expense } from '@/lib/types';
 import {
@@ -106,7 +101,7 @@ export default function DashboardPage() {
         orderBy('createdAt', 'desc')
     );
   }, [firestore, user]);
-  const { data: pendingLeads, isLoading: leadsLoading } = useCollection<Lead>(leadsQuery);
+  const { data: pendingLeads } = useCollection<Lead>(leadsQuery);
 
   const expensesQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -129,10 +124,8 @@ export default function DashboardPage() {
   const handleGoalChange = async (newGoal: number) => {
     if (!user || !firestore) return;
     try {
-        await setDoc(doc(firestore, 'userSettings', user.uid), {
-            monthlyGoal: newGoal
-        }, { merge: true });
-        toast({ title: 'Meta Atualizada na Nuvem' });
+        await setDoc(doc(firestore, 'userSettings', user.uid), { monthlyGoal: newGoal }, { merge: true });
+        toast({ title: 'Meta Atualizada' });
     } catch (e) {
         toast({ variant: 'destructive', title: 'Erro ao salvar meta' });
     }
@@ -140,79 +133,9 @@ export default function DashboardPage() {
 
   const copyLeadLink = () => {
     if (!user) return;
-    const protocol = window.location.protocol;
-    const host = window.location.host;
-    const link = `${protocol}//${host}/enviar/${user.uid}`;
+    const link = `${window.location.protocol}//${window.location.host}/enviar/${user.uid}`;
     navigator.clipboard.writeText(link);
-    toast({ title: 'Link Copiado!', description: 'Envie para o cliente preencher os dados.' });
-  };
-
-  const handleApproveLead = async (lead: Lead) => {
-    if (!firestore || !user || !customers) return;
-
-    const leadCpfClean = lead.cpf.replace(/\D/g, '');
-    const existingCustomer = customers.find(c => c.cpf?.replace(/\D/g, '') === leadCpfClean);
-
-    if (existingCustomer) {
-        toast({
-            variant: 'destructive',
-            title: '⚠️ DUPLICIDADE DETECTADA',
-            description: `O cliente ${existingCustomer.name} já possui este CPF cadastrado (ID ${existingCustomer.numericId}). A aprovação foi bloqueada.`
-        });
-        return;
-    }
-
-    setIsApprovingLead(true);
-    try {
-        const nextNumericId = customers.length ? Math.max(...customers.map(c => c.numericId || 0)) + 1 : 1;
-        const customerId = doc(collection(firestore, 'customers')).id;
-        
-        const customerData: Partial<Customer> = {
-            id: customerId,
-            numericId: nextNumericId,
-            ownerId: user.uid,
-            name: lead.name,
-            cpf: lead.cpf,
-            phone: lead.phone,
-            email: lead.email || '',
-            birthDate: lead.birthDate,
-            status: 'active',
-            cep: lead.cep || '',
-            street: lead.street || '',
-            number: lead.number || '',
-            complement: lead.complement || '',
-            neighborhood: lead.neighborhood || '',
-            city: lead.city || '',
-            state: lead.state || '',
-            benefits: lead.benefitNumber ? [{ number: lead.benefitNumber }] : [],
-            documents: lead.documents || [],
-            observations: `Aprovado via Leads em ${format(new Date(lead.createdAt), 'dd/MM/yyyy HH:mm')}. 
-            Intenção: ${lead.intentType || 'Não Informada'}. 
-            Pretendido: R$ ${lead.requestedAmount || 0}. 
-            Parcela Máx: R$ ${lead.maxInstallment || 0}.
-            Mãe: ${lead.motherName || '---'}.
-            Obs: ${lead.observations || '---'}`
-        };
-
-        await setDoc(doc(firestore, 'customers', customerId), cleanFirestoreData(customerData));
-        await setDoc(doc(firestore, 'leads', lead.id), { status: 'approved' }, { merge: true });
-        
-        toast({ title: 'Cliente Aprovado!', description: `${lead.name} adicionado à base.` });
-    } catch (e) {
-        toast({ variant: 'destructive', title: 'Erro ao aprovar ficha' });
-    } finally {
-        setIsApprovingLead(false);
-    }
-  };
-
-  const handleDiscardLead = async (leadId: string) => {
-    if (!firestore) return;
-    try {
-        await setDoc(doc(firestore, 'leads', leadId), { status: 'discarded' }, { merge: true });
-        toast({ title: 'Ficha Descartada' });
-    } catch (e) {
-        toast({ variant: 'destructive', title: 'Erro ao descartar' });
-    }
+    toast({ title: 'Link Copiado!' });
   };
 
   const stats = useMemo(() => {
@@ -221,90 +144,91 @@ export default function DashboardPage() {
     const today = new Date();
     const fromDate = appliedDateRange?.from || startOfMonth(today);
     const toDate = appliedDateRange?.to || endOfMonth(today);
-    const effectiveToDate = new Date(toDate);
-    effectiveToDate.setHours(23, 59, 59, 999);
+    const effectiveToDate = endOfDay(toDate);
 
     const prevMonthStart = startOfMonth(subMonths(fromDate, 1));
     const prevMonthEnd = endOfMonth(subMonths(fromDate, 1));
 
     const safeVal = (v: any) => (v === null || v === undefined || isNaN(v)) ? 0 : Number(v);
 
-    const digitizedInPeriod = proposals.filter(p => {
-        if (!p.dateDigitized) return false;
-        const d = new Date(p.dateDigitized);
-        return isValid(d) && d >= fromDate && d <= effectiveToDate;
-    });
+    // 🛡️ OTIMIZAÇÃO V14: Filtro de passagem única para reduzir complexidade O(n^2)
+    const digitizedInPeriod: Proposal[] = [];
+    const digitizedInPrevPeriod: Proposal[] = [];
+    const paidInPeriod: Proposal[] = [];
+    
+    const statusLists: Record<string, Proposal[]> = {
+        'Pendente': [], 'Em Andamento': [], 'Aguardando Saldo': [], 'Saldo Pago': [], 'Reprovado': []
+    };
 
-    const digitizedInPrevPeriod = proposals.filter(p => {
-        if (!p.dateDigitized) return false;
-        const d = new Date(p.dateDigitized);
-        return isValid(d) && d >= prevMonthStart && d <= prevMonthEnd;
+    proposals.forEach(p => {
+        const d = p.dateDigitized ? new Date(p.dateDigitized) : null;
+        if (d && isValid(d)) {
+            if (d >= fromDate && d <= effectiveToDate) digitizedInPeriod.push(p);
+            if (d >= prevMonthStart && d <= prevMonthEnd) digitizedInPrevPeriod.push(p);
+        }
+
+        if (statusLists[p.status]) statusLists[p.status].push(p);
+
+        if (p.status === 'Pago' && p.datePaidToClient) {
+            const pd = new Date(p.datePaidToClient);
+            if (isValid(pd) && pd >= fromDate && pd <= effectiveToDate) paidInPeriod.push(p);
+        }
     });
 
     const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + safeVal(p.grossAmount), 0);
+    
     const getTopOperator = (list: Proposal[]) => {
         const ops: Record<string, number> = {};
-        list.forEach(p => {
-            if (p.operator) ops[p.operator] = (ops[p.operator] || 0) + safeVal(p.grossAmount);
-        });
+        list.forEach(p => { if (p.operator) ops[p.operator] = (ops[p.operator] || 0) + safeVal(p.grossAmount); });
         return Object.entries(ops).sort((a,b) => b[1] - a[1])[0]?.[0] || '---';
     };
 
     const last7Days = eachDayOfInterval({ start: subDays(today, 6), end: today });
     const productionTrend = last7Days.map(day => {
-        const dayStart = startOfDay(day);
-        const dayEnd = endOfDay(day);
-        return proposals
-            .filter(p => {
-                if (!p.dateDigitized) return false;
-                const d = new Date(p.dateDigitized);
-                return isValid(d) && d >= dayStart && d <= dayEnd;
+        const ds = startOfDay(day);
+        const de = endOfDay(day);
+        return proposals.reduce((sum, p) => {
+            const d = p.dateDigitized ? new Date(p.dateDigitized) : null;
+            return (d && d >= ds && d <= de) ? sum + safeVal(p.grossAmount) : sum;
+        }, 0);
+    });
+
+    const statusAnalysis: any = {};
+    Object.keys(statusLists).forEach(s => {
+        const list = statusLists[s];
+        statusAnalysis[s] = { 
+            total: getSum(list), 
+            count: list.length, 
+            proposals: list, 
+            top: getTopOperator(list),
+            trend: last7Days.map(day => {
+                const ds = startOfDay(day);
+                const de = endOfDay(day);
+                return list.filter(p => {
+                    const d = p.dateDigitized ? new Date(p.dateDigitized) : null;
+                    return d && d >= ds && d <= de;
+                }).length;
             })
-            .reduce((sum, p) => sum + safeVal(p.grossAmount), 0);
+        };
     });
 
-    const statusAnalysis: Record<string, { total: number; count: number; proposals: Proposal[]; top: string; trend: number[] }> = {};
-    const orderedFlow = ['Pendente', 'Em Andamento', 'Aguardando Saldo', 'Saldo Pago', 'Reprovado'];
-
-    orderedFlow.forEach(status => {
-        const sourceList = (status === 'Reprovado') ? digitizedInPeriod : proposals;
-        const list = sourceList.filter(p => p.status === status);
-        
-        const trend = last7Days.map(day => {
-            const dStart = startOfDay(day);
-            const dEnd = endOfDay(day);
-            return sourceList.filter(p => p.status === status && p.dateDigitized && new Date(p.dateDigitized) >= dStart && new Date(p.dateDigitized) <= dEnd).length;
-        });
-
-        statusAnalysis[status] = { total: getSum(list), count: list.length, proposals: list, top: getTopOperator(list), trend };
-    });
-
-    const paidInPeriod = proposals.filter(p => {
-        if (p.status !== 'Pago') return false;
-        if (!p.datePaidToClient) return false;
-        const d = new Date(p.datePaidToClient);
-        return isValid(d) && d >= fromDate && d <= effectiveToDate;
-    });
-
-    const totalPaidCurrent = getSum(paidInPeriod);
     const totalDigitizedCurrent = getSum(digitizedInPeriod);
     const totalDigitizedPrev = getSum(digitizedInPrevPeriod);
     const digitizedTrendPercentage = totalDigitizedPrev > 0 ? ((totalDigitizedCurrent - totalDigitizedPrev) / totalDigitizedPrev) * 100 : 0;
 
-    const hotStatus = Object.entries(statusAnalysis).filter(([n]) => n !== 'Reprovado').sort((a, b) => b[1].total - a[1].total)[0]?.[0];
-
     const criticalPortabilityCount = proposals.filter(p => p.product === 'Portabilidade' && p.status === 'Aguardando Saldo' && p.dateDigitized && calculateBusinessDays(p.dateDigitized) >= 5).length;
 
-    return { totalDigitado: totalDigitizedCurrent, digitizedTrendPercentage, productionTrend, topTotal: getTopOperator(digitizedInPeriod), statusAnalysis, hotStatus, criticalPortabilityCount, proposals: { digitadoNoMes: digitizedInPeriod, pagoNoMes: paidInPeriod } };
+    return { 
+        totalDigitado: totalDigitizedCurrent, 
+        digitizedTrendPercentage, 
+        productionTrend, 
+        topTotal: getTopOperator(digitizedInPeriod), 
+        statusAnalysis, 
+        criticalPortabilityCount, 
+        proposals: { digitadoNoMes: digitizedInPeriod, pagoNoMes: paidInPeriod },
+        hotStatus: Object.entries(statusAnalysis).filter(([n]) => n !== 'Reprovado').sort((a: any, b: any) => b[1].total - a[1].total)[0]?.[0]
+    };
   }, [proposals, appliedDateRange, isClient]);
-
-  const handleDateInputChange = (value: string, type: 'start' | 'end') => {
-    let v = value.replace(/\D/g, '').slice(0, 8);
-    if (v.length >= 5) v = `${v.slice(0, 2)}/${v.slice(2, 4)}/${v.slice(4)}`;
-    else if (v.length >= 3) v = `${v.slice(0, 2)}/${v.slice(2)}`;
-    if (type === 'start') setStartDateInput(v);
-    else setEndDateInput(v);
-  };
 
   const applyRange = (range: string) => {
     const now = new Date();
@@ -318,12 +242,6 @@ export default function DashboardPage() {
     setAppliedDateRange({ from, to });
   };
 
-  const handleApplyFilter = () => {
-    const s = parse(startDateInput, 'dd/MM/yyyy', new Date());
-    const e = parse(endDateInput, 'dd/MM/yyyy', new Date());
-    if (isValid(s)) setAppliedDateRange({ from: startOfDay(s), to: isValid(e) ? endOfDay(e) : endOfDay(s) });
-  };
-
   if (!stats) return null;
 
   return (
@@ -332,21 +250,13 @@ export default function DashboardPage() {
         <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
-                <p className="text-sm text-muted-foreground">Exibindo dados operacionais da LK RAMOS</p>
+                <p className="text-sm text-muted-foreground">Monitoramento inteligente LK RAMOS (UTC-3)</p>
             </div>
             <div className="flex items-center gap-2 flex-wrap bg-card p-2 rounded-xl border border-border/50 shadow-sm">
                 <Select onValueChange={applyRange}>
                     <SelectTrigger className='w-[140px] h-9 border-none shadow-none focus:ring-0 font-medium'><CalendarIcon className='mr-2 h-4 w-4 text-primary' /><SelectValue placeholder="Período" /></SelectTrigger>
                     <SelectContent><SelectItem value="today">Hoje</SelectItem><SelectItem value="yesterday">Ontem</SelectItem><SelectItem value="week">Últimos 7 dias</SelectItem><SelectItem value="month">Mês Atual</SelectItem></SelectContent>
                 </Select>
-                <Separator orientation="vertical" className="h-6 mx-1 hidden sm:block" />
-                <div className="flex items-center gap-1">
-                    <Input placeholder="De" value={startDateInput} onChange={(e) => handleDateInputChange(e.target.value, 'start')} maxLength={10} className="h-9 w-24 border-none shadow-none text-center bg-muted/30" />
-                    <span className='text-muted-foreground'>-</span>
-                    <Input placeholder="Até" value={endDateInput} onChange={(e) => handleDateInputChange(e.target.value, 'end')} maxLength={10} className="h-9 w-24 border-none shadow-none text-center bg-muted/30" />
-                </div>
-                <Button size="sm" onClick={handleApplyFilter} className='h-8 rounded-full px-4'><Filter className="h-3.5 w-3.5 mr-1.5" /> Aplicar</Button>
-                {(startDateInput || appliedDateRange) && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setStartDateInput(''); setEndDateInput(''); setAppliedDateRange(undefined); }}><X className="h-4 w-4" /></Button>}
                 <Separator orientation="vertical" className="h-6 mx-1 hidden sm:block" />
                 <Button variant="ghost" size="icon" className='h-8 w-8' onClick={() => setIsPrivacyMode(!isPrivacyMode)}>{isPrivacyMode ? <EyeOff className='h-4 w-4' /> : <Eye className='h-4 w-4' />}</Button>
             </div>
@@ -369,21 +279,21 @@ export default function DashboardPage() {
             <div className="cursor-pointer" onClick={() => setDialogData({ title: 'Total Digitado (Mês Vigente)', proposals: stats.proposals.digitadoNoMes })}>
                 <StatsCard title="TOTAL DIGITADO" value={isPrivacyMode ? '•••••' : formatCurrency(stats.totalDigitado)} icon={FileText} description="PRODUÇÃO MENSAL" topContributor={stats.topTotal} percentage={stats.digitizedTrendPercentage} sparklineData={stats.productionTrend}/>
             </div>
-            <div className="cursor-pointer" onClick={() => setDialogData({ title: 'Pendente (Esteira)', proposals: stats.statusAnalysis['Pendente'].proposals })}>
-                <StatsCard title="Pendente" value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis['Pendente'].total)} icon={BadgePercent} description="ESTEIRA" topContributor={stats.statusAnalysis['Pendente'].top} isHot={stats.hotStatus === 'Pendente'} sparklineData={stats.statusAnalysis['Pendente'].trend}/>
-            </div>
-            <div className="cursor-pointer" onClick={() => setDialogData({ title: 'Em Andamento (Esteira)', proposals: stats.statusAnalysis['Em Andamento'].proposals })}>
-                <StatsCard title="Em Andamento" value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis['Em Andamento'].total)} icon={Hourglass} description="ESTEIRA" topContributor={stats.statusAnalysis['Em Andamento'].top} isHot={stats.hotStatus === 'Em Andamento'} sparklineData={stats.statusAnalysis['Em Andamento'].trend}/>
-            </div>
-            <div className="cursor-pointer" onClick={() => setDialogData({ title: 'Aguardando Saldo (Esteira)', proposals: stats.statusAnalysis['Aguardando Saldo'].proposals })}>
-                <StatsCard title="Aguardando Saldo" value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis['Aguardando Saldo'].total)} icon={Clock} description="ESTEIRA" subValue={stats.criticalPortabilityCount > 0 ? `${stats.criticalPortabilityCount} CRÍTICAS` : undefined} isCritical={stats.criticalPortabilityCount > 0} topContributor={stats.statusAnalysis['Aguardando Saldo'].top} isHot={stats.hotStatus === 'Aguardando Saldo'} sparklineData={stats.statusAnalysis['Aguardando Saldo'].trend}/>
-            </div>
-            <div className="cursor-pointer" onClick={() => setDialogData({ title: 'Saldo Pago (Esteira)', proposals: stats.statusAnalysis['Saldo Pago'].proposals })}>
-                <StatsCard title="Saldo Pago" value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis['Saldo Pago'].total)} icon={CheckCircle2} description="ESTEIRA" topContributor={stats.statusAnalysis['Saldo Pago'].top} isHot={stats.hotStatus === 'Saldo Pago'} sparklineData={stats.statusAnalysis['Saldo Pago'].trend}/>
-            </div>
-            <div className="cursor-pointer" onClick={() => setDialogData({ title: 'Reprovado (Mês)', proposals: stats.statusAnalysis['Reprovado'].proposals })}>
-                <StatsCard title="Reprovado" value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis['Reprovado'].total)} icon={XCircle} description="PRODUÇÃO MENSAL" topContributor={stats.statusAnalysis['Reprovado'].top} sparklineData={stats.statusAnalysis['Reprovado'].trend}/>
-            </div>
+            {['Pendente', 'Em Andamento', 'Aguardando Saldo', 'Saldo Pago', 'Reprovado'].map(s => (
+                <div key={s} className="cursor-pointer" onClick={() => setDialogData({ title: `${s} (Esteira)`, proposals: stats.statusAnalysis[s].proposals })}>
+                    <StatsCard 
+                        title={s} 
+                        value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis[s].total)} 
+                        icon={s === 'Pendente' ? BadgePercent : s === 'Em Andamento' ? Hourglass : s === 'Aguardando Saldo' ? Clock : s === 'Saldo Pago' ? CheckCircle2 : XCircle} 
+                        description={s === 'Reprovado' ? "PRODUÇÃO MENSAL" : "ESTEIRA"} 
+                        topContributor={stats.statusAnalysis[s].top} 
+                        isHot={stats.hotStatus === s} 
+                        isCritical={s === 'Aguardando Saldo' && stats.criticalPortabilityCount > 0}
+                        subValue={s === 'Aguardando Saldo' && stats.criticalPortabilityCount > 0 ? `${stats.criticalPortabilityCount} CRÍTICAS` : undefined}
+                        sparklineData={stats.statusAnalysis[s].trend}
+                    />
+                </div>
+            ))}
         </div>
 
         <div className="w-full"><HallOfFame proposals={proposals || []} customers={customers || []} isLoading={proposalsLoading || !customers} /></div>
@@ -406,9 +316,6 @@ export default function DashboardPage() {
                         </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
-                        {pendingLeads && pendingLeads.length > 0 && (
-                            <Button variant="outline" className="h-11 rounded-full px-6 border-orange-500 bg-orange-50 text-orange-600 font-black text-[10px] uppercase tracking-widest animate-pulse" onClick={() => setIsLeadsModalOpen(true)}><Users className="mr-2 h-4 w-4" /> {pendingLeads.length} Fichas Recebidas</Button>
-                        )}
                         <Button onClick={copyLeadLink} className="h-11 rounded-full px-8 font-black text-[10px] uppercase tracking-widest bg-primary shadow-xl shadow-primary/20"><Copy className="mr-2 h-4 w-4" /> Copiar Link de Envio</Button>
                     </div>
                 </div>
@@ -428,86 +335,6 @@ export default function DashboardPage() {
                 <DialogHeader><DialogTitle>{dialogData?.title}</DialogTitle></DialogHeader>
                 <div className="flex-1 overflow-y-auto"><ProposalsStatusTable proposals={dialogData?.proposals || []} customers={customers || []} /></div>
             </DialogContent>
-      </Dialog>
-
-      <Dialog open={isLeadsModalOpen} onOpenChange={setIsLeadsModalOpen}>
-        <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col">
-            <DialogHeader><DialogTitle className="flex items-center gap-2 font-black uppercase text-xl text-primary"><Users className="h-6 w-6" /> Fichas de Leads Recebidas</DialogTitle></DialogHeader>
-            <ScrollArea className="flex-1 pr-4">
-                <div className="space-y-4 py-4">
-                    {pendingLeads?.map((lead) => (
-                        <Card key={lead.id} className="p-6 border-2 hover:border-primary/40 transition-all">
-                            <div className="flex flex-col md:flex-row justify-between gap-6">
-                                <div className="space-y-6 flex-1">
-                                    <div className="flex items-center gap-3">
-                                        <Badge className="bg-primary text-white font-black text-[10px] uppercase">Pendente</Badge>
-                                        <span className="text-[10px] font-bold text-muted-foreground uppercase">{format(new Date(lead.createdAt), 'dd/MM/yyyy HH:mm')}</span>
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                                        <div><p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1.5"><UserIcon className="h-3 w-3" /> Nome Completo</p><p className="font-black text-base uppercase tracking-tight">{lead.name}</p></div>
-                                        <div><p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1.5"><FileText className="h-3 w-3" /> CPF</p><p className="font-bold">{lead.cpf}</p></div>
-                                        <div><p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1.5"><CalendarIcon className="h-3 w-3" /> Nascimento</p><p className="font-bold">{format(new Date(lead.birthDate + 'T00:00:00'), 'dd/MM/yyyy')}</p></div>
-                                        <div><p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1.5"><Briefcase className="h-3 w-3" /> WhatsApp</p><p className="font-bold">{lead.phone}</p></div>
-                                        <div><p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1.5"><CreditCard className="h-3 w-3" /> Benefício</p><p className="font-bold text-primary">{lead.benefitNumber || '---'}</p></div>
-                                        <div><p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1.5"><UserIcon className="h-3 w-3" /> Mãe</p><p className="font-bold uppercase text-xs">{lead.motherName || '---'}</p></div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-primary/5 rounded-xl border border-primary/10">
-                                        <div className="space-y-1">
-                                            <p className="text-[9px] font-black uppercase text-primary tracking-widest flex items-center gap-1.5"><Target className="h-3 w-3" /> Objetivo</p>
-                                            <Badge variant="secondary" className="font-black text-[10px] bg-white border-primary/20 text-primary">{lead.intentType || 'NÃO INFORMADO'}</Badge>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <p className="text-[9px] font-black uppercase text-primary tracking-widest flex items-center gap-1.5"><CircleDollarSign className="h-3 w-3" /> Valor Pretendido</p>
-                                            <p className="font-bold text-sm">{lead.requestedAmount ? formatCurrency(lead.requestedAmount) : '---'}</p>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <p className="text-[9px] font-black uppercase text-primary tracking-widest flex items-center gap-1.5"><BadgePercent className="h-3 w-3" /> Parcela Máx.</p>
-                                            <p className="font-bold text-sm">{lead.maxInstallment ? formatCurrency(lead.maxInstallment) : '---'}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="p-4 bg-muted/20 rounded-xl border border-dashed">
-                                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1.5 mb-2"><MapPin className="h-3 w-3" /> Endereço</p>
-                                        <p className="text-xs font-bold uppercase leading-relaxed">{lead.street ? `${lead.street}, ${lead.number} ${lead.complement ? `(${lead.complement})` : ''}` : 'Não informado'}<br />{lead.neighborhood} - {lead.city}/{lead.state} - CEP: {lead.cep}</p>
-                                    </div>
-
-                                    {lead.documents && lead.documents.length > 0 && (
-                                        <div className="space-y-3">
-                                            <p className="text-[10px] font-black uppercase text-primary tracking-widest">Documentos Separados por Categoria</p>
-                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                                {['RG', 'EXTRATO', 'ENDERECO'].map(cat => {
-                                                    const docs = lead.documents?.filter(d => d.category === cat) || [];
-                                                    if (docs.length === 0) return null;
-                                                    return (
-                                                        <div key={cat} className="space-y-2 p-3 bg-white border rounded-xl">
-                                                            <p className="text-[8px] font-black uppercase text-muted-foreground">{cat === 'RG' ? 'Documentos ID' : cat === 'EXTRATO' ? 'Extratos' : 'Endereço'}</p>
-                                                            {docs.map((doc, i) => (
-                                                                <a key={i} href={doc.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[10px] font-bold text-primary hover:underline truncate">
-                                                                    <Download className="h-3 w-3" /> {doc.name}
-                                                                </a>
-                                                            ))}
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="flex flex-row md:flex-col gap-2 justify-end">
-                                    <Button className="bg-green-600 hover:bg-green-700 text-white font-black uppercase text-[10px] tracking-widest h-12 px-8 rounded-full shadow-lg" onClick={() => handleApproveLead(lead)} disabled={isApprovingLead}>{isApprovingLead ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}Aprovar Ficha</Button>
-                                    <Button variant="outline" className="text-destructive hover:bg-red-50 border-destructive/20 h-12 px-8 rounded-full font-bold uppercase text-[10px] tracking-widest" onClick={() => handleDiscardLead(lead.id)}><Trash2 className="mr-2 h-4 w-4" /> Descartar</Button>
-                                </div>
-                            </div>
-                        </Card>
-                    ))}
-                    {(!pendingLeads || pendingLeads.length === 0) && (
-                        <div className="py-20 text-center border-2 border-dashed rounded-[2rem] bg-muted/5 opacity-40"><Users className="h-12 w-12 mx-auto mb-4" /><p className="font-black uppercase tracking-widest text-sm">Nenhum lead aguardando revisão.</p></div>
-                    )}
-                </div>
-            </ScrollArea>
-            <DialogFooter className="p-6 border-t"><Button variant="ghost" onClick={() => setIsLeadsModalOpen(false)} className="rounded-full font-bold uppercase text-[10px] tracking-widest">Fechar</Button></DialogFooter>
-        </DialogContent>
       </Dialog>
     </AppLayout>
   );
