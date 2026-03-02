@@ -187,7 +187,31 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                         <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Data de Nascimento</span><div className="flex items-center gap-2 font-bold text-foreground"><Calendar className="h-3.5 w-3.5 text-primary/40" /><span>{customer.birthDate ? formatDateSafe(customer.birthDate) : '-'}</span><Badge variant="secondary" className="text-[9px] bg-primary/10 text-primary border-none font-black">{age || 0} ANOS</Badge></div></div>
                         <div className="flex flex-col gap-1.5 lg:col-span-2"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">E-mail</span><div className="flex items-center gap-2 font-bold text-foreground"><Mail className="h-3.5 w-3.5 text-primary/40" /><span>{customer.email || '-'}</span><CopyButton text={customer.email} label="E-mail" /></div></div>
                         <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Contato Principal</span><div className="flex items-center gap-2 font-black text-foreground"><Phone className="h-3.5 w-3.5 text-primary/40" /><span>{customer.phone || '---'}</span><div className="flex items-center gap-1"><CopyButton text={customer.phone} label="Telefone" />{customer.phone && isWhatsApp(customer.phone) && <a href={getWhatsAppUrl(customer.phone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:scale-110 transition-transform"><WhatsAppIcon className="h-4 w-4" /></a>}</div></div></div>
-                        <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Telefone 2</span><div className="flex items-center gap-2 font-bold text-foreground"><Phone className="h-3.5 w-3.5 text-primary/40" /><span>{customer.phone2 || '-'}</span><div className="flex items-center gap-1"><CopyButton text={customer.phone2} label="Telefone 2" />{customer.phone2 && isWhatsApp(customer.phone2!)} && <a href={getWhatsAppUrl(customer.phone2!)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:scale-110 transition-transform"><WhatsAppIcon className="h-4 w-4" /></a>}</div></div></div>
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">
+                            Telefone 2
+                          </span>
+
+                          <div className="flex items-center gap-2 font-bold text-foreground">
+                            <Phone className="h-3.5 w-3.5 text-primary/40" />
+                            <span>{customer.phone2 || '-'}</span>
+
+                            <div className="flex items-center gap-1">
+                              <CopyButton text={customer.phone2} label="Telefone 2" />
+
+                              {customer.phone2 && isWhatsApp(customer.phone2) && (
+                                <a
+                                  href={getWhatsAppUrl(customer.phone2)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-green-500 hover:scale-110 transition-transform"
+                                >
+                                  <WhatsAppIcon className="h-4 w-4" />
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                     </div>
                 </div>
 
