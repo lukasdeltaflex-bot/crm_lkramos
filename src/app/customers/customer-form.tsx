@@ -230,7 +230,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
         const response = await fetch(`/api/cep/${cleanCep}`);
         
         if (!response.ok) {
-            console.warn("⚠️ Falha na conexão com o serviço de CEP.");
+            console.error("Falha na conexão com o serviço de CEP.");
             return;
         }
 
@@ -257,7 +257,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
     } finally {
         setIsFetchingCep(false);
     }
-  }, [form]);
+  }, [form.setValue]);
 
   useEffect(() => {
     const cleanCep = (watchCep || '').replace(/\D/g, '');
@@ -481,7 +481,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                                 <Phone className="h-3.5 w-3.5 text-[#00AEEF]" /> Telefone 2
                             </FormLabel>
                             <FormControl>
-                                <Input placeholder="(00) 00000-0000" {...field} value={field.value ?? ''} onChange={(e) => handlePhoneMask(e.target.value)} maxLength={15} className="rounded-full h-11 px-5 border-zinc-200 font-bold"/>
+                                <Input placeholder="(00) 00000-0000" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} maxLength={15} className="rounded-full h-11 px-5 border-zinc-200 font-bold"/>
                             </FormControl>
                             </FormItem>
                         )}
