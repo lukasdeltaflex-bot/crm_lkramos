@@ -101,7 +101,6 @@ function CustomersPageContent() {
   const processedCustomers = React.useMemo(() => {
     if (!customers) return [];
     
-    // 🛡️ ENRIQUECIMENTO COM SMART TAGS (BUG #1)
     return customers.map(c => {
         const smartTags = getSmartTags(c, proposals || []);
         return {
@@ -168,15 +167,20 @@ function CustomersPageContent() {
         
         selectedIds.forEach(id => {
             const docRef = doc(firestore, 'customers', id);
+            // 🛡️ BLINDAGEM LGPD V2: Limpeza total de dados de contato e benefícios
             batch.update(docRef, { 
                 name: 'Cliente Removido', 
                 cpf: '000.000.000-00', 
+                phone: '',
+                phone2: '',
+                email: '',
+                benefits: [],
                 status: 'inactive' 
             });
         });
 
         await batch.commit();
-        toast({ title: 'Ação Concluída', description: `${selectedIds.length} registros foram anonimizados.` });
+        toast({ title: 'Ação Concluída', description: `${selectedIds.length} registros foram anonimizados conforme LGPD.` });
         setRowSelection({});
     } catch (e: any) {
         if (e.code === 'permission-denied') {
@@ -230,10 +234,20 @@ function CustomersPageContent() {
   const handleAnonymizeCustomer = async (customerId: string) => {
     if (!firestore) return;
     const docRef = doc(firestore, 'customers', customerId);
-    const dataToUpdate = { name: 'Cliente Removido', cpf: '000.000.000-00', status: 'inactive' };
+    
+    // 🛡️ BLINDAGEM LGPD V2: Limpeza total de dados de contato e benefícios
+    const dataToUpdate = { 
+        name: 'Cliente Removido', 
+        cpf: '000.000.000-00', 
+        phone: '',
+        phone2: '',
+        email: '',
+        benefits: [],
+        status: 'inactive' 
+    };
     
     updateDoc(docRef, dataToUpdate)
-        .then(() => toast({ title: 'Cliente Anonimizado' }))
+        .then(() => toast({ title: 'Cliente Anonimizado (LGPD OK)' }))
         .catch(async (error) => {
             if (error.code === 'permission-denied') {
                 errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -311,7 +325,7 @@ function CustomersPageContent() {
                             <AlertDialogHeader>
                                 <AlertDialogTitle>Inativar {selectedCount} Clientes?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    Esta ação irá anonimizar os dados dos registros selecionados. Os nomes serão substituídos por "Cliente Removido" e o CPF zerado por segurança.
+                                    Esta ação irá anonimizar os dados dos registros selecionados para conformidade com a LGPD. Nomes, CPFs, Telefones, E-mails e Benefícios serão eliminados definitivamente.
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
