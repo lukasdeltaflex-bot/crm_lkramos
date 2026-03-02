@@ -23,8 +23,21 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { format } from 'date-fns';
-import { Loader2, Save, ImageIcon, ScrollText, Link as LinkIcon, FileType } from 'lucide-react';
+import { Loader2, Save, ImageIcon, ScrollText, Link as LinkIcon, FileType, Upload, X, FileText, Download } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useState, useRef } from 'react';
+import { useFirebase } from '@/firebase';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { toast } from '@/hooks/use-toast';
+import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
+
+const attachmentSchema = z.object({
+  name: z.string(),
+  url: z.string(),
+  type: z.string(),
+  size: z.number(),
+});
 
 const newsSchema = z.object({
   title: z.string().min(5, 'O título deve ter pelo menos 5 caracteres.'),
@@ -34,6 +47,7 @@ const newsSchema = z.object({
   externalLink: z.string().url('URL inválida.').or(z.literal('')).optional(),
   status: z.enum(['Draft', 'Published']),
   date: z.string(),
+  attachments: z.array(attachmentSchema).optional(),
 });
 
 type NewsFormValues = z.infer<typeof newsSchema>;
@@ -45,6 +59,11 @@ interface NewsFormProps {
 }
 
 export function NewsForm({ initialData, onSubmit, isSaving = false }: NewsFormProps) {
+  const { storage, user } = useFirebase();
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const form = useForm<NewsFormValues>({
     resolver: zodResolver(newsSchema),
     defaultValues: initialData || {
@@ -55,14 +74,112 @@ export function NewsForm({ initialData, onSubmit, isSaving = false }: NewsFormPr
       externalLink: '',
       status: 'Draft',
       date: format(new Date(), 'yyyy-MM-dd'),
+      attachments: [],
     },
   });
 
+  const attachments = form.watch('attachments') || [];
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !storage || !user) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+        toast({ variant: 'destructive', title: 'Arquivo muito grande', description: 'O limite é 5MB.' });
+        return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    const filePath = `management/news/${user.uid}/${Date.now()}_${file.name}`;
+    const storageRef = ref(storage, filePath);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            setUploadProgress(progress);
+        },
+        (error) => {
+            setIsUploading(false);
+            setUploadProgress(null);
+            toast({ variant: 'destructive', title: 'Falha no upload', description: 'Tente novamente.' });
+        },
+        async () => {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            const newAttachment = {
+                name: file.name,
+                url: downloadURL,
+                type: file.type,
+                size: file.size,
+            };
+
+            const current = form.getValues('attachments') || [];
+            form.setValue('attachments', [...current, newAttachment]);
+            
+            // Se for imagem, define como capa automaticamente se não houver uma
+            if (file.type.startsWith('image/') && !form.getValues('coverUrl')) {
+                form.setValue('coverUrl', downloadURL);
+            }
+
+            setIsUploading(false);
+            setUploadProgress(null);
+            toast({ title: 'Arquivo anexado!' });
+        }
+    );
+  };
+
+  const removeAttachment = (index: number) => {
+    const current = form.getValues('attachments') || [];
+    const removed = current[index];
+    const newList = current.filter((_, i) => i !== index);
+    form.setValue('attachments', newList);
+    
+    if (removed.url === form.getValues('coverUrl')) {
+        form.setValue('coverUrl', '');
+    }
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-0">
-        <ScrollArea className="h-[65vh] pr-4">
-            <div className="space-y-6 py-2">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
+        <ScrollArea className="flex-1 pr-4">
+            <div className="space-y-8 py-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                        control={form.control}
+                        name="status"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="font-bold uppercase text-[10px] tracking-widest text-primary/60">Situação</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                                <SelectTrigger className="font-bold h-11 rounded-xl">
+                                    <SelectValue />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                <SelectItem value="Draft">Rascunho (Privado)</SelectItem>
+                                <SelectItem value="Published">Publicado (Todos veem)</SelectItem>
+                            </SelectContent>
+                            </Select>
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="date"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="font-bold uppercase text-[10px] tracking-widest text-primary/60">Data de Publicação</FormLabel>
+                            <FormControl><Input type="date" {...field} className="h-11 rounded-xl font-bold" /></FormControl>
+                        </FormItem>
+                        )}
+                    />
+                </div>
+
                 <div className="grid grid-cols-1 gap-6">
                     <FormField
                         control={form.control}
@@ -70,7 +187,7 @@ export function NewsForm({ initialData, onSubmit, isSaving = false }: NewsFormPr
                         render={({ field }) => (
                         <FormItem>
                             <FormLabel className="font-bold uppercase text-[10px] tracking-widest text-primary/60">Título da Notícia *</FormLabel>
-                            <FormControl><Input placeholder="Ex: Novo reajuste do INSS para 2025" {...field} className="font-bold h-11 rounded-xl" /></FormControl>
+                            <FormControl><Input placeholder="Ex: Novo reajuste do INSS para 2025" {...field} className="font-black text-lg h-12 rounded-xl" /></FormControl>
                             <FormMessage />
                         </FormItem>
                         )}
@@ -80,80 +197,52 @@ export function NewsForm({ initialData, onSubmit, isSaving = false }: NewsFormPr
                         name="subtitle"
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel className="font-bold uppercase text-[10px] tracking-widest text-primary/60">Subtítulo ou Resumo</FormLabel>
-                            <FormControl><Input placeholder="Breve frase de destaque para o card" {...field} className="h-11 rounded-xl" /></FormControl>
+                            <FormLabel className="font-bold uppercase text-[10px] tracking-widest text-primary/60">Subtítulo ou Resumo Curto</FormLabel>
+                            <FormControl><Input placeholder="Breve frase de destaque" {...field} className="h-11 rounded-xl font-medium" /></FormControl>
                             <FormMessage />
                         </FormItem>
                         )}
                     />
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                            control={form.control}
-                            name="status"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel className="font-bold uppercase text-[10px] tracking-widest text-primary/60">Situação</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                    <SelectTrigger className="font-bold h-11 rounded-xl">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    <SelectItem value="Draft">Rascunho (Privado)</SelectItem>
-                                    <SelectItem value="Published">Publicado (Todos veem)</SelectItem>
-                                </SelectContent>
-                                </Select>
-                            </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="date"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel className="font-bold uppercase text-[10px] tracking-widest text-primary/60">Data de Publicação</FormLabel>
-                                <FormControl><Input type="date" {...field} className="h-11 rounded-xl" /></FormControl>
-                            </FormItem>
-                            )}
-                        />
-                    </div>
+                </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                            control={form.control}
-                            name="coverUrl"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel className="font-bold uppercase text-[10px] tracking-widest text-primary/60 flex items-center gap-2">
-                                    <ImageIcon className="h-3 w-3" /> Imagem Informativa (URL)
-                                </FormLabel>
-                                <FormControl>
-                                    <div className="flex items-center gap-3">
-                                        <Input placeholder="Link da imagem/print..." {...field} className="h-11 rounded-xl" />
-                                        <div className="h-11 w-11 rounded-xl border-2 border-dashed bg-muted flex items-center justify-center shrink-0 overflow-hidden shadow-inner">
-                                            {field.value ? <img src={field.value} className="h-full w-full object-cover" /> : <ImageIcon className="h-5 w-5 opacity-20" />}
-                                        </div>
-                                    </div>
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
+                <div className="space-y-4">
+                    <h4 className="font-bold uppercase text-[10px] tracking-widest text-primary/60 flex items-center gap-2">
+                        <Upload className="h-3 w-3" /> Anexos e Mídias (PNG, JPEG ou PDF)
+                    </h4>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div 
+                            className={cn(
+                                "border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-3 transition-all cursor-pointer bg-muted/10 hover:bg-muted/20",
+                                isUploading && "opacity-50 pointer-events-none"
                             )}
-                        />
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                {isUploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
+                            </div>
+                            <div className="space-y-1">
+                                <p className="font-black uppercase text-[10px] tracking-tight">Carregar Arquivo</p>
+                                <p className="text-[9px] text-muted-foreground uppercase opacity-60">Imagens ou Documentos PDF</p>
+                            </div>
+                            {uploadProgress !== null && (
+                                <div className="w-full mt-2">
+                                    <Progress value={uploadProgress} className="h-1" />
+                                </div>
+                            )}
+                        </div>
+                        <input type="file" ref={fileInputRef} className="hidden" accept="image/*,application/pdf" onChange={handleFileUpload} />
+
                         <FormField
                             control={form.control}
                             name="externalLink"
                             render={({ field }) => (
                             <FormItem>
                                 <FormLabel className="font-bold uppercase text-[10px] tracking-widest text-primary/60 flex items-center gap-2">
-                                    <LinkIcon className="h-3 w-3" /> Link Externo / PDF (URL)
+                                    <LinkIcon className="h-3 w-3" /> Link Externo Adicional
                                 </FormLabel>
                                 <FormControl>
-                                    <div className="relative">
-                                        <Input placeholder="https://..." {...field} className="h-11 rounded-xl pr-10" />
-                                        <FileType className="absolute right-3 top-3 h-5 w-5 text-muted-foreground opacity-30" />
-                                    </div>
+                                    <Input placeholder="https://..." {...field} className="h-11 rounded-xl" />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -161,31 +250,45 @@ export function NewsForm({ initialData, onSubmit, isSaving = false }: NewsFormPr
                         />
                     </div>
 
-                    <FormField
-                        control={form.control}
-                        name="content"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="font-bold uppercase text-[10px] tracking-widest text-primary/60 flex items-center gap-2">
-                                <ScrollText className="h-3 w-3" /> Conteúdo da Notícia *
-                            </FormLabel>
-                            <FormControl>
-                                <Textarea 
-                                    placeholder="Escreva os detalhes da atualização aqui..." 
-                                    className="min-h-[250px] font-medium leading-relaxed text-sm p-5 rounded-2xl bg-muted/10 focus-visible:ring-primary/20 border-2" 
-                                    {...field} 
-                                />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {attachments.map((file, idx) => (
+                            <div key={idx} className="p-3 bg-card border rounded-xl flex items-center justify-between gap-3 group relative">
+                                <div className="flex items-center gap-2 overflow-hidden">
+                                    {file.type.startsWith('image/') ? <ImageIcon className="h-4 w-4 text-blue-500 shrink-0" /> : <FileText className="h-4 w-4 text-red-500 shrink-0" />}
+                                    <span className="text-[10px] font-bold truncate uppercase">{file.name}</span>
+                                </div>
+                                <button type="button" onClick={() => removeAttachment(idx)} className="text-muted-foreground hover:text-destructive">
+                                    <X className="h-3.5 w-3.5" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
                 </div>
+
+                <FormField
+                    control={form.control}
+                    name="content"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel className="font-bold uppercase text-[10px] tracking-widest text-primary/60 flex items-center gap-2">
+                            <ScrollText className="h-3 w-3" /> Conteúdo Detalhado da Notícia *
+                        </FormLabel>
+                        <FormControl>
+                            <Textarea 
+                                placeholder="Escreva os detalhes da atualização aqui..." 
+                                className="min-h-[300px] font-medium leading-relaxed text-sm p-6 rounded-3xl bg-muted/5 focus-visible:ring-primary/20 border-2" 
+                                {...field} 
+                            />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
             </div>
         </ScrollArea>
 
-        <div className="flex justify-end pt-6 border-t mt-4">
-          <Button type="submit" disabled={isSaving} className="rounded-full px-10 h-12 font-black uppercase text-[10px] tracking-[0.2em] shadow-xl bg-primary shadow-primary/20 transition-all border-none">
+        <div className="flex justify-end pt-6 border-t mt-4 shrink-0">
+          <Button type="submit" disabled={isSaving || isUploading} className="rounded-full px-12 h-12 font-black uppercase text-[11px] tracking-[0.2em] shadow-xl bg-primary shadow-primary/20 transition-all border-none">
             {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Publicando...</> : <><Save className="mr-2 h-4 w-4" /> Salvar Publicação</>}
           </Button>
         </div>

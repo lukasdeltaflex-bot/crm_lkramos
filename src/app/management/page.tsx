@@ -28,7 +28,9 @@ import {
     ShieldCheck,
     PhoneCall,
     Headset,
-    EyeOff
+    EyeOff,
+    Download,
+    FileText
 } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc, setDoc, deleteDoc, orderBy } from 'firebase/firestore';
@@ -63,7 +65,7 @@ export default function ManagementPage() {
   const [decryptedPasswords, setDecryptedPasswords] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
 
-  // Firestore Queries - Notícias e Links Úteis são públicos (sem filtro de ownerId na leitura)
+  // Firestore Queries - Notícias e Links Úteis são públicos
   const newsQuery = useMemoFirebase(() => query(collection(firestore!, 'managementNews'), orderBy('date', 'desc')), []);
   const linksQuery = useMemoFirebase(() => query(collection(firestore!, 'managementQuickLinks'), orderBy('name', 'asc')), []);
   
@@ -196,14 +198,16 @@ export default function ManagementPage() {
                 ) : (
                     news?.map((item) => (
                         <Card key={item.id} className="group overflow-hidden border-2 hover:border-primary/40 transition-all flex flex-col shadow-sm">
-                            {item.coverUrl && (
-                                <div className="h-48 overflow-hidden relative">
+                            <div className="h-48 overflow-hidden relative bg-muted flex items-center justify-center">
+                                {item.coverUrl ? (
                                     <img src={item.coverUrl} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" alt={item.title} />
-                                    <Badge className={cn("absolute top-3 right-3 font-black text-[8px] uppercase", item.status === 'Published' ? "bg-green-600" : "bg-orange-500")}>
-                                        {item.status === 'Published' ? 'Publicado' : 'Rascunho'}
-                                    </Badge>
-                                </div>
-                            )}
+                                ) : (
+                                    <Newspaper className="h-12 w-12 opacity-10" />
+                                )}
+                                <Badge className={cn("absolute top-3 right-3 font-black text-[8px] uppercase", item.status === 'Published' ? "bg-green-600" : "bg-orange-500")}>
+                                    {item.status === 'Published' ? 'Publicado' : 'Rascunho'}
+                                </Badge>
+                            </div>
                             <CardHeader className="p-5 flex-1">
                                 <p className="text-[10px] font-black uppercase text-primary/60 tracking-widest flex items-center gap-2 mb-2">
                                     <Calendar className="h-3 w-3" /> {format(parseISO(item.date), 'dd/MM/yyyy')}
