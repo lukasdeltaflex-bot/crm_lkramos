@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -22,15 +21,12 @@ import {
     Lock,
     Eye,
     Landmark,
-    MessageSquareText,
     ChevronDown,
     ChevronUp,
     ShieldCheck,
     PhoneCall,
     Headset,
     EyeOff,
-    Download,
-    FileText,
     Mail
 } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -45,7 +41,6 @@ import { decryptPassword } from '@/lib/crypto-utils';
 import { format, parseISO } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn, cleanFirestoreData, isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
 
 export default function ManagementPage() {
@@ -53,24 +48,19 @@ export default function ManagementPage() {
   const firestore = useFirestore();
   const [activeTab, setActiveTab] = useState('news');
   
-  // Modals
   const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
   const [isPromoterModalOpen, setIsPromoterModalOpen] = useState(false);
   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   
-  // Data selection
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [selectedPromoterId, setSelectedPromoterId] = useState<string | null>(null);
   const [expandedPromoter, setExpandedPromoter] = useState<string | null>(null);
   const [decryptedPasswords, setDecryptedPasswords] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
 
-  // Firestore Queries - Notícias e Links Úteis são públicos
   const newsQuery = useMemoFirebase(() => query(collection(firestore!, 'managementNews'), orderBy('date', 'desc')), []);
   const linksQuery = useMemoFirebase(() => query(collection(firestore!, 'managementQuickLinks'), orderBy('name', 'asc')), []);
-  
-  // Promotoras e Logins Bancários são privados
   const promotersQuery = useMemoFirebase(() => user ? query(collection(firestore!, 'managementPromoters'), where('ownerId', '==', user.uid), orderBy('name', 'asc')) : null, [user]);
 
   const { data: news, isLoading: loadingNews } = useCollection(newsQuery);
@@ -138,10 +128,14 @@ export default function ManagementPage() {
 
   const handleDelete = async (collectionPath: string, id: string) => {
     if (!firestore) return;
+    if (!confirm("Tem certeza que deseja excluir permanentemente este item?")) return;
+    
     try {
         await deleteDoc(doc(firestore, collectionPath, id));
-        toast({ title: 'Item removido' });
-    } catch (e) { toast({ variant: 'destructive', title: 'Erro ao excluir' }); }
+        toast({ title: 'Item removido com sucesso!' });
+    } catch (e) { 
+        toast({ variant: 'destructive', title: 'Erro ao excluir' }); 
+    }
   };
 
   const handleShowPassword = async (bankId: string, encrypted: string) => {
@@ -181,24 +175,24 @@ export default function ManagementPage() {
             <div className="flex items-center justify-between">
                 <div className="space-y-1">
                     <h2 className="text-xl font-black uppercase tracking-tight">Mural do Correspondente</h2>
-                    <p className="text-xs text-muted-foreground">Conteúdo compartilhado para todos os usuários do sistema.</p>
+                    <p className="text-xs text-muted-foreground">Conteúdo compartilhado para toda a equipe.</p>
                 </div>
-                <Button onClick={() => { setSelectedItem(null); setIsNewsModalOpen(true); }} className="rounded-full bg-primary font-bold shadow-lg gap-2">
-                    <PlusCircle className="h-4 w-4" /> Publicar Notícia
+                <Button onClick={() => { setSelectedItem(null); setIsNewsModalOpen(true); }} className="rounded-full bg-primary font-bold shadow-lg gap-2 h-11 px-8">
+                    <PlusCircle className="h-4 w-4" /> Criar Notícia
                 </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {loadingNews ? (
                     Array.from({ length: 3 }).map((_, i) => <Card key={i} className="h-64 animate-pulse bg-muted" />)
-                ) : news?.length === 0 ? (
+                ) : !news || news.length === 0 ? (
                     <div className="col-span-full py-20 text-center border-2 border-dashed rounded-[2rem] bg-muted/5 opacity-40">
                         <Newspaper className="h-12 w-12 mx-auto mb-4" />
                         <p className="font-black uppercase tracking-widest text-xs">Nenhuma notícia publicada ainda.</p>
                     </div>
                 ) : (
-                    news?.map((item) => (
-                        <Card key={item.id} className="group overflow-hidden border-2 hover:border-primary/40 transition-all flex flex-col shadow-sm">
+                    news.map((item) => (
+                        <Card key={item.id} className="group overflow-hidden border-2 hover:border-primary/40 transition-all flex flex-col shadow-sm relative">
                             <div className="h-48 overflow-hidden relative bg-muted flex items-center justify-center">
                                 {item.coverUrl ? (
                                     <img src={item.coverUrl} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" alt={item.title} />
@@ -208,22 +202,32 @@ export default function ManagementPage() {
                                 <Badge className={cn("absolute top-3 right-3 font-black text-[8px] uppercase", item.status === 'Published' ? "bg-green-600" : "bg-orange-500")}>
                                     {item.status === 'Published' ? 'Publicado' : 'Rascunho'}
                                 </Badge>
+                                {item.ownerId === user?.uid && (
+                                    <Button 
+                                        variant="destructive" 
+                                        size="icon" 
+                                        className="absolute top-3 left-3 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                                        onClick={(e) => { e.stopPropagation(); handleDelete('managementNews', item.id); }}
+                                        title="Excluir Notícia"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                )}
                             </div>
                             <CardHeader className="p-5 flex-1">
                                 <p className="text-[10px] font-black uppercase text-primary/60 tracking-widest flex items-center gap-2 mb-2">
-                                    <Calendar className="h-3 w-3" /> {format(parseISO(item.date), 'dd/MM/yyyy')}
+                                    <Calendar className="h-3 w-3" /> {item.date ? format(parseISO(item.date), 'dd/MM/yyyy') : '--/--/----'}
                                 </p>
                                 <CardTitle className="text-base font-black uppercase leading-tight line-clamp-2">{item.title}</CardTitle>
                                 <CardDescription className="text-xs line-clamp-3 mt-2 font-medium leading-relaxed">{item.subtitle}</CardDescription>
                             </CardHeader>
                             <CardContent className="p-5 pt-0 flex gap-2">
                                 {item.ownerId === user?.uid && (
-                                    <>
-                                        <Button variant="outline" size="sm" className="flex-1 rounded-full font-bold text-[10px] uppercase" onClick={() => { setSelectedItem(item); setIsNewsModalOpen(true); }}>Editar</Button>
-                                        <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-50 rounded-full" onClick={() => handleDelete('managementNews', item.id)}><Trash2 className="h-4 w-4" /></Button>
-                                    </>
+                                    <Button variant="outline" size="sm" className="flex-1 rounded-full font-bold text-[10px] uppercase h-9" onClick={() => { setSelectedItem(item); setIsNewsModalOpen(true); }}>
+                                        <Edit className="mr-1.5 h-3.5 w-3.5" /> Editar
+                                    </Button>
                                 )}
-                                <Button variant="secondary" size="sm" className="rounded-full text-[10px] font-bold uppercase flex-1" onClick={() => { setSelectedItem(item); setIsNewsModalOpen(true); }}>Ler Mais</Button>
+                                <Button variant="secondary" size="sm" className="rounded-full text-[10px] font-bold uppercase flex-1 h-9" onClick={() => { setSelectedItem(item); setIsNewsModalOpen(true); }}>Ler Conteúdo</Button>
                             </CardContent>
                         </Card>
                     ))
@@ -235,10 +239,10 @@ export default function ManagementPage() {
             <div className="flex items-center justify-between">
                 <div className="space-y-1">
                     <h2 className="text-xl font-black uppercase tracking-tight text-blue-600">Parceiros & Promotoras</h2>
-                    <p className="text-xs text-muted-foreground">Controle individual de telefones, gerentes e senhas vinculadas.</p>
+                    <p className="text-xs text-muted-foreground">Telefones, e-mails e senhas blindadas por parceiro.</p>
                 </div>
-                <Button onClick={() => { setSelectedItem(null); setIsPromoterModalOpen(true); }} className="rounded-full bg-blue-600 hover:bg-blue-700 font-bold shadow-lg gap-2">
-                    <Building2 className="h-4 w-4" /> Adicionar Promotora
+                <Button onClick={() => { setSelectedItem(null); setIsPromoterModalOpen(true); }} className="rounded-full bg-blue-600 hover:bg-blue-700 font-bold shadow-lg gap-2 h-11 px-8">
+                    <PlusCircle className="h-4 w-4" /> Nova Promotora
                 </Button>
             </div>
 
@@ -261,75 +265,48 @@ export default function ManagementPage() {
                                     <div className="h-12 w-12 rounded-2xl bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
                                         <Building2 className="h-6 w-6" />
                                     </div>
-                                    <div>
-                                        <h3 className="font-black uppercase text-sm tracking-tight">{promoter.name}</h3>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2 text-[10px] font-bold text-muted-foreground uppercase mt-2">
+                                    <div className="min-w-0">
+                                        <h3 className="font-black uppercase text-sm tracking-tight truncate">{promoter.name}</h3>
+                                        <div className="flex flex-wrap gap-x-6 gap-y-2 text-[10px] font-bold text-muted-foreground uppercase mt-2">
                                             {/* GERENTE */}
                                             <div className="flex items-center gap-1.5 min-w-0">
                                                 <NotebookTabs className="h-3.5 w-3.5 text-blue-500 shrink-0" /> 
                                                 <span className="truncate">Gerente: {promoter.contactName || 'Sem nome'}</span>
                                                 {promoter.whatsapp && (
-                                                    <div className="flex items-center gap-1 ml-1 shrink-0">
-                                                        <a 
-                                                            href={getWhatsAppUrl(promoter.whatsapp)} 
-                                                            target="_blank" 
-                                                            rel="noopener noreferrer" 
-                                                            className="text-green-500 hover:scale-125 transition-transform flex items-center" 
-                                                            onClick={(e) => e.stopPropagation()}
-                                                        >
-                                                            <WhatsAppIcon className="h-3.5 w-3.5" />
-                                                        </a>
-                                                    </div>
+                                                    <a 
+                                                        href={getWhatsAppUrl(promoter.whatsapp)} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer" 
+                                                        className="text-[#25D366] hover:scale-125 transition-transform flex items-center p-0.5" 
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <WhatsAppIcon className="h-4 w-4" />
+                                                    </a>
                                                 )}
                                             </div>
 
                                             {/* SUPORTE */}
                                             <div className="flex items-center gap-1.5 min-w-0">
                                                 <Headset className="h-3.5 w-3.5 text-blue-500 shrink-0" /> 
-                                                <span className="truncate">Suporte: {promoter.supportPhone || 'Não inf.'}</span>
+                                                <span className="truncate">Suporte: {promoter.supportPhone || '---'}</span>
                                                 {isSupportWhatsApp && (
                                                     <a 
                                                         href={getWhatsAppUrl(promoter.supportPhone!)} 
                                                         target="_blank" 
                                                         rel="noopener noreferrer" 
-                                                        className="text-green-500 hover:scale-125 transition-transform flex items-center" 
+                                                        className="text-[#25D366] hover:scale-125 transition-transform flex items-center p-0.5" 
                                                         onClick={(e) => e.stopPropagation()}
                                                     >
-                                                        <WhatsAppIcon className="h-3.5 w-3.5" />
+                                                        <WhatsAppIcon className="h-4 w-4" />
                                                     </a>
                                                 )}
                                             </div>
 
-                                            {/* FIXO */}
-                                            {promoter.phone && (
-                                                <div className="flex items-center gap-1.5 min-w-0">
-                                                    <PhoneCall className="h-3.5 w-3.5 text-blue-500 shrink-0" /> 
-                                                    <span className="truncate">Fixo: {promoter.phone}</span>
-                                                    {isPhoneWhatsApp && (
-                                                        <a 
-                                                            href={getWhatsAppUrl(promoter.phone)} 
-                                                            target="_blank" 
-                                                            rel="noopener noreferrer" 
-                                                            className="text-green-500 hover:scale-125 transition-transform flex items-center" 
-                                                            onClick={(e) => e.stopPropagation()}
-                                                        >
-                                                            <WhatsAppIcon className="h-3.5 w-3.5" />
-                                                        </a>
-                                                    )}
-                                                </div>
-                                            )}
-
-                                            {/* E-MAILS */}
-                                            {promoter.email && (
-                                                <div className="flex items-center gap-1.5 min-w-0">
-                                                    <Mail className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-                                                    <a href={`mailto:${promoter.email}`} className="truncate hover:text-blue-600 transition-colors" onClick={(e) => e.stopPropagation()}>{promoter.email}</a>
-                                                </div>
-                                            )}
+                                            {/* E-MAIL GERENTE */}
                                             {promoter.managerEmail && (
                                                 <div className="flex items-center gap-1.5 min-w-0">
                                                     <Mail className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-                                                    <a href={`mailto:${promoter.managerEmail}`} className="truncate hover:text-blue-600 transition-colors" onClick={(e) => e.stopPropagation()}>Gerente: {promoter.managerEmail}</a>
+                                                    <a href={`mailto:${promoter.managerEmail}`} className="truncate hover:text-blue-600 transition-colors" onClick={(e) => e.stopPropagation()}>{promoter.managerEmail}</a>
                                                 </div>
                                             )}
                                         </div>
@@ -346,7 +323,7 @@ export default function ManagementPage() {
                                 <div className="p-6 bg-muted/10 space-y-6 animate-in slide-in-from-top-2 duration-300">
                                     <div className="flex items-center justify-between border-b pb-4">
                                         <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground flex items-center gap-2">
-                                            <Lock className="h-3.5 w-3.5" /> Logins Bancários Vínculados
+                                            <Lock className="h-3.5 w-3.5" /> Logins Bancários Blindados
                                         </h4>
                                         <Button size="sm" variant="outline" className="rounded-full h-8 px-4 font-bold text-[10px] uppercase gap-2 border-primary/20 text-primary" onClick={() => { setSelectedPromoterId(promoter.id); setSelectedItem(null); setIsBankModalOpen(true); }}>
                                             <PlusCircle className="h-3.5 w-3.5" /> Vincular Login
@@ -357,7 +334,7 @@ export default function ManagementPage() {
                                         {loadingLogins ? (
                                             <div className="col-span-full flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
                                         ) : bankLogins.length === 0 ? (
-                                            <div className="col-span-full py-10 text-center border-2 border-dashed rounded-2xl opacity-30 text-[10px] font-black uppercase">Nenhum login cadastrado para esta promotora.</div>
+                                            <div className="col-span-full py-10 text-center border-2 border-dashed rounded-2xl opacity-30 text-[10px] font-black uppercase">Nenhum login cadastrado.</div>
                                         ) : (
                                             bankLogins.map((bank) => (
                                                 <Card key={bank.id} className="bg-background border-2 shadow-sm p-4 space-y-4 group/bank">
@@ -377,7 +354,7 @@ export default function ManagementPage() {
                                                             <span className="text-[11px] font-bold select-all">{bank.login}</span>
                                                         </div>
                                                         <div className="flex flex-col relative">
-                                                            <span className="text-[8px] font-black uppercase text-muted-foreground">Senha Protegida</span>
+                                                            <span className="text-[8px] font-black uppercase text-muted-foreground">Senha AES-256</span>
                                                             <div className="flex items-center gap-2">
                                                                 <span className="text-[11px] font-mono tracking-widest flex-1">
                                                                     {decryptedPasswords[bank.id] ? decryptedPasswords[bank.id] : '••••••••'}
@@ -409,9 +386,9 @@ export default function ManagementPage() {
             <div className="flex items-center justify-between">
                 <div className="space-y-1">
                     <h2 className="text-xl font-black uppercase tracking-tight text-emerald-600">Área de Links Rápidos</h2>
-                    <p className="text-xs text-muted-foreground">Atalhos compartilhados para agilizar o acesso aos portais oficiais.</p>
+                    <p className="text-xs text-muted-foreground">Atalhos compartilhados para agilizar o acesso.</p>
                 </div>
-                <Button onClick={() => { setSelectedItem(null); setIsLinkModalOpen(true); }} className="rounded-full bg-emerald-600 hover:bg-emerald-700 font-bold shadow-lg gap-2">
+                <Button onClick={() => { setSelectedItem(null); setIsLinkModalOpen(true); }} className="rounded-full bg-emerald-600 hover:bg-emerald-700 font-bold shadow-lg gap-2 h-11 px-8">
                     <PlusCircle className="h-4 w-4" /> Novo Atalho
                 </Button>
             </div>
@@ -443,11 +420,11 @@ export default function ManagementPage() {
       </Tabs>
 
       <Dialog open={isNewsModalOpen} onOpenChange={setIsNewsModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col rounded-[2rem]">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col rounded-[2.5rem]">
             <DialogHeader className="px-6 pt-6 shrink-0">
                 <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
                     <Newspaper className="h-5 w-5 text-primary" />
-                    {selectedItem ? 'Editar Publicação' : 'Criar Nova Notícia'}
+                    {selectedItem ? 'Publicação' : 'Criar Notícia'}
                 </DialogTitle>
             </DialogHeader>
             <div className="flex-1 overflow-hidden px-6 pb-6 mt-4">
@@ -457,22 +434,22 @@ export default function ManagementPage() {
       </Dialog>
 
       <Dialog open={isPromoterModalOpen} onOpenChange={setIsPromoterModalOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md rounded-[2rem]">
             <DialogHeader><DialogTitle>{selectedItem ? 'Editar Promotora' : 'Nova Promotora'}</DialogTitle></DialogHeader>
             <PromoterForm initialData={selectedItem} onSubmit={(d) => handleSave('managementPromoters', d, selectedItem?.id)} isSaving={isSaving} />
         </DialogContent>
       </Dialog>
 
       <Dialog open={isBankModalOpen} onOpenChange={setIsBankModalOpen}>
-        <DialogContent className="max-w-md">
-            <DialogHeader><DialogTitle>{selectedItem ? 'Editar Login' : 'Vincular Novo Banco'}</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-md rounded-[2rem]">
+            <DialogHeader><DialogTitle>{selectedItem ? 'Editar Login' : 'Vincular Banco'}</DialogTitle></DialogHeader>
             <BankForm initialData={selectedItem} onSubmit={(d) => handleSaveBank(d, selectedItem?.id)} isSaving={isSaving} />
         </DialogContent>
       </Dialog>
 
       <Dialog open={isLinkModalOpen} onOpenChange={setIsLinkModalOpen}>
-        <DialogContent className="max-w-md">
-            <DialogHeader><DialogTitle>{selectedItem ? 'Editar Atalho' : 'Novo Link Rápido'}</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-md rounded-[2rem]">
+            <DialogHeader><DialogTitle>{selectedItem ? 'Editar Atalho' : 'Novo Link'}</DialogTitle></DialogHeader>
             <QuickLinkForm initialData={selectedItem} onSubmit={(d) => handleSave('managementQuickLinks', d, selectedItem?.id)} isSaving={isSaving} />
         </DialogContent>
       </Dialog>

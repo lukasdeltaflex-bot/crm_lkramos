@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,11 +22,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { format } from 'date-fns';
-import { Loader2, Save, ImageIcon, ScrollText, Link as LinkIcon, FileType, Upload, X, FileText, Download } from 'lucide-react';
+import { Loader2, Save, ImageIcon, ScrollText, Link as LinkIcon, Upload, X, FileText, Trash2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useState, useRef } from 'react';
 import { useFirebase } from '@/firebase';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { toast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
@@ -84,15 +83,15 @@ export function NewsForm({ initialData, onSubmit, isSaving = false }: NewsFormPr
     const file = event.target.files?.[0];
     if (!file || !storage || !user) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-        toast({ variant: 'destructive', title: 'Arquivo muito grande', description: 'O limite é 5MB.' });
+    if (file.size > 10 * 1024 * 1024) {
+        toast({ variant: 'destructive', title: 'Arquivo muito grande', description: 'O limite é 10MB.' });
         return;
     }
 
     setIsUploading(true);
     setUploadProgress(0);
 
-    const filePath = `management/news/${user.uid}/${Date.now()}_${file.name}`;
+    const filePath = `management/news/${user.uid}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
     const storageRef = ref(storage, filePath);
     const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -119,7 +118,6 @@ export function NewsForm({ initialData, onSubmit, isSaving = false }: NewsFormPr
             const current = form.getValues('attachments') || [];
             form.setValue('attachments', [...current, newAttachment]);
             
-            // Se for imagem, define como capa automaticamente se não houver uma
             if (file.type.startsWith('image/') && !form.getValues('coverUrl')) {
                 form.setValue('coverUrl', downloadURL);
             }
@@ -131,14 +129,32 @@ export function NewsForm({ initialData, onSubmit, isSaving = false }: NewsFormPr
     );
   };
 
-  const removeAttachment = (index: number) => {
+  const removeAttachment = async (index: number) => {
     const current = form.getValues('attachments') || [];
-    const removed = current[index];
-    const newList = current.filter((_, i) => i !== index);
-    form.setValue('attachments', newList);
+    const fileToRemove = current[index];
     
-    if (removed.url === form.getValues('coverUrl')) {
-        form.setValue('coverUrl', '');
+    if (!fileToRemove) return;
+
+    try {
+        // Tenta excluir do Storage para liberar espaço real
+        if (storage && fileToRemove.url.includes('firebasestorage')) {
+            const fileRef = ref(storage, fileToRemove.url);
+            await deleteObject(fileRef);
+        }
+        
+        const newList = current.filter((_, i) => i !== index);
+        form.setValue('attachments', newList);
+        
+        if (fileToRemove.url === form.getValues('coverUrl')) {
+            form.setValue('coverUrl', '');
+        }
+        
+        toast({ title: 'Arquivo removido e espaço liberado!' });
+    } catch (e) {
+        // Se falhar no storage (ex: arquivo já não existe), removemos apenas da lista
+        const newList = current.filter((_, i) => i !== index);
+        form.setValue('attachments', newList);
+        toast({ title: 'Anexo removido da lista.' });
     }
   };
 
@@ -223,7 +239,7 @@ export function NewsForm({ initialData, onSubmit, isSaving = false }: NewsFormPr
                             </div>
                             <div className="space-y-1">
                                 <p className="font-black uppercase text-[10px] tracking-tight">Carregar Arquivo</p>
-                                <p className="text-[9px] text-muted-foreground uppercase opacity-60">Imagens ou Documentos PDF</p>
+                                <p className="text-[9px] text-muted-foreground uppercase opacity-60">PNG, JPEG ou PDF (Máx 10MB)</p>
                             </div>
                             {uploadProgress !== null && (
                                 <div className="w-full mt-2">
@@ -250,16 +266,23 @@ export function NewsForm({ initialData, onSubmit, isSaving = false }: NewsFormPr
                         />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {attachments.map((file, idx) => (
-                            <div key={idx} className="p-3 bg-card border rounded-xl flex items-center justify-between gap-3 group relative">
+                            <div key={idx} className="p-3 bg-card border rounded-xl flex items-center justify-between gap-3 group relative hover:border-red-200 transition-colors">
                                 <div className="flex items-center gap-2 overflow-hidden">
                                     {file.type.startsWith('image/') ? <ImageIcon className="h-4 w-4 text-blue-500 shrink-0" /> : <FileText className="h-4 w-4 text-red-500 shrink-0" />}
                                     <span className="text-[10px] font-bold truncate uppercase">{file.name}</span>
                                 </div>
-                                <button type="button" onClick={() => removeAttachment(idx)} className="text-muted-foreground hover:text-destructive">
-                                    <X className="h-3.5 w-3.5" />
-                                </button>
+                                <Button 
+                                    type="button" 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    onClick={() => removeAttachment(idx)} 
+                                    className="h-7 w-7 text-muted-foreground hover:text-red-600 hover:bg-red-50"
+                                    title="Excluir arquivo e liberar espaço"
+                                >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
                             </div>
                         ))}
                     </div>
