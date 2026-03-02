@@ -103,33 +103,41 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                     <div className='flex items-center gap-4'>
                          <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20"><User className="h-7 w-7 text-primary" /></div>
                         <div className="space-y-1">
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 flex-wrap">
                                 <div className="flex items-center gap-2">
                                     <CardTitle className="text-2xl font-black uppercase tracking-tight">{customer.name || 'Cliente Sem Nome'}</CardTitle>
                                     <CopyButton text={customer.name} label="Nome" />
                                 </div>
-                                <Badge 
-                                    className={cn(
-                                        "rounded-full px-3 py-0.5 font-black uppercase text-[10px] tracking-widest border-2 transition-all",
-                                        isInactive 
-                                            ? "bg-zinc-500 text-white border-zinc-600 shadow-sm" 
-                                            : "bg-emerald-500 text-white border-emerald-600 shadow-sm hover:bg-emerald-600"
-                                    )}
-                                >
-                                    {isInactive ? "Inativo" : "Ativo"}
-                                </Badge>
+                                <div className="flex items-center gap-2">
+                                    <Badge 
+                                        className={cn(
+                                            "rounded-full px-3 py-0.5 font-black uppercase text-[10px] tracking-widest border-2 transition-all",
+                                            isInactive 
+                                                ? "bg-zinc-500 text-white border-zinc-600 shadow-sm" 
+                                                : "bg-emerald-500 text-white border-emerald-600 shadow-sm hover:bg-emerald-600"
+                                        )}
+                                    >
+                                        {isInactive ? "Inativo" : "Ativo"}
+                                    </Badge>
+
+                                    {/* SMART TAGS PROEMINENTES NO TOPO */}
+                                    {smartTags.map(tag => (
+                                        <Badge 
+                                            key={tag.label} 
+                                            className={cn(
+                                                "rounded-full px-2.5 py-0.5 font-black uppercase text-[9px] tracking-widest border-none text-white shadow-sm animate-in zoom-in-95", 
+                                                tag.color
+                                            )}
+                                        >
+                                            {tag.label}
+                                        </Badge>
+                                    ))}
+                                </div>
                             </div>
                             <div className="flex flex-col gap-2">
                                 <div className="flex items-center flex-wrap gap-2">
                                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Registro Oficial</p>
                                     
-                                    {/* SMART TAGS (AUTOMÁTICAS) */}
-                                    {smartTags.map(tag => (
-                                        <Badge key={tag.label} className={cn("h-4 text-[7px] font-black px-1.5 py-0 border-none text-white shadow-sm", tag.color)}>
-                                            {tag.label}
-                                        </Badge>
-                                    ))}
-
                                     {customer.tags && customer.tags.length > 0 && (
                                         <div className="flex items-center gap-1.5 border-l pl-2 border-border/50">
                                             {customer.tags.map((tag: string) => (
@@ -179,7 +187,7 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                         <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Data de Nascimento</span><div className="flex items-center gap-2 font-bold text-foreground"><Calendar className="h-3.5 w-3.5 text-primary/40" /><span>{customer.birthDate ? formatDateSafe(customer.birthDate) : '-'}</span><Badge variant="secondary" className="text-[9px] bg-primary/10 text-primary border-none font-black">{age || 0} ANOS</Badge></div></div>
                         <div className="flex flex-col gap-1.5 lg:col-span-2"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">E-mail</span><div className="flex items-center gap-2 font-bold text-foreground"><Mail className="h-3.5 w-3.5 text-primary/40" /><span>{customer.email || '-'}</span><CopyButton text={customer.email} label="E-mail" /></div></div>
                         <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Contato Principal</span><div className="flex items-center gap-2 font-black text-foreground"><Phone className="h-3.5 w-3.5 text-primary/40" /><span>{customer.phone || '---'}</span><div className="flex items-center gap-1"><CopyButton text={customer.phone} label="Telefone" />{customer.phone && isWhatsApp(customer.phone) && <a href={getWhatsAppUrl(customer.phone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:scale-110 transition-transform"><WhatsAppIcon className="h-4 w-4" /></a>}</div></div></div>
-                        <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Telefone 2</span><div className="flex items-center gap-2 font-bold text-foreground"><Phone className="h-3.5 w-3.5 text-primary/40" /><span>{customer.phone2 || '-'}</span><div className="flex items-center gap-1"><CopyButton text={customer.phone2} label="Telefone 2" />{customer.phone2 && isWhatsApp(customer.phone2) && <a href={getWhatsAppUrl(customer.phone2!)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:scale-110 transition-transform"><WhatsAppIcon className="h-4 w-4" /></a>}</div></div></div>
+                        <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Telefone 2</span><div className="flex items-center gap-2 font-bold text-foreground"><Phone className="h-3.5 w-3.5 text-primary/40" /><span>{customer.phone2 || '-'}</span><div className="flex items-center gap-1"><CopyButton text={customer.phone2} label="Telefone 2" />{customer.phone2 && isWhatsApp(customer.phone2!)} && <a href={getWhatsAppUrl(customer.phone2!)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:scale-110 transition-transform"><WhatsAppIcon className="h-4 w-4" /></a>}</div></div></div>
                     </div>
                 </div>
 
@@ -223,7 +231,7 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                                         <div className="flex items-center bg-background/60 border border-border/50 rounded-2xl p-1.5 shadow-sm h-16 md:min-w-[440px]">
                                             {/* SLOT RMC */}
                                             <div className="flex-1 flex items-center gap-4 px-4 py-2 border-r border-border/30">
-                                                <div className="flex items-center justify-center h-9 w-9 rounded-full bg-orange-500/10 text-orange-600 font-black text-[10px] uppercase shadow-sm">RMC</div>
+                                                <div className="flex items-center justify-center h-9 w-9 rounded-full bg-orange-50/10 text-orange-600 font-black text-[10px] uppercase shadow-sm">RMC</div>
                                                 <div className="flex items-center gap-2.5 overflow-hidden">
                                                     <BankIcon bankName={benefit.rmcBank} domain={userSettings?.bankDomains?.[benefit.rmcBank]} showLogo={showLogos} className="h-5 w-5" />
                                                     <p className="text-[11px] font-black text-foreground truncate max-w-[100px] uppercase tracking-tight">
