@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -36,6 +35,7 @@ export function GoalCard({
   const [editValue, setEditValue] = useState(String(monthlyGoal));
   const [isClient, setIsClient] = useState(false);
 
+  // Sincroniza o valor de edição quando o prop monthlyGoal mudar (reatividade total)
   useEffect(() => {
     setIsClient(true);
     setEditValue(String(monthlyGoal));
@@ -101,21 +101,21 @@ export function GoalCard({
           </div>
 
           {isEditing ? (
-            <div className="flex items-center gap-2 bg-white p-1.5 rounded-lg border shadow-sm scale-95 origin-right">
+            <div className="flex items-center gap-2 bg-white p-1.5 rounded-lg border shadow-sm scale-95 origin-right animate-in zoom-in-95">
               <Input
                 type="number"
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
-                className="h-8 w-24 text-xs border-none"
+                className="h-8 w-24 text-xs border-none font-bold"
                 autoFocus
               />
-              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleSave}><Check className="h-4 w-4 text-green-500" /></Button>
-              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setIsEditing(false)}><X className="h-4 w-4 text-destructive" /></Button>
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-green-600 hover:bg-green-50" onClick={handleSave}><Check className="h-4 w-4" /></Button>
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:bg-red-50" onClick={() => setIsEditing(false)}><X className="h-4 w-4" /></Button>
             </div>
           ) : (
             <div className="flex items-center gap-3">
               <div className="hidden md:block">{renderSparkline()}</div>
-              <div className="text-[10px] font-black text-green-700 bg-white/90 px-3 py-1 rounded-full border border-green-100 shadow-sm">
+              <div className="text-[10px] font-black text-green-700 bg-white/90 px-3 py-1 rounded-full border border-green-100 shadow-sm animate-in fade-in">
                 META: {isPrivacyMode ? '•••••' : formatCurrency(monthlyGoal)}
               </div>
               <Button variant="ghost" size="icon" className="h-7 w-7 opacity-40 hover:opacity-100 transition-opacity" onClick={() => setIsEditing(true)}>
@@ -137,7 +137,7 @@ export function GoalCard({
           </div>
 
           <div className="text-right">
-            <div className="text-xl sm:text-2xl font-light text-green-600 dark:text-green-400 tracking-tighter">
+            <div className="text-xl sm:text-2xl font-light text-green-600 dark:text-green-400 tracking-tighter animate-in slide-in-from-right-2">
               {percentageOfGoal.toFixed(1)}%
             </div>
             <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">Atingido</p>
@@ -145,7 +145,7 @@ export function GoalCard({
         </div>
 
         <div className="relative pt-1.5">
-            <Progress value={percentageOfGoal} className="h-1.5 bg-green-100 dark:bg-green-900/30" />
+            <Progress value={percentageOfGoal} className="h-1.5 bg-green-100 dark:bg-green-900/30 transition-all duration-1000" />
         </div>
 
         {topContributor && (

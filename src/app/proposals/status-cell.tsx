@@ -10,10 +10,10 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { cn, cleanFirestoreData } from '@/lib/utils';
-import { proposalStatuses } from '@/lib/config-data';
+import { proposalStatuses, defaultRejectionReasons } from '@/lib/config-data';
 import type { ProposalStatus, ProposalHistoryEntry } from '@/lib/types';
 import { useFirestore, auth } from '@/firebase';
-import { doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { MessageSquareText, Loader2 } from 'lucide-react';
+import { MessageSquareText, Loader2, AlertTriangle, Label } from 'lucide-react';
 
 interface StatusCellProps {
   proposalId: string;
@@ -43,24 +43,28 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
   const [pendingStatus, setPendingStatus] = useState<ProposalStatus | null>(null);
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [quickNote, setQuickNote] = useState('');
+  const [rejectionReason, setRejectionReason] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
 
   const handleUpdateInitiate = (newStatus: ProposalStatus) => {
     if (newStatus === currentStatus) return;
     
-    // Se for reprovado ou se tiver função de callback externa (ex: PropostasPage), delegamos direto
-    if (newStatus === 'Reprovado' || onStatusChange) {
-        onStatusChange?.(proposalId, newStatus, product);
-        return;
-    }
-
+    // Se tiver função de callback externa (ex: PropostasPage), delegamos a abertura do modal de reprova para lá se necessário
+    // Mas para manter o StatusCell resiliente em qualquer widget, ele agora lida com o motivo se for Reprovado
     setPendingStatus(newStatus);
     setQuickNote('');
+    setRejectionReason('');
     setIsNoteModalOpen(true);
   };
 
   const handleUpdateConfirm = async () => {
     if (!pendingStatus || !firestore) return;
+
+    // Validação obrigatória de motivo para reprova
+    if (pendingStatus === 'Reprovado' && !rejectionReason) {
+        toast({ variant: 'destructive', title: 'Motivo Obrigatório', description: 'Selecione uma justificativa para a reprova.' });
+        return;
+    }
 
     setIsUpdating(true);
     const now = new Date().toISOString();
@@ -85,13 +89,21 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
         dataToUpdate.statusAwaitingBalanceAt = now;
     }
 
-    // 🛡️ BUG #3: Registro de Nota Rápida na Linha do Tempo
+    if (pendingStatus === 'Reprovado') {
+        dataToUpdate.rejectionReason = rejectionReason;
+    }
+
+    // Registro na Linha do Tempo
+    const historyMessage = pendingStatus === 'Reprovado'
+        ? `⚙️ Status para "${pendingStatus}". MOTIVO: ${rejectionReason}${quickNote ? ` | NOTA: ${quickNote}` : ''}`
+        : quickNote.trim() 
+            ? `⚙️ Status para "${pendingStatus}". Nota: ${quickNote.trim()}`
+            : `⚙️ Status alterado rapidamente para "${pendingStatus}"`;
+
     const historyEntry: ProposalHistoryEntry = {
         id: crypto.randomUUID(),
         date: now,
-        message: quickNote.trim() 
-            ? `⚙️ Status para "${pendingStatus}". Nota: ${quickNote.trim()}`
-            : `⚙️ Status alterado rapidamente para "${pendingStatus}"`,
+        message: historyMessage,
         userName: userName
     };
     dataToUpdate.history = arrayUnion(historyEntry);
@@ -105,6 +117,10 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
             description: `Alterado para "${pendingStatus}".`,
         });
         setIsNoteModalOpen(false);
+        // Se houver callback, avisamos que mudou
+        if (onStatusChange) {
+            onStatusChange(proposalId, pendingStatus, product);
+        }
     } catch (error: any) {
         if (error.code === 'permission-denied') {
             errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -154,29 +170,54 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
     </Select>
 
     <Dialog open={isNoteModalOpen} onOpenChange={setIsNoteModalOpen}>
-        <DialogContent className="max-w-xs p-6 rounded-[2rem]">
+        <DialogContent className="max-w-sm p-6 rounded-[2rem]">
             <DialogHeader>
                 <DialogTitle className="flex items-center gap-2 text-base font-black uppercase tracking-tight">
-                    <MessageSquareText className="h-4 w-4 text-primary" /> Nota de Trâmite
+                    <MessageSquareText className="h-4 w-4 text-primary" /> 
+                    {pendingStatus === 'Reprovado' ? 'Justificativa de Reprova' : 'Nota de Trâmite'}
                 </DialogTitle>
             </DialogHeader>
-            <div className="py-4 space-y-4">
+            <div className="py-4 space-y-5">
                 <div className="p-3 bg-muted/30 rounded-xl border border-dashed text-[10px] font-bold uppercase text-muted-foreground text-center">
-                    Alterando para: <span className="text-primary">{pendingStatus}</span>
+                    Alterando para: <span className={cn("font-black", pendingStatus === 'Reprovado' ? "text-red-600" : "text-primary")}>{pendingStatus}</span>
                 </div>
-                <Textarea 
-                    placeholder="Algo importante a registrar? (Opcional)"
-                    value={quickNote}
-                    onChange={(e) => setQuickNote(e.target.value)}
-                    className="min-h-[80px] rounded-2xl text-xs font-medium"
-                    autoFocus
-                />
+
+                {pendingStatus === 'Reprovado' && (
+                    <div className="space-y-2 animate-in slide-in-from-top-2">
+                        <Label className="text-[9px] font-black uppercase tracking-widest text-red-600 flex items-center gap-1.5">
+                            <AlertTriangle className="h-3 w-3" /> Motivo da Reprova *
+                        </Label>
+                        <Select value={rejectionReason} onValueChange={setRejectionReason}>
+                            <SelectTrigger className="border-red-200 bg-red-50/50 font-bold h-11 rounded-xl">
+                                <SelectValue placeholder="Selecione por que foi reprovado" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {defaultRejectionReasons.map(r => (
+                                    <SelectItem key={r} value={r} className="text-xs font-medium">{r}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                )}
+
+                <div className="space-y-2">
+                    <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Comentário Adicional (Opcional)</Label>
+                    <Textarea 
+                        placeholder={pendingStatus === 'Reprovado' ? "Detalhes da negativa do banco..." : "Algo importante a registrar?"}
+                        value={quickNote}
+                        onChange={(e) => setQuickNote(e.target.value)}
+                        className="min-h-[80px] rounded-2xl text-xs font-medium resize-none"
+                    />
+                </div>
             </div>
             <DialogFooter className="flex flex-col gap-2">
                 <Button 
                     onClick={handleUpdateConfirm} 
-                    disabled={isUpdating}
-                    className="w-full rounded-full font-black uppercase text-[10px] tracking-widest h-11"
+                    disabled={isUpdating || (pendingStatus === 'Reprovado' && !rejectionReason)}
+                    className={cn(
+                        "w-full rounded-full font-black uppercase text-[10px] tracking-widest h-11 shadow-lg transition-all",
+                        pendingStatus === 'Reprovado' ? "bg-red-600 hover:bg-red-700 text-white" : "bg-primary text-white"
+                    )}
                 >
                     {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirmar Mudança"}
                 </Button>
