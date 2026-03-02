@@ -56,7 +56,7 @@ const CopyButton = ({ text, label }: { text?: string; label: string }) => {
     };
     return (
         <Button variant="ghost" size="icon" className="h-6 w-6 opacity-40 hover:opacity-100 transition-opacity" onClick={handleCopy}>
-            <Copy className="h-3 w-3" />
+            <Copy className="h-3.5 w-3.5" />
         </Button>
     );
 };
@@ -264,7 +264,7 @@ export default function ManagementPage() {
                 </Button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
                 {promoters?.map((promoter) => {
                     const isSupportWhatsApp = promoter.supportPhone && isWhatsApp(promoter.supportPhone);
                     
@@ -272,35 +272,35 @@ export default function ManagementPage() {
                         <Card key={promoter.id} className="border-2 overflow-hidden shadow-sm hover:shadow-md transition-all">
                             <div 
                                 className={cn(
-                                    "p-6 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors",
+                                    "p-8 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors",
                                     expandedPromoter === promoter.id && "bg-blue-50/20 border-b-2"
                                 )}
                                 onClick={() => setExpandedPromoter(expandedPromoter === promoter.id ? null : promoter.id)}
                             >
-                                <div className="flex items-center gap-6">
-                                    <Avatar className="h-14 w-14 rounded-2xl border-2 border-primary/10 shadow-sm">
+                                <div className="flex items-center gap-8">
+                                    <Avatar className="h-16 w-16 rounded-2xl border-2 border-primary/10 shadow-sm">
                                         <AvatarImage src={promoter.photoURL} />
                                         <AvatarFallback className="bg-blue-100 text-blue-600 font-black">
-                                            <Building2 className="h-7 w-7" />
+                                            <Building2 className="h-8 w-8" />
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="min-w-0">
-                                        <div className="flex items-center gap-2">
-                                            <h3 className="font-black uppercase text-base tracking-tight truncate">{promoter.name}</h3>
+                                        <div className="flex items-center gap-3">
+                                            <h3 className="font-black uppercase text-lg tracking-tight truncate">{promoter.name}</h3>
                                             {promoter.partnerCode && (
-                                                <div className="flex items-center gap-1 animate-in zoom-in-95">
-                                                    <Badge variant="outline" className="h-5 px-2 text-[9px] font-mono font-black border-blue-200 text-blue-600 bg-blue-50 uppercase">ID: {promoter.partnerCode}</Badge>
+                                                <div className="flex items-center gap-1.5 animate-in zoom-in-95">
+                                                    <Badge variant="outline" className="h-6 px-3 text-[10px] font-mono font-black border-blue-200 text-blue-600 bg-blue-50 uppercase">ID: {promoter.partnerCode}</Badge>
                                                     <CopyButton text={promoter.partnerCode} label="Código Parceiro" />
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="flex flex-wrap gap-x-6 gap-y-2 text-[10px] font-bold text-muted-foreground uppercase mt-2">
+                                        <div className="flex flex-wrap gap-x-8 gap-y-3 text-[11px] font-bold text-muted-foreground uppercase mt-3">
                                             {/* GERENTE */}
-                                            <div className="flex items-center gap-1.5 min-w-0">
-                                                <UserIcon className="h-3.5 w-3.5 text-blue-500 shrink-0" /> 
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <UserIcon className="h-4 w-4 text-blue-500 shrink-0" /> 
                                                 <span className="truncate">Gerente: {promoter.contactName || '---'}</span>
                                                 {promoter.whatsapp && (
-                                                    <div className="flex items-center gap-1">
+                                                    <div className="flex items-center gap-1.5">
                                                         <a 
                                                             href={getWhatsAppUrl(promoter.whatsapp)} 
                                                             target="_blank" 
@@ -308,14 +308,14 @@ export default function ManagementPage() {
                                                             className="text-[#25D366] hover:scale-125 transition-transform flex items-center" 
                                                             onClick={(e) => e.stopPropagation()}
                                                         >
-                                                            <WhatsAppIcon className="h-3.5 w-3.5" />
+                                                            <WhatsAppIcon className="h-4 w-4" />
                                                         </a>
                                                         <CopyButton text={promoter.whatsapp} label="WhatsApp" />
                                                     </div>
                                                 )}
                                                 {promoter.managerEmail && (
-                                                    <div className="flex items-center gap-1 border-l pl-2 ml-1">
-                                                        <Mail className="h-3 w-3 text-blue-400" />
+                                                    <div className="flex items-center gap-1.5 border-l pl-3 ml-1.5">
+                                                        <Mail className="h-3.5 w-3.5 text-blue-400" />
                                                         <span className="lowercase font-medium">{promoter.managerEmail}</span>
                                                         <CopyButton text={promoter.managerEmail} label="E-mail Gerente" />
                                                     </div>
@@ -323,11 +323,11 @@ export default function ManagementPage() {
                                             </div>
 
                                             {/* SUPORTE */}
-                                            <div className="flex items-center gap-1.5 min-w-0">
-                                                <Headset className="h-3.5 w-3.5 text-blue-500 shrink-0" /> 
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <Headset className="h-4 w-4 text-blue-500 shrink-0" /> 
                                                 <span className="truncate">Suporte: {promoter.supportPhone || '---'}</span>
                                                 {promoter.supportPhone && (
-                                                    <div className="flex items-center gap-1">
+                                                    <div className="flex items-center gap-1.5">
                                                         {isSupportWhatsApp && (
                                                             <a 
                                                                 href={getWhatsAppUrl(promoter.supportPhone)} 
@@ -336,7 +336,7 @@ export default function ManagementPage() {
                                                                 className="text-[#25D366] hover:scale-125 transition-transform flex items-center" 
                                                                 onClick={(e) => e.stopPropagation()}
                                                             >
-                                                                <WhatsAppIcon className="h-3.5 w-3.5" />
+                                                                <WhatsAppIcon className="h-4 w-4" />
                                                             </a>
                                                         )}
                                                         <CopyButton text={promoter.supportPhone} label="Suporte" />
@@ -346,8 +346,8 @@ export default function ManagementPage() {
 
                                             {/* EMAIL INSTITUCIONAL */}
                                             {promoter.email && (
-                                                <div className="flex items-center gap-1.5 min-w-0">
-                                                    <Mail className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <Mail className="h-4 w-4 text-blue-500 shrink-0" />
                                                     <span className="truncate">Institucional: {promoter.email}</span>
                                                     <CopyButton text={promoter.email} label="E-mail" />
                                                 </div>
@@ -355,59 +355,59 @@ export default function ManagementPage() {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); setSelectedItem(promoter); setIsPromoterModalOpen(true); }}><Edit className="h-4 w-4" /></Button>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 rounded-full" onClick={(e) => { e.stopPropagation(); handleDelete('managementPromoters', promoter.id); }}><Trash2 className="h-4 w-4" /></Button>
-                                    {expandedPromoter === promoter.id ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
+                                <div className="flex items-center gap-4">
+                                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full" onClick={(e) => { e.stopPropagation(); setSelectedItem(promoter); setIsPromoterModalOpen(true); }}><Edit className="h-5 w-5" /></Button>
+                                    <Button variant="ghost" size="icon" className="h-10 w-10 text-red-500 rounded-full" onClick={(e) => { e.stopPropagation(); handleDelete('managementPromoters', promoter.id); }}><Trash2 className="h-5 w-5" /></Button>
+                                    {expandedPromoter === promoter.id ? <ChevronUp className="h-6 w-6 text-muted-foreground" /> : <ChevronDown className="h-6 w-6 text-muted-foreground" />}
                                 </div>
                             </div>
 
                             {expandedPromoter === promoter.id && (
-                                <div className="p-6 bg-muted/10 space-y-6 animate-in slide-in-from-top-2 duration-300">
-                                    <div className="flex items-center justify-between border-b pb-4">
-                                        <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground flex items-center gap-2">
-                                            <Lock className="h-3.5 w-3.5" /> Logins Bancários Blindados
+                                <div className="p-8 bg-muted/10 space-y-8 animate-in slide-in-from-top-2 duration-300">
+                                    <div className="flex items-center justify-between border-b pb-5">
+                                        <h4 className="text-[11px] font-black uppercase tracking-[0.25em] text-muted-foreground flex items-center gap-2.5">
+                                            <Lock className="h-4 w-4" /> Logins Bancários Blindados
                                         </h4>
-                                        <Button size="sm" variant="outline" className="rounded-full h-8 px-4 font-bold text-[10px] uppercase gap-2 border-primary/20 text-primary" onClick={() => { setSelectedPromoterId(promoter.id); setSelectedItem(null); setIsBankModalOpen(true); }}>
-                                            <PlusCircle className="h-3.5 w-3.5" /> Vincular Login
+                                        <Button size="sm" variant="outline" className="rounded-full h-9 px-5 font-bold text-[11px] uppercase gap-2 border-primary/20 text-primary" onClick={() => { setSelectedPromoterId(promoter.id); setSelectedItem(null); setIsBankModalOpen(true); }}>
+                                            <PlusCircle className="h-4 w-4" /> Vincular Login
                                         </Button>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                                         {loadingLogins ? (
-                                            <div className="col-span-full flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+                                            <div className="col-span-full flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
                                         ) : bankLogins.length === 0 ? (
-                                            <div className="col-span-full py-10 text-center border-2 border-dashed rounded-2xl opacity-30 text-[10px] font-black uppercase">Nenhum login cadastrado.</div>
+                                            <div className="col-span-full py-12 text-center border-2 border-dashed rounded-2xl opacity-30 text-[11px] font-black uppercase tracking-widest">Nenhum login cadastrado.</div>
                                         ) : (
                                             bankLogins.map((bank) => (
-                                                <Card key={bank.id} className="bg-background border-2 shadow-sm p-4 space-y-4 group/bank">
+                                                <Card key={bank.id} className="bg-background border-2 shadow-sm p-5 space-y-5 group/bank">
                                                     <div className="flex justify-between items-start">
-                                                        <div className="flex items-center gap-2">
-                                                            <Landmark className="h-4 w-4 text-primary" />
-                                                            <span className="font-black text-xs uppercase truncate max-w-[120px]">{bank.bankName}</span>
+                                                        <div className="flex items-center gap-2.5">
+                                                            <Landmark className="h-5 w-5 text-primary" />
+                                                            <span className="font-black text-xs uppercase truncate max-w-[140px]">{bank.bankName}</span>
                                                         </div>
-                                                        <div className="flex gap-1 opacity-0 group-hover/bank:opacity-100 transition-opacity">
-                                                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setSelectedPromoterId(promoter.id); setSelectedItem(bank); setIsBankModalOpen(true); }}><Edit className="h-3 w-3" /></Button>
-                                                            <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500" onClick={() => handleDelete(`managementPromoters/${promoter.id}/bankLogins`, bank.id)}><Trash2 className="h-3 w-3" /></Button>
+                                                        <div className="flex gap-1.5 opacity-0 group-hover/bank:opacity-100 transition-opacity">
+                                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setSelectedPromoterId(promoter.id); setSelectedItem(bank); setIsBankModalOpen(true); }}><Edit className="h-4 w-4" /></Button>
+                                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => handleDelete(`managementPromoters/${promoter.id}/bankLogins`, bank.id)}><Trash2 className="h-4 w-4" /></Button>
                                                         </div>
                                                     </div>
-                                                    <div className="space-y-2 bg-muted/20 p-3 rounded-lg border">
+                                                    <div className="space-y-3 bg-muted/20 p-4 rounded-xl border">
                                                         <div className="flex flex-col">
-                                                            <span className="text-[8px] font-black uppercase text-muted-foreground">Usuário</span>
-                                                            <div className="flex items-center justify-between">
-                                                                <span className="text-[11px] font-bold select-all">{bank.login}</span>
+                                                            <span className="text-[9px] font-black uppercase text-muted-foreground tracking-tight">Usuário</span>
+                                                            <div className="flex items-center justify-between mt-0.5">
+                                                                <span className="text-xs font-bold select-all">{bank.login}</span>
                                                                 <CopyButton text={bank.login} label="Login" />
                                                             </div>
                                                         </div>
                                                         <div className="flex flex-col relative">
-                                                            <span className="text-[8px] font-black uppercase text-muted-foreground">Senha AES-256</span>
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-[11px] font-mono tracking-widest flex-1">
+                                                            <span className="text-[9px] font-black uppercase text-muted-foreground tracking-tight">Senha AES-256</span>
+                                                            <div className="flex items-center gap-2.5 mt-0.5">
+                                                                <span className="text-xs font-mono tracking-widest flex-1">
                                                                     {decryptedPasswords[bank.id] ? decryptedPasswords[bank.id] : '••••••••'}
                                                                 </span>
-                                                                <div className="flex items-center gap-1">
+                                                                <div className="flex items-center gap-1.5">
                                                                     <button onClick={() => handleShowPassword(bank.id, bank.password)} className="text-primary hover:scale-110 transition-transform">
-                                                                        {decryptedPasswords[bank.id] ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                                                                        {decryptedPasswords[bank.id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                                                     </button>
                                                                     {decryptedPasswords[bank.id] && <CopyButton text={decryptedPasswords[bank.id]} label="Senha" />}
                                                                 </div>
@@ -415,8 +415,8 @@ export default function ManagementPage() {
                                                         </div>
                                                     </div>
                                                     {bank.accessUrl && (
-                                                        <Button variant="secondary" className="w-full h-8 rounded-full text-[10px] font-bold uppercase gap-2" asChild>
-                                                            <a href={bank.accessUrl} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-3 w-3" /> Abrir Sistema</a>
+                                                        <Button variant="secondary" className="w-full h-9 rounded-full text-[10px] font-black uppercase gap-2 tracking-widest" asChild>
+                                                            <a href={bank.accessUrl} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-3.5 w-3.5" /> Abrir Sistema</a>
                                                         </Button>
                                                     )}
                                                 </Card>
