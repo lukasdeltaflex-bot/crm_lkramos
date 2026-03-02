@@ -228,7 +228,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
     console.log("💎 DISPARANDO BUSCA CEP:", cleanCep);
     setIsFetchingCep(true);
     try {
-        const response = await fetch(`/api/cep/${cleanCep}`, { cache: 'no-store' });
+        const response = await fetch(`/api/cep/${cleanCep}`);
         
         if (!response.ok) {
             console.error("❌ Erro na ponte da API de CEP.");
