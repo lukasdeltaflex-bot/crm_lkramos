@@ -34,6 +34,7 @@ import { toast } from '@/hooks/use-toast';
 import { validateCPF, handlePhoneMask, cleanFirestoreData, cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { parse, isValid as isValidDate, isBefore, startOfToday } from 'date-fns';
 
 export default function LeadCapturePage() {
   const params = useParams();
@@ -92,6 +93,23 @@ export default function LeadCapturePage() {
     
     setFormData(prev => ({ ...prev, [name]: value }));
   };
+
+  // 🛡️ BLINDAGEM DE VALIDAÇÃO (BUG #3)
+  const isCpfValid = React.useMemo(() => {
+    if (formData.cpf.length < 14) return null;
+    return validateCPF(formData.cpf);
+  }, [formData.cpf]);
+
+  const isBirthDateValid = React.useMemo(() => {
+    if (formData.birthDate.length < 10) return null;
+    const parsed = parse(formData.birthDate, 'dd/MM/yyyy', new Date());
+    return isValidDate(parsed) && isBefore(parsed, startOfToday());
+  }, [formData.birthDate]);
+
+  const isFormValid = formData.name.split(' ').length >= 2 && 
+                      isCpfValid === true && 
+                      isBirthDateValid === true && 
+                      formData.phone.length >= 14;
 
   useEffect(() => {
     const cleanCep = formData.cep.replace(/\D/g, '');
@@ -162,11 +180,11 @@ export default function LeadCapturePage() {
 
     setUploadingCategory(category);
     setUploadProgress(0);
-    const MAX_SIZE = 15 * 1024 * 1024; // 15MB
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB limit for Lead Portal to save user data
 
     for (const file of Array.from(files)) {
         if (file.size > MAX_SIZE) {
-            toast({ variant: 'destructive', title: 'Arquivo muito grande', description: `${file.name} excede 15MB.` });
+            toast({ variant: 'destructive', title: 'Arquivo muito grande', description: `${file.name} excede 5MB.` });
             continue;
         }
 
@@ -193,13 +211,8 @@ export default function LeadCapturePage() {
     e.preventDefault();
     if (!firestore || !uid) return;
 
-    if (!formData.name.trim() || formData.name.split(' ').length < 2) {
-        toast({ variant: 'destructive', title: 'Nome Incompleto', description: 'Por favor, digite seu nome completo.' });
-        return;
-    }
-
-    if (!validateCPF(formData.cpf)) {
-        toast({ variant: 'destructive', title: 'CPF Inválido', description: 'Verifique o CPF informado.' });
+    if (!isFormValid) {
+        toast({ variant: 'destructive', title: 'Dados Inválidos', description: 'Por favor, revise os campos marcados em vermelho.' });
         return;
     }
 
@@ -255,8 +268,6 @@ export default function LeadCapturePage() {
     );
   }
 
-  const isCpfInvalid = formData.cpf.length === 14 && !validateCPF(formData.cpf);
-
   const getAttachmentsByCategory = (cat: string) => attachments.filter(a => a.category === cat);
 
   return (
@@ -294,13 +305,40 @@ export default function LeadCapturePage() {
                                 <div className="space-y-2">
                                     <Label className="text-[10px] font-black uppercase text-muted-foreground">CPF *</Label>
                                     <div className="relative">
-                                        <Input name="cpf" required placeholder="000.000.000-00" className={cn("h-12 rounded-xl font-bold", isCpfInvalid && "border-red-500 bg-red-50")} value={formData.cpf} onChange={handleInputChange} />
-                                        {isCpfInvalid && <AlertTriangle className="absolute right-4 top-3.5 h-5 w-5 text-red-500" />}
+                                        <Input 
+                                            name="cpf" 
+                                            required 
+                                            placeholder="000.000.000-00" 
+                                            className={cn(
+                                                "h-12 rounded-xl font-bold transition-all", 
+                                                isCpfValid === false && "border-red-500 bg-red-50 ring-2 ring-red-200",
+                                                isCpfValid === true && "border-green-500 bg-green-50"
+                                            )} 
+                                            value={formData.cpf} 
+                                            onChange={handleInputChange} 
+                                        />
+                                        {isCpfValid === false && <AlertTriangle className="absolute right-4 top-3.5 h-5 w-5 text-red-500 animate-pulse" />}
+                                        {isCpfValid === true && <CheckCircle2 className="absolute right-4 top-3.5 h-5 w-5 text-green-500" />}
                                     </div>
+                                    {isCpfValid === false && <p className="text-[10px] font-bold text-red-600 uppercase mt-1">CPF Inválido. Verifique os dígitos.</p>}
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-[10px] font-black uppercase text-muted-foreground">Data de Nascimento *</Label>
-                                    <Input name="birthDate" required placeholder="DD/MM/AAAA" className="h-12 rounded-xl font-bold" value={formData.birthDate} onChange={handleInputChange} />
+                                    <div className="relative">
+                                        <Input 
+                                            name="birthDate" 
+                                            required 
+                                            placeholder="DD/MM/AAAA" 
+                                            className={cn(
+                                                "h-12 rounded-xl font-bold transition-all", 
+                                                isBirthDateValid === false && "border-red-500 bg-red-50",
+                                                isBirthDateValid === true && "border-green-500 bg-green-50"
+                                            )} 
+                                            value={formData.birthDate} 
+                                            onChange={handleInputChange} 
+                                        />
+                                        {isBirthDateValid === false && <AlertTriangle className="absolute right-4 top-3.5 h-5 w-5 text-red-500" />}
+                                    </div>
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -432,7 +470,7 @@ export default function LeadCapturePage() {
                         </p>
                     </div>
 
-                    <Button type="submit" disabled={isSubmitting || uploadingCategory !== null || isCpfInvalid} className="w-full h-14 rounded-full bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest shadow-xl transition-all text-sm">
+                    <Button type="submit" disabled={isSubmitting || uploadingCategory !== null || !isFormValid} className="w-full h-14 rounded-full bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest shadow-xl transition-all text-sm disabled:opacity-50 disabled:grayscale">
                         {isSubmitting ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processando Ficha...</> : 'Finalizar e Enviar Dados'}
                     </Button>
                 </form>

@@ -118,12 +118,42 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const initialColumns = React.useMemo(() => columns.map(c => c.id!).filter(Boolean), [columns]);
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>([...initialColumns]);
 
+  const [startDateInput, setStartDateInput] = React.useState('');
+  const [endDateInput, setEndDateInput] = React.useState('');
+  const [appliedDateRange, setAppliedDateRange] = React.useState<DateRange | undefined>(undefined);
+
+  // 🛡️ PERSISTÊNCIA DE FILTROS (BUG #2)
   React.useEffect(() => {
     setIsClient(true);
     try {
         const savedPageSize = localStorage.getItem('lk-financial-pageSize');
         if (savedPageSize) setPagination(p => ({ ...p, pageSize: Number(savedPageSize) }));
         
+        const savedStatus = localStorage.getItem('lk-financial-filter-status');
+        if (savedStatus) setStatusFilter(savedStatus);
+
+        const savedBank = localStorage.getItem('lk-financial-filter-bank');
+        if (savedBank) setBankFilter(savedBank);
+
+        const savedPromoter = localStorage.getItem('lk-financial-filter-promoter');
+        if (savedPromoter) setPromoterFilter(savedPromoter);
+
+        const savedSearch = localStorage.getItem('lk-financial-filter-search');
+        if (savedSearch) setGlobalFilter(savedSearch);
+
+        const savedDates = localStorage.getItem('lk-financial-filter-dates');
+        if (savedDates) {
+            const parsed = JSON.parse(savedDates);
+            setStartDateInput(parsed.startStr || '');
+            setEndDateInput(parsed.endStr || '');
+            if (parsed.from) {
+                setAppliedDateRange({
+                    from: new Date(parsed.from),
+                    to: parsed.to ? new Date(parsed.to) : undefined
+                });
+            }
+        }
+
         const savedVisibility = localStorage.getItem('lk-financial-visibility');
         if (savedVisibility) setColumnVisibility(JSON.parse(savedVisibility));
 
@@ -132,25 +162,28 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
         const savedOrder = localStorage.getItem('lk-financial-order');
         if (savedOrder) {
-            const parsedOrder = JSON.parse(savedOrder) as string[];
-            const missingColumns = initialColumns.filter(id => !parsedOrder.includes(id));
-            if (missingColumns.length > 0) {
-                const newOrder = [...parsedOrder];
-                const actionsIdx = newOrder.indexOf('Ações');
-                if (actionsIdx !== -1) {
-                    newOrder.splice(actionsIdx, 0, ...missingColumns);
-                } else {
-                    newOrder.push(...missingColumns);
-                }
-                setColumnOrder(newOrder);
-            } else {
-                setColumnOrder(parsedOrder);
-            }
-        } else {
-            setColumnOrder([...initialColumns]);
+            setColumnOrder(JSON.parse(savedOrder));
         }
     } catch (e) {}
-  }, [initialColumns]);
+  }, []);
+
+  React.useEffect(() => {
+    if (isClient) {
+        localStorage.setItem('lk-financial-filter-status', statusFilter);
+        localStorage.setItem('lk-financial-filter-bank', bankFilter);
+        localStorage.setItem('lk-financial-filter-promoter', promoterFilter);
+        localStorage.setItem('lk-financial-filter-search', globalFilter);
+        localStorage.setItem('lk-financial-filter-dates', JSON.stringify({
+            startStr: startDateInput,
+            endStr: endDateInput,
+            from: appliedDateRange?.from?.toISOString(),
+            to: appliedDateRange?.to?.toISOString()
+        }));
+        localStorage.setItem('lk-financial-visibility', JSON.stringify(columnVisibility));
+        localStorage.setItem('lk-financial-order', JSON.stringify(columnOrder));
+        localStorage.setItem('lk-financial-sizing', JSON.stringify(columnSizing));
+    }
+  }, [statusFilter, bankFilter, promoterFilter, globalFilter, appliedDateRange, startDateInput, endDateInput, columnVisibility, columnOrder, columnSizing, isClient]);
 
   const handlePaginationChange = (updater: any) => {
     setPagination((old) => {
@@ -161,20 +194,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
       return next;
     });
   };
-
-  React.useEffect(() => {
-    if (isClient && columnOrder.length > 0) {
-      try {
-        localStorage.setItem('lk-financial-visibility', JSON.stringify(columnVisibility));
-        localStorage.setItem('lk-financial-order', JSON.stringify(columnOrder));
-        localStorage.setItem('lk-financial-sizing', JSON.stringify(columnSizing));
-      } catch(e) {}
-    }
-  }, [columnVisibility, columnOrder, columnSizing, isClient]);
-
-  const [startDateInput, setStartDateInput] = React.useState('');
-  const [endDateInput, setEndDateInput] = React.useState('');
-  const [appliedDateRange, setAppliedDateRange] = React.useState<DateRange | undefined>(undefined);
 
   const applyDateMask = (value: string) => {
     let v = value.replace(/\D/g, "").substring(0, 8);
@@ -191,11 +210,9 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     const isSearching = globalFilter.trim().length > 0;
     const isSpecificSearch = !!appliedDateRange || isSearching;
 
-    // 🛡️ REGRA ABSOLUTA: Reprovados nunca entram no radar Financeiro
     let list = data.filter(p => p.status !== 'Reprovado');
 
     if (statusFilter === 'Todos') {
-        // Se estiver pesquisando ou com período manual, NÃO aplica o filtro do mês atual
         if (!isSpecificSearch) {
             list = list.filter(p => {
                 const d = p.dateDigitized ? new Date(p.dateDigitized) : null;
@@ -212,7 +229,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         }
     } else if (statusFilter === 'Pendente' || statusFilter === 'Parcial') {
         list = list.filter(p => p.commissionStatus === statusFilter);
-        // Pendentes e Parciais ignoram data por padrão (radar de cobrança total)
     }
 
     if (bankFilter !== 'all') list = list.filter(p => p.bank === bankFilter);
@@ -257,24 +273,17 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         const searchDigits = searchTerm.replace(/\D/g, '');
         const cpfDigits = customer?.cpf?.replace(/\D/g, '') || '';
 
-        // 🛡️ BUSCA NUCLEAR V12: Threshold de Precisão
         if (/^\d+$/.test(searchTerm)) {
-            // 1. Prioridade Absoluta: Correspondência EXATA de ID ou Proposta
             if (customer?.numericId?.toString() === searchTerm) return true;
             if (p.proposalNumber === searchTerm) return true;
-            
-            // 2. Threshold para documentos: Se for curto (<=3), não busca em documentos p/ evitar ruído
             if (searchTerm.length > 3) {
                 if (cpfDigits.includes(searchTerm)) return true;
             }
-
-            return false; // Trava busca numérica para ser estrita em IDs curtos
+            return false;
         }
 
-        // 3. Busca por CPF via dígitos (mesmo que searchTerm tenha pontuação)
         if (searchDigits.length > 3 && cpfDigits.includes(searchDigits)) return true;
 
-        // 4. Busca por texto normalizado
         const normalizedSearch = normalizeString(searchTerm);
         const searchableFields = [
             customer?.name,

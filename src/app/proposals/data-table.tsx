@@ -113,11 +113,37 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const initialColumns = React.useMemo(() => columns.map(c => c.id!).filter(Boolean), [columns]);
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>([...initialColumns]);
 
+  // 🛡️ PERSISTÊNCIA DE FILTROS (BUG #2)
   React.useEffect(() => {
     setIsClient(true);
     try {
         const savedPageSize = localStorage.getItem('lk-proposals-pageSize');
         if (savedPageSize) setPagination(p => ({ ...p, pageSize: Number(savedPageSize) }));
+
+        const savedStatus = localStorage.getItem('lk-proposals-filter-status');
+        if (savedStatus) setStatusFilter(savedStatus);
+
+        const savedBank = localStorage.getItem('lk-proposals-filter-bank');
+        if (savedBank) setBankFilter(savedBank);
+
+        const savedPromoter = localStorage.getItem('lk-proposals-filter-promoter');
+        if (savedPromoter) setPromoterFilter(savedPromoter);
+
+        const savedSearch = localStorage.getItem('lk-proposals-filter-search');
+        if (savedSearch) setGlobalFilter(savedSearch);
+
+        const savedDates = localStorage.getItem('lk-proposals-filter-dates');
+        if (savedDates) {
+            const parsed = JSON.parse(savedDates);
+            setStartDateInput(parsed.startStr || '');
+            setEndDateInput(parsed.endStr || '');
+            if (parsed.from) {
+                setAppliedDateRange({
+                    from: new Date(parsed.from),
+                    to: parsed.to ? new Date(parsed.to) : undefined
+                });
+            }
+        }
 
         const savedVisibility = localStorage.getItem('lk-proposals-visibility');
         if (savedVisibility) setColumnVisibility(JSON.parse(savedVisibility));
@@ -127,25 +153,28 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
 
         const savedOrder = localStorage.getItem('lk-proposals-order');
         if (savedOrder) {
-            const parsedOrder = JSON.parse(savedOrder) as string[];
-            const missingColumns = initialColumns.filter(id => !parsedOrder.includes(id));
-            if (missingColumns.length > 0) {
-                const newOrder = [...parsedOrder];
-                const actionsIdx = newOrder.indexOf('Actions');
-                if (actionsIdx !== -1) {
-                    newOrder.splice(actionsIdx, 0, ...missingColumns);
-                } else {
-                    newOrder.push(...missingColumns);
-                }
-                setColumnOrder(newOrder);
-            } else {
-                setColumnOrder(parsedOrder);
-            }
-        } else {
-            setColumnOrder([...initialColumns]);
+            setColumnOrder(JSON.parse(savedOrder));
         }
     } catch (e) {}
-  }, [initialColumns]);
+  }, []);
+
+  React.useEffect(() => {
+    if (isClient) {
+        localStorage.setItem('lk-proposals-filter-status', statusFilter);
+        localStorage.setItem('lk-proposals-filter-bank', bankFilter);
+        localStorage.setItem('lk-proposals-filter-promoter', promoterFilter);
+        localStorage.setItem('lk-proposals-filter-search', globalFilter);
+        localStorage.setItem('lk-proposals-filter-dates', JSON.stringify({
+            startStr: startDateInput,
+            endStr: endDateInput,
+            from: appliedDateRange?.from?.toISOString(),
+            to: appliedDateRange?.to?.toISOString()
+        }));
+        localStorage.setItem('lk-proposals-visibility', JSON.stringify(columnVisibility));
+        localStorage.setItem('lk-proposals-order', JSON.stringify(columnOrder));
+        localStorage.setItem('lk-proposals-sizing', JSON.stringify(columnSizing));
+    }
+  }, [statusFilter, bankFilter, promoterFilter, globalFilter, appliedDateRange, startDateInput, endDateInput, columnVisibility, columnOrder, columnSizing, isClient]);
 
   const handlePaginationChange = (updater: any) => {
     setPagination((old) => {
@@ -153,22 +182,9 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
       if (typeof window !== 'undefined') {
         try { localStorage.setItem('lk-proposals-pageSize', String(next.pageSize)); } catch(e) {}
       }
-      if (tableContainerRef.current) {
-          tableContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
       return next;
     });
   };
-
-  React.useEffect(() => {
-    if (isClient && columnOrder.length > 0) {
-      try {
-        localStorage.setItem('lk-proposals-visibility', JSON.stringify(columnVisibility));
-        localStorage.setItem('lk-proposals-order', JSON.stringify(columnOrder));
-        localStorage.setItem('lk-proposals-sizing', JSON.stringify(columnSizing));
-      } catch(e) {}
-    }
-  }, [columnVisibility, columnOrder, columnSizing, isClient]);
 
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
 
@@ -238,25 +254,17 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         const searchDigits = searchTerm.replace(/\D/g, '');
         const cpfDigits = customer?.cpf?.replace(/\D/g, '') || '';
 
-        // 🛡️ BUSCA NUCLEAR V12: Prioridade Zero e Estrita para ID e Propostas Curtas
         if (/^\d+$/.test(searchTerm)) {
-            // 1. Prioridade Absoluta: Correspondência EXATA de Proposta ou ID
             if (p.proposalNumber === searchTerm) return true;
             if (customer?.numericId?.toString() === searchTerm) return true;
-            
-            // 2. Threshold para documentos: Se for curto (<=3), exige match exato de ID/Proposta acima
-            // Não busca parciais de CPF em buscas muito curtas para evitar ruído.
             if (searchTerm.length > 3) {
                 if (cpfDigits.includes(searchTerm)) return true;
             }
-
-            return false; // Trava busca numérica para não "vazar" em IDs errados
+            return false;
         }
 
-        // 3. Busca por CPF via dígitos (mesmo que searchTerm tenha pontuação)
         if (searchDigits.length > 3 && cpfDigits.includes(searchDigits)) return true;
 
-        // 4. Texto normalizado e campos literais
         const normalizedSearch = normalizeString(searchTerm);
         const searchableFields = [
             customer?.name,
