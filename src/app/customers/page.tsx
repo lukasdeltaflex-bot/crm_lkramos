@@ -66,6 +66,7 @@ function CustomersPageContent() {
   const [sheetMode, setSheetMode] = React.useState<'new' | 'edit'>('new');
   const [rowSelection, setRowSelection] = React.useState<Record<string, boolean>>({});
   const [isSaving, setIsSaving] = React.useState(false);
+  const [formKey, setFormKey] = React.useState('initial');
   const tableRef = React.useRef<CustomerDataTableHandle>(null);
   
   const initialTab = searchParams.get('tab') || 'active';
@@ -153,6 +154,7 @@ function CustomersPageContent() {
     setSelectedCustomer(undefined);
     setDefaultValues(undefined);
     setSheetMode('new');
+    setFormKey(`new-${Date.now()}`); // Força recriação do formulário
     setIsDialog(true);
   }, []);
 
@@ -167,7 +169,6 @@ function CustomersPageContent() {
         
         selectedIds.forEach(id => {
             const docRef = doc(firestore, 'customers', id);
-            // 🛡️ BLINDAGEM LGPD V2: Limpeza total de dados de contato e benefícios
             batch.update(docRef, { 
                 name: 'Cliente Removido', 
                 cpf: '000.000.000-00', 
@@ -208,6 +209,7 @@ function CustomersPageContent() {
     setSelectedCustomer(customer);
     setDefaultValues(undefined);
     setSheetMode('edit');
+    setFormKey(`edit-${customer.id}`);
     setIsDialog(true);
   };
 
@@ -216,6 +218,7 @@ function CustomersPageContent() {
     setSelectedCustomer(undefined);
     setDefaultValues({ ...aiData, id: newId });
     setSheetMode('new');
+    setFormKey(`ai-${newId}`);
     setIsAiModalOpen(false);
     setIsDialog(true);
   }
@@ -235,7 +238,6 @@ function CustomersPageContent() {
     if (!firestore) return;
     const docRef = doc(firestore, 'customers', customerId);
     
-    // 🛡️ BLINDAGEM LGPD V2: Limpeza total de dados de contato e benefícios
     const dataToUpdate = { 
         name: 'Cliente Removido', 
         cpf: '000.000.000-00', 
@@ -474,7 +476,7 @@ function CustomersPageContent() {
         >
           <DialogHeader><DialogTitle>{sheetMode === 'edit' ? 'Editar' : 'Novo'} Cliente</DialogTitle></DialogHeader>
           <CustomerForm
-            key={selectedCustomer?.id || (defaultValues?.id ? `ai-${defaultValues.id}` : 'new')}
+            key={formKey}
             onSubmit={handleFormSubmit}
             customer={selectedCustomer}
             allCustomers={processedCustomers || []}

@@ -254,6 +254,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
         }
     } catch (error) {
         console.warn("Busca automática de CEP indisponível.");
+        toast({ variant: 'destructive', title: 'CEP não encontrado', description: 'Verifique o número e tente novamente.' });
     } finally {
         setIsFetchingCep(false);
     }
@@ -262,13 +263,14 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
   useEffect(() => {
     const cleanCep = (watchCep || '').replace(/\D/g, '');
     
+    // 🛡️ RESET AGRESSIVO: Se não tem 8 dígitos, libera a memória para permitir nova busca
     if (cleanCep.length === 8) {
         if (cleanCep !== lastProcessedCep.current) {
             handleCepLookup(cleanCep);
             lastProcessedCep.current = cleanCep;
         }
-    } else if (cleanCep.length === 0) {
-        lastProcessedCep.current = ''; // Reseta memória ao limpar campo
+    } else {
+        lastProcessedCep.current = '';
     }
   }, [watchCep, handleCepLookup]);
 
