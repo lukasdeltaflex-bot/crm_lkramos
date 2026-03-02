@@ -225,12 +225,13 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
   const handleCepLookup = useCallback(async (cleanCep: string) => {
     if (cleanCep.length !== 8) return;
     
+    console.log("💎 DISPARANDO BUSCA CEP:", cleanCep);
     setIsFetchingCep(true);
     try {
-        const response = await fetch(`/api/cep/${cleanCep}`);
+        const response = await fetch(`/api/cep/${cleanCep}`, { cache: 'no-store' });
         
         if (!response.ok) {
-            console.error("Falha na conexão com o serviço de CEP.");
+            console.error("❌ Erro na ponte da API de CEP.");
             return;
         }
 
@@ -253,11 +254,11 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
             toast({ title: "Endereço localizado!" });
         }
     } catch (error: any) {
-        console.error("❌ ERRO BUSCA CEP:", error);
+        console.error("❌ ERRO REAL BUSCA CEP:", error);
     } finally {
         setIsFetchingCep(false);
     }
-  }, [form.setValue]);
+  }, [form]);
 
   useEffect(() => {
     const cleanCep = (watchCep || '').replace(/\D/g, '');
