@@ -426,7 +426,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                         <FormItem>
                           <FormLabel className="text-xs font-medium text-muted-foreground flex items-center gap-2">
                             <UserRound className="h-3.5 w-3.5 text-[#00AEEF]" /> Gênero
-                          </FormLabel>
+                          </Label>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                                 <SelectTrigger className="rounded-full h-11 px-5 border-zinc-200 font-bold">
@@ -451,7 +451,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                             <FormItem>
                             <FormLabel className="text-xs font-medium text-muted-foreground flex items-center gap-2">
                                 <Mail className="h-3.5 w-3.5 text-[#00AEEF]" /> E-mail
-                            </FormLabel>
+                            </ExternalLink>
                             <FormControl>
                                 <Input placeholder="exemplo@email.com" {...field} value={field.value ?? ''} className="rounded-full h-11 px-5 border-zinc-200 font-bold" />
                             </FormControl>
@@ -535,7 +535,6 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
 
             <div className="h-px bg-zinc-100" />
 
-            {/* SEÇÃO DE ETIQUETAS */}
             <div className="space-y-6">
                 <h3 className="text-xl font-bold uppercase tracking-tight text-[#00AEEF] flex items-center gap-2">
                     <Tag className="h-5 w-5" /> Classificação e Perfil
@@ -544,10 +543,14 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                     <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em]">Etiquetas Selecionadas</p>
                     <div className="flex flex-wrap gap-2 min-h-[40px] p-4 rounded-3xl bg-muted/5 border-2 border-dashed border-zinc-200">
                         {watchTags && watchTags.length > 0 ? (
-                            watchTags.map(tag => (
+                            watchTags.map((tag) => (
                                 <Badge key={tag} className="gap-1.5 pl-3 pr-1 py-1.5 rounded-full bg-primary text-white font-bold border-none shadow-sm animate-in zoom-in-95">
                                     {tag}
-                                    <button type="button" onClick={() => handleTagToggle(tag)} className="h-5 w-5 rounded-full bg-black/10 flex items-center justify-center hover:bg-black/20 transition-colors">
+                                    <button 
+                                        type="button" 
+                                        onClick={() => handleTagToggle(tag)} 
+                                        className="h-5 w-5 rounded-full bg-black/10 flex items-center justify-center hover:bg-black/20 transition-colors"
+                                    >
                                         <X className="h-3 w-3" />
                                     </button>
                                 </Badge>
