@@ -244,8 +244,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
         const response = await fetch(`/api/cep/${cleanCep}`);
         
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || 'Falha na conexão com o serviço de CEP.');
+            throw new Error('Falha na conexão com o serviço de CEP.');
         }
 
         const data = await response.json();
@@ -268,11 +267,6 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
         }
     } catch (error: any) {
         console.warn("Erro na busca de CEP:", error.message);
-        toast({ 
-            variant: 'destructive', 
-            title: 'Busca Indisponível', 
-            description: error.message || 'Verifique sua conexão e tente novamente.' 
-        });
     } finally {
         setIsFetchingCep(false);
     }
@@ -281,14 +275,12 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
   useEffect(() => {
     const cleanCep = (watchCep || '').replace(/\D/g, '');
     
-    // 🛡️ GATILHO DE BUSCA V15: Detecção exata de 8 dígitos para disparo único
     if (cleanCep.length === 8) {
         if (cleanCep !== lastProcessedCep.current) {
-            handleCepLookup(cleanCep);
             lastProcessedCep.current = cleanCep;
+            handleCepLookup(cleanCep);
         }
     } else {
-        // Se o usuário apagar ou alterar, limpa a trava para permitir nova busca ao atingir 8 dígitos
         lastProcessedCep.current = '';
     }
   }, [watchCep, handleCepLookup]);
@@ -556,7 +548,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                 <div className="space-y-4">
                     <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em]">Etiquetas Selecionadas</p>
                     <div className="flex flex-wrap gap-2 min-h-[40px] p-4 rounded-3xl bg-muted/5 border-2 border-dashed border-zinc-200">
-                        {watchTags.length > 0 ? watchTags.map(tag => (
+                        {watchTags.length > 0 ? watchTags.length > 0 ? watchTags.map(tag => (
                             <Badge key={tag} className="gap-1.5 pl-3 pr-1 py-1.5 rounded-full bg-primary text-white font-bold border-none shadow-sm animate-in zoom-in-95">
                                 {tag}
                                 <button type="button" onClick={() => handleTagToggle(tag)} className="h-5 w-5 rounded-full bg-black/10 flex items-center justify-center hover:bg-black/20 transition-colors">
