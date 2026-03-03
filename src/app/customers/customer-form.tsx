@@ -225,13 +225,11 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
   const handleCepLookup = useCallback(async (cleanCep: string) => {
     if (cleanCep.length !== 8) return;
     
-    console.log("💎 DISPARANDO BUSCA CEP:", cleanCep);
     setIsFetchingCep(true);
     try {
         const response = await fetch(`/api/cep/${cleanCep}`);
         
         if (!response.ok) {
-            console.error("❌ Erro na ponte da API de CEP.");
             toast({ variant: 'destructive', title: 'Falha na conexão', description: 'O serviço de CEP está temporariamente indisponível.' });
             return;
         }
@@ -255,7 +253,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
             toast({ title: "Endereço localizado!" });
         }
     } catch (error: any) {
-        console.error("❌ ERRO REAL BUSCA CEP:", error);
+        console.error("CEP lookup failed:", error);
     } finally {
         setIsFetchingCep(false);
     }
@@ -723,7 +721,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                             </FormLabel>
                             <FormControl>
                                 <div className='relative'>
-                                    <Input 
+                                    <input 
                                         placeholder="00000-000" 
                                         {...field} 
                                         value={field.value ?? ''} 
@@ -733,7 +731,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                                             if (v.length > 5) v = v.replace(/(\d{5})(\d)/, "$1-$2");
                                             field.onChange(v);
                                         }}
-                                        className="rounded-full h-11 px-5 border-zinc-200 font-bold" 
+                                        className="flex h-11 w-full rounded-full border border-zinc-200 bg-background px-5 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm font-bold" 
                                     />
                                     {isFetchingCep && <Loader2 className="absolute right-4 top-3.5 h-4 w-4 animate-spin text-[#00AEEF]" />}
                                 </div>

@@ -27,7 +27,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { MessageSquareText, Loader2, AlertTriangle, Label } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { MessageSquareText, Loader2, AlertTriangle } from 'lucide-react';
 
 interface StatusCellProps {
   proposalId: string;
