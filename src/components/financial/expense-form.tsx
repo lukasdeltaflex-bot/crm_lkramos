@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { format, parse } from 'date-fns';
+import { format, parse, isValid } from 'date-fns';
 import type { Expense } from '@/lib/types';
 import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
@@ -30,8 +30,11 @@ import { Switch } from '@/components/ui/switch';
 const expenseSchema = z.object({
   description: z.string().min(3, 'A descrição deve ter pelo menos 3 caracteres.'),
   amount: z.coerce.number().min(0.01, 'O valor deve ser maior que zero.'),
-  date: z.string().refine((val) => !isNaN(parse(val, 'yyyy-MM-dd', new Date()).getTime()), {
-    message: "Data inválida.",
+  date: z.string().refine((val) => {
+    const parsed = parse(val, 'dd/MM/yyyy', new Date());
+    return isValid(parsed) && val.length === 10;
+  }, {
+    message: "Data inválida. Use o formato dd/mm/aaaa.",
   }),
   category: z.string({ required_error: 'Selecione uma categoria.' }),
   paid: z.boolean().default(false),
@@ -42,9 +45,16 @@ type ExpenseFormValues = z.infer<typeof expenseSchema>;
 interface ExpenseFormProps {
   expense?: Expense;
   categories: string[];
-  onSubmit: (data: ExpenseFormValues) => void;
+  onSubmit: (data: any) => void;
   isSaving?: boolean;
 }
+
+const applyDateMask = (value: string) => {
+    let v = value.replace(/\D/g, "").substring(0, 8);
+    if (v.length > 4) v = v.replace(/(\d{2})(\d{2})(\d)/, "$1/$2/$3");
+    else if (v.length > 2) v = v.replace(/(\d{2})(\d)/, "$1/$2");
+    return v;
+};
 
 export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }: ExpenseFormProps) {
   const form = useForm<ExpenseFormValues>({
@@ -52,27 +62,55 @@ export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }:
     defaultValues: {
       description: '',
       amount: 0,
-      date: format(new Date(), 'yyyy-MM-dd'),
-      category: expense?.category || categories[0] || 'Outros',
+      date: format(new Date(), 'dd/MM/yyyy'),
+      category: '',
       paid: false,
     },
   });
 
   useEffect(() => {
     if (expense) {
+      let formattedDate = format(new Date(), 'dd/MM/yyyy');
+      if (expense.date) {
+          try {
+              const d = expense.date.includes('-') 
+                ? parse(expense.date, 'yyyy-MM-dd', new Date())
+                : parse(expense.date, 'dd/MM/yyyy', new Date());
+              if (isValid(d)) formattedDate = format(d, 'dd/MM/yyyy');
+          } catch(e) {}
+      }
+
       form.reset({
         description: expense.description || '',
         amount: expense.amount ?? 0,
-        date: expense.date || format(new Date(), 'yyyy-MM-dd'),
+        date: formattedDate,
         category: expense.category || categories[0] || 'Outros',
         paid: expense.paid ?? false,
       });
+    } else {
+        form.reset({
+            description: '',
+            amount: 0,
+            date: format(new Date(), 'dd/MM/yyyy'),
+            category: categories[0] || 'Outros',
+            paid: false,
+        });
     }
   }, [expense, form, categories]);
 
+  const handleFormSubmit = (data: ExpenseFormValues) => {
+    const parsedDate = parse(data.date, 'dd/MM/yyyy', new Date());
+    const isoDate = format(parsedDate, 'yyyy-MM-dd');
+    
+    onSubmit({
+        ...data,
+        date: isoDate
+    });
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4 py-4">
         <FormField
           control={form.control}
           name="description"
@@ -111,7 +149,14 @@ export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }:
                     <FormItem>
                     <FormLabel>Data de Vencimento/Pago</FormLabel>
                     <FormControl>
-                        <Input type="date" {...field} value={field.value ?? ''} disabled={isSaving} />
+                        <Input 
+                            placeholder="dd/mm/aaaa" 
+                            {...field} 
+                            value={field.value ?? ''} 
+                            onChange={(e) => field.onChange(applyDateMask(e.target.value))}
+                            maxLength={10}
+                            disabled={isSaving} 
+                        />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -127,10 +172,8 @@ export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }:
                 <FormItem>
                 <FormLabel>Categoria</FormLabel>
                 <Select 
-                    key={expense?.id || 'new'}
                     onValueChange={field.onChange} 
                     value={field.value} 
-                    defaultValue={field.value}
                     disabled={isSaving}
                 >
                     <FormControl>

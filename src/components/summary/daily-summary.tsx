@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Bot, Send, X, Loader2, CalendarClock, Cake, Hourglass, BadgePercent, Zap, Info, ChevronRight, MessageSquareText, Wallet, Receipt } from 'lucide-react';
 import type { Customer, Proposal, UserProfile, FollowUp, UserSettings, Expense } from '@/lib/types';
-import { differenceInDays, format, differenceInMonths, startOfDay, isBefore } from 'date-fns';
+import { differenceInDays, format, differenceInMonths, startOfDay, isBefore, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { calculateBusinessDays, getAge, cn, getWhatsAppUrl, formatCurrency, parseDateSafe } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -532,7 +532,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
                 {isGeneratingBday ? (
                     <div className="flex flex-col items-center justify-center py-10 gap-4">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="text-sm text-muted-foreground animate-pulse font-bold uppercase">A IA está criando uma mensagem única...</p>
+                        <p className="text-sm text-muted-foreground animate-pulse font-bold uppercase">Criando parabéns personalizado...</p>
                     </div>
                 ) : (
                     <textarea 
