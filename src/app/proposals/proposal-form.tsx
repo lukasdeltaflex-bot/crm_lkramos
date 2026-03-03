@@ -72,7 +72,7 @@ const attachmentSchema = z.object({
   name: z.string(),
   url: z.string(),
   type: z.string(),
-  size: z.number(),
+  size: n.number(),
 });
 
 const optionalDateString = z.string().optional().refine(val => !val || !isNaN(parse(val, 'dd/MM/yyyy', new Date()).getTime()), {
@@ -320,13 +320,16 @@ export function ProposalForm({
   }, [watchProposalNumber, allProposals, proposal?.id]);
 
   useEffect(() => {
+    // 🛡️ [LÓGICA]: Limpa número de benefício ao trocar o cliente para evitar dados cruzados
+    setValue('selectedBenefitNumber', '');
+    
     if (selectedCustomer) {
         const benefits = selectedCustomer.benefits || [];
         if (benefits.length === 1) {
             setValue('selectedBenefitNumber', benefits[0].number, { shouldValidate: true });
         }
     }
-  }, [selectedCustomer, setValue]);
+  }, [selectedCustomerId, selectedCustomer, setValue]);
 
   useEffect(() => {
     if (sheetMode === 'new' && !watchDateDigitized) {
@@ -563,7 +566,7 @@ export function ProposalForm({
                             <FormLabel className="text-red-600 font-black uppercase text-[10px] tracking-widest">Motivo Obrigatório da Reprova *</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
                                 <FormControl>
-                                    <SelectTrigger className="border-red-200 bg-red-50/50 font-bold">
+                                    <SelectTrigger className="border-red-200 bg-red-50/50 font-bold h-11 rounded-xl">
                                         <SelectValue placeholder="Selecione por que foi reprovado" />
                                     </SelectTrigger>
                                 </FormControl>

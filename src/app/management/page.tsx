@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -119,6 +118,9 @@ export default function ManagementPage() {
   }, [rawNews, isMounted]);
 
   useEffect(() => {
+    // 🛡️ [SEGURANÇA]: Limpa senhas descriptografadas ao fechar ou trocar de promotora
+    setDecryptedPasswords({});
+    
     if (expandedPromoter && user) {
         setLoadingLogins(true);
         const loginsRef = collection(firestore!, 'managementPromoters', expandedPromoter, 'bankLogins');

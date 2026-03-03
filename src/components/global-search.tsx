@@ -73,7 +73,8 @@ export function GlobalSearch() {
         </kbd>
       </Button>
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder="ID, Nome, CPF ou Smart Tag (ELITE, ATIVO...)" />
+        {/* 🛡️ [UX]: autoFocus para garantir que o cursor já caia na busca ao usar o atalho */}
+        <CommandInput placeholder="ID, Nome, CPF ou Smart Tag (ELITE, ATIVO...)" autoFocus />
         <CommandList>
           <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
           
