@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Bot, Send, X, Loader2, CalendarClock, Cake, Hourglass, BadgePercent, Zap, Info, ChevronRight, MessageSquareText, Wallet, Receipt } from 'lucide-react';
 import type { Customer, Proposal, UserProfile, FollowUp, UserSettings, Expense } from '@/lib/types';
-import { differenceInDays, format, differenceInMonths, startOfDay } from 'date-fns';
+import { differenceInDays, format, differenceInMonths, startOfDay, isBefore } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { calculateBusinessDays, getAge, cn, getWhatsAppUrl, formatCurrency, parseDateSafe } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
