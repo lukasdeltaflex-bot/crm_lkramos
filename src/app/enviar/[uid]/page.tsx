@@ -82,19 +82,39 @@ export default function LeadCapturePage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     let { name, value } = e.target;
-    if (name === 'cpf') value = value.replace(/\D/g, "").replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4").substring(0, 14);
-    if (name === 'phone') value = handlePhoneMask(value);
-    if (name === 'birthDate') value = value.replace(/\D/g, "").replace(/(\d{2})(\d{2})(\d{4})/, "$1/$2/$3").substring(0, 10);
+    
+    // 🛡️ MÁSCARAS FLUÍDAS V2
+    if (name === 'cpf') {
+        let v = value.replace(/\D/g, "");
+        if (v.length > 11) v = v.substring(0, 11);
+        if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+        else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{0,3})/, "$1.$2.$3");
+        else if (v.length > 3) v = v.replace(/(\d{3})(\d{0,3})/, "$1.$2");
+        value = v;
+    }
+    
+    if (name === 'phone') {
+        value = handlePhoneMask(value);
+    }
+    
+    if (name === 'birthDate') {
+        let v = value.replace(/\D/g, "");
+        if (v.length > 8) v = v.substring(0, 8);
+        if (v.length > 4) v = v.replace(/(\d{2})(\d{2})(\d{0,4})/, "$1/$2/$3");
+        else if (v.length > 2) v = v.replace(/(\d{2})(\d{0,2})/, "$1/$2");
+        value = v;
+    }
+    
     if (name === 'cep') {
-        value = value.replace(/\D/g, "");
-        if (value.length > 5) value = value.replace(/(\d{5})(\d)/, "$1-$2");
-        value = value.substring(0, 9);
+        let v = value.replace(/\D/g, "");
+        if (v.length > 8) v = v.substring(0, 8);
+        if (v.length > 5) v = v.replace(/(\d{5})(\d{0,3})/, "$1-$2");
+        value = v;
     }
     
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // 🛡️ BLINDAGEM DE VALIDAÇÃO (BUG #3)
   const isCpfValid = React.useMemo(() => {
     if (formData.cpf.length < 14) return null;
     return validateCPF(formData.cpf);
@@ -102,8 +122,10 @@ export default function LeadCapturePage() {
 
   const isBirthDateValid = React.useMemo(() => {
     if (formData.birthDate.length < 10) return null;
-    const parsed = parse(formData.birthDate, 'dd/MM/yyyy', new Date());
-    return isValidDate(parsed) && isBefore(parsed, startOfToday());
+    try {
+        const parsed = parse(formData.birthDate, 'dd/MM/yyyy', new Date());
+        return isValidDate(parsed) && isBefore(parsed, startOfToday());
+    } catch { return false; }
   }, [formData.birthDate]);
 
   const isFormValid = formData.name.split(' ').length >= 2 && 
@@ -180,7 +202,7 @@ export default function LeadCapturePage() {
 
     setUploadingCategory(category);
     setUploadProgress(0);
-    const MAX_SIZE = 5 * 1024 * 1024; // 5MB limit for Lead Portal to save user data
+    const MAX_SIZE = 5 * 1024 * 1024;
 
     for (const file of Array.from(files)) {
         if (file.size > MAX_SIZE) {

@@ -9,6 +9,7 @@ import { toast } from '@/hooks/use-toast';
 import { summarizeCustomerHistory } from '@/ai/flows/summarize-customer-history-flow';
 import { Skeleton } from '../ui/skeleton';
 import { cn, formatDateSafe } from '@/lib/utils';
+import { ScrollArea } from '../ui/scroll-area';
 
 interface CustomerAiSummaryProps {
   customer: Customer;
@@ -58,10 +59,8 @@ export function CustomerAiSummary({ customer, proposals }: CustomerAiSummaryProp
       const trimmedLine = line.trim();
       if (!trimmedLine) return <div key={index} className="h-2" />;
 
-      // Detecção de Listas
       const isListItem = trimmedLine.startsWith('* ') || trimmedLine.startsWith('- ') || /^\d+\./.test(trimmedLine);
       
-      // Processamento de Negrito (**texto**)
       const parts = trimmedLine.split(/(\*\*.*?\*\*)/g);
       const content = parts.map((part, i) => {
         if (part.startsWith('**') && part.endsWith('**')) {
@@ -121,9 +120,11 @@ export function CustomerAiSummary({ customer, proposals }: CustomerAiSummaryProp
           ) : summary ? (
             <div className="p-6 bg-white dark:bg-zinc-950 rounded-2xl border-2 border-primary/10 shadow-inner relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-1 h-full bg-primary/20" />
-                <div className="space-y-1">
-                    {renderFormattedSummary(summary)}
-                </div>
+                <ScrollArea className="h-full max-h-[300px]">
+                    <div className="space-y-1 pr-4">
+                        {renderFormattedSummary(summary)}
+                    </div>
+                </ScrollArea>
             </div>
           ) : null}
         </CardContent>

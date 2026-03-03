@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
@@ -79,11 +79,13 @@ const CopyButton = ({ text, label }: { text: string | undefined; label: string }
 }
 
 const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus, onGeneratePitch, onEdit, userSettings, totalCommission }: any) => {
-    const age = getAge(customer.birthDate);
+    const [hasMounted, setHasMounted] = useState(false);
+    useEffect(() => setHasMounted(true), []);
+
+    const age = hasMounted ? getAge(customer.birthDate) : null;
     const isInactive = customer.status === 'inactive';
     const showLogos = userSettings?.showBankLogos ?? true;
 
-    // Cálculo do Score de Fidelidade (Ranking)
     const getFidelityScore = (comm: number) => {
         if (comm <= 0) return 0;
         if (comm <= 500) return 1;
@@ -120,8 +122,7 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                                         {isInactive ? "Inativo" : "Ativo"}
                                     </Badge>
 
-                                    {/* SMART TAGS PROEMINENTES NO TOPO */}
-                                    {smartTags.map(tag => (
+                                    {hasMounted && smartTags.map(tag => (
                                         <Badge 
                                             key={tag.label} 
                                             className={cn(
@@ -147,7 +148,6 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                                     )}
                                 </div>
                                 
-                                {/* SCORE DE FIDELIDADE */}
                                 <div className="flex items-center gap-1">
                                     {Array.from({ length: 5 }).map((_, i) => (
                                         <Star 
@@ -175,7 +175,6 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                 </div>
             </CardHeader>
             <CardContent className="space-y-12 px-0">
-                {/* SEÇÃO 1: CADASTRO */}
                 <div className="space-y-6">
                     <h4 className="font-black text-[11px] uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
                         <UserRound className="h-4 w-4" /> Informações Cadastrais
@@ -184,7 +183,7 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                         <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">ID do Cliente</span><div className="flex items-center gap-2 font-black text-foreground"><Hash className="h-3.5 w-3.5 text-primary/40" /><span>{customer.numericId || '---'}</span></div></div>
                         <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Documento (CPF)</span><div className="flex items-center gap-2 font-black text-foreground"><FileText className="h-3.5 w-3.5 text-primary/40" /><span>{customer.cpf || '---'}</span><CopyButton text={customer.cpf} label="CPF" /></div></div>
                         <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Gênero</span><div className="flex items-center gap-2 font-bold text-foreground"><User className="h-3.5 w-3.5 text-primary/40" /><span>{customer.gender || '-'}</span></div></div>
-                        <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Data de Nascimento</span><div className="flex items-center gap-2 font-bold text-foreground"><Calendar className="h-3.5 w-3.5 text-primary/40" /><span>{customer.birthDate ? formatDateSafe(customer.birthDate) : '-'}</span><Badge variant="secondary" className="text-[9px] bg-primary/10 text-primary border-none font-black">{age || 0} ANOS</Badge></div></div>
+                        <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Data de Nascimento</span><div className="flex items-center gap-2 font-bold text-foreground"><Calendar className="h-3.5 w-3.5 text-primary/40" /><span>{customer.birthDate ? formatDateSafe(customer.birthDate) : '-'}</span>{hasMounted && <Badge variant="secondary" className="text-[9px] bg-primary/10 text-primary border-none font-black">{age || 0} ANOS</Badge>}</div></div>
                         <div className="flex flex-col gap-1.5 lg:col-span-2"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">E-mail</span><div className="flex items-center gap-2 font-bold text-foreground"><Mail className="h-3.5 w-3.5 text-primary/40" /><span>{customer.email || '-'}</span><CopyButton text={customer.email} label="E-mail" /></div></div>
                         <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Contato Principal</span><div className="flex items-center gap-2 font-black text-foreground"><Phone className="h-3.5 w-3.5 text-primary/40" /><span>{customer.phone || '---'}</span><div className="flex items-center gap-1"><CopyButton text={customer.phone} label="Telefone" />{customer.phone && isWhatsApp(customer.phone) && <a href={getWhatsAppUrl(customer.phone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:scale-110 transition-transform"><WhatsAppIcon className="h-4 w-4" /></a>}</div></div></div>
                         <div className="flex flex-col gap-1.5">
@@ -215,7 +214,6 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                     </div>
                 </div>
 
-                {/* SEÇÃO 1.1: BENEFÍCIOS E CARTÕES VINCULADOS - DUAL-DOCK (🛡️ BLINDADO V2) */}
                 <div className="space-y-6 pt-8 border-t border-border/40">
                     <h4 className="font-black text-[11px] uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
                         <CreditCard className="h-4 w-4" /> Benefícios e Reservas de Cartão
@@ -226,9 +224,7 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                                 <div key={idx} className="p-6 rounded-3xl bg-muted/10 border border-border/40 space-y-6 transition-all hover:bg-muted/20">
                                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                                         
-                                        {/* DOCK 1: IDENTIFICAÇÃO DO BENEFÍCIO (TEAL/EMERALD) */}
                                         <div className="flex items-center bg-background/60 border border-border/50 rounded-2xl p-1.5 shadow-sm h-16 md:min-w-[440px]">
-                                            {/* SLOT NÚMERO */}
                                             <div className="flex-1 flex items-center gap-4 px-4 py-2 border-r border-border/30">
                                                 <div className="flex items-center justify-center h-9 w-9 rounded-full bg-emerald-500/10 text-emerald-600 font-black text-[10px] uppercase shadow-sm">NB</div>
                                                 <div className="flex flex-col overflow-hidden">
@@ -239,7 +235,6 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                                                     </div>
                                                 </div>
                                             </div>
-                                            {/* SLOT VALOR/SALÁRIO */}
                                             <div className="flex-1 flex items-center gap-4 px-4 py-2">
                                                 <div className="flex items-center justify-center h-9 w-9 rounded-full bg-green-500/10 text-green-600 font-black text-[10px] uppercase shadow-sm">R$</div>
                                                 <div className="flex flex-col overflow-hidden">
@@ -251,9 +246,7 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                                             </div>
                                         </div>
 
-                                        {/* DOCK 2: RESERVAS DE CARTÃO (BLUE/ORANGE) */}
                                         <div className="flex items-center bg-background/60 border border-border/50 rounded-2xl p-1.5 shadow-sm h-16 md:min-w-[440px]">
-                                            {/* SLOT RMC */}
                                             <div className="flex-1 flex items-center gap-4 px-4 py-2 border-r border-border/30">
                                                 <div className="flex items-center justify-center h-9 w-9 rounded-full bg-orange-50/10 text-orange-600 font-black text-[10px] uppercase shadow-sm">RMC</div>
                                                 <div className="flex items-center gap-2.5 overflow-hidden">
@@ -263,7 +256,6 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                                                     </p>
                                                 </div>
                                             </div>
-                                            {/* SLOT RCC */}
                                             <div className="flex-1 flex items-center gap-4 px-4 py-2">
                                                 <div className="flex items-center justify-center h-9 w-9 rounded-full bg-blue-500/10 text-blue-600 font-black text-[10px] uppercase shadow-sm">RCC</div>
                                                 <div className="flex items-center gap-2.5 overflow-hidden">
@@ -288,7 +280,6 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                     </div>
                 </div>
 
-                {/* SEÇÃO 2: ENDEREÇO */}
                 <div className="space-y-6 pt-8 border-t border-border/40">
                     <h4 className="font-black text-[11px] uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
                         <MapPin className="h-4 w-4" /> Endereço Residencial
@@ -330,7 +321,6 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                     </div>
                 </div>
 
-                {/* SEÇÃO 3: OBSERVAÇÕES */}
                 <div className="space-y-6 pt-8 border-t border-border/40">
                     <h4 className="font-black text-[11px] uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
                         <MessageSquareText className="h-4 w-4" /> Observações Internas
@@ -349,12 +339,15 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   const { id: customerId } = React.use(params);
   const firestore = useFirestore();
   const { user } = useUser();
-  const [isPitchModalOpen, setIsPitchModalOpen] = React.useState(false);
-  const [isGeneratingPitch, setIsGeneratingPitch] = React.useState(false);
-  const [generatedPitch, setGeneratedPitch] = React.useState('');
-  const [dialogData, setDialogData] = React.useState<{ title: string; proposals: Proposal[] } | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
-  const [isSaving, setIsSaving] = React.useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
+  const [isPitchModalOpen, setIsPitchModalOpen] = useState(false);
+  const [isGeneratingPitch, setIsGeneratingPitch] = useState(false);
+  const [generatedPitch, setGeneratedPitch] = useState('');
+  const [dialogData, setDialogData] = useState<{ title: string; proposals: Proposal[] } | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => setHasMounted(true), []);
 
   const customerDocRef = useMemoFirebase(() => customerId && firestore ? doc(firestore, 'customers', customerId) : null, [firestore, customerId]);
   const proposalsQuery = useMemoFirebase(() => user && firestore && customerId ? query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), where('customerId', '==', customerId)) : null, [firestore, user, customerId]);
@@ -383,7 +376,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   }, [proposals]);
 
   const retentionOpportunity = React.useMemo(() => {
-    if (!proposals) return null;
+    if (!proposals || !hasMounted) return null;
     const now = new Date();
     return proposals.find(p => {
         if ((p.status === 'Pago' || p.status === 'Saldo Pago') && p.datePaidToClient) {
@@ -395,7 +388,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         }
         return false;
     });
-  }, [proposals]);
+  }, [proposals, hasMounted]);
 
   const handleExportDossier = async () => {
     if (!customer || !proposals || !user) return;
@@ -404,7 +397,6 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     const doc = new jsPDF();
     const primaryColor = [40, 74, 127];
     
-    // 🛡️ LOGO NO PDF
     if (userSettings?.customLogoURL) {
         try {
             doc.addImage(userSettings.customLogoURL, 'PNG', 14, 10, 40, 20, undefined, 'FAST');
@@ -545,7 +537,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     }
   };
 
-  if (isCustomerLoading || areProposalsLoading) return <AppLayout><div className="space-y-4"><div className="h-48 w-full bg-muted animate-pulse rounded-lg" /><div className="h-96 w-full bg-muted animate-pulse rounded-lg" /></div></AppLayout>;
+  if (!hasMounted || isCustomerLoading || areProposalsLoading) return <AppLayout><div className="space-y-4"><div className="h-48 w-full bg-muted animate-pulse rounded-lg" /><div className="h-96 w-full bg-muted animate-pulse rounded-lg" /></div></AppLayout>;
   if (!customer) return <AppLayout><PageHeader title="Não encontrado" /></AppLayout>;
 
   return (
