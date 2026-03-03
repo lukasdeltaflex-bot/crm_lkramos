@@ -30,7 +30,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { TableHead } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 
 const CopyButton = ({ text, label }: { text: string | undefined; label: string }) => {
@@ -183,6 +183,35 @@ const ActionsCell = ({ row, onEdit, onDelete }: any) => {
   );
 };
 
+/**
+ * 🛡️ COMPONENTE DE CÉLULA BLINDADO
+ * Evita erros de hidratação ao calcular idade e tags dinâmicas.
+ */
+const CustomerNameCell = ({ row }: { row: any }) => {
+    const [hasMounted, setHasMounted] = useState(false);
+    useEffect(() => setHasMounted(true), []);
+    
+    const customer = row.original;
+    const age = hasMounted ? getAge(customer.birthDate) : 0;
+    
+    return (
+        <div className="flex flex-col gap-0.5">
+            <Link href={`/customers/${customer.id}`} className="font-bold text-primary hover:underline uppercase text-sm tracking-tight truncate inline-block" onClick={(e) => e.stopPropagation()}>
+                {customer.name}
+            </Link>
+            <div className="flex items-center gap-1">
+                {hasMounted && age >= 74 && (
+                    <Badge variant="destructive" className="w-fit h-4 text-[8px] font-black px-1.5 py-0 animate-pulse">ALERTA 75 ANOS</Badge>
+                )}
+                {/* 🛡️ SMART TAGS NA TABELA */}
+                {hasMounted && (customer as any).smartTags?.slice(0, 2).map((tag: string) => (
+                    <Badge key={tag} className={cn("h-4 text-[7px] font-black px-1.5 py-0 border-none text-white shadow-sm", tag.includes('ELITE') ? 'bg-amber-500' : tag.includes('ATIVO') ? 'bg-orange-600' : 'bg-blue-400')}>{tag}</Badge>
+                ))}
+            </div>
+        </div>
+    );
+};
+
 
 export const getColumns = (
   { onEdit, onDelete }: { onEdit: (customer: Customer) => void; onDelete: (customerId: string) => void; }
@@ -225,26 +254,7 @@ export const getColumns = (
     id: 'Nome',
     accessorFn: (row) => row.name,
     header: 'Nome',
-    cell: ({ row }) => {
-        const customer = row.original;
-        const age = getAge(customer.birthDate);
-        return (
-            <div className="flex flex-col gap-0.5">
-                <Link href={`/customers/${customer.id}`} className="font-bold text-primary hover:underline uppercase text-sm tracking-tight truncate inline-block" onClick={(e) => e.stopPropagation()}>
-                    {customer.name}
-                </Link>
-                <div className="flex items-center gap-1">
-                    {age >= 74 && (
-                        <Badge variant="destructive" className="w-fit h-4 text-[8px] font-black px-1.5 py-0 animate-pulse">ALERTA 75 ANOS</Badge>
-                    )}
-                    {/* 🛡️ SMART TAGS NA TABELA (BUG #1) */}
-                    {(customer as any).smartTags?.slice(0, 2).map((tag: string) => (
-                        <Badge key={tag} className={cn("h-4 text-[7px] font-black px-1.5 py-0 border-none text-white shadow-sm", tag.includes('ELITE') ? 'bg-amber-500' : tag.includes('ATIVO') ? 'bg-orange-600' : 'bg-blue-400')}>{tag}</Badge>
-                    ))}
-                </div>
-            </div>
-        )
-    },
+    cell: (props) => <CustomerNameCell {...props} />,
     size: 250,
   },
   {
