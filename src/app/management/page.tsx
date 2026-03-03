@@ -31,12 +31,17 @@ import {
     Copy,
     Hash,
     User as UserIcon,
-    Clock
+    Clock,
+    Download,
+    Video as VideoIcon,
+    FileText,
+    Image as ImageIcon,
+    PlayCircle
 } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc, setDoc, deleteDoc, orderBy } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { NewsForm } from './news-form';
 import { PromoterForm } from './promoter-form';
 import { BankForm } from './bank-form';
@@ -48,6 +53,7 @@ import { cn, cleanFirestoreData, isWhatsApp, getWhatsAppUrl } from '@/lib/utils'
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
 const CopyButton = ({ text, label }: { text?: string; label: string }) => {
     if (!text) return null;
@@ -70,6 +76,7 @@ export default function ManagementPage() {
   const [isMounted, setIsMounted] = useState(false);
   
   const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
+  const [isReadingNewsModalOpen, setIsReadingNewsModalOpen] = useState(false);
   const [isPromoterModalOpen, setIsPromoterModalOpen] = useState(false);
   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
@@ -95,7 +102,6 @@ export default function ManagementPage() {
   const [bankLogins, setBankLogins] = useState<any[]>([]);
   const [loadingLogins, setLoadingLogins] = useState(false);
 
-  // 🛡️ FIX HIDRATAÇÃO: Filtro de notícias só ocorre após montagem no cliente
   const news = React.useMemo(() => {
     if (!rawNews || !isMounted) return [];
     const today = startOfDay(new Date());
@@ -195,10 +201,16 @@ export default function ManagementPage() {
 
   const closeModals = () => {
     setIsNewsModalOpen(false);
+    setIsReadingNewsModalOpen(false);
     setIsPromoterModalOpen(false);
     setIsBankModalOpen(false);
     setIsLinkModalOpen(false);
     setSelectedItem(null);
+  };
+
+  const handleDownload = (url: string, name: string) => {
+    window.open(url, '_blank');
+    toast({ title: "Iniciando download...", description: name });
   };
 
   return (
@@ -275,11 +287,11 @@ export default function ManagementPage() {
                             </CardHeader>
                             <CardContent className="p-5 pt-0 flex gap-2">
                                 {item.ownerId === user?.uid && (
-                                    <Button variant="outline" size="sm" className="flex-1 rounded-full font-bold text-[10px] uppercase h-9" onClick={() => { setSelectedItem(item); setIsNewsModalOpen(true); }}>
-                                        <Edit className="mr-1.5 h-3.5 w-3.5" /> Editar
+                                    <Button variant="outline" size="sm" className="rounded-full font-bold text-[10px] uppercase h-9 w-10 px-0 shrink-0" onClick={() => { setSelectedItem(item); setIsNewsModalOpen(true); }}>
+                                        <Edit className="h-3.5 w-3.5" />
                                     </Button>
                                 )}
-                                <Button variant="secondary" size="sm" className="rounded-full text-[10px] font-bold uppercase flex-1 h-9" onClick={() => { setSelectedItem(item); setIsNewsModalOpen(true); }}>Ler Conteúdo</Button>
+                                <Button variant="secondary" size="sm" className="rounded-full text-[10px] font-bold uppercase flex-1 h-9" onClick={() => { setSelectedItem(item); setIsReadingNewsModalOpen(true); }}>Ler Conteúdo</Button>
                             </CardContent>
                         </Card>
                     ))
@@ -499,6 +511,7 @@ export default function ManagementPage() {
         </TabsContent>
       </Tabs>
 
+      {/* MODAL DE EDIÇÃO/CRIAÇÃO DE NOTÍCIA */}
       <Dialog open={isNewsModalOpen} onOpenChange={setIsNewsModalOpen}>
         <DialogContent className="max-w-4xl h-[90vh] overflow-hidden flex flex-col rounded-[2.5rem] p-0">
             <DialogHeader className="px-8 pt-8 pb-4 shrink-0 border-b">
@@ -510,6 +523,110 @@ export default function ManagementPage() {
             <div className="flex-1 overflow-hidden px-8 py-4">
                 <NewsForm initialData={selectedItem} onSubmit={(d) => handleSave('managementNews', d, selectedItem?.id)} isSaving={isSaving} />
             </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* MODAL DE LEITURA DE NOTÍCIA (READER) */}
+      <Dialog open={isReadingNewsModalOpen} onOpenChange={setIsReadingNewsModalOpen}>
+        <DialogContent className="max-w-4xl h-[90vh] overflow-hidden flex flex-col rounded-[2.5rem] p-0">
+            {selectedItem && (
+                <>
+                    <DialogHeader className="px-8 pt-8 pb-4 shrink-0 border-b bg-muted/5">
+                        <div className="flex items-center gap-3 mb-2">
+                            <Badge className="bg-primary font-black text-[8px] uppercase tracking-widest">Informativo</Badge>
+                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{format(parseISO(selectedItem.date), 'dd/MM/yyyy')}</span>
+                        </div>
+                        <DialogTitle className="text-2xl font-black uppercase tracking-tight leading-tight">{selectedItem.title}</DialogTitle>
+                        <p className="text-sm text-muted-foreground font-medium mt-1">{selectedItem.subtitle}</p>
+                    </DialogHeader>
+                    <ScrollArea className="flex-1 px-8 py-8">
+                        <div className="space-y-10 max-w-3xl mx-auto pb-20">
+                            {selectedItem.coverUrl && (
+                                <img src={selectedItem.coverUrl} className="w-full h-auto rounded-3xl shadow-xl border-4 border-white" alt="Capa" />
+                            )}
+
+                            <div className="prose prose-zinc dark:prose-invert max-w-none">
+                                <p className="text-base leading-relaxed whitespace-pre-wrap font-medium text-foreground/80">
+                                    {selectedItem.content}
+                                </p>
+                            </div>
+
+                            {/* SEÇÃO DE MÍDIAS (VÍDEOS E IMAGENS) */}
+                            {selectedItem.attachments && selectedItem.attachments.length > 0 && (
+                                <div className="space-y-8 pt-10 border-t border-border/50">
+                                    <h4 className="text-xs font-black uppercase tracking-[0.2em] text-primary/60 flex items-center gap-2">
+                                        <PlayCircle className="h-4 w-4" /> Mídias & Documentos
+                                    </h4>
+                                    
+                                    <div className="grid grid-cols-1 gap-8">
+                                        {/* EXIBIÇÃO DE VÍDEOS */}
+                                        {selectedItem.attachments.filter((a: any) => a.type.startsWith('video/')).map((video: any, idx: number) => (
+                                            <div key={idx} className="space-y-3">
+                                                <div className="rounded-3xl overflow-hidden shadow-2xl border-4 border-background aspect-video bg-black">
+                                                    <video src={video.url} controls className="w-full h-full" />
+                                                </div>
+                                                <p className="text-[10px] font-black uppercase text-center text-muted-foreground">{video.name}</p>
+                                            </div>
+                                        ))}
+
+                                        {/* EXIBIÇÃO DE IMAGENS (QUE NÃO SÃO A CAPA) */}
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {selectedItem.attachments.filter((a: any) => a.type.startsWith('image/') && a.url !== selectedItem.coverUrl).map((img: any, idx: number) => (
+                                                <img key={idx} src={img.url} className="w-full aspect-video object-cover rounded-2xl shadow-md border-2 border-white hover:scale-[1.02] transition-transform cursor-zoom-in" alt="Anexo" onClick={() => window.open(img.url, '_blank')} />
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* LISTA DE DOWNLOADS (PDF E OUTROS) */}
+                                    <div className="space-y-3 pt-4">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Arquivos para Download</p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            {selectedItem.attachments.map((file: any, idx: number) => (
+                                                <div key={idx} className="p-4 bg-muted/20 border-2 border-transparent hover:border-primary/20 rounded-2xl flex items-center justify-between group transition-all">
+                                                    <div className="flex items-center gap-3 overflow-hidden">
+                                                        {file.type.startsWith('image/') ? (
+                                                            <ImageIcon className="h-5 w-5 text-blue-500 shrink-0" />
+                                                        ) : file.type.startsWith('video/') ? (
+                                                            <VideoIcon className="h-5 w-5 text-purple-500 shrink-0" />
+                                                        ) : (
+                                                            <FileText className="h-5 w-5 text-red-500 shrink-0" />
+                                                        )}
+                                                        <div className="flex flex-col overflow-hidden">
+                                                            <span className="text-[11px] font-black truncate uppercase tracking-tight">{file.name}</span>
+                                                            <span className="text-[9px] font-bold text-muted-foreground">Clique para baixar</span>
+                                                        </div>
+                                                    </div>
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon" 
+                                                        className="rounded-full h-10 w-10 bg-background shadow-sm hover:bg-primary hover:text-white transition-all"
+                                                        onClick={() => handleDownload(file.url, file.name)}
+                                                    >
+                                                        <Download className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {selectedItem.externalLink && (
+                                <div className="pt-6">
+                                    <Button className="w-full rounded-2xl h-14 font-black uppercase text-xs tracking-widest gap-2" asChild>
+                                        <a href={selectedItem.externalLink} target="_blank" rel="noopener noreferrer">
+                                            <ExternalLink className="h-4 w-4" /> Acessar Link Externo Oficial
+                                        </a>
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    </ScrollArea>
+                    <DialogFooter className="p-6 border-t bg-muted/5">
+                        <Button variant="outline" className="rounded-full px-8 font-bold" onClick={() => setIsReadingNewsModalOpen(false)}>Fechar Leitura</Button>
+                    </DialogFooter>
+                </>
+            )}
         </DialogContent>
       </Dialog>
 

@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { format } from 'date-fns';
-import { Loader2, Save, ImageIcon, ScrollText, Link as LinkIcon, Upload, X, FileText, Trash2, Clock } from 'lucide-react';
+import { Loader2, Save, ImageIcon, ScrollText, Link as LinkIcon, Upload, X, FileText, Trash2, Clock, Video } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useState, useRef } from 'react';
 import { useFirebase } from '@/firebase';
@@ -86,8 +86,9 @@ export function NewsForm({ initialData, onSubmit, isSaving = false }: NewsFormPr
     const file = event.target.files?.[0];
     if (!file || !storage || !user) return;
 
-    if (file.size > 10 * 1024 * 1024) {
-        toast({ variant: 'destructive', title: 'Arquivo muito grande', description: 'O limite é 10MB.' });
+    // Limite aumentado para 50MB para suportar vídeos curtos
+    if (file.size > 50 * 1024 * 1024) {
+        toast({ variant: 'destructive', title: 'Arquivo muito grande', description: 'O limite para notícias é 50MB.' });
         return;
     }
 
@@ -151,7 +152,7 @@ export function NewsForm({ initialData, onSubmit, isSaving = false }: NewsFormPr
             form.setValue('coverUrl', '');
         }
         
-        toast({ title: 'Arquivo removido e espaço liberado!' });
+        toast({ title: 'Arquivo removido!' });
     } catch (e) {
         const newList = current.filter((_, i) => i !== index);
         form.setValue('attachments', newList);
@@ -237,7 +238,7 @@ export function NewsForm({ initialData, onSubmit, isSaving = false }: NewsFormPr
 
                 <div className="space-y-4">
                     <h4 className="font-bold uppercase text-[10px] tracking-widest text-primary/60 flex items-center gap-2">
-                        <Upload className="h-3 w-3" /> Anexos e Mídias (PNG, JPEG ou PDF)
+                        <Upload className="h-3 w-3" /> Anexos e Mídias (Fotos, PDFs ou Vídeos)
                     </h4>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -253,7 +254,7 @@ export function NewsForm({ initialData, onSubmit, isSaving = false }: NewsFormPr
                             </div>
                             <div className="space-y-1">
                                 <p className="font-black uppercase text-[10px] tracking-tight">Carregar Arquivo</p>
-                                <p className="text-[9px] text-muted-foreground uppercase opacity-60">PNG, JPEG ou PDF (Máx 10MB)</p>
+                                <p className="text-[9px] text-muted-foreground uppercase opacity-60">Aceita Imagens, PDFs e Vídeos (Máx 50MB)</p>
                             </div>
                             {uploadProgress !== null && (
                                 <div className="w-full mt-2">
@@ -261,7 +262,7 @@ export function NewsForm({ initialData, onSubmit, isSaving = false }: NewsFormPr
                                 </div>
                             )}
                         </div>
-                        <input type="file" ref={fileInputRef} className="hidden" accept="image/*,application/pdf" onChange={handleFileUpload} />
+                        <input type="file" ref={fileInputRef} className="hidden" accept="image/*,application/pdf,video/*" onChange={handleFileUpload} />
 
                         <FormField
                             control={form.control}
@@ -284,7 +285,13 @@ export function NewsForm({ initialData, onSubmit, isSaving = false }: NewsFormPr
                         {attachments.map((file, idx) => (
                             <div key={idx} className="p-3 bg-card border rounded-xl flex items-center justify-between gap-3 group relative hover:border-red-200 transition-colors">
                                 <div className="flex items-center gap-2 overflow-hidden">
-                                    {file.type.startsWith('image/') ? <ImageIcon className="h-4 w-4 text-blue-500 shrink-0" /> : <FileText className="h-4 w-4 text-red-500 shrink-0" />}
+                                    {file.type.startsWith('image/') ? (
+                                        <ImageIcon className="h-4 w-4 text-blue-500 shrink-0" />
+                                    ) : file.type.startsWith('video/') ? (
+                                        <Video className="h-4 w-4 text-purple-500 shrink-0" />
+                                    ) : (
+                                        <FileText className="h-4 w-4 text-red-500 shrink-0" />
+                                    )}
                                     <span className="text-[10px] font-bold truncate uppercase">{file.name}</span>
                                 </div>
                                 <Button 
@@ -293,7 +300,7 @@ export function NewsForm({ initialData, onSubmit, isSaving = false }: NewsFormPr
                                     size="icon" 
                                     onClick={() => removeAttachment(idx)} 
                                     className="h-7 w-7 text-muted-foreground hover:text-red-600 hover:bg-red-50"
-                                    title="Excluir arquivo e liberar espaço"
+                                    title="Remover anexo"
                                 >
                                     <Trash2 className="h-3.5 w-3.5" />
                                 </Button>
