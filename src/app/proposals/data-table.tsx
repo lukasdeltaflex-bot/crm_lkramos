@@ -433,7 +433,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                 <div className='relative w-full max-md group'>
                     <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80 group-focus-within:opacity-100 transition-opacity' />
                     <Input
-                        placeholder="Busca por ID, Nome ou Proposta..."
+                        placeholder="Busca por ID, CPF, Nome ou Proposta..."
                         value={globalFilter ?? ''}
                         onChange={(e) => setGlobalFilter(e.target.value)}
                         className="pl-10 h-11 bg-background border-2 border-zinc-300 dark:border-primary/40 rounded-full text-base font-bold shadow-md"

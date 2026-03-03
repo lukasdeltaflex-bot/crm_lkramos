@@ -472,7 +472,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 <div className="flex items-center justify-between px-4 py-2 gap-4">
                     <div className='relative w-full max-md group'>
                         <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80 group-focus-within:opacity-100 transition-opacity' />
-                        <Input placeholder="Busca inteligente por Nome, ID ou CPF..." value={globalFilter} onChange={(e) => setGlobalFilter(e.target.value)} className="pl-10 h-11 bg-background border-2 border-zinc-300 rounded-full text-base font-bold shadow-md" />
+                        <Input placeholder="Busca por ID, CPF, Nome ou Proposta..." value={globalFilter} onChange={(e) => setGlobalFilter(e.target.value)} className="pl-10 h-11 bg-background border-2 border-zinc-300 rounded-full text-base font-bold shadow-md" />
                     </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild><Button variant="outline" className="h-11 rounded-full px-6 font-black border-2 border-zinc-300 bg-background shadow-md gap-2 text-[10px] uppercase tracking-widest">Colunas <ChevronDown className="h-4 w-4 opacity-50" /></Button></DropdownMenuTrigger>
