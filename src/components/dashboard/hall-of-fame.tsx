@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Trophy, Zap, Star } from 'lucide-react';
 import { format, isSameMonth, parseISO, isValid } from 'date-fns';
@@ -16,8 +16,14 @@ interface HallOfFameProps {
 }
 
 export function HallOfFame({ proposals, customers, isLoading }: HallOfFameProps) {
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
   const stats = useMemo(() => {
-    if (!proposals || !customers) return null;
+    if (!hasMounted || !proposals || !customers) return null;
     const now = new Date();
     
     // Filtra propostas do mês atual
@@ -56,9 +62,9 @@ export function HallOfFame({ proposals, customers, isLoading }: HallOfFameProps)
         bestCustomer,
         bestCustomerVolume: bestCustomerId ? customerPaidVolume[bestCustomerId] : 0
     };
-  }, [proposals, customers]);
+  }, [proposals, customers, hasMounted]);
 
-  if (isLoading) {
+  if (isLoading || !hasMounted) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Skeleton className="h-24 w-full rounded-2xl" />

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Zap, ChevronRight, User, TrendingUp } from 'lucide-react';
@@ -18,8 +18,14 @@ interface RadarWidgetProps {
 }
 
 export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProps) {
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
   const radarOpportunities = useMemo(() => {
-    if (!proposals || !customers) return [];
+    if (!hasMounted || !proposals || !customers) return [];
     
     const now = new Date();
     
@@ -78,7 +84,7 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
       .slice(0, 10);
 
     return opportunities;
-  }, [proposals, customers]);
+  }, [proposals, customers, hasMounted]);
 
   return (
     <Card className="h-full flex flex-col border-orange-500/20 bg-orange-500/5 dark:bg-orange-500/[0.03] shadow-lg overflow-hidden">
@@ -99,7 +105,7 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
         </div>
       </CardHeader>
       <CardContent className="flex-1 pt-6 pb-0">
-        {isLoading ? (
+        {isLoading || !hasMounted ? (
             <div className="space-y-3">
                 {Array.from({ length: 3 }).map((_, i) => (
                     <div key={i} className="h-16 w-full bg-muted animate-pulse rounded-lg" />
