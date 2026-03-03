@@ -50,8 +50,6 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
   const handleUpdateInitiate = (newStatus: ProposalStatus) => {
     if (newStatus === currentStatus) return;
     
-    // Se tiver função de callback externa (ex: PropostasPage), delegamos a abertura do modal de reprova para lá se necessário
-    // Mas para manter o StatusCell resiliente em qualquer widget, ele agora lida com o motivo se for Reprovado
     setPendingStatus(newStatus);
     setQuickNote('');
     setRejectionReason('');
@@ -61,7 +59,6 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
   const handleUpdateConfirm = async () => {
     if (!pendingStatus || !firestore) return;
 
-    // Validação obrigatória de motivo para reprova
     if (pendingStatus === 'Reprovado' && !rejectionReason) {
         toast({ variant: 'destructive', title: 'Motivo Obrigatório', description: 'Selecione uma justificativa para a reprova.' });
         return;
@@ -94,7 +91,6 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
         dataToUpdate.rejectionReason = rejectionReason;
     }
 
-    // Registro na Linha do Tempo
     const historyMessage = pendingStatus === 'Reprovado'
         ? `⚙️ Status para "${pendingStatus}". MOTIVO: ${rejectionReason}${quickNote ? ` | NOTA: ${quickNote}` : ''}`
         : quickNote.trim() 
@@ -118,7 +114,6 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
             description: `Alterado para "${pendingStatus}".`,
         });
         setIsNoteModalOpen(false);
-        // Se houver callback, avisamos que mudou
         if (onStatusChange) {
             onStatusChange(proposalId, pendingStatus, product);
         }
@@ -207,7 +202,7 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
                         placeholder={pendingStatus === 'Reprovado' ? "Detalhes da negativa do banco..." : "Algo importante a registrar?"}
                         value={quickNote}
                         onChange={(e) => setQuickNote(e.target.value)}
-                        className="min-h-[80px] rounded-2xl text-xs font-medium resize-none"
+                        className="min-h-[120px] rounded-2xl text-xs font-medium resize-none"
                     />
                 </div>
             </div>
