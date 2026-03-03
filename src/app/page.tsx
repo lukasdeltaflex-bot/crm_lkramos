@@ -72,8 +72,6 @@ export default function DashboardPage() {
   const [appliedDateRange, setAppliedDateRange] = useState<DateRange | undefined>(undefined);
   const [isPrivacyMode, setIsPrivacyMode] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  const [isLeadsModalOpen, setIsLeadsModalOpen] = useState(false);
-  const [isApprovingLead, setIsApprovingLead] = useState(false);
   
   useEffect(() => {
     setIsClient(true);
@@ -91,17 +89,6 @@ export default function DashboardPage() {
     return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid));
   }, [firestore, user]);
   const { data: customers } = useCollection<Customer>(customersQuery);
-
-  const leadsQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return query(
-        collection(firestore, 'leads'), 
-        where('ownerId', '==', user.uid),
-        where('status', '==', 'pending'),
-        orderBy('createdAt', 'desc')
-    );
-  }, [firestore, user]);
-  const { data: pendingLeads } = useCollection<Lead>(leadsQuery);
 
   const expensesQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -129,6 +116,40 @@ export default function DashboardPage() {
     } catch (e) {
         toast({ variant: 'destructive', title: 'Erro ao salvar meta' });
     }
+  };
+
+  const handleApplyFilter = () => {
+    const startDate = parse(startDateInput, 'dd/MM/yyyy', new Date());
+    const endDate = parse(endDateInput, 'dd/MM/yyyy', new Date());
+    if (isValid(startDate) && isValid(endDate)) {
+        setAppliedDateRange({ from: startOfDay(startDate), to: endOfDay(endDate) });
+    } else if (isValid(startDate)) {
+        setAppliedDateRange({ from: startOfDay(startDate), to: endOfDay(startDate) });
+    } else {
+        setAppliedDateRange(undefined);
+    }
+  };
+
+  const handleDateMask = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 8) value = value.substring(0, 8);
+    value = value.replace(/(\d{2})(\d)/, '$1/$2');
+    value = value.replace(/(\d{2})(\d)/, '$1/$2');
+    e.target.value = value;
+    return value;
+  };
+
+  const applyRangeShortcut = (range: string) => {
+    const now = new Date();
+    let from = startOfMonth(now);
+    let to = now;
+    if (range === 'today') from = startOfDay(now);
+    if (range === 'yesterday') { from = startOfDay(subDays(now, 1)); to = endOfDay(subDays(now, 1)); }
+    if (range === 'week') from = startOfDay(subDays(now, 7));
+    
+    setStartDateInput(format(from, 'dd/MM/yyyy'));
+    setEndDateInput(format(to, 'dd/MM/yyyy'));
+    setAppliedDateRange({ from, to });
   };
 
   const copyLeadLink = () => {
@@ -166,12 +187,10 @@ export default function DashboardPage() {
             if (d >= prevMonthStart && d <= prevMonthEnd) digitizedInPrevPeriod.push(p);
         }
 
-        // Para status operacionais (esteira), mostramos o estado atual do que está na mesa
         if (p.status !== 'Reprovado' && statusLists[p.status]) {
             statusLists[p.status].push(p);
         }
 
-        // 🛡️ REGRA SOLICITADA: Reprovados apenas do mês vigente (evento da reprova)
         if (p.status === 'Reprovado') {
             const rejectionDate = p.statusUpdatedAt ? new Date(p.statusUpdatedAt) : (p.dateDigitized ? new Date(p.dateDigitized) : null);
             if (rejectionDate && isValid(rejectionDate) && rejectionDate >= fromDate && rejectionDate <= effectiveToDate) {
@@ -240,35 +259,74 @@ export default function DashboardPage() {
     };
   }, [proposals, appliedDateRange, isClient]);
 
-  const applyRange = (range: string) => {
-    const now = new Date();
-    let from = startOfMonth(now);
-    let to = now;
-    if (range === 'today') from = startOfDay(now);
-    if (range === 'yesterday') { from = startOfDay(subDays(now, 1)); to = endOfDay(subDays(now, 1)); }
-    if (range === 'week') from = startOfDay(subDays(now, 7));
-    setStartDateInput(from.toLocaleDateString('pt-BR'));
-    setEndDateInput(to.toLocaleDateString('pt-BR'));
-    setAppliedDateRange({ from, to });
-  };
-
   if (!stats) return null;
 
   return (
     <AppLayout>
        <div className="space-y-8 animate-in fade-in duration-500 w-full max-w-full pb-10">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
                 <p className="text-sm text-muted-foreground">Monitoramento inteligente LK RAMOS (UTC-3)</p>
             </div>
-            <div className="flex items-center gap-2 flex-wrap bg-card p-2 rounded-xl border border-border/50 shadow-sm">
-                <Select onValueChange={applyRange}>
-                    <SelectTrigger className='w-[140px] h-9 border-none shadow-none focus:ring-0 font-medium'><CalendarIcon className='mr-2 h-4 w-4 text-primary' /><SelectValue placeholder="Período" /></SelectTrigger>
-                    <SelectContent><SelectItem value="today">Hoje</SelectItem><SelectItem value="yesterday">Ontem</SelectItem><SelectItem value="week">Últimos 7 dias</SelectItem><SelectItem value="month">Mês Atual</SelectItem></SelectContent>
-                </Select>
-                <Separator orientation="vertical" className="h-6 mx-1 hidden sm:block" />
-                <Button variant="ghost" size="icon" className='h-8 w-8' onClick={() => setIsPrivacyMode(!isPrivacyMode)}>{isPrivacyMode ? <EyeOff className='h-4 w-4' /> : <Eye className='h-4 w-4' />}</Button>
+            
+            <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-3 bg-background border-2 border-zinc-200 dark:border-primary/20 rounded-full px-3 py-1 shadow-sm transition-all hover:border-primary/40">
+                    <Select onValueChange={applyRangeShortcut}>
+                        <SelectTrigger className="h-7 w-[120px] border-none bg-transparent focus:ring-0 text-xs font-black uppercase p-0">
+                            <CalendarIcon className="mr-2 h-3.5 w-3.5 text-primary" />
+                            <SelectValue placeholder="PERÍODO" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="today">Hoje</SelectItem>
+                            <SelectItem value="yesterday">Ontem</SelectItem>
+                            <SelectItem value="week">Últimos 7 dias</SelectItem>
+                            <SelectItem value="month">Mês Atual</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Separator orientation="vertical" className="h-4 mx-1 bg-zinc-300 dark:bg-zinc-700" />
+                    <div className="flex items-center gap-1">
+                        <Input 
+                            placeholder="De" 
+                            value={startDateInput} 
+                            onChange={(e) => setStartDateInput(handleDateMask(e))} 
+                            className="h-7 w-28 border-none bg-muted/40 text-[11px] text-center font-black rounded-full focus-visible:ring-primary/20" 
+                        />
+                        <span className="text-muted-foreground font-black opacity-40">-</span>
+                        <Input 
+                            placeholder="Até" 
+                            value={endDateInput} 
+                            onChange={(e) => setEndDateInput(handleDateMask(e))} 
+                            className="h-7 w-28 border-none bg-muted/40 text-[11px] text-center font-black rounded-full focus-visible:ring-primary/20" 
+                        />
+                    </div>
+                    <Button 
+                        size="sm" 
+                        onClick={handleApplyFilter} 
+                        className="h-7 bg-primary text-white hover:bg-primary/90 rounded-full px-4 text-[10px] font-black uppercase shadow-sm gap-1.5 transition-all active:scale-95"
+                    >
+                        <Filter className="h-3 w-3" /> APLICAR
+                    </Button>
+                    {appliedDateRange && (
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-7 w-7 text-destructive hover:bg-red-50 rounded-full" 
+                            onClick={() => { setStartDateInput(''); setEndDateInput(''); setAppliedDateRange(undefined); }}
+                        >
+                            <X className="h-3.5 w-3.5" />
+                        </Button>
+                    )}
+                </div>
+                
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className='h-10 w-10 bg-card border border-border/50 rounded-full shadow-sm hover:bg-muted transition-colors' 
+                    onClick={() => setIsPrivacyMode(!isPrivacyMode)}
+                >
+                    {isPrivacyMode ? <EyeOff className='h-5 w-5' /> : <Eye className='h-5 w-5' />}
+                </Button>
             </div>
         </div>
 
