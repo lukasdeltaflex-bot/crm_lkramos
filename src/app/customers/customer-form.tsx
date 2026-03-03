@@ -59,6 +59,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { summarizeNotes } from '@/ai/flows/summarize-notes-flow';
 import { useUser } from '@/firebase';
 import { BankIcon } from '@/components/bank-icon';
+import { Label } from '@/components/ui/label';
 import * as configData from '@/lib/config-data';
 
 const benefitSchema = z.object({
@@ -124,10 +125,15 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
   const { user } = useUser();
   const [isFetchingCep, setIsFetchingCep] = useState(false);
   const [isSummarizing, setIsSummarizing] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   const banks = userSettings?.banks || configData.banks;
   const availableTags = userSettings?.customerTags || configData.defaultCustomerTags;
   const showLogos = userSettings?.showBankLogos ?? true;
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const initialValues = useMemo(() => {
     const source = customer || defaultValues;
@@ -184,13 +190,13 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
   const watchTags = form.watch('tags') || [];
 
   const customerAge = useMemo(() => {
-    if (!watchBirthDate || watchBirthDate.length < 10) return null;
+    if (!isMounted || !watchBirthDate || watchBirthDate.length < 10) return null;
     try {
         const parsed = parse(watchBirthDate, 'dd/MM/yyyy', new Date());
         if (isValid(parsed)) return differenceInYears(new Date(), parsed);
     } catch { return null; }
     return null;
-  }, [watchBirthDate]);
+  }, [watchBirthDate, isMounted]);
 
   const duplicity = useMemo(() => {
     const results = { phone: false, email: false, cpf: false };
