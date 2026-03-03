@@ -319,6 +319,8 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     selectedRows.reduce((acc, row) => acc + (row.original.commissionValue || 0), 0),
   [selectedRows]);
 
+  const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (active.id !== over?.id) {
@@ -339,7 +341,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   React.useImperativeHandle(ref, () => ({ table }));
 
   return (
-    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor))}>
+    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
         <div className="space-y-4 w-full">
             <FinancialSummary rows={data} currentMonthRange={startOfDay(currentMonthRange.from) as any} isPrivacyMode={isPrivacyMode} isFiltered={!!globalFilter} onShowDetails={onShowDetails} userSettings={userSettings} />
 

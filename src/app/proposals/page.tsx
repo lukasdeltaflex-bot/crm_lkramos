@@ -28,6 +28,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
     DropdownMenuSeparator,
+    DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { cleanFirestoreData, formatCurrency, cleanBankName } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -264,7 +265,6 @@ function ProposalsPageContent() {
     const rowsSource = onlySelected ? table.getFilteredSelectedRowModel().rows : table.getFilteredRowModel().rows;
     const doc = new jsPDF('landscape');
     
-    // Header
     const title = onlySelected ? "RELATÓRIO DE PROPOSTAS (SELEÇÃO)" : "RELATÓRIO DE PROPOSTAS COMPLETO";
     doc.setFontSize(18);
     doc.setTextColor(40, 74, 127);
@@ -464,7 +464,7 @@ function ProposalsPageContent() {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Formato Excel</DropdownMenuItem>
+                    <DropdownMenuLabel>Formato Excel</DropdownMenuLabel>
                     <DropdownMenuItem onSelect={() => handleExportToExcel(false)} className="gap-2">
                         <FileSpreadsheet className="h-4 w-4 text-green-600" /> Exportar Tudo
                     </DropdownMenuItem>
@@ -474,7 +474,7 @@ function ProposalsPageContent() {
                         </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuLabel>Formato PDF</DropdownMenuItem>
+                    <DropdownMenuLabel>Formato PDF</DropdownMenuLabel>
                     <DropdownMenuItem onSelect={() => handleExportToPdf(false)} className="gap-2">
                         <FilePdf className="h-4 w-4 text-red-600" /> Exportar Tudo
                     </DropdownMenuItem>
@@ -486,7 +486,8 @@ function ProposalsPageContent() {
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button onClick={handleNewProposal} className="h-10 px-8 rounded-full font-bold bg-[#00AEEF] hover:bg-[#0096D1] text-white shadow-lg shadow-[#00AEEF]/20 transition-all border-none text-xs">
+            <Button onClick={handleNewProposal} className="h-10 px-8 rounded-full font-bold bg-[#00AEEF] hover:bg-[#0096D1] text-white shadow-lg shadow-[#00AEEF]/20 transition-all border-none text-xs"
+            >
                 <PlusCircle className="mr-2 h-4 w-4" /> Nova Proposta
             </Button>
         </div>
