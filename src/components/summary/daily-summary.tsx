@@ -119,6 +119,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
   };
 
   const alertData = useMemo(() => {
+    // 🛡️ BLINDAGEM DE HIDRATAÇÃO: Retorna dados vazios se não for no cliente
     if (!isClient || !proposals || !customers) return { birthdayAlerts: [], followUpReminders: [], commissionReminders: [], debtBalanceReminders: [], partialCommissionReminders: [], manualFollowUps: [], radarAlerts: [], expenseAlerts: [] };
 
     const now = new Date();
@@ -218,7 +219,6 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
             link: '/follow-ups'
         }));
 
-    // Alertas de Despesas Pendentes
     const expenseAlerts = (expenses || [])
         .filter(e => !e.paid)
         .map(e => {
@@ -350,7 +350,6 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
         ) : (
             <ScrollArea className="h-[450px] w-full">
                 <div className="space-y-6 pr-4 pb-10">
-                    {/* SEÇÃO: CONTAS A PAGAR (VERMELHO) */}
                     {visibleExpenseAlerts.length > 0 && (
                         <div className="space-y-3">
                             <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-red-600 flex items-center gap-2 px-1">
@@ -372,7 +371,6 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
                         </div>
                     )}
 
-                    {/* SEÇÃO: SALDO DEVEDOR (VERMELHO) */}
                     {visibleDebtBalanceReminders.length > 0 && (
                         <div className="space-y-3">
                             <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-red-600 flex items-center gap-2 px-1">
@@ -394,7 +392,6 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
                         </div>
                     )}
 
-                    {/* SEÇÃO: COBRANÇAS (AZUL) */}
                     {(visibleCommissionReminders.length > 0 || visiblePartialCommissionReminders.length > 0) && (
                         <div className="space-y-3">
                             <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-600 flex items-center gap-2 px-1">
@@ -427,7 +424,6 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
                         </div>
                     )}
 
-                    {/* SEÇÃO: RADAR E OPORTUNIDADES (LARANJA) */}
                     {visibleRadarAlerts.length > 0 && (
                         <div className="space-y-3">
                             <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-orange-600 flex items-center gap-2 px-1">
@@ -449,7 +445,6 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
                         </div>
                     )}
 
-                    {/* SEÇÃO: RETORNOS E AGENDA (ROXO) */}
                     {visibleManualFollowUps.length > 0 && (
                         <div className="space-y-3">
                             <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-purple-600 flex items-center gap-2 px-1">
@@ -471,7 +466,6 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
                         </div>
                     )}
 
-                    {/* SEÇÃO: ANIVERSÁRIOS (ROSA) */}
                     {visibleBirthdayAlerts.length > 0 && (
                         <div className="space-y-3">
                             <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-pink-600 flex items-center gap-2 px-1">

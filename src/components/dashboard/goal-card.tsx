@@ -32,13 +32,12 @@ export function GoalCard({
     topContributor
 }: GoalCardProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(String(monthlyGoal));
+  const [editValue, setEditValue] = useState(String(monthlyGoal || 0));
   const [isClient, setIsClient] = useState(false);
 
-  // Sincroniza o valor de edição quando o prop monthlyGoal mudar (reatividade total)
   useEffect(() => {
     setIsClient(true);
-    setEditValue(String(monthlyGoal));
+    setEditValue(String(monthlyGoal || 0));
   }, [monthlyGoal]);
 
   const handleSave = () => {
