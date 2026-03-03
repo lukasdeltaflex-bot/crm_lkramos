@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Bell, Cake, BadgePercent, X, CalendarClock, Bot, Loader2, MessageSquareText, Hourglass, Coins, Zap, AlertTriangle } from 'lucide-react';
+import { Bell, Cake, BadgePercent, X, CalendarClock, Bot, Loader2, MessageSquareText, Hourglass, Coins, Zap, AlertTriangle, Newspaper } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,9 +14,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCollection, useFirestore, useUser, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, where, doc, setDoc } from 'firebase/firestore';
+import { collection, query, where, doc, setDoc, orderBy, limit } from 'firebase/firestore';
 import type { Customer, Proposal, FollowUp, UserSettings } from '@/lib/types';
-import { differenceInDays, format, differenceInMonths } from 'date-fns';
+import { differenceInDays, format, differenceInMonths, parseISO, isAfter, subDays } from 'date-fns';
 import { getWhatsAppUrl, calculateBusinessDays, getAge } from '@/lib/utils';
 import Link from 'next/link';
 import { generateBirthdayMessage } from '@/ai/flows/generate-birthday-message-flow';
@@ -56,6 +56,16 @@ export function NotificationBell() {
     );
   }, [firestore, user]);
 
+  const newsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(
+        collection(firestore, 'managementNews'), 
+        where('status', '==', 'Published'),
+        orderBy('date', 'desc'),
+        limit(10)
+    );
+  }, [firestore]);
+
   const settingsDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return doc(firestore, 'userSettings', user.uid);
@@ -64,6 +74,7 @@ export function NotificationBell() {
   const { data: customers } = useCollection<Customer>(customersQuery);
   const { data: proposals } = useCollection<Proposal>(proposalsQuery);
   const { data: followUps } = useCollection<FollowUp>(followUpsQuery);
+  const { data: news } = useCollection<any>(newsQuery);
   const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
 
   const dismissedIds = userSettings?.dismissedAlerts || [];
@@ -71,17 +82,32 @@ export function NotificationBell() {
   const notifications = React.useMemo(() => {
     if (!isClient) return [];
     
-    const alerts: { id: string; title: string; type: 'birthday' | 'commission' | 'followup' | 'debt' | 'partial' | 'radar' | 'age'; date: string; link: string; customerId?: string }[] = [];
+    const alerts: { id: string; title: string; type: 'birthday' | 'commission' | 'followup' | 'debt' | 'partial' | 'radar' | 'age' | 'news'; date: string; link: string; customerId?: string }[] = [];
     const now = new Date();
     const todayStr = format(now, 'MM-dd');
     const todayIso = format(now, 'yyyy-MM-dd');
+    const threeDaysAgo = subDays(now, 3);
+
+    // 📰 NOTIFICAÇÕES DE NOTÍCIAS (Públicas para todos)
+    news?.forEach(item => {
+        const publishDate = parseISO(item.date);
+        // Só notifica se foi publicada nos últimos 3 dias
+        if (isAfter(publishDate, threeDaysAgo)) {
+            alerts.push({
+                id: `news-notif-${item.id}`,
+                title: `Novidade: ${item.title}`,
+                type: 'news',
+                date: 'Publicado agora',
+                link: '/management'
+            });
+        }
+    });
 
     customers?.forEach(c => {
       const age = getAge(c.birthDate);
       const isInactive = c.status === 'inactive' || age >= 75;
       if (isInactive) return;
       
-      // Alerta de proximidade dos 75 anos (74 anos completos)
       if (age === 74) {
         alerts.push({
           id: `age-limit-${c.id}`,
@@ -176,7 +202,7 @@ export function NotificationBell() {
     });
 
     return alerts;
-  }, [customers, proposals, followUps, isClient]);
+  }, [customers, proposals, followUps, news, isClient]);
 
   const visibleNotifications = React.useMemo(() => {
     return notifications.filter(n => !dismissedIds.includes(n.id));
@@ -283,6 +309,7 @@ export function NotificationBell() {
                             {n.type === 'followup' && <CalendarClock className="h-4 w-4 text-purple-500 mt-1" />}
                             {n.type === 'debt' && <Hourglass className="h-4 w-4 text-red-500 mt-1" />}
                             {n.type === 'partial' && <Coins className="h-4 w-4 text-blue-500 mt-1" />}
+                            {n.type === 'news' && <Newspaper className="h-4 w-4 text-emerald-500 mt-1" />}
                             <div className="space-y-1 overflow-hidden">
                             <p className="text-sm font-bold leading-none truncate">{n.title}</p>
                             <p className="text-[10px] text-muted-foreground">{n.date}</p>

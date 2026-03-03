@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -213,6 +214,11 @@ export default function ManagementPage() {
     toast({ title: "Iniciando download...", description: name });
   };
 
+  const openNewsReader = (item: any) => {
+    setSelectedItem(item);
+    setIsReadingNewsModalOpen(true);
+  };
+
   return (
     <AppLayout>
       <PageHeader title="Gestão & Notícias" />
@@ -245,7 +251,7 @@ export default function ManagementPage() {
                     </div>
                 ) : (
                     news.map((item) => (
-                        <Card key={item.id} className="group overflow-hidden border-2 hover:border-primary/40 transition-all flex flex-col shadow-sm relative">
+                        <Card key={item.id} className="group overflow-hidden border-2 hover:border-primary/40 transition-all flex flex-col shadow-sm relative cursor-pointer" onClick={() => openNewsReader(item)}>
                             <div className="h-48 overflow-hidden relative bg-muted flex items-center justify-center">
                                 {item.coverUrl ? (
                                     <img src={item.coverUrl} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" alt={item.title} />
@@ -270,7 +276,7 @@ export default function ManagementPage() {
                                     <Button 
                                         variant="destructive" 
                                         size="icon" 
-                                        className="absolute top-3 left-3 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                                        className="absolute top-3 left-3 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-10"
                                         onClick={(e) => { e.stopPropagation(); handleDelete('managementNews', item.id); }}
                                         title="Excluir Notícia"
                                     >
@@ -285,13 +291,13 @@ export default function ManagementPage() {
                                 <CardTitle className="text-base font-black uppercase leading-tight line-clamp-2">{item.title}</CardTitle>
                                 <CardDescription className="text-xs line-clamp-3 mt-2 font-medium leading-relaxed">{item.subtitle}</CardDescription>
                             </CardHeader>
-                            <CardContent className="p-5 pt-0 flex gap-2">
+                            <CardContent className="p-5 pt-0 flex gap-2" onClick={(e) => e.stopPropagation()}>
                                 {item.ownerId === user?.uid && (
                                     <Button variant="outline" size="sm" className="rounded-full font-bold text-[10px] uppercase h-9 w-10 px-0 shrink-0" onClick={() => { setSelectedItem(item); setIsNewsModalOpen(true); }}>
                                         <Edit className="h-3.5 w-3.5" />
                                     </Button>
                                 )}
-                                <Button variant="secondary" size="sm" className="rounded-full text-[10px] font-bold uppercase flex-1 h-9" onClick={() => { setSelectedItem(item); setIsReadingNewsModalOpen(true); }}>Ler Conteúdo</Button>
+                                <Button variant="secondary" size="sm" className="rounded-full text-[10px] font-bold uppercase flex-1 h-9" onClick={() => openNewsReader(item)}>Ler Conteúdo</Button>
                             </CardContent>
                         </Card>
                     ))
