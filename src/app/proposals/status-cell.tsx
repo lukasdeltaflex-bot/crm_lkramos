@@ -11,8 +11,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { cn, cleanFirestoreData } from '@/lib/utils';
 import { proposalStatuses, defaultRejectionReasons } from '@/lib/config-data';
-import type { ProposalStatus, ProposalHistoryEntry } from '@/lib/types';
-import { useFirestore, auth } from '@/firebase';
+import type { ProposalStatus, ProposalHistoryEntry, UserSettings } from '@/lib/types';
+import { useFirestore, auth, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -38,6 +38,7 @@ interface StatusCellProps {
 }
 
 export function StatusCell({ proposalId, currentStatus, product, onStatusChange }: StatusCellProps) {
+  const { user } = useUser();
   const firestore = useFirestore();
   const { statusColors, containerStyle } = useTheme();
   
@@ -46,6 +47,15 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
   const [quickNote, setQuickNote] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // 🛡️ SINCRONIZAÇÃO DE CONFIGURAÇÕES: Busca os motivos de reprova editados pelo usuário
+  const settingsDocRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'userSettings', user.uid);
+  }, [firestore, user]);
+
+  const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
+  const finalRejectionReasons = userSettings?.rejectionReasons || defaultRejectionReasons;
 
   const handleUpdateInitiate = (newStatus: ProposalStatus) => {
     if (newStatus === currentStatus) return;
@@ -66,8 +76,8 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
 
     setIsUpdating(true);
     const now = new Date().toISOString();
-    const user = auth?.currentUser;
-    const userName = user?.displayName || user?.email || 'Sistema';
+    const currentUser = auth?.currentUser;
+    const userName = currentUser?.displayName || currentUser?.email || 'Sistema';
 
     const dataToUpdate: any = { 
       status: pendingStatus,
@@ -186,7 +196,7 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
                                 <SelectValue placeholder="Selecione por que foi reprovado" />
                             </SelectTrigger>
                             <SelectContent>
-                                {defaultRejectionReasons.map(r => (
+                                {finalRejectionReasons.map(r => (
                                     <SelectItem key={r} value={r} className="text-xs font-medium">{r}</SelectItem>
                                 ))}
                             </SelectContent>
