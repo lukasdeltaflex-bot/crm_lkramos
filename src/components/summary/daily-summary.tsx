@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Bot, Send, X, Loader2, CalendarClock, Cake, Hourglass, BadgePercent, Zap, Info, ChevronRight, MessageSquareText, Wallet, Receipt } from 'lucide-react';
 import type { Customer, Proposal, UserProfile, FollowUp, UserSettings, Expense } from '@/lib/types';
-import { differenceInDays, format, differenceInMonths, startOfDay, isBefore, parseISO } from 'date-fns';
+import { differenceInDays, format, differenceInMonths, startOfDay, isBefore, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { calculateBusinessDays, getAge, cn, getWhatsAppUrl, formatCurrency, parseDateSafe } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -126,11 +126,10 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
     const todayStr = format(now, 'MM-dd');
     const customerMap = new Map(customers.map(c => [c.id, c]));
 
-    // 🛡️ UNIFICAÇÃO DE IDs: Sincronizado com NotificationBell
     const birthdayAlerts = customers
         .filter(c => c.status !== 'inactive' && getAge(c.birthDate) >= 74 && getAge(c.birthDate) < 75)
         .map(c => ({ 
-            id: `age-${c.id}`, // Unificado
+            id: `age-${c.id}`,
             customerId: c.id,
             customerName: c.name, 
             age: 75,
@@ -149,7 +148,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
             });
         })
         .map(c => ({
-            id: `radar-${c.id}`, // Unificado
+            id: `radar-${c.id}`,
             customerName: c.name,
             customerId: c.id,
             link: `/customers/${c.id}`
@@ -163,7 +162,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
       })
       .filter(p => p.digitDate && differenceInDays(now, p.digitDate) > 20)
       .map(p => ({
-        id: `fup-prop-${p.id}`, // Especial para propostas em andamento longa
+        id: `fup-prop-${p.id}`,
         customerName: customerMap.get(p.customerId)?.name || 'Cliente Desconhecido',
         proposalNumber: p.proposalNumber,
         daysOpen: differenceInDays(now, p.digitDate!),
@@ -182,7 +181,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
       })
       .filter(p => p.paidDate && differenceInDays(now, p.paidDate) > 7)
       .map(p => ({
-        id: `comm-${p.id}`, // Unificado
+        id: `comm-${p.id}`,
         customerName: customerMap.get(p.customerId)?.name || 'Cliente Desconhecido',
         proposalNumber: p.proposalNumber,
         daysPending: differenceInDays(now, p.paidDate!),
@@ -197,7 +196,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
             calculateBusinessDays(p.dateDigitized) >= 5
         )
         .map(p => ({
-            id: `debt-${p.id}`, // Unificado
+            id: `debt-${p.id}`,
             customerName: customerMap.get(p.customerId)?.name || 'Cliente Desconhecido',
             proposalNumber: p.proposalNumber,
             daysWaiting: calculateBusinessDays(p.dateDigitized),
@@ -215,7 +214,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
         })
         .filter(p => p.lastPayDate && differenceInDays(now, p.lastPayDate) > 15)
         .map(p => ({
-            id: `part-${p.id}`, // Unificado
+            id: `part-${p.id}`,
             customerName: customerMap.get(p.customerId)?.name || 'Cliente Desconhecido',
             proposalNumber: p.proposalNumber,
             amountPaid: p.amountPaid,
@@ -227,7 +226,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
     const manualFollowUps = (followUps || [])
         .filter(f => f.status === 'pending' && f.dueDate <= todayIso)
         .map(f => ({
-            id: `fup-${f.id}`, // Unificado
+            id: `fup-${f.id}`,
             contactName: f.contactName,
             description: f.description,
             isToday: f.dueDate === todayIso,
@@ -240,7 +239,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
             const dueDate = parseDateSafe(e.date) || new Date();
             const isLate = isBefore(dueDate, startOfDay(now));
             return {
-                id: `exp-${e.id}`, // Unificado
+                id: `exp-${e.id}`,
                 title: e.description,
                 amount: e.amount,
                 date: format(dueDate, 'dd/MM/yyyy'),
@@ -527,7 +526,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
             <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                     <MessageSquareText className="h-5 w-5 text-pink-500" />
-                    Parabéns: {selectedBdayCustomer?.name}
+                    Mensagem IA: {selectedBdayCustomer?.name}
                 </DialogTitle>
             </DialogHeader>
             <div className="py-4">
