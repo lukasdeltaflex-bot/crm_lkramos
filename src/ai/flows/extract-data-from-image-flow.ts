@@ -23,7 +23,8 @@ const ExtractFromImageOutputSchema = z.object({
     benefits: z.array(BenefitFromImageSchema).optional().describe('Lista de benefícios, salários e cartões identificados no extrato ou documento.'),
     city: z.string().optional().describe('Cidade do endereço.'),
     state: z.string().optional().describe('Estado (UF) do endereço.'),
-    phone: z.string().optional().describe('Telefone de contato encontrado.'),
+    phone: z.string().optional().describe('Telefone principal de contato encontrado.'),
+    phone2: z.string().optional().describe('Segundo telefone de contato encontrado.'),
 }).describe('Dados extraídos da imagem ou PDF do documento.');
 
 export type ExtractFromImageOutput = z.infer<typeof ExtractFromImageOutputSchema>;
@@ -59,13 +60,25 @@ const extractDataFromImageFlow = ai.defineFlow(
             2. EXTRATOS PDF: Localize todos os Números de Benefício (NB), seus valores de Salário/Mensalidade e bancos de cartões (RMC/RCC).
             3. Formate a data de nascimento como YYYY-MM-DD.
             4. Seja extremamente preciso nos caracteres para evitar erros de digitação.
-            5. Se identificar múltiplos benefícios, liste-os individualmente.` },
+            5. Se identificar múltiplos benefícios, liste-os individualmente.
+            6. TELEFONES: Se encontrar mais de um número de telefone, separe-os nos campos phone e phone2. NÃO concatene dois números no mesmo campo. Se encontrar apenas um, coloque em phone.` },
             { media: { url: input.photoDataUri, contentType: contentType } }
           ],
           output: { schema: ExtractFromImageOutputSchema }
         });
 
-        return output || {};
+        const result = output || {};
+
+        // 🛡️ BLINDAGEM CONTRA TELEFONES CONCATENADOS
+        if (result.phone && !result.phone2) {
+            const phoneMatches = result.phone.match(/\(?\d{2}\)?\s?\d{4,5}-?\d{4}/g);
+            if (phoneMatches && phoneMatches.length > 1) {
+                result.phone = phoneMatches[0];
+                result.phone2 = phoneMatches[1];
+            }
+        }
+
+        return result;
     } catch (error) {
         console.error("AI Generation Error:", error);
         throw new Error("A Inteligência Artificial não conseguiu processar este documento. Verifique se o arquivo não está protegido por senha ou muito pesado.");

@@ -52,7 +52,8 @@ const prompt = ai.definePrompt({
 2.  **Salário**: Identifique o valor bruto ou líquido do benefício se disponível.
 3.  **Cartões RMC/RCC**: Se identificar bancos vinculados a reservas de cartão (RMC ou RCC/Benefício), inclua no objeto do benefício correspondente.
 4.  **Data de Nascimento**: Converta para YYYY-MM-DD.
-5.  **OMISSÃO**: Se um campo não existir, NÃO o invente.
+5.  **Telefones**: Se houver mais de um número no texto, separe-os obrigatoriamente nos campos phone e phone2. Não os concatene.
+6.  **OMISSÃO**: Se um campo não existir, NÃO o invente.
 
 ### EXEMPLO DE EXTRATO:
 *Entrada:*
@@ -83,6 +84,17 @@ const extractCustomerDataFlow = ai.defineFlow(
         return {};
     }
     const { output } = await prompt(input);
-    return output || {};
+    const result = output || {};
+
+    // 🛡️ BLINDAGEM CONTRA TELEFONES CONCATENADOS
+    if (result.phone && !result.phone2) {
+        const phoneMatches = result.phone.match(/\(?\d{2}\)?\s?\d{4,5}-?\d{4}/g);
+        if (phoneMatches && phoneMatches.length > 1) {
+            result.phone = phoneMatches[0];
+            result.phone2 = phoneMatches[1];
+        }
+    }
+
+    return result;
   }
 );
