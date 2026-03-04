@@ -3,7 +3,6 @@
 import React from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { 
     Palette, 
@@ -42,8 +41,15 @@ import {
     Clock,
     Trash2,
     TrendingUp,
-    Receipt
+    Receipt,
+    ListChecks,
+    History,
+    Timer,
+    Send,
+    FileCheck,
+    PenTool
 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 export default function ManualPage() {
@@ -56,7 +62,7 @@ export default function ManualPage() {
             <Accordion type="single" collapsible className="w-full space-y-4">
                 
                 {/* 1. INTELIGÊNCIA ARTIFICIAL E VENDAS */}
-                <AccordionItem value="ai-features" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-primary/10">
+                <AccordionItem value="ai-features" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-orange-500/10">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-orange-100 text-orange-600"><Zap className="h-5 w-5" /></div>
@@ -86,13 +92,73 @@ export default function ManualPage() {
                     </AccordionContent>
                 </AccordionItem>
 
-                {/* 2. REGRAS DE PORTABILIDADE E AUDITORIA */}
+                {/* 2. OPERAÇÃO DE ESTEIRA & CHECKLIST */}
+                <AccordionItem value="ops-pipeline" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-blue-500/20">
+                    <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-blue-100 text-blue-600"><ListChecks className="h-5 w-5" /></div>
+                            <div className="text-left">
+                                <p className="font-bold text-sm">2. Esteira de Produção & Checklist</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Monitoramento Visual por Etapas</p>
+                            </div>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
+                        <p className="text-muted-foreground mb-4">Cada proposta possui 4 etapas fundamentais representadas por ícones na tabela principal:</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-xl border">
+                                <Send className="h-4 w-4 text-blue-500" />
+                                <div className="text-[11px]"><span className="font-bold uppercase">Formalização:</span> Link enviado ao cliente.</div>
+                            </div>
+                            <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-xl border">
+                                <FileCheck className="h-4 w-4 text-orange-500" />
+                                <div className="text-[11px]"><span className="font-bold uppercase">Documentação:</span> Arquivos conferidos.</div>
+                            </div>
+                            <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-xl border">
+                                <PenTool className="h-4 w-4 text-purple-500" />
+                                <div className="text-[11px]"><span className="font-bold uppercase">Checklist:</span> Assinatura e trâmite do banco.</div>
+                            </div>
+                            <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-xl border">
+                                <ShieldCheck className="h-4 w-4 text-green-500" />
+                                <div className="text-[11px]"><span className="font-bold uppercase">Averbação:</span> Confirmação no órgão.</div>
+                            </div>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-4 italic">Dica: Você pode marcar essas etapas diretamente na tabela clicando nos ícones ou dentro do formulário da proposta.</p>
+                    </AccordionContent>
+                </AccordionItem>
+
+                {/* 3. HISTÓRICO INTELIGENTE (TÓPICOS) */}
+                <AccordionItem value="history-topics" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-purple-500/20">
+                    <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-purple-100 text-purple-600"><History className="h-5 w-5" /></div>
+                            <div className="text-left">
+                                <p className="font-bold text-sm">3. Linha do Tempo & Tópicos Rápidos</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Agilidade no Registro de Trâmites</p>
+                            </div>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
+                        <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-200">
+                            <h4 className="font-bold text-purple-700 flex items-center gap-2 mb-2"><Zap className="h-4 w-4" /> Registro com Um Clique</h4>
+                            <p className="text-xs text-muted-foreground mb-4">Dentro de cada proposta, você encontrará o painel de **Tópicos Rápidos**. Ao clicar em um botão (ex: "Aguardando Selfie"), o sistema registra automaticamente o trâmite com data, hora e o nome do operador.</p>
+                            <div className="bg-white p-3 rounded-lg border flex gap-2 overflow-x-auto">
+                                <Badge variant="outline" className="text-[9px] font-black uppercase">Link Enviado</Badge>
+                                <Badge variant="outline" className="text-[9px] font-black uppercase">Aguardando Selfie</Badge>
+                                <Badge variant="outline" className="text-[9px] font-black uppercase">Saldo via CIP</Badge>
+                            </div>
+                            <p className="text-[11px] text-muted-foreground mt-4">Você pode personalizar esses botões em **Configurações > Parâmetros > Tópicos de Trâmite**.</p>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+
+                {/* 4. REGRAS DE PORTABILIDADE E AUDITORIA */}
                 <AccordionItem value="portability-rules" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-red-500/20">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-red-100 text-red-600"><SearchX className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">2. Ferramenta de Auditoria de Portabilidade</p>
+                                <p className="font-bold text-sm">4. Auditoria de Portabilidade</p>
                                 <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Blindagem contra Retrabalho</p>
                             </div>
                         </div>
@@ -110,19 +176,41 @@ export default function ManualPage() {
                                 <h4 className="font-bold text-orange-700 flex items-center gap-2 mb-2">
                                     <AlertTriangle className="h-4 w-4" /> Alerta de Reprova Anterior
                                 </h4>
-                                <p className="text-xs text-muted-foreground">O sistema possui um **radar histórico**. Ao digitar o número do contrato, ele verifica instantaneamente se esse contrato já foi reprovado antes. Se sim, um alerta vermelho aparecerá no topo do formulário exibindo o motivo da reprova anterior.</p>
+                                <p className="text-xs text-muted-foreground">Ao digitar o número do contrato, o sistema verifica instantaneamente se esse contrato já foi reprovado antes em sua base. Um alerta vermelho aparecerá exibindo o motivo da reprova anterior para evitar nova digitação perdida.</p>
                             </div>
                         </div>
                     </AccordionContent>
                 </AccordionItem>
 
-                {/* 3. GESTÃO DE PARCEIROS & SEGURANÇA */}
+                {/* 5. BUSCA NUCLEAR (CTRL + K) */}
+                <AccordionItem value="nuclear-search" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-emerald-500/20">
+                    <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600"><Search className="h-5 w-5" /></div>
+                            <div className="text-left">
+                                <p className="font-bold text-sm">5. Busca Inteligente Global</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Pesquisa Ultra-Rápida por ID</p>
+                            </div>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
+                        <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+                            <p className="text-xs text-muted-foreground">
+                                Utilize o atalho <kbd className="bg-white border px-1 rounded mx-1">CTRL + K</kbd> em qualquer tela. 
+                                <br/><br/>
+                                Agora o sistema suporta a **Busca por ID Puro**. Digite apenas o número (ex: "45") para encontrar o cliente ou o número da proposta. Além disso, você pode buscar por Nome, CPF (com ou sem pontos) e até por etiquetas como "ELITE" ou "ATIVO".
+                            </p>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+
+                {/* 6. GESTÃO DE PARCEIROS & SEGURANÇA */}
                 <AccordionItem value="management-secure" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-blue-500/20">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-blue-100 text-blue-600"><Lock className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">3. Gestão de Parceiros & Senhas AES-256</p>
+                                <p className="font-bold text-sm">6. Gestão de Parceiros & Senhas AES-256</p>
                                 <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Criptografia Militar e Colaboração</p>
                             </div>
                         </div>
@@ -137,75 +225,6 @@ export default function ManualPage() {
                                 <h4 className="font-bold text-green-700 flex items-center gap-2 mb-2"><NotebookTabs className="h-4 w-4" /> Mural Colaborativo</h4>
                                 <p className="text-xs text-muted-foreground">A aba de **Notícias** e **Links Úteis** é pública para sua equipe. Tudo o que você publicar aparecerá para seus sócios instantaneamente.</p>
                             </div>
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
-
-                {/* 4. TEMPORIZADOR DE NOTÍCIAS (NOVO) */}
-                <AccordionItem value="news-timer" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-orange-500/20">
-                    <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-orange-100 text-orange-600"><Clock className="h-5 w-5" /></div>
-                            <div className="text-left">
-                                <p className="font-bold text-sm">4. Temporizador Inteligente de Avisos</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Publicações com data de validade</p>
-                            </div>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
-                        <div className="p-4 rounded-xl bg-orange-500/5 border border-orange-200">
-                            <h4 className="font-bold text-orange-700 flex items-center gap-2 mb-2"><Clock className="h-4 w-4" /> Expiração Automática</h4>
-                            <p className="text-xs text-muted-foreground">
-                                Agora você pode definir uma **Data de Remoção** ao criar uma notícia. 
-                                <br/><br/>
-                                • **Aviso Temporário**: Defina a data e a notícia sumirá do mural sozinha após o prazo (ex: comunicado de feriado).
-                                <br/>
-                                • **Aviso Permanente**: Deixe o campo vazio e a notícia ficará no mural até que você a exclua manualmente.
-                            </p>
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
-
-                {/* 5. DOCUMENTAÇÃO & ESPAÇO */}
-                <AccordionItem value="docs-storage" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-purple-500/20">
-                    <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-purple-100 text-purple-600"><UploadCloud className="h-5 w-5" /></div>
-                            <div className="text-left">
-                                <p className="font-bold text-sm">5. Central Multimídia & Gestão de Espaço</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Controle total de arquivos e armazenamento</p>
-                            </div>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
-                        <ul className="space-y-3">
-                            <li className="flex gap-3">
-                                <div className="h-5 w-5 rounded-full bg-purple-500 text-white flex items-center justify-center text-[10px] font-black shrink-0">1</div>
-                                <p><strong>Upload PNG/JPG/PDF</strong>: Suporte total para fotos de WhatsApp e extratos digitais com visualização rápida no sistema.</p>
-                            </li>
-                            <li className="flex gap-3">
-                                <div className="h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center shrink-0"><Trash2 className="h-3 w-3" /></div>
-                                <p><strong>Exclusão Física</strong>: Ao remover um anexo, o sistema exclui o arquivo **fisicamente do servidor**, liberando espaço em tempo real.</p>
-                            </li>
-                        </ul>
-                    </AccordionContent>
-                </AccordionItem>
-
-                {/* 6. FINANÇAS & ALERTAS */}
-                <AccordionItem value="finance-alerts" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-emerald-500/20">
-                    <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600"><Wallet className="h-5 w-5" /></div>
-                            <div className="text-left">
-                                <p className="font-bold text-sm">6. Fluxo de Caixa & Alertas de Despesas</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Saúde financeira operacional</p>
-                            </div>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
-                        <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
-                            <h4 className="font-bold text-emerald-700 flex items-center gap-2 mb-2"><Receipt className="h-4 w-4" /> Alertas no Dashboard</h4>
-                            <p className="text-xs text-muted-foreground">O painel principal monitora a aba **Financeiro/Despesas**. Contas pendentes ou atrasadas aparecerão no seu resumo matinal como alertas críticos na seção de Inteligência Diária.</p>
                         </div>
                     </AccordionContent>
                 </AccordionItem>
