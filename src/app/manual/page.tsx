@@ -143,7 +143,7 @@ export default function ManualPage() {
                             </div>
                             <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-xl border">
                                 <PenTool className="h-4 w-4 text-purple-500" />
-                                <div className="text-[11px]"><span className="font-bold uppercase">Checklist:</span> Assinatura e trâmite do banco.</div>
+                                <div className="text-[11px]"><span className="font-bold uppercase">Checklist:</span> Asssignature e trâmite do banco.</div>
                             </div>
                             <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-xl border">
                                 <ShieldCheck className="h-4 w-4 text-green-500" />
@@ -152,7 +152,7 @@ export default function ManualPage() {
                         </div>
                         <div className="mt-6 p-4 rounded-xl bg-blue-50/5 border border-blue-200">
                             <h4 className="font-bold text-blue-700 flex items-center gap-2 mb-2"><Zap className="h-4 w-4" /> Trâmites Instantâneos</h4>
-                            <p className="text-xs text-muted-foreground">Agora você pode usar os **Tópicos Rápidos (Sub-status)** desde o cadastro da proposta. Clicar em um tópico reserva o trâmite para ser gravado assim que a proposta for salva.</p>
+                            <p className="text-xs text-muted-foreground">Agora você pode usar os **Tópicos Rápidos (Sub-status)** desde o cadastro da proposta. Clicar em um tópico reserva o trâmite para ser gravado assim que a proposta for salva. A validação visual de erros (borda vermelha) garante a segurança sem poluir a interface com ícones pulsantes.</p>
                         </div>
                     </AccordionContent>
                 </AccordionItem>
