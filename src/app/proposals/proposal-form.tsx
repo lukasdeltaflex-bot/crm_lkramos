@@ -721,7 +721,7 @@ export function ProposalForm({
                                             {...field} 
                                             value={field.value ?? ''} 
                                             readOnly={isReadOnly || isSaving} 
-                                            className={cn("font-bold border-primary/20 bg-primary/[0.02]", historicalRejection && "border-red-500 bg-red-50 ring-2 ring-red-200")}
+                                            className="font-bold border-primary/20 bg-primary/[0.02]"
                                         />
                                     </div>
                                 </FormControl>
@@ -745,7 +745,7 @@ export function ProposalForm({
                                 {...field} 
                                 value={field.value ?? ''} 
                                 readOnly={isReadOnly || isSaving} 
-                                className={cn("font-bold", isDuplicateProposal && "border-red-500 bg-red-50")}
+                                className="font-bold"
                             />
                         </div>
                       </FormControl>
