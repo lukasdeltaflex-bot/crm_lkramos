@@ -25,7 +25,8 @@ import {
   commissionStatuses as initialCommissionStatuses,
   expenseCategories as initialExpenseCategories,
   defaultCustomerTags as initialCustomerTags,
-  defaultRejectionReasons as initialRejectionReasons
+  defaultRejectionReasons as initialRejectionReasons,
+  defaultHistoryTopics as initialHistoryTopics
 } from '@/lib/config-data';
 import { 
     ListChecks, 
@@ -55,7 +56,8 @@ import {
     RotateCcw,
     CloudSun,
     Tags,
-    SearchX
+    SearchX,
+    Timer
 } from 'lucide-react';
 import { EditableList } from '@/components/settings/editable-list';
 import { BankEditableList } from '@/components/settings/bank-editable-list';
@@ -734,6 +736,20 @@ export default function SettingsPage() {
                         <EditableList title="Órgãos Aprovadores" items={userSettings?.approvingBodies || initialApprovingBodies} setItems={(n) => saveSettingsToFirebase({ approvingBodies: n as string[] })} />
                         <EditableList title="Categorias de Despesas" items={userSettings?.expenseCategories || initialExpenseCategories} setItems={(n) => saveSettingsToFirebase({ expenseCategories: n as string[] })} />
                         
+                        <AccordionItem value="tramites" className="border-b">
+                            <AccordionTrigger className="flex items-center gap-2">
+                                <Timer className="h-4 w-4 text-purple-500" />
+                                Tópicos de Trâmite (Linha do Tempo)
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                <EditableList 
+                                    title="Tópicos Rápidos" 
+                                    items={userSettings?.historyTopics || initialHistoryTopics as any} 
+                                    setItems={(n) => saveSettingsToFirebase({ historyTopics: n as string[] })} 
+                                />
+                            </AccordionContent>
+                        </AccordionItem>
+
                         <AccordionItem value="reprovas" className="border-b">
                             <AccordionTrigger className="flex items-center gap-2">
                                 <SearchX className="h-4 w-4 text-red-500" />

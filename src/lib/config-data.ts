@@ -9,6 +9,19 @@ export const expenseCategories: readonly string[] = ['Aluguel', 'Internet', 'Tel
 export const defaultCustomerTags: readonly string[] = ['💎 VIP', '✅ Margem Livre', '⚠️ Restrição', '📞 Receptivo', '🚀 Prospecção', '👴 Aposentado', '🏦 Servidor', '💼 CLT'];
 export const defaultRejectionReasons: readonly string[] = ['Retenção do cliente', 'Contrato já liquidado', 'Contrato não encontrado', 'Saldo devedor divergente', 'Erro de averbação', 'Desistência do cliente', 'Margem excedida', 'Vínculo empregatício incompatível'];
 
+export const defaultHistoryTopics: readonly string[] = [
+  '📲 Link de formalização enviado ao cliente',
+  '✍️ Aguardando assinatura digital',
+  '📸 Pendente de captura de selfie/documentos',
+  '🏦 Proposta enviada ao sistema do banco',
+  '⏳ Aguardando retorno da CIP (Saldo)',
+  '📞 Tentativa de contato sem sucesso',
+  '📑 Documentação em análise pela promotora',
+  '✅ Averbação solicitada ao órgão',
+  '🔍 Em análise de fraude/prevenção',
+  '🚀 Cliente aceitou a oferta de Refin'
+];
+
 export const operationalSteps = [
   { id: 'formalization', label: 'Formalização', icon: 'send' },
   { id: 'documentation', label: 'Documentação', icon: 'file' },

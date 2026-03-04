@@ -49,7 +49,8 @@ import {
     FileCheck,
     PenTool,
     ShieldCheck,
-    SearchX
+    SearchX,
+    Zap
 } from 'lucide-react';
 import { format, parse, parseISO, isValid } from 'date-fns';
 import { cn, formatCurrency, cleanBankName, cleanFirestoreData } from '@/lib/utils';
@@ -200,6 +201,7 @@ export function ProposalForm({
   const productTypes = userSettings?.productTypes || configData.productTypes;
   const proposalStatuses = userSettings?.proposalStatuses || configData.proposalStatuses;
   const rejectionReasons = userSettings?.rejectionReasons || configData.defaultRejectionReasons;
+  const historyTopics = userSettings?.historyTopics || configData.defaultHistoryTopics;
   const approvingBodies = userSettings?.approvingBodies || configData.approvingBodies;
   const banks = userSettings?.banks || configData.banks;
   const showLogos = userSettings?.showBankLogos ?? true;
@@ -452,21 +454,23 @@ export function ProposalForm({
     setValue('attachments', attachments, { shouldValidate: true });
   };
 
-  const handleAddHistory = async () => {
-    if (!newHistoryEntry.trim() || !proposal?.id || !firestore) return;
+  const handleAddHistory = async (customMessage?: string) => {
+    const messageToAdd = customMessage || newHistoryEntry.trim();
+    if (!messageToAdd || !proposal?.id || !firestore) return;
+    
     setIsAddingHistory(true);
     const now = new Date().toISOString();
     const entry: ProposalHistoryEntry = {
         id: crypto.randomUUID(),
         date: now,
-        message: newHistoryEntry.trim(),
+        message: messageToAdd,
         userName: user?.displayName || user?.email || 'Agente'
     };
     const docRef = doc(firestore, 'loanProposals', proposal.id);
     const updateData = { history: arrayUnion(entry), statusUpdatedAt: now };
     updateDoc(docRef, updateData)
         .then(() => { 
-            setNewHistoryEntry(''); 
+            if (!customMessage) setNewHistoryEntry(''); 
             toast({ title: "Histórico Atualizado" }); 
         })
         .finally(() => setIsAddingHistory(false));
@@ -955,24 +959,47 @@ export function ProposalForm({
                     <History className="h-4 w-4" /> Linha do Tempo
                 </h3>
                 {proposal?.id && (
-                    <div className="space-y-4">
+                    <div className="space-y-6">
+                        <div className="p-4 rounded-2xl border-2 border-dashed bg-muted/5 space-y-4">
+                            <div className="flex items-center gap-2">
+                                <Zap className="h-3.5 w-3.5 text-primary" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-primary/60">Tópicos Rápidos (Sub-status)</span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {historyTopics.map((topic) => (
+                                    <Button
+                                        key={topic}
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 rounded-full text-[10px] font-bold px-4 border-primary/20 hover:bg-primary/5 hover:border-primary transition-all"
+                                        onClick={() => handleAddHistory(topic)}
+                                        disabled={isAddingHistory || isReadOnly}
+                                    >
+                                        {topic}
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+
                         <div className="flex gap-2">
                             <Input 
-                                placeholder="Nova atualização de trâmite..." 
+                                placeholder="Ou digite uma atualização personalizada..." 
                                 value={newHistoryEntry} 
                                 onChange={e => setNewHistoryEntry(e.target.value)} 
-                                disabled={isAddingHistory}
+                                disabled={isAddingHistory || isReadOnly}
                                 onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddHistory())}
                             />
-                            <Button type="button" size="sm" onClick={handleAddHistory} disabled={isAddingHistory || !newHistoryEntry.trim()}>
+                            <Button type="button" size="sm" onClick={() => handleAddHistory()} disabled={isAddingHistory || !newHistoryEntry.trim() || isReadOnly}>
                                 {isAddingHistory ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                             </Button>
                         </div>
-                        <div className="space-y-3 max-h-[250px] overflow-y-auto">
+
+                        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
                             {proposal.history && Array.isArray(proposal.history) && proposal.history.length > 0 ? (
                                 [...proposal.history].sort((a,b) => b.date.localeCompare(a.date)).map(entry => (
                                     <div key={entry.id} className={cn(
-                                        "p-3 rounded-lg border text-xs transition-colors hover:bg-muted/50",
+                                        "p-3 rounded-xl border text-xs transition-colors hover:bg-muted/50",
                                         entry.message.startsWith("AUTOAUDIT") ? "bg-blue-50/30 border-blue-100" : "bg-muted/30 border-border"
                                     )}>
                                         <div className="flex justify-between font-black uppercase text-primary/70 mb-1">

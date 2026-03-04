@@ -133,6 +133,7 @@ export type UserSettings = {
   tagColors?: Record<string, string>; // Cores das etiquetas
   expenseCategories: string[];
   rejectionReasons?: string[]; // Motivos de reprova de portabilidade
+  historyTopics?: string[]; // Tópicos rápidos para a linha do tempo
   bankDomains?: Record<string, string>;
   promoterDomains?: Record<string, string>;
   showBankLogos?: boolean;
