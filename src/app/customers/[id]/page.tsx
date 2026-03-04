@@ -149,7 +149,7 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                                 </div>
                                 
                                 <div className="flex items-center gap-1">
-                                    {Array.from({ length: 5 }).map((_, i) => (
+                                    {hasMounted && Array.from({ length: 5 }).map((_, i) => (
                                         <Star 
                                             key={i} 
                                             className={cn(
@@ -239,9 +239,12 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                                                 <div className="flex items-center justify-center h-9 w-9 rounded-full bg-green-500/10 text-green-600 font-black text-[10px] uppercase shadow-sm">R$</div>
                                                 <div className="flex flex-col overflow-hidden">
                                                     <span className="text-[8px] font-black text-green-600/60 uppercase tracking-widest leading-none mb-1">Valor Mensal</span>
-                                                    <p className="text-sm font-black text-green-600 truncate tracking-tight">
-                                                        {benefit.salary ? formatCurrency(Number(benefit.salary)) : "Não Inf."}
-                                                    </p>
+                                                    <div className="flex items-center gap-1">
+                                                        <p className="text-sm font-black text-green-600 truncate tracking-tight">
+                                                            {benefit.salary ? formatCurrency(Number(benefit.salary)) : "Não Inf."}
+                                                        </p>
+                                                        {benefit.salary && <CopyButton text={formatCurrency(Number(benefit.salary))} label="Salário" />}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>

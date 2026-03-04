@@ -50,7 +50,8 @@ import {
     PenTool,
     FilterX,
     CalendarClock,
-    Bell
+    Bell,
+    Copy
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -226,6 +227,29 @@ export default function ManualPage() {
                                 <h4 className="font-bold text-green-700 flex items-center gap-2 mb-2"><NotebookTabs className="h-4 w-4" /> Mural Colaborativo</h4>
                                 <p className="text-xs text-muted-foreground">A aba de **Notícias** e **Links Úteis** é pública para sua equipe. Tudo o que você publicar aparecerá para seus sócios instantaneamente.</p>
                             </div>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+
+                {/* 7. PRODUTIVIDADE & ATALHOS */}
+                <AccordionItem value="ux-productivity" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-emerald-500/20">
+                    <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600"><Copy className="h-5 w-5" /></div>
+                            <div className="text-left">
+                                <p className="font-bold text-sm">7. Produtividade & Atalhos Operacionais</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Cópia Rápida e Facilidades</p>
+                            </div>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
+                        <div className="p-4 rounded-xl bg-emerald-50/5 border border-emerald-500/20">
+                            <h4 className="font-bold text-emerald-700 flex items-center gap-2 mb-2">
+                                <Copy className="h-4 w-4" /> Botões de Cópia Rápida
+                            </h4>
+                            <p className="text-xs text-muted-foreground">
+                                Para evitar erros de digitação ao preencher propostas nos portais dos bancos, a ficha do cliente possui botões de cópia em campos estratégicos: **CPF**, **Número do Benefício (NB)**, **CEP** e **Salário**. Basta clicar no ícone ao lado do valor para copiá-lo instantaneamente para sua área de transferência.
+                            </p>
                         </div>
                     </AccordionContent>
                 </AccordionItem>
