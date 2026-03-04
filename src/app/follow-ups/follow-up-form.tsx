@@ -18,7 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
 import type { FollowUp, Customer } from '@/lib/types';
 import { useEffect, useState } from 'react';
-import { Loader2, Sparkles, Clock } from 'lucide-react';
+import { Loader2, Sparkles, Clock, Calendar as CalendarIcon } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -190,7 +190,9 @@ export function FollowUpForm({ customers, initialData, onSubmit, isSaving = fals
                 name="dueDate"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Data do Retorno</FormLabel>
+                    <FormLabel className="flex items-center gap-2 h-5">
+                        <CalendarIcon className="h-3.5 w-3.5" /> Data do Retorno
+                    </FormLabel>
                     <FormControl>
                         <Input type="date" {...field} disabled={isSaving} />
                     </FormControl>
@@ -203,7 +205,7 @@ export function FollowUpForm({ customers, initialData, onSubmit, isSaving = fals
                 name="dueTime"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel className="flex items-center gap-2">
+                    <FormLabel className="flex items-center gap-2 h-5">
                         <Clock className="h-3.5 w-3.5" /> Horário (Opcional)
                     </FormLabel>
                     <FormControl>
