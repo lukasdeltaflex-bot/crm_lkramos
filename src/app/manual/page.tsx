@@ -184,24 +184,23 @@ export default function ManualPage() {
                             <div className="p-2 rounded-xl bg-red-100 text-red-600"><SearchX className="h-5 w-5" /></div>
                             <div className="text-left">
                                 <p className="font-bold text-sm">5. Auditoria de Portabilidade & Saneamento</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Blindagem contra Retrabalho e Dados Sujos</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Blindagem contra Retrabalho e Fluxo Operacional</p>
                             </div>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
                         <div className="space-y-4">
+                            <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
+                                <h4 className="font-bold text-blue-700 flex items-center gap-2 mb-2">
+                                    <Clock className="h-4 w-4" /> Fluxo de Datas Inteligente
+                                </h4>
+                                <p className="text-xs text-muted-foreground">O formulário de Portabilidade reorganiza as datas para o padrão lógico: **Digitação -> Retorno de Saldo -> Averbação**. Isso ajuda no acompanhamento visual do tempo de resposta dos bancos.</p>
+                            </div>
                             <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/20">
                                 <h4 className="font-bold text-red-700 flex items-center gap-2 mb-2">
                                     <Check className="h-4 w-4" /> Nº de Contrato Obrigatório
                                 </h4>
                                 <p className="text-xs text-muted-foreground">Ao selecionar o produto **Portabilidade**, o campo "Nº Contrato Portado (Origem)" torna-se **obrigatório**. O sistema não permite salvar a proposta sem essa identificação única.</p>
-                            </div>
-                            
-                            <div className="p-4 rounded-xl bg-green-500/5 border border-green-500/20">
-                                <h4 className="font-bold text-green-700 flex items-center gap-2 mb-2">
-                                    <ShieldCheck className="h-4 w-4" /> Saneamento Automático
-                                </h4>
-                                <p className="text-xs text-muted-foreground">Se você mudar o produto de uma proposta de "Portabilidade" para outro (ex: Margem), o sistema **limpa automaticamente** o número do contrato portado antigo para manter sua base 100% fiel e organizada.</p>
                             </div>
                         </div>
                     </AccordionContent>
