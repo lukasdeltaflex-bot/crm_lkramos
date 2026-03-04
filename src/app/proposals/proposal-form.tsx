@@ -916,22 +916,6 @@ export function ProposalForm({
                 )}
               </div>
 
-              {productValue === 'Portabilidade' && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField
-                        control={form.control}
-                        name="datePaidToClient"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Pagamento Cliente</FormLabel>
-                            <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(applyDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} /></FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                  </div>
-              )}
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}

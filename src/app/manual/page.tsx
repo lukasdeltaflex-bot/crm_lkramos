@@ -194,7 +194,7 @@ export default function ManualPage() {
                                 <h4 className="font-bold text-blue-700 flex items-center gap-2 mb-2">
                                     <Clock className="h-4 w-4" /> Fluxo de Datas Inteligente
                                 </h4>
-                                <p className="text-xs text-muted-foreground">O formulário de Portabilidade reorganiza as datas para o padrão lógico: **Digitação -> Retorno de Saldo -> Averbação**. Isso ajuda no acompanhamento visual do tempo de resposta dos bancos.</p>
+                                <p className="text-xs text-muted-foreground">O formulário de Portabilidade reorganiza as datas para o padrão lógico: **Digitação -> Retorno de Saldo -> Averbação**. Isso ajuda no acompanhamento visual do tempo de resposta dos bancos. Note que para Portabilidade pura, o campo de Pagamento ao Cliente é omitido.</p>
                             </div>
                             <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/20">
                                 <h4 className="font-bold text-red-700 flex items-center gap-2 mb-2">
