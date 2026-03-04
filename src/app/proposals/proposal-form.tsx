@@ -61,7 +61,7 @@ import { Separator } from '@/components/ui/separator';
 import { useEffect, useState, useMemo } from 'react';
 import { ProposalAttachmentUploader } from '@/components/proposals/proposal-attachment-uploader';
 import { useUser, useFirestore } from '@/firebase';
-import { doc, collection, updateDoc, arrayUnion } from 'firebase/firestore';
+import { doc, collection, updateDoc, arrayUnion, setDoc } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
@@ -129,7 +129,6 @@ const proposalSchema = z.object({
   observations: z.string().optional(),
   checklist: z.record(z.boolean()).optional(),
 }).superRefine((data, ctx) => {
-  // 🛡️ REGRA 2: Nº Contrato Obrigatório para Portabilidade
   if (data.product === 'Portabilidade' && (!data.originalContractNumber || data.originalContractNumber.trim() === '')) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -138,7 +137,6 @@ const proposalSchema = z.object({
     });
   }
 
-  // 🛡️ REGRA 1: Justificativa Obrigatória para Status Reprovado
   if (data.status === 'Reprovado' && (!data.rejectionReason || data.rejectionReason.trim() === '')) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -322,9 +320,7 @@ export function ProposalForm({
   }, [watchProposalNumber, allProposals, proposal?.id]);
 
   useEffect(() => {
-    // 🛡️ [LÓGICA]: Limpa número de benefício ao trocar o cliente para evitar dados cruzados
     setValue('selectedBenefitNumber', '');
-    
     if (selectedCustomer) {
         const benefits = selectedCustomer.benefits || [];
         if (benefits.length === 1) {
@@ -361,13 +357,32 @@ export function ProposalForm({
     }
   }, [commissionBase, commissionPercentage, grossAmount, netAmount, setValue, isReadOnly]);
 
+  const handleAddHistory = async (customMessage: string) => {
+    if (!customMessage || !currentProposalId || !firestore || !user) return;
+    
+    setIsAddingHistory(true);
+    const now = new Date().toISOString();
+    const entry: ProposalHistoryEntry = {
+        id: crypto.randomUUID(),
+        date: now,
+        message: customMessage,
+        userName: user.displayName || user.email || 'Agente'
+    };
+
+    try {
+        const docRef = doc(firestore, 'loanProposals', currentProposalId);
+        await setDoc(docRef, { history: arrayUnion(entry), statusUpdatedAt: now }, { merge: true });
+        toast({ title: "Sub-status Registrado!" });
+    } catch (e) {
+        toast({ variant: 'destructive', title: "Erro ao salvar trâmite" });
+    } finally {
+        setIsAddingHistory(false);
+    }
+  };
+
   function handleFormSubmit(data: ProposalFormValues) {
     if (isDuplicateProposal) {
-        toast({
-            variant: 'destructive',
-            title: '⚠️ BLOQUEIO DE SEGURANÇA',
-            description: 'Já existe uma proposta cadastrada com este número exato.'
-        });
+        toast({ variant: 'destructive', title: '⚠️ BLOQUEIO', description: 'Número de proposta já existente.' });
         return;
     }
 
@@ -380,8 +395,6 @@ export function ProposalForm({
     }
 
     const now = new Date().toISOString();
-    
-    // 🛡️ SANEAMENTO DE DADOS: Limpa campos específicos se não for Portabilidade
     const finalData: any = {
         ...data,
         rejectionReason: data.status === 'Reprovado' ? data.rejectionReason : "",
@@ -396,15 +409,6 @@ export function ProposalForm({
         finalData.originalContractNumber = "";
         finalData.bankOrigin = "";
         finalData.debtBalanceArrivalDate = null;
-    }
-
-    const isAverbado = !!finalData.dateApproved;
-    const isNotReprovado = finalData.status !== 'Reprovado';
-
-    if (isNotReprovado && isAverbado) {
-        if (!finalData.commissionStatus || finalData.commissionStatus === '') {
-            finalData.commissionStatus = 'Pendente';
-        }
     }
 
     const auditEntries: ProposalHistoryEntry[] = [];
@@ -427,23 +431,11 @@ export function ProposalForm({
         checkChange('status', 'Status');
         checkChange('bank', 'Banco');
         checkChange('grossAmount', 'Valor Bruto', formatCurrency);
-        checkChange('netAmount', 'Valor Líquido', formatCurrency);
-        checkChange('promoter', 'Promotora');
         if (finalData.status === 'Reprovado') {
-            auditEntries.push({
-                id: crypto.randomUUID(),
-                date: now,
-                message: `MOTIVO DA REPROVA: ${finalData.rejectionReason}`,
-                userName
-            });
+            auditEntries.push({ id: crypto.randomUUID(), date: now, message: `MOTIVO DA REPROVA: ${finalData.rejectionReason}`, userName });
         }
     } else {
-        auditEntries.push({
-            id: crypto.randomUUID(),
-            date: now,
-            message: `Proposta criada no sistema com status inicial: ${finalData.status}`,
-            userName
-        });
+        auditEntries.push({ id: crypto.randomUUID(), date: now, message: `Proposta criada com status: ${finalData.status}`, userName });
     }
 
     const existingHistory = Array.isArray(proposal?.history) ? proposal!.history : [];
@@ -458,28 +450,6 @@ export function ProposalForm({
 
   const handleAttachmentsChange = (attachments: Attachment[]) => {
     setValue('attachments', attachments, { shouldValidate: true });
-  };
-
-  const handleAddHistory = async (customMessage?: string) => {
-    const messageToAdd = customMessage || newHistoryEntry.trim();
-    if (!messageToAdd || !proposal?.id || !firestore) return;
-    
-    setIsAddingHistory(true);
-    const now = new Date().toISOString();
-    const entry: ProposalHistoryEntry = {
-        id: crypto.randomUUID(),
-        date: now,
-        message: messageToAdd,
-        userName: user?.displayName || user?.email || 'Agente'
-    };
-    const docRef = doc(firestore, 'loanProposals', proposal.id);
-    const updateData = { history: arrayUnion(entry), statusUpdatedAt: now };
-    updateDoc(docRef, updateData)
-        .then(() => { 
-            if (!customMessage) setNewHistoryEntry(''); 
-            toast({ title: "Histórico Atualizado" }); 
-        })
-        .finally(() => setIsAddingHistory(false));
   };
 
   const statusColor = currentStatusValue ? (statusColors[currentStatusValue.toUpperCase()] || statusColors[currentStatusValue]) : undefined;
@@ -501,16 +471,10 @@ export function ProposalForm({
               </h3>
               
               {historicalRejection && (
-                  <Alert variant="destructive" className="border-2 animate-in slide-in-from-top-2 duration-500 rounded-2xl bg-red-50 dark:bg-red-900/20">
+                  <Alert variant="destructive" className="border-2 rounded-2xl bg-red-50 dark:bg-red-900/20">
                       <SearchX className="h-5 w-5 text-red-600" />
-                      <AlertTitle className="font-black uppercase text-xs tracking-widest">Contrato Já Reprovado!</AlertTitle>
-                      <AlertDescription className="text-xs font-medium">
-                          Este número de contrato foi reprovado anteriormente na <span className="font-black">Prop. {historicalRejection.proposalNumber}</span>.
-                          <div className="mt-2 p-2 bg-white/50 dark:bg-black/20 rounded border border-red-200">
-                              <span className="font-black text-[10px] uppercase text-red-700">Motivo:</span>
-                              <p className="font-bold text-red-600 italic">"{historicalRejection.rejectionReason || 'Não especificado'}"</p>
-                          </div>
-                      </AlertDescription>
+                      <AlertTitle className="font-black uppercase text-xs">Contrato Já Reprovado Anteriormente!</AlertTitle>
+                      <AlertDescription className="text-xs">Identificada reprova na Prop. {historicalRejection.proposalNumber}: "{historicalRejection.rejectionReason}"</AlertDescription>
                   </Alert>
               )}
 
@@ -566,6 +530,31 @@ export function ProposalForm({
                     )}
                 />
               </div>
+
+              {/* 🚀 TÓPICOS RÁPIDOS (SUB-STATUS) PERTO DO STATUS */}
+              {proposal?.id && !isReadOnly && (
+                  <div className="p-4 rounded-2xl border-2 border-dashed bg-primary/[0.02] space-y-3 animate-in fade-in duration-500">
+                      <div className="flex items-center gap-2">
+                          <Zap className="h-3.5 w-3.5 text-primary" />
+                          <span className="text-[10px] font-black uppercase tracking-widest text-primary/60">Tópicos de Trâmite (Sub-status)</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                          {historyTopics.map((topic) => (
+                              <Button
+                                  key={topic}
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 rounded-full text-[10px] font-bold px-4 border-primary/20 hover:bg-primary/5 hover:border-primary transition-all"
+                                  onClick={() => handleAddHistory(topic)}
+                                  disabled={isAddingHistory}
+                              >
+                                  {topic}
+                              </Button>
+                          ))}
+                      </div>
+                  </div>
+              )}
 
               {currentStatusValue === 'Reprovado' && (
                   <FormField
@@ -628,7 +617,7 @@ export function ProposalForm({
 
             <div className="space-y-4">
               <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
-                <Clock className="h-4 w-4" /> DIGITAÇÃO OFERTA CONSIGNADO
+                <Clock className="h-4 w-4" /> DIGITAÇÃO DA PROPOSTA
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -750,14 +739,9 @@ export function ProposalForm({
                                 readOnly={isReadOnly || isSaving} 
                                 className={cn("font-bold", isDuplicateProposal && "border-red-500 bg-red-50")}
                             />
-                            {isDuplicateProposal && (
-                                <AlertTriangle className="absolute right-3 top-2.5 h-5 w-5 text-red-500 animate-pulse" />
-                            )}
+                            {isDuplicateProposal && <AlertTriangle className="absolute right-3 top-2.5 h-5 w-5 text-red-500 animate-pulse" />}
                         </div>
                       </FormControl>
-                      {isDuplicateProposal && (
-                          <p className="text-[10px] font-bold text-red-600 uppercase mt-1 animate-in slide-in-from-top-1">⚠️ Este número já existe em sua base.</p>
-                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -842,57 +826,28 @@ export function ProposalForm({
                     </FormItem>
                   )}
                 />
-                {productValue === 'Portabilidade' ? (
-                    <>
-                        <FormField
-                            control={form.control}
-                            name="debtBalanceArrivalDate"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Retorno Saldo</FormLabel>
-                                <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(applyDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} /></FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="dateApproved"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Averbação</FormLabel>
-                                <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(applyDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} /></FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </>
-                ) : (
-                    <>
-                        <FormField
-                            control={form.control}
-                            name="dateApproved"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Data Averbação</FormLabel>
-                                <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(applyDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} /></FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="datePaidToClient"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Pagamento Cliente</FormLabel>
-                                <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(applyDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} /></FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </>
-                )}
+                <FormField
+                    control={form.control}
+                    name="dateApproved"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Data Averbação</FormLabel>
+                        <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(applyDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} /></FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="datePaidToClient"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Pagamento Cliente</FormLabel>
+                        <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(applyDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} /></FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -962,41 +917,19 @@ export function ProposalForm({
 
             <div className="space-y-4">
                 <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
-                    <History className="h-4 w-4" /> Linha do Tempo
+                    <History className="h-4 w-4" /> Histórico Completo
                 </h3>
                 {proposal?.id && (
                     <div className="space-y-6">
-                        <div className="p-4 rounded-2xl border-2 border-dashed bg-muted/5 space-y-4">
-                            <div className="flex items-center gap-2">
-                                <Zap className="h-3.5 w-3.5 text-primary" />
-                                <span className="text-[10px] font-black uppercase tracking-widest text-primary/60">Tópicos Rápidos (Sub-status)</span>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {historyTopics.map((topic) => (
-                                    <Button
-                                        key={topic}
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8 rounded-full text-[10px] font-bold px-4 border-primary/20 hover:bg-primary/5 hover:border-primary transition-all"
-                                        onClick={() => handleAddHistory(topic)}
-                                        disabled={isAddingHistory || isReadOnly}
-                                    >
-                                        {topic}
-                                    </Button>
-                                ))}
-                            </div>
-                        </div>
-
                         <div className="flex gap-2">
                             <Input 
-                                placeholder="Ou digite uma atualização personalizada..." 
+                                placeholder="Digite uma atualização personalizada..." 
                                 value={newHistoryEntry} 
                                 onChange={e => setNewHistoryEntry(e.target.value)} 
                                 disabled={isAddingHistory || isReadOnly}
-                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddHistory())}
+                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddHistory(newHistoryEntry))}
                             />
-                            <Button type="button" size="sm" onClick={() => handleAddHistory()} disabled={isAddingHistory || !newHistoryEntry.trim() || isReadOnly}>
+                            <Button type="button" size="sm" onClick={() => handleAddHistory(newHistoryEntry)} disabled={isAddingHistory || !newHistoryEntry.trim() || isReadOnly}>
                                 {isAddingHistory ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                             </Button>
                         </div>

@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { cn, cleanFirestoreData } from '@/lib/utils';
-import { proposalStatuses, defaultRejectionReasons } from '@/lib/config-data';
+import { proposalStatuses, defaultRejectionReasons, defaultHistoryTopics } from '@/lib/config-data';
 import type { ProposalStatus, ProposalHistoryEntry, UserSettings } from '@/lib/types';
 import { useFirestore, auth, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
@@ -28,7 +28,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { MessageSquareText, Loader2 } from 'lucide-react';
+import { MessageSquareText, Loader2, Zap, Timer } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface StatusCellProps {
   proposalId: string;
@@ -55,6 +56,7 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
 
   const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
   const finalRejectionReasons = userSettings?.rejectionReasons || defaultRejectionReasons;
+  const historyTopics = userSettings?.historyTopics || defaultHistoryTopics;
 
   const handleUpdateInitiate = (newStatus: ProposalStatus) => {
     if (newStatus === currentStatus) return;
@@ -96,7 +98,6 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
         dataToUpdate.statusAwaitingBalanceAt = now;
     }
 
-    // 🛡️ LIMPEZA DE DADOS: Se não for reprovado, garante que o motivo antigo seja removido
     if (pendingStatus === 'Reprovado') {
         dataToUpdate.rejectionReason = rejectionReason;
     } else {
@@ -178,56 +179,81 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
     </Select>
 
     <Dialog open={isNoteModalOpen} onOpenChange={setIsNoteModalOpen}>
-        <DialogContent className="max-w-sm p-6 rounded-[2rem]">
-            <DialogHeader>
-                <DialogTitle className="flex items-center gap-2 text-base font-black uppercase tracking-tight">
-                    <MessageSquareText className="h-4 w-4 text-primary" /> 
+        <DialogContent className="max-w-md p-0 overflow-hidden rounded-[2rem]">
+            <DialogHeader className="p-6 pb-2">
+                <DialogTitle className="flex items-center gap-2 text-lg font-black uppercase tracking-tight">
+                    <MessageSquareText className="h-5 w-5 text-primary" /> 
                     {pendingStatus === 'Reprovado' ? 'Justificativa de Reprova' : 'Nota de Trâmite'}
                 </DialogTitle>
             </DialogHeader>
-            <div className="py-4 space-y-5">
-                <div className="p-3 bg-muted/30 rounded-xl border border-dashed text-[10px] font-bold uppercase text-muted-foreground text-center">
-                    Alterando para: <span className={cn("font-black", pendingStatus === 'Reprovado' ? "text-red-600" : "text-primary")}>{pendingStatus}</span>
-                </div>
-
-                {pendingStatus === 'Reprovado' && (
-                    <div className="space-y-2 animate-in slide-in-from-top-2">
-                        <Label className="text-[9px] font-black uppercase tracking-widest text-red-600">Motivo da Reprova *</Label>
-                        <Select value={rejectionReason} onValueChange={setRejectionReason}>
-                            <SelectTrigger className="border-red-200 bg-red-50/50 font-bold h-11 rounded-xl">
-                                <SelectValue placeholder="Selecione por que foi reprovado" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {finalRejectionReasons.map(r => (
-                                    <SelectItem key={r} value={r} className="text-xs font-medium">{r}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+            <ScrollArea className="max-h-[70vh]">
+                <div className="p-6 space-y-6">
+                    <div className="p-3 bg-muted/30 rounded-xl border border-dashed text-[10px] font-bold uppercase text-muted-foreground text-center">
+                        Alterando para: <span className={cn("font-black", pendingStatus === 'Reprovado' ? "text-red-600" : "text-primary")}>{pendingStatus}</span>
                     </div>
-                )}
 
-                <div className="space-y-2">
-                    <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Comentário Adicional (Opcional)</Label>
-                    <Textarea 
-                        placeholder={pendingStatus === 'Reprovado' ? "Detalhes da negativa do banco..." : "Algo importante a registrar?"}
-                        value={quickNote}
-                        onChange={(e) => setQuickNote(e.target.value)}
-                        className="min-h-[120px] rounded-2xl text-xs font-medium resize-none"
-                    />
-                </div>
-            </div>
-            <DialogFooter className="flex flex-col gap-2">
-                <Button 
-                    onClick={handleUpdateConfirm} 
-                    disabled={isUpdating || (pendingStatus === 'Reprovado' && !rejectionReason)}
-                    className={cn(
-                        "w-full rounded-full font-black uppercase text-[10px] tracking-widest h-11 shadow-lg transition-all",
-                        pendingStatus === 'Reprovado' ? "bg-red-600 hover:bg-red-700 text-white" : "bg-primary text-white"
+                    {pendingStatus === 'Reprovado' && (
+                        <div className="space-y-2 animate-in slide-in-from-top-2">
+                            <Label className="text-[9px] font-black uppercase tracking-widest text-red-600">Motivo da Reprova *</Label>
+                            <Select value={rejectionReason} onValueChange={setRejectionReason}>
+                                <SelectTrigger className="border-red-200 bg-red-50/50 font-bold h-11 rounded-xl">
+                                    <SelectValue placeholder="Selecione por que foi reprovado" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {finalRejectionReasons.map(r => (
+                                        <SelectItem key={r} value={r} className="text-xs font-medium">{r}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     )}
-                >
-                    {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirmar Mudança"}
-                </Button>
-                <Button variant="ghost" onClick={() => setIsNoteModalOpen(false)} className="rounded-full font-bold text-[10px] uppercase">Cancelar</Button>
+
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                            <Zap className="h-3.5 w-3.5 text-primary" />
+                            <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Tópicos Rápidos (Sub-status)</Label>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {historyTopics.map((topic) => (
+                                <Button
+                                    key={topic}
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 rounded-full text-[9px] font-bold px-3 border-primary/20 hover:bg-primary/5 hover:border-primary transition-all"
+                                    onClick={() => setQuickNote(topic)}
+                                >
+                                    {topic}
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Comentário Adicional</Label>
+                        <Textarea 
+                            placeholder={pendingStatus === 'Reprovado' ? "Detalhes da negativa do banco..." : "Algo importante a registrar?"}
+                            value={quickNote}
+                            onChange={(e) => setQuickNote(e.target.value)}
+                            className="min-h-[100px] rounded-2xl text-xs font-medium resize-none border-2"
+                        />
+                    </div>
+                </div>
+            </ScrollArea>
+            <DialogFooter className="p-6 bg-muted/5 border-t">
+                <div className="flex flex-col sm:flex-row gap-2 w-full">
+                    <Button variant="ghost" onClick={() => setIsNoteModalOpen(false)} className="rounded-full font-bold text-[10px] uppercase flex-1 h-11">Cancelar</Button>
+                    <Button 
+                        onClick={handleUpdateConfirm} 
+                        disabled={isUpdating || (pendingStatus === 'Reprovado' && !rejectionReason)}
+                        className={cn(
+                            "flex-[2] rounded-full font-black uppercase text-[10px] tracking-widest h-11 shadow-lg transition-all",
+                            pendingStatus === 'Reprovado' ? "bg-red-600 hover:bg-red-700 text-white" : "bg-primary text-white"
+                        )}
+                    >
+                        {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirmar Mudança"}
+                    </Button>
+                </div>
             </DialogFooter>
         </DialogContent>
     </Dialog>
