@@ -381,7 +381,7 @@ export function ProposalForm({
 
     const now = new Date().toISOString();
     
-    // 🛡️ CORREÇÃO DO BUG 1: Limpeza de dados fantasmas de reprova
+    // 🛡️ SANEAMENTO DE DADOS: Limpa campos específicos se não for Portabilidade
     const finalData: any = {
         ...data,
         rejectionReason: data.status === 'Reprovado' ? data.rejectionReason : "",
@@ -391,6 +391,12 @@ export function ProposalForm({
         debtBalanceArrivalDate: convertToIso(data.debtBalanceArrivalDate),
         commissionPaymentDate: convertToIso(data.commissionPaymentDate),
     };
+
+    if (data.product !== 'Portabilidade') {
+        finalData.originalContractNumber = "";
+        finalData.bankOrigin = "";
+        finalData.debtBalanceArrivalDate = null;
+    }
 
     const isAverbado = !!finalData.dateApproved;
     const isNotReprovado = finalData.status !== 'Reprovado';

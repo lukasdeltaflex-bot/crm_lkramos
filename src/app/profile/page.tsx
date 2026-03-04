@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -13,7 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { updateEmail } from 'firebase/auth';
 import { cleanFirestoreData, formatCurrency } from '@/lib/utils';
-import { Trophy, Star, Crown, Medal, TrendingUp, Wallet, Share2, Copy, Mail, MessageSquareText, Check } from 'lucide-react';
+import { Trophy, Star, Crown, Medal, TrendingUp, Wallet, Share2, Copy, Mail, MessageSquareText, Check, Link as LinkIcon } from 'lucide-react';
 import { startOfMonth, format, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -39,7 +38,7 @@ const RecordCard = ({ title, value, subValue, icon: Icon, colorClass }: any) => 
 export default function ProfilePage() {
     const { user, auth, isUserLoading } = useFirebase();
     const firestore = useFirestore();
-    const [copiedType, setCopiedType] = React.useState<'email' | 'whatsapp' | null>(null);
+    const [copiedType, setCopiedType] = React.useState<'email' | 'whatsapp' | 'leads' | null>(null);
 
     const userProfileDocRef = useMemoFirebase(() => {
         if (!user || !firestore) return null;
@@ -138,8 +137,18 @@ export default function ProfilePage() {
         }
     };
 
-    const handleCopySignature = (type: 'email' | 'whatsapp') => {
-        if (!userProfile) return;
+    const handleCopySignature = (type: 'email' | 'whatsapp' | 'leads') => {
+        if (!userProfile || !user) return;
+        
+        if (type === 'leads') {
+            const link = `${window.location.protocol}//${window.location.host}/enviar/${user.uid}`;
+            navigator.clipboard.writeText(link);
+            setCopiedType('leads');
+            setTimeout(() => setCopiedType(null), 2000);
+            toast({ title: "Link de Leads Copiado!", description: "Envie para seus clientes se cadastrarem." });
+            return;
+        }
+
         const name = userProfile.fullName || userProfile.displayName || "Agente LK RAMOS";
         const phone = userProfile.phone || "(00) 00000-0000";
         const email = userProfile.email;
@@ -148,7 +157,6 @@ export default function ProfilePage() {
             const text = `*${name}*\n🔹 Agente de Crédito de Elite\n🏢 *LK RAMOS*\n📞 ${phone}\n✉️ ${email}\n🚀 _Soluções financeiras de alta performance._`;
             navigator.clipboard.writeText(text);
         } else {
-            // Versão básica de texto para e-mail (copiar HTML rico via JS é limitado sem libs extras, então fornecemos um bom formato)
             const text = `${name}\nAgente de Crédito de Elite | LK RAMOS\nTelefone: ${phone}\nE-mail: ${email}\nwww.lkramos.com.br`;
             navigator.clipboard.writeText(text);
         }
@@ -216,8 +224,8 @@ export default function ProfilePage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* FORMULÁRIO DE PERFIL */}
-                    <div className="lg:col-span-2">
-                        <Card className="border-border/50 shadow-lg rounded-2xl overflow-hidden h-full">
+                    <div className="lg:col-span-2 space-y-8">
+                        <Card className="border-border/50 shadow-lg rounded-2xl overflow-hidden">
                             <CardHeader className="bg-muted/10 border-b border-border/50">
                                 <CardTitle className="text-xl font-bold flex items-center gap-2">
                                     <Medal className="h-5 w-5 text-primary" />
@@ -244,6 +252,32 @@ export default function ProfilePage() {
                                 ) : (
                                     <ProfileForm userProfile={userProfile} onSubmit={handleProfileUpdate} />
                                 )}
+                            </CardContent>
+                        </Card>
+
+                        {/* 🔗 PORTAL DE LEADS (ACESSO RÁPIDO NO PERFIL) */}
+                        <Card className="border-primary/20 bg-primary/[0.02] shadow-lg rounded-2xl overflow-hidden">
+                            <CardHeader className="pb-4">
+                                <CardTitle className="text-lg font-black uppercase flex items-center gap-2 text-primary">
+                                    <LinkIcon className="h-5 w-5" />
+                                    Portal de Captura de Leads
+                                </CardTitle>
+                                <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Seu link exclusivo para auto-cadastro do cliente</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div className="p-3 bg-white dark:bg-zinc-950 border-2 rounded-xl flex-1 w-full overflow-hidden">
+                                    <p className="text-xs font-mono text-muted-foreground truncate">
+                                        {user ? `${window.location.protocol}//${window.location.host}/enviar/${user.uid}` : 'Carregando link...'}
+                                    </p>
+                                </div>
+                                <Button 
+                                    onClick={() => handleCopySignature('leads')}
+                                    className="rounded-full h-11 px-8 font-black uppercase text-[10px] tracking-widest bg-primary shadow-xl shadow-primary/20 shrink-0"
+                                    disabled={!user}
+                                >
+                                    {copiedType === 'leads' ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                                    Copiar Link de Envio
+                                </Button>
                             </CardContent>
                         </Card>
                     </div>

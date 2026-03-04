@@ -158,8 +158,8 @@ export default function ManualPage() {
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-red-100 text-red-600"><SearchX className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">4. Auditoria de Portabilidade</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Blindagem contra Retrabalho</p>
+                                <p className="font-bold text-sm">4. Auditoria de Portabilidade & Saneamento</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Blindagem contra Retrabalho e Dados Sujos</p>
                             </div>
                         </div>
                     </AccordionTrigger>
@@ -172,54 +172,32 @@ export default function ManualPage() {
                                 <p className="text-xs text-muted-foreground">Ao selecionar o produto **Portabilidade**, o campo "Nº Contrato Portado (Origem)" torna-se **obrigatório**. O sistema não permite salvar a proposta sem essa identificação única.</p>
                             </div>
                             
-                            <div className="p-4 rounded-xl bg-orange-500/5 border border-orange-500/20">
-                                <h4 className="font-bold text-orange-700 flex items-center gap-2 mb-2">
-                                    <AlertTriangle className="h-4 w-4" /> Alerta de Reprova Anterior
+                            <div className="p-4 rounded-xl bg-green-500/5 border border-green-500/20">
+                                <h4 className="font-bold text-green-700 flex items-center gap-2 mb-2">
+                                    <ShieldCheck className="h-4 w-4" /> Saneamento Automático
                                 </h4>
-                                <p className="text-xs text-muted-foreground">Ao digitar o número do contrato, o sistema verifica instantaneamente se esse contrato já foi reprovado antes em sua base. Um alerta vermelho aparecerá exibindo o motivo da reprova anterior para evitar nova digitação perdida.</p>
+                                <p className="text-xs text-muted-foreground">Se você mudar o produto de uma proposta de "Portabilidade" para outro (ex: Margem), o sistema **limpa automaticamente** o número do contrato portado antigo para manter sua base 100% fiel e organizada.</p>
                             </div>
                         </div>
                     </AccordionContent>
                 </AccordionItem>
 
-                {/* 5. BUSCA NUCLEAR (CTRL + K) */}
-                <AccordionItem value="nuclear-search" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-emerald-500/20">
-                    <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600"><Search className="h-5 w-5" /></div>
-                            <div className="text-left">
-                                <p className="font-bold text-sm">5. Busca Inteligente Global</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Pesquisa Ultra-Rápida por ID</p>
-                            </div>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
-                        <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
-                            <p className="text-xs text-muted-foreground">
-                                Utilize o atalho <kbd className="bg-white border px-1 rounded mx-1">CTRL + K</kbd> em qualquer tela. 
-                                <br/><br/>
-                                Agora o sistema suporta a **Busca por ID Puro**. Digite apenas o número (ex: "45") para encontrar o cliente ou o número da proposta. Além disso, você pode buscar por Nome, CPF (com ou sem pontos) e até por etiquetas como "ELITE" ou "ATIVO".
-                            </p>
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
-
-                {/* 6. GESTÃO DE PARCEIROS & SEGURANÇA */}
+                {/* 5. GESTÃO DE PARCEIROS & SEGURANÇA */}
                 <AccordionItem value="management-secure" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-blue-500/20">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-blue-100 text-blue-600"><Lock className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">6. Gestão de Parceiros & Senhas AES-256</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Criptografia Militar e Colaboração</p>
+                                <p className="font-bold text-sm">5. Gestão de Parceiros & Portal de Leads</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Criptografia Militar e Automação de Entrada</p>
                             </div>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
                         <div className="grid gap-4 md:grid-cols-2">
                             <div className="p-4 rounded-xl bg-blue-50/5 border border-blue-200">
-                                <h4 className="font-bold text-blue-700 flex items-center gap-2 mb-2"><ShieldCheck className="h-4 w-4" /> Criptografia Blindada</h4>
-                                <p className="text-xs text-muted-foreground">Suas senhas bancárias são criptografadas via **AES-256-GCM** antes de saírem do seu navegador. Somente você consegue descriptografar.</p>
+                                <h4 className="font-bold text-blue-700 flex items-center gap-2 mb-2"><LinkIcon className="h-4 w-4" /> Portal de Leads</h4>
+                                <p className="text-xs text-muted-foreground">Seu link exclusivo de auto-cadastro está disponível no **Dashboard** e também na sua página de **Meu Perfil**. Envie este link para os clientes para que eles mesmos preencham a ficha e anexem documentos.</p>
                             </div>
                             <div className="p-4 rounded-xl bg-green-50/5 border border-green-200">
                                 <h4 className="font-bold text-green-700 flex items-center gap-2 mb-2"><NotebookTabs className="h-4 w-4" /> Mural Colaborativo</h4>
