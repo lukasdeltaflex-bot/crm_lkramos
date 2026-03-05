@@ -38,7 +38,7 @@ export function SidebarNav() {
   return (
     <>
     <SidebarMenu>
-      {links.filter(l => !l.hidden).map((link) => {
+      {links.map((link) => {
         const isActive = link.href === '/' 
             ? pathname === '/' 
             : pathname.startsWith(link.href);
