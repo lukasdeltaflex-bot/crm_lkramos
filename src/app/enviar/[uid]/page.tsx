@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useFirestore, useDoc, useMemoFirebase, useFirebase } from '@/firebase';
 import { doc, collection, setDoc } from 'firebase/firestore';
@@ -28,13 +28,16 @@ import {
     CircleDollarSign,
     Target,
     FileCheck,
-    Home
+    Home,
+    MapPin,
+    Mail,
+    Hash
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { validateCPF, handlePhoneMask, cleanFirestoreData, cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { parse, isValid as isValidDate, isBefore, startOfToday } from 'date-fns';
+import { parse, isValid as isValidDate, isBefore, startOfToday, differenceInYears } from 'date-fns';
 
 export default function LeadCapturePage() {
   const params = useParams();
@@ -83,7 +86,6 @@ export default function LeadCapturePage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     let { name, value } = e.target;
     
-    // 🛡️ MÁSCARAS FLUÍDAS V2
     if (name === 'cpf') {
         let v = value.replace(/\D/g, "");
         if (v.length > 11) v = v.substring(0, 11);
@@ -115,17 +117,28 @@ export default function LeadCapturePage() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const isCpfValid = React.useMemo(() => {
+  const isCpfValid = useMemo(() => {
     if (formData.cpf.length < 14) return null;
     return validateCPF(formData.cpf);
   }, [formData.cpf]);
 
-  const isBirthDateValid = React.useMemo(() => {
+  const isBirthDateValid = useMemo(() => {
     if (formData.birthDate.length < 10) return null;
     try {
         const parsed = parse(formData.birthDate, 'dd/MM/yyyy', new Date());
         return isValidDate(parsed) && isBefore(parsed, startOfToday());
     } catch { return false; }
+  }, [formData.birthDate]);
+
+  const calculatedAge = useMemo(() => {
+    if (formData.birthDate.length < 10) return null;
+    try {
+        const parsed = parse(formData.birthDate, 'dd/MM/yyyy', new Date());
+        if (isValidDate(parsed)) {
+            return differenceInYears(new Date(), parsed);
+        }
+    } catch { return null; }
+    return null;
   }, [formData.birthDate]);
 
   const isFormValid = formData.name.split(' ').length >= 2 && 
@@ -345,7 +358,14 @@ export default function LeadCapturePage() {
                                     {isCpfValid === false && <p className="text-[10px] font-bold text-red-600 uppercase mt-1">CPF Inválido. Verifique os dígitos.</p>}
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Data de Nascimento *</Label>
+                                    <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center justify-between">
+                                        Data de Nascimento *
+                                        {calculatedAge !== null && (
+                                            <Badge variant="outline" className="h-5 text-[9px] font-black border-primary/30 text-primary">
+                                                {calculatedAge} ANOS
+                                            </Badge>
+                                        )}
+                                    </Label>
                                     <div className="relative">
                                         <Input 
                                             name="birthDate" 
@@ -369,8 +389,70 @@ export default function LeadCapturePage() {
                                     <Input name="phone" required placeholder="(00) 00000-0000" className="h-12 rounded-xl font-bold" value={formData.phone} onChange={handleInputChange} />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Nº Benefício INSS (Opcional)</Label>
-                                    <Input name="benefitNumber" placeholder="000.000.000-0" className="h-12 rounded-xl font-bold" value={formData.benefitNumber} onChange={handleInputChange} />
+                                    <Label className="text-[10px] font-black uppercase text-muted-foreground">E-mail</Label>
+                                    <div className="relative">
+                                        <Input name="email" type="email" placeholder="seu@email.com" className="h-12 rounded-xl font-bold pl-10" value={formData.email} onChange={handleInputChange} />
+                                        <Mail className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground opacity-40" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase text-muted-foreground">Nº Benefício INSS (Opcional)</Label>
+                                <Input name="benefitNumber" placeholder="000.000.000-0" className="h-12 rounded-xl font-bold" value={formData.benefitNumber} onChange={handleInputChange} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="space-y-6">
+                        <h3 className="text-sm font-black uppercase text-primary flex items-center gap-2"><MapPin className="h-4 w-4" /> Endereço Residencial</h3>
+                        <div className="grid gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase text-muted-foreground">CEP *</Label>
+                                    <div className="relative">
+                                        <Input 
+                                            name="cep" 
+                                            placeholder="00000-000" 
+                                            className="h-12 rounded-xl font-bold" 
+                                            value={formData.cep} 
+                                            onChange={handleInputChange} 
+                                            maxLength={9} 
+                                        />
+                                        {isFetchingCep && <Loader2 className="absolute right-4 top-3.5 h-5 w-5 animate-spin text-primary" />}
+                                    </div>
+                                    <p className="text-[9px] font-bold text-primary uppercase flex items-center gap-1.5 mt-1 opacity-70">
+                                        <Zap className="h-3 w-3 fill-current" /> Digite o CEP para preencher o endereço automaticamente.
+                                    </p>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Bairro</Label>
+                                    <Input name="neighborhood" placeholder="Seu Bairro" className="h-12 rounded-xl font-bold" value={formData.neighborhood} onChange={handleInputChange} />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
+                                <div className="sm:col-span-3 space-y-2">
+                                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Rua / Logradouro</Label>
+                                    <Input name="street" placeholder="Avenida, Rua, Travessa..." className="h-12 rounded-xl font-bold" value={formData.street} onChange={handleInputChange} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Número</Label>
+                                    <Input name="number" placeholder="123" className="h-12 rounded-xl font-bold" value={formData.number} onChange={handleInputChange} />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Complemento</Label>
+                                    <Input name="complement" placeholder="Apto, Bloco, Casa..." className="h-12 rounded-xl font-bold" value={formData.complement} onChange={handleInputChange} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Cidade</Label>
+                                    <Input name="city" placeholder="Sua Cidade" className="h-12 rounded-xl font-bold" value={formData.city} onChange={handleInputChange} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Estado (UF)</Label>
+                                    <Input name="state" placeholder="SP" className="h-12 rounded-xl font-bold uppercase" value={formData.state} onChange={handleInputChange} maxLength={2} />
                                 </div>
                             </div>
                         </div>
@@ -388,6 +470,7 @@ export default function LeadCapturePage() {
                                         <SelectValue placeholder="Selecione..." />
                                     </SelectTrigger>
                                     <SelectContent>
+                                        <SelectItem value="Antecipação FGTS">Antecipação FGTS</SelectItem>
                                         <SelectItem value="Refinanciamento">Refinanciamento</SelectItem>
                                         <SelectItem value="Portabilidade">Portabilidade</SelectItem>
                                         <SelectItem value="Margem Livre">Margem Livre (Novo)</SelectItem>
