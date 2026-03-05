@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Bell, Cake, BadgePercent, X, CalendarClock, Bot, Loader2, MessageSquareText, Hourglass, Coins, Zap, AlertTriangle, Newspaper } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Bell, Cake, BadgePercent, X, CalendarClock, Bot, Loader2, MessageSquareText, Hourglass, Coins, Zap, AlertTriangle, Newspaper, UserPlus } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,18 +14,21 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCollection, useFirestore, useUser, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, where, doc, setDoc, orderBy, limit } from 'firebase/firestore';
-import type { Customer, Proposal, FollowUp, UserSettings } from '@/lib/types';
+import type { Customer, Proposal, FollowUp, UserSettings, Lead } from '@/lib/types';
 import { differenceInDays, format, differenceInMonths, parseISO, isAfter, subDays } from 'date-fns';
 import { getWhatsAppUrl, calculateBusinessDays, getAge } from '@/lib/utils';
 import Link from 'next/link';
 import { generateBirthdayMessage } from '@/ai/flows/generate-birthday-message-flow';
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 export function NotificationBell() {
   const { user } = useUser();
   const firestore = useFirestore();
   const [isClient, setIsClient] = useState(false);
+  const [hasNewLeadPulse, setHasNewLeadPulse] = useState(false);
+  const lastLeadIdRef = useRef<string | null>(null);
 
   // AI State
   const [isGeneratingBday, setIsGeneratingBday] = useState(false);
@@ -65,6 +68,16 @@ export function NotificationBell() {
     );
   }, [firestore]);
 
+  const leadsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(
+        collection(firestore, 'leads'),
+        where('ownerId', '==', user.uid),
+        orderBy('createdAt', 'desc'),
+        limit(1)
+    );
+  }, [firestore, user]);
+
   const settingsDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return doc(firestore, 'userSettings', user.uid);
@@ -74,20 +87,48 @@ export function NotificationBell() {
   const { data: proposals } = useCollection<Proposal>(proposalsQuery);
   const { data: followUps } = useCollection<FollowUp>(followUpsQuery);
   const { data: news } = useCollection<any>(newsQuery);
+  const { data: leads } = useCollection<Lead>(leadsQuery);
   const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
+
+  // 🕵️ MONITOR DE LEADS EM TEMPO REAL
+  useEffect(() => {
+    if (leads && leads.length > 0) {
+        const latestLead = leads[0];
+        if (lastLeadIdRef.current && lastLeadIdRef.current !== latestLead.id) {
+            setHasNewLeadPulse(true);
+            toast({ 
+                title: "🚀 NOVO LEAD RECEBIDO!", 
+                description: `${latestLead.name} acabou de preencher a ficha.`,
+                variant: "default"
+            });
+        }
+        lastLeadIdRef.current = latestLead.id;
+    }
+  }, [leads]);
 
   const dismissedIds = userSettings?.dismissedAlerts || [];
 
   const notifications = React.useMemo(() => {
     if (!isClient) return [];
     
-    const alerts: { id: string; title: string; type: 'birthday' | 'commission' | 'followup' | 'debt' | 'partial' | 'radar' | 'age' | 'news'; date: string; link: string; customerId?: string }[] = [];
+    const alerts: { id: string; title: string; type: 'birthday' | 'commission' | 'followup' | 'debt' | 'partial' | 'radar' | 'age' | 'news' | 'lead'; date: string; link: string; customerId?: string }[] = [];
     const now = new Date();
     const todayStr = format(now, 'MM-dd');
     const todayIso = format(now, 'yyyy-MM-dd');
     const threeDaysAgo = subDays(now, 3);
 
-    // 📰 NOTIFICAÇÕES DE NOTÍCIAS (IDs Sincronizados)
+    // 🎯 ALERTA DE LEADS PENDENTES (Não dispensáveis até serem tratados)
+    leads?.filter(l => l.status === 'pending').forEach(lead => {
+        alerts.push({
+            id: `lead-${lead.id}`,
+            title: `Lead: ${lead.name}`,
+            type: 'lead',
+            date: lead.createdAt ? format(parseISO(lead.createdAt), 'dd/MM HH:mm') : 'Pendente',
+            link: '/'
+        });
+    });
+
+    // 📰 NOTIFICAÇÕES DE NOTÍCIAS
     news?.forEach(item => {
         const publishDate = parseISO(item.date);
         if (isAfter(publishDate, threeDaysAgo)) {
@@ -108,7 +149,7 @@ export function NotificationBell() {
       
       if (age === 74) {
         alerts.push({
-          id: `age-${c.id}`, // Unificado
+          id: `age-${c.id}`,
           title: `Atenção Idade: ${c.name}`,
           type: 'age',
           date: 'Próximo aos 75 anos',
@@ -119,7 +160,7 @@ export function NotificationBell() {
 
       if (c.birthDate && c.birthDate.substring(5) === todayStr) {
         alerts.push({
-          id: `bday-${c.id}-${todayStr}`, // Unificado
+          id: `bday-${c.id}-${todayStr}`,
           title: `Aniversário: ${c.name}`,
           type: 'birthday',
           date: 'Hoje',
@@ -137,7 +178,7 @@ export function NotificationBell() {
 
       if (hasMatured) {
           alerts.push({
-              id: `radar-${c.id}`, // Unificado
+              id: `radar-${c.id}`,
               title: `Radar: ${c.name}`,
               type: 'radar',
               date: 'Contrato Maduro',
@@ -149,7 +190,7 @@ export function NotificationBell() {
     followUps?.forEach(f => {
         if (f.dueDate <= todayIso) {
             alerts.push({
-                id: `fup-${f.id}`, // Unificado
+                id: `fup-${f.id}`,
                 title: `Retorno: ${f.contactName}`,
                 type: 'followup',
                 date: f.dueDate === todayIso ? 'Hoje' : 'Atrasado',
@@ -163,7 +204,7 @@ export function NotificationBell() {
         const days = differenceInDays(now, new Date(p.datePaidToClient));
         if (days > 7) {
           alerts.push({
-            id: `comm-${p.id}`, // Unificado
+            id: `comm-${p.id}`,
             title: `Comissão Pendente: ${p.proposalNumber}`,
             type: 'commission',
             date: `${days} dias`,
@@ -176,7 +217,7 @@ export function NotificationBell() {
           const bizDays = calculateBusinessDays(new Date(p.dateDigitized));
           if (bizDays >= 5) {
               alerts.push({
-                  id: `debt-${p.id}`, // Unificado
+                  id: `debt-${p.id}`,
                   title: `Saldo Atrasado: ${p.proposalNumber}`,
                   type: 'debt',
                   date: `${bizDays} dias úteis`,
@@ -189,7 +230,7 @@ export function NotificationBell() {
           const daysSince = differenceInDays(now, new Date(p.commissionPaymentDate));
           if (daysSince > 15) {
               alerts.push({
-                  id: `part-${p.id}`, // Unificado
+                  id: `part-${p.id}`,
                   title: `Cobrar Saldo: ${p.proposalNumber}`,
                   type: 'partial',
                   date: `${daysSince} dias`,
@@ -200,7 +241,7 @@ export function NotificationBell() {
     });
 
     return alerts;
-  }, [customers, proposals, followUps, news, isClient]);
+  }, [customers, proposals, followUps, news, leads, isClient]);
 
   const visibleNotifications = React.useMemo(() => {
     return notifications.filter(n => !dismissedIds.includes(n.id));
@@ -257,12 +298,23 @@ export function NotificationBell() {
 
   return (
     <>
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={(open) => open && setHasNewLeadPulse(false)}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
+        <Button 
+            variant="ghost" 
+            size="icon" 
+            className={cn(
+                "relative transition-all duration-500",
+                hasNewLeadPulse && "animate-alert-pulse text-orange-500"
+            )}
+            style={hasNewLeadPulse ? { '--status-color': '24 95% 53%' } as any : {}}
+        >
+          <Bell className={cn("h-5 w-5", hasNewLeadPulse && "fill-current")} />
           {count > 0 && (
-            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500 hover:bg-red-600 text-[10px] animate-in zoom-in">
+            <Badge className={cn(
+                "absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] animate-in zoom-in",
+                hasNewLeadPulse ? "bg-orange-600" : "bg-red-500"
+            )}>
               {count}
             </Badge>
           )}
@@ -300,6 +352,7 @@ export function NotificationBell() {
                     <Link href={n.link} passHref className="flex-1">
                         <DropdownMenuItem className="cursor-pointer p-3">
                         <div className="flex items-start gap-3">
+                            {n.type === 'lead' && <UserPlus className="h-4 w-4 text-orange-600 mt-1 animate-pulse" />}
                             {n.type === 'birthday' && <Cake className="h-4 w-4 text-pink-500 mt-1" />}
                             {n.type === 'age' && <AlertTriangle className="h-4 w-4 text-red-500 mt-1" />}
                             {n.type === 'radar' && <Zap className="h-4 w-4 text-orange-500 fill-orange-500 mt-1" />}
@@ -342,7 +395,7 @@ export function NotificationBell() {
     </DropdownMenu>
 
     <Dialog open={isBdayModalOpen} onOpenChange={setIsBdayModalOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md rounded-[2rem]">
             <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                     <MessageSquareText className="h-5 w-5 text-pink-500" />
@@ -357,15 +410,15 @@ export function NotificationBell() {
                     </div>
                 ) : (
                     <textarea 
-                        className="w-full min-h-[150px] p-4 rounded-lg border bg-muted/30 text-sm focus:ring-2 focus:ring-primary outline-none"
+                        className="w-full min-h-[150px] p-4 rounded-3xl border-2 bg-muted/30 text-sm focus:ring-2 focus:ring-primary outline-none"
                         value={generatedBdayMessage}
                         onChange={(e) => setGeneratedBdayMessage(e.target.value)}
                     />
                 )}
             </div>
             <DialogFooter>
-                <Button variant="ghost" onClick={() => setIsBdayModalOpen(false)}>Cancelar</Button>
-                <Button onClick={handleSendToWhatsApp} disabled={isGeneratingBday || !generatedBdayMessage}>
+                <Button variant="ghost" className="rounded-full font-bold" onClick={() => setIsBdayModalOpen(false)}>Cancelar</Button>
+                <Button onClick={handleSendToWhatsApp} className="rounded-full font-bold" disabled={isGeneratingBday || !generatedBdayMessage}>
                     Enviar para WhatsApp
                 </Button>
             </DialogFooter>
