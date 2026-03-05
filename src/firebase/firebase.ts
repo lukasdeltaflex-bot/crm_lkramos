@@ -24,10 +24,11 @@ if (typeof window !== "undefined") {
 
         const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
         
-        // 🛡️ CONFIGURAÇÃO DE REDE V21: Resolvida incompatibilidade de parâmetros.
-        // experimentalAutoDetectLongPolling substitui a necessidade de forçar manualmente.
+        // 🛡️ CONFIGURAÇÃO DE REDE V22: Forçando Long Polling.
+        // Em ambientes com proxies ou firewalls restritivos, o WebSocket pode falhar e causar timeout.
+        // O Long Polling utiliza requisições HTTPS padrão, garantindo a conexão estável.
         db = initializeFirestore(app, {
-            experimentalAutoDetectLongPolling: true,
+            experimentalForceLongPolling: true,
             localCache: persistentLocalCache({
                 tabManager: persistentMultipleTabManager()
             })
@@ -36,7 +37,7 @@ if (typeof window !== "undefined") {
         auth = getAuth(app);
         storage = getStorage(app, firebaseConfig.storageBucket);
         
-        console.log("💎 LK RAMOS: Núcleo Firebase sincronizado com protocolo de detecção automática e suporte multi-abas.");
+        console.log("💎 LK RAMOS: Núcleo Firebase sincronizado com protocolo de Long Polling forçado para máxima estabilidade.");
     } catch (error) {
         console.error("❌ Erro crítico na inicialização do Firebase:", error);
     }
