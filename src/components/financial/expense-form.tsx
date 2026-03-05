@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -23,10 +22,10 @@ import {
 } from '@/components/ui/select';
 import { format, parse, isValid } from 'date-fns';
 import type { Expense } from '@/lib/types';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
-import { formatCurrencyInput } from '@/lib/utils';
+import { formatCurrencyInput, formatDateSafe } from '@/lib/utils';
 
 const expenseSchema = z.object({
   description: z.string().min(3, 'A descrição deve ter pelo menos 3 caracteres.'),
@@ -58,44 +57,37 @@ const applyDateMask = (value: string) => {
 };
 
 export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }: ExpenseFormProps) {
+  // 🛡️ GARANTIA DE CATEGORIA: Se a categoria salva não estiver na lista atual, adicionamos ela 
+  // para evitar que o campo apareça vazio/resetado.
+  const finalCategories = useMemo(() => {
+    const list = [...categories];
+    if (expense?.category && !list.includes(expense.category)) {
+        list.push(expense.category);
+    }
+    return list;
+  }, [categories, expense?.category]);
+
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
-      description: '',
-      amount: 0,
-      date: format(new Date(), 'dd/MM/yyyy'),
-      category: '',
-      paid: false,
+      description: expense?.description || '',
+      amount: expense?.amount ?? 0,
+      date: expense?.date ? formatDateSafe(expense.date) : format(new Date(), 'dd/MM/yyyy'),
+      category: expense?.category || categories[0] || '',
+      paid: expense?.paid ?? false,
     },
   });
 
+  // Atualiza o formulário se a despesa selecionada mudar (ex: trocar de uma edição para outra)
   useEffect(() => {
     if (expense) {
-      let formattedDate = format(new Date(), 'dd/MM/yyyy');
-      if (expense.date) {
-          try {
-              const d = expense.date.includes('-') 
-                ? parse(expense.date, 'yyyy-MM-dd', new Date())
-                : parse(expense.date, 'dd/MM/yyyy', new Date());
-              if (isValid(d)) formattedDate = format(d, 'dd/MM/yyyy');
-          } catch(e) {}
-      }
-
       form.reset({
         description: expense.description || '',
         amount: expense.amount ?? 0,
-        date: formattedDate,
-        category: expense.category || categories[0] || 'Outros',
+        date: formatDateSafe(expense.date),
+        category: expense.category || categories[0] || '',
         paid: expense.paid ?? false,
       });
-    } else {
-        form.reset({
-            description: '',
-            amount: 0,
-            date: format(new Date(), 'dd/MM/yyyy'),
-            category: categories[0] || 'Outros',
-            paid: false,
-        });
     }
   }, [expense, form, categories]);
 
@@ -194,7 +186,7 @@ export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }:
                     </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                    {categories.map((cat) => (
+                    {finalCategories.map((cat) => (
                         <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
                     </SelectContent>
