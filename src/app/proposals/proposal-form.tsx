@@ -739,6 +739,7 @@ export function ProposalForm({
                                             placeholder="Nº Contrato Banco Origem" 
                                             {...field} 
                                             value={field.value ?? ''} 
+                                            onChange={(e) => field.onChange(e.target.value.replace(/\s+/g, ''))}
                                             readOnly={isReadOnly || isSaving} 
                                             className="font-bold border-primary/20 bg-primary/[0.02]"
                                         />
@@ -763,6 +764,7 @@ export function ProposalForm({
                                 placeholder="Contrato Novo" 
                                 {...field} 
                                 value={field.value ?? ''} 
+                                onChange={(e) => field.onChange(e.target.value.replace(/\s+/g, ''))}
                                 readOnly={isReadOnly || isSaving} 
                                 className="font-bold"
                             />
