@@ -243,7 +243,7 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                                                         <p className="text-sm font-black text-green-600 truncate tracking-tight">
                                                             {benefit.salary ? formatCurrency(Number(benefit.salary)) : "Não Inf."}
                                                         </p>
-                                                        {benefit.salary && <CopyButton text={formatCurrency(Number(benefit.salary))} label="Salário" />}
+                                                        {benefit.salary && <CopyButton text={formatCurrency(Number(benefit.salary)).replace(/\D/g, '')} label="Salário" />}
                                                     </div>
                                                 </div>
                                             </div>
@@ -346,7 +346,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   const [isPitchModalOpen, setIsPitchModalOpen] = useState(false);
   const [isGeneratingPitch, setIsGeneratingPitch] = useState(false);
   const [generatedPitch, setGeneratedPitch] = useState('');
-  const [dialogData, setDialogData] = useState<{ title: string; proposals: Proposal[] } | null>(null);
+  const [dialogData, setDialogData] = React.useState<{ title: string; proposals: Proposal[] } | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
