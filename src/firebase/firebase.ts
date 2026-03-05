@@ -24,9 +24,9 @@ if (typeof window !== "undefined") {
 
         const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
         
-        // 🛡️ CONFIGURAÇÃO DE REDE V20: Maximizando compatibilidade com proxies e múltiplas abas.
+        // 🛡️ CONFIGURAÇÃO DE REDE V21: Resolvida incompatibilidade de parâmetros.
+        // experimentalAutoDetectLongPolling substitui a necessidade de forçar manualmente.
         db = initializeFirestore(app, {
-            experimentalForceLongPolling: true,
             experimentalAutoDetectLongPolling: true,
             localCache: persistentLocalCache({
                 tabManager: persistentMultipleTabManager()
@@ -36,7 +36,7 @@ if (typeof window !== "undefined") {
         auth = getAuth(app);
         storage = getStorage(app, firebaseConfig.storageBucket);
         
-        console.log("💎 LK RAMOS: Núcleo Firebase sincronizado com protocolo de alta resiliência e suporte multi-abas.");
+        console.log("💎 LK RAMOS: Núcleo Firebase sincronizado com protocolo de detecção automática e suporte multi-abas.");
     } catch (error) {
         console.error("❌ Erro crítico na inicialização do Firebase:", error);
     }
