@@ -31,7 +31,8 @@ import {
     Home,
     MapPin,
     Mail,
-    Hash
+    Hash,
+    Zap
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { validateCPF, handlePhoneMask, cleanFirestoreData, cn } from '@/lib/utils';
