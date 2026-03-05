@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect } from 'react';
@@ -17,12 +18,8 @@ export function FollowUpsWidget() {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  useEffect(() => {
-    if (user) {
-        console.log("📂 DASHBOARD: LENDO RETORNOS EM:", `users/${user.uid}/followUps`);
-    }
-  }, [user]);
-
+  // 🛡️ REATIVIDADE TOTAL: O useMemoFirebase agora depende do user.uid
+  // Isso garante que o widget seja reconstruído instantaneamente quando uma ação ocorre.
   const followUpsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(
@@ -64,48 +61,54 @@ export function FollowUpsWidget() {
       </CardHeader>
       <CardContent className="flex-1 space-y-3 pt-2">
         {isLoading ? (
-            Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)
+            <div className="space-y-3">
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+            </div>
         ) : !followUps || followUps.length === 0 ? (
             <div className="h-32 flex flex-col items-center justify-center text-center text-muted-foreground border-2 border-dashed rounded-lg bg-muted/5 border-border/50">
                 <CalendarClock className="h-8 w-8 mb-2 opacity-20" />
                 <p className="text-xs">Nenhum retorno agendado.</p>
             </div>
         ) : (
-            followUps.map((f) => {
-                const status = getStatusInfo(f.dueDate);
-                return (
-                    <Link key={f.id} href="/follow-ups">
-                        <div className="group flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-card hover:bg-muted/30 hover:border-primary/30 transition-all">
-                            <Badge className={cn("h-10 w-10 flex flex-col items-center justify-center p-0 rounded-md text-[10px] shrink-0", status.className)}>
-                                <span className="font-bold">{status.label}</span>
-                            </Badge>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                    <p className="text-sm font-semibold truncate group-hover:text-primary transition-colors">{f.contactName}</p>
-                                    {f.dueTime && (
-                                        <Badge variant="outline" className="h-4 px-1.5 text-[9px] font-black border-primary/30 text-primary gap-1">
-                                            <Clock className="h-2 w-2" /> {f.dueTime}
-                                        </Badge>
-                                    )}
+            <div className="space-y-3 animate-in fade-in duration-500">
+                {followUps.map((f) => {
+                    const status = getStatusInfo(f.dueDate);
+                    return (
+                        <Link key={f.id} href="/follow-ups">
+                            <div className="group flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-card hover:bg-muted/30 hover:border-primary/30 transition-all">
+                                <Badge className={cn("h-10 w-10 flex flex-col items-center justify-center p-0 rounded-md text-[10px] shrink-0", status.className)}>
+                                    <span className="font-bold">{status.label}</span>
+                                </Badge>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-sm font-semibold truncate group-hover:text-primary transition-colors">{f.contactName}</p>
+                                        {f.dueTime && (
+                                            <Badge variant="outline" className="h-4 px-1.5 text-[9px] font-black border-primary/30 text-primary gap-1">
+                                                <Clock className="h-2 w-2" /> {f.dueTime}
+                                            </Badge>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-1">
+                                        {f.referralInfo ? (
+                                            <span className="px-2 py-0.5 bg-primary/5 text-primary border border-primary/20 rounded text-[9px] font-black uppercase tracking-tight truncate max-w-[180px]">
+                                                {f.referralInfo}
+                                            </span>
+                                        ) : (
+                                            <span className="flex items-center gap-1">
+                                                <Phone className="h-2.5 w-2.5" />
+                                                {f.contactPhone || 'S/ Tel'}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-1">
-                                    {f.referralInfo ? (
-                                        <span className="px-2 py-0.5 bg-primary/5 text-primary border border-primary/20 rounded text-[9px] font-black uppercase tracking-tight truncate max-w-[180px]">
-                                            {f.referralInfo}
-                                        </span>
-                                    ) : (
-                                        <span className="flex items-center gap-1">
-                                            <Phone className="h-2.5 w-2.5" />
-                                            {f.contactPhone || 'S/ Tel'}
-                                        </span>
-                                    )}
-                                </div>
+                                <CheckCircle2 className="h-4 w-4 text-muted-foreground group-hover:text-primary opacity-0 group-hover:opacity-100 transition-all" />
                             </div>
-                            <CheckCircle2 className="h-4 w-4 text-muted-foreground group-hover:text-primary opacity-0 group-hover:opacity-100 transition-all" />
-                        </div>
-                    </Link>
-                );
-            })
+                        </Link>
+                    );
+                })}
+            </div>
         )}
       </CardContent>
     </Card>

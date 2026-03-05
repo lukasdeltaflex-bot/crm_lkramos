@@ -6,7 +6,7 @@ import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Calendar as CalendarIcon, History, Search, User, CheckCircle2, RefreshCw, XCircle, Loader2, FilterX, Clock, Sparkles } from 'lucide-react';
+import { PlusCircle, Calendar as CalendarIcon, History, Search, User, CheckCircle2, RefreshCw, XCircle, Loader2, FilterX, Clock, Sparkles, AlertTriangle } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc, setDoc, orderBy } from 'firebase/firestore';
 import type { FollowUp, Customer } from '@/lib/types';
@@ -16,6 +16,16 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { FollowUpForm } from './follow-up-form';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
@@ -33,6 +43,7 @@ export default function FollowUpsPage() {
   const [selectedFollowUp, setSelectedFollowUp] = useState<FollowUp | undefined>(undefined);
   const [isActionDialogOpen, setIsActionDialogOpen] = useState(false);
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
+  const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
   const [actionNotes, setActionNotes] = useState('');
   const [isSummarizingAction, setIsSummarizingAction] = useState(false);
   const [newDueDate, setNewDueDate] = useState(format(addDays(new Date(), 7), 'yyyy-MM-dd'));
@@ -47,7 +58,7 @@ export default function FollowUpsPage() {
       collection(firestore, 'users', user.uid, 'followUps'),
       orderBy('dueDate', 'asc')
     );
-  }, [firestore, user]);
+  }, [firestore, user, isSaving]); // Re-memoize on save to ensure fresh data
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -117,8 +128,9 @@ export default function FollowUpsPage() {
 
     try {
         await setDoc(docRef, updateData, { merge: true });
-        toast({ title: 'Ação realizada com sucesso' });
+        toast({ title: status === 'cancelled' ? 'Agendamento Cancelado' : 'Ação realizada com sucesso' });
         setIsActionDialogOpen(false);
+        setIsCancelConfirmOpen(false);
     } catch (e: any) {
         console.error("❌ CRM ERROR:", e);
         toast({ variant: 'destructive', title: 'Erro ao salvar', description: 'Não foi possível atualizar o status.' });
@@ -383,10 +395,11 @@ export default function FollowUpsPage() {
             </Tabs>
         </div>
         <div className="lg:col-span-1">
-            <FollowUpsWidget />
+            <FollowUpsWidget key={followUps?.length} />
         </div>
       </div>
 
+      {/* MODAL DE AÇÃO NO RETORNO */}
       <Dialog open={isActionDialogOpen} onOpenChange={setIsActionDialogOpen}>
         <DialogContent className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
@@ -430,7 +443,7 @@ export default function FollowUpsPage() {
             </div>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => handleUpdateStatus('cancelled')} disabled={isSaving || isSummarizingAction}>
+            <Button variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => setIsCancelConfirmOpen(true)} disabled={isSaving || isSummarizingAction}>
                 <XCircle className="mr-2 h-4 w-4" /> Cancelar
             </Button>
             <Button variant="outline" onClick={() => setIsRescheduleOpen(true)} disabled={isSaving || isSummarizingAction}>
@@ -444,6 +457,33 @@ export default function FollowUpsPage() {
         </DialogContent>
       </Dialog>
 
+      {/* CONFIRMAÇÃO DE CANCELAMENTO */}
+      <AlertDialog open={isCancelConfirmOpen} onOpenChange={setIsCancelConfirmOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 mb-2">
+                    <AlertTriangle className="h-6 w-6" />
+                </div>
+                <AlertDialogTitle>Cancelar Agendamento?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Você tem certeza que deseja cancelar o retorno de <strong>{selectedFollowUp?.contactName}</strong>? Esta ação não pode ser desfeita e o item sairá da sua lista de pendências.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel disabled={isSaving}>Voltar</AlertDialogCancel>
+                <AlertDialogAction 
+                    onClick={() => handleUpdateStatus('cancelled')} 
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    disabled={isSaving}
+                >
+                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Confirmar Cancelamento
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* REAGENDAMENTO */}
       <Dialog open={isRescheduleOpen} onOpenChange={setIsRescheduleOpen}>
         <DialogContent className="max-w-xs" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
