@@ -35,7 +35,7 @@ import {
     Zap
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { validateCPF, handlePhoneMask, cleanFirestoreData, cn } from '@/lib/utils';
+import { validateCPF, handlePhoneMask, cleanFirestoreData, cn, formatCurrencyInput } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { parse, isValid as isValidDate, isBefore, startOfToday, differenceInYears } from 'date-fns';
@@ -54,9 +54,9 @@ export default function LeadCapturePage() {
     email: '',
     motherName: '',
     benefitNumber: '',
-    grossSalary: '',
-    requestedAmount: '',
-    maxInstallment: '',
+    grossSalary: 0,
+    requestedAmount: 0,
+    maxInstallment: 0,
     intentType: '',
     cep: '',
     street: '',
@@ -88,6 +88,14 @@ export default function LeadCapturePage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     let { name, value } = e.target;
     
+    // 💰 LÓGICA DE MOEDA (IGUAL AO CADASTRO DE CLIENTES)
+    if (['grossSalary', 'requestedAmount', 'maxInstallment'].includes(name)) {
+        const val = value.replace(/\D/g, "");
+        const num = val ? parseInt(val) / 100 : 0;
+        setFormData(prev => ({ ...prev, [name]: num }));
+        return;
+    }
+
     if (name === 'cpf') {
         let v = value.replace(/\D/g, "");
         if (v.length > 11) v = v.substring(0, 11);
@@ -269,9 +277,9 @@ export default function LeadCapturePage() {
             ownerId: uid,
             name: formData.name.toUpperCase(),
             birthDate: birthIso || formData.birthDate,
-            grossSalary: parseFloat(formData.grossSalary) || 0,
-            requestedAmount: parseFloat(formData.requestedAmount) || 0,
-            maxInstallment: parseFloat(formData.maxInstallment) || 0,
+            grossSalary: Number(formData.grossSalary) || 0,
+            requestedAmount: Number(formData.requestedAmount) || 0,
+            maxInstallment: Number(formData.maxInstallment) || 0,
             status: 'pending',
             createdAt: new Date().toISOString(),
             documents: attachments
@@ -408,7 +416,14 @@ export default function LeadCapturePage() {
                                     <Label className="text-[10px] font-black uppercase text-muted-foreground">Salário Bruto (R$)</Label>
                                     <div className="relative">
                                         <span className="absolute left-3 top-3.5 text-[10px] font-black opacity-30">R$</span>
-                                        <Input name="grossSalary" type="number" placeholder="0,00" className="h-12 rounded-xl font-bold pl-10" value={formData.grossSalary} onChange={handleInputChange} />
+                                        <Input 
+                                            name="grossSalary" 
+                                            type="text" 
+                                            placeholder="0,00" 
+                                            className="h-12 rounded-xl font-bold pl-10 text-green-600" 
+                                            value={formatCurrencyInput(Number(formData.grossSalary))} 
+                                            onChange={handleInputChange} 
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -496,14 +511,28 @@ export default function LeadCapturePage() {
                                 <Label className="text-[10px] font-black uppercase text-muted-foreground">Valor que deseja (R$)</Label>
                                 <div className="relative">
                                     <span className="absolute left-3 top-3.5 text-[10px] font-black opacity-30">R$</span>
-                                    <Input name="requestedAmount" type="number" placeholder="Ex: 5000" className="h-12 rounded-xl font-bold pl-10" value={formData.requestedAmount} onChange={handleInputChange} />
+                                    <Input 
+                                        name="requestedAmount" 
+                                        type="text" 
+                                        placeholder="Ex: 5.000,00" 
+                                        className="h-12 rounded-xl font-bold pl-10" 
+                                        value={formatCurrencyInput(Number(formData.requestedAmount))} 
+                                        onChange={handleInputChange} 
+                                    />
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase text-muted-foreground">Parcela Máxima (R$)</Label>
                                 <div className="relative">
                                     <span className="absolute left-3 top-3.5 text-[10px] font-black opacity-30">R$</span>
-                                    <Input name="maxInstallment" type="number" placeholder="Ex: 200" className="h-12 rounded-xl font-bold pl-10" value={formData.maxInstallment} onChange={handleInputChange} />
+                                    <Input 
+                                        name="maxInstallment" 
+                                        type="text" 
+                                        placeholder="Ex: 200,00" 
+                                        className="h-12 rounded-xl font-bold pl-10" 
+                                        value={formatCurrencyInput(Number(formData.maxInstallment))} 
+                                        onChange={handleInputChange} 
+                                    />
                                 </div>
                             </div>
                         </div>
