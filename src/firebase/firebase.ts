@@ -24,11 +24,11 @@ if (typeof window !== "undefined") {
 
         const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
         
-        // 🛡️ CONFIGURAÇÃO DE REDE V22: Forçando Long Polling.
-        // Em ambientes com proxies ou firewalls restritivos, o WebSocket pode falhar e causar timeout.
-        // O Long Polling utiliza requisições HTTPS padrão, garantindo a conexão estável.
+        // 🛡️ CONFIGURAÇÃO DE REDE V23: Forçando Long Polling Absoluto.
+        // O Long Polling utiliza requisições HTTPS padrão, ignorando bloqueios de WebSocket.
         db = initializeFirestore(app, {
             experimentalForceLongPolling: true,
+            experimentalAutoDetectLongPolling: false, // Desativa detecção automática para forçar o protocolo estável
             localCache: persistentLocalCache({
                 tabManager: persistentMultipleTabManager()
             })
