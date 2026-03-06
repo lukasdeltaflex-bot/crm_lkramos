@@ -186,6 +186,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
   });
 
   const watchPhone = form.watch('phone');
+  const watchPhone2 = form.watch('phone2');
   const watchCpf = form.watch('cpf');
   const watchBirthDate = form.watch('birthDate');
   const watchObservations = form.watch('observations');
@@ -502,7 +503,21 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                                 <Phone className="h-3.5 w-3.5 text-[#00AEEF]" /> Telefone 2
                             </FormLabel>
                             <FormControl>
-                                <Input placeholder="(00) 00000-0000" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} maxLength={15} className="rounded-full h-11 px-5 border-zinc-200 font-bold"/>
+                                <div className="relative">
+                                    <Input 
+                                        placeholder="(00) 00000-0000" 
+                                        {...field} 
+                                        value={field.value ?? ''} 
+                                        onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} 
+                                        maxLength={15} 
+                                        className="rounded-full h-11 px-5 border-zinc-200 font-bold"
+                                    />
+                                    {isWhatsApp(watchPhone2 || '') && (
+                                        <a href={getWhatsAppUrl(watchPhone2!)} target="_blank" rel="noopener noreferrer" className="absolute right-4 top-3 h-5 hover:scale-125 transition-transform" title="Abrir WhatsApp">
+                                            <WhatsAppIcon className="h-4 w-4" />
+                                        </a>
+                                    )}
+                                </div>
                             </FormControl>
                             </FormItem>
                         )}
