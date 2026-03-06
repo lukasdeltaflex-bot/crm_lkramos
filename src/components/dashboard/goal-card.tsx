@@ -131,7 +131,7 @@ export function GoalCard({
         </div>
 
         <div className="flex items-end justify-between mb-2" onClick={onValueClick}>
-          <div className="space-y-1 cursor-pointer group">
+          <div className="space-y-2 cursor-pointer group">
             <div className="text-2xl sm:text-3xl font-light tracking-tighter text-green-600 dark:text-green-400 group-hover:translate-x-1 transition-transform">
               {isPrivacyMode ? '•••••' : formatCurrency(currentProduction)}
             </div>
@@ -141,7 +141,7 @@ export function GoalCard({
             </div>
           </div>
 
-          <div className="text-right">
+          <div className="text-right space-y-2">
             <div className="text-xl sm:text-2xl font-light text-green-600 dark:text-green-400 tracking-tighter animate-in slide-in-from-right-2">
               {percentageOfGoal.toFixed(1)}%
             </div>
