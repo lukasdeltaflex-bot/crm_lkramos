@@ -60,7 +60,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { X, Filter, Search, Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Landmark, Building2, User } from 'lucide-react';
+import { X, Filter, Search, Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Landmark, Building2, User, Check } from 'lucide-react';
 import { cn, cleanBankName, normalizeString, formatCurrency } from '@/lib/utils';
 import type { Proposal, Customer, UserSettings } from '@/lib/types';
 import { FinancialSummary } from '@/components/financial/financial-summary';
@@ -101,9 +101,12 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'Data Pagamento', desc: true }]);
   const [statusFilter, setStatusFilter] = React.useState('Todos');
   const [globalFilter, setGlobalFilter] = React.useState('');
-  const [bankFilter, setBankFilter] = React.useState('all');
-  const [promoterFilter, setPromoterFilter] = React.useState('all');
-  const [operatorFilter, setOperatorFilter] = React.useState('all');
+  
+  // 🚀 FILTROS MULTI-SELEÇÃO
+  const [bankFilters, setBankFilters] = React.useState<string[]>([]);
+  const [promoterFilters, setPromoterFilters] = React.useState<string[]>([]);
+  const [operatorFilters, setOperatorFilters] = React.useState<string[]>([]);
+
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [isClient, setIsClient] = React.useState(false);
 
@@ -132,14 +135,14 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         const savedStatus = localStorage.getItem('lk-financial-filter-status');
         if (savedStatus) setStatusFilter(savedStatus);
 
-        const savedBank = localStorage.getItem('lk-financial-filter-bank');
-        if (savedBank) setBankFilter(savedBank);
+        const savedBanks = localStorage.getItem('lk-financial-filter-banks');
+        if (savedBanks) setBankFilters(JSON.parse(savedBanks));
 
-        const savedPromoter = localStorage.getItem('lk-financial-filter-promoter');
-        if (savedPromoter) setPromoterFilter(savedPromoter);
+        const savedPromoters = localStorage.getItem('lk-financial-filter-promoters');
+        if (savedPromoters) setPromoterFilters(JSON.parse(savedPromoters));
 
-        const savedOperator = localStorage.getItem('lk-financial-filter-operator');
-        if (savedOperator) setOperatorFilter(savedOperator);
+        const savedOperators = localStorage.getItem('lk-financial-filter-operators');
+        if (savedOperators) setOperatorFilters(JSON.parse(savedOperators));
 
         const savedSearch = localStorage.getItem('lk-financial-filter-search');
         if (savedSearch) setGlobalFilter(savedSearch);
@@ -185,14 +188,14 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     } catch (e) {}
   }, [initialColumns]);
 
-  const hasActiveFilters = statusFilter !== 'Todos' || bankFilter !== 'all' || promoterFilter !== 'all' || operatorFilter !== 'all' || !!globalFilter || !!appliedDateRange;
+  const hasActiveFilters = statusFilter !== 'Todos' || bankFilters.length > 0 || promoterFilters.length > 0 || operatorFilters.length > 0 || !!globalFilter || !!appliedDateRange;
 
   const handleClearAllFilters = () => {
       setStatusFilter('Todos');
       setGlobalFilter('');
-      setBankFilter('all');
-      setPromoterFilter('all');
-      setOperatorFilter('all');
+      setBankFilters([]);
+      setPromoterFilters([]);
+      setOperatorFilters([]);
       setStartDateInput('');
       setEndDateInput('');
       setAppliedDateRange(undefined);
@@ -202,9 +205,9 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     if (isClient) {
         try {
             localStorage.setItem('lk-financial-filter-status', statusFilter);
-            localStorage.setItem('lk-financial-filter-bank', bankFilter);
-            localStorage.setItem('lk-financial-filter-promoter', promoterFilter);
-            localStorage.setItem('lk-financial-filter-operator', operatorFilter);
+            localStorage.setItem('lk-financial-filter-banks', JSON.stringify(bankFilters));
+            localStorage.setItem('lk-financial-filter-promoters', JSON.stringify(promoterFilters));
+            localStorage.setItem('lk-financial-filter-operators', JSON.stringify(operatorFilters));
             localStorage.setItem('lk-financial-filter-search', globalFilter);
             localStorage.setItem('lk-financial-filter-dates', JSON.stringify({
                 startStr: startDateInput,
@@ -217,7 +220,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             localStorage.setItem('lk-financial-sizing', JSON.stringify(columnSizing));
         } catch(e) {}
     }
-  }, [statusFilter, bankFilter, promoterFilter, operatorFilter, globalFilter, appliedDateRange, startDateInput, endDateInput, columnVisibility, columnOrder, columnSizing, isClient]);
+  }, [statusFilter, bankFilters, promoterFilters, operatorFilters, globalFilter, appliedDateRange, startDateInput, endDateInput, columnVisibility, columnOrder, columnSizing, isClient]);
 
   const handlePaginationChange = (updater: any) => {
     setPagination((old) => {
@@ -265,9 +268,9 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         list = list.filter(p => p.commissionStatus === statusFilter);
     }
 
-    if (bankFilter !== 'all') list = list.filter(p => p.bank === bankFilter);
-    if (promoterFilter !== 'all') list = list.filter(p => p.promoter === promoterFilter);
-    if (operatorFilter !== 'all') list = list.filter(p => (p.operator || 'Sem Operador') === operatorFilter);
+    if (bankFilters.length > 0) list = list.filter(p => bankFilters.includes(p.bank));
+    if (promoterFilters.length > 0) list = list.filter(p => promoterFilters.includes(p.promoter));
+    if (operatorFilters.length > 0) list = list.filter(p => operatorFilters.includes(p.operator || 'Sem Operador'));
 
     if (appliedDateRange && appliedDateRange.from) {
         const fromDate = appliedDateRange.from;
@@ -279,7 +282,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     }
 
     return list;
-  }, [data, statusFilter, bankFilter, promoterFilter, operatorFilter, appliedDateRange, globalFilter]);
+  }, [data, statusFilter, bankFilters, promoterFilters, operatorFilters, appliedDateRange, globalFilter]);
 
   const table = useReactTable({
     data: filteredData,
@@ -368,6 +371,14 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     return Array.from(ops).sort();
   }, [data]);
 
+  const banksList = React.useMemo(() => Array.from(new Set(data.map(p => p.bank))).sort(), [data]);
+  const promotersList = React.useMemo(() => Array.from(new Set(data.map(p => p.promoter))).sort(), [data]);
+
+  const toggleFilter = (current: string[], val: string, setter: (v: string[]) => void) => {
+      if (current.includes(val)) setter(current.filter(v => v !== val));
+      else setter([...current, val]);
+  };
+
   React.useImperativeHandle(ref, () => ({ table }));
 
   return (
@@ -386,82 +397,103 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 </Tabs>
 
                 <div className="flex items-center gap-3 ml-auto flex-nowrap overflow-x-auto pb-1 md:pb-0">
-                    <Select value={operatorFilter} onValueChange={setOperatorFilter}>
-                        <SelectTrigger className="h-10 min-w-[180px] bg-background border rounded-full text-[10px] font-black uppercase px-5 shadow-sm hover:bg-primary/5 transition-colors">
-                            <div className="flex items-center gap-2 truncate">
-                                <SelectValue placeholder="OPERADOR" />
-                            </div>
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl border-2">
-                            <SelectItem value="all" className="font-black text-[10px] uppercase">
-                                <div className="flex items-center gap-3">
-                                    <User className="h-4 w-4 text-primary" />
-                                    <span>Todos Operadores</span>
+                    {/* FILTRO MULTI OPERADOR */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className={cn("h-10 min-w-[180px] bg-background border rounded-full text-[10px] font-black uppercase px-5 shadow-sm hover:bg-primary/5 transition-colors justify-between", operatorFilters.length > 0 && "border-primary text-primary bg-primary/5")}>
+                                <div className="flex items-center gap-2 truncate">
+                                    <User className="h-3.5 w-3.5" />
+                                    <span>{operatorFilters.length === 0 ? "OPERADORES" : `${operatorFilters.length} SELECIONADOS`}</span>
                                 </div>
-                            </SelectItem>
+                                <ChevronDown className="h-3.5 w-3.5 opacity-50" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56 max-h-80 overflow-y-auto">
+                            <DropdownMenuLabel>Selecionar Operadores</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
                             {operatorsList.map(op => (
-                                <SelectItem key={op} value={op} className="font-bold text-[11px] uppercase">
-                                    <div className="flex items-center gap-3">
-                                        <User className="h-4 w-4 text-muted-foreground" />
-                                        <span>{op}</span>
+                                <DropdownMenuCheckboxItem
+                                    key={op}
+                                    checked={operatorFilters.includes(op)}
+                                    onCheckedChange={() => toggleFilter(operatorFilters, op, setOperatorFilters)}
+                                    onSelect={(e) => e.preventDefault()}
+                                    className="font-bold text-[11px] uppercase py-2"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <User className="h-3 w-3 opacity-40" />
+                                        {op}
                                     </div>
-                                </SelectItem>
+                                </DropdownMenuCheckboxItem>
                             ))}
-                        </SelectContent>
-                    </Select>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
 
-                    <Select value={bankFilter} onValueChange={setBankFilter}>
-                        <SelectTrigger className="h-10 min-w-[180px] bg-background border rounded-full text-[10px] font-black uppercase px-5 shadow-sm hover:bg-primary/5 transition-colors">
-                            <div className="flex items-center gap-2 truncate">
-                                <SelectValue placeholder="BANCO" />
-                            </div>
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl border-2">
-                            <SelectItem value="all" className="font-black text-[10px] uppercase">
-                                <div className="flex items-center gap-3">
-                                    <Landmark className="h-4 w-4 text-primary" />
-                                    <span>Todos os Bancos</span>
+                    {/* FILTRO MULTI BANCO */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className={cn("h-10 min-w-[180px] bg-background border rounded-full text-[10px] font-black uppercase px-5 shadow-sm hover:bg-primary/5 transition-colors justify-between", bankFilters.length > 0 && "border-primary text-primary bg-primary/5")}>
+                                <div className="flex items-center gap-2 truncate">
+                                    <Landmark className="h-3.5 w-3.5" />
+                                    <span>{bankFilters.length === 0 ? "BANCOS" : `${bankFilters.length} SELECIONADOS`}</span>
                                 </div>
-                            </SelectItem>
-                            {Array.from(new Set(data.map(p => p.bank))).sort().map(b => (
-                                <SelectItem key={b} value={b} className="font-bold text-[11px] uppercase">
-                                    <div className="flex items-center gap-3">
-                                        <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} className="h-4 w-4" />
-                                        <span>{cleanBankName(b)}</span>
+                                <ChevronDown className="h-3.5 w-3.5 opacity-50" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-64 max-h-80 overflow-y-auto">
+                            <DropdownMenuLabel>Selecionar Instituições</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {banksList.map(b => (
+                                <DropdownMenuCheckboxItem
+                                    key={b}
+                                    checked={bankFilters.includes(b)}
+                                    onCheckedChange={() => toggleFilter(bankFilters, b, setBankFilters)}
+                                    onSelect={(e) => e.preventDefault()}
+                                    className="font-bold text-[11px] uppercase py-2"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} className="h-3.5 w-3.5" />
+                                        <span className="truncate">{cleanBankName(b)}</span>
                                     </div>
-                                </SelectItem>
+                                </DropdownMenuCheckboxItem>
                             ))}
-                        </SelectContent>
-                    </Select>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
 
-                    <Select value={promoterFilter} onValueChange={setPromoterFilter}>
-                        <SelectTrigger className="h-10 min-w-[180px] bg-background border rounded-full text-[10px] font-black uppercase px-5 shadow-sm hover:bg-primary/5 transition-colors">
-                            <div className="flex items-center gap-2 truncate">
-                                <SelectValue placeholder="PROMOTORA" />
-                            </div>
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl border-2">
-                            <SelectItem value="all" className="font-black text-[10px] uppercase">
-                                <div className="flex items-center gap-3">
-                                    <Building2 className="h-4 w-4 text-primary" />
-                                    <span>Todas Promotoras</span>
+                    {/* FILTRO MULTI PROMOTORA */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className={cn("h-10 min-w-[180px] bg-background border rounded-full text-[10px] font-black uppercase px-5 shadow-sm hover:bg-primary/5 transition-colors justify-between", promoterFilters.length > 0 && "border-primary text-primary bg-primary/5")}>
+                                <div className="flex items-center gap-2 truncate">
+                                    <Building2 className="h-3.5 w-3.5" />
+                                    <span>{promoterFilters.length === 0 ? "PROMOTORAS" : `${promoterFilters.length} SELECIONADAS`}</span>
                                 </div>
-                            </SelectItem>
-                            {Array.from(new Set(data.map(p => p.promoter))).sort().map(p => (
-                                <SelectItem key={p} value={p} className="font-bold text-[11px] uppercase">
-                                    <div className="flex items-center gap-3">
+                                <ChevronDown className="h-3.5 w-3.5 opacity-50" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-64 max-h-80 overflow-y-auto">
+                            <DropdownMenuLabel>Selecionar Promotoras</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {promotersList.map(p => (
+                                <DropdownMenuCheckboxItem
+                                    key={p}
+                                    checked={promoterFilters.includes(p)}
+                                    onCheckedChange={() => toggleFilter(promoterFilters, p, setPromoterFilters)}
+                                    onSelect={(e) => e.preventDefault()}
+                                    className="font-bold text-[11px] uppercase py-2"
+                                >
+                                    <div className="flex items-center gap-2">
                                         <BankIcon 
                                             bankName={p} 
                                             domain={userSettings?.promoterDomains?.[p]} 
                                             showLogo={userSettings?.showPromoterLogos ?? true} 
-                                            className="h-4 w-4" 
+                                            className="h-3.5 w-3.5" 
                                         />
-                                        <span>{p}</span>
+                                        <span className="truncate">{p}</span>
                                     </div>
-                                </SelectItem>
+                                </DropdownMenuCheckboxItem>
                             ))}
-                        </SelectContent>
-                    </Select>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
 
