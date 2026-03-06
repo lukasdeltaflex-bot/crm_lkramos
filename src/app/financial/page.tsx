@@ -228,13 +228,15 @@ export default function FinancialPage() {
             'CPF': p.customer?.cpf,
             'Proposta': p.proposalNumber,
             'Banco': cleanBankName(p.bank),
+            'Promotora': p.promoter,
             'Produto': p.product,
+            'Operador': p.operator || '-',
             'Vlr Bruto': p.grossAmount,
+            'Comissão (%)': p.commissionPercentage,
             'Comissão R$': p.commissionValue,
             'Vlr Pago': p.amountPaid || 0,
             'Status': p.commissionStatus,
             'Pagamento': p.commissionPaymentDate ? format(new Date(p.commissionPaymentDate), 'dd/MM/yyyy') : '-',
-            'Operador': p.operator || '-'
         };
     });
 
@@ -277,21 +279,38 @@ export default function FinancialPage() {
             p.customer?.name || '-',
             p.customer?.cpf || '-',
             p.proposalNumber,
+            p.promoter,
             cleanBankName(p.bank),
             p.product,
+            p.operator || '-',
             isPrivacyMode ? '•••••' : formatCurrency(p.grossAmount),
+            isPrivacyMode ? '•••••' : `${p.commissionPercentage.toFixed(2)}%`,
             isPrivacyMode ? '•••••' : formatCurrency(p.commissionValue),
             p.commissionStatus,
             p.commissionPaymentDate ? format(new Date(p.commissionPaymentDate), 'dd/MM/yyyy') : '-'
         ];
     });
 
+    // Adiciona linha de totais se houver seleção
+    if (rowsSource.length > 0) {
+        const totalGross = rowsSource.reduce((acc, r) => acc + (r.original.grossAmount || 0), 0);
+        const totalComm = rowsSource.reduce((acc, r) => acc + (r.original.commissionValue || 0), 0);
+        tableData.push([
+            'TOTAIS', '', '', '', '', '', '',
+            isPrivacyMode ? '•••••' : formatCurrency(totalGross),
+            '',
+            isPrivacyMode ? '•••••' : formatCurrency(totalComm),
+            '', ''
+        ]);
+    }
+
     autoTable(doc, {
         startY: 35,
-        head: [['Cliente', 'CPF', 'Proposta', 'Banco', 'Produto', 'Vlr Bruto', 'Comissão', 'Status', 'Pagamento']],
+        head: [['Cliente', 'CPF', 'Proposta', 'Promotora', 'Banco', 'Produto', 'Operador', 'Vlr Bruto', '%', 'Comissão', 'Status', 'Pagamento']],
         body: tableData,
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [40, 74, 127] }
+        styles: { fontSize: 7 },
+        headStyles: { fillColor: [40, 74, 127] },
+        footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' }
     });
 
     doc.save(`financeiro_${onlySelected ? 'selecao' : 'completo'}.pdf`);
