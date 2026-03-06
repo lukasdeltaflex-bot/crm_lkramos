@@ -2,13 +2,13 @@
 
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
-import { initializeFirestore, Firestore, persistentLocalCache, memoryLocalCache } from "firebase/firestore";
+import { initializeFirestore, Firestore, persistentLocalCache, memoryLocalCache, getFirestore } from "firebase/firestore";
 import { getStorage, FirebaseStorage } from "firebase/storage";
 import { firebaseConfig } from "./config";
 
 /**
- * 🛠️ INFRAESTRUTURA DE DADOS LK RAMOS - ULTRA RESILIENTE
- * Otimizado para ambientes com restrição de rede, proxies corporativos e Safari iOS.
+ * 🛠️ INFRAESTRUTURA DE DADOS LK RAMOS - SINGLETON RESILIENTE
+ * Otimizado para evitar múltiplas inicializações e garantir conectividade em redes instáveis.
  */
 
 let db: Firestore | null = null;
@@ -19,35 +19,38 @@ if (typeof window !== "undefined") {
     try {
         const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
         
-        // 🛡️ PROTOCOLO DE CONEXÃO BLINDADO (MODO COMPATIBILIDADE TOTAL)
-        // Forçamos Long Polling e desativamos Fetch Streams para máxima estabilidade.
-        // Removemos configurações manuais de host para permitir que o SDK escolha a melhor rota.
-        const firestoreSettings = {
-            experimentalForceLongPolling: true,
-            experimentalAutoDetectLongPolling: false,
-            useFetchStreams: false, 
-        };
+        // 🛡️ VERIFICAÇÃO DE SINGLETON: Evita erro de "Firestore has already been initialized"
+        // que pode causar falhas de conexão no Next.js HMR.
+        try {
+            db = getFirestore(app);
+        } catch (e) {
+            // Se falhar (ex: configurações pendentes), inicializamos com o protocolo blindado
+            const firestoreSettings = {
+                experimentalForceLongPolling: true,
+                experimentalAutoDetectLongPolling: false,
+                useFetchStreams: false,
+                ignoreUndefinedProperties: true,
+            };
 
-        // Gerenciamento de cache resiliente (Safe para Safari Mobile e Modo Privado)
-        // Removido TabManager para evitar conflitos de bloqueio de escrita em navegadores restritos.
-        const localCache = (() => {
-            try {
-                return persistentLocalCache({});
-            } catch (e) {
-                console.warn("⚠️ LK RAMOS: Cache persistente não suportado. Usando modo memória.");
-                return memoryLocalCache();
-            }
-        })();
+            const localCache = (() => {
+                try {
+                    return persistentLocalCache({});
+                } catch (e) {
+                    console.warn("⚠️ LK RAMOS: Cache persistente não suportado. Usando modo memória.");
+                    return memoryLocalCache();
+                }
+            })();
 
-        db = initializeFirestore(app, {
-            ...firestoreSettings,
-            localCache
-        });
+            db = initializeFirestore(app, {
+                ...firestoreSettings,
+                localCache
+            });
+        }
 
         auth = getAuth(app);
         storage = getStorage(app, firebaseConfig.storageBucket);
         
-        console.log("💎 LK RAMOS: Conectividade Firestore estabilizada via Long Polling.");
+        console.log("💎 LK RAMOS: Conectividade Firestore estabilizada.");
     } catch (error) {
         console.error("❌ Falha crítica na inicialização Firebase:", error);
     }
