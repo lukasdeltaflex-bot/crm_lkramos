@@ -70,7 +70,26 @@ const ActionsCell = ({ row, onEdit, onView, onDelete, onDuplicate }: any) => {
     const [isAlertOpen, setIsAlertOpen] = useState(false);
 
     return (
-      <div className="text-right" onClick={(e) => e.stopPropagation()}>
+      <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+        {/* 🚀 ATALHO RÁPIDO: DUPLICAR EM 1-CLIQUE */}
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 rounded-full text-blue-600 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all active:scale-90" 
+                        onClick={() => onDuplicate && onDuplicate(proposal)}
+                    >
+                        <CopyPlus className="h-4 w-4" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                    <p className="text-[10px] font-black uppercase tracking-widest">Duplicar Proposta (1-Clique)</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted transition-colors rounded-full border border-transparent hover:border-border">

@@ -54,7 +54,8 @@ import {
     Copy,
     DollarSign,
     CreditCard,
-    GripVertical
+    GripVertical,
+    CopyPlus
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -221,25 +222,29 @@ export default function ManualPage() {
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600"><Copy className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">6. Produtividade & Máscaras de Moeda</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Precisão Financeira Total</p>
+                                <p className="font-bold text-sm">6. Produtividade & Atalhos de Elite</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Precisão Financeira e Agilidade</p>
                             </div>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
-                        <div className="p-4 rounded-xl bg-blue-50/5 border border-blue-500/20">
-                            <h4 className="font-bold text-blue-700 flex items-center gap-2 mb-2">
-                                <DollarSign className="h-4 w-4" /> Formatação em Tempo Real
-                            </h4>
-                            <p className="text-xs text-muted-foreground">
-                                Todos os campos de valor do sistema agora possuem **Máscara de Moeda Inteligente**. Isso inclui:
-                            </p>
-                            <ul className="mt-2 space-y-1 text-xs font-bold text-primary list-disc pl-4 uppercase">
-                                <li>Valor Bruto e Líquido nas Propostas</li>
-                                <li>Salário no Cadastro de Clientes</li>
-                                <li>Meta Mensal no Dashboard</li>
-                                <li>Lançamento de Despesas Operacionais</li>
-                            </ul>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="p-4 rounded-xl bg-blue-50/5 border border-blue-500/20">
+                                <h4 className="font-bold text-blue-700 flex items-center gap-2 mb-2">
+                                    <CopyPlus className="h-4 w-4" /> Duplicação em 1-Clique
+                                </h4>
+                                <p className="text-xs text-muted-foreground">
+                                    Na tabela de propostas, utilize o ícone de **Duplicar** diretamente na linha. Isso clonará os dados do cliente e do banco, permitindo lançar um novo contrato em segundos.
+                                </p>
+                            </div>
+                            <div className="p-4 rounded-xl bg-emerald-50/5 border border-emerald-500/20">
+                                <h4 className="font-bold text-emerald-700 flex items-center gap-2 mb-2">
+                                    <DollarSign className="h-4 w-4" /> Máscaras de Moeda
+                                </h4>
+                                <p className="text-xs text-muted-foreground">
+                                    Todos os campos de valor possuem formatação em tempo real, garantindo precisão total nos cálculos de comissão e volume bruto.
+                                </p>
+                            </div>
                         </div>
                     </AccordionContent>
                 </AccordionItem>
