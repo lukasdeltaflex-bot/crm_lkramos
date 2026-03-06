@@ -264,8 +264,11 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 return d && isValid(d) && d >= startOfThisMonth && d <= endOfThisMonth;
             });
         }
-    } else if (statusFilter === 'Pendente' || statusFilter === 'Parcial') {
-        list = list.filter(p => p.commissionStatus === statusFilter);
+    } else if (statusFilter === 'Pendente') {
+        // 🛡️ FILTRO BLINDADO V2: Só mostra pendentes se houver data de averbação
+        list = list.filter(p => p.commissionStatus === 'Pendente' && !!p.dateApproved);
+    } else if (statusFilter === 'Parcial') {
+        list = list.filter(p => p.commissionStatus === 'Parcial');
     }
 
     if (bankFilters.length > 0) list = list.filter(p => bankFilters.includes(p.bank));
@@ -573,8 +576,15 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                         <TableBody>
                             {table.getRowModel().rows.length > 0 ? (
                                 table.getRowModel().rows.map(row => {
-                                    const commStatus = row.original.commissionStatus;
-                                    const colorValue = (commStatus && typeof commStatus === 'string') ? (statusColors[commStatus.toUpperCase()] || statusColors[commStatus]) : undefined;
+                                    const p = row.original;
+                                    const commStatus = p.commissionStatus;
+                                    
+                                    // 🛡️ LÓGICA DE COR BLINDADA V2: Só colore Pendente se houver averbação
+                                    const effectiveStatus = (commStatus === 'Paga' || commStatus === 'Parcial')
+                                        ? commStatus
+                                        : (p.dateApproved ? 'Pendente' : null);
+
+                                    const colorValue = effectiveStatus ? (statusColors[effectiveStatus.toUpperCase()] || statusColors[effectiveStatus]) : undefined;
                                     
                                     return (
                                         <TableRow 
