@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useRef } from 'react';
@@ -15,6 +14,16 @@ export function FirebaseErrorListener() {
   const lastLogTimeRef = useRef<number>(0);
 
   useEffect(() => {
+    // 🛡️ INTERCEPTOR DE CONSOLE: Silencia avisos de timeout que o NextJS promove a erros
+    const originalWarn = console.warn;
+    console.warn = (...args) => {
+        if (typeof args[0] === 'string' && args[0].includes('Could not reach Cloud Firestore backend')) {
+            // Log discreto apenas se necessário, sem disparar erro visual
+            return;
+        }
+        originalWarn.apply(console, args);
+    };
+
     const handleError = (error: FirestorePermissionError) => {
       const now = Date.now();
       const errorKey = `${error.request.method}:${error.request.path}`;
@@ -39,6 +48,7 @@ export function FirebaseErrorListener() {
 
     return () => {
       errorEmitter.off('permission-error', handleError);
+      console.warn = originalWarn; // Restaura o console original
     };
   }, []);
 

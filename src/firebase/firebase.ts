@@ -2,7 +2,7 @@
 
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
-import { initializeFirestore, Firestore, persistentLocalCache, persistentMultipleTabManager, memoryLocalCache } from "firebase/firestore";
+import { initializeFirestore, Firestore, persistentLocalCache, memoryLocalCache } from "firebase/firestore";
 import { getStorage, FirebaseStorage } from "firebase/storage";
 import { firebaseConfig } from "./config";
 
@@ -19,23 +19,20 @@ if (typeof window !== "undefined") {
     try {
         const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
         
-        // 🛡️ PROTOCOLO DE CONEXÃO BLINDADO V26
-        // Forçamos Long Polling e desativamos Fetch Streams para máxima compatibilidade.
-        // Isso resolve erros de "Could not reach Cloud Firestore backend" em redes instáveis.
+        // 🛡️ PROTOCOLO DE CONEXÃO BLINDADO (MODO COMPATIBILIDADE TOTAL)
+        // Forçamos Long Polling e desativamos Fetch Streams para máxima estabilidade.
+        // Removemos configurações manuais de host para permitir que o SDK escolha a melhor rota.
         const firestoreSettings = {
             experimentalForceLongPolling: true,
             experimentalAutoDetectLongPolling: false,
-            useFetchStreams: false, // Crucial: Evita problemas com proxies que não suportam streams
-            host: "firestore.googleapis.com",
-            ssl: true,
+            useFetchStreams: false, 
         };
 
         // Gerenciamento de cache resiliente (Safe para Safari Mobile e Modo Privado)
+        // Removido TabManager para evitar conflitos de bloqueio de escrita em navegadores restritos.
         const localCache = (() => {
             try {
-                return persistentLocalCache({
-                    tabManager: persistentMultipleTabManager()
-                });
+                return persistentLocalCache({});
             } catch (e) {
                 console.warn("⚠️ LK RAMOS: Cache persistente não suportado. Usando modo memória.");
                 return memoryLocalCache();
@@ -50,7 +47,7 @@ if (typeof window !== "undefined") {
         auth = getAuth(app);
         storage = getStorage(app, firebaseConfig.storageBucket);
         
-        console.log("💎 LK RAMOS: Conectividade Firestore estabilizada via Long Polling + No-Streams.");
+        console.log("💎 LK RAMOS: Conectividade Firestore estabilizada via Long Polling.");
     } catch (error) {
         console.error("❌ Falha crítica na inicialização Firebase:", error);
     }
