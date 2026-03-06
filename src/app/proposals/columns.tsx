@@ -31,7 +31,8 @@ import {
     Send, 
     FileCheck, 
     PenTool, 
-    ShieldCheck 
+    ShieldCheck,
+    CopyPlus
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { formatCurrency, cleanBankName, cn, formatDateSafe, isWhatsApp, getWhatsAppUrl, calculateBusinessDays } from '@/lib/utils';
@@ -81,7 +82,9 @@ const ActionsCell = ({ row, onEdit, onView, onDelete, onDuplicate }: any) => {
             <DropdownMenuLabel>Opções da Proposta</DropdownMenuLabel>
             <DropdownMenuItem onSelect={() => onView && onView(proposal)} className="font-bold">Ver detalhes</DropdownMenuItem>
             <DropdownMenuItem onSelect={() => onEdit && onEdit(proposal)} className="font-bold">Editar Registro</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => onDuplicate && onDuplicate(proposal)} className="font-bold">Duplicar Proposta</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => onDuplicate && onDuplicate(proposal)} className="font-bold text-blue-600 focus:text-blue-600 flex items-center gap-2">
+                <CopyPlus className="h-3.5 w-3.5" /> Duplicar Proposta
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem 
                 onSelect={() => setIsAlertOpen(true)}
@@ -183,10 +186,6 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
     )
 }
 
-/**
- * 🛡️ COMPONENTE DE CÉLULA BLINDADO (FORA DAS COLUNAS)
- * Evita recriação de componentes durante o render da tabela para performance máxima.
- */
 const ProposalStatusCell = ({ p, onStatusChange }: { p: Proposal; onStatusChange: any }) => {
     const [hasMounted, setHasMounted] = useState(false);
     useEffect(() => setHasMounted(true), []);

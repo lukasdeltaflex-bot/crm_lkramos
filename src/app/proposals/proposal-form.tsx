@@ -50,7 +50,8 @@ import {
     PenTool,
     ShieldCheck,
     SearchX,
-    Zap
+    Zap,
+    Save
 } from 'lucide-react';
 import { format, parse, parseISO, isValid } from 'date-fns';
 import { cn, formatCurrency, cleanBankName, cleanFirestoreData, formatCurrencyInput } from '@/lib/utils';
@@ -321,15 +322,9 @@ export function ProposalForm({
     });
   }, [watchProposalNumber, allProposals, proposal?.id]);
 
-  /**
-   * 🛡️ MOTOR DE BENEFÍCIO INTELIGENTE V2
-   * Resolve o bug onde o NB sumia ao carregar a página ou salvar.
-   * Agora ele só altera o NB se o CLIENTE mudar na tela.
-   */
   const prevCustomerIdRef = useRef(initialValues.customerId);
   useEffect(() => {
     if (selectedCustomerId && selectedCustomerId !== prevCustomerIdRef.current) {
-        // O cliente realmente mudou (ação do usuário)
         setValue('selectedBenefitNumber', '');
         if (selectedCustomer) {
             const benefits = selectedCustomer.benefits || [];
@@ -347,7 +342,6 @@ export function ProposalForm({
     }
   }, [sheetMode, setValue, watchDateDigitized]);
 
-  // Regras de negócio dinâmicas para Cartão - Plástico
   useEffect(() => {
     if (productValue === 'Cartão - Plástico') {
         setValue('term', 1, { shouldValidate: true });
@@ -378,12 +372,14 @@ export function ProposalForm({
   }, [commissionBase, commissionPercentage, grossAmount, netAmount, setValue, isReadOnly]);
 
   /**
-   * ✍️ GESTÃO DE HISTÓRICO UNIFICADA
-   * Evita perda de dados ao salvar o histórico apenas junto com a proposta.
+   * 🛡️ BLINDAGEM DE HISTÓRICO V3
+   * Agora salva imediatamente no Firestore se a proposta já existir (sheetMode === 'edit').
+   * Se for nova proposta, mantém o comportamento de staging.
    */
-  const handleAddHistory = (customMessage: string) => {
+  const handleAddHistory = async (customMessage: string) => {
     if (!customMessage || !user) return;
     
+    setIsAddingHistory(true);
     const now = new Date().toISOString();
     const entry: ProposalHistoryEntry = {
         id: crypto.randomUUID(),
@@ -392,10 +388,27 @@ export function ProposalForm({
         userName: user.displayName || user.email || 'Agente'
     };
 
-    // Adiciona à lista temporária (staged)
-    setStagedHistory(prev => [entry, ...prev]);
-    setNewHistoryEntry('');
-    toast({ title: "Atualização reservada!", description: "Será gravada ao clicar em Salvar Proposta." });
+    if (proposal?.id && firestore) {
+        // SALVAMENTO IMEDIATO (CRM BLINDADO)
+        try {
+            const docRef = doc(firestore, 'loanProposals', proposal.id);
+            await updateDoc(docRef, {
+                history: arrayUnion(entry)
+            });
+            toast({ title: "Histórico Gravado!", description: "A anotação foi salva permanentemente." });
+            setNewHistoryEntry('');
+        } catch (e) {
+            toast({ variant: 'destructive', title: "Erro ao salvar histórico" });
+        } finally {
+            setIsAddingHistory(false);
+        }
+    } else {
+        // STAGING PARA NOVA PROPOSTA
+        setStagedHistory(prev => [entry, ...prev]);
+        setNewHistoryEntry('');
+        toast({ title: "Atualização reservada!", description: "Será gravada ao clicar em Salvar Proposta." });
+        setIsAddingHistory(false);
+    }
   };
 
   const displayHistory = useMemo(() => {
@@ -470,8 +483,6 @@ export function ProposalForm({
     }
 
     const existingHistory = Array.isArray(proposal?.history) ? proposal!.history : [];
-    
-    // 🛡️ PERSISTÊNCIA TOTAL: Une histórico do banco + histórico digitado agora + auditorias do sistema
     finalData.history = [...existingHistory, ...stagedHistory, ...auditEntries];
     
     if (proposal?.status !== finalData.status) {
@@ -564,14 +575,13 @@ export function ProposalForm({
                 />
               </div>
 
-              {/* 🚀 TÓPICOS RÁPIDOS EM FORMATO DE SELEÇÃO */}
               {!isReadOnly && (
                   <div className="p-4 rounded-2xl border-2 border-dashed bg-primary/[0.02] space-y-3 animate-in fade-in duration-500">
                       <div className="flex items-center gap-2">
                           <Zap className="h-3.5 w-3.5 text-primary" />
                           <span className="text-[10px] font-black uppercase tracking-widest text-primary/60">Registrar Trâmite Instantâneo (Sub-status)</span>
                       </div>
-                      <Select onValueChange={(val) => handleAddHistory(val)}>
+                      <Select onValueChange={(val) => handleAddHistory(val)} disabled={isAddingHistory}>
                           <SelectTrigger className="rounded-xl border-2 bg-background font-bold text-xs h-11">
                               <SelectValue placeholder="Selecione um tópico rápido para registrar..." />
                           </SelectTrigger>
@@ -1118,7 +1128,7 @@ export function ProposalForm({
                     disabled={isSaving || isDuplicateProposal} 
                     className="rounded-full px-10 font-black uppercase tracking-widest bg-[#00AEEF] hover:bg-[#0096D1] shadow-lg shadow-[#00AEEF]/20 transition-all border-none"
                 >
-                    {isSaving ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Salvando...</> : 'Salvar Proposta'}
+                    {isSaving ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Salvando...</> : <><Save className="mr-2 h-4 w-4" /> Salvar Proposta</>}
                 </Button>
             )}
         </div>

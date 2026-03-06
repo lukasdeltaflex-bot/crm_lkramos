@@ -43,7 +43,8 @@ import {
     Hash,
     X,
     Info,
-    Tag
+    Tag,
+    Save
 } from 'lucide-react';
 import { format, parse, isValid, differenceInYears } from 'date-fns';
 import { validateCPF, handlePhoneMask, cn, isWhatsApp, getWhatsAppUrl, cleanBankName, cleanFirestoreData, formatCurrencyInput } from '@/lib/utils';
@@ -851,7 +852,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                 {isSaving ? (
                     <div className="flex items-center"><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Salvando...</div>
                 ) : (
-                    duplicity.cpf ? 'CPF Já Cadastrado' : 'Salvar Cadastro'
+                    duplicity.cpf ? 'CPF Já Cadastrado' : <><Save className="mr-2 h-4 w-4" /> Salvar Cadastro</>
                 )}
             </Button>
         </div>
