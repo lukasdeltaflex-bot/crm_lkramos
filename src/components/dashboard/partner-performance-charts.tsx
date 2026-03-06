@@ -17,7 +17,7 @@ interface PartnerPerformanceChartsProps {
 /**
  * Componente customizado para o eixo Y que exibe o ícone do banco e o nome limpo.
  */
-const CustomYAxisTick = ({ x, y, payload, type, bankDomains, showLogos }: any) => {
+const CustomYAxisTick = ({ x, y, payload, type, bankDomains, promoterDomains, showBankLogos, showPromoterLogos }: any) => {
   if (type === 'banks') {
     const cleanedName = cleanBankName(payload.value);
     const domain = bankDomains?.[payload.value];
@@ -29,7 +29,25 @@ const CustomYAxisTick = ({ x, y, payload, type, bankDomains, showLogos }: any) =
               {cleanedName}
             </span>
             <div className="shrink-0">
-                <BankIcon bankName={payload.value} domain={domain} showLogo={showLogos} className="h-3.5 w-3.5" />
+                <BankIcon bankName={payload.value} domain={domain} showLogo={showBankLogos} className="h-3.5 w-3.5" />
+            </div>
+          </div>
+        </foreignObject>
+      </g>
+    );
+  }
+
+  if (type === 'promoters') {
+    const domain = promoterDomains?.[payload.value];
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <foreignObject x={-185} y={-10} width={180} height={20}>
+          <div className="flex items-center justify-end gap-2 w-full h-full pr-1">
+            <span className="text-[10px] font-bold text-muted-foreground truncate text-right flex-1 leading-none">
+              {payload.value}
+            </span>
+            <div className="shrink-0">
+                <BankIcon bankName={payload.value} domain={domain} showLogo={showPromoterLogos} className="h-3.5 w-3.5" />
             </div>
           </div>
         </foreignObject>
@@ -62,8 +80,10 @@ export function PartnerPerformanceCharts({ proposals }: PartnerPerformanceCharts
   }, [firestore, user]);
 
   const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
-  const showLogos = userSettings?.showBankLogos ?? true;
+  const showBankLogos = userSettings?.showBankLogos ?? true;
+  const showPromoterLogos = userSettings?.showPromoterLogos ?? true;
   const bankDomains = userSettings?.bankDomains || {};
+  const promoterDomains = userSettings?.promoterDomains || {};
 
   const bankData = useMemo(() => {
     const dataMap: Record<string, number> = {};
@@ -121,7 +141,7 @@ export function PartnerPerformanceCharts({ proposals }: PartnerPerformanceCharts
             width={180} 
             tickLine={false}
             axisLine={false}
-            tick={<CustomYAxisTick type={type} bankDomains={bankDomains} showLogos={showLogos} />}
+            tick={<CustomYAxisTick type={type} bankDomains={bankDomains} promoterDomains={promoterDomains} showBankLogos={showBankLogos} showPromoterLogos={showPromoterLogos} />}
           />
           <Tooltip 
             cursor={{ fill: 'hsl(var(--muted)/0.1)' }}

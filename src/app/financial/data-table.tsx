@@ -542,7 +542,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                             {table.getRowModel().rows.length > 0 ? (
                                 table.getRowModel().rows.map(row => {
                                     const commStatus = row.original.commissionStatus;
-                                    const colorValue = commStatus ? (statusColors[commStatus.toUpperCase()] || statusColors[commStatus]) : undefined;
+                                    const colorValue = (commStatus && typeof commStatus === 'string') ? (statusColors[commStatus.toUpperCase()] || statusColors[commStatus]) : undefined;
                                     
                                     return (
                                         <TableRow 

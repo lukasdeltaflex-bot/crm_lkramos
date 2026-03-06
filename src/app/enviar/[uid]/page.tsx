@@ -144,7 +144,7 @@ export default function LeadCapturePage() {
     if (formData.birthDate.length < 10) return null;
     try {
         const parsed = parse(formData.birthDate, 'dd/MM/yyyy', new Date());
-        if (isValidDate(parsed)) {
+        if (isValidDate(parsed) && isBefore(parsed, startOfToday())) {
             return differenceInYears(new Date(), parsed);
         }
     } catch { return null; }

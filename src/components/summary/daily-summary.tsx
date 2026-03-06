@@ -104,15 +104,18 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
     setIsClient(true);
   }, []);
 
-  const dismissedItems = userSettings?.dismissedAlerts || [];
+  const dismissedItems = useMemo(() => userSettings?.dismissedAlerts || [], [userSettings]);
 
   const handleDismiss = async (itemId: string) => {
     if (!user || !firestore) return;
     try {
-        await setDoc(doc(firestore, 'userSettings', user.uid), {
-            dismissedAlerts: [...dismissedItems, itemId]
-        }, { merge: true });
-        toast({ title: "Alerta removido globalmente" });
+        const currentDismissed = [...dismissedItems];
+        if (!currentDismissed.includes(itemId)) {
+            await setDoc(doc(firestore, 'userSettings', user.uid), {
+                dismissedAlerts: [...currentDismissed, itemId]
+            }, { merge: true });
+            toast({ title: "Alerta removido globalmente" });
+        }
     } catch (e) {
         console.error("Failed to sync dismiss state:", e);
     }
