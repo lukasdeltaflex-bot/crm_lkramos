@@ -206,7 +206,6 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         const cpfDigits = customer.cpf?.replace(/\D/g, '') || '';
         const phoneDigits = customer.phone?.replace(/\D/g, '') || '';
 
-        // 🛡️ BUSCA NUCLEAR V13: Indexação de Smart Tags e IDs
         if (/^\d+$/.test(searchTerm)) {
             if (customer.numericId?.toString() === searchTerm) return true;
             if (searchTerm.length > 3) {
@@ -221,7 +220,6 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
 
         const normalizedSearch = normalizeString(searchTerm);
         
-        // 💎 INCLUI SMART TAGS NO ÍNDICE DE BUSCA DA TABELA
         const searchableFields = [
             customer.name,
             customer.cpf,
@@ -240,6 +238,14 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   });
 
   React.useImperativeHandle(ref, () => ({ table }));
+
+  const getStickyClass = (columnId: string) => {
+    if (columnId === 'Selecionar') return 'sticky left-0 z-30 bg-background shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]';
+    if (columnId === 'ID') return 'sticky left-[50px] z-30 bg-background shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]';
+    if (columnId === 'Nome') return 'sticky left-[130px] z-30 bg-background shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]';
+    if (columnId === 'Ações') return 'sticky right-0 z-30 bg-background shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]';
+    return '';
+  };
 
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
@@ -284,14 +290,18 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
           </div>
           
           <div className="customers-table">
-            <div className="overflow-auto relative">
+            <div className="overflow-x-auto relative">
                 <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
                     <TableHeader className="bg-background dark:bg-zinc-900 border-b-2">
                         {table.getHeaderGroups().map(headerGroup => (
                         <TableRow key={headerGroup.id} className="hover:bg-transparent border-b-2 border-zinc-200 dark:border-zinc-800">
                             <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
                             {headerGroup.headers.map(header => (
-                                <DraggableHeader key={header.id} header={header as Header<Customer, unknown>} />
+                                <DraggableHeader 
+                                    key={header.id} 
+                                    header={header as Header<Customer, unknown>} 
+                                    className={getStickyClass(header.column.id)}
+                                />
                             ))}
                             </SortableContext>
                         </TableRow>
@@ -317,7 +327,10 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
                                 <TableCell 
                                     key={cell.id} 
                                     style={{ width: cell.column.getSize() }}
-                                    className="p-2 text-sm border-none"
+                                    className={cn(
+                                        "p-2 text-sm border-none",
+                                        getStickyClass(cell.column.id)
+                                    )}
                                 >
                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                 </TableCell>

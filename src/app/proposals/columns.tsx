@@ -71,7 +71,6 @@ const ActionsCell = ({ row, onEdit, onView, onDelete, onDuplicate }: any) => {
 
     return (
       <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-        {/* 🚀 ATALHO RÁPIDO: DUPLICAR EM 1-CLIQUE */}
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
@@ -133,7 +132,7 @@ const ActionsCell = ({ row, onEdit, onView, onDelete, onDuplicate }: any) => {
     );
 };
 
-export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => {
+export const DraggableHeader = ({ header, className }: { header: Header<any, unknown>, className?: string }) => {
     const isDraggable = header.column.getCanSort();
     const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({ 
         id: header.column.id,
@@ -146,7 +145,7 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
         opacity: isDragging ? 0.5 : 1,
     };
 
-    const isActions = header.column.id === 'Actions';
+    const isActions = header.column.id === 'Actions' || header.column.id === 'Ações';
     const isSelect = header.column.id === 'Selecionar';
 
     return (
@@ -154,7 +153,10 @@ export const DraggableHeader = ({ header }: { header: Header<any, unknown>}) => 
             ref={setNodeRef}
             colSpan={header.colSpan}
             style={style}
-            className={cn('relative p-0 h-14 transition-colors hover:bg-muted/50 border-b-2 border-zinc-200 dark:border-zinc-800')}
+            className={cn(
+                'relative p-0 h-14 transition-colors hover:bg-muted/50 border-b-2 border-zinc-200 dark:border-zinc-800',
+                className
+            )}
         >
             <div className="flex flex-col h-full justify-center">
                 <div

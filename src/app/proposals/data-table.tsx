@@ -95,7 +95,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const [statusFilter, setStatusFilter] = React.useState('Todos');
   const [globalFilter, setGlobalFilter] = React.useState('');
   
-  // 🚀 FILTROS MULTI-SELEÇÃO
   const [bankFilters, setBankFilters] = React.useState<string[]>([]);
   const [promoterFilters, setPromoterFilters] = React.useState<string[]>([]);
   const [operatorFilters, setOperatorFilters] = React.useState<string[]>([]);
@@ -370,6 +369,14 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
       else setter([...current, val]);
   };
 
+  const getStickyClass = (columnId: string) => {
+    if (columnId === 'Selecionar') return 'sticky left-0 z-30 bg-background shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]';
+    if (columnId === 'Etapas') return 'sticky left-[50px] z-30 bg-background shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]';
+    if (columnId === 'Promotora') return 'sticky left-[150px] z-30 bg-background shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]';
+    if (columnId === 'Actions') return 'sticky right-0 z-30 bg-background shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]';
+    return '';
+  };
+
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
         <div className="space-y-4">
@@ -384,7 +391,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                                     key={s} 
                                     value={s} 
                                     className="status-tab font-black uppercase text-[10px] tracking-widest px-4 h-9 border-2 border-transparent data-[state=active]:bg-background"
-                                    style={colorValue ? { '--status-color': colorValue } as any : {}}
+                                    style={{ '--status-color': colorValue } as any}
                                 >
                                     {s}
                                 </TabsTrigger>
@@ -394,7 +401,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                 </Tabs>
 
                 <div className="flex items-center gap-3 ml-auto flex-nowrap overflow-x-auto pb-1 md:pb-0">
-                    {/* FILTRO MULTI OPERADOR */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className={cn("h-10 min-w-[180px] bg-background border rounded-full text-[10px] font-black uppercase px-5 shadow-sm hover:bg-primary/5 transition-colors justify-between", operatorFilters.length > 0 && "border-primary text-primary bg-primary/5")}>
@@ -425,7 +431,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                         </DropdownMenuContent>
                     </DropdownMenu>
 
-                    {/* FILTRO MULTI BANCO */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className={cn("h-10 min-w-[180px] bg-background border rounded-full text-[10px] font-black uppercase px-5 shadow-sm hover:bg-primary/5 transition-colors justify-between", bankFilters.length > 0 && "border-primary text-primary bg-primary/5")}>
@@ -456,7 +461,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                         </DropdownMenuContent>
                     </DropdownMenu>
 
-                    {/* FILTRO MULTI PROMOTORA */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className={cn("h-10 min-w-[180px] bg-background border rounded-full text-[10px] font-black uppercase px-5 shadow-sm hover:bg-primary/5 transition-colors justify-between", promoterFilters.length > 0 && "border-primary text-primary bg-primary/5")}>
@@ -584,13 +588,19 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
 
             <Card ref={tableContainerRef} className="proposals-table border-2 border-zinc-300 dark:border-primary/30 shadow-xl rounded-xl overflow-hidden bg-card p-1">
                 <div className="p-0">
-                    <div className="overflow-auto relative">
+                    <div className="overflow-x-auto relative">
                         <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
                             <TableHeader className="bg-background dark:bg-zinc-900 border-b-2">
                                 {table.getHeaderGroups().map(hg => (
                                     <TableRow key={hg.id} className="hover:bg-transparent">
                                         <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
-                                            {hg.headers.map(h => <DraggableHeader key={h.id} header={h as any} />)}
+                                            {hg.headers.map(h => (
+                                                <DraggableHeader 
+                                                    key={h.id} 
+                                                    header={h as any} 
+                                                    className={getStickyClass(h.column.id)}
+                                                />
+                                            ))}
                                         </SortableContext>
                                     </TableRow>
                                     ))}
@@ -608,13 +618,16 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                                                     "transition-colors border-b h-14 hover:bg-primary/[0.03]",
                                                     colorValue && "status-row-custom"
                                                 )}
-                                                style={colorValue ? { '--status-color': colorValue } as any : {}}
+                                                style={{ '--status-color': colorValue } as any}
                                             >
                                                 {row.getVisibleCells().map(cell => (
                                                     <TableCell 
                                                         key={cell.id} 
                                                         style={{ width: cell.column.getSize() }} 
-                                                        className="p-3 text-sm border-none"
+                                                        className={cn(
+                                                            "p-3 text-sm border-none",
+                                                            getStickyClass(cell.column.id)
+                                                        )}
                                                     >
                                                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                                     </TableCell>

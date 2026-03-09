@@ -102,7 +102,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const [statusFilter, setStatusFilter] = React.useState('Todos');
   const [globalFilter, setGlobalFilter] = React.useState('');
   
-  // 🚀 FILTROS MULTI-SELEÇÃO
   const [bankFilters, setBankFilters] = React.useState<string[]>([]);
   const [promoterFilters, setPromoterFilters] = React.useState<string[]>([]);
   const [operatorFilters, setOperatorFilters] = React.useState<string[]>([]);
@@ -265,7 +264,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             });
         }
     } else if (statusFilter === 'Pendente') {
-        // 🛡️ FILTRO BLINDADO V2: Só mostra pendentes se houver data de averbação
         list = list.filter(p => p.commissionStatus === 'Pendente' && !!p.dateApproved);
     } else if (statusFilter === 'Parcial') {
         list = list.filter(p => p.commissionStatus === 'Parcial');
@@ -351,9 +349,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     selectedRows.reduce((acc, row) => acc + (row.original.grossAmount || 0), 0),
   [selectedRows]);
 
-  // 🛡️ SINCRONIZAÇÃO DE CÁLCULO V3
-  // Agora subtrai o 'amountPaid' da 'commissionValue' para refletir o saldo real pendente,
-  // exatamente como faz o card de "Saldo a Receber".
   const totalCommission = React.useMemo(() => 
     selectedRows.reduce((acc, row) => acc + ((row.original.commissionValue || 0) - (row.original.amountPaid || 0)), 0),
   [selectedRows]);
@@ -369,6 +364,14 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         return arrayMove(items, oldIndex, newIndex);
       });
     }
+  };
+
+  const getStickyClass = (columnId: string) => {
+    if (columnId === 'Selecionar') return 'sticky left-0 z-30 bg-background shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]';
+    if (columnId === 'Promotora') return 'sticky left-[50px] z-30 bg-background shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]';
+    if (columnId === 'Cliente') return 'sticky left-[200px] z-30 bg-background shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]';
+    if (columnId === 'Ações') return 'sticky right-0 z-30 bg-background shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]';
+    return '';
   };
 
   const operatorsList = React.useMemo(() => {
@@ -403,7 +406,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 </Tabs>
 
                 <div className="flex items-center gap-3 ml-auto flex-nowrap overflow-x-auto pb-1 md:pb-0">
-                    {/* FILTRO MULTI OPERADOR */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className={cn("h-10 min-w-[180px] bg-background border rounded-full text-[10px] font-black uppercase px-5 shadow-sm hover:bg-primary/5 transition-colors justify-between", operatorFilters.length > 0 && "border-primary text-primary bg-primary/5")}>
@@ -434,7 +436,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                         </DropdownMenuContent>
                     </DropdownMenu>
 
-                    {/* FILTRO MULTI BANCO */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className={cn("h-10 min-w-[180px] bg-background border rounded-full text-[10px] font-black uppercase px-5 shadow-sm hover:bg-primary/5 transition-colors justify-between", bankFilters.length > 0 && "border-primary text-primary bg-primary/5")}>
@@ -465,7 +466,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                         </DropdownMenuContent>
                     </DropdownMenu>
 
-                    {/* FILTRO MULTI PROMOTORA */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className={cn("h-10 min-w-[180px] bg-background border rounded-full text-[10px] font-black uppercase px-5 shadow-sm hover:bg-primary/5 transition-colors justify-between", promoterFilters.length > 0 && "border-primary text-primary bg-primary/5")}>
@@ -565,13 +565,19 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                     </DropdownMenu>
                 </div>
 
-                <div className="overflow-auto relative">
+                <div className="overflow-x-auto relative">
                     <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
-                        <TableHeader className="bg-background dark:bg-zinc-900 border-b-2 sticky top-0 z-10">
+                        <TableHeader className="bg-background dark:bg-zinc-900 border-b-2">
                             {table.getHeaderGroups().map(hg => (
                                 <TableRow key={hg.id} className="border-b hover:bg-transparent">
                                     <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
-                                        {hg.headers.map(h => <DraggableHeader key={h.id} header={h as any} />)}
+                                        {hg.headers.map(h => (
+                                            <DraggableHeader 
+                                                key={h.id} 
+                                                header={h as any} 
+                                                className={getStickyClass(h.column.id)}
+                                            />
+                                        ))}
                                     </SortableContext>
                                 </TableRow>
                             ))}
@@ -582,7 +588,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                                     const p = row.original;
                                     const commStatus = p.commissionStatus;
                                     
-                                    // 🛡️ LÓGICA DE COR BLINDADA V2: Só colore Pendente se houver averbação
                                     const effectiveStatus = (commStatus === 'Paga' || commStatus === 'Parcial')
                                         ? commStatus
                                         : (p.dateApproved ? 'Pendente' : null);
@@ -597,9 +602,20 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                                                 "transition-colors border-b h-14 hover:bg-primary/[0.03]",
                                                 colorValue && "status-row-custom"
                                             )}
-                                            style={colorValue ? { '--status-color': colorValue } as any : {}} 
+                                            style={{ '--status-color': colorValue } as any} 
                                         >
-                                            {row.getVisibleCells().map(cell => (<TableCell key={cell.id} style={{ width: cell.column.getSize() }} className="p-3 text-sm border-none">{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>))}
+                                            {row.getVisibleCells().map(cell => (
+                                                <TableCell 
+                                                    key={cell.id} 
+                                                    style={{ width: cell.column.getSize() }} 
+                                                    className={cn(
+                                                        "p-3 text-sm border-none",
+                                                        getStickyClass(cell.column.id)
+                                                    )}
+                                                >
+                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                                </TableCell>
+                                            ))}
                                         </TableRow>
                                     )
                                 })

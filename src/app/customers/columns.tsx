@@ -52,7 +52,7 @@ const CopyButton = ({ text, label }: { text: string | undefined; label: string }
     );
 };
 
-export const DraggableHeader = ({ header }: { header: Header<Customer, unknown> }) => {
+export const DraggableHeader = ({ header, className }: { header: Header<Customer, unknown>, className?: string }) => {
     const isDraggable = header.column.getCanSort();
     const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({
         id: header.column.id,
@@ -75,7 +75,8 @@ export const DraggableHeader = ({ header }: { header: Header<Customer, unknown> 
             style={style}
             className={cn(
                 'relative p-0 h-14 transition-colors hover:bg-muted/50 border-b-2 border-zinc-200 dark:border-zinc-800',
-                isSelect && 'w-[50px] min-w-[50px]'
+                isSelect && 'w-[50px] min-w-[50px]',
+                className
             )}
         >
             <div className="flex flex-col h-full justify-center">
@@ -183,10 +184,6 @@ const ActionsCell = ({ row, onEdit, onDelete }: any) => {
   );
 };
 
-/**
- * 🛡️ COMPONENTE DE CÉLULA BLINDADO
- * Evita erros de hidratação ao calcular idade e tags dinâmicas.
- */
 const CustomerNameCell = ({ row }: { row: any }) => {
     const [hasMounted, setHasMounted] = useState(false);
     useEffect(() => setHasMounted(true), []);
@@ -203,7 +200,6 @@ const CustomerNameCell = ({ row }: { row: any }) => {
                 {hasMounted && age >= 74 && (
                     <Badge variant="destructive" className="w-fit h-4 text-[8px] font-black px-1.5 py-0 animate-pulse">ALERTA 75 ANOS</Badge>
                 )}
-                {/* 🛡️ SMART TAGS NA TABELA */}
                 {hasMounted && (customer as any).smartTags?.slice(0, 2).map((tag: string) => (
                     <Badge key={tag} className={cn("h-4 text-[7px] font-black px-1.5 py-0 border-none text-white shadow-sm", tag.includes('ELITE') ? 'bg-amber-500' : tag.includes('ATIVO') ? 'bg-orange-600' : 'bg-blue-400')}>{tag}</Badge>
                 ))}
