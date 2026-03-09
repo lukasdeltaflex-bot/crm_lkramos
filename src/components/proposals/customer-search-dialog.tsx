@@ -38,7 +38,8 @@ export function CustomerSearchDialog({
             const searchOnlyNumbers = search.replace(/\D/g, '');
             if (!normalizedSearch) return 1;
             
-            // 🛡️ LÓGICA DE FILTRO AVANÇADA V2: Prioriza ID exato isolando o termo
+            // 🛡️ LÓGICA DE FILTRO AVANÇADA V3: Prioriza ID exato isolando o termo
+            // O prefixo 'id_' no value ajuda a ancorar a busca numérica curta
             if (searchOnlyNumbers !== '') {
                 // Se o termo de busca for exatamente o ID prefixado no value
                 if (value.includes(`id_${searchOnlyNumbers} `)) return 1;
@@ -55,7 +56,7 @@ export function CustomerSearchDialog({
               <CommandGroup>
                 {customers.map((customer) => {
                   const cpfNumeric = customer.cpf?.replace(/\D/g, '') || '';
-                  // 🛡️ INDEXAÇÃO DE ALTA PRECISÃO: Prefixamos o ID para busca estrita
+                  // 🛡️ INDEXAÇÃO DE ALTA PRECISÃO V3: Prefixamos o ID para busca estrita
                   const searchIndex = normalizeString(`id_${customer.numericId} ${customer.numericId} ${customer.name} ${customer.cpf} ${cpfNumeric}`);
                   
                   return (

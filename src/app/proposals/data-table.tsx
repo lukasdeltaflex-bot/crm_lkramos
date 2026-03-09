@@ -249,9 +249,17 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     globalFilterFn: (row, columnId, filterValue) => {
         const searchTerm = String(filterValue ?? '').trim();
         if (!searchTerm) return true;
+        
         const customer = row.original.customer;
         const p = row.original;
+        const searchOnlyNumbers = searchTerm.replace(/\D/g, '');
         const normalizedSearch = normalizeString(searchTerm);
+        
+        // 🛡️ BUSCA NUCLEAR V4: Prioridade Absoluta para ID Exato
+        if (searchOnlyNumbers !== '' && String(customer?.numericId) === searchOnlyNumbers) {
+            return true;
+        }
+
         const searchableFields = [customer?.name, customer?.cpf, p.proposalNumber, p.operator, p.bank, cleanBankName(p.bank), p.promoter];
         return searchableFields.some(field => field && normalizeString(String(field)).includes(normalizedSearch));
     },
@@ -259,6 +267,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   });
 
   const onMouseDown = (e: React.MouseEvent) => {
+    // Ignora arrasto se clicar em botões, inputs ou links
     const target = e.target as HTMLElement;
     if (target.closest('button') || target.closest('input') || target.closest('a') || target.closest('[role="checkbox"]')) {
       return;
@@ -277,7 +286,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     if (!isDraggingScroll || !tableContainerRef.current) return;
     e.preventDefault();
     const x = e.pageX - tableContainerRef.current.offsetLeft;
-    const walk = (x - startX) * 2; 
+    const walk = (x - startX) * 2; // Aumentada a sensibilidade
     tableContainerRef.current.scrollLeft = scrollLeft - walk;
   };
 

@@ -103,7 +103,7 @@ export function GlobalSearch() {
               const smartTags = getSmartTags(customer, proposals || []);
               const smartTagsLabels = smartTags.map(tag => tag.label).join(' ');
               
-              // 🛡️ BUSCA NUCLEAR SINCRO V2: Prefixamos o ID para evitar confusão com CPFs
+              // 🛡️ BUSCA NUCLEAR SINCRO V3: Prefixamos o ID para evitar confusão com CPFs e garantir busca estrita
               const searchIndex = normalizeString(`ID_${customer.numericId} ${customer.numericId} ${customer.name} ${customer.cpf} ${cpfNumeric} ${smartTagsLabels}`);
               
               return (

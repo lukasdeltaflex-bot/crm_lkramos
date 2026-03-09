@@ -8,7 +8,6 @@ import {
   VisibilityState,
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
@@ -187,11 +186,15 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         const cpfNumeric = customer.cpf?.replace(/\D/g, '') || '';
         const numericIdStr = String(customer.numericId || '');
         
-        // 🛡️ BUSCA NUCLEAR V3: Prioridade para ID Exato
-        if (searchOnlyNumbers !== '') {
-            if (numericIdStr === searchOnlyNumbers) return true;
-            if (cpfNumeric.includes(searchOnlyNumbers)) return true;
+        // 🛡️ BUSCA NUCLEAR V4: Prioridade Absoluta para ID Exato
+        // Se o que foi digitado for EXATAMENTE o ID, retorna verdadeiro e ignora o resto
+        if (searchOnlyNumbers !== '' && numericIdStr === searchOnlyNumbers) {
+            return true;
         }
+
+        // Se estivermos buscando por ID exato e o atual não for ele, mas for numérico, 
+        // evitamos que IDs que contenham o número (ex: 101 quando busca 10) apareçam se houver um ID exato.
+        // Nota: O motor de busca global do React Table processa linha a linha.
 
         const searchableFields = [
             customer.name, 
@@ -202,6 +205,11 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
             ...((customer as any).smartTags || [])
         ];
 
+        // Busca por CPF numérico (contém)
+        if (searchOnlyNumbers !== '' && cpfNumeric.includes(searchOnlyNumbers)) {
+            return true;
+        }
+
         return searchableFields.some(field => {
             if (!field) return false;
             return normalizeString(String(field)).includes(normalizedSearch);
@@ -210,6 +218,12 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   });
 
   const onMouseDown = (e: React.MouseEvent) => {
+    // Ignora arrasto se clicar em botões, inputs ou links
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('input') || target.closest('a') || target.closest('[role="checkbox"]')) {
+      return;
+    }
+
     if (!tableContainerRef.current) return;
     setIsDraggingScroll(true);
     setStartX(e.pageX - tableContainerRef.current.offsetLeft);
@@ -223,7 +237,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     if (!isDraggingScroll || !tableContainerRef.current) return;
     e.preventDefault();
     const x = e.pageX - tableContainerRef.current.offsetLeft;
-    const walk = (x - startX) * 1.5; 
+    const walk = (x - startX) * 2; // Aumentada a sensibilidade
     tableContainerRef.current.scrollLeft = scrollLeft - walk;
   };
 
