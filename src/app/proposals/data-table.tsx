@@ -107,6 +107,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'Data Digitação', desc: true }]);
   const [isClient, setIsClient] = React.useState(false);
 
+  // Grab-to-scroll Pro State
   const [isDraggingScroll, setIsDraggingScroll] = React.useState(false);
   const [startX, setStartX] = React.useState(0);
   const [scrollLeft, setScrollLeft] = React.useState(0);
@@ -181,30 +182,46 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     });
   };
 
+  // 🛡️ MOTOR GRAB-TO-SCROLL PRO V9
   const onMouseDown = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
-    if (target.closest('button') || target.closest('input') || target.closest('a') || target.closest('[role="checkbox"]') || target.closest('svg')) {
+    if (target.closest('button, input, a, [role="checkbox"], svg, .cursor-grab')) {
       return;
     }
 
     if (!tableContainerRef.current) return;
+    
     setIsDraggingScroll(true);
-    const rect = tableContainerRef.current.getBoundingClientRect();
-    setStartX(e.clientX - rect.left);
+    setStartX(e.pageX - tableContainerRef.current.offsetLeft);
     setScrollLeft(tableContainerRef.current.scrollLeft);
   };
 
-  const onMouseUp = () => setIsDraggingScroll(false);
-  const onMouseLeave = () => setIsDraggingScroll(false);
+  React.useEffect(() => {
+    if (!isDraggingScroll) return;
 
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (!isDraggingScroll || !tableContainerRef.current) return;
-    e.preventDefault();
-    const rect = tableContainerRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const walk = (x - startX) * 2.5; 
-    tableContainerRef.current.scrollLeft = scrollLeft - walk;
-  };
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingScroll || !tableContainerRef.current) return;
+      e.preventDefault();
+      
+      const x = e.pageX - tableContainerRef.current.offsetLeft;
+      const walk = (x - startX) * 2.5; 
+      tableContainerRef.current.scrollLeft = scrollLeft - walk;
+    };
+
+    const handleMouseUp = () => {
+      setIsDraggingScroll(false);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.body.style.userSelect = 'none';
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = '';
+    };
+  }, [isDraggingScroll, startX, scrollLeft]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor));
 
@@ -280,22 +297,15 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         const searchOnlyNumbers = searchTerm.replace(/\D/g, '');
         const normalizedSearch = normalizeString(searchTerm);
         
-        // 🛡️ BUSCA NUCLEAR V7: Prioridade Absoluta para ID Exato
         if (searchOnlyNumbers !== '') {
             const numericIdStr = String(customer?.numericId || '');
             const cpfNumeric = (customer?.cpf || '').replace(/\D/g, '');
             
-            // Se o que o usuário digitou for exatamente o ID do cliente dono da proposta
             if (numericIdStr === searchOnlyNumbers) return true;
-            
-            // Se o que o usuário digitou estiver contido no CPF
             if (cpfNumeric.includes(searchOnlyNumbers)) return true;
-            
-            // Se bater exatamente com o número da proposta
             if (p.proposalNumber.replace(/\D/g, '') === searchOnlyNumbers) return true;
 
-            // Se for busca puramente numérica e curta, e não bateu ID exato, descartamos
-            if (/^\d+$/.test(searchTerm) && numericIdStr !== searchOnlyNumbers) {
+            if (/^\d+$/.test(searchTerm)) {
                 return false;
             }
         }
@@ -501,9 +511,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                         isDraggingScroll && "cursor-grabbing select-none"
                     )}
                     onMouseDown={onMouseDown}
-                    onMouseLeave={onMouseLeave}
-                    onMouseUp={onMouseUp}
-                    onMouseMove={onMouseMove}
                 >
                     <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
                         <TableHeader className="bg-background border-b-2">

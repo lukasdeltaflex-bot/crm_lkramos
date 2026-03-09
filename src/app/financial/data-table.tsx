@@ -110,6 +110,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [isClient, setIsClient] = React.useState(false);
 
+  // Grab-to-scroll Pro State
   const [isDraggingScroll, setIsDraggingScroll] = React.useState(false);
   const [startX, setStartX] = React.useState(0);
   const [scrollLeft, setScrollLeft] = React.useState(0);
@@ -174,30 +175,46 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     }
   }, [globalFilter, columnVisibility, columnOrder, frozenCount, isClient]);
 
+  // 🛡️ MOTOR GRAB-TO-SCROLL PRO V9
   const onMouseDown = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
-    if (target.closest('button') || target.closest('input') || target.closest('a') || target.closest('[role="checkbox"]') || target.closest('svg')) {
+    if (target.closest('button, input, a, [role="checkbox"], svg, .cursor-grab')) {
       return;
     }
 
     if (!tableContainerRef.current) return;
+    
     setIsDraggingScroll(true);
-    const rect = tableContainerRef.current.getBoundingClientRect();
-    setStartX(e.clientX - rect.left);
+    setStartX(e.pageX - tableContainerRef.current.offsetLeft);
     setScrollLeft(tableContainerRef.current.scrollLeft);
   };
 
-  const onMouseUp = () => setIsDraggingScroll(false);
-  const onMouseLeave = () => setIsDraggingScroll(false);
+  React.useEffect(() => {
+    if (!isDraggingScroll) return;
 
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (!isDraggingScroll || !tableContainerRef.current) return;
-    e.preventDefault();
-    const rect = tableContainerRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const walk = (x - startX) * 2.5; 
-    tableContainerRef.current.scrollLeft = scrollLeft - walk;
-  };
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingScroll || !tableContainerRef.current) return;
+      e.preventDefault();
+      
+      const x = e.pageX - tableContainerRef.current.offsetLeft;
+      const walk = (x - startX) * 2.5; 
+      tableContainerRef.current.scrollLeft = scrollLeft - walk;
+    };
+
+    const handleMouseUp = () => {
+      setIsDraggingScroll(false);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.body.style.userSelect = 'none';
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = '';
+    };
+  }, [isDraggingScroll, startX, scrollLeft]);
 
   const handlePaginationChange = (updater: any) => {
     setPagination((old) => {
@@ -285,6 +302,29 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     enableColumnResizing: true,
     columnResizeMode: 'onChange',
     state: { sorting, rowSelection, columnVisibility, columnSizing, columnOrder, pagination, globalFilter },
+    globalFilterFn: (row, columnId, filterValue) => {
+        const searchTerm = String(filterValue ?? '').trim();
+        if (!searchTerm) return true;
+        
+        const customer = row.original.customer;
+        const p = row.original;
+        const searchOnlyNumbers = searchTerm.replace(/\D/g, '');
+        const normalizedSearch = normalizeString(searchTerm);
+        
+        if (searchOnlyNumbers !== '') {
+            const numericIdStr = String(customer?.numericId || '');
+            const cpfNumeric = (customer?.cpf || '').replace(/\D/g, '');
+            if (numericIdStr === searchOnlyNumbers) return true;
+            if (cpfNumeric.includes(searchOnlyNumbers)) return true;
+            if (p.proposalNumber.replace(/\D/g, '') === searchOnlyNumbers) return true;
+            if (/^\d+$/.test(searchTerm)) {
+                return false;
+            }
+        }
+
+        const searchableFields = [customer?.name, customer?.cpf, p.proposalNumber, p.operator, p.bank, cleanBankName(p.bank), p.promoter];
+        return searchableFields.some(field => field && normalizeString(String(field)).includes(normalizedSearch));
+    },
     meta: { isPrivacyMode, userSettings }
   });
 
@@ -483,7 +523,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
             <div className='relative w-full group'>
                 <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80' />
-                <Input placeholder="Busca por ID, CPF, Nome ou Proposta..." value={globalFilter} onChange={(e) => setGlobalFilter(e.target.value)} className="pl-10 h-11 bg-background border-2 border-zinc-300 rounded-full text-base font-bold shadow-md" />
+                <Input placeholder="Busca por ID exato, CPF, Nome ou Proposta..." value={globalFilter ?? ''} onChange={(e) => setGlobalFilter(e.target.value)} className="pl-10 h-11 bg-background border-2 border-zinc-300 rounded-full text-base font-bold shadow-md" />
             </div>
 
             <Card className="rounded-[1.5rem] border-2 border-zinc-200 bg-card shadow-xl overflow-hidden p-1">
@@ -494,9 +534,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                         isDraggingScroll && "cursor-grabbing select-none"
                     )}
                     onMouseDown={onMouseDown}
-                    onMouseLeave={onMouseLeave}
-                    onMouseUp={onMouseUp}
-                    onMouseMove={onMouseMove}
                 >
                     <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
                         <TableHeader className="bg-background border-b-2">

@@ -86,6 +86,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   const [frozenCount, setFrozenCount] = React.useState(2);
   const [isClient, setIsClient] = React.useState(false);
 
+  // Grab-to-scroll Pro State
   const [isDraggingScroll, setIsDraggingScroll] = React.useState(false);
   const [startX, setStartX] = React.useState(0);
   const [scrollLeft, setScrollLeft] = React.useState(0);
@@ -142,30 +143,51 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     }
   }, [globalFilter, columnVisibility, columnOrder, frozenCount, isClient]);
 
+  // 🛡️ MOTOR GRAB-TO-SCROLL PRO V9
   const onMouseDown = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
-    if (target.closest('button') || target.closest('input') || target.closest('a') || target.closest('[role="checkbox"]') || target.closest('svg')) {
+    // Ignora se clicar em elementos interativos
+    if (target.closest('button, input, a, [role="checkbox"], svg, .cursor-grab')) {
       return;
     }
 
     if (!tableContainerRef.current) return;
+    
     setIsDraggingScroll(true);
-    const rect = tableContainerRef.current.getBoundingClientRect();
-    setStartX(e.clientX - rect.left);
+    // Armazena posição absoluta
+    setStartX(e.pageX - tableContainerRef.current.offsetLeft);
     setScrollLeft(tableContainerRef.current.scrollLeft);
   };
 
-  const onMouseUp = () => setIsDraggingScroll(false);
-  const onMouseLeave = () => setIsDraggingScroll(false);
+  React.useEffect(() => {
+    if (!isDraggingScroll) return;
 
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (!isDraggingScroll || !tableContainerRef.current) return;
-    e.preventDefault();
-    const rect = tableContainerRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const walk = (x - startX) * 2.5; 
-    tableContainerRef.current.scrollLeft = scrollLeft - walk;
-  };
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingScroll || !tableContainerRef.current) return;
+      e.preventDefault();
+      
+      const x = e.pageX - tableContainerRef.current.offsetLeft;
+      const walk = (x - startX) * 2.5; // Multiplicador de velocidade
+      tableContainerRef.current.scrollLeft = scrollLeft - walk;
+    };
+
+    const handleMouseUp = () => {
+      setIsDraggingScroll(false);
+    };
+
+    // Listeners globais garantem que o arraste não trave ao sair da div
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    
+    // Desativa seleção de texto durante o arraste
+    document.body.style.userSelect = 'none';
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = '';
+    };
+  }, [isDraggingScroll, startX, scrollLeft]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -212,17 +234,16 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         const numericIdStr = String(customer.numericId || '');
         const cpfNumeric = (customer.cpf || '').replace(/\D/g, '');
 
-        // 🛡️ BUSCA NUCLEAR V7: Prioridade absoluta para ID Exato
+        // 🛡️ BUSCA NUCLEAR V9: Prioridade absoluta para ID Exato
         if (searchOnlyNumbers !== '') {
-            // Se o que o usuário digitou for exatamente o ID, mostramos
+            // Se o usuário digitou exatamente o ID, priorizamos ele e limpamos o resto
             if (numericIdStr === searchOnlyNumbers) return true;
             
-            // Se o que o usuário digitou estiver contido no CPF, mostramos
+            // Se for busca puramente numérica e NÃO bateu ID exato, mas bateu CPF
             if (cpfNumeric.includes(searchOnlyNumbers)) return true;
             
-            // Se for busca puramente numérica e NÃO bateu ID exato nem CPF parcial,
-            // descartamos (ex: evita que buscar "11" traga o ID "110")
-            if (/^\d+$/.test(searchTerm) && numericIdStr !== searchOnlyNumbers) {
+            // Se for puramente numérica e não bateu ID exato nem CPF, esconde
+            if (/^\d+$/.test(searchTerm)) {
                 return false;
             }
         }
@@ -292,9 +313,6 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
                 isDraggingScroll && "cursor-grabbing select-none"
             )}
             onMouseDown={onMouseDown}
-            onMouseLeave={onMouseLeave}
-            onMouseUp={onMouseUp}
-            onMouseMove={onMouseMove}
           >
             <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
                 <TableHeader className="bg-background border-b-2">
