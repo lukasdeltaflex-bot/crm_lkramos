@@ -404,11 +404,8 @@ export default function FinancialPage() {
         const parsedDate = parse(data.date, 'dd/MM/yyyy', new Date());
         const groupId = data.groupId || (data.recurrence !== 'none' ? crypto.randomUUID() : undefined);
         
-        let count = 1;
-        if (data.recurrence === 'monthly') count = 12;
-        else if (data.recurrence === 'installments') count = data.installmentsCount || 1;
-        else if (data.recurrence === 'semi-annually') count = 2; // Ex: Próximos 2 semestres
-        else if (data.recurrence === 'annually') count = 2; // Ex: Próximos 2 anos
+        // 🛡️ RECORRÊNCIA FLEXÍVEL: Usa o count do formulário se não for lançamento único
+        const count = data.recurrence === 'none' ? 1 : (data.installmentsCount || 1);
 
         for (let i = 0; i < count; i++) {
             let nextDate: Date;
@@ -429,24 +426,21 @@ export default function FinancialPage() {
                 ownerId: user.uid,
                 date: format(nextDate, 'yyyy-MM-dd'),
                 groupId: groupId,
-                // Apenas a primeira parcela/mês pode herdar o status de "pago" se marcado no form
                 paid: i === 0 ? data.paid : false,
-                installmentNumber: data.recurrence === 'installments' ? i + 1 : undefined,
-                description: data.recurrence === 'installments' 
+                installmentNumber: i + 1,
+                installmentsCount: count,
+                description: count > 1 
                     ? `${data.description} (${i + 1}/${count})` 
                     : data.description
             };
 
             const docRef = doc(firestore, 'users', user.uid, 'expenses', expenseId);
             batch.set(docRef, cleanFirestoreData(expenseData), { merge: true });
-            
-            // Se for lançamento único, encerra o loop
-            if (data.recurrence === 'none') break;
         }
 
         await batch.commit();
         setIsExpenseFormOpen(false);
-        toast({ title: 'Despesas Lançadas!', description: count > 1 ? `${count} parcelas/recorrências geradas no fluxo.` : 'Gasto registrado com sucesso.' });
+        toast({ title: 'Despesas Lançadas!', description: count > 1 ? `${count} parcelas/recorrências geradas.` : 'Gasto registrado com sucesso.' });
     } catch (e: any) {
         console.error("Expense Batch Error:", e);
         toast({ variant: 'destructive', title: 'Erro ao processar lançamentos' });

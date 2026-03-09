@@ -11,6 +11,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
@@ -234,28 +235,29 @@ export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }:
                                     </FormControl>
                                     <SelectContent>
                                         <SelectItem value="none">Lançamento Único</SelectItem>
-                                        <SelectItem value="monthly">Fixa Mensal (12 meses)</SelectItem>
+                                        <SelectItem value="monthly">Mensal</SelectItem>
                                         <SelectItem value="semi-annually">Semestral</SelectItem>
                                         <SelectItem value="annually">Anual</SelectItem>
-                                        <SelectItem value="installments">Parcelada (Fixa)</SelectItem>
+                                        <SelectItem value="installments">Parcelada</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </FormItem>
                         )}
                     />
 
-                    {watchRecurrence === 'installments' && (
+                    {watchRecurrence !== 'none' && (
                         <FormField
                             control={form.control}
                             name="installmentsCount"
                             render={({ field }) => (
                                 <FormItem className="animate-in zoom-in-95">
                                     <FormLabel className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-orange-600">
-                                        <ListNumbered className="h-3 w-3" /> Qtd. Parcelas
+                                        <ListNumbered className="h-3 w-3" /> Qtd. de Vezes
                                     </FormLabel>
                                     <FormControl>
                                         <Input type="number" {...field} min={1} max={120} className="h-9 font-bold" />
                                     </FormControl>
+                                    <FormDescription className="text-[9px]">Repetições automáticas.</FormDescription>
                                 </FormItem>
                             )}
                         />

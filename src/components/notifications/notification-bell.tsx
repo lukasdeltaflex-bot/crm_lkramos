@@ -208,7 +208,7 @@ export function NotificationBell() {
             title: `Comissão Pendente: ${p.proposalNumber}`,
             type: 'commission',
             date: `${days} dias`,
-            link: `/proposals?search=${p.proposalNumber}`
+            link: `/proposals?open=${p.id}`
           });
         }
       }
@@ -221,7 +221,7 @@ export function NotificationBell() {
                   title: `Saldo Atrasado: ${p.proposalNumber}`,
                   type: 'debt',
                   date: `${bizDays} dias úteis`,
-                  link: `/proposals?search=${p.proposalNumber}`
+                  link: `/proposals?open=${p.id}`
               });
           }
       }
@@ -234,7 +234,7 @@ export function NotificationBell() {
                   title: `Cobrar Saldo: ${p.proposalNumber}`,
                   type: 'partial',
                   date: `${daysSince} dias`,
-                  link: `/proposals?search=${p.proposalNumber}`
+                  link: `/proposals?open=${p.id}`
               });
           }
       }
