@@ -53,7 +53,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, Snowflake } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DraggableHeader } from './columns';
@@ -83,9 +83,10 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'ID', desc: true }]);
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [globalFilter, setGlobalFilter] = React.useState('');
+  const [frozenCount, setFrozenCount] = React.useState(2);
   const [isClient, setIsClient] = React.useState(false);
 
-  // 🖱️ Lógica de Grab-to-scroll
+  // 🖱️ Lógica de Grab-to-scroll corrigida
   const [isDraggingScroll, setIsDraggingScroll] = React.useState(false);
   const [startX, setStartX] = React.useState(0);
   const [scrollLeft, setScrollLeft] = React.useState(0);
@@ -104,6 +105,9 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   React.useEffect(() => {
     setIsClient(true);
     try {
+        const savedFrozen = localStorage.getItem('lk-customers-frozen-count');
+        if (savedFrozen) setFrozenCount(Number(savedFrozen));
+
         const savedPageSize = localStorage.getItem('lk-customers-pageSize');
         if (savedPageSize) setPagination(p => ({ ...p, pageSize: Number(savedPageSize) }));
 
@@ -113,30 +117,10 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         const savedVisibility = localStorage.getItem('lk-customers-visibility');
         if (savedVisibility) setColumnVisibility(JSON.parse(savedVisibility));
 
-        const savedSizing = localStorage.getItem('lk-customers-sizing');
-        if (savedSizing) setColumnSizing(JSON.parse(savedSizing));
-
         const savedOrder = localStorage.getItem('lk-customers-order');
-        if (savedOrder) {
-            const parsedOrder = JSON.parse(savedOrder) as string[];
-            const missingColumns = initialColumns.filter(id => !parsedOrder.includes(id));
-            if (missingColumns.length > 0) {
-                const newOrder = [...parsedOrder];
-                const actionsIdx = newOrder.indexOf('Ações');
-                if (actionsIdx !== -1) {
-                    newOrder.splice(actionsIdx, 0, ...missingColumns);
-                } else {
-                    newOrder.push(...missingColumns);
-                }
-                setColumnOrder(newOrder);
-            } else {
-                setColumnOrder(parsedOrder);
-            }
-        } else {
-            setColumnOrder([...initialColumns]);
-        }
+        if (savedOrder) setColumnOrder(JSON.parse(savedOrder));
     } catch (e) {}
-  }, [initialColumns]);
+  }, []);
 
   const handlePaginationChange = (updater: any) => {
     setPagination((old) => {
@@ -149,15 +133,15 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   };
 
   React.useEffect(() => {
-    if (isClient && columnOrder.length > 0) {
+    if (isClient) {
       try {
+        localStorage.setItem('lk-customers-frozen-count', String(frozenCount));
         localStorage.setItem('lk-customers-filter-search', globalFilter);
         localStorage.setItem('lk-customers-visibility', JSON.stringify(columnVisibility));
         localStorage.setItem('lk-customers-order', JSON.stringify(columnOrder));
-        localStorage.setItem('lk-customers-sizing', JSON.stringify(columnSizing));
       } catch(e) {}
     }
-  }, [globalFilter, columnVisibility, columnOrder, columnSizing, isClient]);
+  }, [globalFilter, columnVisibility, columnOrder, frozenCount, isClient]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -190,59 +174,20 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     onColumnOrderChange: setColumnOrder,
     onColumnSizingChange: setColumnSizing,
     onPaginationChange: handlePaginationChange,
-    autoResetPageIndex: false,
     enableColumnResizing: true,
     columnResizeMode: 'onChange',
-    state: {
-      sorting,
-      globalFilter,
-      columnVisibility,
-      rowSelection,
-      columnOrder,
-      columnSizing,
-      pagination,
-    },
+    state: { sorting, globalFilter, columnVisibility, rowSelection, columnOrder, columnSizing, pagination },
     globalFilterFn: (row, columnId, filterValue) => {
         const searchTerm = String(filterValue ?? '').trim();
         if (!searchTerm) return true;
         const customer = row.original;
-        
-        const searchDigits = searchTerm.replace(/\D/g, '');
-        const cpfDigits = customer.cpf?.replace(/\D/g, '') || '';
-        const phoneDigits = customer.phone?.replace(/\D/g, '') || '';
-
-        if (/^\d+$/.test(searchTerm)) {
-            if (customer.numericId?.toString() === searchTerm) return true;
-            if (searchTerm.length > 3) {
-                if (cpfDigits.includes(searchTerm) || phoneDigits.includes(searchTerm)) return true;
-            }
-            return false;
-        }
-
-        if (searchDigits.length > 3) {
-            if (cpfDigits.includes(searchDigits) || phoneDigits.includes(searchDigits)) return true;
-        }
-
         const normalizedSearch = normalizeString(searchTerm);
-        
-        const searchableFields = [
-            customer.name,
-            customer.cpf,
-            customer.city,
-            customer.email,
-            customer.observations,
-            ...(customer.tags || []),
-            ...((customer as any).smartTags || []) 
-        ];
-
-        return searchableFields.some(field => {
-            if (!field) return false;
-            return normalizeString(String(field)).includes(normalizedSearch);
-        });
-      },
+        const searchableFields = [customer.name, customer.cpf, customer.city, customer.email, customer.observations, ...(customer.tags || []), ...((customer as any).smartTags || [])];
+        return searchableFields.some(field => field && normalizeString(String(field)).includes(normalizedSearch));
+    },
   });
 
-  // 🖱️ Handlers do Grab-to-scroll
+  // 🖱️ Handlers Grab-to-scroll corrigidos
   const onMouseDown = (e: React.MouseEvent) => {
     if (!tableContainerRef.current) return;
     setIsDraggingScroll(true);
@@ -257,7 +202,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     if (!isDraggingScroll || !tableContainerRef.current) return;
     e.preventDefault();
     const x = e.pageX - tableContainerRef.current.offsetLeft;
-    const walk = (x - startX) * 2;
+    const walk = (x - startX) * 1.5; 
     tableContainerRef.current.scrollLeft = scrollLeft - walk;
   };
 
@@ -265,51 +210,49 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
 
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
-      <Card className="rounded-[1.5rem] border-2 border-zinc-200 dark:border-primary/30 bg-card shadow-xl overflow-hidden p-1">
+      <Card className="rounded-[1.5rem] border-2 border-zinc-200 bg-card shadow-xl overflow-hidden p-1">
         <div className="py-2">
           <div className="flex items-center justify-between px-4 py-2 gap-4">
             <div className='relative w-full max-w-md group'>
-                <Search className='absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80 group-focus-within:opacity-100 transition-opacity' />
-                <Input
-                    placeholder="Busca por ID, Nome, CPF ou Smart Tag (ELITE, ATIVO...)"
-                    value={globalFilter ?? ''}
-                    onChange={(event) => setGlobalFilter(event.target.value)}
-                    className="pl-11 w-full bg-background border-2 border-zinc-300 dark:border-primary/40 h-11 rounded-full shadow-md focus-visible:ring-primary/20 transition-all font-bold text-sm"
-                />
+                <Search className='absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80' />
+                <Input placeholder="Busca por ID, Nome, CPF ou Smart Tag..." value={globalFilter ?? ''} onChange={(e) => setGlobalFilter(e.target.value)} className="pl-11 w-full bg-background border-2 border-zinc-300 h-11 rounded-full shadow-md font-bold text-sm" />
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-auto rounded-full font-black h-11 border-2 border-zinc-300 dark:border-primary/30 bg-background px-6 shadow-md text-xs uppercase tracking-widest">
-                  Colunas <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 shadow-2xl border-2">
-                <DropdownMenuLabel>Personalizar Visão</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {table
-                  .getAllColumns()
-                  .filter((column) => column.getCanHide())
-                  .map((column) => {
-                    return (
-                      <DropdownMenuCheckboxItem
-                        key={column.id}
-                        className="capitalize text-xs font-bold"
-                        checked={column.getIsVisible()}
-                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                      >
-                        {column.id}
-                      </DropdownMenuCheckboxItem>
-                    );
-                  })}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            
+            <div className="flex items-center gap-3">
+                <Select value={String(frozenCount)} onValueChange={(val) => setFrozenCount(Number(val))}>
+                    <SelectTrigger className="h-10 min-w-[140px] rounded-full text-[10px] font-black uppercase border-2 border-zinc-300 bg-background shadow-sm">
+                        <div className="flex items-center gap-2"><Snowflake className="h-3.5 w-3.5 text-blue-500" /><SelectValue placeholder="Congelar" /></div>
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="0" className="text-[10px] font-bold uppercase">Nenhuma fixa</SelectItem>
+                        <SelectItem value="1" className="text-[10px] font-bold uppercase">Fixar 1ª Coluna</SelectItem>
+                        <SelectItem value="2" className="text-[10px] font-bold uppercase">Fixar 2 Colunas</SelectItem>
+                        <SelectItem value="3" className="text-[10px] font-bold uppercase">Fixar 3 Colunas</SelectItem>
+                    </SelectContent>
+                </Select>
+
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="rounded-full font-black h-11 border-2 border-zinc-300 bg-background px-6 shadow-md text-xs uppercase tracking-widest">
+                        Colunas <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 shadow-2xl border-2">
+                        <DropdownMenuLabel>Personalizar Visão</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {table.getAllColumns().filter(c => c.getCanHide()).map(column => (
+                            <DropdownMenuCheckboxItem key={column.id} checked={column.getIsVisible()} onCheckedChange={v => column.toggleVisibility(!!v)} className="capitalize text-xs font-bold">{column.id}</DropdownMenuCheckboxItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
           </div>
           
           <div 
             ref={tableContainerRef}
             className={cn(
-                "overflow-x-auto relative cursor-grab active:cursor-grabbing select-none",
-                isDraggingScroll && "cursor-grabbing"
+                "overflow-x-auto relative cursor-grab active:cursor-grabbing",
+                isDraggingScroll && "cursor-grabbing select-none"
             )}
             onMouseDown={onMouseDown}
             onMouseLeave={onMouseLeave}
@@ -317,17 +260,18 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
             onMouseMove={onMouseMove}
           >
             <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
-                <TableHeader className="bg-background dark:bg-zinc-900 border-b-2">
+                <TableHeader className="bg-background border-b-2">
                     {table.getHeaderGroups().map(headerGroup => (
-                    <TableRow key={headerGroup.id} className="hover:bg-transparent border-b-2 border-zinc-200 dark:border-zinc-800">
+                    <TableRow key={headerGroup.id} className="hover:bg-transparent border-b-2">
                         <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
                         {headerGroup.headers.map((header, i) => (
                             <DraggableHeader 
                                 key={header.id} 
                                 header={header as Header<Customer, unknown>} 
                                 className={cn(
-                                    i === 0 && "sticky left-0 z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
-                                    i === 1 && "sticky left-[50px] z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.05)]"
+                                    i === 0 && frozenCount >= 1 && "sticky left-0 z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.1)]",
+                                    i === 1 && frozenCount >= 2 && "sticky left-[50px] z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.1)]",
+                                    i === 2 && frozenCount >= 3 && "sticky left-[200px] z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.1)]"
                                 )}
                             />
                         ))}
@@ -346,19 +290,16 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
                     ))
                     ) : table.getRowModel().rows?.length ? (
                     table.getRowModel().rows.map((row) => (
-                        <TableRow
-                        key={row.id}
-                        data-state={row.getIsSelected() && 'selected'}
-                        className="hover:bg-primary/[0.03] transition-colors border-b h-12 cursor-default"
-                        >
+                        <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className="hover:bg-primary/[0.03] transition-colors border-b h-12">
                         {row.getVisibleCells().map((cell, i) => (
                             <TableCell 
                                 key={cell.id} 
                                 style={{ width: cell.column.getSize() }}
                                 className={cn(
                                     "p-2 text-sm border-none",
-                                    i === 0 && "sticky left-0 z-30 bg-inherit shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
-                                    i === 1 && "sticky left-[50px] z-30 bg-inherit shadow-[2px_0_5px_rgba(0,0,0,0.05)]"
+                                    i === 0 && frozenCount >= 1 && "sticky left-0 z-30 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
+                                    i === 1 && frozenCount >= 2 && "sticky left-[50px] z-30 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
+                                    i === 2 && frozenCount >= 3 && "sticky left-[200px] z-30 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.05)]"
                                 )}
                             >
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -367,9 +308,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
                         </TableRow>
                     ))
                     ) : (
-                    <TableRow>
-                        <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground font-black uppercase text-[10px] tracking-widest opacity-40">Nenhum cliente na base.</TableCell>
-                    </TableRow>
+                    <TableRow><TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground font-black uppercase text-[10px] tracking-widest opacity-40">Nenhum cliente na base.</TableCell></TableRow>
                     )}
                 </TableBody>
             </Table>
@@ -377,38 +316,15 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
 
           <div className="flex items-center justify-between px-6 py-4 border-t-2 bg-muted/10 font-black text-[11px] uppercase tracking-[0.1em] text-foreground/60 min-h-[64px]">
             <div className="flex-1">
-              {table.getFilteredSelectedRowModel().rows.length} DE{' '}
-              {table.getFilteredRowModel().rows.length} SELECIONADOS.
+              {table.getFilteredSelectedRowModel().rows.length} SELECIONADOS.
             </div>
             <div className="flex items-center gap-6 lg:gap-8">
-                <div className="flex items-center gap-2">
-                    <p>LINHAS</p>
-                    <Select
-                        value={String(table.getState().pagination.pageSize)}
-                        onValueChange={(value) => {
-                            table.setPageSize(Number(value));
-                        }}
-                    >
-                        <SelectTrigger className="h-8 w-[70px] border-none bg-transparent font-black p-0 focus:ring-0 shadow-none text-foreground">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl border-2">
-                            {[10, 20, 30, 40, 50, 100].map((pageSize) => (
-                                <SelectItem key={pageSize} value={String(pageSize)} className="font-bold text-xs">
-                                    {pageSize}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
                 <div className="text-primary font-black">
                     PÁG {table.getState().pagination.pageIndex + 1} DE {table.getPageCount()}
                 </div>
                 <div className="flex items-center gap-1">
-                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-2" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}><ChevronsLeft className="h-4 w-4" /></Button>
                     <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-2" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}><ChevronLeft className="h-4 w-4" /></Button>
                     <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-2" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}><ChevronRight className="h-4 w-4" /></Button>
-                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-2" onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}><ChevronsRight className="h-4 w-4" /></Button>
                 </div>
             </div>
           </div>
