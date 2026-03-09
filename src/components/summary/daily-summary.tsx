@@ -169,7 +169,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
         customerName: customerMap.get(p.customerId)?.name || 'Cliente Desconhecido',
         proposalNumber: p.proposalNumber,
         daysOpen: differenceInDays(now, p.digitDate!),
-        link: `/proposals?open=${p.id}`
+        link: `/proposals?open=${p.id}&search=${p.proposalNumber}`
       }));
 
     const commissionReminders = proposals
@@ -188,7 +188,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
         customerName: customerMap.get(p.customerId)?.name || 'Cliente Desconhecido',
         proposalNumber: p.proposalNumber,
         daysPending: differenceInDays(now, p.paidDate!),
-        link: `/proposals?open=${p.id}`
+        link: `/proposals?open=${p.id}&search=${p.proposalNumber}`
       }));
 
     const debtBalanceReminders = proposals
@@ -203,7 +203,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
             customerName: customerMap.get(p.customerId)?.name || 'Cliente Desconhecido',
             proposalNumber: p.proposalNumber,
             daysWaiting: calculateBusinessDays(p.dateDigitized),
-            link: `/proposals?open=${p.id}`
+            link: `/proposals?open=${p.id}&search=${p.proposalNumber}`
         }));
     
     const partialCommissionReminders = proposals
@@ -223,7 +223,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
             amountPaid: p.amountPaid,
             totalCommission: p.commissionValue,
             daysSincePayment: differenceInDays(now, p.lastPayDate!),
-            link: `/proposals?open=${p.id}`
+            link: `/proposals?open=${p.id}&search=${p.proposalNumber}`
         }));
 
     const manualFollowUps = (followUps || [])

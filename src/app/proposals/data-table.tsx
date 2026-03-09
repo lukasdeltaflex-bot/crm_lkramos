@@ -29,6 +29,7 @@ import {
 import { SortableContext, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { parse, isValid, startOfDay, endOfDay, subDays, startOfMonth, format } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
+import { useSearchParams } from 'next/navigation';
 
 import {
   Table,
@@ -92,6 +93,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
 }, ref) => {
   const tableContainerRef = React.useRef<HTMLDivElement>(null);
   const { statusColors } = useTheme();
+  const searchParams = useSearchParams();
   const [statusFilter, setStatusFilter] = React.useState('Todos');
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [frozenCount, setFrozenCount] = React.useState(2);
@@ -146,6 +148,14 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         if (savedOrder) setColumnOrder(JSON.parse(savedOrder));
     } catch (e) {}
   }, []);
+
+  // 🎯 FILTRO AUTOMÁTICO VIA URL
+  React.useEffect(() => {
+    const search = searchParams.get('search');
+    if (search) {
+      setGlobalFilter(search);
+    }
+  }, [searchParams]);
 
   const hasActiveFilters = statusFilter !== 'Todos' || bankFilters.length > 0 || promoterFilters.length > 0 || operatorFilters.length > 0 || !!globalFilter || !!appliedDateRange;
 

@@ -128,7 +128,7 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                             style={colorValue ? { '--status-color': colorValue } as any : {}}
                         >
                             <TableCell className="px-6 py-5">
-                                <div className="flex items-center gap-3">
+                                <Link href={`/proposals?open=${proposal.id}&search=${proposal.proposalNumber}`} className="flex items-center gap-3">
                                     <Avatar className="h-9 w-9 border border-primary/10 shadow-sm">
                                         <AvatarFallback className="text-[10px] font-bold bg-primary/10 text-primary/70">
                                             {getInitials(proposal.customer?.name)}
@@ -137,9 +137,9 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                                     <div className="overflow-hidden">
                                         <div className="flex items-center gap-2">
                                             {phone && isWhatsApp(phone) && (
-                                                <a href={getWhatsAppUrl(phone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:scale-125 transition-transform shrink-0">
+                                                <span onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(getWhatsAppUrl(phone), '_blank'); }} className="text-green-500 hover:scale-125 transition-transform shrink-0">
                                                     <WhatsAppIcon className="h-3.5 w-3.5" />
-                                                </a>
+                                                </span>
                                             )}
                                             <div className="font-bold text-primary/90 group-hover:text-primary transition-colors truncate max-w-[180px]">{proposal.customer?.name || 'Cliente não encontrado'}</div>
                                             {isBigWin && <Zap className="h-3 w-3 text-orange-500 fill-orange-500" title="Contrato de Alta Performance" />}
@@ -148,10 +148,10 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                                             {proposal.customer?.cpf || 'CPF não informado'}
                                         </div>
                                     </div>
-                                </div>
+                                </Link>
                             </TableCell>
                             <TableCell className="px-6 py-5">
-                                <div className="flex flex-col gap-1.5">
+                                <Link href={`/proposals?open=${proposal.id}&search=${proposal.proposalNumber}`} className="flex flex-col gap-1.5">
                                     <div className="flex items-center gap-2">
                                         <BankIcon bankName={proposal.bank} domain={customDomain} showLogo={showLogos} className="h-4 w-4" />
                                         <span className="text-[10px] font-bold text-muted-foreground truncate max-w-[120px]">{cleanBank}</span>
@@ -159,7 +159,7 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                                     <Badge variant="secondary" className="bg-muted/50 text-muted-foreground font-bold text-[9px] border-none px-2 py-0 w-fit">
                                         {proposal.product}
                                     </Badge>
-                                </div>
+                                </Link>
                             </TableCell>
                             <TableCell className="px-6 py-5">
                                 <div className="flex items-center gap-2">
