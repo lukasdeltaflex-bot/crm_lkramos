@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -424,7 +423,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                 <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80' /><Input placeholder="Busca por ID exato, CPF, Nome ou Proposta..." value={globalFilter ?? ''} onChange={(e) => setGlobalFilter(e.target.value)} className="pl-10 h-11 bg-background border-2 border-zinc-300 rounded-full text-base font-bold shadow-md" />
             </div>
             <Card className="border-2 border-zinc-300 shadow-xl rounded-xl overflow-hidden bg-card p-1">
-                <ScrollArea className="h-[calc(100vh-400px)] w-full">
+                <ScrollArea className="h-[calc(100vh-280px)] w-full scroll-area-priority">
                     <Table style={{ width: totalTableWidth, tableLayout: 'fixed' }}>
                         <TableHeader className="bg-background border-b-2 sticky top-0 z-50 shadow-sm">
                             {table.getHeaderGroups().map(hg => (
@@ -474,6 +473,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                         </TableBody>
                     </Table>
                     <ScrollBar orientation="horizontal" />
+                    <ScrollBar orientation="vertical" />
                 </ScrollArea>
                 <div className="flex items-center justify-between px-6 py-4 border-t-2 bg-muted/10 font-black text-[11px] uppercase tracking-[0.1em] text-foreground/60 min-h-[64px]">
                     <div className="flex items-center gap-4">

@@ -251,7 +251,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
             </div>
           </div>
           
-          <ScrollArea className="h-[calc(100vh-400px)] w-full relative">
+          <ScrollArea className="h-[calc(100vh-280px)] w-full relative scroll-area-priority">
             <Table style={{ width: totalTableWidth, tableLayout: 'fixed' }}>
                 <TableHeader className="bg-background border-b-2 sticky top-0 z-50 shadow-sm">
                     {table.getHeaderGroups().map(headerGroup => (
@@ -274,7 +274,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
                 </TableHeader>
                 <TableBody>
                     {isLoading ? (
-                    Array.from({ length: 8 }).map((_, i) => (
+                    Array.from({ length: 15 }).map((_, i) => (
                         <TableRow key={i}>
                         {columns.map((column, j) => (
                             <TableCell key={j} className="p-3"><Skeleton className="h-5 w-full" /></TableCell>
@@ -306,6 +306,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
                 </TableBody>
             </Table>
             <ScrollBar orientation="horizontal" />
+            <ScrollBar orientation="vertical" />
           </ScrollArea>
 
           <div className="flex items-center justify-between px-6 py-4 border-t-2 bg-muted/10 font-black text-[11px] uppercase tracking-[0.1em] text-foreground/60 min-h-[64px]">
