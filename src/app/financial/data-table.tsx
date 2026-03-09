@@ -565,7 +565,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                     </DropdownMenu>
                 </div>
 
-                <div className="overflow-auto max-h-[calc(100vh-350px)] relative">
+                <div className="overflow-auto relative">
                     <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
                         <TableHeader className="bg-background dark:bg-zinc-900 border-b-2 sticky top-0 z-10">
                             {table.getHeaderGroups().map(hg => (

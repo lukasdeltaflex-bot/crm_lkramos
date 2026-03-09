@@ -584,9 +584,9 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
 
             <Card ref={tableContainerRef} className="proposals-table border-2 border-zinc-300 dark:border-primary/30 shadow-xl rounded-xl overflow-hidden bg-card p-1">
                 <div className="p-0">
-                    <div className="overflow-auto max-h-[calc(100vh-320px)] relative">
+                    <div className="overflow-auto relative">
                         <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
-                            <TableHeader className="bg-background dark:bg-zinc-900 border-b-2 sticky top-0 z-10">
+                            <TableHeader className="bg-background dark:bg-zinc-900 border-b-2">
                                 {table.getHeaderGroups().map(hg => (
                                     <TableRow key={hg.id} className="hover:bg-transparent">
                                         <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>

@@ -284,9 +284,9 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
           </div>
           
           <div className="customers-table">
-            <div className="overflow-auto max-h-[calc(100vh-320px)] relative">
+            <div className="overflow-auto relative">
                 <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
-                    <TableHeader className="bg-background dark:bg-zinc-900 border-b-2 sticky top-0 z-10">
+                    <TableHeader className="bg-background dark:bg-zinc-900 border-b-2">
                         {table.getHeaderGroups().map(headerGroup => (
                         <TableRow key={headerGroup.id} className="hover:bg-transparent border-b-2 border-zinc-200 dark:border-zinc-800">
                             <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
