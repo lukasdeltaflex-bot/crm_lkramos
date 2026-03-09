@@ -140,15 +140,15 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     }
   }, [globalFilter, columnVisibility, columnOrder, frozenCount, isClient]);
 
-  // 🛡️ MOTOR DE SINCRONIZAÇÃO V5 (ESTABILIZADO)
+  // 🛡️ MOTOR DE SINCRONIZAÇÃO V10 (ULTRARRESILIENTE)
   const handleTopScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (tableContainerRef.current) {
+    if (tableContainerRef.current && tableContainerRef.current.scrollLeft !== e.currentTarget.scrollLeft) {
       tableContainerRef.current.scrollLeft = e.currentTarget.scrollLeft;
     }
   };
 
   const handleTableScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (topScrollRef.current) {
+    if (topScrollRef.current && topScrollRef.current.scrollLeft !== e.currentTarget.scrollLeft) {
       topScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
     }
   };
@@ -263,9 +263,10 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
             </div>
           </div>
           
+          {/* BARRA DE ROLAGEM SUPERIOR (V10) */}
           <div 
             ref={topScrollRef}
-            className="overflow-x-auto h-5 bg-muted/20 border-b cursor-pointer relative z-50 pointer-events-auto"
+            className="overflow-x-auto h-5 bg-muted/30 border-b cursor-pointer relative z-[60] pointer-events-auto"
             onScroll={handleTopScroll}
           >
             <div style={{ width: totalTableWidth, height: '1px' }} />
@@ -273,7 +274,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
 
           <div 
             ref={tableContainerRef}
-            className="overflow-x-auto relative"
+            className="overflow-x-auto relative z-10"
             onScroll={handleTableScroll}
           >
             <Table style={{ width: totalTableWidth, tableLayout: 'fixed' }}>

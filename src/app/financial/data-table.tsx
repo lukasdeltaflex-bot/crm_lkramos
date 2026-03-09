@@ -169,15 +169,15 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     }
   }, [globalFilter, columnVisibility, columnOrder, frozenCount, isClient]);
 
-  // 🛡️ MOTOR DE SINCRONIZAÇÃO V5 (ESTABILIZADO)
+  // 🛡️ MOTOR DE SINCRONIZAÇÃO V10 (ULTRARRESILIENTE)
   const handleTopScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (tableContainerRef.current) {
+    if (tableContainerRef.current && tableContainerRef.current.scrollLeft !== e.currentTarget.scrollLeft) {
       tableContainerRef.current.scrollLeft = e.currentTarget.scrollLeft;
     }
   };
 
   const handleTableScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (topScrollRef.current) {
+    if (topScrollRef.current && topScrollRef.current.scrollLeft !== e.currentTarget.scrollLeft) {
       topScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
     }
   };
@@ -274,7 +274,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         
         const customer = row.original.customer;
         const p = row.original;
-        const searchOnlyNumbers = searchTerm.replace(/\D/g, '');
         const normalizedSearch = normalizeString(searchTerm);
         const isPureNumber = /^\d+$/.test(searchTerm);
         
@@ -500,9 +499,10 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             </div>
 
             <Card className="rounded-[1.5rem] border-2 border-zinc-200 bg-card shadow-xl overflow-hidden p-1">
+                {/* BARRA DE ROLAGEM SUPERIOR (V10) */}
                 <div 
                     ref={topScrollRef}
-                    className="overflow-x-auto h-5 bg-muted/20 border-b cursor-pointer relative z-50 pointer-events-auto"
+                    className="overflow-x-auto h-5 bg-muted/30 border-b cursor-pointer relative z-[60] pointer-events-auto"
                     onScroll={handleTopScroll}
                 >
                     <div style={{ width: totalTableWidth, height: '1px' }} />
@@ -510,7 +510,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
                 <div 
                     ref={tableContainerRef}
-                    className="overflow-x-auto relative"
+                    className="overflow-x-auto relative z-10"
                     onScroll={handleTableScroll}
                 >
                     <Table style={{ width: totalTableWidth, tableLayout: 'fixed' }}>
@@ -639,6 +639,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 </div>
             </Card>
         </div>
+    </DndContext>
   );
 });
 
