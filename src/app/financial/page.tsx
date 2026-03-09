@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -28,7 +29,8 @@ import {
     Calendar as CalendarIcon,
     Filter,
     X,
-    TrendingUp
+    TrendingUp,
+    CalendarDays
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -53,6 +55,7 @@ import {
 import { CommissionForm, type CommissionFormValues } from './commission-form';
 import { toast } from '@/hooks/use-toast';
 import { format, startOfMonth, endOfMonth, parse, isValid, addMonths, startOfDay, endOfDay, isSameMonth } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { CommissionReconciliation } from '@/components/financial/commission-reconciliation';
 import { formatCurrency, cleanBankName, cleanFirestoreData } from '@/lib/utils';
 import { ProposalsStatusTable } from '@/components/dashboard/proposals-status-table';
@@ -65,6 +68,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 export type ProposalWithCustomer = Proposal & { customer: Customer | undefined };
 
@@ -132,6 +142,18 @@ export default function FinancialPage() {
     }
   };
 
+  const handleStatsMonthSelect = (monthVal: string) => {
+      const now = new Date();
+      const year = now.getFullYear();
+      const monthIndex = parseInt(monthVal);
+      const start = startOfMonth(new Date(year, monthIndex, 1));
+      const end = endOfMonth(start);
+      
+      setStatsStartDate(format(start, 'dd/MM/yyyy'));
+      setStatsEndDate(format(end, 'dd/MM/yyyy'));
+      setAppliedStatsRange({ from: startOfDay(start), to: endOfDay(end) });
+  };
+
   const { proposalsWithCustomerData, summaryProposals, currentMonthRange, operatorStats } = React.useMemo(() => {
     if (!proposals || !customers || !isClient) return { proposalsWithCustomerData: [], summaryProposals: [], currentMonthRange: { from: new Date(), to: new Date() }, operatorStats: [] };
     
@@ -151,7 +173,6 @@ export default function FinancialPage() {
 
     const opMap: Record<string, { name: string; totalPaid: number; count: number; potential: number }> = {};
     
-    // Filtro de data para as estatísticas
     const statsData = appliedStatsRange 
         ? tableData.filter(p => {
             const d = p.dateDigitized ? new Date(p.dateDigitized) : null;
@@ -565,39 +586,65 @@ export default function FinancialPage() {
                     </DialogHeader>
                     
                     <div className="space-y-6 py-4">
-                        <div className="flex items-center gap-3 bg-muted/30 p-3 rounded-2xl border-2 border-dashed">
-                            <div className="flex items-center gap-2">
-                                <CalendarIcon className="h-4 w-4 text-primary opacity-60" />
-                                <Input 
-                                    placeholder="De" 
-                                    value={statsStartDate} 
-                                    onChange={(e) => {
-                                        let v = e.target.value.replace(/\D/g, "").substring(0, 8);
-                                        if (v.length > 4) v = v.replace(/(\d{2})(\d{2})(\d)/, "$1/$2/$3");
-                                        else if (v.length > 2) v = v.replace(/(\d{2})(\d)/, "$1/$2");
-                                        setStatsStartDate(v);
-                                    }}
-                                    className="h-9 w-28 text-center text-xs font-bold rounded-xl"
-                                />
-                                <span className="text-muted-foreground font-black opacity-40">-</span>
-                                <Input 
-                                    placeholder="Até" 
-                                    value={statsEndDate} 
-                                    onChange={(e) => {
-                                        let v = e.target.value.replace(/\D/g, "").substring(0, 8);
-                                        if (v.length > 4) v = v.replace(/(\d{2})(\d{2})(\d)/, "$1/$2/$3");
-                                        else if (v.length > 2) v = v.replace(/(\d{2})(\d)/, "$1/$2");
-                                        setStatsEndDate(v);
-                                    }}
-                                    className="h-9 w-28 text-center text-xs font-bold rounded-xl"
-                                />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/30 p-4 rounded-2xl border-2 border-dashed">
+                            <div className="space-y-3">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                    <CalendarDays className="h-3 w-3" /> Mês Referência
+                                </Label>
+                                <Select onValueChange={handleStatsMonthSelect}>
+                                    <SelectTrigger className="rounded-xl border-2 bg-background font-bold text-xs">
+                                        <SelectValue placeholder="Escolher mês..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {[0,1,2,3,4,5,6,7,8,9,10,11].map(m => (
+                                            <SelectItem key={m} value={String(m)} className="text-xs font-bold uppercase">
+                                                {format(new Date(2024, m, 1), 'MMMM', { locale: ptBR })}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
-                            <Button size="sm" onClick={handleApplyStatsFilter} className="h-9 rounded-full font-black uppercase text-[10px] tracking-widest gap-2">
-                                <Filter className="h-3 w-3" /> Atualizar Ranking
-                            </Button>
+
+                            <div className="space-y-3">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                    <CalendarIcon className="h-3 w-3" /> Período Manual
+                                </Label>
+                                <div className="flex items-center gap-2 bg-background p-1 px-2 border-2 rounded-xl">
+                                    <Input 
+                                        placeholder="De" 
+                                        value={statsStartDate} 
+                                        onChange={(e) => {
+                                            let v = e.target.value.replace(/\D/g, "").substring(0, 8);
+                                            if (v.length > 4) v = v.replace(/(\d{2})(\d{2})(\d)/, "$1/$2/$3");
+                                            else if (v.length > 2) v = v.replace(/(\d{2})(\d)/, "$1/$2");
+                                            setStatsStartDate(v);
+                                        }}
+                                        className="h-8 border-none bg-transparent text-center text-xs font-bold focus-visible:ring-0"
+                                    />
+                                    <span className="text-muted-foreground font-black opacity-40">-</span>
+                                    <Input 
+                                        placeholder="Até" 
+                                        value={statsEndDate} 
+                                        onChange={(e) => {
+                                            let v = e.target.value.replace(/\D/g, "").substring(0, 8);
+                                            if (v.length > 4) v = v.replace(/(\d{2})(\d{2})(\d)/, "$1/$2/$3");
+                                            else if (v.length > 2) v = v.replace(/(\d{2})(\d)/, "$1/$2");
+                                            setStatsEndDate(v);
+                                        }}
+                                        className="h-8 border-none bg-transparent text-center text-xs font-bold focus-visible:ring-0"
+                                    />
+                                    <Button size="sm" onClick={handleApplyStatsFilter} className="h-7 w-7 p-0 rounded-full shadow-md active:scale-95">
+                                        <CheckCircle2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between px-2">
+                            <p className="text-[10px] font-black uppercase text-primary/60 tracking-widest">Resultados filtrados</p>
                             {appliedStatsRange && (
-                                <Button variant="ghost" size="icon" className="h-9 w-9 text-red-500" onClick={() => { setStatsStartDate(''); setStatsEndDate(''); setAppliedStatsRange(null); }}>
-                                    <X className="h-4 w-4" />
+                                <Button variant="ghost" size="sm" className="h-6 text-[9px] font-black uppercase text-red-500" onClick={() => { setStatsStartDate(''); setStatsEndDate(''); setAppliedStatsRange(null); }}>
+                                    <X className="h-3 w-3 mr-1" /> Limpar Filtro
                                 </Button>
                             )}
                         </div>
@@ -607,7 +654,7 @@ export default function FinancialPage() {
                                 {operatorStats.map((op) => (
                                     <Card key={op.name} className="p-5 flex items-center justify-between border-2 hover:border-primary/20 transition-all">
                                         <div className="flex items-center gap-4">
-                                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-black text-primary">
+                                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-black text-primary uppercase">
                                                 {op.name.charAt(0)}
                                             </div>
                                             <div>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -161,8 +162,6 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
 
   const syncScroll = (source: HTMLDivElement, target: HTMLDivElement) => {
     if (isScrollingRef.current) return;
-    const diff = Math.abs(source.scrollLeft - target.scrollLeft);
-    if (diff < 1) return;
     isScrollingRef.current = true;
     target.scrollLeft = source.scrollLeft;
     setTimeout(() => { isScrollingRef.current = false; }, 50);
@@ -264,7 +263,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
           </div>
           <div 
             ref={topScrollRef}
-            className="overflow-x-auto h-5 bg-muted/30 border-b cursor-pointer relative z-[100] pointer-events-auto"
+            className="overflow-x-auto h-5 bg-muted/30 border-b cursor-pointer relative z-[60] pointer-events-auto"
             onScroll={(e) => { if (tableContainerRef.current) syncScroll(e.currentTarget as HTMLDivElement, tableContainerRef.current); }}
           >
             <div style={{ width: totalTableWidth, height: '1px' }} />
