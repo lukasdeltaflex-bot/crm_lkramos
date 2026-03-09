@@ -50,6 +50,8 @@ export const DraggableHeader = ({ header, className }: { header: Header<any, unk
         opacity: isDragging ? 0.5 : 1,
     };
 
+    const isSelect = header.column.id === 'Selecionar';
+
     return (
         <TableHead
             ref={setNodeRef}
@@ -62,15 +64,16 @@ export const DraggableHeader = ({ header, className }: { header: Header<any, unk
                     className={cn(
                         'flex items-center gap-1 h-full px-2',
                         'select-none',
-                        header.column.id === 'Ações' && 'justify-end'
+                        header.column.id === 'Ações' && 'justify-end',
+                        isSelect && 'justify-center'
                     )}
                 >
-                    {header.column.id !== 'Selecionar' && (
+                    {!isSelect && (
                         <div {...attributes} {...listeners} className="p-1 hover:bg-primary/10 rounded cursor-grab text-muted-foreground/40" onClick={(e) => e.stopPropagation()}>
                             <GripVertical className="h-3.5 w-3.5" />
                         </div>
                     )}
-                    <div className={cn("overflow-hidden font-black text-[12px] uppercase tracking-wider text-foreground leading-tight flex items-center gap-1", header.column.id === 'Ações' && "text-right pr-2", header.column.id === 'Selecionar' && "justify-center w-full pr-0")}>
+                    <div className={cn("overflow-hidden font-black text-[12px] uppercase tracking-wider text-foreground leading-tight flex items-center gap-1", header.column.id === 'Ações' && "text-right pr-2", isSelect && "justify-center w-full pr-0")}>
                         {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                         {header.column.getIsSorted() && (
                             <div className="text-primary shrink-0 ml-1">
@@ -88,7 +91,21 @@ export const DraggableHeader = ({ header, className }: { header: Header<any, unk
 }
 
 export const getColumns = ({ onEdit, onStatusUpdate }: any): ColumnDef<ProposalWithCustomer>[] => [
-  { id: 'Selecionar', header: ({ table }) => (<Checkbox checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')} onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)} className="rounded-full h-5 w-5" onClick={(e) => e.stopPropagation()} />), cell: ({ row }) => (<Checkbox checked={row.getIsSelected()} onCheckedChange={(value) => row.toggleSelected(!!value)} className="rounded-full h-5 w-5" onClick={(e) => e.stopPropagation()} />), enableSorting: false, size: 50 },
+  { 
+    id: 'Selecionar', 
+    header: ({ table }) => (
+        <div className="flex justify-center w-full">
+            <Checkbox checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')} onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)} className="rounded-full h-5 w-5" onClick={(e) => e.stopPropagation()} />
+        </div>
+    ), 
+    cell: ({ row }) => (
+        <div className="flex justify-center w-full">
+            <Checkbox checked={row.getIsSelected()} onCheckedChange={(value) => row.toggleSelected(!!value)} className="rounded-full h-5 w-5" onClick={(e) => e.stopPropagation()} />
+        </div>
+    ), 
+    enableSorting: false, 
+    size: 50 
+  },
   { id: 'Data Digitação', accessorKey: 'dateDigitized', header: 'Data Digitação', cell: ({ row }) => <span className="text-sm font-bold text-muted-foreground">{formatDateSafe(row.original.dateDigitized)}</span>, size: 130 },
   { id: 'Promotora', accessorKey: 'promoter', header: 'Promotora', cell: ({ row, table }) => {
         const prom = row.original.promoter;

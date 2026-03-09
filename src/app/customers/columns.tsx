@@ -59,6 +59,7 @@ export const DraggableHeader = ({ header, className }: { header: Header<Customer
     };
 
     const isSortable = header.column.getCanSort();
+    const isSelect = header.column.id === 'Selecionar';
 
     return (
         <TableHead
@@ -72,15 +73,16 @@ export const DraggableHeader = ({ header, className }: { header: Header<Customer
                     className={cn(
                         'flex items-center gap-1 h-full px-2',
                         'select-none',
-                        header.column.id === 'Ações' && 'justify-end'
+                        header.column.id === 'Ações' && 'justify-end',
+                        isSelect && 'justify-center'
                     )}
                 >
-                    {header.column.id !== 'Selecionar' && (
+                    {!isSelect && (
                         <div {...attributes} {...listeners} className="p-1 hover:bg-primary/10 rounded cursor-grab text-primary opacity-40" onClick={(e) => e.stopPropagation()}>
                             <GripVertical className="h-3.5 w-3.5" />
                         </div>
                     )}
-                    <div className={cn("overflow-hidden font-black text-[12px] uppercase tracking-widest text-foreground leading-tight flex items-center gap-1", isSortable && "cursor-pointer", header.column.id === 'Ações' && "text-right pr-2", header.column.id === 'Selecionar' && "justify-center w-full pr-0")} onClick={isSortable ? header.column.getToggleSortingHandler() : undefined}>
+                    <div className={cn("overflow-hidden font-black text-[12px] uppercase tracking-widest text-foreground leading-tight flex items-center gap-1", isSortable && "cursor-pointer", header.column.id === 'Ações' && "text-right pr-2", isSelect && "justify-center w-full pr-0")} onClick={isSortable ? header.column.getToggleSortingHandler() : undefined}>
                         {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                         {header.column.getIsSorted() && (
                             <div className="text-primary shrink-0 ml-1">
@@ -128,7 +130,21 @@ const ActionsCell = ({ row, onEdit, onDelete }: any) => {
 };
 
 export const getColumns = ({ onEdit, onDelete }: any): ColumnDef<Customer>[] => [
-  { id: 'Selecionar', header: ({ table }) => (<Checkbox checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')} onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)} className="rounded-full h-5 w-5" onClick={(e) => e.stopPropagation()} />), cell: ({ row }) => (<Checkbox checked={row.getIsSelected()} onCheckedChange={(value) => row.toggleSelected(!!value)} className="rounded-full h-5 w-5" onClick={(e) => e.stopPropagation()} />), enableSorting: false, size: 50 },
+  { 
+    id: 'Selecionar', 
+    header: ({ table }) => (
+        <div className="flex justify-center w-full">
+            <Checkbox checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')} onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)} className="rounded-full h-5 w-5" onClick={(e) => e.stopPropagation()} />
+        </div>
+    ), 
+    cell: ({ row }) => (
+        <div className="flex justify-center w-full">
+            <Checkbox checked={row.getIsSelected()} onCheckedChange={(value) => row.toggleSelected(!!value)} className="rounded-full h-5 w-5" onClick={(e) => e.stopPropagation()} />
+        </div>
+    ), 
+    enableSorting: false, 
+    size: 50 
+  },
   { id: 'ID', accessorFn: (row) => row.numericId, header: 'ID', cell: ({ row }) => <span className="text-sm font-black text-foreground/80">{row.original.numericId}</span>, size: 80 },
   { id: 'Nome', accessorFn: (row) => row.name, header: 'Nome', cell: ({ row }) => {
       const customer = row.original;
