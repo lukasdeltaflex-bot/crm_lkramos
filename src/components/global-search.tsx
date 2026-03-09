@@ -99,12 +99,12 @@ export function GlobalSearch() {
 
           <CommandGroup heading="Resultados">
             {validCustomers.map((customer) => {
-              const cpfNumeric = customer.cpf?.replace(/\D/g, '') || '';
+              const cpfNumeric = (customer.cpf || '').replace(/\D/g, '');
               const smartTags = getSmartTags(customer, proposals || []);
               const smartTagsLabels = smartTags.map(tag => tag.label).join(' ');
               
-              // 🛡️ BUSCA NUCLEAR V6: Indexação com âncoras para ID exato
-              const searchIndex = normalizeString(`ID:${customer.numericId} ID_${customer.numericId} ${customer.name} ${customer.cpf} ${cpfNumeric} ${smartTagsLabels}`);
+              // 🛡️ INDEXAÇÃO DE ALTA PRECISÃO V7: ID como âncora isolada
+              const searchIndex = normalizeString(`ID_${customer.numericId} ${customer.numericId} ${customer.name} ${customer.cpf} ${cpfNumeric} ${smartTagsLabels}`);
               
               return (
                 <CommandItem

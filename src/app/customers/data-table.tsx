@@ -209,16 +209,22 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         const searchOnlyNumbers = searchTerm.replace(/\D/g, '');
         const normalizedSearch = normalizeString(searchTerm);
         
-        const cpfNumeric = customer.cpf?.replace(/\D/g, '') || '';
         const numericIdStr = String(customer.numericId || '');
-        
-        // 🛡️ BUSCA NUCLEAR V6: Prioridade Absoluta para ID Exato
+        const cpfNumeric = (customer.cpf || '').replace(/\D/g, '');
+
+        // 🛡️ BUSCA NUCLEAR V7: Prioridade absoluta para ID Exato
         if (searchOnlyNumbers !== '') {
+            // Se o que o usuário digitou for exatamente o ID, mostramos
             if (numericIdStr === searchOnlyNumbers) return true;
+            
+            // Se o que o usuário digitou estiver contido no CPF, mostramos
             if (cpfNumeric.includes(searchOnlyNumbers)) return true;
             
-            // Se for apenas dígitos e não bateu ID nem CPF, descartamos para evitar poluição
-            if (/^\d+$/.test(searchTerm)) return false;
+            // Se for busca puramente numérica e NÃO bateu ID exato nem CPF parcial,
+            // descartamos (ex: evita que buscar "11" traga o ID "110")
+            if (/^\d+$/.test(searchTerm) && numericIdStr !== searchOnlyNumbers) {
+                return false;
+            }
         }
 
         const searchableFields = [

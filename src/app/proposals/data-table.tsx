@@ -280,15 +280,24 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         const searchOnlyNumbers = searchTerm.replace(/\D/g, '');
         const normalizedSearch = normalizeString(searchTerm);
         
-        // 🛡️ BUSCA NUCLEAR V6: Prioridade Absoluta para ID Exato
+        // 🛡️ BUSCA NUCLEAR V7: Prioridade Absoluta para ID Exato
         if (searchOnlyNumbers !== '') {
             const numericIdStr = String(customer?.numericId || '');
+            const cpfNumeric = (customer?.cpf || '').replace(/\D/g, '');
+            
+            // Se o que o usuário digitou for exatamente o ID do cliente dono da proposta
             if (numericIdStr === searchOnlyNumbers) return true;
             
-            const cpfNumeric = customer?.cpf?.replace(/\D/g, '') || '';
+            // Se o que o usuário digitou estiver contido no CPF
             if (cpfNumeric.includes(searchOnlyNumbers)) return true;
             
-            if (/^\d+$/.test(searchTerm)) return false;
+            // Se bater exatamente com o número da proposta
+            if (p.proposalNumber.replace(/\D/g, '') === searchOnlyNumbers) return true;
+
+            // Se for busca puramente numérica e curta, e não bateu ID exato, descartamos
+            if (/^\d+$/.test(searchTerm) && numericIdStr !== searchOnlyNumbers) {
+                return false;
+            }
         }
 
         const searchableFields = [customer?.name, customer?.cpf, p.proposalNumber, p.operator, p.bank, cleanBankName(p.bank), p.promoter];
