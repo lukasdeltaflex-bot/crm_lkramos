@@ -25,16 +25,14 @@ export function CommissionStatusCell({ proposal, onStatusUpdate, onEdit }: Commi
     const { statusColors } = useTheme();
     const { commissionStatus, status, dateApproved } = proposal;
 
-    // 🔓 AUTONOMIA TOTAL: Removida a trava de averbação.
-    // O usuário agora tem liberdade para definir a comissão em qualquer fase.
+    // 🔓 AUTONOMIA TOTAL: O usuário pode definir a comissão em qualquer fase.
     const isReprovado = status === 'Reprovado';
     const canInteract = !isReprovado;
 
-    // 🎯 LÓGICA DE PADRÃO REFINADA (CONFORME SOLICITADO): 
-    // "Pendente" só deve aparecer visualmente se houver data de averbação preenchida.
-    // Se não tiver data de averbação, tratamos o "Pendente" como nulo (exibindo "Definir").
-    // Status manuais e definitivos como "Paga" ou "Parcial" são mantidos sempre, independente da data.
-    const effectiveStatus = (commissionStatus === 'Paga' || commissionStatus === 'Parcial')
+    // 🎯 LÓGICA DE PADRÃO RECONSTITUÍDA (CONFORME COMBINADO): 
+    // Prioriza o status salvo no banco (Paga, Parcial ou Pendente).
+    // Se o campo estiver vazio, usa a data de averbação como gatilho para mostrar "Pendente".
+    const effectiveStatus = (commissionStatus === 'Paga' || commissionStatus === 'Parcial' || commissionStatus === 'Pendente')
         ? commissionStatus
         : (dateApproved ? 'Pendente' : null);
     

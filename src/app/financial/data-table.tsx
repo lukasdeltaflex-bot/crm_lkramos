@@ -78,7 +78,7 @@ const COLUMN_LABELS: Record<string, string> = {
     col_pnum: "Nº Proposta",
     col_gross: "Valor Bruto",
     col_comm: "Comissão (%)",
-    col_proposal_status: "Status Proposta",
+    col_proposal_status: "Situação Proposta",
     col_comm_status: "Status Comissão",
     col_payment_date: "Data Pagamento",
     col_promoter: "Promotora",
@@ -209,8 +209,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
   const syncScroll = (source: HTMLDivElement, target: HTMLDivElement) => {
     if (isScrollingRef.current) return;
-    const diff = Math.abs(source.scrollLeft - target.scrollLeft);
-    if (diff < 1) return;
     isScrollingRef.current = true;
     target.scrollLeft = source.scrollLeft;
     setTimeout(() => { isScrollingRef.current = false; }, 50);
@@ -350,7 +348,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                             <Button variant="outline" className="h-11 rounded-full px-6 font-black border-2 border-zinc-300 bg-background shadow-md gap-2 text-xs uppercase tracking-widest">Colunas <ChevronDown className="h-4 w-4 opacity-50" /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56 shadow-2xl border-2">
-                            <DropdownMenuLabel>Exibir/Ocultar</DropdownMenuLabel>
+                            <DropdownMenuLabel>Personalizar Visão</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             {table.getAllColumns().filter(c => c.getCanHide()).map(column => (
                                 <DropdownMenuCheckboxItem key={column.id} checked={column.getIsVisible()} onCheckedChange={v => column.toggleVisibility(!!v)} className="capitalize text-xs font-bold">
@@ -446,7 +444,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                                 table.getRowModel().rows.map(row => {
                                     const p = row.original;
                                     const commStatus = p.commissionStatus;
-                                    const effectiveStatus = (commStatus === 'Paga' || commStatus === 'Parcial') ? commStatus : (p.dateApproved ? 'Pendente' : null);
+                                    const effectiveStatus = (commStatus === 'Paga' || commStatus === 'Parcial' || commStatus === 'Pendente') ? commStatus : (p.dateApproved ? 'Pendente' : null);
                                     const colorValue = effectiveStatus ? (statusColors[effectiveStatus.toUpperCase()] || statusColors[effectiveStatus]) : undefined;
                                     return (
                                         <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className={cn("transition-colors border-b h-14 hover:bg-primary/[0.03]", colorValue && "status-row-custom")} style={{ '--status-color': colorValue } as any}>

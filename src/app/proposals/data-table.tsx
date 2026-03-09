@@ -215,8 +215,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
 
   const syncScroll = (source: HTMLDivElement, target: HTMLDivElement) => {
     if (isScrollingRef.current) return;
-    const diff = Math.abs(source.scrollLeft - target.scrollLeft);
-    if (diff < 1) return;
     isScrollingRef.current = true;
     target.scrollLeft = source.scrollLeft;
     setTimeout(() => { isScrollingRef.current = false; }, 50);
