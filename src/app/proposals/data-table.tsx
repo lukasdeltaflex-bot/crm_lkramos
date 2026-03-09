@@ -92,6 +92,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   userSettings,
 }, ref) => {
   const tableContainerRef = React.useRef<HTMLDivElement>(null);
+  const topScrollRef = React.useRef<HTMLDivElement>(null);
   const { statusColors } = useTheme();
   const searchParams = useSearchParams();
   const [statusFilter, setStatusFilter] = React.useState('Todos');
@@ -109,18 +110,13 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'Data Digitação', desc: true }]);
   const [isClient, setIsClient] = React.useState(false);
 
-  // Grab-to-scroll Pro State
-  const [isDraggingScroll, setIsDraggingScroll] = React.useState(false);
-  const [startX, setStartX] = React.useState(0);
-  const [scrollLeft, setScrollLeft] = React.useState(0);
-
   const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
     'Operador': false,
     'Data Averbação': true,
     'Data Pgto. Cliente': true,
     'Chegada Saldo': true,
-    'Comissão (R$)': true,
+    'CommissionValue': true,
   });
 
   const initialColumns = React.useMemo(() => columns.map(c => c.id!).filter(Boolean), [columns]);
@@ -149,7 +145,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     } catch (e) {}
   }, []);
 
-  // 🎯 FILTRO AUTOMÁTICO VIA URL
   React.useEffect(() => {
     const search = searchParams.get('search');
     if (search) {
@@ -182,6 +177,13 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     }
   }, [statusFilter, globalFilter, columnVisibility, columnOrder, frozenCount, isClient]);
 
+  // Sincronização de Scroll Duplo
+  const syncScroll = (source: React.RefObject<HTMLDivElement>, target: React.RefObject<HTMLDivElement>) => {
+    if (source.current && target.current) {
+      target.current.scrollLeft = source.current.scrollLeft;
+    }
+  };
+
   const handlePaginationChange = (updater: any) => {
     setPagination((old) => {
       const next = typeof updater === 'function' ? updater(old) : updater;
@@ -191,47 +193,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
       return next;
     });
   };
-
-  // 🛡️ MOTOR GRAB-TO-SCROLL PRO V9
-  const onMouseDown = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('button, input, a, [role="checkbox"], svg, .cursor-grab')) {
-      return;
-    }
-
-    if (!tableContainerRef.current) return;
-    
-    setIsDraggingScroll(true);
-    setStartX(e.pageX - tableContainerRef.current.offsetLeft);
-    setScrollLeft(tableContainerRef.current.scrollLeft);
-  };
-
-  React.useEffect(() => {
-    if (!isDraggingScroll) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDraggingScroll || !tableContainerRef.current) return;
-      e.preventDefault();
-      
-      const x = e.pageX - tableContainerRef.current.offsetLeft;
-      const walk = (x - startX) * 2.5; 
-      tableContainerRef.current.scrollLeft = scrollLeft - walk;
-    };
-
-    const handleMouseUp = () => {
-      setIsDraggingScroll(false);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    document.body.style.userSelect = 'none';
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.userSelect = '';
-    };
-  }, [isDraggingScroll, startX, scrollLeft]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor));
 
@@ -311,6 +272,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
             const numericIdStr = String(customer?.numericId || '');
             const cpfNumeric = (customer?.cpf || '').replace(/\D/g, '');
             
+            // 🛡️ BUSCA NUCLEAR V9: Prioridade absoluta para ID Exato
             if (numericIdStr === searchOnlyNumbers) return true;
             if (cpfNumeric.includes(searchOnlyNumbers)) return true;
             if (p.proposalNumber.replace(/\D/g, '') === searchOnlyNumbers) return true;
@@ -357,6 +319,9 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const toggleOperatorFilter = (op: string) => setOperatorFilters(prev => prev.includes(op) ? prev.filter(o => o !== op) : [...prev, op]);
   const toggleBankFilter = (bank: string) => setBankFilters(prev => prev.includes(bank) ? prev.filter(b => b !== bank) : [...prev, bank]);
   const togglePromoterFilter = (prom: string) => setPromoterFilters(prev => prev.includes(prom) ? prev.filter(p => p !== prom) : [...prev, prom]);
+
+  const showLogos = userSettings?.showBankLogos ?? true;
+  const showPromoterLogos = userSettings?.showPromoterLogos ?? true;
 
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
@@ -480,7 +445,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                         {uniqueBanks.map(bank => (
                             <DropdownMenuCheckboxItem key={bank} checked={bankFilters.includes(bank)} onCheckedChange={() => toggleBankFilter(bank)} className="font-bold text-[10px] uppercase">
                                 <div className="flex items-center gap-2">
-                                    <BankIcon bankName={bank} domain={userSettings?.bankDomains?.[bank]} showLogo={userSettings?.showBankLogos ?? true} className="h-3 w-3" />
+                                    <BankIcon bankName={bank} domain={userSettings?.bankDomains?.[bank]} showLogo={showLogos} className="h-3 w-3" />
                                     <span className="truncate">{cleanBankName(bank)}</span>
                                 </div>
                             </DropdownMenuCheckboxItem>
@@ -496,7 +461,12 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56 max-h-80 overflow-y-auto border-2">
                         {uniquePromoters.map(prom => (
-                            <DropdownMenuCheckboxItem key={prom} checked={promoterFilters.includes(prom)} onCheckedChange={() => togglePromoterFilter(prom)} className="font-bold text-xs uppercase">{prom}</DropdownMenuCheckboxItem>
+                            <DropdownMenuCheckboxItem key={prom} checked={promoterFilters.includes(prom)} onCheckedChange={() => togglePromoterFilter(prom)} className="font-bold text-xs uppercase">
+                                <div className="flex items-center gap-2">
+                                    <BankIcon bankName={prom} domain={userSettings?.promoterDomains?.[prom]} showLogo={showPromoterLogos} className="h-3 w-3" />
+                                    <span className="truncate">{prom}</span>
+                                </div>
+                            </DropdownMenuCheckboxItem>
                         ))}
                     </DropdownMenuContent>
                 </DropdownMenu>
@@ -514,13 +484,19 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
             </div>
 
             <Card className="border-2 border-zinc-300 shadow-xl rounded-xl overflow-hidden bg-card p-1">
+                {/* BARRA DE ROLAGEM SUPERIOR */}
+                <div 
+                    ref={topScrollRef}
+                    className="overflow-x-auto h-3 scrollbar-hide mb-1"
+                    onScroll={() => syncScroll(topScrollRef, tableContainerRef)}
+                >
+                    <div style={{ width: table.getTotalSize() }} className="h-1" />
+                </div>
+
                 <div 
                     ref={tableContainerRef}
-                    className={cn(
-                        "overflow-x-auto relative cursor-grab active:cursor-grabbing",
-                        isDraggingScroll && "cursor-grabbing select-none"
-                    )}
-                    onMouseDown={onMouseDown}
+                    className="overflow-x-auto relative"
+                    onScroll={() => syncScroll(tableContainerRef, topScrollRef)}
                 >
                     <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
                         <TableHeader className="bg-background border-b-2">

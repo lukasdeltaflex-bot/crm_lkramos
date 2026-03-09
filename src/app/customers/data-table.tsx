@@ -80,16 +80,12 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   setRowSelection,
 }, ref) => {
   const tableContainerRef = React.useRef<HTMLDivElement>(null);
+  const topScrollRef = React.useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'ID', desc: true }]);
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [frozenCount, setFrozenCount] = React.useState(2);
   const [isClient, setIsClient] = React.useState(false);
-
-  // Grab-to-scroll Pro State
-  const [isDraggingScroll, setIsDraggingScroll] = React.useState(false);
-  const [startX, setStartX] = React.useState(0);
-  const [scrollLeft, setScrollLeft] = React.useState(0);
 
   const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
@@ -143,51 +139,12 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     }
   }, [globalFilter, columnVisibility, columnOrder, frozenCount, isClient]);
 
-  // 🛡️ MOTOR GRAB-TO-SCROLL PRO V9
-  const onMouseDown = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    // Ignora se clicar em elementos interativos
-    if (target.closest('button, input, a, [role="checkbox"], svg, .cursor-grab')) {
-      return;
+  // Sincronização de Scroll Duplo
+  const syncScroll = (source: React.RefObject<HTMLDivElement>, target: React.RefObject<HTMLDivElement>) => {
+    if (source.current && target.current) {
+      target.current.scrollLeft = source.current.scrollLeft;
     }
-
-    if (!tableContainerRef.current) return;
-    
-    setIsDraggingScroll(true);
-    // Armazena posição absoluta
-    setStartX(e.pageX - tableContainerRef.current.offsetLeft);
-    setScrollLeft(tableContainerRef.current.scrollLeft);
   };
-
-  React.useEffect(() => {
-    if (!isDraggingScroll) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDraggingScroll || !tableContainerRef.current) return;
-      e.preventDefault();
-      
-      const x = e.pageX - tableContainerRef.current.offsetLeft;
-      const walk = (x - startX) * 2.5; // Multiplicador de velocidade
-      tableContainerRef.current.scrollLeft = scrollLeft - walk;
-    };
-
-    const handleMouseUp = () => {
-      setIsDraggingScroll(false);
-    };
-
-    // Listeners globais garantem que o arraste não trave ao sair da div
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    
-    // Desativa seleção de texto durante o arraste
-    document.body.style.userSelect = 'none';
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.userSelect = '';
-    };
-  }, [isDraggingScroll, startX, scrollLeft]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -306,13 +263,19 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
             </div>
           </div>
           
+          {/* BARRA DE ROLAGEM SUPERIOR */}
+          <div 
+            ref={topScrollRef}
+            className="overflow-x-auto h-3 scrollbar-hide mb-1"
+            onScroll={() => syncScroll(topScrollRef, tableContainerRef)}
+          >
+            <div style={{ width: table.getTotalSize() }} className="h-1" />
+          </div>
+
           <div 
             ref={tableContainerRef}
-            className={cn(
-                "overflow-x-auto relative cursor-grab active:cursor-grabbing",
-                isDraggingScroll && "cursor-grabbing select-none"
-            )}
-            onMouseDown={onMouseDown}
+            className="overflow-x-auto relative"
+            onScroll={() => syncScroll(tableContainerRef, topScrollRef)}
           >
             <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
                 <TableHeader className="bg-background border-b-2">

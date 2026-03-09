@@ -56,7 +56,7 @@ const CopyButton = ({ text, label }: { text: string | undefined; label: string }
         toast({ title: `${label} copiado!` });
     };
     return (
-        <Button variant="ghost" size="icon" className="h-7 w-7 opacity-40 hover:opacity-100 transition-opacity" onClick={handleCopy}>
+        <Button variant="ghost" size="icon" className="h-6 w-6 opacity-40 hover:opacity-100 transition-opacity" onClick={handleCopy}>
             <Copy className="h-3.5 w-3.5" />
         </Button>
     );
@@ -201,7 +201,7 @@ export const getColumns = (
   { id: 'CPF', accessorFn: (row) => row.customer?.cpf, header: 'CPF', cell: ({ row }) => (<div className="flex items-center gap-1 text-sm font-black text-foreground/80"><span>{row.original.customer?.cpf || '-'}</span><CopyButton text={row.original.customer?.cpf} label="CPF" /></div>), size: 160 },
   { id: 'Produto', accessorKey: 'product', header: 'Produto', cell: ({ row }) => <span className="text-sm font-bold text-foreground/80">{row.original.product}</span>, size: 120 },
   { id: 'Valor Bruto', accessorKey: 'grossAmount', header: () => <div className="text-right">Valor Bruto</div>, cell: ({ row }) => <div className="text-right font-black text-sm">{formatCurrency(row.original.grossAmount)}</div>, size: 120 },
-  { id: 'Comissão (R$)', accessorKey: 'commissionValue', header: () => <div className="text-right">Comissão</div>, cell: ({ row }) => <div className="text-right font-bold text-emerald-600">{formatCurrency(row.original.commissionValue)}</div>, size: 120 },
+  { id: 'CommissionValue', accessorKey: 'commissionValue', header: () => <div className="text-right">Comissão</div>, cell: ({ row }) => <div className="text-right font-bold text-emerald-600">{formatCurrency(row.original.commissionValue)}</div>, size: 120 },
   { id: 'Banco Digitado', accessorKey: 'bank', header: 'Banco Digitado', cell: ({ row, table }) => {
         const bank = row.original.bank;
         const sett = (table.options.meta as any)?.userSettings;

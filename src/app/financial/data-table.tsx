@@ -95,6 +95,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   userSettings,
 }, ref) => {
   const tableContainerRef = React.useRef<HTMLDivElement>(null);
+  const topScrollRef = React.useRef<HTMLDivElement>(null);
   const { statusColors } = useTheme();
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'Data Digitação', desc: true }]);
   const [statusFilter, setStatusFilter] = React.useState('Todos');
@@ -107,11 +108,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [isClient, setIsClient] = React.useState(false);
-
-  // Grab-to-scroll Pro State
-  const [isDraggingScroll, setIsDraggingScroll] = React.useState(false);
-  const [startX, setStartX] = React.useState(0);
-  const [scrollLeft, setScrollLeft] = React.useState(0);
 
   const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
@@ -173,46 +169,12 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     }
   }, [globalFilter, columnVisibility, columnOrder, frozenCount, isClient]);
 
-  // 🛡️ MOTOR GRAB-TO-SCROLL PRO V9
-  const onMouseDown = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('button, input, a, [role="checkbox"], svg, .cursor-grab')) {
-      return;
+  // Sincronização de Scroll Duplo
+  const syncScroll = (source: React.RefObject<HTMLDivElement>, target: React.RefObject<HTMLDivElement>) => {
+    if (source.current && target.current) {
+      target.current.scrollLeft = source.current.scrollLeft;
     }
-
-    if (!tableContainerRef.current) return;
-    
-    setIsDraggingScroll(true);
-    setStartX(e.pageX - tableContainerRef.current.offsetLeft);
-    setScrollLeft(tableContainerRef.current.scrollLeft);
   };
-
-  React.useEffect(() => {
-    if (!isDraggingScroll) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDraggingScroll || !tableContainerRef.current) return;
-      e.preventDefault();
-      
-      const x = e.pageX - tableContainerRef.current.offsetLeft;
-      const walk = (x - startX) * 2.5; 
-      tableContainerRef.current.scrollLeft = scrollLeft - walk;
-    };
-
-    const handleMouseUp = () => {
-      setIsDraggingScroll(false);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    document.body.style.userSelect = 'none';
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.userSelect = '';
-    };
-  }, [isDraggingScroll, startX, scrollLeft]);
 
   const handlePaginationChange = (updater: any) => {
     setPagination((old) => {
@@ -507,7 +469,12 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56 max-h-80 overflow-y-auto border-2">
                         {uniquePromoters.map(prom => (
-                            <DropdownMenuCheckboxItem key={prom} checked={promoterFilters.includes(prom)} onCheckedChange={() => togglePromoterFilter(prom)} className="font-bold text-xs uppercase">{prom}</DropdownMenuCheckboxItem>
+                            <DropdownMenuCheckboxItem key={prom} checked={promoterFilters.includes(prom)} onCheckedChange={() => togglePromoterFilter(prom)} className="font-bold text-xs uppercase">
+                                <div className="flex items-center gap-2">
+                                    <BankIcon bankName={prom} domain={userSettings?.promoterDomains?.[prom]} showLogo={userSettings?.showPromoterLogos ?? true} className="h-3 w-3" />
+                                    <span className="truncate">{prom}</span>
+                                </div>
+                            </DropdownMenuCheckboxItem>
                         ))}
                     </DropdownMenuContent>
                 </DropdownMenu>
@@ -525,13 +492,19 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             </div>
 
             <Card className="rounded-[1.5rem] border-2 border-zinc-200 bg-card shadow-xl overflow-hidden p-1">
+                {/* BARRA DE ROLAGEM SUPERIOR */}
+                <div 
+                    ref={topScrollRef}
+                    className="overflow-x-auto h-3 scrollbar-hide mb-1"
+                    onScroll={() => syncScroll(topScrollRef, tableContainerRef)}
+                >
+                    <div style={{ width: table.getTotalSize() }} className="h-1" />
+                </div>
+
                 <div 
                     ref={tableContainerRef}
-                    className={cn(
-                        "overflow-x-auto relative cursor-grab active:cursor-grabbing",
-                        isDraggingScroll && "cursor-grabbing select-none"
-                    )}
-                    onMouseDown={onMouseDown}
+                    className="overflow-x-auto relative"
+                    onScroll={() => syncScroll(tableContainerRef, topScrollRef)}
                 >
                     <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
                         <TableHeader className="bg-background border-b-2">
@@ -659,7 +632,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 </div>
             </Card>
         </div>
-    </DndContext>
   );
 });
 
