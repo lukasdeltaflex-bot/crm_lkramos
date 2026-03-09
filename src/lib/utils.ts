@@ -204,17 +204,24 @@ export function getSmartTags(customer: Customer, proposals: Proposal[] = []): { 
     const now = new Date();
     const customerProposals = proposals.filter(p => p.customerId === customer.id);
     const totalComm = customerProposals.reduce((s, p) => s + (p.amountPaid || 0), 0);
+    
     if (totalComm >= 5000) tags.push({ label: '💎 ELITE', color: 'bg-amber-500' });
+    
     const hasRecent = customerProposals.some(p => {
         const d = parseDateSafe(p.dateDigitized);
         return d && differenceInDays(now, d) <= 30;
     });
     if (hasRecent) tags.push({ label: '🔥 ATIVO', color: 'bg-orange-600' });
+    
     const hasAnyInLast6Months = customerProposals.some(p => {
         const d = parseDateSafe(p.dateDigitized);
         return d && differenceInDays(now, d) <= 180;
     });
     if (!hasAnyInLast6Months && customerProposals.length > 0) tags.push({ label: '🧊 REATIVAR', color: 'bg-blue-400' });
-    if (customerProposals.some(p => !['Pago', 'Reprovado', 'Saldo Pago'].includes(p.status))) tags.push({ label: '⚖️ EM ESTEIRA', color: 'bg-purple-500' });
+    
+    if (customerProposals.some(p => !['Pago', 'Reprovado', 'Saldo Pago'].includes(p.status))) {
+        tags.push({ label: '⚖️ EM ESTEIRA', color: 'bg-blue-500' });
+    }
+    
     return tags;
 }

@@ -28,7 +28,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/dialog";
 import { CustomerAiForm } from '@/components/customers/customer-ai-form';
 import {
     DropdownMenu,
@@ -114,7 +114,8 @@ function CustomersPageContent() {
         const smartTags = getSmartTags(c, proposals || []);
         return {
             ...c,
-            smartTags: smartTags.map(st => st.label)
+            smartTags: smartTags.map(st => st.label),
+            smartTagsFull: smartTags
         };
     });
   }, [customers, proposals]);

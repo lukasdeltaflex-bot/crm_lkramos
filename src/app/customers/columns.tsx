@@ -131,19 +131,33 @@ const ActionsCell = ({ row, onEdit, onDelete }: any) => {
 export const getColumns = ({ onEdit, onDelete }: any): ColumnDef<Customer>[] => [
   { id: 'Selecionar', header: ({ table }) => (<Checkbox checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')} onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)} className="rounded-full h-5 w-5" onClick={(e) => e.stopPropagation()} />), cell: ({ row }) => (<Checkbox checked={row.getIsSelected()} onCheckedChange={(value) => row.toggleSelected(!!value)} className="rounded-full h-5 w-5" onClick={(e) => e.stopPropagation()} />), enableSorting: false, size: 50 },
   { id: 'ID', accessorFn: (row) => row.numericId, header: 'ID', cell: ({ row }) => <span className="text-sm font-black text-foreground/80">{row.original.numericId}</span>, size: 80 },
-  { id: 'Nome', accessorFn: (row) => row.name, header: 'Nome', cell: ({ row }) => (<Link href={`/customers/${row.original.id}`} className="font-bold text-primary hover:underline uppercase text-sm truncate block" onClick={(e) => e.stopPropagation()}>{row.original.name}</Link>), size: 250 },
+  { id: 'Nome', accessorFn: (row) => row.name, header: 'Nome', cell: ({ row }) => {
+      const customer = row.original;
+      const smartTags = (customer as any).smartTagsFull || [];
+      return (
+          <div className="flex flex-col gap-1 py-1">
+              <Link href={`/customers/${customer.id}`} className="font-bold text-primary hover:underline uppercase text-sm truncate block" onClick={(e) => { e.stopPropagation(); }}>
+                  {customer.name}
+              </Link>
+              <div className="flex flex-wrap gap-1">
+                  {smartTags.map((tag: any) => (
+                      <Badge key={tag.label} className={cn("text-[8px] font-black uppercase px-2 py-0.5 rounded-full border-none text-white shadow-sm", tag.color)}>
+                          {tag.label}
+                      </Badge>
+                  ))}
+              </div>
+          </div>
+      );
+  }, size: 250 },
   { id: 'CPF', accessorFn: (row) => row.cpf, header: 'CPF', cell: ({ row }) => (<div className="flex items-center gap-1 font-bold text-sm"><span>{row.original.cpf}</span><CopyButton text={row.original.cpf} label="CPF" /></div>), size: 150 },
   { id: 'Telefone', accessorFn: (row) => row.phone, header: 'Telefone', cell: ({ row }) => { const phone = row.original.phone; return (<div className="flex items-center gap-2 font-bold text-sm"><span>{phone}</span>{isWhatsApp(phone) && <a href={getWhatsAppUrl(phone)} target="_blank" rel="noopener noreferrer" className="text-green-600"><WhatsAppIcon className="h-4 w-4" /></a>}</div>) }, size: 150 },
   { id: 'Telefone 2', accessorFn: (row) => row.phone2, header: 'Telefone 2', cell: ({ row }) => { const phone = row.original.phone2; if (!phone) return '-'; return (<div className="flex items-center gap-2 font-bold text-sm"><span>{phone}</span>{isWhatsApp(phone) && <a href={getWhatsAppUrl(phone)} target="_blank" rel="noopener noreferrer" className="text-green-600"><WhatsAppIcon className="h-4 w-4" /></a>}</div>) }, size: 150 },
   { id: 'Tags', header: 'Tags', cell: ({ row }) => {
       const customer = row.original;
-      const smartTags = (customer as any).smartTags || [];
       const manualTags = customer.tags || [];
+      if (manualTags.length === 0) return '-';
       return (
           <div className="flex flex-wrap gap-1 max-w-[200px]">
-              {smartTags.map((tag: string) => (
-                  <Badge key={tag} className="text-[8px] font-black uppercase px-1.5 py-0 bg-primary/10 text-primary border-none">{tag}</Badge>
-              ))}
               {manualTags.map((tag: string) => (
                   <Badge key={tag} variant="outline" className="text-[8px] font-black uppercase px-1.5 py-0 border-primary/20">{tag}</Badge>
               ))}
