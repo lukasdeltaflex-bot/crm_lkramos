@@ -206,7 +206,7 @@ export function getSmartTags(customer: Customer, proposals: Proposal[] = []): { 
     // 🛡️ ALERTA 75 ANOS: Identifica clientes se aproximando ou atingindo o limite de idade
     const age = getAge(customer.birthDate);
     if (age >= 74 && age <= 75) {
-        tags.push({ label: 'ALERTA 75 ANOS', color: 'bg-[#F87171]' }); // Cor coral/salmon vibrante
+        tags.push({ label: 'ALERTA 75 ANOS', color: 'bg-red-500' }); // Cor sólida para evitar invisibilidade
     }
 
     const customerProposals = proposals.filter(p => p.customerId === customer.id);

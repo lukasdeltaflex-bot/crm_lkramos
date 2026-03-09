@@ -93,6 +93,8 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
 }, ref) => {
   const tableContainerRef = React.useRef<HTMLDivElement>(null);
   const topScrollRef = React.useRef<HTMLDivElement>(null);
+  const isScrolling = React.useRef(false);
+
   const { statusColors } = useTheme();
   const searchParams = useSearchParams();
   const [statusFilter, setStatusFilter] = React.useState('Todos');
@@ -177,11 +179,14 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     }
   }, [statusFilter, globalFilter, columnVisibility, columnOrder, frozenCount, isClient]);
 
-  // 🛡️ MOTOR DE SINCRONIZAÇÃO V3 (BI-DIRECIONAL ROBUSTO)
+  // 🛡️ MOTOR DE SINCRONIZAÇÃO V4
   const syncScroll = (source: HTMLDivElement, target: HTMLDivElement) => {
-    if (target.scrollLeft !== source.scrollLeft) {
-      target.scrollLeft = source.scrollLeft;
-    }
+    if (isScrolling.current) return;
+    isScrolling.current = true;
+    target.scrollLeft = source.scrollLeft;
+    requestAnimationFrame(() => {
+        isScrolling.current = false;
+    });
   };
 
   const handleTopScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -489,10 +494,10 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
             </div>
 
             <Card className="border-2 border-zinc-300 shadow-xl rounded-xl overflow-hidden bg-card p-1">
-                {/* 🚀 BARRA DE ROLAGEM SUPERIOR RECALIBRADA */}
+                {/* 🚀 BARRA DE ROLAGEM SUPERIOR V4 */}
                 <div 
                     ref={topScrollRef}
-                    className="overflow-x-auto h-5 bg-muted/20 border-b cursor-pointer"
+                    className="overflow-x-auto h-3 bg-muted/30 border-b cursor-pointer relative z-50"
                     onScroll={handleTopScroll}
                 >
                     <div style={{ width: table.getTotalSize(), height: '1px' }} />
