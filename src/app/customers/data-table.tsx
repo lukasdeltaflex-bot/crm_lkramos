@@ -16,6 +16,7 @@ import {
   ColumnSizingState,
   Table as ReactTable,
   PaginationState,
+  getFilteredRowModel,
 } from '@tanstack/react-table';
 import {
     DndContext,
@@ -52,7 +53,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, Snowflake } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, Search, Snowflake } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DraggableHeader } from './columns';
@@ -141,6 +142,31 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     }
   }, [globalFilter, columnVisibility, columnOrder, frozenCount, isClient]);
 
+  const onMouseDown = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('input') || target.closest('a') || target.closest('[role="checkbox"]') || target.closest('svg')) {
+      return;
+    }
+
+    if (!tableContainerRef.current) return;
+    setIsDraggingScroll(true);
+    const rect = tableContainerRef.current.getBoundingClientRect();
+    setStartX(e.clientX - rect.left);
+    setScrollLeft(tableContainerRef.current.scrollLeft);
+  };
+
+  const onMouseUp = () => setIsDraggingScroll(false);
+  const onMouseLeave = () => setIsDraggingScroll(false);
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingScroll || !tableContainerRef.current) return;
+    e.preventDefault();
+    const rect = tableContainerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const walk = (x - startX) * 2.5; 
+    tableContainerRef.current.scrollLeft = scrollLeft - walk;
+  };
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor)
@@ -186,17 +212,12 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         const cpfNumeric = customer.cpf?.replace(/\D/g, '') || '';
         const numericIdStr = String(customer.numericId || '');
         
-        // 🛡️ BUSCA NUCLEAR V5: Prioridade Absoluta para ID Exato
-        // Se a busca for numérica, comparamos a igualdade exata com o ID.
-        // Se for 10, não deve mostrar o 101 a menos que o 101 combine com outro campo.
+        // 🛡️ BUSCA NUCLEAR V6: Prioridade Absoluta para ID Exato
         if (searchOnlyNumbers !== '') {
             if (numericIdStr === searchOnlyNumbers) return true;
-            
-            // Se o usuário digitou algo numérico, e não é o ID exato, mas é um CPF completo ou parcial, mostramos.
             if (cpfNumeric.includes(searchOnlyNumbers)) return true;
             
-            // Se não bateu no ID nem no CPF, e a busca é puramente numérica, evitamos mostrar IDs "que contenham"
-            // para não poluir. Só continuamos para busca de texto se houver letras no termo original.
+            // Se for apenas dígitos e não bateu ID nem CPF, descartamos para evitar poluição
             if (/^\d+$/.test(searchTerm)) return false;
         }
 
@@ -215,29 +236,6 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         });
     },
   });
-
-  const onMouseDown = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('button') || target.closest('input') || target.closest('a') || target.closest('[role="checkbox"]')) {
-      return;
-    }
-
-    if (!tableContainerRef.current) return;
-    setIsDraggingScroll(true);
-    setStartX(e.pageX - tableContainerRef.current.offsetLeft);
-    setScrollLeft(tableContainerRef.current.scrollLeft);
-  };
-
-  const onMouseLeave = () => setIsDraggingScroll(false);
-  const onMouseUp = () => setIsDraggingScroll(false);
-
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (!isDraggingScroll || !tableContainerRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - tableContainerRef.current.offsetLeft;
-    const walk = (x - startX) * 2; 
-    tableContainerRef.current.scrollLeft = scrollLeft - walk;
-  };
 
   React.useImperativeHandle(ref, () => ({ table }));
 

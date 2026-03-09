@@ -60,7 +60,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { X, Filter, Search, Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Snowflake, User, Landmark, Building2 } from 'lucide-react';
+import { X, Filter, Search, Calendar as CalendarIcon, ChevronDown, Snowflake, User, Landmark, Building2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn, cleanBankName, normalizeString, formatCurrency } from '@/lib/utils';
 import type { Proposal, Customer, UserSettings } from '@/lib/types';
 import { FinancialSummary } from '@/components/financial/financial-summary';
@@ -174,6 +174,31 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     }
   }, [globalFilter, columnVisibility, columnOrder, frozenCount, isClient]);
 
+  const onMouseDown = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('input') || target.closest('a') || target.closest('[role="checkbox"]') || target.closest('svg')) {
+      return;
+    }
+
+    if (!tableContainerRef.current) return;
+    setIsDraggingScroll(true);
+    const rect = tableContainerRef.current.getBoundingClientRect();
+    setStartX(e.clientX - rect.left);
+    setScrollLeft(tableContainerRef.current.scrollLeft);
+  };
+
+  const onMouseUp = () => setIsDraggingScroll(false);
+  const onMouseLeave = () => setIsDraggingScroll(false);
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingScroll || !tableContainerRef.current) return;
+    e.preventDefault();
+    const rect = tableContainerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const walk = (x - startX) * 2.5; 
+    tableContainerRef.current.scrollLeft = scrollLeft - walk;
+  };
+
   const handlePaginationChange = (updater: any) => {
     setPagination((old) => {
       const next = typeof updater === 'function' ? updater(old) : updater;
@@ -263,29 +288,10 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     meta: { isPrivacyMode, userSettings }
   });
 
-  const onMouseDown = (e: React.MouseEvent) => {
-    if (!tableContainerRef.current) return;
-    setIsDraggingScroll(true);
-    setStartX(e.pageX - tableContainerRef.current.offsetLeft);
-    setScrollLeft(tableContainerRef.current.scrollLeft);
-  };
-
-  const onMouseLeave = () => setIsDraggingScroll(false);
-  const onMouseUp = () => setIsDraggingScroll(false);
-
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (!isDraggingScroll || !tableContainerRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - tableContainerRef.current.offsetLeft;
-    const walk = (x - startX) * 1.5; 
-    tableContainerRef.current.scrollLeft = scrollLeft - walk;
-  };
-
   const selectedRows = table.getFilteredSelectedRowModel().rows;
   const numSelected = selectedRows.length;
   const totalGross = React.useMemo(() => selectedRows.reduce((acc, row) => acc + (row.original.grossAmount || 0), 0), [selectedRows]);
   
-  // 🛡️ CÁLCULO DE SALDO REAL (REMANESCENTE)
   const totalCommission = React.useMemo(() => 
     selectedRows.reduce((acc, row) => {
         const p = row.original;
@@ -376,7 +382,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-                {/* 🛡️ REORGANIZAÇÃO: FILTRO DE DATAS INTEGRADO AOS FILTROS DE CATEGORIA */}
                 <div className="flex items-center gap-3 bg-background border-2 border-zinc-300 rounded-full px-3 py-1 shadow-sm">
                     <Select onValueChange={applyRangeShortcut}>
                         <SelectTrigger className="h-7 w-[120px] border-none bg-transparent focus:ring-0 text-xs font-black uppercase p-0">
@@ -476,7 +481,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 )}
             </div>
 
-            {/* 🕵️ BUSCA EM LINHA EXCLUSIVA PARA MELHOR VISUALIZAÇÃO */}
             <div className='relative w-full group'>
                 <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80' />
                 <Input placeholder="Busca por ID, CPF, Nome ou Proposta..." value={globalFilter} onChange={(e) => setGlobalFilter(e.target.value)} className="pl-10 h-11 bg-background border-2 border-zinc-300 rounded-full text-base font-bold shadow-md" />

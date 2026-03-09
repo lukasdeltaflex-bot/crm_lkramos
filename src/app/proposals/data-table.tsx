@@ -60,7 +60,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Card } from '@/components/ui/card';
-import { Filter, X, Search, Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Snowflake, User, Landmark, Building2 } from 'lucide-react';
+import { Filter, X, Search, Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, Snowflake, User, Landmark, Building2 } from 'lucide-react';
 import type { ProposalStatus, UserSettings } from '@/lib/types';
 import { DraggableHeader } from './columns';
 import type { ProposalWithCustomer } from './page';
@@ -181,6 +181,31 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     });
   };
 
+  const onMouseDown = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('input') || target.closest('a') || target.closest('[role="checkbox"]') || target.closest('svg')) {
+      return;
+    }
+
+    if (!tableContainerRef.current) return;
+    setIsDraggingScroll(true);
+    const rect = tableContainerRef.current.getBoundingClientRect();
+    setStartX(e.clientX - rect.left);
+    setScrollLeft(tableContainerRef.current.scrollLeft);
+  };
+
+  const onMouseUp = () => setIsDraggingScroll(false);
+  const onMouseLeave = () => setIsDraggingScroll(false);
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingScroll || !tableContainerRef.current) return;
+    e.preventDefault();
+    const rect = tableContainerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const walk = (x - startX) * 2.5; 
+    tableContainerRef.current.scrollLeft = scrollLeft - walk;
+  };
+
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor));
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -255,7 +280,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         const searchOnlyNumbers = searchTerm.replace(/\D/g, '');
         const normalizedSearch = normalizeString(searchTerm);
         
-        // 🛡️ BUSCA NUCLEAR V5: Prioridade Absoluta para ID Exato
+        // 🛡️ BUSCA NUCLEAR V6: Prioridade Absoluta para ID Exato
         if (searchOnlyNumbers !== '') {
             const numericIdStr = String(customer?.numericId || '');
             if (numericIdStr === searchOnlyNumbers) return true;
@@ -263,7 +288,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
             const cpfNumeric = customer?.cpf?.replace(/\D/g, '') || '';
             if (cpfNumeric.includes(searchOnlyNumbers)) return true;
             
-            // Se for apenas número e não bateu ID nem CPF, evitamos poluição
             if (/^\d+$/.test(searchTerm)) return false;
         }
 
@@ -272,29 +296,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     },
     meta: { userSettings }
   });
-
-  const onMouseDown = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('button') || target.closest('input') || target.closest('a') || target.closest('[role="checkbox"]')) {
-      return;
-    }
-    
-    if (!tableContainerRef.current) return;
-    setIsDraggingScroll(true);
-    setStartX(e.pageX - tableContainerRef.current.offsetLeft);
-    setScrollLeft(tableContainerRef.current.scrollLeft);
-  };
-
-  const onMouseLeave = () => setIsDraggingScroll(false);
-  const onMouseUp = () => setIsDraggingScroll(false);
-
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (!isDraggingScroll || !tableContainerRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - tableContainerRef.current.offsetLeft;
-    const walk = (x - startX) * 2; 
-    tableContainerRef.current.scrollLeft = scrollLeft - walk;
-  };
 
   React.useImperativeHandle(ref, () => ({ table }));
 

@@ -8,6 +8,7 @@ import {
   CommandEmpty,
   CommandGroup,
   CommandInput,
+  CommandItem,
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command';
@@ -102,8 +103,8 @@ export function GlobalSearch() {
               const smartTags = getSmartTags(customer, proposals || []);
               const smartTagsLabels = smartTags.map(tag => tag.label).join(' ');
               
-              // 🛡️ BUSCA NUCLEAR V5: Prefixação estrita com espaços para garantir ID exato no cmdk
-              const searchIndex = normalizeString(`ID_${customer.numericId} [ID:${customer.numericId}] ${customer.name} ${customer.cpf} ${cpfNumeric} ${smartTagsLabels}`);
+              // 🛡️ BUSCA NUCLEAR V6: Indexação com âncoras para ID exato
+              const searchIndex = normalizeString(`ID:${customer.numericId} ID_${customer.numericId} ${customer.name} ${customer.cpf} ${cpfNumeric} ${smartTagsLabels}`);
               
               return (
                 <CommandItem
