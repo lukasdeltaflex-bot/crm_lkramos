@@ -72,14 +72,14 @@ import { BankIcon } from '@/components/bank-icon';
 const COLUMN_LABELS: Record<string, string> = {
     col_select: "Seleção",
     col_date: "Data Digitação",
-    col_promoter: "Promotora",
+    col_bank: "Banco",
     col_customer: "Cliente",
-    col_cpf: "CPF",
     col_pnum: "Nº Proposta",
-    col_product: "Produto",
     col_gross: "Valor Bruto",
-    col_comm: "Comissão",
+    col_comm: "Vlr. Comissão",
     col_comm_status: "Status Comissão",
+    col_payment_date: "Data Pagamento",
+    col_promoter: "Promotora",
     col_operator: "Operador",
     col_actions: "Ações"
 };
@@ -133,10 +133,9 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
     'col_promoter': false,
-    'col_cpf': false,
-    'col_comm': true,
-    'col_comm_status': true,
-    'col_operator': true
+    'col_operator': true,
+    'col_payment_date': true,
+    'col_bank': true
   });
   
   const [startDateInput, setStartDateInput] = React.useState('');

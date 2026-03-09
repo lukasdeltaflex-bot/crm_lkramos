@@ -18,7 +18,6 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { TableHead } from '@/components/ui/table';
 import { CommissionStatusCell } from './commission-status-cell';
-import { StatusCell } from '@/app/proposals/status-cell';
 import Link from 'next/link';
 import { toast } from '@/hooks/use-toast';
 import { BankIcon } from '@/components/bank-icon';
@@ -113,18 +112,22 @@ export const getColumns = ({ onEdit, onStatusUpdate }: any): ColumnDef<ProposalW
     size: 50 
   },
   { id: 'col_date', accessorKey: 'dateDigitized', header: 'Data Digitação', cell: ({ row }) => <span className="text-sm font-bold text-muted-foreground">{formatDateSafe(row.original.dateDigitized)}</span>, size: 130 },
+  { id: 'col_bank', accessorKey: 'bank', header: 'Banco', cell: ({ row, table }) => {
+        const bank = row.original.bank;
+        const sett = (table.options.meta as any)?.userSettings;
+        return (<div className="flex items-center gap-2"><BankIcon bankName={bank} domain={sett?.bankDomains?.[bank]} showLogo={sett?.showBankLogos ?? true} className="h-4 w-4" /><span className="text-sm font-bold truncate">{cleanBankName(bank)}</span></div>)
+    }, size: 150 },
+  { id: 'col_customer', accessorFn: (row) => row.customer?.name, header: 'Cliente', cell: ({ row }) => <span className="font-black text-primary uppercase text-sm truncate">{row.original.customer?.name}</span>, size: 200 },
+  { id: 'col_pnum', accessorKey: 'proposalNumber', header: 'Nº Proposta', cell: ({ row }) => (<div className="flex items-center gap-1 text-sm font-black"><Link href={`/proposals?open=${row.original.id}`} className="text-primary hover:underline font-black" onClick={(e) => e.stopPropagation()}>{row.original.proposalNumber}</Link><CopyButton text={row.original.proposalNumber} label="Proposta" /></div>), size: 150 },
+  { id: 'col_gross', accessorKey: 'grossAmount', header: () => <div className="text-right">Valor Bruto</div>, cell: ({ row, table }) => { const isPriv = (table.options.meta as any)?.isPrivacyMode; return (<div className="text-right font-black text-sm">{isPriv ? '•••••' : formatCurrency(row.original.grossAmount)}</div>) }, size: 120 },
+  { id: 'col_comm', accessorKey: 'commissionValue', header: () => <div className="text-right">Vlr. Comissão</div>, cell: ({ row, table }) => { const isPriv = (table.options.meta as any)?.isPrivacyMode; return (<div className="text-right font-black text-sm text-emerald-600">{isPriv ? '•••••' : formatCurrency(row.original.commissionValue)}</div>) }, size: 120 },
+  { id: 'col_comm_status', accessorKey: 'commissionStatus', header: 'Status Comissão', cell: ({ row }) => <CommissionStatusCell proposal={row.original} onStatusUpdate={onStatusUpdate} onEdit={onEdit} />, size: 140 },
+  { id: 'col_payment_date', accessorKey: 'commissionPaymentDate', header: 'Data Pagamento', cell: ({ row }) => <span className="text-sm font-bold text-muted-foreground">{formatDateSafe(row.original.commissionPaymentDate)}</span>, size: 130 },
   { id: 'col_promoter', accessorKey: 'promoter', header: 'Promotora', cell: ({ row, table }) => {
         const prom = row.original.promoter;
         const sett = (table.options.meta as any)?.userSettings;
         return (<div className="flex items-center gap-2"><BankIcon bankName={prom} domain={sett?.promoterDomains?.[prom]} showLogo={sett?.showPromoterLogos ?? true} className="h-4 w-4" /><span className="text-sm font-bold truncate">{prom}</span></div>)
     }, size: 150 },
-  { id: 'col_customer', accessorFn: (row) => row.customer?.name, header: 'Cliente', cell: ({ row }) => <span className="font-black text-primary uppercase text-sm truncate">{row.original.customer?.name}</span>, size: 200 },
-  { id: 'col_cpf', accessorFn: (row) => row.customer?.cpf, header: 'CPF', cell: ({ row }) => (<div className="flex items-center gap-1 text-sm font-black text-foreground/80"><span>{row.original.customer?.cpf || '-'}</span><CopyButton text={row.original.customer?.cpf} label="CPF" /></div>), size: 150 },
-  { id: 'col_pnum', accessorKey: 'proposalNumber', header: 'Nº Proposta', cell: ({ row }) => (<div className="flex items-center gap-1 text-sm font-black"><Link href={`/proposals?open=${row.original.id}`} className="text-primary hover:underline font-black" onClick={(e) => e.stopPropagation()}>{row.original.proposalNumber}</Link><CopyButton text={row.original.proposalNumber} label="Proposta" /></div>), size: 150 },
-  { id: 'col_product', accessorKey: 'product', header: 'Produto', cell: ({ row }) => <span className="text-sm font-bold text-foreground/80">{row.original.product}</span>, size: 120 },
-  { id: 'col_gross', accessorKey: 'grossAmount', header: () => <div className="text-right">Valor Bruto</div>, cell: ({ row, table }) => { const isPriv = (table.options.meta as any)?.isPrivacyMode; return (<div className="text-right font-black text-sm">{isPriv ? '•••••' : formatCurrency(row.original.grossAmount)}</div>) }, size: 120 },
-  { id: 'col_comm', accessorKey: 'commissionValue', header: 'Comissão', cell: ({ row, table }) => { const isPriv = (table.options.meta as any)?.isPrivacyMode; return (<div className="text-right font-black text-sm">{isPriv ? '•••••' : formatCurrency(row.original.commissionValue)}</div>) }, size: 120 },
-  { id: 'col_comm_status', accessorKey: 'commissionStatus', header: 'Status Comissão', cell: ({ row }) => <CommissionStatusCell proposal={row.original} onStatusUpdate={onStatusUpdate} onEdit={onEdit} />, size: 140 },
   { id: 'col_operator', accessorKey: 'operator', header: 'Operador', cell: ({ row }) => <span className="text-xs font-bold">{row.original.operator || '-'}</span>, size: 120 },
   { id: 'col_actions', header: 'Ações', cell: ({ row }) => (<div className="text-right" onClick={(e) => e.stopPropagation()}><Button variant="ghost" size="icon" className="rounded-full h-8 w-8" onClick={() => onEdit(row.original)}><MoreHorizontal className="h-4 w-4" /></Button></div>), enableHiding: false, size: 80 },
 ];
