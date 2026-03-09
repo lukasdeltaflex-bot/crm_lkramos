@@ -83,22 +83,23 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   const topScrollRef = React.useRef<HTMLDivElement>(null);
   const isScrollingRef = React.useRef(false);
 
-  const [sorting, setSorting] = React.useState<SortingState>([{ id: 'ID', desc: true }]);
+  const [sorting, setSorting] = React.useState<SortingState>([{ id: 'col_id', desc: true }]);
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [frozenCount, setFrozenCount] = React.useState(2);
   const [isClient, setIsClient] = React.useState(false);
 
   const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
-    'Telefone2': true,
-    'Cidade': true,
-    'Estado': true,
-    'Observacoes': false,
-  });
+  
+  const initialIds = React.useMemo(() => columns.map(c => c.id!).filter(Boolean), [columns]);
+  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(initialIds);
 
-  const initialColumns = React.useMemo(() => columns.map(c => c.id!).filter(Boolean), [columns]);
-  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>([...initialColumns]);
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
+    'col_phone2': true,
+    'col_city': true,
+    'col_state': true,
+    'col_obs': false,
+  });
 
   React.useEffect(() => {
     setIsClient(true);
@@ -116,9 +117,12 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         if (savedVisibility) setColumnVisibility(JSON.parse(savedVisibility));
 
         const savedOrder = localStorage.getItem('lk-customers-order');
-        if (savedOrder) setColumnOrder(JSON.parse(savedOrder));
+        if (savedOrder) {
+            const parsed = JSON.parse(savedOrder);
+            if (parsed.length === initialIds.length) setColumnOrder(parsed);
+        }
     } catch (e) {}
-  }, []);
+  }, [initialIds]);
 
   const handlePaginationChange = (updater: any) => {
     setPagination((old) => {
@@ -141,14 +145,19 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     }
   }, [globalFilter, columnVisibility, columnOrder, frozenCount, isClient]);
 
-  // 🛡️ MOTOR DE SINCRONIZAÇÃO V11
+  // 🛡️ MOTOR DE SINCRONIZAÇÃO V12 (TRAVA MECÂNICA)
   const syncScroll = (source: HTMLDivElement, target: HTMLDivElement) => {
     if (isScrollingRef.current) return;
+    
+    const diff = Math.abs(source.scrollLeft - target.scrollLeft);
+    if (diff < 1) return;
+
     isScrollingRef.current = true;
     target.scrollLeft = source.scrollLeft;
-    requestAnimationFrame(() => {
+    
+    setTimeout(() => {
         isScrollingRef.current = false;
-    });
+    }, 10);
   };
 
   const sensors = useSensors(
@@ -254,17 +263,19 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
                         <DropdownMenuLabel>Personalizar Visão</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         {table.getAllColumns().filter(c => c.getCanHide()).map(column => (
-                            <DropdownMenuCheckboxItem key={column.id} checked={column.getIsVisible()} onCheckedChange={v => column.toggleVisibility(!!v)} className="capitalize text-xs font-bold">{column.id}</DropdownMenuCheckboxItem>
+                            <DropdownMenuCheckboxItem key={column.id} checked={column.getIsVisible()} onCheckedChange={v => column.toggleVisibility(!!v)} className="capitalize text-xs font-bold">
+                                {column.columnDef.header as string}
+                            </DropdownMenuCheckboxItem>
                         ))}
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
           </div>
           
-          {/* 🛡️ BARRA DE ROLAGEM SUPERIOR V11 */}
+          {/* 🛡️ BARRA DE ROLAGEM SUPERIOR V12 (INTERAÇÃO PRIORITÁRIA) */}
           <div 
             ref={topScrollRef}
-            className="overflow-x-auto h-5 bg-muted/30 border-b cursor-pointer relative z-[70] pointer-events-auto"
+            className="overflow-x-auto h-5 bg-muted/30 border-b cursor-pointer relative z-[100] pointer-events-auto"
             onScroll={(e) => {
                 if (tableContainerRef.current) syncScroll(e.currentTarget as HTMLDivElement, tableContainerRef.current);
             }}

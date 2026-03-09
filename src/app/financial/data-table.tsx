@@ -99,7 +99,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const isScrollingRef = React.useRef(false);
 
   const { statusColors } = useTheme();
-  const [sorting, setSorting] = React.useState<SortingState>([{ id: 'DataDigitacao', desc: true }]);
+  const [sorting, setSorting] = React.useState<SortingState>([{ id: 'col_date', desc: true }]);
   const [statusFilter, setStatusFilter] = React.useState('Todos');
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [frozenCount, setFrozenCount] = React.useState(2);
@@ -112,17 +112,18 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const [isClient, setIsClient] = React.useState(false);
 
   const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
+  
+  const initialIds = React.useMemo(() => columns.map(c => c.id!).filter(Boolean), [columns]);
+  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(initialIds);
+
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
-    'Promotora': false,
-    'CPF': false,
-    'Comissao': true,
-    'StatusComissao': true,
-    'Operador': true
+    'col_promoter': false,
+    'col_cpf': false,
+    'col_comm': true,
+    'col_comm_status': true,
+    'col_operator': true
   });
   
-  const initialColumns = React.useMemo(() => columns.map(c => c.id!).filter(Boolean), [columns]);
-  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>([...initialColumns]);
-
   const [startDateInput, setStartDateInput] = React.useState('');
   const [endDateInput, setEndDateInput] = React.useState('');
   const [appliedDateRange, setAppliedDateRange] = React.useState<DateRange | undefined>(undefined);
@@ -153,9 +154,12 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         if (savedVisibility) setColumnVisibility(JSON.parse(savedVisibility));
 
         const savedOrder = localStorage.getItem('lk-financial-order');
-        if (savedOrder) setColumnOrder(JSON.parse(savedOrder));
+        if (savedOrder) {
+            const parsed = JSON.parse(savedOrder);
+            if (parsed.length === initialIds.length) setColumnOrder(parsed);
+        }
     } catch (e) {}
-  }, []);
+  }, [initialIds]);
 
   const hasActiveFilters = statusFilter !== 'Todos' || bankFilters.length > 0 || promoterFilters.length > 0 || operatorFilters.length > 0 || !!globalFilter || !!appliedDateRange;
 
@@ -181,116 +185,20 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     }
   }, [globalFilter, columnVisibility, columnOrder, frozenCount, isClient]);
 
-  // 🛡️ MOTOR DE SINCRONIZAÇÃO V11
+  // 🛡️ MOTOR DE SINCRONIZAÇÃO V12 (TRAVA MECÂNICA)
   const syncScroll = (source: HTMLDivElement, target: HTMLDivElement) => {
     if (isScrollingRef.current) return;
+    
+    const diff = Math.abs(source.scrollLeft - target.scrollLeft);
+    if (diff < 1) return;
+
     isScrollingRef.current = true;
     target.scrollLeft = source.scrollLeft;
-    requestAnimationFrame(() => {
-        isScrollingRef.current = false;
-    });
-  };
-
-  const applyRangeShortcut = (range: string) => {
-    const now = new Date();
-    let from = startOfMonth(now);
-    let to = now;
-    if (range === 'today') from = startOfDay(now);
-    if (range === 'yesterday') { from = startOfDay(subDays(now, 1)); to = endOfDay(subDays(now, 1)); }
-    if (range === 'week') from = startOfDay(subDays(now, 7));
     
-    setStartDateInput(format(from, 'dd/MM/yyyy'));
-    setEndDateInput(format(to, 'dd/MM/yyyy'));
-    setAppliedDateRange({ from, to: endOfDay(to) });
+    setTimeout(() => {
+        isScrollingRef.current = false;
+    }, 10);
   };
-
-  const filteredData = React.useMemo(() => {
-    const today = new Date();
-    const startOfThisMonth = startOfMonth(today);
-    const endOfThisMonth = endOfMonth(today);
-    const isSearching = globalFilter.trim().length > 0;
-    const isSpecificSearch = !!appliedDateRange || isSearching;
-
-    let list = data.filter(p => p.status !== 'Reprovado');
-
-    if (statusFilter === 'Todos') {
-        if (!isSpecificSearch) {
-            list = list.filter(p => {
-                const d = p.dateDigitized ? new Date(p.dateDigitized) : null;
-                return d && isValid(d) && d >= startOfThisMonth && d <= endOfThisMonth;
-            });
-        }
-    } else if (statusFilter === 'Paga') {
-        list = list.filter(p => p.commissionStatus === 'Paga');
-        if (!isSpecificSearch) {
-            list = list.filter(p => {
-                const d = p.commissionPaymentDate ? new Date(p.commissionPaymentDate) : null;
-                return d && isValid(d) && d >= startOfThisMonth && d <= endOfThisMonth;
-            });
-        }
-    } else if (statusFilter === 'Pendente') {
-        list = list.filter(p => p.commissionStatus === 'Pendente' && !!p.dateApproved);
-    } else if (statusFilter === 'Parcial') {
-        list = list.filter(p => p.commissionStatus === 'Parcial');
-    }
-
-    if (bankFilters.length > 0) list = list.filter(p => bankFilters.includes(p.bank));
-    if (promoterFilters.length > 0) list = list.filter(p => promoterFilters.includes(p.promoter));
-    if (operatorFilters.length > 0) list = list.filter(p => operatorFilters.includes(p.operator || 'Sem Operador'));
-
-    if (appliedDateRange && appliedDateRange.from) {
-        const fromDate = appliedDateRange.from;
-        const toDate = appliedDateRange.to ? endOfDay(appliedDateRange.to) : endOfDay(appliedDateRange.from);
-        list = list.filter(p => {
-            const d = p.commissionPaymentDate ? new Date(p.commissionPaymentDate) : (p.dateDigitized ? new Date(p.dateDigitized) : null);
-            return d && isValid(d) && d >= fromDate && d <= toDate;
-        });
-    }
-    return list;
-  }, [data, statusFilter, bankFilters, promoterFilters, operatorFilters, appliedDateRange, globalFilter]);
-
-  const table = useReactTable({
-    data: filteredData,
-    columns,
-    getRowId: (row) => row.id,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    onGlobalFilterChange: setGlobalFilter,
-    onColumnSizingChange: setColumnSizing,
-    onColumnOrderChange: setColumnOrder,
-    onPaginationChange: handlePaginationChange,
-    enableColumnResizing: true,
-    columnResizeMode: 'onChange',
-    state: { sorting, rowSelection, columnVisibility, columnSizing, columnOrder, pagination, globalFilter },
-    globalFilterFn: (row, columnId, filterValue) => {
-        const searchTerm = String(filterValue ?? '').trim();
-        if (!searchTerm) return true;
-        
-        const customer = row.original.customer;
-        const p = row.original;
-        const normalizedSearch = normalizeString(searchTerm);
-        const isPureNumber = /^\d+$/.test(searchTerm);
-        
-        if (isPureNumber) {
-            const numericIdStr = String(customer?.numericId || '');
-            if (numericIdStr === searchTerm) return true;
-            const cpfNumeric = (customer?.cpf || '').replace(/\D/g, '');
-            if (cpfNumeric.startsWith(searchTerm)) return true;
-            const pNum = (p.proposalNumber || '').replace(/\D/g, '');
-            if (pNum.startsWith(searchTerm)) return true;
-            return false;
-        }
-
-        const searchableFields = [customer?.name, customer?.cpf, p.proposalNumber, p.operator, p.bank, cleanBankName(p.bank), p.promoter];
-        return searchableFields.some(field => field && normalizeString(String(field)).includes(normalizedSearch));
-    },
-    meta: { isPrivacyMode, userSettings }
-  });
 
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
 
@@ -339,6 +247,52 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const uniquePromoters = React.useMemo(() => Array.from(new Set(data.map(p => p.promoter))).sort(), [data]);
 
   const totalTableWidth = table.getTotalSize();
+  const numSelected = table.getFilteredSelectedRowModel().rows.length;
+  const totalGross = table.getFilteredSelectedRowModel().rows.reduce((acc, r) => acc + (r.original.grossAmount || 0), 0);
+  const totalCommission = table.getFilteredSelectedRowModel().rows.reduce((acc, r) => acc + (r.original.commissionValue || 0), 0);
+
+  const table = useReactTable({
+    data: filteredData,
+    columns,
+    getRowId: (row) => row.id,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onSortingChange: setSorting,
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
+    onGlobalFilterChange: setGlobalFilter,
+    onColumnSizingChange: setColumnSizing,
+    onColumnOrderChange: setColumnOrder,
+    onPaginationChange: handlePaginationChange,
+    enableColumnResizing: true,
+    columnResizeMode: 'onChange',
+    state: { sorting, rowSelection, columnVisibility, columnSizing, columnOrder, pagination, globalFilter },
+    globalFilterFn: (row, columnId, filterValue) => {
+        const searchTerm = String(filterValue ?? '').trim();
+        if (!searchTerm) return true;
+        
+        const customer = row.original.customer;
+        const p = row.original;
+        const normalizedSearch = normalizeString(searchTerm);
+        const isPureNumber = /^\d+$/.test(searchTerm);
+        
+        if (isPureNumber) {
+            const numericIdStr = String(customer?.numericId || '');
+            if (numericIdStr === searchTerm) return true;
+            const cpfNumeric = (customer?.cpf || '').replace(/\D/g, '');
+            if (cpfNumeric.startsWith(searchTerm)) return true;
+            const pNum = (p.proposalNumber || '').replace(/\D/g, '');
+            if (pNum.startsWith(searchTerm)) return true;
+            return false;
+        }
+
+        const searchableFields = [customer?.name, customer?.cpf, p.proposalNumber, p.operator, p.bank, cleanBankName(p.bank), p.promoter];
+        return searchableFields.some(field => field && normalizeString(String(field)).includes(normalizedSearch));
+    },
+    meta: { isPrivacyMode, userSettings }
+  });
 
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
@@ -376,7 +330,9 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                             <DropdownMenuLabel>Exibir/Ocultar</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             {table.getAllColumns().filter(c => c.getCanHide()).map(column => (
-                                <DropdownMenuCheckboxItem key={column.id} checked={column.getIsVisible()} onCheckedChange={v => column.toggleVisibility(!!v)} className="capitalize text-xs font-bold">{column.id}</DropdownMenuCheckboxItem>
+                                <DropdownMenuCheckboxItem key={column.id} checked={column.getIsVisible()} onCheckedChange={v => column.toggleVisibility(!!v)} className="capitalize text-xs font-bold">
+                                    {column.columnDef.header as string}
+                                </DropdownMenuCheckboxItem>
                             ))}
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -493,11 +449,11 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 <Input placeholder="Busca por ID exato, CPF, Nome ou Proposta..." value={globalFilter ?? ''} onChange={(e) => setGlobalFilter(e.target.value)} className="pl-10 h-11 bg-background border-2 border-zinc-300 rounded-full text-base font-bold shadow-md" />
             </div>
 
-            <Card className="rounded-[1.5rem] border-2 border-zinc-200 bg-card shadow-xl overflow-hidden p-1">
-                {/* 🛡️ BARRA DE ROLAGEM SUPERIOR V11 */}
+            <Card className="border-2 border-zinc-300 shadow-xl rounded-xl overflow-hidden bg-card p-1">
+                {/* 🛡️ BARRA DE ROLAGEM SUPERIOR V12 (INTERAÇÃO PRIORITÁRIA) */}
                 <div 
                     ref={topScrollRef}
-                    className="overflow-x-auto h-5 bg-muted/30 border-b cursor-pointer relative z-[70] pointer-events-auto"
+                    className="overflow-x-auto h-5 bg-muted/30 border-b cursor-pointer relative z-[100] pointer-events-auto"
                     onScroll={(e) => {
                         if (tableContainerRef.current) syncScroll(e.currentTarget as HTMLDivElement, tableContainerRef.current);
                     }}

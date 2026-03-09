@@ -109,7 +109,7 @@ export const DraggableHeader = ({ header, className }: { header: Header<any, unk
     };
 
     const isSortable = header.column.getCanSort();
-    const isSelect = header.column.id === 'Selecionar';
+    const isSelect = header.column.id === 'col_select';
 
     return (
         <TableHead
@@ -123,18 +123,20 @@ export const DraggableHeader = ({ header, className }: { header: Header<any, unk
                     className={cn(
                         'flex items-center gap-1 h-full px-2',
                         'select-none',
-                        header.column.id === 'Acoes' && 'justify-end',
+                        header.column.id === 'col_actions' && 'justify-end',
                         isSelect && 'justify-center'
                     )}
                 >
-                    <div {...attributes} {...listeners} className="p-1 hover:bg-primary/10 rounded cursor-grab text-muted-foreground/40" onClick={(e) => e.stopPropagation()}>
-                        <GripVertical className="h-3.5 w-3.5" />
-                    </div>
+                    {!isSelect && (
+                        <div {...attributes} {...listeners} className="p-1 hover:bg-primary/10 rounded cursor-grab text-muted-foreground/40" onClick={(e) => e.stopPropagation()}>
+                            <GripVertical className="h-3.5 w-3.5" />
+                        </div>
+                    )}
                     <div 
                         className={cn(
                             "overflow-hidden font-black text-[12px] uppercase tracking-wider text-foreground leading-tight flex items-center gap-1", 
                             isSortable && "cursor-pointer",
-                            header.column.id === 'Acoes' && "text-right pr-2", 
+                            header.column.id === 'col_actions' && "text-right pr-2", 
                             isSelect && "justify-center w-full pr-0"
                         )}
                         onClick={isSortable ? header.column.getToggleSortingHandler() : undefined}
@@ -174,8 +176,8 @@ export const getColumns = (
     onEdit: any, onView: any, onDelete: any, onStatusChange: any, onDuplicate: any, onToggleChecklist: (pId: string, sId: string, val: boolean) => void
     ): ColumnDef<Proposal & { customer: any }>[] => [
   { 
-    id: 'Selecionar', 
-    header: 'S',
+    id: 'col_select', 
+    header: 'Seleção',
     cell: ({ row }) => (
         <div className="flex justify-center w-full">
             <Checkbox checked={row.getIsSelected()} onCheckedChange={(value) => row.toggleSelected(!!value)} className="rounded-full h-5 w-5" onClick={(e) => e.stopPropagation()} />
@@ -184,19 +186,19 @@ export const getColumns = (
     enableSorting: false, 
     size: 50 
   },
-  { id: 'DataDigitacao', accessorKey: 'dateDigitized', header: 'Data Digitação', cell: ({ row }) => <span className="text-sm font-bold text-muted-foreground">{formatDateSafe(row.original.dateDigitized)}</span>, size: 130 },
-  { id: 'Etapas', header: 'Etapas', cell: ({ row }) => {
+  { id: 'col_date', accessorKey: 'dateDigitized', header: 'Data Digitação', cell: ({ row }) => <span className="text-sm font-bold text-muted-foreground">{formatDateSafe(row.original.dateDigitized)}</span>, size: 130 },
+  { id: 'col_steps', header: 'Etapas', cell: ({ row }) => {
         const p = row.original;
         const steps = [{ id: 'formalization', icon: Send, color: 'text-blue-500' }, { id: 'documentation', icon: FileCheck, color: 'text-orange-500' }, { id: 'signature', icon: PenTool, color: 'text-purple-500' }, { id: 'approval', icon: ShieldCheck, color: 'text-green-500' }];
         return (<div className="flex items-center gap-1.5">{steps.map(s => { const act = p.checklist?.[s.id]; return (<button key={s.id} onClick={(e) => { e.stopPropagation(); onToggleChecklist(p.id, s.id, !!act); }} className="hover:scale-125 transition-transform"><s.icon className={cn("h-3.5 w-3.5", act ? s.color : "text-muted-foreground/30")} /></button>) })}</div>)
     }, size: 100 },
-  { id: 'Promotora', accessorKey: 'promoter', header: 'Promotora', cell: ({ row, table }) => {
+  { id: 'col_promoter', accessorKey: 'promoter', header: 'Promotora', cell: ({ row, table }) => {
         const prom = row.original.promoter;
         const sett = (table.options.meta as any)?.userSettings;
         return (<div className="flex items-center gap-2"><BankIcon bankName={prom} domain={sett?.promoterDomains?.[prom]} showLogo={sett?.showPromoterLogos ?? true} className="h-4 w-4" /><span className="truncate text-sm font-bold">{prom}</span></div>)
     }, size: 150 },
-  { id: 'NumeroProposta', accessorKey: 'proposalNumber', header: 'Nº Proposta', cell: ({ row }) => (<div className="flex items-center gap-1 text-sm font-black"><span>{row.original.proposalNumber}</span><CopyButton text={row.original.proposalNumber} label="Proposta" /></div>), size: 150 },
-  { id: 'Cliente', accessorFn: (row) => row.customer?.name, header: 'Cliente', cell: ({ row }) => {
+  { id: 'col_pnum', accessorKey: 'proposalNumber', header: 'Nº Proposta', cell: ({ row }) => (<div className="flex items-center gap-1 text-sm font-black"><span>{row.original.proposalNumber}</span><CopyButton text={row.original.proposalNumber} label="Proposta" /></div>), size: 150 },
+  { id: 'col_customer', accessorFn: (row) => row.customer?.name, header: 'Cliente', cell: ({ row }) => {
         const customer = row.original.customer;
         const phone = customer?.phone;
         return (
@@ -210,19 +212,19 @@ export const getColumns = (
             </div>
         );
     }, size: 220 },
-  { id: 'CPF', accessorFn: (row) => row.customer?.cpf, header: 'CPF', cell: ({ row }) => (<div className="flex items-center gap-1 text-sm font-black text-foreground/80"><span>{row.original.customer?.cpf || '-'}</span><CopyButton text={row.original.customer?.cpf} label="CPF" /></div>), size: 160 },
-  { id: 'Produto', accessorKey: 'product', header: 'Produto', cell: ({ row }) => <span className="text-sm font-bold text-foreground/80">{row.original.product}</span>, size: 120 },
-  { id: 'ValorBruto', accessorKey: 'grossAmount', header: () => <div className="text-right">Valor Bruto</div>, cell: ({ row }) => <div className="text-right font-black text-sm">{formatCurrency(row.original.grossAmount)}</div>, size: 120 },
-  { id: 'Comissao', accessorKey: 'commissionValue', header: () => <div className="text-right">Comissão</div>, cell: ({ row }) => <div className="text-right font-bold text-emerald-600">{formatCurrency(row.original.commissionValue)}</div>, size: 120 },
-  { id: 'Banco', accessorKey: 'bank', header: 'Banco Digitado', cell: ({ row, table }) => {
+  { id: 'col_cpf', accessorFn: (row) => row.customer?.cpf, header: 'CPF', cell: ({ row }) => (<div className="flex items-center gap-1 text-sm font-black text-foreground/80"><span>{row.original.customer?.cpf || '-'}</span><CopyButton text={row.original.customer?.cpf} label="CPF" /></div>), size: 160 },
+  { id: 'col_product', accessorKey: 'product', header: 'Produto', cell: ({ row }) => <span className="text-sm font-bold text-foreground/80">{row.original.product}</span>, size: 120 },
+  { id: 'col_gross', accessorKey: 'grossAmount', header: () => <div className="text-right">Valor Bruto</div>, cell: ({ row }) => <div className="text-right font-black text-sm">{formatCurrency(row.original.grossAmount)}</div>, size: 120 },
+  { id: 'col_comm', accessorKey: 'commissionValue', header: () => <div className="text-right">Comissão</div>, cell: ({ row }) => <div className="text-right font-bold text-emerald-600">{formatCurrency(row.original.commissionValue)}</div>, size: 120 },
+  { id: 'col_bank', accessorKey: 'bank', header: 'Banco Digitado', cell: ({ row, table }) => {
         const bank = row.original.bank;
         const sett = (table.options.meta as any)?.userSettings;
         return (<div className="flex items-center gap-2"><BankIcon bankName={bank} domain={sett?.bankDomains?.[bank]} showLogo={sett?.showBankLogos ?? true} /><span className="truncate text-sm font-bold">{cleanBankName(bank)}</span></div>)
     }, size: 150 },
-  { id: 'Situacao', accessorKey: 'status', header: 'Situação', cell: ({ row }) => <ProposalStatusCell p={row.original} onStatusChange={onStatusChange} />, size: 160 },
-  { id: 'DataAverbacao', accessorKey: 'dateApproved', header: 'Data Averbação', cell: ({ row }) => <span className="text-sm font-medium">{formatDateSafe(row.original.dateApproved)}</span>, size: 130 },
-  { id: 'DataPgtoCliente', accessorKey: 'datePaidToClient', header: 'Data Pgto. Cliente', cell: ({ row }) => <span className="text-sm font-medium">{formatDateSafe(row.original.datePaidToClient)}</span>, size: 130 },
-  { id: 'ChegadaSaldo', accessorKey: 'debtBalanceArrivalDate', header: 'Chegada Saldo', cell: ({ row }) => <span className="text-sm font-medium">{formatDateSafe(row.original.debtBalanceArrivalDate)}</span>, size: 130 },
-  { id: 'Operador', accessorKey: 'operator', header: 'Operador', cell: ({ row }) => <span className="text-xs font-bold">{row.original.operator || '-'}</span>, size: 120 },
-  { id: 'Acoes', header: '', cell: (cp) => (<ActionsCell row={cp.row} onEdit={onEdit} onView={onView} onDelete={onDelete} onDuplicate={onDuplicate} />), enableHiding: false, size: 80 },
+  { id: 'col_status', accessorKey: 'status', header: 'Situação', cell: ({ row }) => <ProposalStatusCell p={row.original} onStatusChange={onStatusChange} />, size: 160 },
+  { id: 'col_date_appr', accessorKey: 'dateApproved', header: 'Data Averbação', cell: ({ row }) => <span className="text-sm font-medium">{formatDateSafe(row.original.dateApproved)}</span>, size: 130 },
+  { id: 'col_date_paid', accessorKey: 'datePaidToClient', header: 'Data Pgto. Cliente', cell: ({ row }) => <span className="text-sm font-medium">{formatDateSafe(row.original.datePaidToClient)}</span>, size: 130 },
+  { id: 'col_date_debt', accessorKey: 'debtBalanceArrivalDate', header: 'Chegada Saldo', cell: ({ row }) => <span className="text-sm font-medium">{formatDateSafe(row.original.debtBalanceArrivalDate)}</span>, size: 130 },
+  { id: 'col_operator', accessorKey: 'operator', header: 'Operador', cell: ({ row }) => <span className="text-xs font-bold">{row.original.operator || '-'}</span>, size: 120 },
+  { id: 'col_actions', header: 'Ações', cell: (cp) => (<ActionsCell row={cp.row} onEdit={onEdit} onView={onView} onDelete={onDelete} onDuplicate={onDuplicate} />), enableHiding: false, size: 80 },
 ];

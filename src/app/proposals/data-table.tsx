@@ -109,20 +109,21 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const [endDateInput, setEndDateInput] = React.useState('');
   const [appliedDateRange, setAppliedDateRange] = React.useState<DateRange | undefined>(undefined);
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
-  const [sorting, setSorting] = React.useState<SortingState>([{ id: 'DataDigitacao', desc: true }]);
+  const [sorting, setSorting] = React.useState<SortingState>([{ id: 'col_date', desc: true }]);
   const [isClient, setIsClient] = React.useState(false);
 
   const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
+  
+  const initialIds = React.useMemo(() => columns.map(c => c.id!).filter(Boolean), [columns]);
+  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(initialIds);
+  
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
-    'Operador': false,
-    'DataAverbacao': true,
-    'DataPgtoCliente': true,
-    'ChegadaSaldo': true,
-    'Comissao': true,
+    'col_operator': false,
+    'col_date_appr': true,
+    'col_date_paid': true,
+    'col_date_debt': true,
+    'col_comm': true,
   });
-
-  const initialColumns = React.useMemo(() => columns.map(c => c.id!).filter(Boolean), [columns]);
-  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>([...initialColumns]);
 
   const handlePaginationChange = (updater: any) => {
     setPagination((old) => {
@@ -153,9 +154,12 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         if (savedVisibility) setColumnVisibility(JSON.parse(savedVisibility));
 
         const savedOrder = localStorage.getItem('lk-proposals-order');
-        if (savedOrder) setColumnOrder(JSON.parse(savedOrder));
+        if (savedOrder) {
+            const parsed = JSON.parse(savedOrder);
+            if (parsed.length === initialIds.length) setColumnOrder(parsed);
+        }
     } catch (e) {}
-  }, []);
+  }, [initialIds]);
 
   React.useEffect(() => {
     const search = searchParams.get('search');
@@ -189,16 +193,20 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     }
   }, [statusFilter, globalFilter, columnVisibility, columnOrder, frozenCount, isClient]);
 
-  // 🛡️ MOTOR DE SINCRONIZAÇÃO V11 (ULTRA FIDELIDADE)
+  // 🛡️ MOTOR DE SINCRONIZAÇÃO V12 (TRAVA MECÂNICA)
   const syncScroll = (source: HTMLDivElement, target: HTMLDivElement) => {
     if (isScrollingRef.current) return;
     
+    const diff = Math.abs(source.scrollLeft - target.scrollLeft);
+    if (diff < 1) return;
+
     isScrollingRef.current = true;
     target.scrollLeft = source.scrollLeft;
     
-    requestAnimationFrame(() => {
+    // Pequeno atraso para liberar a trava e evitar loop infinito
+    setTimeout(() => {
         isScrollingRef.current = false;
-    });
+    }, 10);
   };
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor));
@@ -222,11 +230,8 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     if (range === 'yesterday') { from = startOfDay(subDays(now, 1)); to = endOfDay(subDays(now, 1)); }
     if (range === 'week') from = startOfDay(subDays(now, 7));
     
-    const fmtStart = format(from, 'dd/MM/yyyy');
-    const fmtEnd = format(to, 'dd/MM/yyyy');
-    
-    setStartDateInput(fmtStart);
-    setEndDateInput(fmtEnd);
+    setStartDateInput(format(from, 'dd/MM/yyyy'));
+    setEndDateInput(format(to, 'dd/MM/yyyy'));
     setAppliedDateRange({ from, to: endOfDay(to) });
   };
 
@@ -331,9 +336,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const uniqueBanks = React.useMemo(() => Array.from(new Set(data.map(p => p.bank))).sort(), [data]);
   const uniquePromoters = React.useMemo(() => Array.from(new Set(data.map(p => p.promoter))).sort(), [data]);
 
-  const showLogos = userSettings?.showBankLogos ?? true;
-  const showPromoterLogos = userSettings?.showPromoterLogos ?? true;
-
   const totalTableWidth = table.getTotalSize();
 
   return (
@@ -379,7 +381,9 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                             <DropdownMenuLabel>Exibir/Ocultar</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             {table.getAllColumns().filter(c => c.getCanHide()).map(column => (
-                                <DropdownMenuCheckboxItem key={column.id} checked={column.getIsVisible()} onCheckedChange={v => column.toggleVisibility(!!v)} className="capitalize text-xs font-bold">{column.id}</DropdownMenuCheckboxItem>
+                                <DropdownMenuCheckboxItem key={column.id} checked={column.getIsVisible()} onCheckedChange={v => column.toggleVisibility(!!v)} className="capitalize text-xs font-bold">
+                                    {column.columnDef.header as string}
+                                </DropdownMenuCheckboxItem>
                             ))}
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -458,7 +462,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                         {uniqueBanks.map(bank => (
                             <DropdownMenuCheckboxItem key={bank} checked={bankFilters.includes(bank)} onCheckedChange={() => toggleBankFilter(bank)} className="font-bold text-[10px] uppercase">
                                 <div className="flex items-center gap-2">
-                                    <BankIcon bankName={bank} domain={userSettings?.bankDomains?.[bank]} showLogo={showLogos} className="h-3 w-3" />
+                                    <BankIcon bankName={bank} domain={userSettings?.bankDomains?.[bank]} showLogo={userSettings?.showBankLogos ?? true} className="h-3 w-3" />
                                     <span className="truncate">{cleanBankName(bank)}</span>
                                 </div>
                             </DropdownMenuCheckboxItem>
@@ -476,7 +480,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                         {uniquePromoters.map(prom => (
                             <DropdownMenuCheckboxItem key={prom} checked={promoterFilters.includes(prom)} onCheckedChange={() => togglePromoterFilter(prom)} className="font-bold text-xs uppercase">
                                 <div className="flex items-center gap-2">
-                                    <BankIcon bankName={prom} domain={userSettings?.promoterDomains?.[prom]} showLogo={showPromoterLogos} className="h-3 w-3" />
+                                    <BankIcon bankName={prom} domain={userSettings?.promoterDomains?.[prom]} showLogo={userSettings?.showPromoterLogos ?? true} className="h-3 w-3" />
                                     <span className="truncate">{prom}</span>
                                 </div>
                             </DropdownMenuCheckboxItem>
@@ -497,10 +501,10 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
             </div>
 
             <Card className="border-2 border-zinc-300 shadow-xl rounded-xl overflow-hidden bg-card p-1">
-                {/* 🛡️ BARRA DE ROLAGEM SUPERIOR V11 (ULTRA FIDELIDADE) */}
+                {/* 🛡️ BARRA DE ROLAGEM SUPERIOR V12 (INTERAÇÃO PRIORITÁRIA) */}
                 <div 
                     ref={topScrollRef}
-                    className="overflow-x-auto h-5 bg-muted/30 border-b cursor-pointer relative z-[70] pointer-events-auto"
+                    className="overflow-x-auto h-5 bg-muted/30 border-b cursor-pointer relative z-[100] pointer-events-auto"
                     onScroll={(e) => {
                         if (tableContainerRef.current) syncScroll(e.currentTarget as HTMLDivElement, tableContainerRef.current);
                     }}
