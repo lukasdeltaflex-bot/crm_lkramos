@@ -33,7 +33,7 @@ const CopyButton = ({ text, label }: { text: string | undefined; label: string }
         toast({ title: `${label} copiado!` });
     };
     return (
-        <Button variant="ghost" size="icon" className="h-7 w-7 opacity-40 hover:opacity-100" onClick={handleCopy}>
+        <Button variant="ghost" size="icon" className="h-7 w-7 opacity-40 hover:opacity-100 transition-opacity" onClick={handleCopy}>
             <Copy className="h-3.5 w-3.5" />
         </Button>
     );
@@ -92,6 +92,7 @@ export const DraggableHeader = ({ header, className }: { header: Header<any, unk
 
 export const getColumns = ({ onEdit, onStatusUpdate }: any): ColumnDef<ProposalWithCustomer>[] => [
   { id: 'Selecionar', header: ({ table }) => (<Checkbox checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')} onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)} className="rounded-full h-5 w-5" onClick={(e) => e.stopPropagation()} />), cell: ({ row }) => (<Checkbox checked={row.getIsSelected()} onCheckedChange={(value) => row.toggleSelected(!!value)} className="rounded-full h-5 w-5" onClick={(e) => e.stopPropagation()} />), enableSorting: false, size: 50 },
+  { id: 'Data Digitação', accessorKey: 'dateDigitized', header: 'Data Digitação', cell: ({ row }) => <span className="text-sm font-bold text-muted-foreground">{formatDateSafe(row.original.dateDigitized)}</span>, size: 130 },
   { id: 'Promotora', accessorKey: 'promoter', header: 'Promotora', cell: ({ row, table }) => {
         const prom = row.original.promoter;
         const sett = (table.options.meta as any)?.userSettings;
@@ -104,5 +105,6 @@ export const getColumns = ({ onEdit, onStatusUpdate }: any): ColumnDef<ProposalW
   { id: 'Valor Bruto', accessorKey: 'grossAmount', header: () => <div className="text-right">Valor Bruto</div>, cell: ({ row, table }) => { const isPriv = (table.options.meta as any)?.isPrivacyMode; return (<div className="text-right font-black text-sm">{isPriv ? '•••••' : formatCurrency(row.original.grossAmount)}</div>) }, size: 120 },
   { id: 'Valor Comissão', accessorKey: 'commissionValue', header: 'Comissão', cell: ({ row, table }) => { const isPriv = (table.options.meta as any)?.isPrivacyMode; return (<div className="text-right font-black text-sm">{isPriv ? '•••••' : formatCurrency(row.original.commissionValue)}</div>) }, size: 120 },
   { id: 'Status Comissão', accessorKey: 'commissionStatus', header: 'Status Comissão', cell: ({ row }) => <CommissionStatusCell proposal={row.original} onStatusUpdate={onStatusUpdate} onEdit={onEdit} />, size: 140 },
+  { id: 'Operador', accessorKey: 'operator', header: 'Operador', cell: ({ row }) => <span className="text-xs font-bold">{row.original.operator || '-'}</span>, size: 120 },
   { id: 'Ações', header: '', cell: ({ row }) => (<div className="text-right" onClick={(e) => e.stopPropagation()}><Button variant="ghost" size="icon" className="rounded-full h-8 w-8" onClick={() => onEdit(row.original)}><MoreHorizontal className="h-4 w-4" /></Button></div>), enableHiding: false, size: 80 },
 ];

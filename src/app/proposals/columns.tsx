@@ -32,7 +32,8 @@ import {
     FileCheck, 
     PenTool, 
     ShieldCheck,
-    CopyPlus
+    CopyPlus,
+    Calendar as CalendarIcon
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { formatCurrency, cleanBankName, cn, formatDateSafe, isWhatsApp, getWhatsAppUrl, calculateBusinessDays } from '@/lib/utils';
@@ -166,6 +167,7 @@ export const getColumns = (
     onEdit: any, onView: any, onDelete: any, onStatusChange: any, onDuplicate: any, onToggleChecklist: (pId: string, sId: string, val: boolean) => void
     ): ColumnDef<Proposal & { customer: any }>[] => [
   { id: 'Selecionar', header: ({ table }) => (<Checkbox checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')} onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)} className="rounded-full h-5 w-5" onClick={(e) => e.stopPropagation()} />), cell: ({ row }) => (<Checkbox checked={row.getIsSelected()} onCheckedChange={(value) => row.toggleSelected(!!value)} className="rounded-full h-5 w-5" onClick={(e) => e.stopPropagation()} />), enableSorting: false, size: 50 },
+  { id: 'Data Digitação', accessorKey: 'dateDigitized', header: 'Data Digitação', cell: ({ row }) => <span className="text-sm font-bold text-muted-foreground">{formatDateSafe(row.original.dateDigitized)}</span>, size: 130 },
   { id: 'Etapas', header: 'Etapas', cell: ({ row }) => {
         const p = row.original;
         const steps = [{ id: 'formalization', icon: Send, color: 'text-blue-500' }, { id: 'documentation', icon: FileCheck, color: 'text-orange-500' }, { id: 'signature', icon: PenTool, color: 'text-purple-500' }, { id: 'approval', icon: ShieldCheck, color: 'text-green-500' }];
@@ -187,5 +189,6 @@ export const getColumns = (
         return (<div className="flex items-center gap-2"><BankIcon bankName={bank} domain={sett?.bankDomains?.[bank]} showLogo={sett?.showBankLogos ?? true} /><span className="truncate text-sm font-bold">{cleanBankName(bank)}</span></div>)
     }, size: 150 },
   { id: 'Status', accessorKey: 'status', header: 'Status', cell: ({ row }) => <ProposalStatusCell p={row.original} onStatusChange={onStatusChange} />, size: 160 },
+  { id: 'Operador', accessorKey: 'operator', header: 'Operador', cell: ({ row }) => <span className="text-xs font-bold">{row.original.operator || '-'}</span>, size: 120 },
   { id: 'Actions', header: '', cell: (cp) => (<ActionsCell row={cp.row} onEdit={onEdit} onView={onView} onDelete={onDelete} onDuplicate={onDuplicate} />), enableHiding: false, size: 80 },
 ];

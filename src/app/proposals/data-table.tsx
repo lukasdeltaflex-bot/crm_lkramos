@@ -60,13 +60,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Card } from '@/components/ui/card';
-import { Filter, X, Search, Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Snowflake } from 'lucide-react';
+import { Filter, X, Search, Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Snowflake, User, Landmark, Building2 } from 'lucide-react';
 import type { ProposalStatus, UserSettings } from '@/lib/types';
 import { DraggableHeader } from './columns';
 import type { ProposalWithCustomer } from './page';
 import { Separator } from '@/components/ui/separator';
 import { normalizeString, cn, formatCurrency, cleanBankName } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
+import { BankIcon } from '@/components/bank-icon';
 
 interface DataTableProps {
   columns: ColumnDef<ProposalWithCustomer, unknown>[];
@@ -106,7 +107,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'Data Digitação', desc: true }]);
   const [isClient, setIsClient] = React.useState(false);
 
-  // 🖱️ Lógica de Grab-to-scroll corrigida
   const [isDraggingScroll, setIsDraggingScroll] = React.useState(false);
   const [startX, setStartX] = React.useState(0);
   const [scrollLeft, setScrollLeft] = React.useState(0);
@@ -241,7 +241,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     meta: { userSettings }
   });
 
-  // 🖱️ Handlers Grab-to-scroll corrigidos
   const onMouseDown = (e: React.MouseEvent) => {
     if (!tableContainerRef.current) return;
     setIsDraggingScroll(true);
@@ -279,6 +278,14 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     const e = parse(endDateInput, 'dd/MM/yyyy', new Date());
     setAppliedDateRange(isValid(s) ? { from: startOfDay(s), to: isValid(e) ? endOfDay(e) : endOfDay(s) } : undefined);
   };
+
+  const uniqueOperators = React.useMemo(() => Array.from(new Set(data.map(p => p.operator || 'Sem Operador'))).sort(), [data]);
+  const uniqueBanks = React.useMemo(() => Array.from(new Set(data.map(p => p.bank))).sort(), [data]);
+  const uniquePromoters = React.useMemo(() => Array.from(new Set(data.map(p => p.promoter))).sort(), [data]);
+
+  const toggleOperatorFilter = (op: string) => setOperatorFilters(prev => prev.includes(op) ? prev.filter(o => o !== op) : [...prev, op]);
+  const toggleBankFilter = (bank: string) => setBankFilters(prev => prev.includes(bank) ? prev.filter(b => b !== bank) : [...prev, bank]);
+  const togglePromoterFilter = (prom: string) => setPromoterFilters(prev => prev.includes(prom) ? prev.filter(p => p !== prom) : [...prev, prom]);
 
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
@@ -330,6 +337,58 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                 </div>
             </div>
 
+            <div className="flex flex-wrap items-center gap-3">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="h-10 rounded-full font-bold px-6 border-2 border-zinc-300 bg-background shadow-sm text-xs gap-2">
+                            <User className="h-4 w-4" /> Operadores <ChevronDown className="h-3 w-3 opacity-50" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56 max-h-80 overflow-y-auto border-2">
+                        {uniqueOperators.map(op => (
+                            <DropdownMenuCheckboxItem key={op} checked={operatorFilters.includes(op)} onCheckedChange={() => toggleOperatorFilter(op)} className="font-bold text-xs uppercase">{op}</DropdownMenuCheckboxItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="h-10 rounded-full font-bold px-6 border-2 border-zinc-300 bg-background shadow-sm text-xs gap-2">
+                            <Landmark className="h-4 w-4" /> Bancos <ChevronDown className="h-3 w-3 opacity-50" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-64 max-h-80 overflow-y-auto border-2">
+                        {uniqueBanks.map(bank => (
+                            <DropdownMenuCheckboxItem key={bank} checked={bankFilters.includes(bank)} onCheckedChange={() => toggleBankFilter(bank)} className="font-bold text-[10px] uppercase">
+                                <div className="flex items-center gap-2">
+                                    <BankIcon bankName={bank} domain={userSettings?.bankDomains?.[bank]} showLogo={userSettings?.showBankLogos ?? true} className="h-3 w-3" />
+                                    <span className="truncate">{cleanBankName(bank)}</span>
+                                </div>
+                            </DropdownMenuCheckboxItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="h-10 rounded-full font-bold px-6 border-2 border-zinc-300 bg-background shadow-sm text-xs gap-2">
+                            <Building2 className="h-4 w-4" /> Promotoras <ChevronDown className="h-3 w-3 opacity-50" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56 max-h-80 overflow-y-auto border-2">
+                        {uniquePromoters.map(prom => (
+                            <DropdownMenuCheckboxItem key={prom} checked={promoterFilters.includes(prom)} onCheckedChange={() => togglePromoterFilter(prom)} className="font-bold text-xs uppercase">{prom}</DropdownMenuCheckboxItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+
+                {hasActiveFilters && (
+                    <Button variant="ghost" size="sm" onClick={handleClearAllFilters} className="text-red-600 hover:text-red-700 hover:bg-red-50 font-black text-[10px] uppercase gap-1.5 rounded-full">
+                        <X className="h-3 w-3" /> Limpar Filtros
+                    </Button>
+                )}
+            </div>
+
             <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className='relative w-full max-md group'>
                     <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80' />
@@ -370,7 +429,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                                                 className={cn(
                                                     i === 0 && frozenCount >= 1 && "sticky left-0 z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.1)]",
                                                     i === 1 && frozenCount >= 2 && "sticky left-[50px] z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.1)]",
-                                                    i === 2 && frozenCount >= 3 && "sticky left-[200px] z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.1)]"
+                                                    i === 2 && frozenCount >= 3 && "sticky left-[150px] z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.1)]"
                                                 )}
                                             />
                                         ))}
@@ -389,10 +448,10 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                                                     key={cell.id} 
                                                     style={{ width: cell.column.getSize() }} 
                                                     className={cn(
-                                                        "p-3 text-sm border-none",
-                                                        i === 0 && frozenCount >= 1 && "sticky left-0 z-30 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
-                                                        i === 1 && frozenCount >= 2 && "sticky left-[50px] z-30 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
-                                                        i === 2 && frozenCount >= 3 && "sticky left-[200px] z-30 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.05)]"
+                                                        "p-3 text-sm border-none bg-background",
+                                                        i === 0 && frozenCount >= 1 && "sticky left-0 z-30 shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
+                                                        i === 1 && frozenCount >= 2 && "sticky left-[50px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
+                                                        i === 2 && frozenCount >= 3 && "sticky left-[150px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.05)]"
                                                     )}
                                                 >
                                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -421,6 +480,22 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                         )}
                     </div>
                     <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-2">
+                            <span>LINHAS:</span>
+                            <Select
+                                value={String(table.getState().pagination.pageSize)}
+                                onValueChange={(val) => table.setPageSize(Number(val))}
+                            >
+                                <SelectTrigger className="h-8 w-16 border-2 font-black text-[10px]">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {[10, 20, 30, 50, 100].map(size => (
+                                        <SelectItem key={size} value={String(size)} className="text-[10px] font-bold">{size}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                         <div className="text-primary font-black">PÁG {table.getState().pagination.pageIndex + 1} DE {table.getPageCount()}</div>
                         <div className="flex items-center gap-1">
                             <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-2" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}><ChevronLeft className="h-4 w-4" /></Button>

@@ -60,13 +60,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { X, Filter, Search, Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Snowflake } from 'lucide-react';
+import { X, Filter, Search, Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Snowflake, User, Landmark, Building2 } from 'lucide-react';
 import { cn, cleanBankName, normalizeString, formatCurrency } from '@/lib/utils';
 import type { Proposal, Customer, UserSettings } from '@/lib/types';
 import { FinancialSummary } from '@/components/financial/financial-summary';
 import { DraggableHeader } from './columns';
 import { Separator } from '@/components/ui/separator';
 import { useTheme } from '@/components/theme-provider';
+import { BankIcon } from '@/components/bank-icon';
 
 type ProposalWithCustomer = Proposal & { customer: Customer };
 
@@ -97,7 +98,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 }, ref) => {
   const tableContainerRef = React.useRef<HTMLDivElement>(null);
   const { statusColors } = useTheme();
-  const [sorting, setSorting] = React.useState<SortingState>([{ id: 'Data Pagamento', desc: true }]);
+  const [sorting, setSorting] = React.useState<SortingState>([{ id: 'Data Digitação', desc: true }]);
   const [statusFilter, setStatusFilter] = React.useState('Todos');
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [frozenCount, setFrozenCount] = React.useState(2);
@@ -109,7 +110,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [isClient, setIsClient] = React.useState(false);
 
-  // 🖱️ Lógica de Grab-to-scroll corrigida
   const [isDraggingScroll, setIsDraggingScroll] = React.useState(false);
   const [startX, setStartX] = React.useState(0);
   const [scrollLeft, setScrollLeft] = React.useState(0);
@@ -149,6 +149,19 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         if (savedOrder) setColumnOrder(JSON.parse(savedOrder));
     } catch (e) {}
   }, []);
+
+  const hasActiveFilters = statusFilter !== 'Todos' || bankFilters.length > 0 || promoterFilters.length > 0 || operatorFilters.length > 0 || !!globalFilter || !!appliedDateRange;
+
+  const handleClearAllFilters = () => {
+      setStatusFilter('Todos');
+      setGlobalFilter('');
+      setBankFilters([]);
+      setPromoterFilters([]);
+      setOperatorFilters([]);
+      setStartDateInput('');
+      setEndDateInput('');
+      setAppliedDateRange(undefined);
+  };
 
   React.useEffect(() => {
     if (isClient) {
@@ -237,7 +250,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     meta: { isPrivacyMode, userSettings }
   });
 
-  // 🖱️ Handlers Grab-to-scroll corrigidos
   const onMouseDown = (e: React.MouseEvent) => {
     if (!tableContainerRef.current) return;
     setIsDraggingScroll(true);
@@ -273,6 +285,27 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
       });
     }
   };
+
+  const handleDateMask = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, "").substring(0, 8);
+    value = value.replace(/(\d{2})(\d)/, '$1/$2').replace(/(\d{2})(\d)/, '$1/$2');
+    e.target.value = value;
+    return value;
+  };
+
+  const handleApplyFilter = () => {
+    const s = parse(startDateInput, 'dd/MM/yyyy', new Date());
+    const e = parse(endDateInput, 'dd/MM/yyyy', new Date());
+    setAppliedDateRange(isValid(s) ? { from: startOfDay(s), to: isValid(e) ? endOfDay(e) : endOfDay(s) } : undefined);
+  };
+
+  const uniqueOperators = React.useMemo(() => Array.from(new Set(data.map(p => p.operator || 'Sem Operador'))).sort(), [data]);
+  const uniqueBanks = React.useMemo(() => Array.from(new Set(data.map(p => p.bank))).sort(), [data]);
+  const uniquePromoters = React.useMemo(() => Array.from(new Set(data.map(p => p.promoter))).sort(), [data]);
+
+  const toggleOperatorFilter = (op: string) => setOperatorFilters(prev => prev.includes(op) ? prev.filter(o => o !== op) : [...prev, op]);
+  const toggleBankFilter = (bank: string) => setBankFilters(prev => prev.includes(bank) ? prev.filter(b => b !== bank) : [...prev, bank]);
+  const togglePromoterFilter = (prom: string) => setPromoterFilters(prev => prev.includes(prom) ? prev.filter(p => p !== prom) : [...prev, prom]);
 
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
@@ -317,9 +350,72 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 </div>
             </div>
 
-            <div className='relative w-full max-md group'>
-                <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80' />
-                <Input placeholder="Busca por ID, CPF, Nome ou Proposta..." value={globalFilter} onChange={(e) => setGlobalFilter(e.target.value)} className="pl-10 h-11 bg-background border-2 border-zinc-300 rounded-full text-base font-bold shadow-md" />
+            <div className="flex flex-wrap items-center gap-3">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="h-10 rounded-full font-bold px-6 border-2 border-zinc-300 bg-background shadow-sm text-xs gap-2">
+                            <User className="h-4 w-4" /> Operadores <ChevronDown className="h-3 w-3 opacity-50" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56 max-h-80 overflow-y-auto border-2">
+                        {uniqueOperators.map(op => (
+                            <DropdownMenuCheckboxItem key={op} checked={operatorFilters.includes(op)} onCheckedChange={() => toggleOperatorFilter(op)} className="font-bold text-xs uppercase">{op}</DropdownMenuCheckboxItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="h-10 rounded-full font-bold px-6 border-2 border-zinc-300 bg-background shadow-sm text-xs gap-2">
+                            <Landmark className="h-4 w-4" /> Bancos <ChevronDown className="h-3 w-3 opacity-50" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-64 max-h-80 overflow-y-auto border-2">
+                        {uniqueBanks.map(bank => (
+                            <DropdownMenuCheckboxItem key={bank} checked={bankFilters.includes(bank)} onCheckedChange={() => toggleBankFilter(bank)} className="font-bold text-[10px] uppercase">
+                                <div className="flex items-center gap-2">
+                                    <BankIcon bankName={bank} domain={userSettings?.bankDomains?.[bank]} showLogo={userSettings?.showBankLogos ?? true} className="h-3 w-3" />
+                                    <span className="truncate">{cleanBankName(bank)}</span>
+                                </div>
+                            </DropdownMenuCheckboxItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="h-10 rounded-full font-bold px-6 border-2 border-zinc-300 bg-background shadow-sm text-xs gap-2">
+                            <Building2 className="h-4 w-4" /> Promotoras <ChevronDown className="h-3 w-3 opacity-50" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56 max-h-80 overflow-y-auto border-2">
+                        {uniquePromoters.map(prom => (
+                            <DropdownMenuCheckboxItem key={prom} checked={promoterFilters.includes(prom)} onCheckedChange={() => togglePromoterFilter(prom)} className="font-bold text-xs uppercase">{prom}</DropdownMenuCheckboxItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+
+                {hasActiveFilters && (
+                    <Button variant="ghost" size="sm" onClick={handleClearAllFilters} className="text-red-600 hover:text-red-700 hover:bg-red-50 font-black text-[10px] uppercase gap-1.5 rounded-full">
+                        <X className="h-3 w-3" /> Limpar Filtros
+                    </Button>
+                )}
+            </div>
+
+            <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className='relative w-full max-md group'>
+                    <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80' />
+                    <Input placeholder="Busca por ID, CPF, Nome ou Proposta..." value={globalFilter} onChange={(e) => setGlobalFilter(e.target.value)} className="pl-10 h-11 bg-background border-2 border-zinc-300 rounded-full text-base font-bold shadow-md" />
+                </div>
+                <div className="flex items-center gap-2 bg-background border-2 border-zinc-300 rounded-full px-3 py-1 shadow-sm">
+                    <CalendarIcon className="h-3.5 w-3.5 text-primary" />
+                    <div className="flex items-center gap-1">
+                        <Input placeholder="De" value={startDateInput} onChange={(e) => setStartDateInput(handleDateMask(e))} className="h-7 w-28 border-none bg-muted/40 text-[11px] text-center font-black rounded-full" />
+                        <Input placeholder="Até" value={endDateInput} onChange={(e) => setEndDateInput(handleDateMask(e))} className="h-7 w-28 border-none bg-muted/40 text-[11px] text-center font-black rounded-full" />
+                    </div>
+                    <Button size="sm" onClick={handleApplyFilter} className="h-7 bg-primary text-white rounded-full px-4 text-[10px] font-black uppercase shadow-sm">APLICAR</Button>
+                    {appliedDateRange && <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => { setStartDateInput(''); setEndDateInput(''); setAppliedDateRange(undefined); }}><X className="h-3.5 w-3.5" /></Button>}
+                </div>
             </div>
 
             <Card className="rounded-[1.5rem] border-2 border-zinc-200 bg-card shadow-xl overflow-hidden p-1">
@@ -346,7 +442,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                                                 className={cn(
                                                     i === 0 && frozenCount >= 1 && "sticky left-0 z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.1)]",
                                                     i === 1 && frozenCount >= 2 && "sticky left-[50px] z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.1)]",
-                                                    i === 2 && frozenCount >= 3 && "sticky left-[200px] z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.1)]"
+                                                    i === 2 && frozenCount >= 3 && "sticky left-[180px] z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.1)]"
                                                 )}
                                             />
                                         ))}
@@ -369,10 +465,10 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                                                     key={cell.id} 
                                                     style={{ width: cell.column.getSize() }} 
                                                     className={cn(
-                                                        "p-3 text-sm border-none",
-                                                        i === 0 && frozenCount >= 1 && "sticky left-0 z-30 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
-                                                        i === 1 && frozenCount >= 2 && "sticky left-[50px] z-30 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
-                                                        i === 2 && frozenCount >= 3 && "sticky left-[200px] z-30 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.05)]"
+                                                        "p-3 text-sm border-none bg-background",
+                                                        i === 0 && frozenCount >= 1 && "sticky left-0 z-30 shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
+                                                        i === 1 && frozenCount >= 2 && "sticky left-[50px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
+                                                        i === 2 && frozenCount >= 3 && "sticky left-[180px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.05)]"
                                                     )}
                                                 >
                                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -400,7 +496,29 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                             </>
                         )}
                     </div>
-                    <div className="flex items-center gap-6 text-primary font-black">PÁG {table.getState().pagination.pageIndex + 1} DE {table.getPageCount()}</div>
+                    <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-2">
+                            <span>LINHAS:</span>
+                            <Select
+                                value={String(table.getState().pagination.pageSize)}
+                                onValueChange={(val) => table.setPageSize(Number(val))}
+                            >
+                                <SelectTrigger className="h-8 w-16 border-2 font-black text-[10px]">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {[10, 20, 30, 50, 100].map(size => (
+                                        <SelectItem key={size} value={String(size)} className="text-[10px] font-bold">{size}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="text-primary font-black">PÁG {table.getState().pagination.pageIndex + 1} DE {table.getPageCount()}</div>
+                        <div className="flex items-center gap-1">
+                            <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-2" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}><ChevronLeft className="h-4 w-4" /></Button>
+                            <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-2" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}><ChevronRight className="h-4 w-4" /></Button>
+                        </div>
+                    </div>
                 </div>
             </Card>
         </div>
