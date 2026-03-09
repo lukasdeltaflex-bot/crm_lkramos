@@ -201,7 +201,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     onPaginationChange: handlePaginationChange,
     enableColumnResizing: true,
     columnResizeMode: 'onChange',
-    state: { sorting, globalFilter, columnVisibility, rowSelection, columnOrder, columnSizing, pagination },
+    state: { sorting, globalFilter, rowSelection, columnOrder, columnSizing, pagination },
     globalFilterFn: (row, columnId, filterValue) => {
         const searchTerm = String(filterValue ?? '').trim();
         if (!searchTerm) return true;

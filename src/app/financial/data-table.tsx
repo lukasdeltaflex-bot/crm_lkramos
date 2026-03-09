@@ -153,6 +153,29 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     });
   };
 
+  const handleApplyFilter = () => {
+    const s = parse(startDateInput, 'dd/MM/yyyy', new Date());
+    const e = parse(endDateInput, 'dd/MM/yyyy', new Date());
+    if (isValid(s)) {
+        setAppliedDateRange({ from: startOfDay(s), to: isValid(e) ? endOfDay(e) : endOfDay(s) });
+    } else {
+        setAppliedDateRange(undefined);
+    }
+  };
+
+  const handleClearAllFilters = () => {
+      setStatusFilter('Todos');
+      setGlobalFilter('');
+      setBankFilters([]);
+      setPromoterFilters([]);
+      setOperatorFilters([]);
+      setStartDateInput('');
+      setEndDateInput('');
+      setAppliedDateRange(undefined);
+  };
+
+  const hasActiveFilters = statusFilter !== 'Todos' || bankFilters.length > 0 || promoterFilters.length > 0 || operatorFilters.length > 0 || !!globalFilter || !!appliedDateRange;
+
   React.useEffect(() => {
     setIsClient(true);
     try {
@@ -171,19 +194,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         }
     } catch (e) {}
   }, [initialIds]);
-
-  const hasActiveFilters = statusFilter !== 'Todos' || bankFilters.length > 0 || promoterFilters.length > 0 || operatorFilters.length > 0 || !!globalFilter || !!appliedDateRange;
-
-  const handleClearAllFilters = () => {
-      setStatusFilter('Todos');
-      setGlobalFilter('');
-      setBankFilters([]);
-      setPromoterFilters([]);
-      setOperatorFilters([]);
-      setStartDateInput('');
-      setEndDateInput('');
-      setAppliedDateRange(undefined);
-  };
 
   React.useEffect(() => {
     if (isClient) {
@@ -299,16 +309,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     value = value.replace(/(\d{2})(\d)/, '$1/$2').replace(/(\d{2})(\d)/, '$1/$2');
     e.target.value = value;
     return value;
-  };
-
-  const handleApplyFilter = () => {
-    const s = parse(startDateInput, 'dd/MM/yyyy', new Date());
-    const e = parse(endDateInput, 'dd/MM/yyyy', new Date());
-    if (isValid(s)) {
-        setAppliedDateRange({ from: startOfDay(s), to: isValid(e) ? endOfDay(e) : endOfDay(s) });
-    } else {
-        setAppliedDateRange(undefined);
-    }
   };
 
   const toggleBankFilter = (bank: string) => { setBankFilters(prev => prev.includes(bank) ? prev.filter(b => b !== bank) : [...prev, bank]); };

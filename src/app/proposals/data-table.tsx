@@ -153,6 +153,32 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     });
   };
 
+  const handleApplyFilter = () => {
+    const startDate = parse(startDateInput, 'dd/MM/yyyy', new Date());
+    const endDate = parse(endDateInput, 'dd/MM/yyyy', new Date());
+    if (isValid(startDate)) {
+        setAppliedDateRange({ 
+            from: startOfDay(startDate), 
+            to: isValid(endDate) ? endOfDay(endDate) : endOfDay(startDate) 
+        });
+    } else {
+        setAppliedDateRange(undefined);
+    }
+  };
+
+  const handleClearAllFilters = () => {
+      setStatusFilter('Todos');
+      setGlobalFilter('');
+      setBankFilters([]);
+      setPromoterFilters([]);
+      setOperatorFilters([]);
+      setStartDateInput('');
+      setEndDateInput('');
+      setAppliedDateRange(undefined);
+  };
+
+  const hasActiveFilters = statusFilter !== 'Todos' || bankFilters.length > 0 || promoterFilters.length > 0 || operatorFilters.length > 0 || !!globalFilter || !!appliedDateRange;
+
   React.useEffect(() => {
     setIsClient(true);
     try {
@@ -178,19 +204,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         }
     } catch (e) {}
   }, [initialIds]);
-
-  const hasActiveFilters = statusFilter !== 'Todos' || bankFilters.length > 0 || promoterFilters.length > 0 || operatorFilters.length > 0 || !!globalFilter || !!appliedDateRange;
-
-  const handleClearAllFilters = () => {
-      setStatusFilter('Todos');
-      setGlobalFilter('');
-      setBankFilters([]);
-      setPromoterFilters([]);
-      setOperatorFilters([]);
-      setStartDateInput('');
-      setEndDateInput('');
-      setAppliedDateRange(undefined);
-  };
 
   React.useEffect(() => {
     if (isClient) {
@@ -309,6 +322,14 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   };
 
   const totalTableWidth = table.getTotalSize();
+
+  const toggleBankFilter = (bank: string) => { setBankFilters(prev => prev.includes(bank) ? prev.filter(b => b !== bank) : [...prev, bank]); };
+  const togglePromoterFilter = (promoter: string) => { setPromoterFilters(prev => prev.includes(promoter) ? prev.filter(p => p !== promoter) : [...prev, promoter]); };
+  const toggleOperatorFilter = (op: string) => { setOperatorFilters(prev => prev.includes(op) ? prev.filter(o => o !== op) : [...prev, op]); };
+
+  const uniqueOperators = React.useMemo(() => Array.from(new Set(data.map(p => p.operator || 'Sem Operador'))).sort(), [data]);
+  const uniqueBanks = React.useMemo(() => Array.from(new Set(data.map(p => p.bank))).sort(), [data]);
+  const uniquePromoters = React.useMemo(() => Array.from(new Set(data.map(p => p.promoter))).sort(), [data]);
 
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
