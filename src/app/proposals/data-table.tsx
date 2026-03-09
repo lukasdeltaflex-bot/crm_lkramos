@@ -106,6 +106,11 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'Data Digitação', desc: true }]);
   const [isClient, setIsClient] = React.useState(false);
 
+  // 🖱️ Lógica de Grab-to-scroll
+  const [isDraggingScroll, setIsDraggingScroll] = React.useState(false);
+  const [startX, setStartX] = React.useState(0);
+  const [scrollLeft, setScrollLeft] = React.useState(0);
+
   const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
     'Operador': false,
@@ -325,6 +330,25 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     },
     meta: { userSettings }
   });
+
+  // 🖱️ Handlers do Grab-to-scroll
+  const onMouseDown = (e: React.MouseEvent) => {
+    if (!tableContainerRef.current) return;
+    setIsDraggingScroll(true);
+    setStartX(e.pageX - tableContainerRef.current.offsetLeft);
+    setScrollLeft(tableContainerRef.current.scrollLeft);
+  };
+
+  const onMouseLeave = () => setIsDraggingScroll(false);
+  const onMouseUp = () => setIsDraggingScroll(false);
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingScroll || !tableContainerRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - tableContainerRef.current.offsetLeft;
+    const walk = (x - startX) * 2; // Multiplicador de velocidade
+    tableContainerRef.current.scrollLeft = scrollLeft - walk;
+  };
 
   React.useImperativeHandle(ref, () => ({ table }));
 
@@ -578,61 +602,77 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                 </DropdownMenu>
             </div>
 
-            <Card ref={tableContainerRef} className="proposals-table border-2 border-zinc-300 dark:border-primary/30 shadow-xl rounded-xl overflow-hidden bg-card p-1">
-                <div className="p-0">
-                    <div className="overflow-x-auto relative">
-                        <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
-                            <TableHeader className="bg-background dark:bg-zinc-900 border-b-2">
-                                {table.getHeaderGroups().map(hg => (
-                                    <TableRow key={hg.id} className="hover:bg-transparent">
-                                        <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
-                                            {hg.headers.map(h => (
-                                                <DraggableHeader 
-                                                    key={h.id} 
-                                                    header={h as any} 
-                                                />
-                                            ))}
-                                        </SortableContext>
-                                    </TableRow>
-                                    ))}
-                            </TableHeader>
-                            <TableBody>
-                                {table.getRowModel().rows.length > 0 ? (
-                                    table.getRowModel().rows.map(row => {
-                                        const status = row.original.status;
-                                        const statusKey = status.toUpperCase();
-                                        const colorValue = statusColors[statusKey] || statusColors[status];
-                                        return (
-                                            <TableRow 
-                                                key={row.id} 
+            <Card className="border-2 border-zinc-300 dark:border-primary/30 shadow-xl rounded-xl overflow-hidden bg-card p-1">
+                <div 
+                    ref={tableContainerRef}
+                    className={cn(
+                        "overflow-x-auto relative cursor-grab active:cursor-grabbing select-none",
+                        isDraggingScroll && "cursor-grabbing"
+                    )}
+                    onMouseDown={onMouseDown}
+                    onMouseLeave={onMouseLeave}
+                    onMouseUp={onMouseUp}
+                    onMouseMove={onMouseMove}
+                >
+                    <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
+                        <TableHeader className="bg-background dark:bg-zinc-900 border-b-2">
+                            {table.getHeaderGroups().map(hg => (
+                                <TableRow key={hg.id} className="hover:bg-transparent">
+                                    <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
+                                        {hg.headers.map((h, i) => (
+                                            <DraggableHeader 
+                                                key={h.id} 
+                                                header={h as any} 
                                                 className={cn(
-                                                    "transition-colors border-b h-14 hover:bg-primary/[0.03]",
-                                                    colorValue && "status-row-custom"
+                                                    i === 0 && "sticky left-0 z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
+                                                    i === 1 && "sticky left-[50px] z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.05)]"
                                                 )}
-                                                style={{ '--status-color': colorValue } as any}
-                                            >
-                                                {row.getVisibleCells().map(cell => (
-                                                    <TableCell 
-                                                        key={cell.id} 
-                                                        style={{ width: cell.column.getSize() }} 
-                                                        className="p-3 text-sm border-none"
-                                                    >
-                                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                    </TableCell>
-                                                ))}
-                                            </TableRow>
-                                        )
-                                    })
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground font-black uppercase text-[10px] tracking-widest opacity-40">
-                                            Nenhuma proposta encontrada com os filtros atuais.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
+                                            />
+                                        ))}
+                                    </SortableContext>
+                                </TableRow>
+                                ))}
+                        </TableHeader>
+                        <TableBody>
+                            {table.getRowModel().rows.length > 0 ? (
+                                table.getRowModel().rows.map(row => {
+                                    const status = row.original.status;
+                                    const statusKey = status.toUpperCase();
+                                    const colorValue = statusColors[statusKey] || statusColors[status];
+                                    return (
+                                        <TableRow 
+                                            key={row.id} 
+                                            className={cn(
+                                                "transition-colors border-b h-14 hover:bg-primary/[0.03]",
+                                                colorValue && "status-row-custom"
+                                            )}
+                                            style={{ '--status-color': colorValue } as any}
+                                        >
+                                            {row.getVisibleCells().map((cell, i) => (
+                                                <TableCell 
+                                                    key={cell.id} 
+                                                    style={{ width: cell.column.getSize() }} 
+                                                    className={cn(
+                                                        "p-3 text-sm border-none",
+                                                        i === 0 && "sticky left-0 z-30 bg-inherit shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
+                                                        i === 1 && "sticky left-[50px] z-30 bg-inherit shadow-[2px_0_5px_rgba(0,0,0,0.05)]"
+                                                    )}
+                                                >
+                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                                </TableCell>
+                                            ))}
+                                        </TableRow>
+                                    )
+                                })
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground font-black uppercase text-[10px] tracking-widest opacity-40">
+                                        Nenhuma proposta encontrada com os filtros atuais.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
                 </div>
 
                 <div className="flex items-center justify-between px-6 py-4 border-t-2 bg-muted/10 font-black text-[11px] uppercase tracking-[0.1em] text-foreground/60 min-h-[64px]">

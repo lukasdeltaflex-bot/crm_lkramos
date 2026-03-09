@@ -109,6 +109,11 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [isClient, setIsClient] = React.useState(false);
 
+  // 🖱️ Lógica de Grab-to-scroll
+  const [isDraggingScroll, setIsDraggingScroll] = React.useState(false);
+  const [startX, setStartX] = React.useState(0);
+  const [scrollLeft, setScrollLeft] = React.useState(0);
+
   const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
     'Promotora': false,
@@ -342,6 +347,25 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     meta: { isPrivacyMode, userSettings }
   });
 
+  // 🖱️ Handlers do Grab-to-scroll
+  const onMouseDown = (e: React.MouseEvent) => {
+    if (!tableContainerRef.current) return;
+    setIsDraggingScroll(true);
+    setStartX(e.pageX - tableContainerRef.current.offsetLeft);
+    setScrollLeft(tableContainerRef.current.scrollLeft);
+  };
+
+  const onMouseLeave = () => setIsDraggingScroll(false);
+  const onMouseUp = () => setIsDraggingScroll(false);
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingScroll || !tableContainerRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - tableContainerRef.current.offsetLeft;
+    const walk = (x - startX) * 2;
+    tableContainerRef.current.scrollLeft = scrollLeft - walk;
+  };
+
   const selectedRows = table.getFilteredSelectedRowModel().rows;
   const numSelected = selectedRows.length;
 
@@ -539,7 +563,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 )}
             </div>
 
-            <Card ref={tableContainerRef} className="proposals-table rounded-[1.5rem] border-2 border-zinc-200 bg-card shadow-xl overflow-hidden p-1">
+            <Card className="rounded-[1.5rem] border-2 border-zinc-200 bg-card shadow-xl overflow-hidden p-1">
                 <div className="flex items-center justify-between px-4 py-2 gap-4">
                     <div className='relative w-full max-md group'>
                         <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80 group-focus-within:opacity-100 transition-opacity' />
@@ -557,16 +581,30 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                     </DropdownMenu>
                 </div>
 
-                <div className="overflow-x-auto relative">
+                <div 
+                    ref={tableContainerRef}
+                    className={cn(
+                        "overflow-x-auto relative cursor-grab active:cursor-grabbing select-none",
+                        isDraggingScroll && "cursor-grabbing"
+                    )}
+                    onMouseDown={onMouseDown}
+                    onMouseLeave={onMouseLeave}
+                    onMouseUp={onMouseUp}
+                    onMouseMove={onMouseMove}
+                >
                     <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
                         <TableHeader className="bg-background dark:bg-zinc-900 border-b-2">
                             {table.getHeaderGroups().map(hg => (
                                 <TableRow key={hg.id} className="border-b hover:bg-transparent">
                                     <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
-                                        {hg.headers.map(h => (
+                                        {hg.headers.map((h, i) => (
                                             <DraggableHeader 
                                                 key={h.id} 
                                                 header={h as any} 
+                                                className={cn(
+                                                    i === 0 && "sticky left-0 z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
+                                                    i === 1 && "sticky left-[50px] z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.05)]"
+                                                )}
                                             />
                                         ))}
                                     </SortableContext>
@@ -595,11 +633,15 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                                             )}
                                             style={{ '--status-color': colorValue } as any} 
                                         >
-                                            {row.getVisibleCells().map(cell => (
+                                            {row.getVisibleCells().map((cell, i) => (
                                                 <TableCell 
                                                     key={cell.id} 
                                                     style={{ width: cell.column.getSize() }} 
-                                                    className="p-3 text-sm border-none"
+                                                    className={cn(
+                                                        "p-3 text-sm border-none",
+                                                        i === 0 && "sticky left-0 z-30 bg-inherit shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
+                                                        i === 1 && "sticky left-[50px] z-30 bg-inherit shadow-[2px_0_5px_rgba(0,0,0,0.05)]"
+                                                    )}
                                                 >
                                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                                 </TableCell>

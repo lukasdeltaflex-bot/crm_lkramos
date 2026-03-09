@@ -85,6 +85,11 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [isClient, setIsClient] = React.useState(false);
 
+  // 🖱️ Lógica de Grab-to-scroll
+  const [isDraggingScroll, setIsDraggingScroll] = React.useState(false);
+  const [startX, setStartX] = React.useState(0);
+  const [scrollLeft, setScrollLeft] = React.useState(0);
+
   const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
     'Telefone 2': true,
@@ -237,11 +242,30 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
       },
   });
 
+  // 🖱️ Handlers do Grab-to-scroll
+  const onMouseDown = (e: React.MouseEvent) => {
+    if (!tableContainerRef.current) return;
+    setIsDraggingScroll(true);
+    setStartX(e.pageX - tableContainerRef.current.offsetLeft);
+    setScrollLeft(tableContainerRef.current.scrollLeft);
+  };
+
+  const onMouseLeave = () => setIsDraggingScroll(false);
+  const onMouseUp = () => setIsDraggingScroll(false);
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingScroll || !tableContainerRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - tableContainerRef.current.offsetLeft;
+    const walk = (x - startX) * 2;
+    tableContainerRef.current.scrollLeft = scrollLeft - walk;
+  };
+
   React.useImperativeHandle(ref, () => ({ table }));
 
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
-      <Card ref={tableContainerRef} className="rounded-[1.5rem] border-2 border-zinc-200 dark:border-primary/30 bg-card shadow-xl overflow-hidden p-1">
+      <Card className="rounded-[1.5rem] border-2 border-zinc-200 dark:border-primary/30 bg-card shadow-xl overflow-hidden p-1">
         <div className="py-2">
           <div className="flex items-center justify-between px-4 py-2 gap-4">
             <div className='relative w-full max-w-md group'>
@@ -281,58 +305,74 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
             </DropdownMenu>
           </div>
           
-          <div className="customers-table">
-            <div className="overflow-x-auto relative">
-                <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
-                    <TableHeader className="bg-background dark:bg-zinc-900 border-b-2">
-                        {table.getHeaderGroups().map(headerGroup => (
-                        <TableRow key={headerGroup.id} className="hover:bg-transparent border-b-2 border-zinc-200 dark:border-zinc-800">
-                            <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
-                            {headerGroup.headers.map(header => (
-                                <DraggableHeader 
-                                    key={header.id} 
-                                    header={header as Header<Customer, unknown>} 
-                                />
-                            ))}
-                            </SortableContext>
-                        </TableRow>
+          <div 
+            ref={tableContainerRef}
+            className={cn(
+                "overflow-x-auto relative cursor-grab active:cursor-grabbing select-none",
+                isDraggingScroll && "cursor-grabbing"
+            )}
+            onMouseDown={onMouseDown}
+            onMouseLeave={onMouseLeave}
+            onMouseUp={onMouseUp}
+            onMouseMove={onMouseMove}
+          >
+            <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
+                <TableHeader className="bg-background dark:bg-zinc-900 border-b-2">
+                    {table.getHeaderGroups().map(headerGroup => (
+                    <TableRow key={headerGroup.id} className="hover:bg-transparent border-b-2 border-zinc-200 dark:border-zinc-800">
+                        <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
+                        {headerGroup.headers.map((header, i) => (
+                            <DraggableHeader 
+                                key={header.id} 
+                                header={header as Header<Customer, unknown>} 
+                                className={cn(
+                                    i === 0 && "sticky left-0 z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
+                                    i === 1 && "sticky left-[50px] z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.05)]"
+                                )}
+                            />
                         ))}
-                    </TableHeader>
-                    <TableBody>
-                        {isLoading ? (
-                        Array.from({ length: 8 }).map((_, i) => (
-                            <TableRow key={i}>
-                            {columns.map((column, j) => (
-                                <TableCell key={j} className="p-3"><Skeleton className="h-5 w-full" /></TableCell>
-                            ))}
-                            </TableRow>
-                        ))
-                        ) : table.getRowModel().rows?.length ? (
-                        table.getRowModel().rows.map((row) => (
-                            <TableRow
-                            key={row.id}
-                            data-state={row.getIsSelected() && 'selected'}
-                            className="hover:bg-primary/[0.03] transition-colors border-b h-12 cursor-default"
-                            >
-                            {row.getVisibleCells().map((cell) => (
-                                <TableCell 
-                                    key={cell.id} 
-                                    style={{ width: cell.column.getSize() }}
-                                    className="p-2 text-sm border-none"
-                                >
-                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                </TableCell>
-                            ))}
-                            </TableRow>
-                        ))
-                        ) : (
-                        <TableRow>
-                            <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground font-black uppercase text-[10px] tracking-widest opacity-40">Nenhum cliente na base.</TableCell>
+                        </SortableContext>
+                    </TableRow>
+                    ))}
+                </TableHeader>
+                <TableBody>
+                    {isLoading ? (
+                    Array.from({ length: 8 }).map((_, i) => (
+                        <TableRow key={i}>
+                        {columns.map((column, j) => (
+                            <TableCell key={j} className="p-3"><Skeleton className="h-5 w-full" /></TableCell>
+                        ))}
                         </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+                    ))
+                    ) : table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                        <TableRow
+                        key={row.id}
+                        data-state={row.getIsSelected() && 'selected'}
+                        className="hover:bg-primary/[0.03] transition-colors border-b h-12 cursor-default"
+                        >
+                        {row.getVisibleCells().map((cell, i) => (
+                            <TableCell 
+                                key={cell.id} 
+                                style={{ width: cell.column.getSize() }}
+                                className={cn(
+                                    "p-2 text-sm border-none",
+                                    i === 0 && "sticky left-0 z-30 bg-inherit shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
+                                    i === 1 && "sticky left-[50px] z-30 bg-inherit shadow-[2px_0_5px_rgba(0,0,0,0.05)]"
+                                )}
+                            >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </TableCell>
+                        ))}
+                        </TableRow>
+                    ))
+                    ) : (
+                    <TableRow>
+                        <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground font-black uppercase text-[10px] tracking-widest opacity-40">Nenhum cliente na base.</TableCell>
+                    </TableRow>
+                    )}
+                </TableBody>
+            </Table>
           </div>
 
           <div className="flex items-center justify-between px-6 py-4 border-t-2 bg-muted/10 font-black text-[11px] uppercase tracking-[0.1em] text-foreground/60 min-h-[64px]">
