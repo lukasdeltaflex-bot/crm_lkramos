@@ -86,7 +86,6 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   const [frozenCount, setFrozenCount] = React.useState(2);
   const [isClient, setIsClient] = React.useState(false);
 
-  // 🖱️ Lógica de Grab-to-scroll corrigida
   const [isDraggingScroll, setIsDraggingScroll] = React.useState(false);
   const [startX, setStartX] = React.useState(0);
   const [scrollLeft, setScrollLeft] = React.useState(0);
@@ -187,7 +186,6 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     },
   });
 
-  // 🖱️ Handlers Grab-to-scroll corrigidos
   const onMouseDown = (e: React.MouseEvent) => {
     if (!tableContainerRef.current) return;
     setIsDraggingScroll(true);
@@ -296,10 +294,10 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
                                 key={cell.id} 
                                 style={{ width: cell.column.getSize() }}
                                 className={cn(
-                                    "p-2 text-sm border-none",
-                                    i === 0 && frozenCount >= 1 && "sticky left-0 z-30 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
-                                    i === 1 && frozenCount >= 2 && "sticky left-[50px] z-30 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
-                                    i === 2 && frozenCount >= 3 && "sticky left-[200px] z-30 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.05)]"
+                                    "p-2 text-sm border-none bg-background",
+                                    i === 0 && frozenCount >= 1 && "sticky left-0 z-30 shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
+                                    i === 1 && frozenCount >= 2 && "sticky left-[50px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
+                                    i === 2 && frozenCount >= 3 && "sticky left-[200px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.05)]"
                                 )}
                             >
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -315,10 +313,26 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
           </div>
 
           <div className="flex items-center justify-between px-6 py-4 border-t-2 bg-muted/10 font-black text-[11px] uppercase tracking-[0.1em] text-foreground/60 min-h-[64px]">
-            <div className="flex-1">
-              {table.getFilteredSelectedRowModel().rows.length} SELECIONADOS.
+            <div className="flex items-center gap-4">
+                <div>{table.getFilteredSelectedRowModel().rows.length} SELECIONADOS.</div>
             </div>
             <div className="flex items-center gap-6 lg:gap-8">
+                <div className="flex items-center gap-2">
+                    <span>LINHAS:</span>
+                    <Select
+                        value={String(table.getState().pagination.pageSize)}
+                        onValueChange={(val) => table.setPageSize(Number(val))}
+                    >
+                        <SelectTrigger className="h-8 w-16 border-2 font-black text-[10px]">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {[10, 20, 30, 50, 100].map(size => (
+                                <SelectItem key={size} value={String(size)} className="text-[10px] font-bold">{size}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
                 <div className="text-primary font-black">
                     PÁG {table.getState().pagination.pageIndex + 1} DE {table.getPageCount()}
                 </div>

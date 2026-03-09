@@ -134,7 +134,24 @@ export const getColumns = ({ onEdit, onDelete }: any): ColumnDef<Customer>[] => 
   { id: 'Nome', accessorFn: (row) => row.name, header: 'Nome', cell: ({ row }) => (<Link href={`/customers/${row.original.id}`} className="font-bold text-primary hover:underline uppercase text-sm truncate block" onClick={(e) => e.stopPropagation()}>{row.original.name}</Link>), size: 250 },
   { id: 'CPF', accessorFn: (row) => row.cpf, header: 'CPF', cell: ({ row }) => (<div className="flex items-center gap-1 font-bold text-sm"><span>{row.original.cpf}</span><CopyButton text={row.original.cpf} label="CPF" /></div>), size: 150 },
   { id: 'Telefone', accessorFn: (row) => row.phone, header: 'Telefone', cell: ({ row }) => { const phone = row.original.phone; return (<div className="flex items-center gap-2 font-bold text-sm"><span>{phone}</span>{isWhatsApp(phone) && <a href={getWhatsAppUrl(phone)} target="_blank" rel="noopener noreferrer" className="text-green-600"><WhatsAppIcon className="h-4 w-4" /></a>}</div>) }, size: 150 },
+  { id: 'Telefone 2', accessorFn: (row) => row.phone2, header: 'Telefone 2', cell: ({ row }) => { const phone = row.original.phone2; if (!phone) return '-'; return (<div className="flex items-center gap-2 font-bold text-sm"><span>{phone}</span>{isWhatsApp(phone) && <a href={getWhatsAppUrl(phone)} target="_blank" rel="noopener noreferrer" className="text-green-600"><WhatsAppIcon className="h-4 w-4" /></a>}</div>) }, size: 150 },
+  { id: 'Tags', header: 'Tags', cell: ({ row }) => {
+      const customer = row.original;
+      const smartTags = (customer as any).smartTags || [];
+      const manualTags = customer.tags || [];
+      return (
+          <div className="flex flex-wrap gap-1 max-w-[200px]">
+              {smartTags.map((tag: string) => (
+                  <Badge key={tag} className="text-[8px] font-black uppercase px-1.5 py-0 bg-primary/10 text-primary border-none">{tag}</Badge>
+              ))}
+              {manualTags.map((tag: string) => (
+                  <Badge key={tag} variant="outline" className="text-[8px] font-black uppercase px-1.5 py-0 border-primary/20">{tag}</Badge>
+              ))}
+          </div>
+      )
+  }, size: 200 },
   { id: 'Cidade', accessorFn: (row) => row.city, header: 'Cidade', cell: ({ row }) => <span className="text-sm font-medium truncate block">{row.original.city || '-'}</span>, size: 150 },
   { id: 'Estado', accessorFn: (row) => row.state, header: 'Estado', cell: ({ row }) => <span className="text-sm font-black uppercase">{row.original.state || '-'}</span>, size: 80 },
+  { id: 'Observações', accessorKey: 'observations', header: 'Observações', cell: ({ row }) => <span className="text-xs text-muted-foreground truncate block max-w-[200px] italic">{row.original.observations || '-'}</span>, size: 200 },
   { id: 'Ações', header: '', cell: (props) => <ActionsCell {...props} onEdit={onEdit} onDelete={onDelete} />, enableHiding: false, size: 80 },
 ];
