@@ -116,7 +116,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     'Data Averbação': true,
     'Data Pgto. Cliente': true,
     'Chegada Saldo': true,
-    'CommissionValue': true,
+    'Comissão': true,
   });
 
   const initialColumns = React.useMemo(() => columns.map(c => c.id!).filter(Boolean), [columns]);
@@ -179,7 +179,9 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
 
   const syncScroll = (source: React.RefObject<HTMLDivElement>, target: React.RefObject<HTMLDivElement>) => {
     if (source.current && target.current) {
-      target.current.scrollLeft = source.current.scrollLeft;
+      if (target.current.scrollLeft !== source.current.scrollLeft) {
+        target.current.scrollLeft = source.current.scrollLeft;
+      }
     }
   };
 
@@ -271,15 +273,10 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         const cpfNumeric = (customer?.cpf || '').replace(/\D/g, '');
         const pNum = (p.proposalNumber || '').replace(/\D/g, '');
 
-        // 🛡️ BUSCA NUCLEAR V10: Prioridade absoluta para ID Exato e CPF/Contrato inicial
         if (isPureNumber) {
-            // 1. ID Exato
             if (numericIdStr === searchTerm) return true;
-            // 2. CPF começando com
             if (cpfNumeric.startsWith(searchTerm)) return true;
-            // 3. Proposta começando com
             if (pNum.startsWith(searchTerm)) return true;
-            
             return false;
         }
 
