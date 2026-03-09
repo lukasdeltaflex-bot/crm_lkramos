@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
 import { FinancialDataTable, type FinancialDataTableHandle } from './data-table';
@@ -15,7 +15,6 @@ import {
     EyeOff, 
     FileCheck2, 
     FileDown, 
-    Users2, 
     CircleDollarSign, 
     PlusCircle, 
     Users, 
@@ -25,7 +24,11 @@ import {
     FileText as FilePdf,
     BarChart3,
     Printer,
-    Wallet
+    Wallet,
+    Calendar as CalendarIcon,
+    Filter,
+    X,
+    TrendingUp
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -49,7 +52,7 @@ import {
   } from '@/components/ui/dialog';
 import { CommissionForm, type CommissionFormValues } from './commission-form';
 import { toast } from '@/hooks/use-toast';
-import { format, startOfMonth, endOfMonth, parse, getYear, getMonth, isSameMonth, isValid, addMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, parse, isValid, addMonths, startOfDay, endOfDay, isSameMonth } from 'date-fns';
 import { CommissionReconciliation } from '@/components/financial/commission-reconciliation';
 import { formatCurrency, cleanBankName, cleanFirestoreData } from '@/lib/utils';
 import { ProposalsStatusTable } from '@/components/dashboard/proposals-status-table';
@@ -60,6 +63,8 @@ import { ExpenseTable } from '@/components/financial/expense-table';
 import { expenseCategories as initialExpenseCategories } from '@/lib/config-data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
 
 export type ProposalWithCustomer = Proposal & { customer: Customer | undefined };
 
@@ -80,6 +85,11 @@ export default function FinancialPage() {
   const [isSaving, setIsSaving] = React.useState(false);
   const tableRef = React.useRef<FinancialDataTableHandle>(null);
   const [dialogData, setDialogData] = React.useState<{ title: string; proposals: ProposalWithCustomer[] } | null>(null);
+
+  // Stats Period Filtering
+  const [statsStartDate, setStatsStartDate] = useState(format(startOfMonth(new Date()), 'dd/MM/yyyy'));
+  const [statsEndDate, setStatsEndDate] = useState(format(new Date(), 'dd/MM/yyyy'));
+  const [appliedStatsRange, setAppliedStatsRange] = useState<{ from: Date; to: Date } | null>(null);
 
   React.useEffect(() => {
     setIsClient(true);
@@ -112,11 +122,20 @@ export default function FinancialPage() {
 
   const isLoading = proposalsLoading || customersLoading || expensesLoading || isUserLoading || settingsLoading;
 
+  const handleApplyStatsFilter = () => {
+    const s = parse(statsStartDate, 'dd/MM/yyyy', new Date());
+    const e = parse(statsEndDate, 'dd/MM/yyyy', new Date());
+    if (isValid(s) && isValid(e)) {
+        setAppliedStatsRange({ from: startOfDay(s), to: endOfDay(e) });
+    } else {
+        setAppliedStatsRange(null);
+    }
+  };
+
   const { proposalsWithCustomerData, summaryProposals, currentMonthRange, operatorStats } = React.useMemo(() => {
     if (!proposals || !customers || !isClient) return { proposalsWithCustomerData: [], summaryProposals: [], currentMonthRange: { from: new Date(), to: new Date() }, operatorStats: [] };
     
     const customersMap = new Map(customers.map(c => [c.id, c]));
-    
     const today = new Date();
     const startOfCurrent = startOfMonth(today);
     const endOfCurrent = endOfMonth(today);
@@ -131,7 +150,16 @@ export default function FinancialPage() {
       .filter(p => p.customer);
 
     const opMap: Record<string, { name: string; totalPaid: number; count: number; potential: number }> = {};
-    tableData.forEach(p => {
+    
+    // Filtro de data para as estatísticas
+    const statsData = appliedStatsRange 
+        ? tableData.filter(p => {
+            const d = p.dateDigitized ? new Date(p.dateDigitized) : null;
+            return d && d >= appliedStatsRange.from && d <= appliedStatsRange.to;
+        })
+        : tableData;
+
+    statsData.forEach(p => {
         const op = p.operator || 'Sem Operador';
         if (!opMap[op]) opMap[op] = { name: op, totalPaid: 0, count: 0, potential: 0 };
         opMap[op].count++;
@@ -149,7 +177,7 @@ export default function FinancialPage() {
       currentMonthRange: { from: startOfCurrent, to: endOfCurrent },
       operatorStats: stats
     };
-  }, [proposals, customers, isClient]);
+  }, [proposals, customers, isClient, appliedStatsRange]);
 
   const selectedIds = React.useMemo(() => 
     Object.keys(rowSelection).filter(id => rowSelection[id]),
@@ -291,7 +319,6 @@ export default function FinancialPage() {
         ];
     });
 
-    // Adiciona linha de totais se houver seleção
     if (rowsSource.length > 0) {
         const totalGross = rowsSource.reduce((acc, r) => acc + (r.original.grossAmount || 0), 0);
         const totalComm = rowsSource.reduce((acc, r) => acc + (r.original.commissionValue || 0), 0);
@@ -404,7 +431,6 @@ export default function FinancialPage() {
         const parsedDate = parse(data.date, 'dd/MM/yyyy', new Date());
         const groupId = data.groupId || (data.recurrence !== 'none' ? crypto.randomUUID() : undefined);
         
-        // 🛡️ RECORRÊNCIA FLEXÍVEL: Usa o count do formulário se não for lançamento único
         const count = data.recurrence === 'none' ? 1 : (data.installmentsCount || 1);
 
         for (let i = 0; i < count; i++) {
@@ -531,13 +557,80 @@ export default function FinancialPage() {
                     <Users className="mr-2 h-4 w-4" /> Performance
                 </Button>
                 <DialogContent className="max-w-3xl">
-                    <DialogHeader><DialogTitle>Comissões por Operador</DialogTitle></DialogHeader>
-                    <div className="py-4"><ScrollArea className="h-[400px]"><div className="space-y-4">{operatorStats.map((op) => (
-                        <Card key={op.name} className="p-4 flex items-center justify-between">
-                            <div><p className="font-bold">{op.name}</p><p className="text-[10px] uppercase text-muted-foreground">{op.count} Propostas</p></div>
-                            <div className="text-right"><p className="text-xs uppercase font-bold text-muted-foreground">Recebido</p><p className="font-bold text-green-600">{formatCurrency(op.totalPaid)}</p></div>
-                        </Card>
-                    ))}</div></ScrollArea></div>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <TrendingUp className="h-5 w-5 text-primary" />
+                            Performance por Período
+                        </DialogTitle>
+                    </DialogHeader>
+                    
+                    <div className="space-y-6 py-4">
+                        <div className="flex items-center gap-3 bg-muted/30 p-3 rounded-2xl border-2 border-dashed">
+                            <div className="flex items-center gap-2">
+                                <CalendarIcon className="h-4 w-4 text-primary opacity-60" />
+                                <Input 
+                                    placeholder="De" 
+                                    value={statsStartDate} 
+                                    onChange={(e) => {
+                                        let v = e.target.value.replace(/\D/g, "").substring(0, 8);
+                                        if (v.length > 4) v = v.replace(/(\d{2})(\d{2})(\d)/, "$1/$2/$3");
+                                        else if (v.length > 2) v = v.replace(/(\d{2})(\d)/, "$1/$2");
+                                        setStatsStartDate(v);
+                                    }}
+                                    className="h-9 w-28 text-center text-xs font-bold rounded-xl"
+                                />
+                                <span className="text-muted-foreground font-black opacity-40">-</span>
+                                <Input 
+                                    placeholder="Até" 
+                                    value={statsEndDate} 
+                                    onChange={(e) => {
+                                        let v = e.target.value.replace(/\D/g, "").substring(0, 8);
+                                        if (v.length > 4) v = v.replace(/(\d{2})(\d{2})(\d)/, "$1/$2/$3");
+                                        else if (v.length > 2) v = v.replace(/(\d{2})(\d)/, "$1/$2");
+                                        setStatsEndDate(v);
+                                    }}
+                                    className="h-9 w-28 text-center text-xs font-bold rounded-xl"
+                                />
+                            </div>
+                            <Button size="sm" onClick={handleApplyStatsFilter} className="h-9 rounded-full font-black uppercase text-[10px] tracking-widest gap-2">
+                                <Filter className="h-3 w-3" /> Atualizar Ranking
+                            </Button>
+                            {appliedStatsRange && (
+                                <Button variant="ghost" size="icon" className="h-9 w-9 text-red-500" onClick={() => { setStatsStartDate(''); setStatsEndDate(''); setAppliedStatsRange(null); }}>
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            )}
+                        </div>
+
+                        <ScrollArea className="h-[400px]">
+                            <div className="space-y-4 pr-4">
+                                {operatorStats.map((op) => (
+                                    <Card key={op.name} className="p-5 flex items-center justify-between border-2 hover:border-primary/20 transition-all">
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-black text-primary">
+                                                {op.name.charAt(0)}
+                                            </div>
+                                            <div>
+                                                <p className="font-black uppercase text-sm tracking-tight">{op.name}</p>
+                                                <p className="text-[10px] uppercase font-bold text-muted-foreground">{op.count} Propostas no período</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-[10px] uppercase font-black text-muted-foreground/60 tracking-widest">Recebido Líquido</p>
+                                            <p className="font-black text-lg text-green-600">{formatCurrency(op.totalPaid)}</p>
+                                            <p className="text-[9px] font-bold text-muted-foreground">Potencial: {formatCurrency(op.potential)}</p>
+                                        </div>
+                                    </Card>
+                                ))}
+                                {operatorStats.length === 0 && (
+                                    <div className="py-20 text-center border-2 border-dashed rounded-3xl opacity-30">
+                                        <Users className="h-10 w-10 mx-auto mb-4" />
+                                        <p className="text-[10px] font-black uppercase tracking-widest">Nenhuma produção localizada para este período.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </ScrollArea>
+                    </div>
                 </DialogContent>
             </Dialog>
 

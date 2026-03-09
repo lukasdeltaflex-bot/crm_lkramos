@@ -369,7 +369,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56 shadow-2xl border-2">
-                            <DropdownMenuLabel>Exibir/Ocultar</DropdownMenuLabel>
+                            <DropdownMenuLabel>Personalizar Visão</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             {table.getAllColumns().filter(c => c.getCanHide()).map(column => (
                                 <DropdownMenuCheckboxItem key={column.id} checked={column.getIsVisible()} onCheckedChange={v => column.toggleVisibility(!!v)} className="capitalize text-xs font-bold">

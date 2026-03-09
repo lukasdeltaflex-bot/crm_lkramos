@@ -1,7 +1,7 @@
 'use client';
 
 import { ColumnDef, flexRender, Header } from '@tanstack/react-table';
-import type { Proposal, Customer, CommissionStatus, UserSettings } from '@/lib/types';
+import type { Proposal, Customer, CommissionStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal, GripVertical, Copy, ArrowUp, ArrowDown } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
