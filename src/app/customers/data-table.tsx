@@ -139,9 +139,16 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     }
   }, [globalFilter, columnVisibility, columnOrder, frozenCount, isClient]);
 
-  const syncScroll = (source: React.RefObject<HTMLDivElement>, target: React.RefObject<HTMLDivElement>) => {
-    if (source.current && target.current) {
-      target.current.scrollLeft = source.current.scrollLeft;
+  // 🛡️ MOTOR DE SINCRONIZAÇÃO V2
+  const syncScrollTopToTable = () => {
+    if (topScrollRef.current && tableContainerRef.current) {
+        tableContainerRef.current.scrollLeft = topScrollRef.current.scrollLeft;
+    }
+  };
+
+  const syncScrollTableToTop = () => {
+    if (tableContainerRef.current && topScrollRef.current) {
+        topScrollRef.current.scrollLeft = tableContainerRef.current.scrollLeft;
     }
   };
 
@@ -190,13 +197,9 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         const numericIdStr = String(customer.numericId || '');
         const cpfNumeric = (customer.cpf || '').replace(/\D/g, '');
 
-        // 🛡️ BUSCA NUCLEAR V10: Prioridade absoluta para ID Exato e CPF inicial
         if (isPureNumber) {
-            // 1. ID Exato
             if (numericIdStr === searchTerm) return true;
-            // 2. CPF Começando com (para busca parcial de documento)
             if (cpfNumeric.startsWith(searchTerm)) return true;
-            // Se for puramente número e não bateu ID exato nem Início de CPF, filtra fora
             return false;
         }
 
@@ -260,16 +263,16 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
           
           <div 
             ref={topScrollRef}
-            className="overflow-x-auto h-3 scrollbar-hide mb-1"
-            onScroll={() => syncScroll(topScrollRef, tableContainerRef)}
+            className="overflow-x-auto h-2 mb-1 bg-muted/20"
+            onScroll={syncScrollTopToTable}
           >
-            <div style={{ width: table.getTotalSize() }} className="h-1" />
+            <div style={{ width: table.getTotalSize(), height: '1px' }} />
           </div>
 
           <div 
             ref={tableContainerRef}
             className="overflow-x-auto relative"
-            onScroll={() => syncScroll(tableContainerRef, topScrollRef)}
+            onScroll={syncScrollTableToTop}
           >
             <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
                 <TableHeader className="bg-background border-b-2">

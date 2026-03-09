@@ -177,11 +177,16 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     }
   }, [statusFilter, globalFilter, columnVisibility, columnOrder, frozenCount, isClient]);
 
-  const syncScroll = (source: React.RefObject<HTMLDivElement>, target: React.RefObject<HTMLDivElement>) => {
-    if (source.current && target.current) {
-      if (target.current.scrollLeft !== source.current.scrollLeft) {
-        target.current.scrollLeft = source.current.scrollLeft;
-      }
+  // 🛡️ MOTOR DE SINCRONIZAÇÃO V2 (MAIS ROBUSTO)
+  const syncScrollTopToTable = () => {
+    if (topScrollRef.current && tableContainerRef.current) {
+        tableContainerRef.current.scrollLeft = topScrollRef.current.scrollLeft;
+    }
+  };
+
+  const syncScrollTableToTop = () => {
+    if (tableContainerRef.current && topScrollRef.current) {
+        topScrollRef.current.scrollLeft = tableContainerRef.current.scrollLeft;
     }
   };
 
@@ -314,10 +319,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const uniqueBanks = React.useMemo(() => Array.from(new Set(data.map(p => p.bank))).sort(), [data]);
   const uniquePromoters = React.useMemo(() => Array.from(new Set(data.map(p => p.promoter))).sort(), [data]);
 
-  const toggleOperatorFilter = (op: string) => setOperatorFilters(prev => prev.includes(op) ? prev.filter(o => o !== op) : [...prev, op]);
-  const toggleBankFilter = (bank: string) => setBankFilters(prev => prev.includes(bank) ? prev.filter(b => b !== bank) : [...prev, bank]);
-  const togglePromoterFilter = (prom: string) => setPromoterFilters(prev => prev.includes(prom) ? prev.filter(p => p !== prom) : [...prev, prom]);
-
   const showLogos = userSettings?.showBankLogos ?? true;
   const showPromoterLogos = userSettings?.showPromoterLogos ?? true;
 
@@ -435,7 +436,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="h-10 rounded-full px-6 border-2 border-zinc-300 bg-background shadow-sm text-xs gap-2">
+                        <Button variant="outline" className="h-10 rounded-full font-bold px-6 border-2 border-zinc-300 bg-background shadow-sm text-xs gap-2">
                             <Landmark className="h-4 w-4" /> Bancos <ChevronDown className="h-3 w-3 opacity-50" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -453,7 +454,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="h-10 rounded-full px-6 border-2 border-zinc-300 bg-background shadow-sm text-xs gap-2">
+                        <Button variant="outline" className="h-10 rounded-full font-bold px-6 border-2 border-zinc-300 bg-background shadow-sm text-xs gap-2">
                             <Building2 className="h-4 w-4" /> Promotoras <ChevronDown className="h-3 w-3 opacity-50" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -482,18 +483,19 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
             </div>
 
             <Card className="border-2 border-zinc-300 shadow-xl rounded-xl overflow-hidden bg-card p-1">
+                {/* BARRA DE ROLAGEM SUPERIOR (SINCRONIZADA) */}
                 <div 
                     ref={topScrollRef}
-                    className="overflow-x-auto h-3 scrollbar-hide mb-1"
-                    onScroll={() => syncScroll(topScrollRef, tableContainerRef)}
+                    className="overflow-x-auto h-2 mb-1 bg-muted/20"
+                    onScroll={syncScrollTopToTable}
                 >
-                    <div style={{ width: table.getTotalSize() }} className="h-1" />
+                    <div style={{ width: table.getTotalSize(), height: '1px' }} />
                 </div>
 
                 <div 
                     ref={tableContainerRef}
                     className="overflow-x-auto relative"
-                    onScroll={() => syncScroll(tableContainerRef, topScrollRef)}
+                    onScroll={syncScrollTableToTop}
                 >
                     <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
                         <TableHeader className="bg-background border-b-2">

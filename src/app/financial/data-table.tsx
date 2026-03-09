@@ -169,10 +169,16 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     }
   }, [globalFilter, columnVisibility, columnOrder, frozenCount, isClient]);
 
-  // Sincronização de Scroll Duplo
-  const syncScroll = (source: React.RefObject<HTMLDivElement>, target: React.RefObject<HTMLDivElement>) => {
-    if (source.current && target.current) {
-      target.current.scrollLeft = source.current.scrollLeft;
+  // 🛡️ MOTOR DE SINCRONIZAÇÃO V2
+  const syncScrollTopToTable = () => {
+    if (topScrollRef.current && tableContainerRef.current) {
+        tableContainerRef.current.scrollLeft = topScrollRef.current.scrollLeft;
+    }
+  };
+
+  const syncScrollTableToTop = () => {
+    if (tableContainerRef.current && topScrollRef.current) {
+        topScrollRef.current.scrollLeft = tableContainerRef.current.scrollLeft;
     }
   };
 
@@ -492,19 +498,19 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             </div>
 
             <Card className="rounded-[1.5rem] border-2 border-zinc-200 bg-card shadow-xl overflow-hidden p-1">
-                {/* BARRA DE ROLAGEM SUPERIOR */}
+                {/* BARRA DE ROLAGEM SUPERIOR (SINCRONIZADA) */}
                 <div 
                     ref={topScrollRef}
-                    className="overflow-x-auto h-3 scrollbar-hide mb-1"
-                    onScroll={() => syncScroll(topScrollRef, tableContainerRef)}
+                    className="overflow-x-auto h-2 mb-1 bg-muted/20"
+                    onScroll={syncScrollTopToTable}
                 >
-                    <div style={{ width: table.getTotalSize() }} className="h-1" />
+                    <div style={{ width: table.getTotalSize(), height: '1px' }} />
                 </div>
 
                 <div 
                     ref={tableContainerRef}
                     className="overflow-x-auto relative"
-                    onScroll={() => syncScroll(tableContainerRef, topScrollRef)}
+                    onScroll={syncScrollTableToTop}
                 >
                     <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
                         <TableHeader className="bg-background border-b-2">
