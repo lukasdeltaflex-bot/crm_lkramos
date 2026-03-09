@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ColumnDef, flexRender, Header } from '@tanstack/react-table';
@@ -126,10 +127,9 @@ export const getColumns = ({ onEdit, onStatusUpdate }: any): ColumnDef<ProposalW
   { 
     id: 'col_proposal_status', 
     accessorKey: 'status', 
-    header: 'Status Proposta', 
+    header: 'Situação Proposta', 
     cell: ({ row, table }) => {
         const status = row.original.status;
-        const sett = (table.options.meta as any)?.userSettings;
         const statusColors = (table.options.meta as any)?.statusColors || {};
         const colorValue = statusColors[status.toUpperCase()] || statusColors[status];
         return (
