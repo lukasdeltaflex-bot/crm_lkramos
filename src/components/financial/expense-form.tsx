@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -224,7 +225,7 @@ export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }:
                         name="recurrence"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary/60">
+                                <FormLabel className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-primary/60">
                                     <CalendarRange className="h-3 w-3" /> Tipo de Despesa
                                 </FormLabel>
                                 <Select onValueChange={field.onChange} value={field.value}>
@@ -251,7 +252,7 @@ export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }:
                             name="installmentsCount"
                             render={({ field }) => (
                                 <FormItem className="animate-in zoom-in-95">
-                                    <FormLabel className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-orange-600">
+                                    <FormLabel className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-orange-600">
                                         <ListOrdered className="h-3 w-3" /> Qtd. de Vezes
                                     </FormLabel>
                                     <FormControl>

@@ -1,3 +1,4 @@
+
 'use client';
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -6,7 +7,7 @@ import { PageHeader } from '@/components/page-header';
 import { ProposalsDataTable, type ProposalsDataTableHandle } from './data-table';
 import { getColumns } from './columns';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, FileDown, Trash2, CheckCircle2, ChevronDown, FileSpreadsheet, FileText as FilePdf, FileBadge } from 'lucide-react';
+import { PlusCircle, FileDown, Trash2, CheckCircle2, ChevronDown, FileSpreadsheet, FileText as FilePdf, FileBadge, Printer, Download } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -220,10 +221,10 @@ function ProposalsPageContent() {
     }
   };
 
-  const handlePrintCovers = async () => {
+  const handlePrintCovers = async (downloadMode = false) => {
     const selectedProposals = proposalsWithCustomerData.filter(p => rowSelection[p.id]);
     if (selectedProposals.length === 0) {
-        toast({ variant: 'destructive', title: 'Nenhuma seleção', description: 'Selecione ao menos uma proposta para imprimir a capa.' });
+        toast({ variant: 'destructive', title: 'Nenhuma seleção', description: 'Selecione ao menos uma proposta.' });
         return;
     }
 
@@ -235,11 +236,10 @@ function ProposalsPageContent() {
     selectedProposals.forEach((p, index) => {
         if (index > 0) doc.addPage();
 
-        // Logo Personalizada
         if (userSettings?.customLogoURL) {
             try {
                 doc.addImage(userSettings.customLogoURL, 'PNG', 14, 10, 40, 20, undefined, 'FAST');
-            } catch (e) { console.warn("Failed to add logo to Cover PDF"); }
+            } catch (e) {}
         }
 
         doc.setFontSize(22); doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]); doc.setFont("helvetica", "bold"); 
@@ -251,7 +251,6 @@ function ProposalsPageContent() {
         
         doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]); doc.setLineWidth(0.5); doc.line(14, 38, 196, 38);
 
-        // Seção Cliente
         doc.setFontSize(14); doc.setTextColor(0); doc.setFont("helvetica", "bold");
         doc.text("DADOS DO CLIENTE", 14, 50);
         autoTable(doc, {
@@ -260,7 +259,7 @@ function ProposalsPageContent() {
                 ['Nome do Cliente', p.customer?.name || '---'],
                 ['CPF', p.customer?.cpf || '---'],
                 ['Telefone', p.customer?.phone || '---'],
-                ['Data de Nascimento', p.customer?.birthDate ? format(new Date(p.customer.birthDate), 'dd/MM/yyyy') : '---'],
+                ['Nascimento', p.customer?.birthDate ? format(new Date(p.customer.birthDate), 'dd/MM/yyyy') : '---'],
             ],
             theme: 'plain',
             styles: { fontSize: 11 },
@@ -269,7 +268,6 @@ function ProposalsPageContent() {
 
         const finalY1 = (doc as any).lastAutoTable.finalY;
 
-        // Seção Proposta
         doc.setFontSize(14); doc.setTextColor(0); doc.setFont("helvetica", "bold");
         doc.text("DETALHES DA OPERAÇÃO", 14, finalY1 + 15);
         autoTable(doc, {
@@ -289,7 +287,6 @@ function ProposalsPageContent() {
 
         const finalY2 = (doc as any).lastAutoTable.finalY;
 
-        // Seção Financeira
         doc.setFontSize(14); doc.setTextColor(0); doc.setFont("helvetica", "bold");
         doc.text("RESUMO FINANCEIRO", 14, finalY2 + 15);
         autoTable(doc, {
@@ -304,9 +301,6 @@ function ProposalsPageContent() {
             columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50, fillColor: [245, 245, 245] } }
         });
 
-        const finalY3 = (doc as any).lastAutoTable.finalY;
-
-        // Rodapé / Assinaturas
         const footerY = 250;
         doc.setDrawColor(150);
         doc.line(14, footerY, 90, footerY);
@@ -314,17 +308,15 @@ function ProposalsPageContent() {
         doc.setFontSize(8); doc.setTextColor(100);
         doc.text("ASSINATURA DO CLIENTE", 52, footerY + 5, { align: 'center' });
         doc.text("AGENTE RESPONSÁVEL", 148, footerY + 5, { align: 'center' });
-        
-        doc.setFontSize(7);
-        doc.text("Este documento é um resumo interno da proposta e não substitui o contrato bancário oficial.", 105, 285, { align: 'center' });
     });
 
-    const fileName = selectedProposals.length === 1 
-        ? `Capa_Proposta_${selectedProposals[0].proposalNumber}.pdf`
-        : `Capas_Propostas_${format(new Date(), 'dd_MM_yyyy')}.pdf`;
-        
-    doc.save(fileName);
-    toast({ title: 'Capa(s) Gerada(s)!', description: 'O arquivo PDF foi baixado.' });
+    if (downloadMode) {
+        doc.save(`Capas_Propostas_${format(new Date(), 'dd_MM_yyyy')}.pdf`);
+        toast({ title: 'Download iniciado!' });
+    } else {
+        window.open(doc.output('bloburl'), '_blank');
+        toast({ title: 'PDF Gerado para impressão!' });
+    }
   };
 
   const handleExportToExcel = async (onlySelected = false) => {
@@ -556,14 +548,26 @@ function ProposalsPageContent() {
         <div className="flex items-center gap-3 flex-wrap">
             {selectedCount > 0 && (
                 <div className="flex items-center gap-2 animate-in slide-in-from-right-2 duration-300">
-                    <Button 
-                        variant="outline" 
-                        className="h-10 px-6 rounded-full font-bold text-xs gap-2 text-primary border-primary/20 bg-primary/5"
-                        onClick={handlePrintCovers}
-                        disabled={isSaving}
-                    >
-                        <FileBadge className="h-4 w-4" /> Imprimir Capa ({selectedCount})
-                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button 
+                                variant="outline" 
+                                className="h-10 px-6 rounded-full font-bold text-xs gap-2 text-primary border-primary/20 bg-primary/5"
+                                disabled={isSaving}
+                            >
+                                <FileBadge className="h-4 w-4" /> Capas ({selectedCount}) <ChevronDown className="h-3 w-3" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onSelect={() => handlePrintCovers(false)} className="gap-2">
+                                <Printer className="h-4 w-4" /> Imprimir (Visualizar)
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handlePrintCovers(true)} className="gap-2">
+                                <Download className="h-4 w-4" /> Exportar (Baixar PDF)
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className="h-10 px-6 rounded-full font-bold border-primary/30 bg-primary/5 text-primary text-xs" disabled={isSaving}>
@@ -624,7 +628,7 @@ function ProposalsPageContent() {
             onPointerDownOutside={(e) => e.preventDefault()}
             onInteractOutside={(e) => e.preventDefault()}
         >
-          <DialogHeader><DialogTitle>{sheetMode === 'edit' ? 'Editar' : 'Novo'} Proposta</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{sheetMode === 'edit' ? 'Editar' : sheetMode === 'view' ? 'Detalhes' : 'Novo'} Proposta</DialogTitle></DialogHeader>
           <ProposalForm 
             key={formKey}
             proposal={selectedProposal} 

@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -275,7 +276,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     onColumnSizingChange: setColumnSizing,
     onColumnOrderChange: setColumnOrder,
     onPaginationChange: handlePaginationChange,
-    onGlobalFilterChange: setGlobalFilter,
     enableColumnResizing: true,
     columnResizeMode: 'onChange',
     state: { sorting, globalFilter, rowSelection, columnVisibility, columnSizing, columnOrder, pagination },

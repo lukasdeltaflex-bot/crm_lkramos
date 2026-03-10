@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -430,7 +431,7 @@ export default function FinancialPage() {
         setIsSheetOpen(false);
         toast({ title: 'Salvo!' });
     } catch (e: any) {
-        if (e.code === 'permission-denied') {
+        if (error.code === 'permission-denied') {
             errorEmitter.emit('permission-error', new FirestorePermissionError({
                 path: `loanProposals/${selectedProposal.id}`,
                 operation: 'update',
@@ -588,7 +589,7 @@ export default function FinancialPage() {
                     <div className="space-y-6 py-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/30 p-4 rounded-2xl border-2 border-dashed">
                             <div className="space-y-3">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                                     <CalendarDays className="h-3 w-3" /> Mês Referência
                                 </Label>
                                 <Select onValueChange={handleStatsMonthSelect}>
@@ -606,7 +607,7 @@ export default function FinancialPage() {
                             </div>
 
                             <div className="space-y-3">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                                     <CalendarIcon className="h-3 w-3" /> Período Manual
                                 </Label>
                                 <div className="flex items-center gap-2 bg-background p-1 px-2 border-2 rounded-xl">
@@ -641,9 +642,9 @@ export default function FinancialPage() {
                         </div>
 
                         <div className="flex items-center justify-between px-2">
-                            <p className="text-[10px] font-black uppercase text-primary/60 tracking-widest">Resultados filtrados</p>
+                            <p className="text-[10px] font-bold uppercase text-primary/60 tracking-widest">Resultados filtrados</p>
                             {appliedStatsRange && (
-                                <Button variant="ghost" size="sm" className="h-6 text-[9px] font-black uppercase text-red-500" onClick={() => { setStatsStartDate(''); setStatsEndDate(''); setAppliedStatsRange(null); }}>
+                                <Button variant="ghost" size="sm" className="h-6 text-[9px] font-bold uppercase text-red-500" onClick={() => { setStatsStartDate(''); setStatsEndDate(''); setAppliedStatsRange(null); }}>
                                     <X className="h-3 w-3 mr-1" /> Limpar Filtro
                                 </Button>
                             )}
@@ -654,17 +655,17 @@ export default function FinancialPage() {
                                 {operatorStats.map((op) => (
                                     <Card key={op.name} className="p-5 flex items-center justify-between border-2 hover:border-primary/20 transition-all">
                                         <div className="flex items-center gap-4">
-                                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-black text-primary uppercase">
+                                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary uppercase">
                                                 {op.name.charAt(0)}
                                             </div>
                                             <div>
-                                                <p className="font-black uppercase text-sm tracking-tight">{op.name}</p>
+                                                <p className="font-bold uppercase text-sm tracking-tight">{op.name}</p>
                                                 <p className="text-[10px] uppercase font-bold text-muted-foreground">{op.count} Propostas no período</p>
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-[10px] uppercase font-black text-muted-foreground/60 tracking-widest">Recebido Líquido</p>
-                                            <p className="font-black text-lg text-green-600">{formatCurrency(op.totalPaid)}</p>
+                                            <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-widest">Recebido Líquido</p>
+                                            <p className="font-bold text-lg text-green-600">{formatCurrency(op.totalPaid)}</p>
                                             <p className="text-[9px] font-bold text-muted-foreground">Potencial: {formatCurrency(op.potential)}</p>
                                         </div>
                                     </Card>
@@ -672,7 +673,7 @@ export default function FinancialPage() {
                                 {operatorStats.length === 0 && (
                                     <div className="py-20 text-center border-2 border-dashed rounded-3xl opacity-30">
                                         <Users className="h-10 w-10 mx-auto mb-4" />
-                                        <p className="text-[10px] font-black uppercase tracking-widest">Nenhuma produção localizada para este período.</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest">Nenhuma produção localizada para este período.</p>
                                     </div>
                                 )}
                             </div>
