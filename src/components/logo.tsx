@@ -10,7 +10,7 @@ const LogoSvg = ({ className }: { className?: string }) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 160 80"
-      className={cn("h-10 w-auto", className)}
+      className={cn("h-12 w-auto", className)}
       aria-label="LK Ramos Logo"
     >
         <defs>
@@ -27,8 +27,9 @@ const LogoSvg = ({ className }: { className?: string }) => (
                 {`
                     .logo-text {
                         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                        font-size: 16px;
-                        font-weight: 600;
+                        font-size: 18px;
+                        font-weight: 900;
+                        letter-spacing: -0.02em;
                         fill: hsl(var(--sidebar-foreground));
                     }
                 `}
@@ -68,7 +69,7 @@ const LogoSvg = ({ className }: { className?: string }) => (
         />
 
         {/* Text */}
-        <text x="30" y="70" className="logo-text" dominantBaseline="middle" textAnchor="start">LK RAMOS</text>
+        <text x="30" y="72" className="logo-text" dominantBaseline="middle" textAnchor="start">LK RAMOS</text>
     </svg>
 );
 
@@ -88,13 +89,11 @@ export function Logo({ className, forPrinting = false }: { className?: string; f
   
   const { data: settings, isLoading } = useDoc<UserSettings>(settingsRef);
 
-  // 🛡️ PREVENÇÃO DE FLICKER: Enquanto estiver carregando ou não montado, 
-  // exibe apenas um container vazio para segurar o layout sem mostrar a logo errada.
   if (!hasMounted || isLoading) {
     return (
         <div className={cn(
             'flex items-center justify-center',
-            forPrinting ? 'h-16 w-auto' : 'h-14 w-full p-2 group-data-[collapsible=icon]:p-1',
+            forPrinting ? 'h-16 w-auto' : 'h-20 w-full p-1 group-data-[collapsible=icon]:p-1',
             className
         )}>
             <div className="w-full h-full bg-transparent" />
@@ -106,7 +105,7 @@ export function Logo({ className, forPrinting = false }: { className?: string; f
     return (
         <div className={cn(
             'flex items-center justify-center transition-all duration-500 overflow-hidden animate-in fade-in duration-300',
-            forPrinting ? 'h-16 w-auto' : 'h-14 w-full p-2 group-data-[collapsible=icon]:p-1',
+            forPrinting ? 'h-16 w-auto' : 'h-20 w-full p-1 group-data-[collapsible=icon]:p-1',
             className
         )}>
             <img 
@@ -124,11 +123,11 @@ export function Logo({ className, forPrinting = false }: { className?: string; f
   return (
     <div
       className={cn(
-        'flex items-center group-data-[collapsible=icon]:gap-0 animate-in fade-in duration-300',
+        'flex items-center group-data-[collapsible=icon]:gap-0 animate-in fade-in duration-300 h-20',
         className
       )}
     >
-      <LogoSvg className="h-12 w-full group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:w-full"/>
+      <LogoSvg className="h-16 w-full group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:w-full"/>
     </div>
   );
 }
