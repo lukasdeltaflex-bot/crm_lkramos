@@ -47,7 +47,7 @@ const CopyButton = ({ text, label }: { text: string | undefined; label: string }
     );
 };
 
-export const DraggableHeader = ({ header, className }: { header: Header<Customer, unknown>; className?: string }) => {
+export const DraggableHeader = ({ header, className, style: customStyle }: { header: Header<Customer, unknown>; className?: string; style?: React.CSSProperties }) => {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({
         id: header.column.id,
     });
@@ -56,6 +56,7 @@ export const DraggableHeader = ({ header, className }: { header: Header<Customer
         width: header.getSize(),
         transform: CSS.Transform.toString(transform),
         opacity: isDragging ? 0.5 : 1,
+        ...customStyle,
     };
 
     const isSortable = header.column.getCanSort();

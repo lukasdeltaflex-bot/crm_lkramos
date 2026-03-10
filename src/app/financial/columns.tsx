@@ -39,7 +39,7 @@ const CopyButton = ({ text, label }: { text: string | undefined; label: string }
     );
 };
 
-export const DraggableHeader = ({ header, className }: { header: Header<any, unknown>; className?: string }) => {
+export const DraggableHeader = ({ header, className, style: customStyle }: { header: Header<any, unknown>; className?: string; style?: React.CSSProperties }) => {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({ 
         id: header.column.id,
     });
@@ -48,6 +48,7 @@ export const DraggableHeader = ({ header, className }: { header: Header<any, unk
         width: header.getSize(),
         transform: CSS.Transform.toString(transform),
         opacity: isDragging ? 0.5 : 1,
+        ...customStyle,
     };
 
     const isSortable = header.column.getCanSort();
@@ -120,7 +121,7 @@ export const getColumns = ({ onEdit, onStatusUpdate }: any): ColumnDef<ProposalW
     }, size: 150 },
   { id: 'col_customer', accessorFn: (row) => row.customer?.name, header: 'Cliente', cell: ({ row }) => <span className="font-black text-primary uppercase text-sm truncate">{row.original.customer?.name}</span>, size: 200 },
   { id: 'col_cpf', accessorFn: (row) => row.customer?.cpf, header: 'CPF', cell: ({ row }) => (<div className="flex items-center gap-1 font-bold text-sm"><span>{row.original.customer?.cpf || '-'}</span><CopyButton text={row.original.customer?.cpf} label="CPF" /></div>), size: 150 },
-  { id: 'col_pnum', accessorKey: 'proposalNumber', header: 'Nº Proposta', cell: ({ row }) => (<div className="flex items-center gap-1 text-sm font-black"><Link href={`/proposals?open=${row.original.id}`} className="text-primary hover:underline font-black" onClick={(e) => e.stopPropagation()}>{row.original.proposalNumber}</Link><CopyButton text={row.original.proposalNumber} label="Proposta" /></div>), size: 150 },
+  { id: 'col_pnum', accessorKey: 'proposalNumber', header: 'N° Proposta', cell: ({ row }) => (<div className="flex items-center gap-1 text-sm font-black"><Link href={`/proposals?open=${row.original.id}`} className="text-primary hover:underline font-black" onClick={(e) => e.stopPropagation()}>{row.original.proposalNumber}</Link><CopyButton text={row.original.proposalNumber} label="Proposta" /></div>), size: 150 },
   { id: 'col_product', accessorKey: 'product', header: 'Produto', cell: ({ row }) => <span className="text-sm font-bold text-foreground/80">{row.original.product}</span>, size: 120 },
   { id: 'col_gross', accessorKey: 'grossAmount', header: () => <div className="text-right">Valor Bruto</div>, cell: ({ row, table }) => { const isPriv = (table.options.meta as any)?.isPrivacyMode; return (<div className="text-right font-black text-sm">{isPriv ? '•••••' : formatCurrency(row.original.grossAmount)}</div>) }, size: 120 },
   { id: 'col_comm', accessorKey: 'commissionPercentage', header: () => <div className="text-right">Comissão (%)</div>, cell: ({ row, table }) => { const isPriv = (table.options.meta as any)?.isPrivacyMode; return (<div className="text-right font-bold text-sm">{isPriv ? '•••' : `${row.original.commissionPercentage?.toFixed(2)}%`}</div>) }, size: 110 },

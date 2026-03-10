@@ -98,7 +98,7 @@ const ActionsCell = ({ row, onEdit, onView, onDelete, onDuplicate }: any) => {
     );
 };
 
-export const DraggableHeader = ({ header, className }: { header: Header<any, unknown>; className?: string }) => {
+export const DraggableHeader = ({ header, className, style: customStyle }: { header: Header<any, unknown>; className?: string; style?: React.CSSProperties }) => {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({ 
         id: header.column.id,
     });
@@ -107,6 +107,7 @@ export const DraggableHeader = ({ header, className }: { header: Header<any, unk
         width: header.getSize(),
         transform: CSS.Transform.toString(transform),
         opacity: isDragging ? 0.5 : 1,
+        ...customStyle,
     };
 
     const isSortable = header.column.getCanSort();
@@ -178,7 +179,7 @@ const ProposalStatusCell = ({ p, onStatusChange }: { p: Proposal; onStatusChange
             </div>
             {critical && (
                 <div className="shrink-0 h-8 w-8 rounded-full bg-red-500/15 border-2 border-red-500/40 flex items-center justify-center text-red-600 animate-alert-pulse">
-                    <Timer className="h-4.5 w-4.5 fill-current" />
+                    <Timer className="h-4 w-4 fill-current" />
                 </div>
             )}
         </div>
@@ -222,7 +223,7 @@ export const getColumns = (
                             onClick={(e) => { e.stopPropagation(); onToggleChecklist(p.id, s.id, !!act); }} 
                             className="hover:scale-125 transition-transform p-1 rounded-md hover:bg-muted"
                         >
-                            <s.icon className={cn("h-3.5 w-3.5", act ? s.color : "text-muted-foreground/30")} />
+                            <s.icon className={cn("h-3 w-3", act ? s.color : "text-muted-foreground/30")} />
                         </button>
                     ) 
                 })}
