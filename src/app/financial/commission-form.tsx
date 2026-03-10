@@ -25,6 +25,7 @@ import { commissionStatuses } from '@/lib/config-data';
 import type { Proposal } from '@/lib/types';
 import { useEffect } from 'react';
 import { useTheme } from '@/components/theme-provider';
+import { formatCurrencyInput } from '@/lib/utils';
 
 const commissionSchema = z.object({
   commissionStatus: z.string({ required_error: 'Selecione um status.' }),
@@ -126,7 +127,17 @@ export function CommissionForm({ proposal, onSubmit }: CommissionFormProps) {
                             <FormControl>
                                 <div className="relative">
                                     <span className="absolute left-3 top-2.5 text-[10px] font-black text-muted-foreground">R$</span>
-                                    <Input type="number" step="0.01" className="pl-9 font-bold text-primary" placeholder="0.00" {...field} value={field.value ?? 0} />
+                                    <Input 
+                                        type="text" 
+                                        className="pl-9 font-bold text-primary rounded-full" 
+                                        value={formatCurrencyInput(field.value)}
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/\D/g, "");
+                                            const num = val ? parseInt(val) / 100 : 0;
+                                            field.onChange(num);
+                                        }}
+                                        placeholder="0,00"
+                                    />
                                 </div>
                             </FormControl>
                             <FormMessage />
@@ -158,7 +169,7 @@ export function CommissionForm({ proposal, onSubmit }: CommissionFormProps) {
 
         </div>
         <div className="flex justify-end pt-4">
-          <Button type="submit">Salvar Alterações</Button>
+          <Button type="submit" className="rounded-full px-8 font-bold">Salvar Alterações</Button>
         </div>
       </form>
     </Form>

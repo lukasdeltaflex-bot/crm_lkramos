@@ -139,6 +139,7 @@ export default function LeadCapturePage() {
     if (formData.birthDate.length < 10) return null;
     try {
         const parsed = parseDateSafe(formData.birthDate);
+        // 🛡️ TRAVA DE SEGURANÇA: Data deve ser válida e estar no PASSADO.
         return !!(parsed && isValidDate(parsed) && isBefore(parsed, startOfToday()));
     } catch { return false; }
   }, [formData.birthDate]);
@@ -401,6 +402,9 @@ export default function LeadCapturePage() {
                                         />
                                         {isBirthDateValid === false && <AlertTriangle className="absolute right-4 top-3.5 h-5 w-5 text-red-500" />}
                                     </div>
+                                    {isBirthDateValid === false && formData.birthDate.length === 10 && (
+                                        <p className="text-[10px] font-bold text-red-600 uppercase mt-1">Data Inválida ou no Futuro.</p>
+                                    )}
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -456,7 +460,7 @@ export default function LeadCapturePage() {
                                             onChange={handleInputChange} 
                                             maxLength={9} 
                                         />
-                                        {isFetchingCep && <Loader2 className="absolute right-4 top-3.5 h-5 w-5 animate-spin text-primary" />}
+                                        {isFetchingCep && <Loader2 className="absolute right-4 top-3.5 h-4 w-4 animate-spin text-primary" />}
                                     </div>
                                     <p className="text-[9px] font-bold text-primary uppercase flex items-center gap-1.5 mt-1 opacity-70">
                                         <Zap className="h-3 w-3 fill-current" /> Digite o CEP para preencher o endereço automaticamente.
@@ -619,7 +623,7 @@ export default function LeadCapturePage() {
                     </div>
 
                     <div className="bg-orange-50/5 p-4 rounded-2xl border border-orange-500/10 flex items-start gap-3">
-                        <Info className="h-4 w-4 text-orange-600 mt-0.5 shrink-0" />
+                        <div className="mt-0.5 shrink-0"><Info className="h-4 w-4 text-orange-600" /></div>
                         <p className="text-[10px] text-orange-700 leading-relaxed font-medium">
                             Seus dados estão protegidos conforme as diretrizes da LGPD. Ao enviar, você autoriza o processamento exclusivo para fins de análise bancária.
                         </p>
