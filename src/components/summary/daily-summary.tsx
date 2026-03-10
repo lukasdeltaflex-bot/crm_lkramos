@@ -1,9 +1,10 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bot, Send, X, Loader2, CalendarClock, Cake, Hourglass, BadgePercent, Zap, Info, ChevronRight, MessageSquareText, Wallet, Receipt } from 'lucide-react';
+import { Bot, Send, X, Loader2, CalendarClock, Cake, Hourglass, BadgePercent, Zap, Info, ChevronRight, MessageSquareText, Wallet, Receipt, RotateCcw } from 'lucide-react';
 import type { Customer, Proposal, UserProfile, FollowUp, UserSettings, Expense } from '@/lib/types';
 import { differenceInDays, format, differenceInMonths, startOfDay, isBefore, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -120,6 +121,18 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
         console.error("Failed to sync dismiss state:", e);
     }
   };
+
+  const handleRestoreAlerts = async () => {
+    if (!user || !firestore) return;
+    try {
+        await setDoc(doc(firestore, 'userSettings', user.uid), {
+            dismissedAlerts: []
+        }, { merge: true });
+        toast({ title: "Alertas Restaurados!", description: "Toda a sua inteligência diária voltou a ficar visível." });
+    } catch (e) {
+        toast({ variant: "destructive", title: "Erro ao restaurar" });
+    }
+  }
 
   const alertData = useMemo(() => {
     if (!isClient || !proposals || !customers) return { birthdayAlerts: [], followUpReminders: [], commissionReminders: [], debtBalanceReminders: [], partialCommissionReminders: [], manualFollowUps: [], radarAlerts: [], expenseAlerts: [] };
@@ -346,16 +359,29 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
                 Alertas estratégicos do dia
             </CardDescription>
         </div>
-        <Button 
-            variant="default" 
-            size="sm" 
-            onClick={handleSendEmail} 
-            disabled={isSending}
-            className="h-9 px-5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-full font-bold text-[10px] uppercase tracking-wider shadow-lg transition-all group"
-        >
-            {isSending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : <Send className="h-3.5 w-3.5 mr-2 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />}
-            Resumo E-mail
-        </Button>
+        <div className="flex items-center gap-2">
+            {dismissedItems.length > 0 && (
+                <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleRestoreAlerts}
+                    className="h-9 px-3 rounded-full text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all"
+                    title="Restaurar alertas fechados"
+                >
+                    <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Restaurar
+                </Button>
+            )}
+            <Button 
+                variant="default" 
+                size="sm" 
+                onClick={handleSendEmail} 
+                disabled={isSending}
+                className="h-9 px-5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-full font-bold text-[10px] uppercase tracking-wider shadow-lg transition-all group"
+            >
+                {isSending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : <Send className="h-3.5 w-3.5 mr-2 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />}
+                Resumo E-mail
+            </Button>
+        </div>
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden pt-6 pb-0">
         {!hasVisibleAlerts ? (
@@ -363,6 +389,9 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
                 <Info className="h-10 w-10 mb-4 opacity-20" />
                 <p className="font-bold text-sm text-foreground/80 tracking-tight">Esteira Limpa!</p>
                 <p className="text-[11px] opacity-60 mt-1 uppercase font-bold tracking-tighter">Nenhuma pendência ou alerta estratégico para agora.</p>
+                {dismissedItems.length > 0 && (
+                    <Button variant="outline" size="sm" onClick={handleRestoreAlerts} className="mt-4 rounded-full font-bold text-[10px] uppercase">Ver alertas fechados</Button>
+                )}
             </div>
         ) : (
             <ScrollArea className="h-[450px] w-full">

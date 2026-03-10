@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -384,7 +385,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                         <span className="text-muted-foreground font-bold opacity-40">-</span>
                         <Input placeholder="Até" value={endDateInput} onChange={(e) => setEndDateInput(handleDateMask(e))} className="h-7 w-28 border-none bg-muted/40 text-[11px] text-center font-bold rounded-full focus-visible:ring-primary/20" />
                     </div>
-                    <Button size="sm" onClick={handleApplyFilter} className="h-7 bg-primary text-white hover:bg-primary/90 rounded-full px-4 text-[10px] font-bold uppercase shadow-sm gap-1.5 transition-all"><Filter className="h-3 w-3" /> APLICAR</Button>
+                    <Button size="sm" onClick={handleApplyFilter} className="h-7 bg-primary text-white hover:bg-primary/90 rounded-full px-4 text-[10px] font-black uppercase shadow-sm gap-1.5 transition-all"><Filter className="h-3 w-3" /> APLICAR</Button>
                     {appliedDateRange && (
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => { setStartDateInput(''); setEndDateInput(''); setAppliedDateRange(undefined); }}><X className="h-3.5 w-3.5" /></Button>
                     )}
@@ -434,9 +435,9 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                                                 key={h.id} 
                                                 header={h as any} 
                                                 className={cn(
-                                                    i === 0 && frozenCount >= 1 && "sticky left-0 z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.1)]",
-                                                    i === 1 && frozenCount >= 2 && "sticky left-[50px] z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.1)]",
-                                                    i === 2 && frozenCount >= 3 && "sticky left-[150px] z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.1)]"
+                                                    i === 0 && frozenCount >= 1 && "sticky left-0 z-40 bg-background shadow-[4px_0_10px_rgba(0,0,0,0.12)] border-r-2",
+                                                    i === 1 && frozenCount >= 2 && "sticky left-[50px] z-40 bg-background shadow-[4px_0_10px_rgba(0,0,0,0.12)] border-r-2",
+                                                    i === 2 && frozenCount >= 3 && "sticky left-[150px] z-40 bg-background shadow-[4px_0_10px_rgba(0,0,0,0.12)] border-r-2"
                                                 )}
                                             />
                                         ))}
@@ -456,9 +457,9 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                                                     style={{ width: cell.column.getSize() }} 
                                                     className={cn(
                                                         "p-3 text-sm border-none bg-background",
-                                                        i === 0 && frozenCount >= 1 && "sticky left-0 z-30 shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
-                                                        i === 1 && frozenCount >= 2 && "sticky left-[50px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.05)]",
-                                                        i === 2 && frozenCount >= 3 && "sticky left-[150px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.05)]"
+                                                        i === 0 && frozenCount >= 1 && "sticky left-0 z-30 shadow-[4px_0_10px_rgba(0,0,0,0.08)] border-r-2",
+                                                        i === 1 && frozenCount >= 2 && "sticky left-[50px] z-30 shadow-[4px_0_10px_rgba(0,0,0,0.08)] border-r-2",
+                                                        i === 2 && frozenCount >= 3 && "sticky left-[150px] z-30 shadow-[4px_0_10px_rgba(0,0,0,0.08)] border-r-2"
                                                     )}
                                                 >
                                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -71,13 +72,13 @@ export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }:
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
-      description: expense?.description || '',
-      amount: expense?.amount ?? 0,
-      date: expense?.date ? formatDateSafe(expense.date) : format(new Date(), 'dd/MM/yyyy'),
-      category: expense?.category || categories[0] || '',
-      paid: expense?.paid ?? false,
-      recurrence: expense?.recurrence || 'none',
-      installmentsCount: expense?.installmentsCount || 1,
+      description: '',
+      amount: 0,
+      date: format(new Date(), 'dd/MM/yyyy'),
+      category: categories[0] || '',
+      paid: false,
+      recurrence: 'none',
+      installmentsCount: 1,
     },
   });
 
@@ -92,6 +93,16 @@ export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }:
         recurrence: expense.recurrence || 'none',
         installmentsCount: expense.installmentsCount || 1,
       });
+    } else {
+        form.reset({
+            description: '',
+            amount: 0,
+            date: format(new Date(), 'dd/MM/yyyy'),
+            category: categories[0] || '',
+            paid: false,
+            recurrence: 'none',
+            installmentsCount: 1,
+        });
     }
   }, [expense, form, categories]);
 

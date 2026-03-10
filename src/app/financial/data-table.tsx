@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -411,9 +412,9 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                                                 key={h.id} 
                                                 header={h as any} 
                                                 className={cn(
-                                                    i === 0 && frozenCount >= 1 && "sticky left-0 z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.1)]",
-                                                    i === 1 && frozenCount >= 2 && "sticky left-[50px] z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.1)]",
-                                                    i === 2 && frozenCount >= 3 && "sticky left-[180px] z-40 bg-background shadow-[2px_0_5px_rgba(0,0,0,0.1)]"
+                                                    i === 0 && frozenCount >= 1 && "sticky left-0 z-40 bg-background shadow-[4px_0_10px_rgba(0,0,0,0.12)] border-r-2",
+                                                    i === 1 && frozenCount >= 2 && "sticky left-[50px] z-40 bg-background shadow-[4px_0_10px_rgba(0,0,0,0.12)] border-r-2",
+                                                    i === 2 && frozenCount >= 3 && "sticky left-[180px] z-40 bg-background shadow-[4px_0_10px_rgba(0,0,0,0.12)] border-r-2"
                                                 )}
                                             />
                                         ))}
@@ -431,7 +432,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                                     return (
                                         <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className={cn("transition-colors border-b h-14 hover:bg-primary/[0.03]", colorValue && "status-row-custom")} style={{ '--status-color': colorValue } as any}>
                                             {row.getVisibleCells().map((cell, i) => (
-                                                <TableCell key={cell.id} style={{ width: cell.column.getSize() }} className={cn("p-3 text-sm border-none bg-background", i === 0 && frozenCount >= 1 && "sticky left-0 z-30 shadow-[2px_0_5px_rgba(0,0,0,0.05)]", i === 1 && frozenCount >= 2 && "sticky left-[50px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.05)]", i === 2 && frozenCount >= 3 && "sticky left-[180px] z-30 shadow-[2px_0_5px_rgba(0,0,0,0.05)]")}> {flexRender(cell.column.columnDef.cell, cell.getContext())} </TableCell>
+                                                <TableCell key={cell.id} style={{ width: cell.column.getSize() }} className={cn("p-3 text-sm border-none bg-background", i === 0 && frozenCount >= 1 && "sticky left-0 z-30 shadow-[4px_0_10px_rgba(0,0,0,0.08)] border-r-2", i === 1 && frozenCount >= 2 && "sticky left-[50px] z-30 shadow-[4px_0_10px_rgba(0,0,0,0.08)] border-r-2", i === 2 && frozenCount >= 3 && "sticky left-[180px] z-30 shadow-[4px_0_10px_rgba(0,0,0,0.08)] border-r-2")}> {flexRender(cell.column.columnDef.cell, cell.getContext())} </TableCell>
                                             ))}
                                         </TableRow>
                                     )
