@@ -33,7 +33,8 @@ import {
     PenTool, 
     ShieldCheck,
     CopyPlus,
-    Calendar as CalendarIcon
+    Calendar as CalendarIcon,
+    AlertTriangle
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { formatCurrency, cleanBankName, cn, formatDateSafe, isWhatsApp, getWhatsAppUrl, calculateBusinessDays, isProposalCritical } from '@/lib/utils';
@@ -167,6 +168,16 @@ const ProposalStatusCell = ({ p, onStatusChange }: { p: Proposal; onStatusChange
 
     const critical = isProposalCritical(p);
 
+    // Cálculos para a legenda (Tooltip)
+    const historyDates = (p.history || []).map(h => h.date);
+    const lastHistoryDate = historyDates.length > 0 ? [...historyDates].sort().reverse()[0] : null;
+    let baseDate = p.statusUpdatedAt || p.dateDigitized;
+    if (p.status === 'Aguardando Saldo' && p.statusAwaitingBalanceAt) {
+        baseDate = p.statusAwaitingBalanceAt;
+    }
+    const referenceDate = (lastHistoryDate && lastHistoryDate > baseDate) ? lastHistoryDate : baseDate;
+    const bizDays = calculateBusinessDays(referenceDate);
+
     return (
         <div className="flex items-center gap-2 w-full">
             <div className="flex-1">
@@ -178,9 +189,29 @@ const ProposalStatusCell = ({ p, onStatusChange }: { p: Proposal; onStatusChange
                 />
             </div>
             {critical && (
-                <div className="shrink-0 h-8 w-8 rounded-full bg-red-500/15 border-2 border-red-500/40 flex items-center justify-center text-red-600 animate-alert-pulse">
-                    <Timer className="h-4 w-4 fill-current" />
-                </div>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div className="shrink-0 h-8 w-8 rounded-full bg-red-500/15 border-2 border-red-500/40 flex items-center justify-center text-red-600 animate-alert-pulse cursor-help">
+                                <Timer className="h-4 w-4 fill-current" />
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="bg-white dark:bg-zinc-950 text-zinc-950 dark:text-zinc-50 border shadow-2xl p-4 rounded-xl min-w-[220px] z-[100]">
+                            <div className="space-y-2">
+                                <p className="font-black text-xs text-red-600 uppercase tracking-widest flex items-center gap-2">
+                                    <AlertTriangle className="h-3 w-3" /> Atraso Crítico Detectado
+                                </p>
+                                <p className="text-[11px] font-medium leading-relaxed">
+                                    Esta proposta está há <span className="font-black text-red-600">{bizDays} dia(s) úteis</span> sem nenhuma nova interação ou mudança de status.
+                                </p>
+                                <div className="pt-1 border-t border-red-100 dark:border-red-900/30">
+                                    <p className="text-[9px] font-bold uppercase text-muted-foreground">Dica LK RAMOS:</p>
+                                    <p className="text-[9px] italic text-muted-foreground">Adicione uma nota no histórico para pausar este alerta.</p>
+                                </div>
+                            </div>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
             )}
         </div>
     );
