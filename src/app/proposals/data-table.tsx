@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -67,7 +66,7 @@ import type { ProposalStatus, UserSettings } from '@/lib/types';
 import { DraggableHeader } from './columns';
 import type { ProposalWithCustomer } from './page';
 import { Separator } from '@/components/ui/separator';
-import { normalizeString, cn, formatCurrency, cleanBankName } from '@/lib/utils';
+import { normalizeString, cn, formatCurrency, cleanBankName, isProposalCritical } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { BankIcon } from '@/components/bank-icon';
 
@@ -385,7 +384,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                         <span className="text-muted-foreground font-bold opacity-40">-</span>
                         <Input placeholder="Até" value={endDateInput} onChange={(e) => setEndDateInput(handleDateMask(e))} className="h-7 w-28 border-none bg-muted/40 text-[11px] text-center font-bold rounded-full focus-visible:ring-primary/20" />
                     </div>
-                    <Button size="sm" onClick={handleApplyFilter} className="h-7 bg-primary text-white hover:bg-primary/90 rounded-full px-4 text-[10px] font-black uppercase shadow-sm gap-1.5 transition-all"><Filter className="h-3 w-3" /> APLICAR</Button>
+                    <Button size="sm" onClick={handleApplyFilter} className="h-7 bg-primary text-white hover:bg-primary/90 rounded-full px-4 text-[10px] font-black uppercase shadow-sm gap-1.5 transition-all active:scale-95"><Filter className="h-3 w-3" /> APLICAR</Button>
                     {appliedDateRange && (
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => { setStartDateInput(''); setEndDateInput(''); setAppliedDateRange(undefined); }}><X className="h-3.5 w-3.5" /></Button>
                     )}
@@ -448,9 +447,20 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                         <TableBody>
                             {table.getRowModel().rows.length > 0 ? (
                                 table.getRowModel().rows.map(row => {
-                                    const colorValue = statusColors[row.original.status.toUpperCase()] || statusColors[row.original.status];
+                                    const p = row.original;
+                                    const isCritical = isProposalCritical(p);
+                                    const colorValue = statusColors[p.status.toUpperCase()] || statusColors[p.status];
+                                    
                                     return (
-                                        <TableRow key={row.id} className={cn("transition-colors border-b h-14 hover:bg-primary/[0.03]", colorValue && "status-row-custom")} style={{ '--status-color': colorValue } as any}>
+                                        <TableRow 
+                                            key={row.id} 
+                                            className={cn(
+                                                "transition-colors border-b h-14 hover:bg-primary/[0.03]", 
+                                                colorValue && "status-row-custom",
+                                                isCritical && "status-row-critical"
+                                            )} 
+                                            style={colorValue ? { '--status-color': colorValue } as any : {}}
+                                        >
                                             {row.getVisibleCells().map((cell, i) => (
                                                 <TableCell 
                                                     key={cell.id} 

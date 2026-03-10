@@ -139,6 +139,22 @@ export function calculateBusinessDays(startDateStr: string | Date): number {
     return count;
 }
 
+/**
+ * 🛡️ DETECTOR DE CRITICIDADE
+ * Centraliza a regra de negócio para propostas em atraso operacional.
+ */
+export function isProposalCritical(p: Proposal): boolean {
+    const referenceDate = p.statusAwaitingBalanceAt || p.statusUpdatedAt || p.dateDigitized;
+    if (!referenceDate) return false;
+    const bizDays = calculateBusinessDays(referenceDate);
+    
+    if (p.status === 'Reprovado' || p.status === 'Pago' || p.status === 'Saldo Pago') return false;
+
+    return (p.status === 'Pendente' && bizDays >= 2) || 
+           (p.status === 'Aguardando Saldo' && p.product === 'Portabilidade' && bizDays >= 5) || 
+           (p.status === 'Em Andamento' && bizDays >= 5);
+}
+
 export function validateCPF(cpf: string): boolean {
     const cleanCPF = cpf.replace(/[^\d]+/g, '');
     if (cleanCPF.length !== 11) return false;

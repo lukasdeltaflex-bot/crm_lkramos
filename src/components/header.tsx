@@ -68,8 +68,8 @@ export function Header({ className }: { className?: string }) {
     <header className={cn("flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6", className)}>
       <SidebarTrigger />
       <div className="flex-1 flex items-center gap-4">
-        {/* 🛡️ RESPONSIVIDADE HEADER: Esconde relógio em telas muito pequenas para evitar colisão */}
-        <div className="hidden lg:block">
+        {/* 🛡️ RESPONSIVIDADE HEADER: Esconde relógio em telas médias para evitar colisão com a busca */}
+        <div className="hidden xl:block">
             <LiveClock />
         </div>
         <div className="flex-1 flex justify-center max-w-md mx-auto">
@@ -86,8 +86,7 @@ export function Header({ className }: { className?: string }) {
                 <AvatarImage src={userProfile?.photoURL || ''} data-ai-hint="rosto de pessoa" />
                 <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
                 </Avatar>
-                <span className="sr-only">Alternar menu de usuário</span>
-            </Button>
+                </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
             <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>

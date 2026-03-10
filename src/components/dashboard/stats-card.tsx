@@ -88,11 +88,11 @@ export function StatsCard({
   };
 
   const renderSparkline = () => {
-    // 🛡️ BLINDAGEM MATEMÁTICA: Evita divisão por zero e erros de NaN
+    // 🛡️ BLINDAGEM MATEMÁTICA V2: Garante que o gráfico não quebre com 0 ou 1 dado
     if (!sparklineData || sparklineData.length < 2) return null;
     
     const validData = sparklineData.map(v => Number(v) || 0);
-    const max = Math.max(...validData, 1);
+    const max = Math.max(...validData, 1); // Evita divisão por zero
     const width = 60;
     const height = 20;
     

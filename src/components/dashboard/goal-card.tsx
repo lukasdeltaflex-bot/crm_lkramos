@@ -51,7 +51,7 @@ export function GoalCard({
   const conversionRate = totalDigitized > 0 ? (currentProduction / totalDigitized) * 100 : 0;
 
   const renderSparkline = () => {
-    // 🛡️ BLINDAGEM MATEMÁTICA: Evita erros em séries históricas curtas ou zeradas
+    // 🛡️ BLINDAGEM MATEMÁTICA V2: Evita erros em séries históricas curtas ou zeradas
     if (!sparklineData || sparklineData.length < 2) return null;
     
     const validData = sparklineData.map(v => Number(v) || 0);

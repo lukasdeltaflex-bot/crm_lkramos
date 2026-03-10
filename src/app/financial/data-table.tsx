@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -63,7 +62,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { X, Filter, Search, Calendar as CalendarIcon, ChevronDown, ChevronsLeft, ChevronsRight, Snowflake, User, Landmark, Building2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { cn, cleanBankName, normalizeString, formatCurrency } from '@/lib/utils';
+import { cn, cleanBankName, normalizeString, formatCurrency, isProposalCritical } from '@/lib/utils';
 import type { Proposal, Customer, ProposalWithCustomer, UserSettings } from '@/lib/types';
 import { FinancialSummary } from '@/components/financial/financial-summary';
 import { DraggableHeader } from './columns';
@@ -327,7 +326,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 </Tabs>
                 <div className="flex items-center gap-3 ml-auto">
                     <Select value={String(frozenCount)} onValueChange={(val) => setFrozenCount(Number(val))}>
-                        <SelectTrigger className="h-10 min-w-[140px] rounded-full text-[10px] font-black uppercase border-2 border-zinc-300 bg-background shadow-sm">
+                        <SelectTrigger className="h-10 min-w-[140px] rounded-full text-[10px] font-bold uppercase border-2 border-zinc-300 bg-background shadow-sm">
                             <div className="flex items-center gap-2"><Snowflake className="h-3.5 w-3.5 text-blue-500" /><SelectValue placeholder="Congelar" /></div>
                         </SelectTrigger>
                         <SelectContent>
@@ -426,11 +425,22 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                             {table.getRowModel().rows.length > 0 ? (
                                 table.getRowModel().rows.map(row => {
                                     const p = row.original;
+                                    const isCritical = isProposalCritical(p);
                                     const commStatus = p.commissionStatus;
                                     const effectiveStatus = (commStatus === 'Paga' || commStatus === 'Parcial' || commStatus === 'Pendente') ? commStatus : (p.dateApproved ? 'Pendente' : null);
                                     const colorValue = effectiveStatus ? (statusColors[effectiveStatus.toUpperCase()] || statusColors[effectiveStatus]) : undefined;
+                                    
                                     return (
-                                        <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className={cn("transition-colors border-b h-14 hover:bg-primary/[0.03]", colorValue && "status-row-custom")} style={{ '--status-color': colorValue } as any}>
+                                        <TableRow 
+                                            key={row.id} 
+                                            data-state={row.getIsSelected() && 'selected'} 
+                                            className={cn(
+                                                "transition-colors border-b h-14 hover:bg-primary/[0.03]", 
+                                                colorValue && "status-row-custom",
+                                                isCritical && "status-row-critical"
+                                            )} 
+                                            style={colorValue ? { '--status-color': colorValue } as any : {}}
+                                        >
                                             {row.getVisibleCells().map((cell, i) => (
                                                 <TableCell key={cell.id} style={{ width: cell.column.getSize() }} className={cn("p-3 text-sm border-none bg-background", i === 0 && frozenCount >= 1 && "sticky left-0 z-30 shadow-[4px_0_10px_rgba(0,0,0,0.08)] border-r-2", i === 1 && frozenCount >= 2 && "sticky left-[50px] z-30 shadow-[4px_0_10px_rgba(0,0,0,0.08)] border-r-2", i === 2 && frozenCount >= 3 && "sticky left-[180px] z-30 shadow-[4px_0_10px_rgba(0,0,0,0.08)] border-r-2")}> {flexRender(cell.column.columnDef.cell, cell.getContext())} </TableCell>
                                             ))}

@@ -238,6 +238,19 @@ html, body, *, [data-sidebar="inset"] {
     background-color: hsl(var(--status-color) / 0.08) !important;
 }
 
+/* 🔴 REALCE CRÍTICO INDUSTRIAL */
+.status-row-critical {
+    background-color: hsla(0, 100%, 50%, 0.05) !important;
+    border-left: 4px solid hsl(0, 100%, 50%) !important;
+    animation: alert-row-pulse 3s infinite ease-in-out;
+}
+
+@keyframes alert-row-pulse {
+    0% { background-color: hsla(0, 100%, 50%, 0.05); }
+    50% { background-color: hsla(0, 100%, 50%, 0.12); }
+    100% { background-color: hsla(0, 100%, 50%, 0.05); }
+}
+
 .status-tab[data-state=active] {
     color: hsl(var(--status-color)) !important;
     border-color: hsl(var(--status-color) / 0.4) !important;
