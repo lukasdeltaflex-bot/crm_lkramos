@@ -1,8 +1,9 @@
+
 'use client';
 
 /**
  * @fileOverview Formulário mestre para criação e edição de propostas.
- * Centraliza toda a lógica de esteira, cálculos de comissão e histórico.
+ * Centraliza toda a lógica de esteira, cálculos de comissão e histórico com AUTO-AUDIT.
  */
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -371,11 +372,6 @@ export function ProposalForm({
     }
   }, [commissionBase, commissionPercentage, grossAmount, netAmount, setValue, isReadOnly]);
 
-  /**
-   * 🛡️ BLINDAGEM DE HISTÓRICO V3
-   * Agora salva imediatamente no Firestore se a proposta já existir (sheetMode === 'edit').
-   * Se for nova proposta, mantém o comportamento de staging.
-   */
   const handleAddHistory = async (customMessage: string) => {
     if (!customMessage || !user) return;
     
@@ -389,7 +385,6 @@ export function ProposalForm({
     };
 
     if (proposal?.id && firestore) {
-        // SALVAMENTO IMEDIATO (CRM BLINDADO)
         try {
             const docRef = doc(firestore, 'loanProposals', proposal.id);
             await updateDoc(docRef, {
@@ -403,7 +398,6 @@ export function ProposalForm({
             setIsAddingHistory(false);
         }
     } else {
-        // STAGING PARA NOVA PROPOSTA
         setStagedHistory(prev => [entry, ...prev]);
         setNewHistoryEntry('');
         toast({ title: "Atualização reservada!", description: "Será gravada ao clicar em Salvar Proposta." });
@@ -455,13 +449,19 @@ export function ProposalForm({
         finalData.term = 1;
     }
 
+    // 🛡️ AUTO-AUDIT V2 (Aprovado #4)
     const auditEntries: ProposalHistoryEntry[] = [];
     const userName = user?.displayName || user?.email || 'Sistema';
 
     const checkChange = (field: string, label: string, formatter?: (v: any) => string) => {
         const oldVal = proposal ? (proposal as any)[field] : undefined;
-        const newVal = (finalData as any)[field];
-        if (oldVal !== undefined && oldVal !== newVal) {
+        const newVal = finalData[field];
+        
+        // Comparação robusta para números e strings
+        const normalizedOld = typeof oldVal === 'number' ? Number(oldVal) : String(oldVal || '').trim();
+        const normalizedNew = typeof newVal === 'number' ? Number(newVal) : String(newVal || '').trim();
+
+        if (oldVal !== undefined && normalizedOld !== normalizedNew) {
             auditEntries.push({
                 id: crypto.randomUUID(),
                 date: now,
@@ -475,11 +475,14 @@ export function ProposalForm({
         checkChange('status', 'Status');
         checkChange('bank', 'Banco');
         checkChange('grossAmount', 'Valor Bruto', formatCurrency);
-        if (finalData.status === 'Reprovado') {
+        checkChange('netAmount', 'Valor Líquido', formatCurrency);
+        checkChange('installmentAmount', 'Parcela', formatCurrency);
+        
+        if (finalData.status === 'Reprovado' && proposal.status !== 'Reprovado') {
             auditEntries.push({ id: crypto.randomUUID(), date: now, message: `MOTIVO DA REPROVA: ${finalData.rejectionReason}`, userName });
         }
     } else {
-        auditEntries.push({ id: crypto.randomUUID(), date: now, message: `Proposta criada com status: ${finalData.status}`, userName });
+        auditEntries.push({ id: crypto.randomUUID(), date: now, message: `Proposta criada com status inicial: ${finalData.status}`, userName });
     }
 
     const existingHistory = Array.isArray(proposal?.history) ? proposal!.history : [];

@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -39,12 +40,12 @@ export function CustomerSearchDialog({
             const isPureNumber = /^\d+$/.test(search);
             if (!normalizedSearch) return 1;
             
-            // 🛡️ FILTRO V10: Prioridade absoluta para ID Exato e CPF inicial
+            // 🛡️ FILTRO V11 (Aprovado #2): Prioridade absoluta para ID Exato e CPF inicial
             if (isPureNumber) {
-                // 1. ID exato (âncora id_)
+                // 1. ID exato (âncora id_) - Espaço no final para evitar ID 10 match id_1
                 if (value.includes(`id_${search} `)) return 1;
                 // 2. CPF começando com (âncora cpf_)
-                if (value.includes(`cpf_${search}`)) return 1;
+                if (value.includes(`cpf_${search}`)) return 0.9;
                 
                 return 0;
             }
@@ -58,8 +59,8 @@ export function CustomerSearchDialog({
               <CommandGroup>
                 {customers.map((customer) => {
                   const cpfNumeric = (customer.cpf || '').replace(/\D/g, '');
-                  // 🛡️ INDEXAÇÃO V10: Âncoras estritas id_ e cpf_
-                  const searchIndex = normalizeString(`id_${customer.numericId} cpf_${cpfNumeric} ${customer.name} ${customer.cpf}`);
+                  // 🛡️ INDEXAÇÃO V11: Espaço após numericId para garantir match de ID Exato no filter
+                  const searchIndex = normalizeString(`id_${customer.numericId}  cpf_${cpfNumeric} ${customer.name} ${customer.cpf}`);
                   
                   return (
                     <CommandItem

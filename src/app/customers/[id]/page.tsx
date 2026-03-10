@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
@@ -400,6 +401,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     const { default: autoTable } = await import('jspdf-autotable');
     const doc = new jsPDF();
     const primaryColor = [40, 74, 127];
+    const pageHeight = doc.internal.pageSize.height;
     
     if (userSettings?.customLogoURL) {
         try {
@@ -462,14 +464,13 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         styles: { fontSize: 9 } 
     });
 
-    const pageHeight = doc.internal.pageSize.height;
     const decText = `Eu, ${customer.name}, portador do CPF ${customer.cpf}, declaro verdadeiras as informações acima e autorizo expressamente o processamento dos meus dados para fins de simulação e contratação bancária, conforme as diretrizes da LGPD (Lei Geral de Proteção de Dados).`;
     const wrappedDecText = doc.splitTextToSize(decText, 180);
     const textHeight = (wrappedDecText.length * 6);
     
+    // 🛡️ LÓGICA DE QUEBRA INTELIGENTE (Aprovado #1)
     let currentY = getFinalY() + 20;
-    
-    if (currentY + textHeight + 50 > pageHeight) { 
+    if (currentY + textHeight + 60 > pageHeight) { 
         doc.addPage(); 
         currentY = 25;
     }
@@ -480,7 +481,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     
     const signatureY = currentY + 10 + textHeight + 25;
     
-    if (signatureY + 10 > pageHeight) {
+    if (signatureY + 15 > pageHeight) {
         doc.addPage();
         const newSigY = 40;
         doc.setDrawColor(150); doc.line(14, newSigY, 90, newSigY); doc.line(110, newSigY, 186, newSigY);
