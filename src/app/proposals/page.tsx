@@ -29,7 +29,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { cleanFirestoreData, formatCurrency, cleanBankName } from '@/lib/utils';
+import { cleanFirestoreData, formatCurrency, cleanBankName, formatDateSafe } from '@/lib/utils';
 import { format } from 'date-fns';
 
 export type ProposalWithCustomer = Proposal & { customer: Customer | undefined };
@@ -259,7 +259,7 @@ function ProposalsPageContent() {
                 ['Nome do Cliente', p.customer?.name || '---'],
                 ['CPF', p.customer?.cpf || '---'],
                 ['Telefone', p.customer?.phone || '---'],
-                ['Nascimento', p.customer?.birthDate ? format(new Date(p.customer.birthDate), 'dd/MM/yyyy') : '---'],
+                ['Nascimento', formatDateSafe(p.customer?.birthDate)],
             ],
             theme: 'plain',
             styles: { fontSize: 11 },
@@ -270,16 +270,34 @@ function ProposalsPageContent() {
 
         doc.setFontSize(14); doc.setTextColor(0); doc.setFont("helvetica", "bold");
         doc.text("DETALHES DA OPERAÇÃO", 14, finalY1 + 15);
+        
+        const isPortability = p.product === 'Portabilidade';
+        const isPaid = p.status === 'Pago' || p.status === 'Saldo Pago';
+
+        const operationRows = [
+            ['Nº da Proposta', p.proposalNumber],
+            ['Produto', p.product],
+            ['Órgão Aprovador', p.approvingBody],
+            ['Banco Digitado', cleanBankName(p.bank)],
+            ['Data Digitação', formatDateSafe(p.dateDigitized)],
+            ['Status Atual', p.status],
+        ];
+
+        if (isPortability) {
+            operationRows.push(['Banco Portado (Origem)', cleanBankName(p.bankOrigin) || '---']);
+            if (p.debtBalanceArrivalDate) {
+                operationRows.push(['Retorno do Saldo', formatDateSafe(p.debtBalanceArrivalDate)]);
+            }
+        }
+
+        if (isPaid) {
+            if (p.dateApproved) operationRows.push(['Data Averbação', formatDateSafe(p.dateApproved)]);
+            if (p.datePaidToClient) operationRows.push(['Pagamento ao Cliente', formatDateSafe(p.datePaidToClient)]);
+        }
+
         autoTable(doc, {
             startY: finalY1 + 20,
-            body: [
-                ['Nº da Proposta', p.proposalNumber],
-                ['Produto', p.product],
-                ['Banco', cleanBankName(p.bank)],
-                ['Tabela', p.table || '---'],
-                ['Prazo', `${p.term} meses`],
-                ['Promotora', p.promoter],
-            ],
+            body: operationRows,
             theme: 'plain',
             styles: { fontSize: 11 },
             columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50 } }
@@ -295,6 +313,7 @@ function ProposalsPageContent() {
                 ['Valor Bruto', formatCurrency(p.grossAmount)],
                 ['Valor Líquido', formatCurrency(p.netAmount)],
                 ['Valor da Parcela', formatCurrency(p.installmentAmount)],
+                ['Tabela / Prazo', `${p.table || '---'} / ${p.term} meses`],
             ],
             theme: 'grid',
             styles: { fontSize: 12, cellPadding: 5 },
@@ -315,7 +334,7 @@ function ProposalsPageContent() {
         toast({ title: 'Download iniciado!' });
     } else {
         window.open(doc.output('bloburl'), '_blank');
-        toast({ title: 'PDF Gerado para impressão!' });
+        toast({ title: 'PDF Gerado para visualização!' });
     }
   };
 

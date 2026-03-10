@@ -431,7 +431,7 @@ export default function FinancialPage() {
         setIsSheetOpen(false);
         toast({ title: 'Salvo!' });
     } catch (e: any) {
-        if (error.code === 'permission-denied') {
+        if (e.code === 'permission-denied') {
             errorEmitter.emit('permission-error', new FirestorePermissionError({
                 path: `loanProposals/${selectedProposal.id}`,
                 operation: 'update',
