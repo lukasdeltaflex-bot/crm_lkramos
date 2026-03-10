@@ -1,3 +1,4 @@
+
 'use client';
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -145,7 +146,8 @@ function ProposalsPageContent() {
   }, []);
   
   const handleDuplicateProposal = React.useCallback((proposal: Proposal) => {
-    const { id, proposalNumber, status, history, commissionStatus, amountPaid, commissionPaymentDate, ...rest } = proposal;
+    // 🛡️ RESET DE HISTÓRICO: Excluímos 'history' e 'checklist' da clonagem para garantir auditoria limpa
+    const { id, proposalNumber, status, history, checklist, commissionStatus, amountPaid, commissionPaymentDate, ...rest } = proposal;
     const duplicatedData: ProposalFormData = {
         ...rest,
         proposalNumber: '',
@@ -158,6 +160,13 @@ function ProposalsPageContent() {
         datePaidToClient: undefined,
         debtBalanceArrivalDate: undefined,
         attachments: [],
+        history: [], // Força histórico vazio
+        checklist: {
+            formalization: false,
+            documentation: false,
+            signature: false,
+            approval: false
+        }
     };
     setSelectedProposal(undefined);
     setDefaultValues(duplicatedData);

@@ -1,3 +1,4 @@
+
 'use client';
 
 /**
@@ -322,10 +323,11 @@ export function ProposalForm({
     });
   }, [watchProposalNumber, allProposals, proposal?.id]);
 
+  // 🛡️ LIMPEZA DE BENEFÍCIO (Aprovado #4): Reseta o campo de NB sempre que o cliente for alterado
   const prevCustomerIdRef = useRef(initialValues.customerId);
   useEffect(() => {
     if (selectedCustomerId && selectedCustomerId !== prevCustomerIdRef.current) {
-        setValue('selectedBenefitNumber', '');
+        setValue('selectedBenefitNumber', '', { shouldValidate: true });
         if (selectedCustomer) {
             const benefits = selectedCustomer.benefits || [];
             if (benefits.length === 1) {

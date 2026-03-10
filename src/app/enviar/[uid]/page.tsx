@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
@@ -274,11 +275,15 @@ export default function LeadCapturePage() {
         const parsedDate = parseDateSafe(formData.birthDate);
         const birthIso = parsedDate ? format(parsedDate, 'yyyy-MM-dd') : formData.birthDate;
 
+        // 🛡️ PADRONIZAÇÃO DE CPF: Salva apenas números para garantir que a busca global funcione 100%
+        const cleanCpf = formData.cpf.replace(/\D/g, '');
+
         const leadData: any = {
             ...formData,
             id: leadId,
             ownerId: uid,
             name: formData.name.toUpperCase().trim(),
+            cpf: cleanCpf,
             birthDate: birthIso,
             grossSalary: Number(formData.grossSalary) || 0,
             requestedAmount: Number(formData.requestedAmount) || 0,

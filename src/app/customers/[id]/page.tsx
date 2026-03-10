@@ -184,7 +184,10 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10">
                         <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">ID do Cliente</span><div className="flex items-center gap-2 font-black text-foreground"><Hash className="h-3.5 w-3.5 text-primary/40" /><span>{customer.numericId || '---'}</span></div></div>
                         <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Documento (CPF)</span><div className="flex items-center gap-2 font-black text-foreground"><FileText className="h-3.5 w-3.5 text-primary/40" /><span>{customer.cpf || '---'}</span><CopyButton text={customer.cpf} label="CPF" /></div></div>
-                        <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Gênero</span><div className="flex items-center gap-2 font-bold text-foreground"><User className="h-3.5 w-3.5 text-primary/40" /><span>{customer.gender || '-'}</span></div></div>
+                        <div className="flex items-center gap-2 font-bold text-foreground">
+                            <User className="h-3.5 w-3.5 text-primary/40" />
+                            <span>{customer.gender || '-'}</span>
+                        </div>
                         <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Data de Nascimento</span><div className="flex items-center gap-2 font-bold text-foreground"><Calendar className="h-3.5 w-3.5 text-primary/40" /><span>{customer.birthDate ? formatDateSafe(customer.birthDate) : '-'}</span>{hasMounted && <Badge variant="secondary" className="text-[9px] bg-primary/10 text-primary border-none font-black">{age || 0} ANOS</Badge>}</div></div>
                         <div className="flex flex-col gap-1.5 lg:col-span-2"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">E-mail</span><div className="flex items-center gap-2 font-bold text-foreground"><Mail className="h-3.5 w-3.5 text-primary/40" /><span>{customer.email || '-'}</span><CopyButton text={customer.email} label="E-mail" /></div></div>
                         <div className="flex flex-col gap-1.5"><span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Contato Principal</span><div className="flex items-center gap-2 font-black text-foreground"><Phone className="h-3.5 w-3.5 text-primary/40" /><span>{customer.phone || '---'}</span><div className="flex items-center gap-1"><CopyButton text={customer.phone} label="Telefone" />{customer.phone && isWhatsApp(customer.phone) && <a href={getWhatsAppUrl(customer.phone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:scale-110 transition-transform"><WhatsAppIcon className="h-4 w-4" /></a>}</div></div></div>
@@ -403,10 +406,13 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     const primaryColor = [40, 74, 127];
     const pageHeight = doc.internal.pageSize.height;
     
+    // 🛡️ EXPORTAÇÃO RESILIENTE: Try-catch para evitar crash se a logo falhar
     if (userSettings?.customLogoURL) {
         try {
             doc.addImage(userSettings.customLogoURL, 'PNG', 14, 10, 40, 20, undefined, 'FAST');
-        } catch (e) { console.warn("Failed to add logo to PDF Dossier"); }
+        } catch (e) { 
+            console.warn("🛡️ LK RAMOS: Falha ao carregar logo no PDF. Prosseguindo sem imagem."); 
+        }
     }
 
     doc.setFontSize(22); doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]); doc.setFont("helvetica", "bold"); 
