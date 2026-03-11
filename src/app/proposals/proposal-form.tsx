@@ -86,7 +86,7 @@ const proposalSchema = z.object({
   proposalNumber: z.string().min(1, "O N° da proposta é obrigatório."),
   originalContractNumber: z.string().optional(),
   customerId: z.string({ required_error: 'Selecione um cliente.' }),
-  product: z.string({ required_error: 'Selecione um produto.' }),
+  product: z.string().min(1, 'O produto é obrigatório.'),
   status: z.string({ required_error: 'Selecione um status.' }),
   rejectionReason: z.string().optional(),
   
