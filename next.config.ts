@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -16,6 +17,7 @@ const nextConfig: NextConfig = {
       '*.cloudworkstations.dev',
       '*.firebaseapp.com',
       '*.web.app',
+      'localhost:*'
     ],
   },
   images: {

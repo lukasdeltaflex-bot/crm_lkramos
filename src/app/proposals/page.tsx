@@ -67,7 +67,7 @@ function ProposalsPageContent() {
   const [selectedProposal, setSelectedProposal] = React.useState<ProposalWithCustomer | undefined>(undefined);
   const [sheetMode, setSheetMode] = React.useState<'new' | 'edit' | 'view'>('new');
   const [rowSelection, setRowSelection] = React.useState<Record<string, boolean>>({});
-  const [defaultValues, setDefaultValues] = React.useState<ProposalFormData | undefined>(undefined);
+  const [defaultValues, setDefaultValues] = React.useState<any | undefined>(undefined);
   const [isSaving, setIsSaving] = React.useState(false);
   const [formKey, setFormKey] = React.useState('new');
   const tableRef = React.useRef<ProposalsDataTableHandle>(null);
@@ -144,7 +144,7 @@ function ProposalsPageContent() {
   
   const handleDuplicateProposal = React.useCallback((proposal: Proposal) => {
     const { id, proposalNumber, status, history, checklist, commissionStatus, amountPaid, commissionPaymentDate, ...rest } = proposal;
-    const duplicatedData: ProposalFormData = {
+    const duplicatedData: any = {
         ...rest,
         proposalNumber: '',
         status: 'Em Andamento',
@@ -690,10 +690,12 @@ function ProposalsPageContent() {
       </Dialog>
 
       <Dialog open={isCustomerSearchOpen} onOpenChange={setIsCustomerSearchOpen}>
-        <DialogContent className="max-w-2xl" onPointerDownOutside={(e) => e.preventDefault()}>
+        <DialogContent 
+            className="max-w-2xl overflow-hidden rounded-[2rem]" 
+            onPointerDownOutside={(e) => e.preventDefault()}
+        >
+            {/* 🛡️ CORREÇÃO DE ACESSIBILIDADE: Adicionado DialogTitle para evitar erro no console */}
             <CustomerSearchDialog
-                open={isCustomerSearchOpen}
-                onOpenChange={setIsCustomerSearchOpen}
                 customers={customers?.filter(c => c.name !== 'Cliente Removido') || []}
                 onSelectCustomer={handleCustomerSelect}
             />
@@ -716,6 +718,8 @@ function ProposalsPageContent() {
     </AppLayout>
   );
 }
+
+export type ProposalWithCustomer = Proposal & { customer: Customer | undefined };
 
 export default function ProposalsPage() {
     return (

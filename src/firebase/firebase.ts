@@ -1,30 +1,30 @@
+
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
 import { initializeFirestore, Firestore, persistentLocalCache, memoryLocalCache, getFirestore } from "firebase/firestore";
 import { getStorage, FirebaseStorage } from "firebase/storage";
+import { getAnalytics, isSupported, Analytics } from "firebase/analytics";
 import { firebaseConfig } from "./config";
 
 /**
  * 🛠️ INFRAESTRUTURA DE DADOS LK RAMOS - SINGLETON RESILIENTE
- * Otimizado para evitar múltiplas inicializações e garantir conectividade em redes instáveis.
  */
 
 let db: Firestore | null = null;
 let auth: Auth | null = null;
 let storage: FirebaseStorage | null = null;
+let analytics: Analytics | null = null;
 
 if (typeof window !== "undefined") {
     try {
         const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
         
-        // 🛡️ VERIFICAÇÃO DE SINGLETON: Evita erro de "Firestore has already been initialized"
-        // que pode causar falhas de conexão no Next.js HMR.
+        // 🛡️ VERIFICAÇÃO DE SINGLETON FIRESTORE
         try {
             db = getFirestore(app);
         } catch (e) {
-            // Se falhar (ex: configurações pendentes), inicializamos com o protocolo blindado
             const firestoreSettings = {
                 experimentalForceLongPolling: true,
                 experimentalAutoDetectLongPolling: false,
@@ -36,7 +36,6 @@ if (typeof window !== "undefined") {
                 try {
                     return persistentLocalCache({});
                 } catch (e) {
-                    console.warn("⚠️ LK RAMOS: Cache persistente não suportado. Usando modo memória.");
                     return memoryLocalCache();
                 }
             })();
@@ -49,14 +48,24 @@ if (typeof window !== "undefined") {
 
         auth = getAuth(app);
         storage = getStorage(app, firebaseConfig.storageBucket);
+
+        // 🛡️ INICIALIZAÇÃO SEGURA DO ANALYTICS
+        // Evita erro 400 se a API Key for inválida ou placeholder
+        if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("XXXXXXXXXXXX")) {
+            isSupported().then(supported => {
+                if (supported) {
+                    analytics = getAnalytics(app);
+                }
+            }).catch(() => {});
+        }
         
-        console.log("💎 LK RAMOS: Conectividade Firestore estabilizada.");
+        console.log("💎 LK RAMOS: Conectividade Firebase estabilizada.");
     } catch (error) {
         console.error("❌ Falha crítica na inicialização Firebase:", error);
     }
 }
 
-export { db, auth, storage };
+export { db, auth, storage, analytics };
 
 export function initializeFirebase(): FirebaseApp | null {
   if (typeof window !== "undefined") {
