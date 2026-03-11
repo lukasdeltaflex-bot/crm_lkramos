@@ -1,4 +1,3 @@
-
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
@@ -6,6 +5,7 @@ import { getAuth, Auth } from "firebase/auth";
 import { initializeFirestore, Firestore, persistentLocalCache, memoryLocalCache, getFirestore } from "firebase/firestore";
 import { getStorage, FirebaseStorage } from "firebase/storage";
 import { getAnalytics, isSupported, Analytics } from "firebase/analytics";
+import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 import { firebaseConfig } from "./config";
 
 /**
@@ -21,6 +21,20 @@ if (typeof window !== "undefined") {
     try {
         const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
         
+        // 🔐 ATIVAÇÃO APP CHECK (Proteção contra Robôs e Acessos Externos)
+        // Nota: A fiscalização (Enforcement) deve ser ativada no console do Firebase após o registro da chave.
+        if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("XXXXXXXXXXXX")) {
+            try {
+                initializeAppCheck(app, {
+                    provider: new ReCaptchaV3Provider("COLOCAR_AQUI_A_SITE_KEY_PUBLICA"),
+                    isTokenAutoRefreshEnabled: true,
+                });
+                console.log("🛡️ LK RAMOS: App Check inicializado.");
+            } catch (e) {
+                console.warn("🛡️ LK RAMOS: Falha ao carregar App Check. Verifique a Site Key.");
+            }
+        }
+
         // 🛡️ VERIFICAÇÃO DE SINGLETON FIRESTORE
         try {
             db = getFirestore(app);
@@ -50,7 +64,6 @@ if (typeof window !== "undefined") {
         storage = getStorage(app, firebaseConfig.storageBucket);
 
         // 🛡️ INICIALIZAÇÃO SEGURA DO ANALYTICS
-        // Evita erro 400 se a API Key for inválida ou placeholder
         if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("XXXXXXXXXXXX")) {
             isSupported().then(supported => {
                 if (supported) {
