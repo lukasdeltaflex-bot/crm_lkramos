@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/page-header';
 import { ProposalsDataTable, type ProposalsDataTableHandle } from './data-table';
 import { getColumns } from './columns';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, FileDown, Trash2, CheckCircle2, ChevronDown, FileSpreadsheet, FileText as FilePdf, FileBadge, Printer, Download } from 'lucide-react';
+import { PlusCircle, FileDown, Trash2, CheckCircle2, ChevronDown, FileSpreadsheet, FileText as FilePdf, FileBadge, Printer, Download, Sparkles } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cleanFirestoreData, formatCurrency, cleanBankName, formatDateSafe } from '@/lib/utils';
 import { format } from 'date-fns';
+import { CustomerAiForm } from '@/components/customers/customer-ai-form';
 
 function ProposalsPageSkeleton() {
     return (
@@ -61,6 +62,7 @@ function ProposalsPageContent() {
 
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [isCustomerSearchOpen, setIsCustomerSearchOpen] = React.useState(false);
+  const [isAiModalOpen, setIsAiModalOpen] = React.useState(false);
   const [newlySelectedCustomer, setNewlySelectedCustomer] = React.useState<Customer | null>(null);
 
   const [selectedProposal, setSelectedProposal] = React.useState<ProposalWithCustomer | undefined>(undefined);
@@ -413,6 +415,13 @@ function ProposalsPageContent() {
     toast({ title: 'PDF Gerado!' });
   };
 
+  const handleAiFormSubmit = (aiData: any) => {
+    // Processamento do retorno da IA para preencher o formulário ou criar cliente
+    setNewlySelectedCustomer(aiData);
+    setIsAiModalOpen(false);
+    handleNewProposal();
+  };
+
   React.useEffect(() => {
     if (isLoading || proposalsWithCustomerData.length === 0) return;
 
@@ -580,6 +589,14 @@ function ProposalsPageContent() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <PageHeader title="Propostas" />
         <div className="flex items-center gap-3 flex-wrap">
+            <Button 
+                variant="outline" 
+                className="h-10 px-6 rounded-full font-bold bg-background text-foreground border-border/50 hover:bg-muted/50 transition-all text-xs"
+                onClick={() => setIsAiModalOpen(true)}
+            >
+                <Sparkles className="h-4 w-4 mr-2" /> Novo Cliente com IA
+            </Button>
+
             {selectedCount > 0 && (
                 <div className="flex items-center gap-2 animate-in slide-in-from-right-2 duration-300">
                     <DropdownMenu>
@@ -655,6 +672,19 @@ function ProposalsPageContent() {
             </Button>
         </div>
       </div>
+
+      <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
+        <DialogContent 
+            className="max-w-xl" 
+            onPointerDownOutside={(e) => e.preventDefault()} 
+            onInteractOutside={(e) => e.preventDefault()}
+        >
+            <DialogHeader>
+                <DialogTitle>Assistente Visual de Cadastro</DialogTitle>
+            </DialogHeader>
+            <CustomerAiForm onSubmit={handleAiFormSubmit} />
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent 
