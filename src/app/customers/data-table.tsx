@@ -60,6 +60,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { DraggableHeader } from './columns';
 import type { Customer } from '@/lib/types';
 import { normalizeString, cn } from '@/lib/utils';
+import { useUser } from '@/firebase';
 
 const COLUMN_LABELS: Record<string, string> = {
     col_select: "Seleção",
@@ -94,6 +95,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   rowSelection,
   setRowSelection,
 }, ref) => {
+  const { user } = useUser();
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'col_id', desc: true }]);
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [globalFilter, setGlobalFilter] = React.useState('');
@@ -120,24 +122,26 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     });
   };
 
-  // 🛡️ CARREGAMENTO DE PREFERÊNCIAS: Executa uma vez ao montar
+  // 🛡️ CARREGAMENTO DE PREFERÊNCIAS ISOLADO POR USUÁRIO
   React.useEffect(() => {
+    if (!user?.uid) return;
     setIsClient(true);
+    const prefix = user.uid;
+    
     try {
-        const savedFrozen = localStorage.getItem('lk-customers-frozen-count');
+        const savedFrozen = localStorage.getItem(`${prefix}-lk-customers-frozen-count`);
         if (savedFrozen) setFrozenCount(Number(savedFrozen));
 
-        const savedPageSize = localStorage.getItem('lk-customers-pageSize');
+        const savedPageSize = localStorage.getItem(`${prefix}-lk-customers-pageSize`);
         if (savedPageSize) setPagination(p => ({ ...p, pageSize: Number(savedPageSize) }));
 
-        const savedVisibility = localStorage.getItem('lk-customers-visibility');
+        const savedVisibility = localStorage.getItem(`${prefix}-lk-customers-visibility`);
         if (savedVisibility) setColumnVisibility(JSON.parse(savedVisibility));
 
-        const savedOrder = localStorage.getItem('lk-customers-order');
+        const savedOrder = localStorage.getItem(`${prefix}-lk-customers-order`);
         if (savedOrder) {
             const parsed = JSON.parse(savedOrder);
             if (Array.isArray(parsed) && parsed.length > 0) {
-                // Sincroniza com IDs atuais para evitar erros se colunas mudarem no código
                 const currentIds = initialIds;
                 const validOrder = parsed.filter(id => currentIds.includes(id));
                 const missingIds = currentIds.filter(id => !validOrder.includes(id));
@@ -145,27 +149,28 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
             }
         }
 
-        const savedSizing = localStorage.getItem('lk-customers-sizing');
+        const savedSizing = localStorage.getItem(`${prefix}-lk-customers-sizing`);
         if (savedSizing) setColumnSizing(JSON.parse(savedSizing));
         
         setIsLoaded(true);
     } catch (e) {
         setIsLoaded(true);
     }
-  }, [initialIds]);
+  }, [initialIds, user?.uid]);
 
-  // 🛡️ SALVAMENTO DE PREFERÊNCIAS: Só salva após isLoaded ser true
+  // 🛡️ SALVAMENTO DE PREFERÊNCIAS ISOLADO POR USUÁRIO
   React.useEffect(() => {
-    if (isClient && isLoaded) {
+    if (isClient && isLoaded && user?.uid) {
+      const prefix = user.uid;
       try {
-        localStorage.setItem('lk-customers-frozen-count', String(frozenCount));
-        localStorage.setItem('lk-customers-visibility', JSON.stringify(columnVisibility));
-        localStorage.setItem('lk-customers-order', JSON.stringify(columnOrder));
-        localStorage.setItem('lk-customers-sizing', JSON.stringify(columnSizing));
-        localStorage.setItem('lk-customers-pageSize', String(pagination.pageSize));
+        localStorage.setItem(`${prefix}-lk-customers-frozen-count`, String(frozenCount));
+        localStorage.setItem(`${prefix}-lk-customers-visibility`, JSON.stringify(columnVisibility));
+        localStorage.setItem(`${prefix}-lk-customers-order`, JSON.stringify(columnOrder));
+        localStorage.setItem(`${prefix}-lk-customers-sizing`, JSON.stringify(columnSizing));
+        localStorage.setItem(`${prefix}-lk-customers-pageSize`, String(pagination.pageSize));
       } catch(e) {}
     }
-  }, [columnVisibility, columnOrder, columnSizing, frozenCount, isClient, pagination.pageSize, isLoaded]);
+  }, [columnVisibility, columnOrder, columnSizing, frozenCount, isClient, pagination.pageSize, isLoaded, user?.uid]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),

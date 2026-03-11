@@ -68,6 +68,7 @@ import { DraggableHeader } from './columns';
 import { Separator } from '@/components/ui/separator';
 import { useTheme } from '@/components/theme-provider';
 import { BankIcon } from '@/components/bank-icon';
+import { useUser } from '@/firebase';
 
 const COLUMN_LABELS: Record<string, string> = {
     col_select: "Seleção",
@@ -114,6 +115,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   onShowDetails,
   userSettings,
 }, ref) => {
+  const { user } = useUser();
   const { statusColors } = useTheme();
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'col_date', desc: true }]);
   const [statusFilter, setStatusFilter] = React.useState('Todos');
@@ -126,6 +128,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [isClient, setIsClient] = React.useState(false);
+  const [isLoaded, setIsLoaded] = React.useState(false);
 
   const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   
@@ -147,9 +150,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const handlePaginationChange = (updater: any) => {
     setPagination((old) => {
       const next = typeof updater === 'function' ? updater(old) : updater;
-      if (typeof window !== 'undefined') {
-        try { localStorage.setItem('lk-financial-pageSize', String(next.pageSize)); } catch(e) {}
-      }
       return next;
     });
   };
@@ -191,54 +191,68 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
   const hasActiveFilters = statusFilter !== 'Todos' || bankFilters.length > 0 || promoterFilters.length > 0 || operatorFilters.length > 0 || !!globalFilter || !!appliedDateRange;
 
+  // 🛡️ CARREGAMENTO DE PREFERÊNCIAS ISOLADO POR USUÁRIO
   React.useEffect(() => {
+    if (!user?.uid) return;
     setIsClient(true);
+    const prefix = user.uid;
+    
     try {
-        const savedFrozen = localStorage.getItem('lk-financial-frozen-count');
+        const savedFrozen = localStorage.getItem(`${prefix}-lk-financial-frozen-count`);
         if (savedFrozen) setFrozenCount(Number(savedFrozen));
-        const savedPageSize = localStorage.getItem('lk-financial-pageSize');
+
+        const savedPageSize = localStorage.getItem(`${prefix}-lk-financial-pageSize`);
         if (savedPageSize) setPagination(p => ({ ...p, pageSize: Number(savedPageSize) }));
-        const savedSearch = localStorage.getItem('lk-financial-filter-search');
+
+        const savedSearch = localStorage.getItem(`${prefix}-lk-financial-filter-search`);
         if (savedSearch) setGlobalFilter(savedSearch);
-        const savedVisibility = localStorage.getItem('lk-financial-visibility');
+
+        const savedVisibility = localStorage.getItem(`${prefix}-lk-financial-visibility`);
         if (savedVisibility) setColumnVisibility(JSON.parse(savedVisibility));
-        const savedOrder = localStorage.getItem('lk-financial-order');
+
+        const savedOrder = localStorage.getItem(`${prefix}-lk-financial-order`);
         if (savedOrder) {
             const parsed = JSON.parse(savedOrder);
             if (parsed.length === initialIds.length) setColumnOrder(parsed);
         }
-        const savedSizing = localStorage.getItem('lk-financial-sizing');
+
+        const savedSizing = localStorage.getItem(`${prefix}-lk-financial-sizing`);
         if (savedSizing) setColumnSizing(JSON.parse(savedSizing));
 
-        // 🛡️ MEMÓRIA DE FILTROS: Carrega filtros persistidos
-        const savedStatusFilter = localStorage.getItem('lk-financial-filter-status');
+        const savedStatusFilter = localStorage.getItem(`${prefix}-lk-financial-filter-status`);
         if (savedStatusFilter) setStatusFilter(savedStatusFilter);
-        const savedBankFilters = localStorage.getItem('lk-financial-filter-banks');
-        if (savedBankFilters) setBankFilters(JSON.parse(savedBankFilters));
-        const savedPromoterFilters = localStorage.getItem('lk-financial-filter-promoters');
-        if (savedPromoterFilters) setPromoterFilters(JSON.parse(savedPromoterFilters));
-        const savedOperatorFilters = localStorage.getItem('lk-financial-filter-operators');
-        if (savedOperatorFilters) setOperatorFilters(JSON.parse(savedOperatorFilters));
-    } catch (e) {}
-  }, [initialIds]);
 
+        const savedBankFilters = localStorage.getItem(`${prefix}-lk-financial-filter-banks`);
+        if (savedBankFilters) setBankFilters(JSON.parse(savedBankFilters));
+
+        const savedPromoterFilters = localStorage.getItem(`${prefix}-lk-financial-filter-promoters`);
+        if (savedPromoterFilters) setPromoterFilters(JSON.parse(savedPromoterFilters));
+
+        const savedOperatorFilters = localStorage.getItem(`${prefix}-lk-financial-filter-operators`);
+        if (savedOperatorFilters) setOperatorFilters(JSON.parse(savedOperatorFilters));
+        
+        setIsLoaded(true);
+    } catch (e) {}
+  }, [initialIds, user?.uid]);
+
+  // 🛡️ SALVAMENTO DE PREFERÊNCIAS ISOLADO POR USUÁRIO
   React.useEffect(() => {
-    if (isClient) {
+    if (isClient && isLoaded && user?.uid) {
+        const prefix = user.uid;
         try {
-            localStorage.setItem('lk-financial-frozen-count', String(frozenCount));
-            localStorage.setItem('lk-financial-filter-search', globalFilter);
-            localStorage.setItem('lk-financial-visibility', JSON.stringify(columnVisibility));
-            localStorage.setItem('lk-financial-order', JSON.stringify(columnOrder));
-            localStorage.setItem('lk-financial-sizing', JSON.stringify(columnSizing));
-            
-            // 🛡️ PERSISTÊNCIA DE FILTROS
-            localStorage.setItem('lk-financial-filter-status', statusFilter);
-            localStorage.setItem('lk-financial-filter-banks', JSON.stringify(bankFilters));
-            localStorage.setItem('lk-financial-filter-promoters', JSON.stringify(promoterFilters));
-            localStorage.setItem('lk-financial-filter-operators', JSON.stringify(operatorFilters));
+            localStorage.setItem(`${prefix}-lk-financial-frozen-count`, String(frozenCount));
+            localStorage.setItem(`${prefix}-lk-financial-filter-search`, globalFilter);
+            localStorage.setItem(`${prefix}-lk-financial-visibility`, JSON.stringify(columnVisibility));
+            localStorage.setItem(`${prefix}-lk-financial-order`, JSON.stringify(columnOrder));
+            localStorage.setItem(`${prefix}-lk-financial-sizing`, JSON.stringify(columnSizing));
+            localStorage.setItem(`${prefix}-lk-financial-pageSize`, String(pagination.pageSize));
+            localStorage.setItem(`${prefix}-lk-financial-filter-status`, statusFilter);
+            localStorage.setItem(`${prefix}-lk-financial-filter-banks`, JSON.stringify(bankFilters));
+            localStorage.setItem(`${prefix}-lk-financial-filter-promoters`, JSON.stringify(promoterFilters));
+            localStorage.setItem(`${prefix}-lk-financial-filter-operators`, JSON.stringify(operatorFilters));
         } catch(e) {}
     }
-  }, [globalFilter, columnVisibility, columnOrder, columnSizing, frozenCount, statusFilter, bankFilters, promoterFilters, operatorFilters, isClient]);
+  }, [globalFilter, columnVisibility, columnOrder, columnSizing, frozenCount, statusFilter, bankFilters, promoterFilters, operatorFilters, isClient, isLoaded, pagination.pageSize, user?.uid]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor));
 

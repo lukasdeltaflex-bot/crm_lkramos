@@ -69,6 +69,7 @@ import { Separator } from '@/components/ui/separator';
 import { normalizeString, cn, formatCurrency, cleanBankName, isProposalCritical } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { BankIcon } from '@/components/bank-icon';
+import { useUser } from '@/firebase';
 
 const COLUMN_LABELS: Record<string, string> = {
     col_select: "Seleção",
@@ -111,6 +112,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   onBulkStatusChange,
   userSettings,
 }, ref) => {
+  const { user } = useUser();
   const { statusColors } = useTheme();
   const [statusFilter, setStatusFilter] = React.useState('Todos');
   const [globalFilter, setGlobalFilter] = React.useState('');
@@ -148,27 +150,29 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     });
   };
 
-  // 🛡️ CARREGAMENTO DE PREFERÊNCIAS: Executa uma vez ao montar o componente
+  // 🛡️ CARREGAMENTO DE PREFERÊNCIAS ISOLADO POR USUÁRIO
   React.useEffect(() => {
+    if (!user?.uid) return;
     setIsClient(true);
+    const prefix = user.uid;
+    
     try {
-        const savedFrozen = localStorage.getItem('lk-proposals-frozen-count');
+        const savedFrozen = localStorage.getItem(`${prefix}-lk-proposals-frozen-count`);
         if (savedFrozen) setFrozenCount(Number(savedFrozen));
 
-        const savedPageSize = localStorage.getItem('lk-proposals-pageSize');
+        const savedPageSize = localStorage.getItem(`${prefix}-lk-proposals-pageSize`);
         if (savedPageSize) setPagination(p => ({ ...p, pageSize: Number(savedPageSize) }));
 
-        const savedSearch = localStorage.getItem('lk-proposals-filter-search');
+        const savedSearch = localStorage.getItem(`${prefix}-lk-proposals-filter-search`);
         if (savedSearch) setGlobalFilter(savedSearch);
 
-        const savedVisibility = localStorage.getItem('lk-proposals-visibility');
+        const savedVisibility = localStorage.getItem(`${prefix}-lk-proposals-visibility`);
         if (savedVisibility) setColumnVisibility(JSON.parse(savedVisibility));
 
-        const savedOrder = localStorage.getItem('lk-proposals-order');
+        const savedOrder = localStorage.getItem(`${prefix}-lk-proposals-order`);
         if (savedOrder) {
             const parsed = JSON.parse(savedOrder);
             if (Array.isArray(parsed) && parsed.length > 0) {
-                // Sincroniza com IDs atuais para evitar erros se colunas mudarem no código
                 const currentIds = initialIds;
                 const validOrder = parsed.filter(id => currentIds.includes(id));
                 const missingIds = currentIds.filter(id => !validOrder.includes(id));
@@ -176,28 +180,29 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
             }
         }
 
-        const savedSizing = localStorage.getItem('lk-proposals-sizing');
+        const savedSizing = localStorage.getItem(`${prefix}-lk-proposals-sizing`);
         if (savedSizing) setColumnSizing(JSON.parse(savedSizing));
         
         setIsLoaded(true);
     } catch (e) {
         setIsLoaded(true);
     }
-  }, [initialIds]);
+  }, [initialIds, user?.uid]);
 
-  // 🛡️ SALVAMENTO DE PREFERÊNCIAS: Só salva se isLoaded for true (evita sobrescrever com defaults)
+  // 🛡️ SALVAMENTO DE PREFERÊNCIAS ISOLADO POR USUÁRIO
   React.useEffect(() => {
-    if (isClient && isLoaded) {
+    if (isClient && isLoaded && user?.uid) {
+        const prefix = user.uid;
         try {
-            localStorage.setItem('lk-proposals-frozen-count', String(frozenCount));
-            localStorage.setItem('lk-proposals-filter-search', globalFilter);
-            localStorage.setItem('lk-proposals-visibility', JSON.stringify(columnVisibility));
-            localStorage.setItem('lk-proposals-order', JSON.stringify(columnOrder));
-            localStorage.setItem('lk-proposals-sizing', JSON.stringify(columnSizing));
-            localStorage.setItem('lk-proposals-pageSize', String(pagination.pageSize));
+            localStorage.setItem(`${prefix}-lk-proposals-frozen-count`, String(frozenCount));
+            localStorage.setItem(`${prefix}-lk-proposals-filter-search`, globalFilter);
+            localStorage.setItem(`${prefix}-lk-proposals-visibility`, JSON.stringify(columnVisibility));
+            localStorage.setItem(`${prefix}-lk-proposals-order`, JSON.stringify(columnOrder));
+            localStorage.setItem(`${prefix}-lk-proposals-sizing`, JSON.stringify(columnSizing));
+            localStorage.setItem(`${prefix}-lk-proposals-pageSize`, String(pagination.pageSize));
         } catch(e) {}
     }
-  }, [globalFilter, columnVisibility, columnOrder, columnSizing, frozenCount, isClient, pagination.pageSize, isLoaded]);
+  }, [globalFilter, columnVisibility, columnOrder, columnSizing, frozenCount, isClient, pagination.pageSize, isLoaded, user?.uid]);
 
   const handleDateMask = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, "").substring(0, 8);
