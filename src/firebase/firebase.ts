@@ -26,10 +26,10 @@ if (typeof window !== "undefined") {
         if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("XXXXXXXXXXXX")) {
             try {
                 initializeAppCheck(app, {
-                    provider: new ReCaptchaV3Provider("COLOCAR_AQUI_A_SITE_KEY_PUBLICA"),
+                    provider: new ReCaptchaV3Provider("6Lf_fYcsAAAAAO6FkYzdDKt5wlcat-yGOxH0otxD"),
                     isTokenAutoRefreshEnabled: true,
                 });
-                console.log("🛡️ LK RAMOS: App Check inicializado.");
+                console.log("🛡️ LK RAMOS: App Check inicializado com sucesso.");
             } catch (e) {
                 console.warn("🛡️ LK RAMOS: Falha ao carregar App Check. Verifique a Site Key.");
             }
