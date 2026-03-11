@@ -75,6 +75,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { FinancialSummary } from '@/components/financial/financial-summary';
 
 export type ProposalWithCustomer = Proposal & { customer: Customer | undefined };
 
@@ -727,6 +728,14 @@ export default function FinancialPage() {
         <div className="space-y-4"><Skeleton className="h-32 w-full" /><Skeleton className="h-[400px] w-full" /></div>
       ) : (
         <div className="space-y-8">
+            <FinancialSummary 
+                rows={proposalsWithCustomerData} 
+                currentMonthRange={currentMonthRange} 
+                isPrivacyMode={isPrivacyMode} 
+                onShowDetails={(t, p) => setDialogData({ title: t, proposals: p })} 
+                userSettings={userSettings || null} 
+            />
+
             <Tabs defaultValue="commissions" className="w-full">
                 <TabsList className="bg-muted/30 p-1 rounded-full mb-6 border w-fit">
                     <TabsTrigger value="commissions" className="gap-2 rounded-full px-6 data-[state=active]:bg-primary data-[state=active]:text-white font-bold transition-all"><CircleDollarSign className="h-4 w-4" /> Comissões</TabsTrigger>

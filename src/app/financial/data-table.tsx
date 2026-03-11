@@ -64,7 +64,6 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { X, Filter, Search, Calendar as CalendarIcon, ChevronDown, ChevronsLeft, ChevronsRight, Snowflake, User, Landmark, Building2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn, cleanBankName, normalizeString, formatCurrency, isProposalCritical } from '@/lib/utils';
 import type { Proposal, Customer, ProposalWithCustomer, UserSettings } from '@/lib/types';
-import { FinancialSummary } from '@/components/financial/financial-summary';
 import { DraggableHeader } from './columns';
 import { Separator } from '@/components/ui/separator';
 import { useTheme } from '@/components/theme-provider';
@@ -174,6 +173,20 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
       setStartDateInput('');
       setEndDateInput('');
       setAppliedDateRange(undefined);
+  };
+
+  const applyRangeShortcut = (range: string) => {
+    const now = new Date();
+    let from = startOfMonth(now);
+    let to = now;
+    if (range === 'today') from = startOfDay(now);
+    if (range === 'yesterday') { from = startOfDay(subDays(now, 1)); to = endOfDay(subDays(now, 1)); }
+    if (range === 'week') from = startOfDay(subDays(now, 7));
+    if (range === 'month') { from = startOfMonth(now); to = endOfMonth(now); }
+    
+    setStartDateInput(format(from, 'dd/MM/yyyy'));
+    setEndDateInput(format(to, 'dd/MM/yyyy'));
+    setAppliedDateRange({ from, to });
   };
 
   const hasActiveFilters = statusFilter !== 'Todos' || bankFilters.length > 0 || promoterFilters.length > 0 || operatorFilters.length > 0 || !!globalFilter || !!appliedDateRange;
@@ -333,7 +346,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
         <div className="space-y-4 w-full">
-            <FinancialSummary rows={data} currentMonthRange={startOfDay(currentMonthRange.from) as any} isPrivacyMode={isPrivacyMode} isFiltered={!!globalFilter} onShowDetails={onShowDetails} userSettings={userSettings} />
             <div className="flex flex-wrap items-center justify-between gap-4 bg-muted/10 p-3 rounded-2xl border-2 border-zinc-200 shadow-sm">
                 <Tabs value={statusFilter} onValueChange={setStatusFilter}>
                     <TabsList className="bg-transparent p-0 gap-1 h-auto flex-wrap">
