@@ -45,7 +45,8 @@ import {
     X,
     Info,
     Tag,
-    Save
+    Save,
+    Search
 } from 'lucide-react';
 import { format, parse, isValid, differenceInYears } from 'date-fns';
 import { validateCPF, handlePhoneMask, cn, isWhatsApp, getWhatsAppUrl, cleanBankName, cleanFirestoreData, formatCurrencyInput } from '@/lib/utils';
@@ -59,7 +60,8 @@ import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
 import { CustomerAttachmentUploader } from '@/components/customers/customer-attachment-uploader';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { summarizeNotes } from '@/ai/flows/summarize-notes-flow';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
+import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { BankIcon } from '@/components/bank-icon';
 import { Label } from '@/components/ui/label';
 import * as configData from '@/lib/config-data';
@@ -125,9 +127,14 @@ interface CustomerFormProps {
 
 export function CustomerForm({ customer, allCustomers, userSettings, defaultValues, onSubmit, isSaving = false }: CustomerFormProps) {
   const { user } = useUser();
+  const firestore = useFirestore();
   const [isFetchingCep, setIsFetchingCep] = useState(false);
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  
+  // 🛡️ ESTADOS DE VALIDAÇÃO SILENCIOSA
+  const [isCheckingDuplicity, setIsCheckingDuplicity] = useState(false);
+  const [serverDuplicity, setServerDuplicity] = useState({ cpf: false, phone: false, nb: false });
 
   const banks = userSettings?.banks || configData.banks;
   const availableTags = userSettings?.customerTags || configData.defaultCustomerTags;
@@ -187,13 +194,55 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
   });
 
   const watchPhone = form.watch('phone');
-  const watchPhone2 = form.watch('phone2');
   const watchCpf = form.watch('cpf');
   const watchBirthDate = form.watch('birthDate');
   const watchObservations = form.watch('observations');
   const watchCep = form.watch('cep');
   const watchTags = form.watch('tags') || [];
   const watchBenefits = form.watch('benefits') || [];
+
+  // 🛡️ MOTOR DE VALIDAÇÃO SILENCIOSA (ITEM 3 DA AUDITORIA)
+  useEffect(() => {
+    if (!isMounted || !firestore || !user) return;
+
+    const checkDuplicityOnServer = async () => {
+        const cleanCpf = watchCpf.replace(/\D/g, '');
+        const cleanPhone = watchPhone.replace(/\D/g, '');
+        const currentId = customer?.id || defaultValues?.id;
+
+        const results = { cpf: false, phone: false, nb: false };
+        
+        if (cleanCpf.length === 11) {
+            setIsCheckingDuplicity(true);
+            const q = query(
+                collection(firestore, 'customers'), 
+                where('ownerId', '==', user.uid),
+                where('cpf', '==', watchCpf),
+                limit(1)
+            );
+            const snap = await getDocs(q);
+            if (!snap.empty && snap.docs[0].id !== currentId) results.cpf = true;
+        }
+
+        if (cleanPhone.length >= 10) {
+            setIsCheckingDuplicity(true);
+            const q = query(
+                collection(firestore, 'customers'), 
+                where('ownerId', '==', user.uid),
+                where('phone', '==', watchPhone),
+                limit(1)
+            );
+            const snap = await getDocs(q);
+            if (!snap.empty && snap.docs[0].id !== currentId) results.phone = true;
+        }
+
+        setServerDuplicity(results);
+        setIsCheckingDuplicity(false);
+    };
+
+    const timer = setTimeout(checkDuplicityOnServer, 600);
+    return () => clearTimeout(timer);
+  }, [watchCpf, watchPhone, firestore, user, isMounted, customer?.id, defaultValues?.id]);
 
   const customerAge = useMemo(() => {
     if (!isMounted || !watchBirthDate || watchBirthDate.length < 10) return null;
@@ -205,39 +254,6 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
     } catch { return null; }
     return null;
   }, [watchBirthDate, isMounted]);
-
-  const duplicity = useMemo(() => {
-    const results = { phone: false, email: false, cpf: false, nb: false };
-    if (!allCustomers || allCustomers.length === 0) return results;
-    
-    const currentId = customer?.id || defaultValues?.id;
-    const cleanPhone = (watchPhone || '').replace(/\D/g, '');
-    const cleanCpf = (watchCpf || '').replace(/\D/g, '');
-    
-    const currentNBs = watchBenefits
-        .map(b => (b.number || '').replace(/\D/g, ''))
-        .filter(n => n.length >= 5);
-
-    allCustomers.forEach(c => {
-        if (currentId && c.id === currentId) return;
-
-        if (cleanPhone.length >= 10 && c.phone?.replace(/\D/g, '') === cleanPhone) {
-            results.phone = true;
-        }
-        
-        if (cleanCpf.length >= 11 && c.cpf?.replace(/\D/g, '') === cleanCpf) {
-            results.cpf = true;
-        }
-
-        if (currentNBs.length > 0 && c.benefits && c.benefits.length > 0) {
-            const existingNBs = c.benefits.map(b => (b.number || '').replace(/\D/g, ''));
-            if (currentNBs.some(nb => existingNBs.includes(nb))) {
-                results.nb = true;
-            }
-        }
-    });
-    return results;
-  }, [allCustomers, watchPhone, watchCpf, watchBenefits, customer?.id, defaultValues?.id]);
 
   const handleCepLookup = useCallback(async (cleanCep: string) => {
     if (cleanCep.length !== 8) return;
@@ -305,7 +321,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
   };
 
   const handleFormSubmit = (data: CustomerFormValues) => {
-    if (duplicity.phone || duplicity.cpf || duplicity.nb) {
+    if (serverDuplicity.phone || serverDuplicity.cpf) {
         toast({ variant: 'destructive', title: 'Acesso Bloqueado', description: 'Existem dados duplicados que impedem o salvamento.' });
         return;
     }
@@ -349,7 +365,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex flex-col h-full overflow-hidden">
         <ScrollArea className="flex-1 px-8">
           <div className="space-y-10 pb-10 pt-4">
-            {(hasErrors || duplicity.cpf || duplicity.phone || duplicity.nb) && (
+            {(hasErrors || serverDuplicity.cpf || serverDuplicity.phone) && (
                 <Alert variant="destructive" className="rounded-3xl border-2 bg-red-50 border-red-500 py-6">
                     <AlertCircle className="h-6 w-6 text-red-600" />
                     <div className="space-y-1">
@@ -357,10 +373,9 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                         <AlertDescription className="text-xs font-bold text-red-600 space-y-1 mt-2">
                             {errors.name && <p>• O Nome Completo é obrigatório.</p>}
                             {errors.cpf && <p>• {errors.cpf.message}</p>}
-                            {duplicity.cpf && <p className="animate-bounce">• ESTE CPF JÁ EXISTE NA BASE EM OUTRO REGISTRO.</p>}
-                            {duplicity.nb && <p className="animate-pulse">• UM DOS N°s DE BENEFÍCIO JÁ PERTENCE A OUTRO CLIENTE.</p>}
+                            {serverDuplicity.cpf && <p className="animate-bounce">• ESTE CPF JÁ EXISTE NA BASE EM OUTRO REGISTRO.</p>}
                             {errors.phone && <p>• O Telefone Principal é obrigatório.</p>}
-                            {duplicity.phone && <p>• Este Telefone já está em uso por outro cliente.</p>}
+                            {serverDuplicity.phone && <p>• Este Telefone já está em uso por outro cliente.</p>}
                             {errors.birthDate && <p>• A Data de Nascimento é obrigatória e deve ser válida.</p>}
                         </AlertDescription>
                     </div>
@@ -430,10 +445,15 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                                         {...field} 
                                         onChange={(e) => field.onChange(e.target.value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4"))} 
                                         maxLength={14}
-                                        className={cn("rounded-full h-11 px-5 border-zinc-200 font-bold transition-all", (duplicity.cpf || errors.cpf) && "border-red-500 bg-red-50 ring-2 ring-red-500/20")}
+                                        className={cn("rounded-full h-11 px-5 border-zinc-200 font-bold transition-all", (serverDuplicity.cpf || errors.cpf) && "border-red-500 bg-red-50 ring-2 ring-red-500/20")}
                                     />
-                                    {(duplicity.cpf || errors.cpf) && <AlertTriangle className="absolute right-4 top-3.5 h-5 w-5 text-red-500 animate-pulse" />}
-                                    {!errors.cpf && !duplicity.cpf && (watchCpf || '').length === 14 && <CheckCircle2 className="absolute right-4 top-3.5 h-5 w-5 text-green-500" />}
+                                    {isCheckingDuplicity ? (
+                                        <Loader2 className="absolute right-4 top-3.5 h-5 w-5 animate-spin text-primary/40" />
+                                    ) : (serverDuplicity.cpf || errors.cpf) ? (
+                                        <AlertTriangle className="absolute right-4 top-3.5 h-5 w-5 text-red-500 animate-pulse" />
+                                    ) : (watchCpf || '').length === 14 && (
+                                        <CheckCircle2 className="absolute right-4 top-3.5 h-5 w-5 text-green-500" />
+                                    )}
                                 </div>
                             </FormControl>
                             </FormItem>
@@ -491,11 +511,13 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                                     <Input 
                                         placeholder="(00) 00000-0000" 
                                         {...field} 
-                                        className={cn("rounded-full h-11 px-5 border-zinc-200 font-bold", (duplicity.phone || errors.phone) && "border-red-500 bg-red-50")} 
+                                        className={cn("rounded-full h-11 px-5 border-zinc-200 font-bold", (serverDuplicity.phone || errors.phone) && "border-red-500 bg-red-50")} 
                                         onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} 
                                         maxLength={15} 
                                     />
-                                    {isWhatsApp(watchPhone) && (
+                                    {isCheckingDuplicity ? (
+                                        <Loader2 className="absolute right-10 top-3 h-5 w-5 animate-spin text-primary/40" />
+                                    ) : isWhatsApp(watchPhone) && (
                                         <a href={getWhatsAppUrl(watchPhone)} target="_blank" rel="noopener noreferrer" className="absolute right-4 top-3 h-5 hover:scale-125 transition-transform" title="Abrir WhatsApp">
                                             <WhatsAppIcon className="h-4 w-4" />
                                         </a>
@@ -523,8 +545,8 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                                         maxLength={15} 
                                         className="rounded-full h-11 px-5 border-zinc-200 font-bold"
                                     />
-                                    {isWhatsApp(watchPhone2 || '') && (
-                                        <a href={getWhatsAppUrl(watchPhone2!)} target="_blank" rel="noopener noreferrer" className="absolute right-4 top-3 h-5 hover:scale-125 transition-transform" title="Abrir WhatsApp">
+                                    {isWhatsApp(field.value || '') && (
+                                        <a href={getWhatsAppUrl(field.value!)} target="_blank" rel="noopener noreferrer" className="absolute right-4 top-3 h-5 hover:scale-125 transition-transform" title="Abrir WhatsApp">
                                             <WhatsAppIcon className="h-4 w-4" />
                                         </a>
                                     )}
@@ -872,13 +894,15 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
         <div className="sticky bottom-0 px-8 py-6 border-t bg-background z-20 flex justify-end">
             <Button 
                 type="submit" 
-                disabled={isSaving || duplicity.phone || duplicity.cpf || duplicity.nb || hasErrors} 
+                disabled={isSaving || serverDuplicity.phone || serverDuplicity.cpf || hasErrors || isCheckingDuplicity} 
                 className="rounded-full px-12 h-14 font-black uppercase text-xs tracking-[0.2em] text-white bg-[#00AEEF] hover:bg-[#0096D1] shadow-2xl shadow-[#00AEEF]/30 transition-all border-none"
             >
                 {isSaving ? (
                     <div className="flex items-center"><Loader2 className="mr-3 h-5 w-5 animate-spin" /> Salvando...</div>
+                ) : isCheckingDuplicity ? (
+                    <div className="flex items-center"><Loader2 className="mr-3 h-5 w-5 animate-spin" /> Validando base...</div>
                 ) : (
-                    duplicity.cpf ? 'CPF Já Cadastrado' : duplicity.nb ? 'N° Benefício Já Cadastrado' : <><Save className="mr-3 h-5 w-5" /> Salvar Cadastro</>
+                    serverDuplicity.cpf ? 'CPF Já Cadastrado' : <><Save className="mr-3 h-5 w-5" /> Salvar Cadastro</>
                 )}
             </Button>
         </div>
