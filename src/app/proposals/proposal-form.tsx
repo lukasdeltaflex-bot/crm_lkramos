@@ -390,7 +390,6 @@ export function ProposalForm({
         userName: user.displayName || user.email || 'Agente'
     };
 
-    // 🛡️ OPTIMISTIC UI: Adiciona à lista local imediatamente
     setStagedHistory(prev => [entry, ...prev]);
     setNewHistoryEntry('');
 
@@ -401,7 +400,6 @@ export function ProposalForm({
         }).then(() => {
             toast({ title: "Histórico Gravado!" });
         }).catch(async (e) => {
-            // Em caso de erro, remove do staged para manter consistência
             setStagedHistory(prev => prev.filter(item => item.id !== entry.id));
             errorEmitter.emit('permission-error', new FirestorePermissionError({
                 path: docRef.path,
@@ -419,7 +417,6 @@ export function ProposalForm({
 
   const displayHistory = useMemo(() => {
     const existing = Array.isArray(proposal?.history) ? proposal!.history : [];
-    // Filtra duplicatas entre existing e staged (casos onde a gravação já completou mas o componente ainda não remontou com dados do DB)
     const stagedFiltered = stagedHistory.filter(s => !existing.some(e => e.id === s.id));
     return [...existing, ...stagedFiltered].sort((a,b) => b.date.localeCompare(a.date));
   }, [proposal?.history, stagedHistory]);
@@ -499,7 +496,7 @@ export function ProposalForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex flex-col h-full overflow-hidden">
         <ScrollArea className="flex-1 pr-4">
-          <div className="space-y-8 pb-6">
+          <div className="space-y-6 pb-6">
             <div className="space-y-4">
               <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
                 <FolderLock className="h-4 w-4" /> Registro LK RAMOS
@@ -929,12 +926,12 @@ export function ProposalForm({
             </div>
           </div>
         </ScrollArea>
-        <div className="sticky bottom-0 pt-8 border-t bg-background z-10 flex justify-end">
+        <div className="sticky bottom-0 pt-4 pb-2 border-t bg-background z-10 flex justify-end">
             {!isReadOnly && (
                 <Button 
                     type="submit" 
                     disabled={isSaving || isDuplicateProposal} 
-                    className="rounded-full px-10 font-black uppercase tracking-widest bg-[#00AEEF] hover:bg-[#0096D1] shadow-lg shadow-[#00AEEF]/20 transition-all border-none"
+                    className="rounded-full px-10 font-black uppercase tracking-widest bg-[#00AEEF] hover:bg-[#0096D1] shadow-lg shadow-[#00AEEF]/20 transition-all border-none h-12"
                 >
                     {isSaving ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Salvando...</> : <><Save className="mr-2 h-4 w-4" /> Salvar Proposta</>}
                 </Button>

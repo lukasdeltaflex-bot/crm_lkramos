@@ -11,6 +11,13 @@ const nextConfig: NextConfig = {
   },
   // Otimização para Firebase App Hosting (Docker/Cloud Run)
   output: 'standalone',
+  experimental: {
+    allowedDevOrigins: [
+      '*.cloudworkstations.dev',
+      '*.firebaseapp.com',
+      '*.web.app',
+    ],
+  },
   images: {
     remotePatterns: [
       {

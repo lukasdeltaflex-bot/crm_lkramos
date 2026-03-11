@@ -495,20 +495,24 @@ function CustomersPageContent() {
 
       <Dialog open={isDialog} onOpenChange={setIsDialog}>
         <DialogContent 
-            className="max-w-4xl"
+            className="max-w-4xl h-[90vh] flex flex-col p-0 overflow-hidden"
             onPointerDownOutside={(e) => e.preventDefault()}
             onInteractOutside={(e) => e.preventDefault()}
         >
-          <DialogHeader><DialogTitle>{sheetMode === 'edit' ? 'Editar' : 'Novo'} Cliente</DialogTitle></DialogHeader>
-          <CustomerForm
-            key={formKey}
-            onSubmit={handleFormSubmit}
-            customer={selectedCustomer}
-            allCustomers={processedCustomers || []}
-            userSettings={userSettings}
-            defaultValues={defaultValues}
-            isSaving={isSaving}
-          />
+          <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
+            <DialogTitle>{sheetMode === 'edit' ? 'Editar' : 'Novo'} Cliente</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden px-6 pb-6">
+            <CustomerForm
+                key={formKey}
+                onSubmit={handleFormSubmit}
+                customer={selectedCustomer}
+                allCustomers={processedCustomers || []}
+                userSettings={userSettings}
+                defaultValues={defaultValues}
+                isSaving={isSaving}
+            />
+          </div>
         </DialogContent>
       </Dialog>
 

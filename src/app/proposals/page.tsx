@@ -1,4 +1,3 @@
-
 'use client';
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -146,7 +145,6 @@ function ProposalsPageContent() {
   }, []);
   
   const handleDuplicateProposal = React.useCallback((proposal: Proposal) => {
-    // 🛡️ RESET DE HISTÓRICO: Excluímos 'history' e 'checklist' da clonagem para garantir auditoria limpa
     const { id, proposalNumber, status, history, checklist, commissionStatus, amountPaid, commissionPaymentDate, ...rest } = proposal;
     const duplicatedData: ProposalFormData = {
         ...rest,
@@ -160,7 +158,7 @@ function ProposalsPageContent() {
         datePaidToClient: undefined,
         debtBalanceArrivalDate: undefined,
         attachments: [],
-        history: [], // Força histórico vazio
+        history: [], 
         checklist: {
             formalization: false,
             documentation: false,
@@ -663,27 +661,31 @@ function ProposalsPageContent() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent 
-            className="max-w-3xl"
+            className="max-w-4xl h-[90vh] flex flex-col p-0 overflow-hidden"
             onPointerDownOutside={(e) => e.preventDefault()}
             onInteractOutside={(e) => e.preventDefault()}
         >
-          <DialogHeader><DialogTitle>{sheetMode === 'edit' ? 'Editar' : sheetMode === 'view' ? 'Detalhes' : 'Novo'} Proposta</DialogTitle></DialogHeader>
-          <ProposalForm 
-            key={formKey}
-            proposal={selectedProposal} 
-            allProposals={proposals || []}
-            customers={customers || []}
-            userSettings={userSettings || null}
-            isReadOnly={sheetMode === 'view'}
-            onSubmit={handleFormSubmit}
-            onDuplicate={handleDuplicateProposal}
-            defaultValues={defaultValues}
-            sheetMode={sheetMode}
-            onOpenCustomerSearch={() => setIsCustomerSearchOpen(true)}
-            selectedCustomerFromSearch={newlySelectedCustomer}
-            onCustomerSearchSelectionHandled={handleCustomerSearchSelectionHandled}
-            isSaving={isSaving}
-          />
+          <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
+            <DialogTitle>{sheetMode === 'edit' ? 'Editar' : sheetMode === 'view' ? 'Detalhes' : 'Novo'} Proposta</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden px-6 pb-6">
+            <ProposalForm 
+                key={formKey}
+                proposal={selectedProposal} 
+                allProposals={proposals || []}
+                customers={customers || []}
+                userSettings={userSettings || null}
+                isReadOnly={sheetMode === 'view'}
+                onSubmit={handleFormSubmit}
+                onDuplicate={handleDuplicateProposal}
+                defaultValues={defaultValues}
+                sheetMode={sheetMode}
+                onOpenCustomerSearch={() => setIsCustomerSearchOpen(true)}
+                selectedCustomerFromSearch={newlySelectedCustomer}
+                onCustomerSearchSelectionHandled={handleCustomerSearchSelectionHandled}
+                isSaving={isSaving}
+            />
+          </div>
         </DialogContent>
       </Dialog>
 
