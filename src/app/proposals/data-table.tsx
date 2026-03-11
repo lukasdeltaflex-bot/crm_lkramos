@@ -167,7 +167,13 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         const savedOrder = localStorage.getItem('lk-proposals-order');
         if (savedOrder) {
             const parsed = JSON.parse(savedOrder);
-            if (Array.isArray(parsed) && parsed.length > 0) setColumnOrder(parsed);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                // Sincroniza com IDs atuais para evitar erros se colunas mudarem no código
+                const currentIds = initialIds;
+                const validOrder = parsed.filter(id => currentIds.includes(id));
+                const missingIds = currentIds.filter(id => !validOrder.includes(id));
+                setColumnOrder([...validOrder, ...missingIds]);
+            }
         }
 
         const savedSizing = localStorage.getItem('lk-proposals-sizing');
@@ -177,7 +183,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     } catch (e) {
         setIsLoaded(true);
     }
-  }, []);
+  }, [initialIds]);
 
   // 🛡️ SALVAMENTO DE PREFERÊNCIAS: Só salva se isLoaded for true (evita sobrescrever com defaults)
   React.useEffect(() => {

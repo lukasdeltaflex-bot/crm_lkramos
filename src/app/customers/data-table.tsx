@@ -136,7 +136,13 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         const savedOrder = localStorage.getItem('lk-customers-order');
         if (savedOrder) {
             const parsed = JSON.parse(savedOrder);
-            if (Array.isArray(parsed) && parsed.length > 0) setColumnOrder(parsed);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                // Sincroniza com IDs atuais para evitar erros se colunas mudarem no código
+                const currentIds = initialIds;
+                const validOrder = parsed.filter(id => currentIds.includes(id));
+                const missingIds = currentIds.filter(id => !validOrder.includes(id));
+                setColumnOrder([...validOrder, ...missingIds]);
+            }
         }
 
         const savedSizing = localStorage.getItem('lk-customers-sizing');
@@ -146,7 +152,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     } catch (e) {
         setIsLoaded(true);
     }
-  }, []);
+  }, [initialIds]);
 
   // 🛡️ SALVAMENTO DE PREFERÊNCIAS: Só salva após isLoaded ser true
   React.useEffect(() => {
