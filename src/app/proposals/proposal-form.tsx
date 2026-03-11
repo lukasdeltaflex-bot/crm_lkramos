@@ -1,3 +1,4 @@
+
 'use client';
 
 /**
@@ -495,18 +496,20 @@ export function ProposalForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex flex-col h-full overflow-hidden">
-        <ScrollArea className="flex-1 pr-4">
-          <div className="space-y-6 pb-6">
-            <div className="space-y-4">
-              <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
+        <ScrollArea className="flex-1 px-8">
+          <div className="space-y-10 pb-10 pt-4">
+            <div className="space-y-6">
+              <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
                 <FolderLock className="h-4 w-4" /> Registro LK RAMOS
               </h3>
               
               {historicalRejection && (
-                  <Alert variant="destructive" className="border-2 rounded-2xl bg-red-50 dark:bg-red-900/20">
-                      <SearchX className="h-5 w-5 text-red-600" />
-                      <AlertTitle className="font-black uppercase text-xs">Contrato Já Reprovado Anteriormente!</AlertTitle>
-                      <AlertDescription className="text-xs">Identificada reprova na Prop. {historicalRejection.proposalNumber}: "{historicalRejection.rejectionReason}"</AlertDescription>
+                  <Alert variant="destructive" className="border-2 rounded-3xl bg-red-50 dark:bg-red-900/20 py-6">
+                      <SearchX className="h-6 w-6 text-red-600" />
+                      <div className="space-y-1">
+                        <AlertTitle className="font-black uppercase text-xs tracking-widest">Contrato Já Reprovado Anteriormente!</AlertTitle>
+                        <AlertDescription className="text-xs font-medium">Identificada reprova na Prop. {historicalRejection.proposalNumber}: "{historicalRejection.rejectionReason}"</AlertDescription>
+                      </div>
                   </Alert>
               )}
 
@@ -515,12 +518,12 @@ export function ProposalForm({
                 name="customerId"
                 render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Cliente Selecionado *</FormLabel>
-                        <div className="flex items-center gap-2">
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 block">Cliente Selecionado *</FormLabel>
+                        <div className="flex items-center gap-3">
                             <FormControl>
-                                <Input readOnly value={selectedCustomer?.name || "Nenhum cliente selecionado"} className="flex-1 bg-muted/30 font-bold" />
+                                <Input readOnly value={selectedCustomer?.name || "Nenhum cliente selecionado"} className="h-12 flex-1 bg-muted/30 font-black rounded-xl border-2" />
                             </FormControl>
-                            <Button type="button" variant="outline" onClick={onOpenCustomerSearch} disabled={isReadOnly || isSaving} className="font-bold">
+                            <Button type="button" variant="outline" onClick={onOpenCustomerSearch} disabled={isReadOnly || isSaving} className="h-12 px-6 rounded-xl font-bold border-2 border-primary/20 bg-primary/5 text-primary">
                                 {field.value ? 'Trocar' : 'Buscar'} Cliente
                             </Button>
                         </div>
@@ -529,15 +532,15 @@ export function ProposalForm({
                 )}
                 />
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                     control={form.control}
                     name="product"
                     render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Produto *</FormLabel>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 block">Produto *</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
-                        <FormControl><SelectTrigger className="font-bold"><SelectValue placeholder="Produto" /></SelectTrigger></FormControl>
+                        <FormControl><SelectTrigger className="h-12 font-black rounded-xl border-2"><SelectValue placeholder="Produto" /></SelectTrigger></FormControl>
                         <SelectContent>{productTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}</SelectContent>
                         </Select><FormMessage /></FormItem>
                     )}
@@ -547,11 +550,11 @@ export function ProposalForm({
                     name="status"
                     render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Status da Esteira *</FormLabel>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 block">Status da Esteira *</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
                         <FormControl>
                             <SelectTrigger 
-                                className="status-custom font-black text-[10px] uppercase tracking-widest border-2 rounded-full h-10 px-6 transition-all"
+                                className="status-custom font-black text-[10px] uppercase tracking-widest border-2 rounded-full h-12 px-8 transition-all"
                                 style={statusColor ? { '--status-color': statusColor } as any : {}}
                             >
                                 <SelectValue placeholder="Status" />
@@ -564,14 +567,14 @@ export function ProposalForm({
               </div>
 
               {!isReadOnly && (
-                  <div className="p-4 rounded-2xl border-2 border-dashed bg-primary/[0.02] space-y-3 animate-in fade-in duration-500">
+                  <div className="p-6 rounded-3xl border-2 border-dashed bg-primary/[0.02] space-y-4 animate-in fade-in duration-500">
                       <div className="flex items-center gap-2">
-                          <Zap className="h-3.5 w-3.5 text-primary" />
-                          <span className="text-[10px] font-black uppercase tracking-widest text-primary/60">Registrar Trâmite Instantâneo</span>
+                          <Zap className="h-4 w-4 text-primary" />
+                          <span className="text-[10px] font-black uppercase tracking-widest text-primary/60">Registrar Trâmite Instantâneo (Linha do Tempo)</span>
                       </div>
                       <Select onValueChange={(val) => handleAddHistory(val)} disabled={isAddingHistory}>
-                          <SelectTrigger className="rounded-xl border-2 bg-background font-bold text-xs h-11">
-                              <SelectValue placeholder="Selecione um tópico rápido..." />
+                          <SelectTrigger className="rounded-2xl border-2 bg-background font-bold text-xs h-12">
+                              <SelectValue placeholder="Selecione um tópico rápido para o histórico..." />
                           </SelectTrigger>
                           <SelectContent>
                               {historyTopics.map((topic) => (
@@ -587,11 +590,11 @@ export function ProposalForm({
                     control={form.control}
                     name="rejectionReason"
                     render={({ field }) => (
-                        <FormItem className="animate-in slide-in-from-left-2 duration-300">
-                            <FormLabel className="text-red-600 font-black uppercase text-[10px] tracking-widest">Motivo da Reprova *</FormLabel>
+                        <FormItem className="animate-in slide-in-from-top-2 duration-300">
+                            <FormLabel className="text-red-600 font-black uppercase text-[10px] tracking-widest mb-2 block">Motivo da Reprova *</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
                                 <FormControl>
-                                    <SelectTrigger className="border-red-200 bg-red-50/50 font-bold h-11 rounded-xl">
+                                    <SelectTrigger className="border-red-200 bg-red-50/50 font-black h-12 rounded-xl border-2">
                                         <SelectValue placeholder="Selecione o motivo..." />
                                     </SelectTrigger>
                                 </FormControl>
@@ -608,11 +611,11 @@ export function ProposalForm({
 
             <Separator />
 
-            <div className="space-y-4">
-                <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
+            <div className="space-y-6">
+                <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
                     <ListChecks className="h-4 w-4" /> Check-list Operacional
                 </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {[
                         { id: 'formalization', label: 'Formalização', icon: Send },
                         { id: 'documentation', label: 'Documentos', icon: FileCheck },
@@ -624,16 +627,16 @@ export function ProposalForm({
                             type="button"
                             variant="outline"
                             className={cn(
-                                "flex flex-col h-20 gap-2 border-2 transition-all rounded-2xl",
+                                "flex flex-col h-24 gap-3 border-2 transition-all rounded-[1.5rem] p-4",
                                 checklist[step.id] 
-                                    ? "border-green-500 bg-green-50 text-green-700 dark:bg-green-900/20" 
+                                    ? "border-green-500 bg-green-50 text-green-700 dark:bg-green-900/20 shadow-inner" 
                                     : "border-muted-foreground/10 text-muted-foreground opacity-60"
                             )}
                             onClick={() => toggleChecklistItem(step.id)}
                             disabled={isReadOnly || isSaving}
                         >
-                            <step.icon className={cn("h-5 w-5", checklist[step.id] ? "animate-in zoom-in" : "")} />
-                            <span className="text-[10px] font-black uppercase tracking-widest">{step.label}</span>
+                            <step.icon className={cn("h-6 w-6", checklist[step.id] ? "animate-in zoom-in" : "")} />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">{step.label}</span>
                         </Button>
                     ))}
                 </div>
@@ -641,26 +644,26 @@ export function ProposalForm({
 
             <Separator />
 
-            <div className="space-y-4">
-              <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
+            <div className="space-y-6">
+              <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
                 <Clock className="h-4 w-4" /> DIGITAÇÃO DA PROPOSTA
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormField
                   control={form.control}
                   name="selectedBenefitNumber"
                   render={({ field }) => (
-                    <FormItem><FormLabel>N° do Benefício (NB)</FormLabel>
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">N° do Benefício (NB)</FormLabel>
                       {selectedCustomer && selectedCustomer.benefits && selectedCustomer.benefits.length > 0 ? (
                         <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
-                          <FormControl><SelectTrigger className="font-mono font-bold"><SelectValue placeholder="Selecionar NB" /></SelectTrigger></FormControl>
+                          <FormControl><SelectTrigger className="h-12 font-mono font-black border-2 rounded-xl"><SelectValue placeholder="Selecionar NB" /></SelectTrigger></FormControl>
                           <SelectContent>{selectedCustomer.benefits.map(benefit => (
                               <SelectItem key={benefit.number} value={benefit.number}>{benefit.number}</SelectItem>
                             ))}</SelectContent>
                         </Select>
                       ) : (
-                        <FormControl><Input placeholder="Sem NB vinculado" {...field} value={field.value ?? ''} className="font-mono" readOnly={isReadOnly || isSaving} disabled={isReadOnly || !selectedCustomerId || isSaving}/></FormControl>
+                        <FormControl><Input placeholder="Sem NB vinculado" {...field} value={field.value ?? ''} className="h-12 font-mono border-2 rounded-xl" readOnly={isReadOnly || isSaving} disabled={isReadOnly || !selectedCustomerId || isSaving}/></FormControl>
                       )}<FormMessage /></FormItem>
                   )}
                 />
@@ -669,9 +672,9 @@ export function ProposalForm({
                   name="approvingBody"
                   render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Órgão</FormLabel>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Órgão</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
-                            <FormControl><SelectTrigger className="font-bold"><SelectValue placeholder="Órgão" /></SelectTrigger></FormControl>
+                            <FormControl><SelectTrigger className="h-12 font-black border-2 rounded-xl"><SelectValue placeholder="Órgão" /></SelectTrigger></FormControl>
                             <SelectContent>{approvingBodies.map(body => <SelectItem key={body} value={body}>{body}</SelectItem>)}</SelectContent>
                         </Select>
                         <FormMessage />
@@ -683,19 +686,19 @@ export function ProposalForm({
                   name="bank"
                   render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Banco Digitado *</FormLabel>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Banco Digitado *</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
                             <FormControl>
-                                <SelectTrigger className="font-bold w-full overflow-hidden">
+                                <SelectTrigger className="h-12 font-black w-full overflow-hidden border-2 rounded-xl">
                                     <SelectValue placeholder="Banco" />
                                 </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                                 {banks.map(b => (
                                     <SelectItem key={b} value={b}>
-                                        <div className="flex items-center gap-2 w-full overflow-hidden">
+                                        <div className="flex items-center gap-3 w-full overflow-hidden">
                                             <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogos={showLogos} className="h-4 w-4 shrink-0" />
-                                            <span className="truncate flex-1">{cleanBankName(b)}</span>
+                                            <span className="truncate flex-1 font-bold text-xs">{cleanBankName(b)}</span>
                                         </div>
                                     </SelectItem>
                                 ))}
@@ -707,24 +710,24 @@ export function ProposalForm({
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormField
                   control={form.control}
                   name="proposalNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>N° de Proposta *</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">N° de Proposta *</FormLabel>
                       <FormControl>
                         <div className="relative">
                             <Input 
-                                placeholder="Contrato Novo" 
+                                placeholder="Ex: 830310745" 
                                 {...field} 
                                 value={field.value ?? ''} 
                                 onChange={(e) => field.onChange(e.target.value.replace(/\s+/g, ''))}
                                 readOnly={isReadOnly || isSaving} 
-                                className={cn("font-bold", isDuplicateProposal && "border-red-500 bg-red-50")}
+                                className={cn("h-12 font-black border-2 rounded-xl", isDuplicateProposal && "border-red-500 bg-red-50")}
                             />
-                            {isDuplicateProposal && <AlertTriangle className="absolute right-4 top-3 h-4 w-4 text-red-500 animate-pulse" />}
+                            {isDuplicateProposal && <AlertTriangle className="absolute right-4 top-3.5 h-5 w-5 text-red-500 animate-pulse" />}
                         </div>
                       </FormControl>
                       <FormMessage />
@@ -735,28 +738,28 @@ export function ProposalForm({
                   control={form.control}
                   name="table"
                   render={({ field }) => (
-                    <FormItem><FormLabel>Tabela *</FormLabel><FormControl><Input placeholder="Tabela" {...field} value={field.value ?? ''} readOnly={isReadOnly || isSaving} className="font-bold"/></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Tabela *</FormLabel><FormControl><Input placeholder="Tabela" {...field} value={field.value ?? ''} readOnly={isReadOnly || isSaving} className="h-12 font-black border-2 rounded-xl"/></FormControl><FormMessage /></FormItem>
                   )}
                 />
                 <FormField
                   control={form.control}
                   name="term"
                   render={({ field }) => (
-                    <FormItem><FormLabel>Prazo (Meses)</FormLabel><FormControl><Input type="number" {...field} readOnly={isReadOnly || isSaving} /></FormControl></FormItem>
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Prazo (Meses)</FormLabel><FormControl><Input type="number" {...field} className="h-12 font-black border-2 rounded-xl" readOnly={isReadOnly || isSaving} /></FormControl></FormItem>
                   )}
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormField control={form.control} name="installmentAmount" render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Valor Parcela *</FormLabel>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Valor Parcela *</FormLabel>
                         <FormControl>
                             <div className="relative">
-                                <span className="absolute left-3 top-2.5 text-[10px] font-black text-muted-foreground">R$</span>
+                                <span className="absolute left-4 top-3.5 text-[10px] font-black text-muted-foreground">R$</span>
                                 <Input 
                                     type="text" 
-                                    className="pl-9 font-bold rounded-full" 
+                                    className="h-12 pl-10 font-black border-2 rounded-xl" 
                                     value={formatCurrencyInput(field.value)}
                                     onChange={(e) => {
                                         const val = e.target.value.replace(/\D/g, "");
@@ -771,13 +774,13 @@ export function ProposalForm({
                 )} />
                 <FormField control={form.control} name="netAmount" render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Líquido (Cliente) *</FormLabel>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Líquido (Cliente) *</FormLabel>
                         <FormControl>
                             <div className="relative">
-                                <span className="absolute left-3 top-2.5 text-[10px] font-black text-muted-foreground">R$</span>
+                                <span className="absolute left-4 top-3.5 text-[10px] font-black text-muted-foreground">R$</span>
                                 <Input 
                                     type="text" 
-                                    className="pl-9 font-bold rounded-full" 
+                                    className="h-12 pl-10 font-black border-2 rounded-xl" 
                                     value={formatCurrencyInput(field.value)}
                                     onChange={(e) => {
                                         const val = e.target.value.replace(/\D/g, "");
@@ -792,13 +795,13 @@ export function ProposalForm({
                 )} />
                  <FormField control={form.control} name="grossAmount" render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Bruto (Base) *</FormLabel>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Bruto (Base) *</FormLabel>
                         <FormControl>
                             <div className="relative">
-                                <span className="absolute left-3 top-2.5 text-[10px] font-black text-muted-foreground">R$</span>
+                                <span className="absolute left-4 top-3.5 text-[10px] font-black text-muted-foreground">R$</span>
                                 <Input 
                                     type="text" 
-                                    className="pl-9 font-bold rounded-full" 
+                                    className="h-12 pl-10 font-black border-2 rounded-xl" 
                                     value={formatCurrencyInput(field.value)}
                                     onChange={(e) => {
                                         const val = e.target.value.replace(/\D/g, "");
@@ -813,14 +816,14 @@ export function ProposalForm({
                 )} />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormField
                   control={form.control}
                   name="dateDigitized"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Data Digitação *</FormLabel>
-                      <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(applyDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} /></FormControl>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Data Digitação *</FormLabel>
+                      <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(applyDateMask(e))} maxLength={10} className="h-12 font-black border-2 rounded-xl" readOnly={isReadOnly || isSaving} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -830,8 +833,8 @@ export function ProposalForm({
                     name="dateApproved"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Data Averbação</FormLabel>
-                        <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(applyDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} /></FormControl>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Data Averbação</FormLabel>
+                        <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(applyDateMask(e))} maxLength={10} className="h-12 font-black border-2 rounded-xl" readOnly={isReadOnly || isSaving} /></FormControl>
                         <FormMessage />
                         </FormItem>
                     )}
@@ -841,27 +844,27 @@ export function ProposalForm({
                     name="datePaidToClient"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Pagamento Cliente</FormLabel>
-                        <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(applyDateMask(e))} maxLength={10} readOnly={isReadOnly || isSaving} /></FormControl>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Pagamento Cliente</FormLabel>
+                        <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(applyDateMask(e))} maxLength={10} className="h-12 font-black border-2 rounded-xl" readOnly={isReadOnly || isSaving} /></FormControl>
                         <FormMessage />
                         </FormItem>
                     )}
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="operator"
                   render={({ field }) => (
-                    <FormItem><FormLabel>Operador *</FormLabel><FormControl><Input placeholder="Agente" {...field} value={field.value ?? ''} readOnly={isReadOnly || isSaving} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Operador *</FormLabel><FormControl><Input placeholder="Nome do Operador" {...field} value={field.value ?? ''} className="h-12 font-black border-2 rounded-xl uppercase" readOnly={isReadOnly || isSaving} /></FormControl><FormMessage /></FormItem>
                   )}
                 />
                 <FormField
                   control={form.control}
                   name="promoter"
                   render={({ field }) => (
-                    <FormItem><FormLabel>Promotora *</FormLabel><FormControl><Input placeholder="Nome da Promotora" {...field} value={field.value ?? ''} readOnly={isReadOnly || isSaving} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Promotora *</FormLabel><FormControl><Input placeholder="Nome da Promotora" {...field} value={field.value ?? ''} className="h-12 font-black border-2 rounded-xl uppercase" readOnly={isReadOnly || isSaving} /></FormControl><FormMessage /></FormItem>
                   )}
                 />
               </div>
@@ -869,42 +872,45 @@ export function ProposalForm({
 
             <Separator />
 
-            <div className="space-y-4">
-                <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
+            <div className="space-y-6">
+                <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
                     <History className="h-4 w-4" /> Histórico Operacional
                 </h3>
                 {currentProposalId && (
                     <div className="space-y-6">
-                        <div className="flex gap-2">
-                            <Input 
-                                placeholder="Registrar atualização..." 
-                                value={newHistoryEntry} 
-                                onChange={e => setNewHistoryEntry(e.target.value)} 
-                                disabled={isAddingHistory || isReadOnly}
-                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddHistory(newHistoryEntry))}
-                            />
-                            <Button type="button" size="sm" onClick={() => handleAddHistory(newHistoryEntry)} disabled={isAddingHistory || !newHistoryEntry.trim() || isReadOnly}>
-                                {isAddingHistory ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                            </Button>
-                        </div>
+                        {!isReadOnly && (
+                            <div className="flex gap-3">
+                                <Input 
+                                    placeholder="Registrar nova atualização..." 
+                                    value={newHistoryEntry} 
+                                    onChange={e => setNewHistoryEntry(e.target.value)} 
+                                    disabled={isAddingHistory || isReadOnly}
+                                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddHistory(newHistoryEntry))}
+                                    className="h-12 border-2 rounded-xl px-5 font-medium"
+                                />
+                                <Button type="button" size="icon" onClick={() => handleAddHistory(newHistoryEntry)} disabled={isAddingHistory || !newHistoryEntry.trim() || isReadOnly} className="h-12 w-12 rounded-xl bg-primary shadow-lg">
+                                    {isAddingHistory ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
+                                </Button>
+                            </div>
+                        )}
 
-                        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-4 custom-scrollbar">
                             {displayHistory.length > 0 ? (
                                 displayHistory.map(entry => (
                                     <div key={entry.id} className={cn(
-                                        "p-3 rounded-xl border text-xs transition-colors hover:bg-muted/50",
-                                        entry.message.startsWith("AUTOAUDIT") ? "bg-blue-50/30 border-blue-100" : "bg-muted/30 border-border"
+                                        "p-5 rounded-2xl border-2 transition-all hover:shadow-md",
+                                        entry.message.startsWith("AUTOAUDIT") ? "bg-blue-50/20 border-blue-100" : "bg-muted/20 border-border/50"
                                     )}>
-                                        <div className="flex justify-between font-black uppercase text-primary/70 mb-1">
-                                            <span className="flex items-center gap-1.5"><MessageSquareText className="h-3 w-3" />{entry.userName || 'Agente'}</span>
+                                        <div className="flex justify-between font-black uppercase text-[9px] tracking-widest text-primary/70 mb-2">
+                                            <span className="flex items-center gap-2"><MessageSquareText className="h-3 w-3" />{entry.userName || 'Agente'}</span>
                                             <span className="opacity-60">{format(parseISO(entry.date), "dd/MM/yy HH:mm")}</span>
                                         </div>
-                                        <p className="leading-relaxed font-medium">
+                                        <p className="text-xs leading-relaxed font-bold text-foreground/80">
                                             {entry.message.replace("AUTOAUDIT: ", "⚙️ ")}
                                         </p>
                                     </div>
                                 ))
-                            ) : <p className="text-center text-[10px] text-muted-foreground uppercase py-6 border-2 border-dashed rounded-lg opacity-40">Sem registros.</p>}
+                            ) : <div className="py-12 text-center border-2 border-dashed rounded-3xl opacity-20 text-[10px] font-black uppercase tracking-[0.3em]">Sem registros no histórico.</div>}
                         </div>
                     </div>
                 )}
@@ -912,9 +918,9 @@ export function ProposalForm({
 
             <Separator />
 
-            <div className="space-y-4">
-                <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
-                    <FolderLock className="h-4 w-4" /> Documentação
+            <div className="space-y-6">
+                <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
+                    <FolderLock className="h-4 w-4" /> Central de Documentação
                 </h3>
                 <ProposalAttachmentUploader 
                     userId={user!.uid} 
@@ -926,14 +932,14 @@ export function ProposalForm({
             </div>
           </div>
         </ScrollArea>
-        <div className="sticky bottom-0 pt-4 pb-2 border-t bg-background z-10 flex justify-end">
+        <div className="sticky bottom-0 px-8 py-6 border-t bg-background z-20 flex justify-end">
             {!isReadOnly && (
                 <Button 
                     type="submit" 
                     disabled={isSaving || isDuplicateProposal} 
-                    className="rounded-full px-10 font-black uppercase tracking-widest bg-[#00AEEF] hover:bg-[#0096D1] shadow-lg shadow-[#00AEEF]/20 transition-all border-none h-12"
+                    className="rounded-full px-12 font-black uppercase text-xs tracking-[0.2em] bg-[#00AEEF] hover:bg-[#0096D1] shadow-2xl shadow-[#00AEEF]/30 transition-all border-none h-14"
                 >
-                    {isSaving ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Salvando...</> : <><Save className="mr-2 h-4 w-4" /> Salvar Proposta</>}
+                    {isSaving ? <><Loader2 className="mr-3 h-5 w-5 animate-spin" /> Salvando...</> : <><Save className="mr-3 h-5 w-5" /> Salvar Proposta</>}
                 </Button>
             )}
         </div>

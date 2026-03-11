@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -213,7 +214,6 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
     const cleanPhone = (watchPhone || '').replace(/\D/g, '');
     const cleanCpf = (watchCpf || '').replace(/\D/g, '');
     
-    // Extrai NBs atuais sendo digitados (números puros)
     const currentNBs = watchBenefits
         .map(b => (b.number || '').replace(/\D/g, ''))
         .filter(n => n.length >= 5);
@@ -229,7 +229,6 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
             results.cpf = true;
         }
 
-        // 🛡️ TRAVA DE NB DUPLICADO: Verifica se algum NB digitado já pertence a outro cliente
         if (currentNBs.length > 0 && c.benefits && c.benefits.length > 0) {
             const existingNBs = c.benefits.map(b => (b.number || '').replace(/\D/g, ''));
             if (currentNBs.some(nb => existingNBs.includes(nb))) {
@@ -348,21 +347,23 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex flex-col h-full overflow-hidden">
-        <ScrollArea className="flex-1 pr-4">
-          <div className="space-y-10 pb-6">
+        <ScrollArea className="flex-1 px-8">
+          <div className="space-y-10 pb-10 pt-4">
             {(hasErrors || duplicity.cpf || duplicity.phone || duplicity.nb) && (
-                <Alert variant="destructive" className="rounded-2xl border-2 bg-red-50 border-red-500">
-                    <AlertCircle className="h-5 w-5 text-red-600" />
-                    <AlertTitle className="font-black uppercase text-sm tracking-widest text-red-700">Atenção: Correção Necessária</AlertTitle>
-                    <AlertDescription className="text-xs font-bold text-red-600 space-y-1 mt-2">
-                        {errors.name && <p>• O Nome Completo é obrigatório.</p>}
-                        {errors.cpf && <p>• {errors.cpf.message}</p>}
-                        {duplicity.cpf && <p className="animate-bounce">• ESTE CPF JÁ EXISTE NA BASE EM OUTRO REGISTRO.</p>}
-                        {duplicity.nb && <p className="animate-pulse">• UM DOS N°s DE BENEFÍCIO JÁ PERTENCE A OUTRO CLIENTE.</p>}
-                        {errors.phone && <p>• O Telefone Principal é obrigatório.</p>}
-                        {duplicity.phone && <p>• Este Telefone já está em uso por outro cliente.</p>}
-                        {errors.birthDate && <p>• A Data de Nascimento é obrigatória e deve ser válida.</p>}
-                    </AlertDescription>
+                <Alert variant="destructive" className="rounded-3xl border-2 bg-red-50 border-red-500 py-6">
+                    <AlertCircle className="h-6 w-6 text-red-600" />
+                    <div className="space-y-1">
+                        <AlertTitle className="font-black uppercase text-sm tracking-widest text-red-700">Atenção: Correção Necessária</AlertTitle>
+                        <AlertDescription className="text-xs font-bold text-red-600 space-y-1 mt-2">
+                            {errors.name && <p>• O Nome Completo é obrigatório.</p>}
+                            {errors.cpf && <p>• {errors.cpf.message}</p>}
+                            {duplicity.cpf && <p className="animate-bounce">• ESTE CPF JÁ EXISTE NA BASE EM OUTRO REGISTRO.</p>}
+                            {duplicity.nb && <p className="animate-pulse">• UM DOS N°s DE BENEFÍCIO JÁ PERTENCE A OUTRO CLIENTE.</p>}
+                            {errors.phone && <p>• O Telefone Principal é obrigatório.</p>}
+                            {duplicity.phone && <p>• Este Telefone já está em uso por outro cliente.</p>}
+                            {errors.birthDate && <p>• A Data de Nascimento é obrigatória e deve ser válida.</p>}
+                        </AlertDescription>
+                    </div>
                 </Alert>
             )}
 
@@ -868,16 +869,16 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
           </div>
         </ScrollArea>
         
-        <div className="sticky bottom-0 pt-6 border-t mt-4 bg-background z-10 flex justify-end">
+        <div className="sticky bottom-0 px-8 py-6 border-t bg-background z-20 flex justify-end">
             <Button 
                 type="submit" 
                 disabled={isSaving || duplicity.phone || duplicity.cpf || duplicity.nb || hasErrors} 
-                className="rounded-full px-12 h-12 font-bold text-white bg-[#00AEEF] hover:bg-[#0096D1] shadow-lg shadow-[#00AEEF]/20 transition-all border-none"
+                className="rounded-full px-12 h-14 font-black uppercase text-xs tracking-[0.2em] text-white bg-[#00AEEF] hover:bg-[#0096D1] shadow-2xl shadow-[#00AEEF]/30 transition-all border-none"
             >
                 {isSaving ? (
-                    <div className="flex items-center"><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Salvando...</div>
+                    <div className="flex items-center"><Loader2 className="mr-3 h-5 w-5 animate-spin" /> Salvando...</div>
                 ) : (
-                    duplicity.cpf ? 'CPF Já Cadastrado' : duplicity.nb ? 'N° Benefício Já Cadastrado' : <><Save className="mr-2 h-4 w-4" /> Salvar Cadastro</>
+                    duplicity.cpf ? 'CPF Já Cadastrado' : duplicity.nb ? 'N° Benefício Já Cadastrado' : <><Save className="mr-3 h-5 w-5" /> Salvar Cadastro</>
                 )}
             </Button>
         </div>

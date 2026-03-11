@@ -1,3 +1,4 @@
+
 'use client';
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -30,9 +31,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cleanFirestoreData, formatCurrency, cleanBankName, formatDateSafe } from '@/lib/utils';
 import { format } from 'date-fns';
-
-export type ProposalWithCustomer = Proposal & { customer: Customer | undefined };
-type ProposalFormData = Partial<Omit<Proposal, 'id' | 'ownerId'>>;
 
 function ProposalsPageSkeleton() {
     return (
@@ -661,14 +659,16 @@ function ProposalsPageContent() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent 
-            className="max-w-4xl h-[90vh] flex flex-col p-0 overflow-hidden"
+            className="max-w-4xl w-[95vw] h-[90vh] flex flex-col p-0 overflow-hidden rounded-[2rem] border-none shadow-2xl"
             onPointerDownOutside={(e) => e.preventDefault()}
             onInteractOutside={(e) => e.preventDefault()}
         >
-          <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
-            <DialogTitle>{sheetMode === 'edit' ? 'Editar' : sheetMode === 'view' ? 'Detalhes' : 'Novo'} Proposta</DialogTitle>
+          <DialogHeader className="px-8 pt-8 pb-4 shrink-0 bg-muted/5 border-b">
+            <DialogTitle className="text-xl font-black uppercase tracking-tight text-primary">
+                {sheetMode === 'edit' ? 'Editar Registro' : sheetMode === 'view' ? 'Detalhes da Operação' : 'Cadastrar Nova Proposta'}
+            </DialogTitle>
           </DialogHeader>
-          <div className="flex-1 overflow-hidden px-6 pb-6">
+          <div className="flex-1 overflow-hidden">
             <ProposalForm 
                 key={formKey}
                 proposal={selectedProposal} 

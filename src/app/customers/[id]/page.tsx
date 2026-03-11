@@ -706,15 +706,23 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       </Dialog>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-4xl" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
-            <DialogHeader><DialogTitle>Editar Cadastro do Cliente</DialogTitle></DialogHeader>
-            <CustomerForm 
-                customer={customer} 
-                allCustomers={allCustomers || []} 
-                userSettings={userSettings} 
-                onSubmit={handleEditSubmit}
-                isSaving={isSaving}
-            />
+        <DialogContent 
+            className="max-w-4xl w-[95vw] h-[90vh] flex flex-col p-0 overflow-hidden rounded-[2rem] border-none shadow-2xl" 
+            onPointerDownOutside={(e) => e.preventDefault()} 
+            onInteractOutside={(e) => e.preventDefault()}
+        >
+            <DialogHeader className="px-8 pt-8 pb-4 shrink-0 bg-muted/5 border-b">
+                <DialogTitle className="text-xl font-black uppercase tracking-tight text-primary">Editar Cadastro do Cliente</DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 overflow-hidden">
+                <CustomerForm 
+                    customer={customer} 
+                    allCustomers={allCustomers || []} 
+                    userSettings={userSettings} 
+                    onSubmit={handleEditSubmit}
+                    isSaving={isSaving}
+                />
+            </div>
         </DialogContent>
       </Dialog>
     </AppLayout>

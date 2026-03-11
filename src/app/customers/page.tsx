@@ -1,3 +1,4 @@
+
 'use client';
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -495,14 +496,16 @@ function CustomersPageContent() {
 
       <Dialog open={isDialog} onOpenChange={setIsDialog}>
         <DialogContent 
-            className="max-w-4xl h-[90vh] flex flex-col p-0 overflow-hidden"
+            className="max-w-4xl w-[95vw] h-[90vh] flex flex-col p-0 overflow-hidden rounded-[2rem] border-none shadow-2xl"
             onPointerDownOutside={(e) => e.preventDefault()}
             onInteractOutside={(e) => e.preventDefault()}
         >
-          <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
-            <DialogTitle>{sheetMode === 'edit' ? 'Editar' : 'Novo'} Cliente</DialogTitle>
+          <DialogHeader className="px-8 pt-8 pb-4 shrink-0 bg-muted/5 border-b">
+            <DialogTitle className="text-xl font-black uppercase tracking-tight text-primary">
+                {sheetMode === 'edit' ? 'Editar Cadastro' : 'Novo Registro de Cliente'}
+            </DialogTitle>
           </DialogHeader>
-          <div className="flex-1 overflow-hidden px-6 pb-6">
+          <div className="flex-1 overflow-hidden">
             <CustomerForm
                 key={formKey}
                 onSubmit={handleFormSubmit}
