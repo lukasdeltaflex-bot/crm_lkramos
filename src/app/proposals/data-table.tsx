@@ -126,7 +126,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'col_date', desc: true }]);
   const [isClient, setIsClient] = React.useState(false);
-  const hasLoadedRef = React.useRef(false);
+  const [isLoaded, setIsLoaded] = React.useState(false);
 
   const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   
@@ -148,7 +148,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     });
   };
 
-  // 🛡️ MEMÓRIA DE PERSISTÊNCIA V3: Carrega configurações do dispositivo
+  // 🛡️ CARREGAMENTO DE PREFERÊNCIAS: Executa uma vez ao montar o componente
   React.useEffect(() => {
     setIsClient(true);
     try {
@@ -157,6 +157,9 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
 
         const savedPageSize = localStorage.getItem('lk-proposals-pageSize');
         if (savedPageSize) setPagination(p => ({ ...p, pageSize: Number(savedPageSize) }));
+
+        const savedSearch = localStorage.getItem('lk-proposals-filter-search');
+        if (savedSearch) setGlobalFilter(savedSearch);
 
         const savedVisibility = localStorage.getItem('lk-proposals-visibility');
         if (savedVisibility) setColumnVisibility(JSON.parse(savedVisibility));
@@ -170,24 +173,25 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         const savedSizing = localStorage.getItem('lk-proposals-sizing');
         if (savedSizing) setColumnSizing(JSON.parse(savedSizing));
         
-        hasLoadedRef.current = true;
+        setIsLoaded(true);
     } catch (e) {
-        hasLoadedRef.current = true;
+        setIsLoaded(true);
     }
   }, []);
 
-  // 🛡️ PERSISTÊNCIA AUTOMÁTICA: Salva apenas APÓS o carregamento inicial
+  // 🛡️ SALVAMENTO DE PREFERÊNCIAS: Só salva se isLoaded for true (evita sobrescrever com defaults)
   React.useEffect(() => {
-    if (isClient && hasLoadedRef.current) {
+    if (isClient && isLoaded) {
         try {
             localStorage.setItem('lk-proposals-frozen-count', String(frozenCount));
+            localStorage.setItem('lk-proposals-filter-search', globalFilter);
             localStorage.setItem('lk-proposals-visibility', JSON.stringify(columnVisibility));
             localStorage.setItem('lk-proposals-order', JSON.stringify(columnOrder));
             localStorage.setItem('lk-proposals-sizing', JSON.stringify(columnSizing));
             localStorage.setItem('lk-proposals-pageSize', String(pagination.pageSize));
         } catch(e) {}
     }
-  }, [columnVisibility, columnOrder, columnSizing, frozenCount, isClient, pagination.pageSize]);
+  }, [globalFilter, columnVisibility, columnOrder, columnSizing, frozenCount, isClient, pagination.pageSize, isLoaded]);
 
   const handleDateMask = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, "").substring(0, 8);

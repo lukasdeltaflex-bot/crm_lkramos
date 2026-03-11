@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -100,7 +99,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [frozenCount, setFrozenCount] = React.useState(2);
   const [isClient, setIsClient] = React.useState(false);
-  const hasLoadedRef = React.useRef(false);
+  const [isLoaded, setIsLoaded] = React.useState(false);
 
   const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   
@@ -121,6 +120,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     });
   };
 
+  // 🛡️ CARREGAMENTO DE PREFERÊNCIAS: Executa uma vez ao montar
   React.useEffect(() => {
     setIsClient(true);
     try {
@@ -142,14 +142,15 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         const savedSizing = localStorage.getItem('lk-customers-sizing');
         if (savedSizing) setColumnSizing(JSON.parse(savedSizing));
         
-        hasLoadedRef.current = true;
+        setIsLoaded(true);
     } catch (e) {
-        hasLoadedRef.current = true;
+        setIsLoaded(true);
     }
   }, []);
 
+  // 🛡️ SALVAMENTO DE PREFERÊNCIAS: Só salva após isLoaded ser true
   React.useEffect(() => {
-    if (isClient && hasLoadedRef.current) {
+    if (isClient && isLoaded) {
       try {
         localStorage.setItem('lk-customers-frozen-count', String(frozenCount));
         localStorage.setItem('lk-customers-visibility', JSON.stringify(columnVisibility));
@@ -158,7 +159,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         localStorage.setItem('lk-customers-pageSize', String(pagination.pageSize));
       } catch(e) {}
     }
-  }, [columnVisibility, columnOrder, columnSizing, frozenCount, isClient, pagination.pageSize]);
+  }, [columnVisibility, columnOrder, columnSizing, frozenCount, isClient, pagination.pageSize, isLoaded]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -233,7 +234,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
       <Card className="rounded-[1.5rem] border-2 border-zinc-200 bg-card shadow-xl overflow-hidden p-1">
         <div className="py-2">
           <div className="flex items-center justify-between px-4 py-2 gap-4">
-            <div className='relative w-full max-w-md group'>
+            <div className='relative w-full max-md group'>
                 <Search className='absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80' />
                 <Input placeholder="Busca por ID exato, Nome, CPF..." value={globalFilter ?? ''} onChange={(e) => setGlobalFilter(e.target.value)} className="pl-11 w-full bg-background border-2 border-zinc-300 h-11 rounded-full shadow-md font-bold text-sm" />
             </div>
