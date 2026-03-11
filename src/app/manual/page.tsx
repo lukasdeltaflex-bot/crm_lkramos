@@ -56,7 +56,10 @@ import {
     CreditCard,
     GripVertical,
     CopyPlus,
-    Snowflake
+    Snowflake,
+    FileBadge,
+    Printer,
+    CheckCircle2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -88,12 +91,12 @@ export default function ManualPage() {
                                     <Sparkles className="h-4 w-4 text-orange-600" />
                                     <h4 className="font-bold">Análise Estratégica IA</h4>
                                 </div>
-                                <p className="text-xs text-muted-foreground">Dentro da ficha do cliente, o botão "Gerar Consultoria" entrega uma análise profunda. A IA cruza dicas de datas de contratos para sugerir o momento exato de um refinanciamento.</p>
+                                <p className="text-xs text-muted-foreground">Dentro da ficha do cliente, o botão "Gerar Consultoria" entrega uma análise profunda. A IA cruza datas de contratos para sugerir o momento exato de um refinanciamento.</p>
                             </div>
                             <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
                                 <div className="flex items-center gap-2 mb-2">
                                     <Camera className="h-4 w-4 text-blue-600" />
-                                    <h4 className="font-bold">OCR e Separação Inteligente</h4>
+                                    <h4 className="font-bold">OCR e Separação de Contatos</h4>
                                 </div>
                                 <p className="text-xs text-muted-foreground">O cadastro via IA agora identifica e **separa automaticamente múltiplos telefones** encontrados no documento, preenchendo os campos "Principal" e "Telefone 2" de forma organizada.</p>
                             </div>
@@ -119,158 +122,113 @@ export default function ManualPage() {
                                     <Sparkles className="h-4 w-4" /> Resumo de Fechamento
                                 </h4>
                                 <p className="text-xs text-muted-foreground">
-                                    Ao concluir um retorno, utilize o botão **"Resumir com IA"** para organizar suas anotações da conversa. A IA transformará seus rascunhos em um histórico profissional e limpo.
+                                    Ao concluir um retorno, utilize o botão **"Resumir com IA"** para organizar suas anotações da conversa em um histórico profissional.
                                 </p>
                             </div>
                             <div className="p-4 rounded-xl bg-muted/20 border">
                                 <h4 className="font-bold text-foreground flex items-center gap-2 mb-2">
-                                    <Clock className="h-4 w-4 text-primary" /> Visibilidade de Horários
+                                    <Clock className="h-4 w-4 text-primary" /> Calendário de Pauta
                                 </h4>
                                 <p className="text-xs text-muted-foreground">
-                                    A visão de **Calendário** agora exibe o horário agendado diretamente no quadrado do dia (ex: 14:00 - Cliente), permitindo gerir sua pauta sem precisar abrir cada registro.
+                                    O horário agendado aparece diretamente na visão mensal (ex: 14:00 - João), facilitando a gestão do seu dia sem cliques extras.
                                 </p>
                             </div>
                         </div>
                     </AccordionContent>
                 </AccordionItem>
 
-                {/* 3. OPERAÇÃO DE ESTEIRA & CHECKLIST */}
+                {/* 3. OPERAÇÃO DE ESTEIRA & CAPAS */}
                 <AccordionItem value="ops-pipeline" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-blue-500/20">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-blue-100 text-blue-600"><ListChecks className="h-5 w-5" /></div>
+                            <div className="p-2 rounded-xl bg-blue-100 text-blue-600"><FileBadge className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">3. Esteira de Produção & Checklist</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Monitoramento Visual por Etapas</p>
+                                <p className="font-bold text-sm">3. Esteira & Documentação Técnica</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Capa de Lote e Checklist Visual</p>
                             </div>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
-                        <p className="text-muted-foreground mb-4">Cada proposta possui 4 etapas fundamentais representadas por ícones na tabela principal:</p>
+                        <div className="p-4 rounded-xl bg-blue-50/5 border border-blue-500/20 mb-4">
+                            <h4 className="font-bold text-blue-700 flex items-center gap-2 mb-2">
+                                <Printer className="h-4 w-4" /> Capas de Proposta em PDF
+                            </h4>
+                            <p className="text-xs text-muted-foreground">
+                                Na aba Propostas, selecione um ou mais registros para gerar a **Capa de Lote**. O sistema cria um PDF profissional com os dados do cliente, detalhes financeiros e campos para assinatura, pronto para impressão.
+                            </p>
+                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-xl border">
                                 <Send className="h-4 w-4 text-blue-500" />
-                                <div className="text-[11px]"><span className="font-bold uppercase">Formalização:</span> Link enviado ao cliente.</div>
+                                <div className="text-[11px] font-bold uppercase">Formalização</div>
                             </div>
                             <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-xl border">
                                 <FileCheck className="h-4 w-4 text-orange-500" />
-                                <div className="text-[11px]"><span className="font-bold uppercase">Documentação:</span> Arquivos conferidos.</div>
-                            </div>
-                            <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-xl border">
-                                <PenTool className="h-4 w-4 text-purple-500" />
-                                <div className="text-[11px]"><span className="font-bold uppercase">Checklist:</span> Asssignature e trâmite do banco.</div>
-                            </div>
-                            <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-xl border">
-                                <ShieldCheck className="h-4 w-4 text-green-500" />
-                                <div className="text-[11px]"><span className="font-bold uppercase">Averbação:</span> Confirmação no órgão.</div>
+                                <div className="text-[11px] font-bold uppercase">Documentação</div>
                             </div>
                         </div>
                     </AccordionContent>
                 </AccordionItem>
 
-                {/* 4. ALERTAS E CENTRAL DE NOTIFICAÇÕES */}
-                <AccordionItem value="notifications-manual" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-pink-500/20">
+                {/* 4. PRECISÃO E REGRAS DE NEGÓCIO */}
+                <AccordionItem value="precision-rules" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-emerald-500/20">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-pink-100 text-pink-600"><Bell className="h-5 w-5" /></div>
+                            <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600"><CheckCircle2 className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">4. Central de Alertas Unificada</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Sincronização entre Sininho e Dashboard</p>
-                            </div>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
-                        <div className="p-4 rounded-xl bg-pink-50/5 border border-pink-200">
-                            <h4 className="font-bold text-pink-700 flex items-center gap-2 mb-2"><Bot className="h-4 w-4" /> Inteligência de Sincronização</h4>
-                            <p className="text-xs text-muted-foreground">Os alertas de aniversários, comissões pendentes e retornos estão unificados. Ao clicar no **"X" (Dispensar)** de uma notificação no menu superior, ela será automaticamente removida também do card de **"Inteligência Diária"** no Dashboard.</p>
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
-
-                {/* 5. GESTÃO DE PARCEIROS & SEGURANÇA */}
-                <AccordionItem value="management-secure" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-blue-500/20">
-                    <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-blue-100 text-blue-600"><Lock className="h-5 w-5" /></div>
-                            <div className="text-left">
-                                <p className="font-bold text-sm">5. Gestão de Parceiros & Portal de Leads</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Criptografia e Automação de Entrada</p>
+                                <p className="font-bold text-sm">4. Precisão e Validação de Dados</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Regras de Bloqueio e Cálculo</p>
                             </div>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
                         <div className="grid gap-4 md:grid-cols-2">
-                            <div className="p-4 rounded-xl bg-blue-50/5 border border-blue-200">
-                                <h4 className="font-bold text-blue-700 flex items-center gap-2 mb-2"><LinkIcon className="h-4 w-4" /> Portal de Leads</h4>
-                                <p className="text-xs text-muted-foreground">Seu link exclusivo de auto-cadastro permite que o cliente preencha a ficha e anexe documentos diretamente do celular dele para o seu sistema.</p>
-                            </div>
-                            <div className="p-4 rounded-xl bg-green-50/5 border border-green-200">
-                                <h4 className="font-bold text-green-700 flex items-center gap-2 mb-2"><GripVertical className="h-4 w-4" /> Ordenação de Tópicos</h4>
-                                <p className="text-xs text-muted-foreground">Nas **Configurações**, você pode arrastar e soltar os Tópicos Rápidos e Status para a ordem que preferir, deixando os mais usados sempre no topo.</p>
-                            </div>
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
-
-                {/* 6. PRODUTIVIDADE & ATALHOS */}
-                <AccordionItem value="ux-productivity" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-emerald-500/20">
-                    <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600"><Copy className="h-5 w-5" /></div>
-                            <div className="text-left">
-                                <p className="font-bold text-sm">6. Produtividade & Atalhos de Elite</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Precisão Financeira e Agilidade</p>
-                            </div>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <div className="p-4 rounded-xl bg-blue-50/5 border border-blue-500/20">
-                                <h4 className="font-bold text-blue-700 flex items-center gap-2 mb-2">
-                                    <CopyPlus className="h-4 w-4" /> Duplicação em 1-Clique
-                                </h4>
-                                <p className="text-xs text-muted-foreground">
-                                    Na tabela de propostas, utilize o ícone de **Duplicar** diretamente na linha. Isso clonará os dados do cliente e do banco, permitindo lançar um novo contrato em segundos.
-                                </p>
-                            </div>
-                            <div className="p-4 rounded-xl bg-emerald-50/5 border border-emerald-500/20">
+                            <div className="p-4 rounded-xl bg-emerald-50/5 border border-emerald-200">
                                 <h4 className="font-bold text-emerald-700 flex items-center gap-2 mb-2">
-                                    <DollarSign className="h-4 w-4" /> Máscaras de Moeda
+                                    <ShieldCheck className="h-4 w-4" /> Itens Obrigatórios
                                 </h4>
                                 <p className="text-xs text-muted-foreground">
-                                    Todos os campos de valor possuem formatação em tempo real, garantindo precisão total nos cálculos de comissão e volume bruto.
+                                    O campo **Produto** agora é estritamente obrigatório. O sistema impede a gravação de propostas sem classificação para garantir a integridade dos seus relatórios de performance.
+                                </p>
+                            </div>
+                            <div className="p-4 rounded-xl bg-blue-50/5 border border-blue-200">
+                                <h4 className="font-bold text-blue-700 flex items-center gap-2 mb-2">
+                                    <Wallet className="h-4 w-4" /> Comissões Fixas
+                                </h4>
+                                <p className="text-xs text-muted-foreground">
+                                    No Financeiro, os cards superiores (Resumo) são **fixos no mês atual**. Eles não são alterados por filtros de busca ou operador, servindo como uma âncora real do seu faturamento mensal.
                                 </p>
                             </div>
                         </div>
                     </AccordionContent>
                 </AccordionItem>
 
-                {/* 7. NAVEGAÇÃO DE ALTA PRECISÃO */}
-                <AccordionItem value="ux-navigation" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-blue-500/30">
+                {/* 5. INTERFACE E USABILIDADE */}
+                <AccordionItem value="ui-usability" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-zinc-500/20">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-blue-100 text-blue-600"><Snowflake className="h-5 w-5" /></div>
+                            <div className="p-2 rounded-xl bg-zinc-100 text-zinc-600"><Layout className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">7. Navegação de Alta Precisão (Frozen Columns)</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Controle Total de Tabelas Largas</p>
+                                <p className="font-bold text-sm">5. Navegação em Formatos Elite</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Modais de Alta Performance</p>
                             </div>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
-                        <div className="p-4 rounded-xl bg-blue-50/5 border border-blue-200">
-                            <h4 className="font-bold text-blue-700 flex items-center gap-2 mb-2">
-                                <Snowflake className="h-4 w-4" /> Congelamento de Colunas V2
+                        <div className="p-4 rounded-xl bg-muted/20 border">
+                            <h4 className="font-bold text-foreground flex items-center gap-2 mb-2">
+                                <MousePointer2 className="h-4 w-4 text-primary" /> Rodapés Fixos (Sticky)
                             </h4>
                             <p className="text-xs text-muted-foreground">
-                                As tabelas de Propostas, Clientes e Financeiro possuem o seletor **"Congelar"**. Agora com calibração de precisão milimétrica, você pode fixar até as 3 primeiras colunas simultaneamente sem desalinhamento. 
+                                Todos os formulários de cadastro agora possuem o botão **"Salvar"** fixado no rodapé. Você pode rolar o conteúdo livremente sem perder o acesso à finalização do registro.
                             </p>
                         </div>
-                        <div className="p-4 rounded-xl bg-muted/20 border mt-4">
-                            <h4 className="font-bold text-foreground flex items-center gap-2 mb-2">
-                                <MoveHorizontal className="h-4 w-4 text-primary" /> Realce de Scroll Industrial
+                        <div className="p-4 rounded-xl bg-blue-50/5 border border-blue-200 mt-4">
+                            <h4 className="font-bold text-blue-700 flex items-center gap-2 mb-2">
+                                <Snowflake className="h-4 w-4" /> Congelamento V2
                             </h4>
                             <p className="text-xs text-muted-foreground">
-                                A barra de rolagem horizontal foi redesenhada para ser **ultra-visível (16px)**. Ela possui uma borda sólida e alto contraste, garantindo que você nunca perca a referência de navegação em telas ultra-wide.
+                                As tabelas utilizam calibração milimétrica para fixar colunas. Use o seletor **"Congelar"** para manter nomes e IDs visíveis mesmo em telas ultra-largas.
                             </p>
                         </div>
                     </AccordionContent>
@@ -293,28 +251,24 @@ export default function ManualPage() {
                         <p className="text-xs font-bold">CTRL + K</p>
                     </div>
                     <div className="space-y-1">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase">Símbolos/Emojis</p>
-                        <p className="text-xs font-bold">Win + .</p>
-                    </div>
-                    <div className="space-y-1">
                         <p className="text-[10px] font-black text-muted-foreground uppercase">Recolher Menu</p>
                         <p className="text-xs font-bold">CTRL + B</p>
                     </div>
                 </CardContent>
             </Card>
 
-            <Card className="border-2 border-dashed border-green-500/20 bg-green-500/5">
-                <HardDrive className="absolute top-2 right-2 h-4 w-4 text-green-600/30" />
+            <Card className="border-2 border-dashed border-orange-500/20 bg-orange-500/5">
+                <HardDrive className="absolute top-2 right-2 h-4 w-4 text-orange-600/30" />
                 <CardHeader className="pb-2">
-                    <CardTitle className="text-xs font-black uppercase tracking-widest text-green-600">Armazenamento</CardTitle>
+                    <CardTitle className="text-xs font-black uppercase tracking-widest text-orange-600">Armazenamento</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex items-center gap-2 text-green-600">
+                    <div className="flex items-center gap-2 text-orange-600">
                         <div className="h-2 w-2 rounded-full bg-current animate-pulse" />
-                        <span className="text-[10px] font-black uppercase">5 GB Gratuitos</span>
+                        <span className="text-[10px] font-black uppercase">Segurança Cloud</span>
                     </div>
                     <p className="text-[9px] text-muted-foreground mt-2 leading-tight font-medium">
-                        Capacidade para milhares de dossiês. Excluir anexos libera espaço em tempo real.
+                        Seus documentos e anexos estão protegidos por criptografia de ponta a ponta e backups diários automáticos.
                     </p>
                 </CardContent>
             </Card>
