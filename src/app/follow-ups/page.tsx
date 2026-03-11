@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -58,7 +57,7 @@ export default function FollowUpsPage() {
       collection(firestore, 'users', user.uid, 'followUps'),
       orderBy('dueDate', 'asc')
     );
-  }, [firestore, user, isSaving]); // Re-memoize on save to ensure fresh data
+  }, [firestore, user]); // Sincronização em tempo real nativa via onSnapshot
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
