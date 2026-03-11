@@ -1,3 +1,4 @@
+
 'use client';
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -34,7 +35,7 @@ import { CustomerAiForm } from '@/components/customers/customer-ai-form';
 
 function ProposalsPageSkeleton() {
     return (
-        <AppLayout>
+        <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <PageHeader title="Propostas" />
                 <div className="flex items-center gap-2">
@@ -50,7 +51,7 @@ function ProposalsPageSkeleton() {
                     ))}
                 </div>
             </div>
-        </AppLayout>
+        </div>
     )
 }
 
@@ -415,12 +416,11 @@ function ProposalsPageContent() {
     toast({ title: 'PDF Gerado!' });
   };
 
-  const handleAiFormSubmit = (aiData: any) => {
-    // Processamento do retorno da IA para preencher o formulário ou criar cliente
+  const handleAiFormSubmit = React.useCallback((aiData: any) => {
     setNewlySelectedCustomer(aiData);
     setIsAiModalOpen(false);
     handleNewProposal();
-  };
+  }, [handleNewProposal]);
 
   React.useEffect(() => {
     if (isLoading || proposalsWithCustomerData.length === 0) return;
@@ -446,7 +446,7 @@ function ProposalsPageContent() {
     }
   }, [searchParams, isLoading, proposalsWithCustomerData, hasOpenedFromParam, handleNewProposal, handleEditProposal, router]);
 
-  const handleStatusChange = async (proposalId: string, payload: { status: ProposalStatus; rejectionReason?: string; quickNote?: string; product?: string }) => {
+  const handleStatusChange = React.useCallback(async (proposalId: string, payload: { status: ProposalStatus; rejectionReason?: string; quickNote?: string; product?: string }) => {
     if (!firestore || !user) return;
     
     const proposal = proposals?.find(p => p.id === proposalId);
@@ -506,9 +506,9 @@ function ProposalsPageContent() {
     } finally {
         setIsSaving(false);
     }
-  };
+  }, [firestore, user, proposals]);
 
-  const handleToggleChecklist = async (proposalId: string, stepId: string, currentValue: boolean) => {
+  const handleToggleChecklist = React.useCallback(async (proposalId: string, stepId: string, currentValue: boolean) => {
     if (!firestore || !user) return;
     const docRef = doc(firestore, 'loanProposals', proposalId);
     const updatePath = `checklist.${stepId}`;
@@ -529,7 +529,23 @@ function ProposalsPageContent() {
     } finally {
         setIsSaving(false);
     }
-  };
+  }, [firestore, user]);
+
+  const handleDeleteProposal = React.useCallback(async (id: string) => {
+    if (!firestore) return;
+    const docRef = doc(firestore, 'loanProposals', id);
+    try {
+        await deleteDoc(docRef);
+        toast({ title: 'Proposta Excluída' });
+    } catch (error: any) {
+        if (error.code === 'permission-denied') {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: docRef.path,
+                operation: 'delete'
+            }));
+        }
+    }
+  }, [firestore]);
 
   const handleFormSubmit = async (data: any) => {
     if (!firestore || !user) return;
@@ -564,28 +580,14 @@ function ProposalsPageContent() {
   const columns = React.useMemo(() => getColumns(
     handleEditProposal, 
     handleViewProposal, 
-    async (id: string) => {
-        if (!firestore) return;
-        const docRef = doc(firestore, 'loanProposals', id);
-        try {
-            await deleteDoc(docRef);
-            toast({ title: 'Proposta Excluída' });
-        } catch (error: any) {
-            if (error.code === 'permission-denied') {
-                errorEmitter.emit('permission-error', new FirestorePermissionError({
-                    path: docRef.path,
-                    operation: 'delete'
-                }));
-            }
-        }
-    }, 
+    handleDeleteProposal, 
     handleStatusChange, 
     handleDuplicateProposal,
     handleToggleChecklist
-  ), [firestore, handleEditProposal, handleViewProposal, handleStatusChange, handleDuplicateProposal, handleToggleChecklist]);
+  ), [handleEditProposal, handleViewProposal, handleDeleteProposal, handleStatusChange, handleDuplicateProposal, handleToggleChecklist]);
 
   return (
-    <AppLayout>
+    <>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <PageHeader title="Propostas" />
         <div className="flex items-center gap-3 flex-wrap">
@@ -748,7 +750,7 @@ function ProposalsPageContent() {
             userSettings={userSettings || null}
         />
       )}
-    </AppLayout>
+    </>
   );
 }
 
@@ -756,8 +758,10 @@ export type ProposalWithCustomer = Proposal & { customer: Customer | undefined }
 
 export default function ProposalsPage() {
     return (
-        <Suspense fallback={<ProposalsPageSkeleton />}>
-            <ProposalsPageContent />
-        </Suspense>
+        <AppLayout>
+            <Suspense fallback={<ProposalsPageSkeleton />}>
+                <ProposalsPageContent />
+            </Suspense>
+        </AppLayout>
     )
 }
