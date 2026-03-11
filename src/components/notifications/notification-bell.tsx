@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -36,12 +37,11 @@ export function NotificationBell() {
   const [selectedBdayCustomer, setSelectedBdayCustomer] = useState<Customer | null>(null);
   const [isBdayModalOpen, setIsBdayModalOpen] = useState(false);
 
+  // 🛡️ HIDRATAÇÃO SEGURA: Garantimos que o estado inicial seja idêntico ao servidor.
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // 🛡️ PERFORMANCE: Limita o carregamento de notificações aos 100 registros mais recentes.
-  // Evita o download de milhares de registros apenas para calcular os badges do header.
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(
@@ -119,6 +119,7 @@ export function NotificationBell() {
   const dismissedIds = userSettings?.dismissedAlerts || [];
 
   const notifications = React.useMemo(() => {
+    // 🛡️ Trava de Hidratação: Só calcula se estiver no cliente
     if (!isClient) return [];
     
     const alerts: { id: string; title: string; type: 'birthday' | 'commission' | 'followup' | 'debt' | 'partial' | 'radar' | 'age' | 'news' | 'lead'; date: string; link: string; customerId?: string }[] = [];
@@ -301,8 +302,8 @@ export function NotificationBell() {
 
   const count = visibleNotifications.length;
 
-  if (!isClient) return <Button variant="ghost" size="icon"><Bell className="h-5 w-5" /></Button>;
-
+  // 🛡️ RENDERIZAÇÃO ESTÁVEL: O shell do botão é idêntico no servidor e cliente.
+  // Somente o Badge e o conteúdo do Menu são dinâmicos após hidratação.
   return (
     <>
     <DropdownMenu onOpenChange={(open) => open && setHasNewLeadPulse(false)}>
@@ -312,12 +313,12 @@ export function NotificationBell() {
             size="icon" 
             className={cn(
                 "relative transition-all duration-500",
-                hasNewLeadPulse && "animate-alert-pulse text-orange-500"
+                isClient && hasNewLeadPulse && "animate-alert-pulse text-orange-500"
             )}
-            style={hasNewLeadPulse ? { '--status-color': '24 95% 53%' } as any : {}}
+            style={isClient && hasNewLeadPulse ? { '--status-color': '24 95% 53%' } as any : {}}
         >
-          <Bell className={cn("h-5 w-5", hasNewLeadPulse && "fill-current")} />
-          {count > 0 && (
+          <Bell className={cn("h-5 w-5", isClient && hasNewLeadPulse && "fill-current")} />
+          {isClient && count > 0 && (
             <Badge className={cn(
                 "absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] animate-in zoom-in",
                 hasNewLeadPulse ? "bg-orange-600" : "bg-red-500"
@@ -328,75 +329,81 @@ export function NotificationBell() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
-        <div className="flex items-center justify-between p-2 px-3">
-            <DropdownMenuLabel className="p-0">Notificações</DropdownMenuLabel>
-            {dismissedIds.length > 0 && (
-                <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-auto p-0 text-[10px] text-muted-foreground hover:text-primary"
-                    onClick={async () => {
-                        if (user && firestore) {
-                            await setDoc(doc(firestore, 'userSettings', user.uid), { dismissedAlerts: [] }, { merge: true });
-                        }
-                    }}
-                >
-                    Restaurar Tudo
-                </Button>
-            )}
-        </div>
-        <DropdownMenuSeparator />
-        {count === 0 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">
-            <Bell className="h-8 w-8 mx-auto mb-2 opacity-20" />
-            Nenhum alerta novo.
-          </div>
+        {!isClient ? (
+            <div className="p-8 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto opacity-20" /></div>
         ) : (
-          <div className="max-h-96 overflow-y-auto">
-            {visibleNotifications.map((n) => (
-              <div key={n.id} className="relative group">
-                <div className="flex items-center pr-10">
-                    <Link href={n.link} passHref className="flex-1">
-                        <DropdownMenuItem className="cursor-pointer p-3">
-                        <div className="flex items-start gap-3">
-                            {n.type === 'lead' && <UserPlus className="h-4 w-4 text-orange-600 mt-1 animate-pulse" />}
-                            {n.type === 'birthday' && <Cake className="h-4 w-4 text-pink-500 mt-1" />}
-                            {n.type === 'age' && <AlertTriangle className="h-4 w-4 text-red-500 mt-1" />}
-                            {n.type === 'radar' && <Zap className="h-4 w-4 text-orange-500 fill-orange-500 mt-1" />}
-                            {n.type === 'commission' && <BadgePercent className="h-4 w-4 text-blue-500 mt-1" />}
-                            {n.type === 'followup' && <CalendarClock className="h-4 w-4 text-purple-500 mt-1" />}
-                            {n.type === 'debt' && <Hourglass className="h-4 w-4 text-red-500 mt-1" />}
-                            {n.type === 'partial' && <Coins className="h-4 w-4 text-blue-500 mt-1" />}
-                            {n.type === 'news' && <Newspaper className="h-4 w-4 text-emerald-500 mt-1" />}
-                            <div className="space-y-1 overflow-hidden">
-                            <p className="text-sm font-bold leading-none truncate">{n.title}</p>
-                            <p className="text-[10px] text-muted-foreground">{n.date}</p>
-                            </div>
-                        </div>
-                        </DropdownMenuItem>
-                    </Link>
-                    {n.type === 'birthday' && n.customerId && (
+            <>
+                <div className="flex items-center justify-between p-2 px-3">
+                    <DropdownMenuLabel className="p-0">Notificações</DropdownMenuLabel>
+                    {dismissedIds.length > 0 && (
                         <Button 
                             variant="ghost" 
-                            size="icon" 
-                            className="absolute right-10 top-1/2 -translate-y-1/2 h-8 w-8 text-pink-500 hover:bg-pink-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => handleBdayClick(e, n.customerId!)}
-                            title="Gerar Mensagem WhatsApp"
+                            size="sm" 
+                            className="h-auto p-0 text-[10px] text-muted-foreground hover:text-primary"
+                            onClick={async () => {
+                                if (user && firestore) {
+                                    await setDoc(doc(firestore, 'userSettings', user.uid), { dismissedAlerts: [] }, { merge: true });
+                                }
+                            }}
                         >
-                            <Bot className="h-4 w-4" />
+                            Restaurar Tudo
                         </Button>
                     )}
                 </div>
-                <button
-                    onClick={(e) => handleDismiss(e, n.id)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted rounded-md"
-                    title="Remover"
-                >
-                    <X className="h-3 w-3 text-muted-foreground" />
-                </button>
-              </div>
-            ))}
-          </div>
+                <DropdownMenuSeparator />
+                {count === 0 ? (
+                <div className="p-8 text-center text-sm text-muted-foreground">
+                    <Bell className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                    Nenhum alerta novo.
+                </div>
+                ) : (
+                <div className="max-h-96 overflow-y-auto">
+                    {visibleNotifications.map((n) => (
+                    <div key={n.id} className="relative group">
+                        <div className="flex items-center pr-10">
+                            <Link href={n.link} passHref className="flex-1">
+                                <DropdownMenuItem className="cursor-pointer p-3">
+                                <div className="flex items-start gap-3">
+                                    {n.type === 'lead' && <UserPlus className="h-4 w-4 text-orange-600 mt-1 animate-pulse" />}
+                                    {n.type === 'birthday' && <Cake className="h-4 w-4 text-pink-500 mt-1" />}
+                                    {n.type === 'age' && <AlertTriangle className="h-4 w-4 text-red-500 mt-1" />}
+                                    {n.type === 'radar' && <Zap className="h-4 w-4 text-orange-500 fill-orange-500 mt-1" />}
+                                    {n.type === 'commission' && <BadgePercent className="h-4 w-4 text-blue-500 mt-1" />}
+                                    {n.type === 'followup' && <CalendarClock className="h-4 w-4 text-purple-500 mt-1" />}
+                                    {n.type === 'debt' && <Hourglass className="h-4 w-4 text-red-500 mt-1" />}
+                                    {n.type === 'partial' && <Coins className="h-4 w-4 text-blue-500 mt-1" />}
+                                    {n.type === 'news' && <Newspaper className="h-4 w-4 text-emerald-500 mt-1" />}
+                                    <div className="space-y-1 overflow-hidden">
+                                    <p className="text-sm font-bold leading-none truncate">{n.title}</p>
+                                    <p className="text-[10px] text-muted-foreground">{n.date}</p>
+                                    </div>
+                                </div>
+                                </DropdownMenuItem>
+                            </Link>
+                            {n.type === 'birthday' && n.customerId && (
+                                <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="absolute right-10 top-1/2 -translate-y-1/2 h-8 w-8 text-pink-500 hover:bg-pink-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={(e) => handleBdayClick(e, n.customerId!)}
+                                    title="Gerar Mensagem WhatsApp"
+                                >
+                                    <Bot className="h-4 w-4" />
+                                </Button>
+                            )}
+                        </div>
+                        <button
+                            onClick={(e) => handleDismiss(e, n.id)}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted rounded-md"
+                            title="Remover"
+                        >
+                            <X className="h-3 w-3 text-muted-foreground" />
+                        </button>
+                    </div>
+                    ))}
+                </div>
+                )}
+            </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
