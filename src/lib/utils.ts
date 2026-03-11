@@ -119,13 +119,17 @@ export function calculateBusinessDays(startDateStr: string | Date): number {
     if (!start || isNaN(start.getTime())) return 0;
     
     let count = 0;
-    // 🛡️ FIX HIDRATAÇÃO: Força o uso do início do dia local para evitar discrepâncias com o servidor
     const curDate = new Date(start);
     curDate.setHours(0, 0, 0, 0);
     
     const now = new Date();
     now.setHours(0, 0, 0, 0);
     
+    // 🛡️ SEGURANÇA: Impede loops infinitos se a data for inválida ou muito antiga
+    if (isAfter(curDate, now)) return 0;
+    const diffDays = Math.abs(differenceInDays(now, curDate));
+    if (diffDays > 365) return 260; // Retorno máximo para evitar travamento
+
     curDate.setDate(curDate.getDate() + 1);
 
     while (curDate <= now) {
@@ -136,6 +140,10 @@ export function calculateBusinessDays(startDateStr: string | Date): number {
         curDate.setDate(curDate.getDate() + 1);
     }
     return count;
+}
+
+function isAfter(date: Date, dateToCompare: Date): boolean {
+    return date.getTime() > dateToCompare.getTime();
 }
 
 /**

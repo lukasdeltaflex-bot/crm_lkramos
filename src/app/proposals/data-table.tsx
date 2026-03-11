@@ -126,6 +126,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'col_date', desc: true }]);
   const [isClient, setIsClient] = React.useState(false);
+  const hasLoadedRef = React.useRef(false);
 
   const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   
@@ -143,12 +144,50 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const handlePaginationChange = (updater: any) => {
     setPagination((old) => {
       const next = typeof updater === 'function' ? updater(old) : updater;
-      if (typeof window !== 'undefined') {
-        try { localStorage.setItem('lk-proposals-pageSize', String(next.pageSize)); } catch(e) {}
-      }
       return next;
     });
   };
+
+  // 🛡️ MEMÓRIA DE PERSISTÊNCIA V3: Carrega configurações do dispositivo
+  React.useEffect(() => {
+    setIsClient(true);
+    try {
+        const savedFrozen = localStorage.getItem('lk-proposals-frozen-count');
+        if (savedFrozen) setFrozenCount(Number(savedFrozen));
+
+        const savedPageSize = localStorage.getItem('lk-proposals-pageSize');
+        if (savedPageSize) setPagination(p => ({ ...p, pageSize: Number(savedPageSize) }));
+
+        const savedVisibility = localStorage.getItem('lk-proposals-visibility');
+        if (savedVisibility) setColumnVisibility(JSON.parse(savedVisibility));
+
+        const savedOrder = localStorage.getItem('lk-proposals-order');
+        if (savedOrder) {
+            const parsed = JSON.parse(savedOrder);
+            if (Array.isArray(parsed) && parsed.length > 0) setColumnOrder(parsed);
+        }
+
+        const savedSizing = localStorage.getItem('lk-proposals-sizing');
+        if (savedSizing) setColumnSizing(JSON.parse(savedSizing));
+        
+        hasLoadedRef.current = true;
+    } catch (e) {
+        hasLoadedRef.current = true;
+    }
+  }, []);
+
+  // 🛡️ PERSISTÊNCIA AUTOMÁTICA: Salva apenas APÓS o carregamento inicial
+  React.useEffect(() => {
+    if (isClient && hasLoadedRef.current) {
+        try {
+            localStorage.setItem('lk-proposals-frozen-count', String(frozenCount));
+            localStorage.setItem('lk-proposals-visibility', JSON.stringify(columnVisibility));
+            localStorage.setItem('lk-proposals-order', JSON.stringify(columnOrder));
+            localStorage.setItem('lk-proposals-sizing', JSON.stringify(columnSizing));
+            localStorage.setItem('lk-proposals-pageSize', String(pagination.pageSize));
+        } catch(e) {}
+    }
+  }, [columnVisibility, columnOrder, columnSizing, frozenCount, isClient, pagination.pageSize]);
 
   const handleDateMask = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, "").substring(0, 8);
@@ -195,44 +234,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   };
 
   const hasActiveFilters = statusFilter !== 'Todos' || bankFilters.length > 0 || promoterFilters.length > 0 || operatorFilters.length > 0 || !!globalFilter || !!appliedDateRange;
-
-  React.useEffect(() => {
-    setIsClient(true);
-    try {
-        const savedFrozen = localStorage.getItem('lk-proposals-frozen-count');
-        if (savedFrozen) setFrozenCount(Number(savedFrozen));
-
-        const savedPageSize = localStorage.getItem('lk-proposals-pageSize');
-        if (savedPageSize) setPagination(p => ({ ...p, pageSize: Number(savedPageSize) }));
-
-        const savedSearch = localStorage.getItem('lk-proposals-filter-search');
-        if (savedSearch) setGlobalFilter(savedSearch);
-
-        const savedVisibility = localStorage.getItem('lk-proposals-visibility');
-        if (savedVisibility) setColumnVisibility(JSON.parse(savedVisibility));
-
-        const savedOrder = localStorage.getItem('lk-proposals-order');
-        if (savedOrder) {
-            const parsed = JSON.parse(savedOrder);
-            if (parsed.length === initialIds.length) setColumnOrder(parsed);
-        }
-
-        const savedSizing = localStorage.getItem('lk-proposals-sizing');
-        if (savedSizing) setColumnSizing(JSON.parse(savedSizing));
-    } catch (e) {}
-  }, [initialIds]);
-
-  React.useEffect(() => {
-    if (isClient) {
-        try {
-            localStorage.setItem('lk-proposals-frozen-count', String(frozenCount));
-            localStorage.setItem('lk-proposals-filter-search', globalFilter);
-            localStorage.setItem('lk-proposals-visibility', JSON.stringify(columnVisibility));
-            localStorage.setItem('lk-proposals-order', JSON.stringify(columnOrder));
-            localStorage.setItem('lk-proposals-sizing', JSON.stringify(columnSizing));
-        } catch(e) {}
-    }
-  }, [globalFilter, columnVisibility, columnOrder, columnSizing, frozenCount, isClient]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor));
 
@@ -330,6 +331,8 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     });
     return offsets;
   }, [table.getVisibleLeafColumns(), columnSizing]);
+
+  if (!isClient) return <div className="h-96 w-full bg-muted/10 animate-pulse rounded-xl" />;
 
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>

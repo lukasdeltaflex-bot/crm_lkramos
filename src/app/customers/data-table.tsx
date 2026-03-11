@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -99,6 +100,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [frozenCount, setFrozenCount] = React.useState(2);
   const [isClient, setIsClient] = React.useState(false);
+  const hasLoadedRef = React.useRef(false);
 
   const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   
@@ -115,9 +117,6 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   const handlePaginationChange = (updater: any) => {
     setPagination((old) => {
       const next = typeof updater === 'function' ? updater(old) : updater;
-      if (typeof window !== 'undefined') {
-        try { localStorage.setItem('lk-customers-pageSize', String(next.pageSize)); } catch(e) {}
-      }
       return next;
     });
   };
@@ -131,34 +130,35 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         const savedPageSize = localStorage.getItem('lk-customers-pageSize');
         if (savedPageSize) setPagination(p => ({ ...p, pageSize: Number(savedPageSize) }));
 
-        const savedSearch = localStorage.getItem('lk-customers-filter-search');
-        if (savedSearch) setGlobalFilter(savedSearch);
-
         const savedVisibility = localStorage.getItem('lk-customers-visibility');
         if (savedVisibility) setColumnVisibility(JSON.parse(savedVisibility));
 
         const savedOrder = localStorage.getItem('lk-customers-order');
         if (savedOrder) {
             const parsed = JSON.parse(savedOrder);
-            if (parsed.length === initialIds.length) setColumnOrder(parsed);
+            if (Array.isArray(parsed) && parsed.length > 0) setColumnOrder(parsed);
         }
 
         const savedSizing = localStorage.getItem('lk-customers-sizing');
         if (savedSizing) setColumnSizing(JSON.parse(savedSizing));
-    } catch (e) {}
-  }, [initialIds]);
+        
+        hasLoadedRef.current = true;
+    } catch (e) {
+        hasLoadedRef.current = true;
+    }
+  }, []);
 
   React.useEffect(() => {
-    if (isClient) {
+    if (isClient && hasLoadedRef.current) {
       try {
         localStorage.setItem('lk-customers-frozen-count', String(frozenCount));
-        localStorage.setItem('lk-customers-filter-search', globalFilter);
         localStorage.setItem('lk-customers-visibility', JSON.stringify(columnVisibility));
         localStorage.setItem('lk-customers-order', JSON.stringify(columnOrder));
         localStorage.setItem('lk-customers-sizing', JSON.stringify(columnSizing));
+        localStorage.setItem('lk-customers-pageSize', String(pagination.pageSize));
       } catch(e) {}
     }
-  }, [globalFilter, columnVisibility, columnOrder, columnSizing, frozenCount, isClient]);
+  }, [columnVisibility, columnOrder, columnSizing, frozenCount, isClient, pagination.pageSize]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -225,6 +225,8 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     });
     return offsets;
   }, [table.getVisibleLeafColumns(), columnSizing]);
+
+  if (!isClient) return <div className="h-96 w-full bg-muted/10 animate-pulse rounded-xl" />;
 
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>

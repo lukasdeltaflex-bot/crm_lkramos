@@ -1,6 +1,6 @@
 
 'use client';
-import React, { Suspense } from 'react';
+import React, { Suspense, useCallback, useState, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
@@ -61,19 +61,19 @@ function ProposalsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const [isCustomerSearchOpen, setIsCustomerSearchOpen] = React.useState(false);
-  const [isAiModalOpen, setIsAiModalOpen] = React.useState(false);
-  const [newlySelectedCustomer, setNewlySelectedCustomer] = React.useState<Customer | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCustomerSearchOpen, setIsCustomerSearchOpen] = useState(false);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [newlySelectedCustomer, setNewlySelectedCustomer] = useState<Customer | null>(null);
 
-  const [selectedProposal, setSelectedProposal] = React.useState<ProposalWithCustomer | undefined>(undefined);
-  const [sheetMode, setSheetMode] = React.useState<'new' | 'edit' | 'view'>('new');
-  const [rowSelection, setRowSelection] = React.useState<Record<string, boolean>>({});
-  const [defaultValues, setDefaultValues] = React.useState<any | undefined>(undefined);
-  const [isSaving, setIsSaving] = React.useState(false);
-  const [formKey, setFormKey] = React.useState('new');
+  const [selectedProposal, setSelectedProposal] = useState<ProposalWithCustomer | undefined>(undefined);
+  const [sheetMode, setSheetMode] = useState<'new' | 'edit' | 'view'>('new');
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
+  const [defaultValues, setDefaultValues] = useState<any | undefined>(undefined);
+  const [isSaving, setIsSaving] = useState(false);
+  const [formKey, setFormKey] = useState('new');
   const tableRef = React.useRef<ProposalsDataTableHandle>(null);
-  const [hasOpenedFromParam, setHasOpenedFromParam] = React.useState(false);
+  const [hasOpenedFromParam, setHasOpenedFromParam] = useState(false);
   
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -96,13 +96,13 @@ function ProposalsPageContent() {
 
   const isLoading = proposalsLoading || customersLoading || isUserLoading || settingsLoading;
 
-  const selectedIds = React.useMemo(() => 
+  const selectedIds = useMemo(() => 
     Object.keys(rowSelection).filter(id => rowSelection[id]),
   [rowSelection]);
 
   const selectedCount = selectedIds.length;
 
-  const proposalsWithCustomerData: ProposalWithCustomer[] = React.useMemo(() => {
+  const proposalsWithCustomerData: ProposalWithCustomer[] = useMemo(() => {
     if (!proposals || !customers) return [];
     const customersMap = new Map(customers.map(c => [c.id, c]));
     return proposals.map(p => ({
@@ -111,7 +111,7 @@ function ProposalsPageContent() {
     }));
   }, [proposals, customers]);
 
-  const handleNewProposal = React.useCallback(() => {
+  const handleNewProposal = useCallback(() => {
     setSelectedProposal(undefined);
     setDefaultValues(undefined);
     setSheetMode('new');
@@ -119,7 +119,7 @@ function ProposalsPageContent() {
     setIsDialogOpen(true);
   }, []);
 
-  const handleEditProposal = React.useCallback((proposal: ProposalWithCustomer) => {
+  const handleEditProposal = useCallback((proposal: ProposalWithCustomer) => {
     setSelectedProposal(proposal);
     setDefaultValues(undefined);
     setSheetMode('edit');
@@ -127,7 +127,7 @@ function ProposalsPageContent() {
     setIsDialogOpen(true);
   }, []);
 
-  const handleViewProposal = React.useCallback((proposal: ProposalWithCustomer) => {
+  const handleViewProposal = useCallback((proposal: ProposalWithCustomer) => {
     setSelectedProposal(proposal);
     setDefaultValues(undefined);
     setSheetMode('view');
@@ -135,16 +135,16 @@ function ProposalsPageContent() {
     setIsDialogOpen(true);
   }, []);
 
-  const handleCustomerSelect = React.useCallback((customer: Customer) => {
+  const handleCustomerSelect = useCallback((customer: Customer) => {
     setNewlySelectedCustomer(customer);
     setIsCustomerSearchOpen(false);
   }, []);
 
-  const handleCustomerSearchSelectionHandled = React.useCallback(() => {
+  const handleCustomerSearchSelectionHandled = useCallback(() => {
     setNewlySelectedCustomer(null);
   }, []);
   
-  const handleDuplicateProposal = React.useCallback((proposal: Proposal) => {
+  const handleDuplicateProposal = useCallback((proposal: Proposal) => {
     const { id, proposalNumber, status, history, checklist, commissionStatus, amountPaid, commissionPaymentDate, ...rest } = proposal;
     const duplicatedData: any = {
         ...rest,
@@ -173,7 +173,7 @@ function ProposalsPageContent() {
     setIsDialogOpen(true);
   }, []);
 
-  const handleBulkStatusChange = async (newStatus: ProposalStatus) => {
+  const handleBulkStatusChange = useCallback(async (newStatus: ProposalStatus) => {
     if (!firestore || !user || selectedCount === 0) return;
     setIsSaving(true);
     try {
@@ -225,9 +225,9 @@ function ProposalsPageContent() {
     } finally {
         setIsSaving(false);
     }
-  };
+  }, [firestore, user, selectedCount, selectedIds, proposals]);
 
-  const handlePrintCovers = async (downloadMode = false) => {
+  const handlePrintCovers = useCallback(async (downloadMode = false) => {
     const selectedProposals = proposalsWithCustomerData.filter(p => rowSelection[p.id]);
     if (selectedProposals.length === 0) {
         toast({ variant: 'destructive', title: 'Nenhuma seleção', description: 'Selecione ao menos uma proposta.' });
@@ -342,111 +342,9 @@ function ProposalsPageContent() {
         window.open(doc.output('bloburl'), '_blank');
         toast({ title: 'PDF Gerado para visualização!' });
     }
-  };
+  }, [proposalsWithCustomerData, rowSelection, userSettings, user]);
 
-  const handleExportToExcel = async (onlySelected = false) => {
-    const table = tableRef.current?.table;
-    if (!table) return;
-    const { utils, writeFile } = await import('xlsx');
-    const rows = onlySelected ? table.getFilteredSelectedRowModel().rows : table.getFilteredRowModel().rows;
-    
-    const dataToExport = rows.map(r => {
-        const p = r.original;
-        return {
-            'Data Digitação': p.dateDigitized ? format(new Date(p.dateDigitized), 'dd/MM/yyyy') : '-',
-            'Cliente': p.customer?.name || '-',
-            'CPF': p.customer?.cpf || '-',
-            'Nº Proposta': p.proposalNumber,
-            'Produto': p.product,
-            'Valor Bruto': p.grossAmount,
-            'Banco': cleanBankName(p.bank),
-            'Status': p.status,
-            'Promotora': p.promoter
-        };
-    });
-
-    const worksheet = utils.json_to_sheet(dataToExport);
-    const workbook = utils.book_new();
-    utils.book_append_sheet(workbook, worksheet, 'Propostas');
-    writeFile(workbook, onlySelected ? 'propostas_selecionadas.xlsx' : 'todas_propostas.xlsx');
-  };
-
-  const handleExportToPdf = async (onlySelected = false) => {
-    const table = tableRef.current?.table;
-    if (!table || !user) return;
-
-    const { default: jsPDF } = await import('jspdf');
-    const { default: autoTable } = await import('jspdf-autotable');
-    
-    const rowsSource = onlySelected ? table.getFilteredSelectedRowModel().rows : table.getFilteredRowModel().rows;
-    const doc = new jsPDF('landscape');
-    
-    const title = onlySelected ? "RELATÓRIO DE PROPOSTAS (SELEÇÃO)" : "RELATÓRIO DE PROPOSTAS COMPLETO";
-    doc.setFontSize(18);
-    doc.setTextColor(40, 74, 127);
-    doc.text(title, 14, 15);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 14, 22);
-
-    const tableData = rowsSource.map(r => {
-        const p = r.original;
-        return [
-            p.dateDigitized ? format(new Date(p.dateDigitized), 'dd/MM/yyyy') : '-',
-            p.customer?.name || '-',
-            p.customer?.cpf || '-',
-            p.proposalNumber,
-            p.product,
-            formatCurrency(p.grossAmount),
-            cleanBankName(p.bank),
-            p.status
-        ];
-    });
-
-    autoTable(doc, {
-        startY: 30,
-        head: [['Data', 'Cliente', 'CPF', 'Nº Proposta', 'Produto', 'Vlr Bruto', 'Banco', 'Status']],
-        body: tableData,
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [40, 74, 127] }
-    });
-
-    doc.save(`propostas_${onlySelected ? 'selecionadas' : 'completo'}.pdf`);
-    toast({ title: 'PDF Gerado!' });
-  };
-
-  const handleAiFormSubmit = React.useCallback((aiData: any) => {
-    setNewlySelectedCustomer(aiData);
-    setIsAiModalOpen(false);
-    handleNewProposal();
-  }, [handleNewProposal]);
-
-  React.useEffect(() => {
-    if (isLoading || proposalsWithCustomerData.length === 0) return;
-
-    const action = searchParams.get('action');
-    const openId = searchParams.get('open');
-
-    if (!hasOpenedFromParam) {
-        if (action === 'new') {
-            handleNewProposal();
-            setHasOpenedFromParam(true);
-            router.replace('/proposals', { scroll: false });
-        } else if (openId) {
-            const proposalToOpen = proposalsWithCustomerData.find(p => p.id === openId);
-            if (proposalToOpen) {
-                handleEditProposal(proposalToOpen);
-                setHasOpenedFromParam(true);
-                setTimeout(() => {
-                    router.replace('/proposals', { scroll: false });
-                }, 300);
-            }
-        }
-    }
-  }, [searchParams, isLoading, proposalsWithCustomerData, hasOpenedFromParam, handleNewProposal, handleEditProposal, router]);
-
-  const handleStatusChange = React.useCallback(async (proposalId: string, payload: { status: ProposalStatus; rejectionReason?: string; quickNote?: string; product?: string }) => {
+  const handleStatusChange = useCallback(async (proposalId: string, payload: { status: ProposalStatus; rejectionReason?: string; quickNote?: string; product?: string }) => {
     if (!firestore || !user) return;
     
     const proposal = proposals?.find(p => p.id === proposalId);
@@ -508,7 +406,7 @@ function ProposalsPageContent() {
     }
   }, [firestore, user, proposals]);
 
-  const handleToggleChecklist = React.useCallback(async (proposalId: string, stepId: string, currentValue: boolean) => {
+  const handleToggleChecklist = useCallback(async (proposalId: string, stepId: string, currentValue: boolean) => {
     if (!firestore || !user) return;
     const docRef = doc(firestore, 'loanProposals', proposalId);
     const updatePath = `checklist.${stepId}`;
@@ -531,7 +429,7 @@ function ProposalsPageContent() {
     }
   }, [firestore, user]);
 
-  const handleDeleteProposal = React.useCallback(async (id: string) => {
+  const handleDeleteProposal = useCallback(async (id: string) => {
     if (!firestore) return;
     const docRef = doc(firestore, 'loanProposals', id);
     try {
@@ -547,7 +445,7 @@ function ProposalsPageContent() {
     }
   }, [firestore]);
 
-  const handleFormSubmit = async (data: any) => {
+  const handleFormSubmit = useCallback(async (data: any) => {
     if (!firestore || !user) return;
     setIsSaving(true);
     
@@ -575,9 +473,39 @@ function ProposalsPageContent() {
     } finally {
         setIsSaving(false);
     }
-  };
+  }, [firestore, user, sheetMode, selectedProposal]);
 
-  const columns = React.useMemo(() => getColumns(
+  const handleAiFormSubmit = useCallback((aiData: any) => {
+    setNewlySelectedCustomer(aiData);
+    setIsAiModalOpen(false);
+    handleNewProposal();
+  }, [handleNewProposal]);
+
+  React.useEffect(() => {
+    if (isLoading || proposalsWithCustomerData.length === 0) return;
+
+    const action = searchParams.get('action');
+    const openId = searchParams.get('open');
+
+    if (!hasOpenedFromParam) {
+        if (action === 'new') {
+            handleNewProposal();
+            setHasOpenedFromParam(true);
+            router.replace('/proposals', { scroll: false });
+        } else if (openId) {
+            const proposalToOpen = proposalsWithCustomerData.find(p => p.id === openId);
+            if (proposalToOpen) {
+                handleEditProposal(proposalToOpen);
+                setHasOpenedFromParam(true);
+                setTimeout(() => {
+                    router.replace('/proposals', { scroll: false });
+                }, 300);
+            }
+        }
+    }
+  }, [searchParams, isLoading, proposalsWithCustomerData, hasOpenedFromParam, handleNewProposal, handleEditProposal, router]);
+
+  const columns = useMemo(() => getColumns(
     handleEditProposal, 
     handleViewProposal, 
     handleDeleteProposal, 
