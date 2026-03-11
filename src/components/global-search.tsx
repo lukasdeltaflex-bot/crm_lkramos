@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -14,7 +13,7 @@ import {
   CommandSeparator,
 } from '@/components/ui/command';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query, where, limit, orderBy } from 'firebase/firestore';
 import type { Customer, Proposal } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { normalizeString, getSmartTags, cleanBankName } from '@/lib/utils';
@@ -25,14 +24,25 @@ export function GlobalSearch() {
   const { user } = useUser();
   const firestore = useFirestore();
 
+  // 🛡️ PERFORMANCE: Limita a busca global aos 50 registros mais recentes
+  // Isso impede o travamento do navegador ao carregar milhares de clientes na memória.
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid));
+    return query(
+        collection(firestore, 'customers'), 
+        where('ownerId', '==', user.uid),
+        limit(50)
+    );
   }, [firestore, user]);
 
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid));
+    return query(
+        collection(firestore, 'loanProposals'), 
+        where('ownerId', '==', user.uid),
+        orderBy('dateDigitized', 'desc'),
+        limit(50)
+    );
   }, [firestore, user]);
 
   const { data: customers, isLoading: loadingCustomers } = useCollection<Customer>(customersQuery);
@@ -81,24 +91,20 @@ export function GlobalSearch() {
             const isPureNumber = /^\d+$/.test(search);
             if (!normalizedSearch) return 1;
             
-            // 🛡️ FILTRO GLOBAL V11 (Aprovado #2): Prioridade absoluta para ID Exato e CPF inicial
+            // 🛡️ FILTRO GLOBAL V11: Prioridade absoluta para ID Exato e CPF inicial
             if (isPureNumber) {
-                // 1. ID exato (âncora id_) - Espaço no final para evitar ID 10 match id_1
                 if (value.includes(`id_${search} `)) return 1;
-                // 2. CPF começando com (âncora cpf_)
                 if (value.includes(`cpf_${search}`)) return 0.9;
-                // 3. Proposta começando com (âncora pnum_)
                 if (value.includes(`pnum_${search}`)) return 0.8;
-                
                 return 0;
             }
             
             return value.includes(normalizedSearch) ? 1 : 0;
         }}
       >
-        <CommandInput placeholder="Digite ID exato, Nome, CPF..." autoFocus />
+        <CommandInput placeholder="Pesquise por Nome ou CPF recente..." autoFocus />
         <CommandList>
-          <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
+          <CommandEmpty>Nenhum resultado nos registros recentes.</CommandEmpty>
           
           {(loadingCustomers || loadingProposals) && (
             <div className="flex items-center justify-center py-6 text-sm text-muted-foreground">
@@ -120,13 +126,12 @@ export function GlobalSearch() {
 
           <CommandSeparator />
 
-          <CommandGroup heading="Resultados">
+          <CommandGroup heading="Resultados Recentes">
             {validCustomers.map((customer) => {
               const cpfNumeric = (customer.cpf || '').replace(/\D/g, '');
               const smartTags = getSmartTags(customer, proposals || []);
               const smartTagsLabels = smartTags.map(tag => tag.label).join(' ');
               
-              // 🛡️ INDEXAÇÃO V11: Espaço após numericId para garantir match de ID Exato no filter
               const searchIndex = normalizeString(`id_${customer.numericId}  cpf_${cpfNumeric} ${customer.name} ${customer.cpf} ${smartTagsLabels}`);
               
               return (

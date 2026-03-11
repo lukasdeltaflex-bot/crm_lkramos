@@ -114,22 +114,28 @@ export function formatDateSafe(dateString?: string, formatStr: string = "dd/MM/y
     return date ? format(date, formatStr, { locale: ptBR }) : '-';
 }
 
+/**
+ * ⚡ CÁLCULO DE DIAS ÚTEIS (OTIMIZADO)
+ * Conta os dias entre datas pulando fins de semana.
+ */
 export function calculateBusinessDays(startDateStr: string | Date): number {
     const start = typeof startDateStr === 'string' ? parseDateSafe(startDateStr) : startDateStr;
     if (!start || isNaN(start.getTime())) return 0;
     
-    let count = 0;
-    const curDate = new Date(start);
-    curDate.setHours(0, 0, 0, 0);
-    
     const now = new Date();
     now.setHours(0, 0, 0, 0);
     
-    // 🛡️ SEGURANÇA: Impede loops infinitos se a data for inválida ou muito antiga
-    if (isAfter(curDate, now)) return 0;
+    const curDate = new Date(start);
+    curDate.setHours(0, 0, 0, 0);
+    
+    // 🛡️ SEGURANÇA: Impede loops infinitos se a data for no futuro ou muito antiga
+    if (curDate > now) return 0;
+    
     const diffDays = Math.abs(differenceInDays(now, curDate));
-    if (diffDays > 365) return 260; // Retorno máximo para evitar travamento
+    if (diffDays > 365) return 260; // Retorno máximo (aprox 1 ano de dias úteis)
 
+    let count = 0;
+    // Iniciamos a contagem a partir do dia seguinte à abertura/mudança
     curDate.setDate(curDate.getDate() + 1);
 
     while (curDate <= now) {
@@ -142,19 +148,14 @@ export function calculateBusinessDays(startDateStr: string | Date): number {
     return count;
 }
 
-function isAfter(date: Date, dateToCompare: Date): boolean {
-    return date.getTime() > dateToCompare.getTime();
-}
-
 /**
  * ⚡ MOTOR DE INTELIGÊNCIA OPERACIONAL
  * Determina se uma proposta está em atraso crítico.
- * Resetado automaticamente quando o usuário altera o status OU adiciona uma nota no histórico.
  */
 export function isProposalCritical(p: Proposal): boolean {
     if (p.status === 'Reprovado' || p.status === 'Pago' || p.status === 'Saldo Pago') return false;
 
-    // Captura a data da última ação no histórico (atuou na proposta)
+    // Captura a data da última ação no histórico
     const historyDates = (p.history || []).map(h => h.date);
     const lastHistoryDate = historyDates.length > 0 ? [...historyDates].sort().reverse()[0] : null;
 
@@ -164,7 +165,7 @@ export function isProposalCritical(p: Proposal): boolean {
         baseDate = p.statusAwaitingBalanceAt;
     }
 
-    // O Alerta deve considerar o que for mais RECENTE: a mudança de status ou a última nota
+    // O Alerta considera o que for mais RECENTE
     const referenceDate = (lastHistoryDate && lastHistoryDate > baseDate) ? lastHistoryDate : baseDate;
     
     const bizDays = calculateBusinessDays(referenceDate);
@@ -175,7 +176,6 @@ export function isProposalCritical(p: Proposal): boolean {
 }
 
 export function validateCPF(cpf: string): boolean {
-    // 🛡️ SANITIZAÇÃO AGRESSIVA V20: Remove qualquer coisa que não seja dígito, incluindo espaços invisíveis da IA
     const cleanCPF = String(cpf || '').replace(/[^\d]+/g, '');
     
     if (cleanCPF.length !== 11) return false;

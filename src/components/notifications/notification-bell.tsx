@@ -40,21 +40,32 @@ export function NotificationBell() {
     setIsClient(true);
   }, []);
 
+  // 🛡️ PERFORMANCE: Limita o carregamento de notificações aos 100 registros mais recentes.
+  // Evita o download de milhares de registros apenas para calcular os badges do header.
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid));
+    return query(
+        collection(firestore, 'customers'), 
+        where('ownerId', '==', user.uid),
+        limit(100)
+    );
   }, [firestore, user]);
 
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid));
+    return query(
+        collection(firestore, 'loanProposals'), 
+        where('ownerId', '==', user.uid),
+        limit(100)
+    );
   }, [firestore, user]);
 
   const followUpsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(
         collection(firestore, 'users', user.uid, 'followUps'), 
-        where('status', '==', 'pending')
+        where('status', '==', 'pending'),
+        limit(50)
     );
   }, [firestore, user]);
 

@@ -38,7 +38,7 @@ import {
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { formatCurrency, cleanBankName, cn, formatDateSafe, isWhatsApp, getWhatsAppUrl, calculateBusinessDays, isProposalCritical } from '@/lib/utils';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { StatusCell } from './status-cell';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -164,19 +164,27 @@ const ProposalStatusCell = ({ p, onStatusChange }: { p: Proposal; onStatusChange
     const [hasMounted, setHasMounted] = useState(false);
     useEffect(() => setHasMounted(true), []);
 
+    // 🛡️ PERFORMANCE: Memoiza cálculos pesados para evitar lag na rolagem da tabela
+    const { critical, bizDays } = useMemo(() => {
+        if (!hasMounted) return { critical: false, bizDays: 0 };
+        
+        const isCrit = isProposalCritical(p);
+        
+        const historyDates = (p.history || []).map(h => h.date);
+        const lastHistoryDate = historyDates.length > 0 ? [...historyDates].sort().reverse()[0] : null;
+        let baseDate = p.statusUpdatedAt || p.dateDigitized;
+        if (p.status === 'Aguardando Saldo' && p.statusAwaitingBalanceAt) {
+            baseDate = p.statusAwaitingBalanceAt;
+        }
+        const referenceDate = (lastHistoryDate && lastHistoryDate > baseDate) ? lastHistoryDate : baseDate;
+        
+        return {
+            critical: isCrit,
+            bizDays: calculateBusinessDays(referenceDate)
+        };
+    }, [p, hasMounted]);
+
     if (!hasMounted) return <div className="h-8 w-full bg-muted animate-pulse rounded-full" />;
-
-    const critical = isProposalCritical(p);
-
-    // Cálculos para a legenda (Tooltip)
-    const historyDates = (p.history || []).map(h => h.date);
-    const lastHistoryDate = historyDates.length > 0 ? [...historyDates].sort().reverse()[0] : null;
-    let baseDate = p.statusUpdatedAt || p.dateDigitized;
-    if (p.status === 'Aguardando Saldo' && p.statusAwaitingBalanceAt) {
-        baseDate = p.statusAwaitingBalanceAt;
-    }
-    const referenceDate = (lastHistoryDate && lastHistoryDate > baseDate) ? lastHistoryDate : baseDate;
-    const bizDays = calculateBusinessDays(referenceDate);
 
     return (
         <div className="flex items-center gap-2 w-full">
