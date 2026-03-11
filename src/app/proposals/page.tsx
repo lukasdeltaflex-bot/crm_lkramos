@@ -1,4 +1,3 @@
-
 'use client';
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -691,14 +690,18 @@ function ProposalsPageContent() {
 
       <Dialog open={isCustomerSearchOpen} onOpenChange={setIsCustomerSearchOpen}>
         <DialogContent 
-            className="max-w-2xl overflow-hidden rounded-[2rem]" 
+            className="max-w-2xl overflow-hidden rounded-[2rem] p-0" 
             onPointerDownOutside={(e) => e.preventDefault()}
         >
-            {/* 🛡️ CORREÇÃO DE ACESSIBILIDADE: Adicionado DialogTitle para evitar erro no console */}
-            <CustomerSearchDialog
-                customers={customers?.filter(c => c.name !== 'Cliente Removido') || []}
-                onSelectCustomer={handleCustomerSelect}
-            />
+            <DialogHeader className="px-8 pt-8 pb-2">
+                <DialogTitle className="text-xl font-black uppercase tracking-tight text-primary">Buscar Cliente na Base</DialogTitle>
+            </DialogHeader>
+            <div className="px-8 pb-8">
+                <CustomerSearchDialog
+                    customers={customers?.filter(c => c.name !== 'Cliente Removido') || []}
+                    onSelectCustomer={handleCustomerSelect}
+                />
+            </div>
         </DialogContent>
       </Dialog>
 

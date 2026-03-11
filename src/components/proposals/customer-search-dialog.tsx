@@ -1,8 +1,6 @@
-
 'use client';
 
 import * as React from 'react';
-import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Command,
   CommandEmpty,
@@ -24,7 +22,7 @@ interface CustomerSearchDialogProps {
 /**
  * 🔍 CustomerSearchContent
  * Componente que renderiza o interior da busca. 
- * Removido o Dialog interno para evitar aninhamento redundante.
+ * Removido o DialogHeader interno para evitar erro de acessibilidade por aninhamento.
  */
 export function CustomerSearchDialog({
   customers,
@@ -32,10 +30,6 @@ export function CustomerSearchDialog({
 }: CustomerSearchDialogProps) {
   return (
     <div className="flex flex-col h-full">
-        <DialogHeader className="px-1 pb-4">
-          <DialogTitle className="text-xl font-black uppercase tracking-tight text-primary">Buscar Cliente na Base</DialogTitle>
-        </DialogHeader>
-        
         <Command 
             className="rounded-xl border-2 overflow-hidden"
             filter={(value, search) => {
