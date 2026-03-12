@@ -1,4 +1,3 @@
-
 'use client';
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -83,6 +82,8 @@ function CustomersPageContent() {
   const [rmcFilter, setRmcFilter] = React.useState('all');
   const [rccFilter, setRccFilter] = React.useState('all');
   const [tagFilter, setTagFilter] = React.useState('all');
+
+  const hasActiveFilters = rmcFilter !== 'all' || rccFilter !== 'all' || tagFilter !== 'all';
 
   const handleClearFilters = () => {
       setRmcFilter('all');
