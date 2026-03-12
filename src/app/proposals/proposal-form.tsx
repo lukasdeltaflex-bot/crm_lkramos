@@ -1,4 +1,3 @@
-
 'use client';
 
 /**
@@ -437,10 +436,11 @@ export function ProposalForm({
                                 <SelectContent>
                                     {selectedCustomer?.benefits?.map(b => (
                                         <SelectItem key={b.number} value={b.number} className="py-2.5">
-                                            <div className="flex items-baseline gap-2 overflow-hidden">
-                                                <span className="font-black text-sm tracking-tight shrink-0">{b.number}</span>
-                                                <span className="text-[9px] text-muted-foreground uppercase font-black opacity-50 truncate max-w-[200px]">
-                                                    {b.species ? `• ${b.species}` : ''}
+                                            <div className="flex items-center gap-2 overflow-hidden">
+                                                <span className="font-black text-sm tracking-tight text-foreground">{b.number}</span>
+                                                <span className="text-muted-foreground opacity-40">|</span>
+                                                <span className="text-[10px] font-bold text-muted-foreground uppercase truncate">
+                                                    {b.species || 'Sem espécie'}
                                                 </span>
                                             </div>
                                         </SelectItem>
@@ -565,7 +565,49 @@ export function ProposalForm({
                 <Landmark className="h-4 w-4" /> Seção 3 – Dados do Contrato & Valores
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 rounded-3xl bg-muted/10 border-2 border-muted">
+                    <FormField control={form.control} name="installmentAmount" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Valor da Parcela *</FormLabel>
+                            <FormControl>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-3.5 text-[10px] font-black opacity-30">R$</span>
+                                    <Input type="text" className="h-12 pl-10 font-black border-2 rounded-xl" value={formatCurrencyInput(field.value)} onChange={(e) => field.onChange(parseInt(e.target.value.replace(/\D/g, "")) / 100 || 0)} readOnly={isReadOnly} />
+                                </div>
+                            </FormControl>
+                        </FormItem>
+                    )} />
+                    
+                    {productValue !== 'Portabilidade' && !productValue.includes('Cartão - Plástico') && (
+                        <FormField control={form.control} name="netAmount" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Valor liberado ao cliente *</FormLabel>
+                                <FormControl>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-3.5 text-[10px] font-black text-emerald-600/40">R$</span>
+                                        <Input type="text" className="h-12 pl-10 font-black border-2 border-emerald-100 bg-emerald-50/20 text-emerald-600 rounded-xl" value={formatCurrencyInput(field.value)} onChange={(e) => field.onChange(parseInt(e.target.value.replace(/\D/g, "")) / 100 || 0)} readOnly={isReadOnly} />
+                                    </div>
+                                </FormControl>
+                            </FormItem>
+                        )} />
+                    )}
+
+                    <FormField control={form.control} name="grossAmount" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                {productValue.includes('Cartão') ? 'Limite do Cartão (Bruto) *' : 'Valor Bruto (Contrato) *'}
+                            </FormLabel>
+                            <FormControl>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-3.5 text-[10px] font-black opacity-30">R$</span>
+                                    <Input type="text" className="h-12 pl-10 font-black border-2 rounded-xl" value={formatCurrencyInput(field.value)} onChange={(e) => field.onChange(parseInt(e.target.value.replace(/\D/g, "")) / 100 || 0)} readOnly={isReadOnly} />
+                                </div>
+                            </FormControl>
+                        </FormItem>
+                    )} />
+                </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
                 <FormField
                   control={form.control}
                   name="bank"
@@ -684,49 +726,7 @@ export function ProposalForm({
                   </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 rounded-3xl bg-muted/10 border-2 border-muted mt-6">
-                    <FormField control={form.control} name="installmentAmount" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Valor da Parcela *</FormLabel>
-                            <FormControl>
-                                <div className="relative">
-                                    <span className="absolute left-4 top-3.5 text-[10px] font-black opacity-30">R$</span>
-                                    <Input type="text" className="h-12 pl-10 font-black border-2 rounded-xl" value={formatCurrencyInput(field.value)} onChange={(e) => field.onChange(parseInt(e.target.value.replace(/\D/g, "")) / 100 || 0)} readOnly={isReadOnly} />
-                                </div>
-                            </FormControl>
-                        </FormItem>
-                    )} />
-                    
-                    {productValue !== 'Portabilidade' && !productValue.includes('Cartão - Plástico') && (
-                        <FormField control={form.control} name="netAmount" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Valor liberado ao cliente *</FormLabel>
-                                <FormControl>
-                                    <div className="relative">
-                                        <span className="absolute left-4 top-3.5 text-[10px] font-black text-emerald-600/40">R$</span>
-                                        <Input type="text" className="h-12 pl-10 font-black border-2 border-emerald-100 bg-emerald-50/20 text-emerald-600 rounded-xl" value={formatCurrencyInput(field.value)} onChange={(e) => field.onChange(parseInt(e.target.value.replace(/\D/g, "")) / 100 || 0)} readOnly={isReadOnly} />
-                                    </div>
-                                </FormControl>
-                            </FormItem>
-                        )} />
-                    )}
-
-                    <FormField control={form.control} name="grossAmount" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                {productValue.includes('Cartão') ? 'Limite do Cartão (Bruto) *' : 'Valor Bruto (Contrato) *'}
-                            </FormLabel>
-                            <FormControl>
-                                <div className="relative">
-                                    <span className="absolute left-4 top-3.5 text-[10px] font-black opacity-30">R$</span>
-                                    <Input type="text" className="h-12 pl-10 font-black border-2 rounded-xl" value={formatCurrencyInput(field.value)} onChange={(e) => field.onChange(parseInt(e.target.value.replace(/\D/g, "")) / 100 || 0)} readOnly={isReadOnly} />
-                                </div>
-                            </FormControl>
-                        </FormItem>
-                    )} />
-                </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
                 <FormField
                   control={form.control}
                   name="dateDigitized"
@@ -934,30 +934,40 @@ export function ProposalForm({
                     <div className="space-y-6">
                         {!isReadOnly && (
                             <div className="space-y-4">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Registrar Novo Trâmite</Label>
-                                <div className="flex gap-3">
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
+                                    <Zap className="h-3 w-3 fill-current" /> Registrar Trâmite Instantâneo (Linha do Tempo)
+                                </h4>
+                                
+                                <Select onValueChange={(val) => handleAddHistory(val)} value="">
+                                    <SelectTrigger className="h-14 rounded-3xl border-2 px-6 font-bold text-sm bg-background shadow-sm hover:border-primary/50 transition-all">
+                                        <SelectValue placeholder="Selecione um tópico rápido para o histórico..." />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-2xl border-2 shadow-xl">
+                                        {historyTopics.map((topic) => (
+                                            <SelectItem key={topic} value={topic} className="py-3 font-medium cursor-pointer">
+                                                {topic}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+
+                                <div className="flex gap-2 pt-2">
                                     <Input 
-                                        placeholder="Digite aqui ou escolha um tópico rápido..." 
+                                        placeholder="Ou digite um trâmite personalizado..." 
                                         value={newHistoryEntry} 
-                                        onChange={e => setNewHistoryEntry(e.target.value)} 
+                                        onChange={e => setNewHistoryEntry(e.target.value)}
                                         onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddHistory(newHistoryEntry))}
-                                        className="h-12 border-2 rounded-xl px-5" 
+                                        className="h-10 border-2 rounded-xl px-4 text-xs"
                                     />
-                                    <Button type="button" size="icon" onClick={() => handleAddHistory(newHistoryEntry)} disabled={!newHistoryEntry.trim()} className="h-12 w-12 rounded-xl bg-primary shadow-lg"><Check className="h-5 w-5" /></Button>
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                    {historyTopics.slice(0, 6).map(topic => (
-                                        <Button 
-                                            key={topic} 
-                                            type="button" 
-                                            variant="outline" 
-                                            size="sm" 
-                                            onClick={() => handleAddHistory(topic)}
-                                            className="h-7 text-[9px] font-bold uppercase rounded-full border-primary/20 bg-primary/5 text-primary"
-                                        >
-                                            <Zap className="h-2.5 w-2.5 mr-1" /> {topic.split(' ').slice(1).join(' ')}
-                                        </Button>
-                                    ))}
+                                    <Button 
+                                        type="button" 
+                                        size="sm" 
+                                        onClick={() => handleAddHistory(newHistoryEntry)} 
+                                        disabled={!newHistoryEntry.trim()} 
+                                        className="h-10 px-4 rounded-xl font-bold"
+                                    >
+                                        Registrar
+                                    </Button>
                                 </div>
                             </div>
                         )}

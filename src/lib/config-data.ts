@@ -10,11 +10,13 @@ export const defaultCustomerTags: readonly string[] = ['💎 VIP', '✅ Margem L
 export const defaultRejectionReasons: readonly string[] = ['Retenção do cliente', 'Contrato já liquidado', 'Contrato não encontrado', 'Saldo devedor divergente', 'Erro de averbação', 'Desistência do cliente', 'Margem excedida', 'Vínculo empregatício incompatível'];
 
 export const defaultHistoryTopics: readonly string[] = [
-  '📲 Link de formalização enviado ao cliente',
-  '✍️ Aguardando assinatura digital',
-  '📸 Pendente de captura de selfie/documentos',
-  '🏦 Proposta enviada ao sistema do banco',
   '⏳ Aguardando retorno da CIP (Saldo)',
+  '⏳ Aguardando desbloqueio benefício',
+  '⏳ Aguardando portabilidade',
+  '⌚ Aguardando pagamento saldo devedor',
+  '✍️ Aguardando assinatura digital',
+  '⚠️ Pendente reapresentação',
+  '🏦 Proposta enviada ao sistema do banco',
   '📞 Tentativa de contato sem sucesso',
   '📑 Documentação em análise pela promotora',
   '✅ Averbação solicitada ao órgão',
