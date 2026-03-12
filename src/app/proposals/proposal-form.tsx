@@ -1,3 +1,4 @@
+
 'use client';
 
 /**
@@ -161,7 +162,7 @@ interface ProposalFormProps {
   customers: Customer[];
   userSettings: UserSettings | null;
   isReadOnly?: boolean;
-  onSubmit: (data: ProposalFormValues) => void;
+  onSubmit: (data: any) => void;
   onDuplicate: (proposal: Proposal) => void;
   defaultValues?: ProposalFormData;
   sheetMode: 'new' | 'edit' | 'view';
@@ -364,10 +365,11 @@ export function ProposalForm({
         datePaidToClient: convertToIso(data.datePaidToClient),
         debtBalanceArrivalDate: convertToIso(data.debtBalanceArrivalDate),
         commissionPaymentDate: convertToIso(data.commissionPaymentDate),
+        // Preserva o histórico existente e anexa os novos trâmites criados no modal
         history: [...(proposal?.history || []), ...stagedHistory]
     };
 
-    onSubmit(cleanFirestoreData(finalData));
+    onSubmit(finalData);
   }
 
   const statusColor = currentStatusValue ? (statusColors[currentStatusValue.toUpperCase()] || statusColors[currentStatusValue]) : undefined;

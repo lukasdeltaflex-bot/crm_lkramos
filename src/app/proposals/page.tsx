@@ -327,24 +327,34 @@ function ProposalsPageContent() {
     }
   }, [firestore, user]);
 
-  const handleFormSubmit = useCallback(async (data: any) => {
+  const handleFormSubmit = useCallback(async (formData: any) => {
     if (!firestore || !user) return;
     setIsSaving(true);
     
-    const docRef = sheetMode === 'edit' && selectedProposal ? doc(firestore, 'loanProposals', selectedProposal.id) : doc(collection(firestore, 'loanProposals'));
-    
-    const finalData = cleanFirestoreData({ 
-        ...data, 
-        id: docRef.id, 
-        ownerId: user.uid 
-    });
-    
     try {
+        const isEdit = sheetMode === 'edit' && selectedProposal?.id;
+        const docId = isEdit ? selectedProposal.id : doc(collection(firestore, 'loanProposals')).id;
+        const docRef = doc(firestore, 'loanProposals', docId);
+        
+        // Remove campos indesejados que podem ter vindo do join em memória
+        const { customer, ...restOfData } = formData;
+
+        const finalData = cleanFirestoreData({ 
+            ...restOfData, 
+            id: docId, 
+            ownerId: user.uid 
+        });
+        
         await setDoc(docRef, finalData, { merge: true });
-        toast({ title: 'Proposta Salva!' });
+        toast({ title: isEdit ? 'Proposta Atualizada!' : 'Proposta Salva!' });
+        
         setIsDialogOpen(false);
+        // Reseta estados para evitar poluição visual em aberturas futuras
+        setSelectedProposal(undefined);
+        setSheetMode('new');
     } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Erro ao salvar' });
+        console.error("Save error:", error);
+        toast({ variant: 'destructive', title: 'Erro ao salvar', description: 'Verifique sua conexão ou permissões.' });
     } finally {
         setIsSaving(false);
     }
