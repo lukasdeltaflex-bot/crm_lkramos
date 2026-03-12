@@ -277,6 +277,11 @@ export function ProposalForm({
     defaultValues: initialValues,
   });
 
+  // 🛡️ SINCRONIZAÇÃO DE HIDRATAÇÃO: Força o preenchimento da data vigente no cliente
+  useEffect(() => {
+    form.reset(initialValues);
+  }, [initialValues, form]);
+
   const { watch, setValue } = form;
   const productValue = watch('product');
   const selectedCustomerId = watch('customerId');
@@ -294,7 +299,6 @@ export function ProposalForm({
     return customers.find(c => c.id === selectedCustomerId);
   }, [customers, selectedCustomerId]);
 
-  // 🛡️ Lógica de Sincronização de Seleção de Cliente
   useEffect(() => {
     if (selectedCustomerFromSearch) {
         setValue('customerId', selectedCustomerFromSearch.id, { shouldValidate: true });
@@ -302,7 +306,6 @@ export function ProposalForm({
     }
   }, [selectedCustomerFromSearch, setValue, onCustomerSearchSelectionHandled]);
 
-  // 🛡️ Lógica de Benefício Automático
   useEffect(() => {
     if (selectedCustomer && !form.getValues('selectedBenefitNumber')) {
         const benefits = selectedCustomer.benefits || [];
@@ -312,7 +315,6 @@ export function ProposalForm({
     }
   }, [selectedCustomer, setValue, form]);
 
-  // 🛡️ Alerta de Contrato Reprovado anteriormente
   const rejectedPrevious = useMemo(() => {
     if (productValue !== 'Portabilidade' || !originalContractNumber || originalContractNumber.length < 5) return null;
     return allProposals.find(p => 
@@ -322,7 +324,6 @@ export function ProposalForm({
     );
   }, [originalContractNumber, productValue, allProposals, proposal?.id]);
 
-  // 🛡️ Cálculo de Comissão em tempo real
   useEffect(() => {
     if (isReadOnly) return;
     const baseVal = commissionBase === 'gross' ? (grossAmount || 0) : (netAmount || 0);
@@ -380,7 +381,6 @@ export function ProposalForm({
         <ScrollArea className="flex-1 px-8">
           <div className="space-y-12 pb-10 pt-6">
             
-            {/* 🛡️ Alerta de Segurança Portabilidade */}
             {rejectedPrevious && (
                 <Alert variant="destructive" className="rounded-3xl border-2 border-red-500 bg-red-50 animate-in slide-in-from-top-4">
                     <AlertTriangle className="h-5 w-5 text-red-600" />
@@ -393,7 +393,6 @@ export function ProposalForm({
                 </Alert>
             )}
 
-            {/* SEÇÃO 1: DADOS DO CLIENTE */}
             <div className="space-y-6">
               <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
                 <Users className="h-4 w-4" /> Seção 1 – Dados do Cliente
@@ -459,7 +458,6 @@ export function ProposalForm({
 
             <Separator />
 
-            {/* SEÇÃO 2: PRODUTO FINANCEIRO */}
             <div className="space-y-6">
               <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
                 <Briefcase className="h-4 w-4" /> Seção 2 – Produto Financeiro
@@ -516,7 +514,6 @@ export function ProposalForm({
                   )}
                 </div>
 
-                {/* 📍 CAMPOS EXCLUSIVOS DE PORTABILIDADE - REALOCADOS CONFORME SOLICITADO */}
                 {productValue === 'Portabilidade' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 rounded-3xl bg-blue-50/30 border-2 border-blue-100 animate-in fade-in slide-in-from-top-2">
                     <FormField
@@ -566,7 +563,6 @@ export function ProposalForm({
 
             <Separator />
 
-            {/* SEÇÃO 3: DADOS DO CONTRATO E VALORES */}
             <div className="space-y-6">
               <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
                 <Landmark className="h-4 w-4" /> Seção 3 – Dados do Contrato & Valores
@@ -700,7 +696,6 @@ export function ProposalForm({
                   </div>
               )}
 
-              {/* DATAS ORGANIZADAS POR PRODUTO */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <FormField
                   control={form.control}
@@ -762,7 +757,6 @@ export function ProposalForm({
                 )}
               </div>
 
-              {/* VALORES ORGANIZADOS CONFORME SOLICITADO */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 rounded-3xl bg-muted/10 border-2 border-muted mt-6">
                     <FormField control={form.control} name="installmentAmount" render={({ field }) => (
                         <FormItem>
@@ -808,7 +802,6 @@ export function ProposalForm({
 
             <Separator />
 
-            {/* SEÇÃO 4: COMISSIONAMENTO */}
             <div className="space-y-6">
                 <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
                     <CircleDollarSign className="h-4 w-4" /> Seção 4 – Repasse de Comissionamento
@@ -893,7 +886,6 @@ export function ProposalForm({
 
             <Separator />
 
-            {/* SEÇÃO 5: CHECK-LIST OPERACIONAL */}
             <div className="space-y-6">
                 <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
                     <ListChecks className="h-4 w-4" /> Seção 5 – Check-list Operacional
@@ -924,7 +916,6 @@ export function ProposalForm({
 
             <Separator />
 
-            {/* SEÇÃO 6: ANEXOS */}
             <div className="space-y-6">
                 <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
                     <FolderLock className="h-4 w-4" /> Seção 6 – Anexos da Proposta
@@ -940,7 +931,6 @@ export function ProposalForm({
 
             <Separator />
 
-            {/* SEÇÃO 7: LINHA DO TEMPO / TRÂMITE */}
             <div className="space-y-6">
                 <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
                     <History className="h-4 w-4" /> Seção 7 – Linha do Tempo / Histórico
