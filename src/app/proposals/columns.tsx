@@ -1,4 +1,3 @@
-
 'use client';
 
 import { ColumnDef, Header, flexRender } from '@tanstack/react-table';
@@ -247,7 +246,7 @@ export const getColumns = (
                             onClick={(e) => { e.stopPropagation(); onToggleChecklist(p.id, s.id, !!act); }} 
                             className="hover:scale-125 transition-transform p-1 rounded-md hover:bg-muted"
                         >
-                            <s.icon className={cn("h-3 w-3", act ? s.color : "text-muted-foreground/30")} />
+                            <s.icon className={cn("h-4 w-4", act ? s.color : "text-muted-foreground/30")} />
                         </button>
                     ) 
                 })}
