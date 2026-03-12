@@ -679,20 +679,20 @@ export function ProposalForm({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-2xl bg-blue-50/30 border-2 border-blue-100">
                       <FormField
                         control={form.control}
-                        name="originalTerm"
+                        name="remainingInstallments"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-blue-600">Prazo Contrato Original</FormLabel>
+                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-blue-600">Parcelas Restantes</FormLabel>
                                 <FormControl><Input type="number" {...field} readOnly={isReadOnly} className="h-12 font-black border-2 border-white rounded-xl" /></FormControl>
                             </FormItem>
                         )}
                       />
                       <FormField
                         control={form.control}
-                        name="remainingInstallments"
+                        name="originalTerm"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-blue-600">Parcelas Restantes</FormLabel>
+                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-blue-600">Prazo Contrato Original</FormLabel>
                                 <FormControl><Input type="number" {...field} readOnly={isReadOnly} className="h-12 font-black border-2 border-white rounded-xl" /></FormControl>
                             </FormItem>
                         )}
