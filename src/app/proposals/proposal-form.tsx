@@ -1,9 +1,8 @@
-
 'use client';
 
 /**
- * @fileOverview Formulário mestre para criação e edição de propostas.
- * Centraliza toda a lógica de esteira, cálculos de comissão e histórico com AUTO-AUDIT.
+ * @fileOverview Formulário mestre LK RAMOS para criação e edição de propostas.
+ * Organizado por seções lógicas para máxima produtividade.
  */
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -30,10 +29,8 @@ import {
 } from '@/components/ui/select';
 import { 
     Check, 
-    Printer, 
     Loader2, 
     History, 
-    FileBadge,
     Calendar as CalendarIcon,
     AlertTriangle,
     MessageSquareText,
@@ -42,26 +39,28 @@ import {
     Info,
     Percent,
     Timer as TimerIcon,
-    Wallet,
-    TrendingUp,
     CircleDollarSign,
-    ListChecks,
     Send,
     FileCheck,
     PenTool,
     ShieldCheck,
-    SearchX,
     Zap,
     Save,
-    Landmark
+    Landmark,
+    Users,
+    CreditCard,
+    TrendingUp,
+    Briefcase,
+    Building2,
+    UserCircle2
 } from 'lucide-react';
 import { format, parse, parseISO, isValid } from 'date-fns';
 import { cn, formatCurrency, cleanBankName, cleanFirestoreData, formatCurrencyInput } from '@/lib/utils';
 import * as configData from '@/lib/config-data';
-import type { Proposal, Customer, Attachment, UserSettings, ProposalHistoryEntry } from '@/lib/types';
+import type { Proposal, Customer, ProposalStatus, UserSettings, ProposalHistoryEntry } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { ProposalAttachmentUploader } from '@/components/proposals/proposal-attachment-uploader';
 import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { doc, collection, updateDoc, arrayUnion, setDoc } from 'firebase/firestore';
@@ -100,11 +99,13 @@ const proposalSchema = z.object({
 
   table: z.string().min(1, 'A tabela é obrigatória.'),
   term: z.coerce.number().min(1, 'O prazo é obrigatório.'),
+  originalTerm: z.coerce.number().optional(),
+  remainingInstallments: z.coerce.number().optional(),
   interestRate: z.coerce.number().optional(),
 
   installmentAmount: z.coerce.number().min(0, 'O valor da parcela é obrigatório.'),
-  netAmount: z.coerce.number().min(0, 'O valor líquido é obrigatório.'),
-  grossAmount: z.coerce.number().min(0, 'O valor bruto é obrigatório.'),
+  netAmount: z.coerce.number().optional(),
+  grossAmount: z.coerce.number().min(0, 'O valor é obrigatório.'),
   
   commissionBase: z.enum(['gross', 'net'], { required_error: 'Selecione a base da comissão.' }),
   commissionPercentage: z.coerce.number().min(0, 'A porcentagem da comissão é obrigatória.'),
@@ -140,11 +141,10 @@ const proposalSchema = z.object({
       path: ["originalContractNumber"],
     });
   }
-
   if (data.status === 'Reprovado' && (!data.rejectionReason || data.rejectionReason.trim() === '')) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "Selecione o motivo da reprova para continuar.",
+      message: "Selecione o motivo da reprova.",
       path: ["rejectionReason"],
     });
   }
@@ -169,11 +169,11 @@ interface ProposalFormProps {
   isSaving?: boolean;
 }
 
-const applyDateMask = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, "").substring(0, 8);
-    if (value.length > 4) value = value.replace(/(\d{2})(\d{2})(\d)/, '$1/$2/$3');
-    else if (value.length > 2) value = value.replace(/(\d{2})(\d)/, '$1/$2');
-    return value;
+const applyDateMask = (value: string) => {
+    let v = value.replace(/\D/g, "").substring(0, 8);
+    if (v.length > 4) v = v.replace(/(\d{2})(\d{2})(\d)/, '$1/$2/$3');
+    else if (v.length > 2) v = v.replace(/(\d{2})(\d)/, '$1/$2');
+    return v;
 };
 
 export function ProposalForm({ 
@@ -194,7 +194,6 @@ export function ProposalForm({
   const { user } = useUser();
   const firestore = useFirestore();
   const { statusColors } = useTheme();
-  const [tempProposalId, setTempProposalId] = useState<string | undefined>(undefined);
   const [isClient, setIsClient] = useState(false);
   const [newHistoryEntry, setNewHistoryEntry] = useState('');
   const [isAddingHistory, setIsAddingHistory] = useState(false);
@@ -211,14 +210,6 @@ export function ProposalForm({
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  useEffect(() => {
-    if (firestore && !proposal?.id && !tempProposalId) {
-      setTempProposalId(doc(collection(firestore, 'loanProposals')).id);
-    }
-  }, [firestore, proposal, tempProposalId]);
-  
-  const currentProposalId = proposal?.id || tempProposalId;
 
   const formatDateForForm = (dateString?: string) => {
     if (!dateString) return '';
@@ -242,17 +233,17 @@ export function ProposalForm({
       proposalNumber: source?.proposalNumber || '',
       originalContractNumber: source?.originalContractNumber || '',
       customerId: source?.customerId || '',
-      product: source?.product || '',
+      product: source?.product || 'Margem',
       status: source?.status || 'Em Andamento',
       rejectionReason: source?.rejectionReason || '',
-      
-      commissionStatus: source?.commissionStatus || '',
+      commissionStatus: source?.commissionStatus || 'Pendente',
       amountPaid: source?.amountPaid || 0,
       commissionPaymentDate: source?.commissionPaymentDate ? formatDateForForm(source.commissionPaymentDate) : '',
-
       selectedBenefitNumber: source?.selectedBenefitNumber || '',
       table: source?.table || '',
       term: source?.term ?? 84,
+      originalTerm: source?.originalTerm ?? 84,
+      remainingInstallments: source?.remainingInstallments ?? 0,
       interestRate: source?.interestRate ?? 0,
       grossAmount: source?.grossAmount ?? 0,
       netAmount: source?.netAmount ?? 0,
@@ -285,51 +276,52 @@ export function ProposalForm({
     defaultValues: initialValues,
   });
 
-  const { watch, setValue, trigger } = form;
+  const { watch, setValue } = form;
+  const productValue = watch('product');
+  const selectedCustomerId = watch('customerId');
+  const currentStatusValue = watch('status');
   const commissionBase = watch('commissionBase');
   const commissionPercentage = watch('commissionPercentage');
   const grossAmount = watch('grossAmount');
   const netAmount = watch('netAmount');
-  const productValue = watch('product');
-  const selectedCustomerId = watch('customerId');
-  const currentStatusValue = watch('status');
-  const watchDateDigitized = watch('dateDigitized');
-  const watchProposalNumber = watch('proposalNumber');
-  const watchOriginalContract = watch('originalContractNumber');
+  const originalContractNumber = watch('originalContractNumber');
 
   const selectedCustomer = useMemo(() => {
     return customers.find(c => c.id === selectedCustomerId);
   }, [customers, selectedCustomerId]);
 
-  const isDuplicateProposal = useMemo(() => {
-    const cleanNum = (watchProposalNumber || '').trim().toUpperCase().replace(/[-\s]/g, '');
-    if (!cleanNum || cleanNum.length < 3) return false;
-    
-    return allProposals.some(p => {
-        if (proposal?.id && p.id === proposal.id) return false;
-        const existingNum = (p.proposalNumber || '').trim().toUpperCase().replace(/[-\s]/g, '');
-        return existingNum === cleanNum;
-    });
-  }, [watchProposalNumber, allProposals, proposal?.id]);
-
+  // 🛡️ Lógica de Benefício Automático
   useEffect(() => {
-    if (isReadOnly) return;
-    let baseValue = 0;
-    if (commissionBase === 'gross') baseValue = grossAmount || 0;
-    else if (commissionBase === 'net') baseValue = netAmount || 0;
-
-    if (baseValue > 0 && commissionPercentage >= 0) {
-        const calculatedCommission = parseFloat((baseValue * (commissionPercentage / 100)).toFixed(2));
-        if (form.getValues('commissionValue') !== calculatedCommission) {
-            setValue('commissionValue', calculatedCommission, { shouldValidate: true });
+    if (selectedCustomer && !form.getValues('selectedBenefitNumber')) {
+        const benefits = selectedCustomer.benefits || [];
+        if (benefits.length === 1) {
+            setValue('selectedBenefitNumber', benefits[0].number);
         }
     }
-  }, [commissionBase, commissionPercentage, grossAmount, netAmount, setValue, isReadOnly]);
+  }, [selectedCustomer, setValue, form]);
+
+  // 🛡️ Alerta de Contrato Reprovado anteriormente
+  const rejectedPrevious = useMemo(() => {
+    if (productValue !== 'Portabilidade' || !originalContractNumber || originalContractNumber.length < 5) return null;
+    return allProposals.find(p => 
+        p.originalContractNumber === originalContractNumber && 
+        p.status === 'Reprovado' && 
+        p.id !== proposal?.id
+    );
+  }, [originalContractNumber, productValue, allProposals, proposal?.id]);
+
+  // 🛡️ Cálculo de Comissão em tempo real
+  useEffect(() => {
+    if (isReadOnly) return;
+    const baseVal = commissionBase === 'gross' ? (grossAmount || 0) : (netAmount || 0);
+    const calculated = parseFloat((baseVal * ((commissionPercentage || 0) / 100)).toFixed(2));
+    if (watch('commissionValue') !== calculated) {
+        setValue('commissionValue', calculated);
+    }
+  }, [commissionBase, commissionPercentage, grossAmount, netAmount, setValue, isReadOnly, watch]);
 
   const handleAddHistory = (customMessage: string) => {
     if (!customMessage || !user) return;
-    
-    setIsAddingHistory(true);
     const now = new Date().toISOString();
     const entry: ProposalHistoryEntry = {
         id: crypto.randomUUID(),
@@ -337,27 +329,8 @@ export function ProposalForm({
         message: customMessage,
         userName: user.displayName || user.email || 'Agente'
     };
-
     setStagedHistory(prev => [entry, ...prev]);
     setNewHistoryEntry('');
-
-    if (proposal?.id && firestore) {
-        const docRef = doc(firestore, 'loanProposals', proposal.id);
-        updateDoc(docRef, {
-            history: arrayUnion(entry)
-        }).catch(async (e) => {
-            setStagedHistory(prev => prev.filter(item => item.id !== entry.id));
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: docRef.path,
-                operation: 'update',
-                requestResourceData: { history: arrayUnion(entry) }
-            }));
-        }).finally(() => {
-            setIsAddingHistory(false);
-        });
-    } else {
-        setIsAddingHistory(false);
-    }
   };
 
   const displayHistory = useMemo(() => {
@@ -374,19 +347,16 @@ export function ProposalForm({
         } catch { return null; }
     }
 
-    const now = new Date().toISOString();
     const finalData: any = {
         ...data,
-        dateDigitized: convertToIso(data.dateDigitized) || now,
+        dateDigitized: convertToIso(data.dateDigitized),
         dateApproved: convertToIso(data.dateApproved),
         datePaidToClient: convertToIso(data.datePaidToClient),
         debtBalanceArrivalDate: convertToIso(data.debtBalanceArrivalDate),
         commissionPaymentDate: convertToIso(data.commissionPaymentDate),
+        history: [...(proposal?.history || []), ...stagedHistory]
     };
 
-    const existingHistory = Array.isArray(proposal?.history) ? proposal!.history : [];
-    finalData.history = [...existingHistory, ...stagedHistory];
-    
     onSubmit(cleanFirestoreData(finalData));
   }
 
@@ -396,40 +366,91 @@ export function ProposalForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex flex-col h-full overflow-hidden">
         <ScrollArea className="flex-1 px-8">
-          <div className="space-y-10 pb-10 pt-4">
+          <div className="space-y-12 pb-10 pt-6">
+            
+            {/* 🛡️ Alerta de Segurança Portabilidade */}
+            {rejectedPrevious && (
+                <Alert variant="destructive" className="rounded-3xl border-2 border-red-500 bg-red-50 animate-in slide-in-from-top-4">
+                    <AlertTriangle className="h-5 w-5 text-red-600" />
+                    <AlertTitle className="font-black uppercase text-xs">Contrato com Histórico de Reprova</AlertTitle>
+                    <AlertDescription className="text-[11px] font-bold text-red-700">
+                        Este contrato já foi reprovado anteriormente nesta base. 
+                        MOTIVO: <span className="underline">{rejectedPrevious.rejectionReason || "Não informado"}</span>. 
+                        Verifique antes de prosseguir com a redigitação.
+                    </AlertDescription>
+                </Alert>
+            )}
+
+            {/* SEÇÃO 1: DADOS DO CLIENTE */}
             <div className="space-y-6">
               <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
-                <FolderLock className="h-4 w-4" /> Registro LK RAMOS
+                <Users className="h-4 w-4" /> Seção 1 – Dados do Cliente
               </h3>
               
-              <FormField
-                control={form.control}
-                name="customerId"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 block">Cliente Selecionado *</FormLabel>
-                        <div className="flex items-center gap-3">
-                            <FormControl>
-                                <Input readOnly value={selectedCustomer?.name || "Nenhum cliente selecionado"} className="h-12 flex-1 bg-muted/30 font-black rounded-xl border-2" />
-                            </FormControl>
-                            <Button type="button" variant="outline" onClick={onOpenCustomerSearch} disabled={isReadOnly || isSaving} className="h-12 px-6 rounded-xl font-bold border-2 border-primary/20 bg-primary/5 text-primary">
-                                {field.value ? 'Trocar' : 'Buscar'} Cliente
-                            </Button>
-                        </div>
-                        <FormMessage />
-                    </FormItem>
-                )}
-                />
-              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                    control={form.control}
+                    name="customerId"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cliente Selecionado *</FormLabel>
+                            <div className="flex items-center gap-3">
+                                <FormControl>
+                                    <Input readOnly value={selectedCustomer?.name || "Nenhum cliente..."} className="h-12 flex-1 bg-muted/20 font-black rounded-xl border-2" />
+                                </FormControl>
+                                <Button type="button" variant="outline" onClick={onOpenCustomerSearch} disabled={isReadOnly || isSaving} className="h-12 px-6 rounded-xl font-bold border-2 border-primary/20 bg-primary/5">
+                                    {field.value ? 'Trocar' : 'Buscar'}
+                                </Button>
+                            </div>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <FormField
+                    control={form.control}
+                    name="selectedBenefitNumber"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nº Benefício Vincular</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly || !selectedCustomer}>
+                                <FormControl>
+                                    <SelectTrigger className="h-12 font-black rounded-xl border-2">
+                                        <SelectValue placeholder="Selecione o NB..." />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {selectedCustomer?.benefits?.map(b => (
+                                        <SelectItem key={b.number} value={b.number}>{b.number} - {b.species}</SelectItem>
+                                    ))}
+                                    {(!selectedCustomer?.benefits || selectedCustomer.benefits.length === 0) && (
+                                        <SelectItem value="none" disabled>Nenhum NB cadastrado</SelectItem>
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        </FormItem>
+                    )}
+                />
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* SEÇÃO 2: PRODUTO FINANCEIRO */}
+            <div className="space-y-6">
+              <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
+                <Briefcase className="h-4 w-4" /> Seção 2 – Produto Financeiro
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <FormField
                     control={form.control}
                     name="product"
                     render={({ field }) => (
                     <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 block">Produto *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
-                        <FormControl><SelectTrigger className="h-12 font-black rounded-xl border-2"><SelectValue placeholder="Produto" /></SelectTrigger></FormControl>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tipo de Produto *</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
+                        <FormControl><SelectTrigger className="h-12 font-black rounded-xl border-2"><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent>{productTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}</SelectContent>
                         </Select><FormMessage /></FormItem>
                     )}
@@ -439,95 +460,66 @@ export function ProposalForm({
                     name="status"
                     render={({ field }) => (
                     <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 block">Status da Esteira *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Status da Esteira *</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
                         <FormControl>
                             <SelectTrigger 
                                 className="status-custom font-black text-[10px] uppercase tracking-widest border-2 rounded-full h-12 px-8 transition-all"
                                 style={statusColor ? { '--status-color': statusColor } as any : {}}
                             >
-                                <SelectValue placeholder="Status" />
+                                <SelectValue />
                             </SelectTrigger>
                         </FormControl>
                         <SelectContent>{proposalStatuses.map(s => <SelectItem key={s} value={s} className="text-[10px] font-bold uppercase">{s}</SelectItem>)}</SelectContent>
                         </Select><FormMessage /></FormItem>
                     )}
                 />
+                {currentStatusValue === 'Reprovado' && (
+                    <FormField
+                        control={form.control}
+                        name="rejectionReason"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-red-600">Motivo da Reprova *</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
+                                <FormControl><SelectTrigger className="h-12 font-black rounded-xl border-2 border-red-200 bg-red-50/30 text-red-700"><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
+                                <SelectContent>{rejectionReasons.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                )}
               </div>
-
-              {productValue === 'Portabilidade' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 rounded-3xl bg-blue-50/30 border-2 border-blue-100 animate-in slide-in-from-top-2 duration-500">
-                      <FormField
-                        control={form.control}
-                        name="originalContractNumber"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-blue-600 block mb-2">N° Contrato Portado *</FormLabel>
-                                <FormControl><Input placeholder="Contrato de Origem" {...field} className="h-12 font-black border-2 rounded-xl" readOnly={isReadOnly || isSaving} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="bankOrigin"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-blue-600 block mb-2">Banco de Origem</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
-                                    <FormControl><SelectTrigger className="h-12 font-black border-2 rounded-xl"><SelectValue placeholder="Selecione o banco anterior" /></SelectTrigger></FormControl>
-                                    <SelectContent>
-                                        {banks.map(b => (
-                                            <SelectItem key={b} value={b}>{cleanBankName(b)}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </FormItem>
-                        )}
-                      />
-                  </div>
-              )}
             </div>
 
             <Separator />
 
+            {/* SEÇÃO 3: DADOS DO CONTRATO */}
             <div className="space-y-6">
               <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
-                <Clock className="h-4 w-4" /> DIGITAÇÃO DA PROPOSTA
+                <Landmark className="h-4 w-4" /> Seção 3 – Dados do Contrato
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <FormField
-                  control={form.control}
-                  name="approvingBody"
-                  render={({ field }) => (
-                    <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Órgão</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
-                            <FormControl><SelectTrigger className="h-12 font-black border-2 rounded-xl"><SelectValue placeholder="Órgão" /></SelectTrigger></FormControl>
-                            <SelectContent>{approvingBodies.map(body => <SelectItem key={body} value={body}>{body}</SelectItem>)}</SelectContent>
-                        </Select>
-                    </FormItem>
-                  )}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <FormField
                   control={form.control}
                   name="bank"
                   render={({ field }) => (
                     <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Banco Digitado *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Banco Digitado *</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
                             <FormControl>
-                                <SelectTrigger className="h-12 font-black w-full overflow-hidden border-2 rounded-xl">
+                                <SelectTrigger className="h-12 font-black border-2 rounded-xl">
                                     <SelectValue placeholder="Banco" />
                                 </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                                 {banks.map(b => (
                                     <SelectItem key={b} value={b}>
-                                        <div className="flex items-center gap-3 w-full overflow-hidden">
-                                            <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogos={showLogos} className="h-4 w-4 shrink-0" />
-                                            <span className="truncate flex-1 font-bold text-xs">{cleanBankName(b)}</span>
+                                        <div className="flex items-center gap-2">
+                                            <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogo={showLogos} className="h-4 w-4" />
+                                            <span className="font-bold text-xs uppercase">{cleanBankName(b)}</span>
                                         </div>
                                     </SelectItem>
                                 ))}
@@ -541,62 +533,148 @@ export function ProposalForm({
                   name="proposalNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">N° de Proposta *</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                            <Input placeholder="Ex: 830310745" {...field} value={field.value ?? ''} readOnly={isReadOnly || isSaving} className={cn("h-12 font-black border-2 rounded-xl", isDuplicateProposal && "border-red-500 bg-red-50")} />
-                            {isDuplicateProposal && <AlertTriangle className="absolute right-4 top-3.5 h-5 w-5 text-red-500 animate-pulse" />}
-                        </div>
-                      </FormControl>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">N° Proposta *</FormLabel>
+                      <FormControl><Input placeholder="000000000" {...field} readOnly={isReadOnly} className="h-12 font-black border-2 rounded-xl" /></FormControl>
+                    </FormItem>
+                  )}
+                />
+                {productValue === 'Portabilidade' && (
+                    <FormField
+                        control={form.control}
+                        name="originalContractNumber"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-blue-600">N° Contrato Origem *</FormLabel>
+                                <FormControl><Input placeholder="Contrato Portado" {...field} readOnly={isReadOnly} className="h-12 font-black border-2 border-blue-200 bg-blue-50/20 rounded-xl" /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                )}
+                <FormField
+                  control={form.control}
+                  name="approvingBody"
+                  render={({ field }) => (
+                    <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Órgão Aprovador</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
+                            <FormControl><SelectTrigger className="h-12 font-black border-2 rounded-xl"><SelectValue /></SelectTrigger></FormControl>
+                            <SelectContent>{approvingBodies.map(body => <SelectItem key={body} value={body}>{body}</SelectItem>)}</SelectContent>
+                        </Select>
                     </FormItem>
                   )}
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <FormField control={form.control} name="grossAmount" render={({ field }) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <FormField
+                  control={form.control}
+                  name="table"
+                  render={({ field }) => (
                     <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Vlr Bruto (Base Cálculo) *</FormLabel>
-                        <FormControl>
-                            <div className="relative">
-                                <span className="absolute left-4 top-3.5 text-[10px] font-black text-muted-foreground">R$</span>
-                                <Input type="text" className="h-12 pl-10 font-black border-2 rounded-xl" value={formatCurrencyInput(field.value)} onChange={(e) => field.onChange(parseInt(e.target.value.replace(/\D/g, "")) / 100 || 0)} readOnly={isReadOnly || isSaving} />
-                            </div>
-                        </FormControl>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tabela Utilizada *</FormLabel>
+                      <FormControl><Input placeholder="Ex: Tabela Flex" {...field} readOnly={isReadOnly} className="h-12 font-bold border-2 rounded-xl" /></FormControl>
                     </FormItem>
-                )} />
-                <FormField control={form.control} name="netAmount" render={({ field }) => (
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="term"
+                  render={({ field }) => (
                     <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Vlr Líquido *</FormLabel>
-                        <FormControl>
-                            <div className="relative">
-                                <span className="absolute left-4 top-3.5 text-[10px] font-black text-muted-foreground">R$</span>
-                                <Input type="text" className="h-12 pl-10 font-black border-2 rounded-xl" value={formatCurrencyInput(field.value)} onChange={(e) => field.onChange(parseInt(e.target.value.replace(/\D/g, "")) / 100 || 0)} readOnly={isReadOnly || isSaving} />
-                            </div>
-                        </FormControl>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Prazo Digitado (Meses) *</FormLabel>
+                      <FormControl><Input type="number" {...field} readOnly={isReadOnly} className="h-12 font-black border-2 rounded-xl" /></FormControl>
                     </FormItem>
-                )} />
-                <FormField control={form.control} name="installmentAmount" render={({ field }) => (
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="interestRate"
+                  render={({ field }) => (
                     <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Vlr Parcela *</FormLabel>
-                        <FormControl>
-                            <div className="relative">
-                                <span className="absolute left-4 top-3.5 text-[10px] font-black text-muted-foreground">R$</span>
-                                <Input type="text" className="h-12 pl-10 font-black border-2 rounded-xl" value={formatCurrencyInput(field.value)} onChange={(e) => field.onChange(parseInt(e.target.value.replace(/\D/g, "")) / 100 || 0)} readOnly={isReadOnly || isSaving} />
-                            </div>
-                        </FormControl>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Taxa de Juros (% a.m)</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                            <Input type="number" step="0.01" {...field} readOnly={isReadOnly} className="h-12 font-black border-2 rounded-xl pr-10" />
+                            <Percent className="absolute right-4 top-3.5 h-4 w-4 opacity-30" />
+                        </div>
+                      </FormControl>
                     </FormItem>
-                )} />
+                  )}
+                />
+                {productValue === 'Portabilidade' ? (
+                    <FormField
+                        control={form.control}
+                        name="originalTerm"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-blue-600">Prazo Contrato Original</FormLabel>
+                                <FormControl><Input type="number" {...field} readOnly={isReadOnly} className="h-12 font-black border-2 border-blue-100 rounded-xl" /></FormControl>
+                            </FormItem>
+                        )}
+                    />
+                ) : (
+                    <FormField
+                        control={form.control}
+                        name="operator"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Operador Responsável *</FormLabel>
+                                <FormControl><Input placeholder="Nome do digitador" {...field} readOnly={isReadOnly} className="h-12 font-bold border-2 rounded-xl" /></FormControl>
+                            </FormItem>
+                        )}
+                    />
+                )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {productValue === 'Portabilidade' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="remainingInstallments"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-blue-600">Parcelas Restantes</FormLabel>
+                                <FormControl><Input type="number" {...field} readOnly={isReadOnly} className="h-12 font-black border-2 border-blue-100 rounded-xl" /></FormControl>
+                            </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="bankOrigin"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-blue-600">Banco Portado (Origem)</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
+                                    <FormControl><SelectTrigger className="h-12 font-bold border-2 border-blue-100 rounded-xl"><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
+                                    <SelectContent>{banks.map(b => <SelectItem key={b} value={b}>{cleanBankName(b)}</SelectItem>)}</SelectContent>
+                                </Select>
+                            </FormItem>
+                        )}
+                      />
+                      <div className="lg:col-span-2">
+                        <FormField
+                            control={form.control}
+                            name="operator"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Operador Responsável *</FormLabel>
+                                    <FormControl><Input placeholder="Nome do digitador" {...field} readOnly={isReadOnly} className="h-12 font-bold border-2 rounded-xl" /></FormControl>
+                                </FormItem>
+                            )}
+                        />
+                      </div>
+                  </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <FormField
                   control={form.control}
                   name="dateDigitized"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Digitação *</FormLabel>
-                      <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(applyDateMask(e))} maxLength={10} className="h-12 font-black border-2 rounded-xl" readOnly={isReadOnly || isSaving} /></FormControl>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Data Digitação *</FormLabel>
+                      <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(applyDateMask(e.target.value))} maxLength={10} readOnly={isReadOnly} className="h-12 font-black border-2 rounded-xl" /></FormControl>
                     </FormItem>
                   )}
                 />
@@ -605,62 +683,103 @@ export function ProposalForm({
                     name="dateApproved"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Averbação</FormLabel>
-                        <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(applyDateMask(e))} maxLength={10} className="h-12 font-black border-2 rounded-xl" readOnly={isReadOnly || isSaving} /></FormControl>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Data Averbação</FormLabel>
+                        <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(applyDateMask(e.target.value))} maxLength={10} readOnly={isReadOnly} className="h-12 font-black border-2 rounded-xl" /></FormControl>
                         </FormItem>
                     )}
                 />
-                <FormField
-                    control={form.control}
-                    name="datePaidToClient"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Pgto Cliente</FormLabel>
-                        <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(applyDateMask(e))} maxLength={10} className="h-12 font-black border-2 rounded-xl" readOnly={isReadOnly || isSaving} /></FormControl>
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="debtBalanceArrivalDate"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel className={cn("text-[10px] font-black uppercase tracking-widest block mb-2", productValue === 'Portabilidade' ? "text-blue-600" : "text-muted-foreground")}>Chegada Saldo</FormLabel>
-                        <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(applyDateMask(e))} maxLength={10} className="h-12 font-black border-2 rounded-xl" readOnly={isReadOnly || isSaving} disabled={productValue !== 'Portabilidade'} /></FormControl>
-                        </FormItem>
-                    )}
-                />
+                {productValue === 'Portabilidade' ? (
+                    <FormField
+                        control={form.control}
+                        name="debtBalanceArrivalDate"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-blue-600">Chegada do Saldo Devedor</FormLabel>
+                            <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(applyDateMask(e.target.value))} maxLength={10} readOnly={isReadOnly} className="h-12 font-black border-2 border-blue-200 bg-blue-50/20 rounded-xl" /></FormControl>
+                            </FormItem>
+                        )}
+                    />
+                ) : (
+                    <FormField
+                        control={form.control}
+                        name="datePaidToClient"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Pagamento ao Cliente</FormLabel>
+                            <FormControl><Input placeholder="dd/mm/aaaa" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(applyDateMask(e.target.value))} maxLength={10} readOnly={isReadOnly} className="h-12 font-black border-2 rounded-xl" /></FormControl>
+                            </FormItem>
+                        )}
+                    />
+                )}
               </div>
             </div>
 
             <Separator />
 
+            {/* SEÇÃO 4: VALORES FINANCEIROS */}
             <div className="space-y-6">
                 <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
-                    <CircleDollarSign className="h-4 w-4" /> REPASSE DE COMISSIONAMENTO
+                    <TrendingUp className="h-4 w-4" /> Seção 4 – Valores da Operação
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 p-6 rounded-3xl bg-emerald-50/20 border-2 border-emerald-100">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 rounded-3xl bg-muted/10 border-2 border-muted">
+                    <FormField control={form.control} name="grossAmount" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                {productValue.includes('Cartão') ? 'Limite do Cartão (Bruto) *' : 'Valor Bruto (Contrato) *'}
+                            </FormLabel>
+                            <FormControl>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-3.5 text-[10px] font-black opacity-30">R$</span>
+                                    <Input type="text" className="h-12 pl-10 font-black border-2 rounded-xl" value={formatCurrencyInput(field.value)} onChange={(e) => field.onChange(parseInt(e.target.value.replace(/\D/g, "")) / 100 || 0)} readOnly={isReadOnly} />
+                                </div>
+                            </FormControl>
+                        </FormItem>
+                    )} />
+                    <FormField control={form.control} name="installmentAmount" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Valor da Parcela *</FormLabel>
+                            <FormControl>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-3.5 text-[10px] font-black opacity-30">R$</span>
+                                    <Input type="text" className="h-12 pl-10 font-black border-2 rounded-xl" value={formatCurrencyInput(field.value)} onChange={(e) => field.onChange(parseInt(e.target.value.replace(/\D/g, "")) / 100 || 0)} readOnly={isReadOnly} />
+                                </div>
+                            </FormControl>
+                        </FormItem>
+                    )} />
+                    {productValue !== 'Portabilidade' && !productValue.includes('Cartão - Plástico') && (
+                        <FormField control={form.control} name="netAmount" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Valor liberado ao cliente *</FormLabel>
+                                <FormControl>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-3.5 text-[10px] font-black text-emerald-600/40">R$</span>
+                                        <Input type="text" className="h-12 pl-10 font-black border-2 border-emerald-100 bg-emerald-50/20 text-emerald-600 rounded-xl" value={formatCurrencyInput(field.value)} onChange={(e) => field.onChange(parseInt(e.target.value.replace(/\D/g, "")) / 100 || 0)} readOnly={isReadOnly} />
+                                    </div>
+                                </FormControl>
+                            </FormItem>
+                        )} />
+                    )}
+                </div>
+            </div>
+
+            <Separator />
+
+            {/* SEÇÃO 5: COMISSIONAMENTO */}
+            <div className="space-y-6">
+                <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
+                    <CircleDollarSign className="h-4 w-4" /> Seção 5 – Repasse de Comissionamento
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 p-6 rounded-3xl bg-emerald-50/20 border-2 border-emerald-100">
                     <FormField
                         control={form.control}
                         name="commissionBase"
                         render={({ field }) => (
                             <FormItem className="space-y-3">
-                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Base de Cálculo *</FormLabel>
+                                <FormLabel className="text-[10px] font-black uppercase text-emerald-700">Base Cálculo</FormLabel>
                                 <FormControl>
-                                    <RadioGroup
-                                        onValueChange={field.onChange}
-                                        value={field.value}
-                                        className="flex gap-4"
-                                        disabled={isReadOnly || isSaving}
-                                    >
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="gross" id="gross" />
-                                            <Label htmlFor="gross" className="text-xs font-bold uppercase">Bruto</Label>
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="net" id="net" />
-                                            <Label htmlFor="net" className="text-xs font-bold uppercase">Líquido</Label>
-                                        </div>
+                                    <RadioGroup onValueChange={field.onChange} value={field.value} className="flex gap-4" disabled={isReadOnly}>
+                                        <div className="flex items-center space-x-2"><RadioGroupItem value="gross" id="gross" /><Label htmlFor="gross" className="text-xs font-bold uppercase">Bruto</Label></div>
+                                        <div className="flex items-center space-x-2"><RadioGroupItem value="net" id="net" /><Label htmlFor="net" className="text-xs font-bold uppercase">Líquido</Label></div>
                                     </RadioGroup>
                                 </FormControl>
                             </FormItem>
@@ -671,10 +790,10 @@ export function ProposalForm({
                         name="commissionPercentage"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Porcentagem (%) *</FormLabel>
+                                <FormLabel className="text-[10px] font-black uppercase text-emerald-700">Porcentagem (%)</FormLabel>
                                 <FormControl>
                                     <div className="relative">
-                                        <Input type="number" step="0.01" className="h-12 pr-10 font-black border-2 rounded-xl text-emerald-600" {...field} readOnly={isReadOnly || isSaving} />
+                                        <Input type="number" step="0.01" className="h-12 pr-10 font-black border-2 rounded-xl text-emerald-600" {...field} readOnly={isReadOnly} />
                                         <Percent className="absolute right-4 top-3.5 h-4 w-4 text-emerald-600/40" />
                                     </div>
                                 </FormControl>
@@ -686,14 +805,26 @@ export function ProposalForm({
                         name="commissionValue"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Valor Comissão (R$) *</FormLabel>
+                                <FormLabel className="text-[10px] font-black uppercase text-emerald-700">Vlr Comissão (R$)</FormLabel>
                                 <FormControl>
                                     <div className="relative">
                                         <span className="absolute left-4 top-3.5 text-[10px] font-black text-emerald-600/40">R$</span>
                                         <Input type="text" className="h-12 pl-10 font-black border-2 rounded-xl text-emerald-600 bg-emerald-50/50" value={formatCurrencyInput(field.value)} readOnly />
                                     </div>
                                 </FormControl>
-                                <FormDescription className="text-[9px] uppercase font-bold text-emerald-600/60">Cálculo automático</FormDescription>
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="promoter"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="text-[10px] font-black uppercase text-emerald-700">Promotora *</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
+                                    <FormControl><SelectTrigger className="h-12 font-bold border-2 rounded-xl"><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
+                                    <SelectContent>{userSettings?.promoters?.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
+                                </Select>
                             </FormItem>
                         )}
                     />
@@ -702,11 +833,11 @@ export function ProposalForm({
                         name="commissionStatus"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Status Pgto</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isReadOnly || isSaving}>
-                                    <FormControl><SelectTrigger className="h-12 font-black border-2 rounded-xl"><SelectValue placeholder="Status" /></SelectTrigger></FormControl>
+                                <FormLabel className="text-[10px] font-black uppercase text-emerald-700">Status Pgto</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
+                                    <FormControl><SelectTrigger className="h-12 font-black border-2 rounded-xl"><SelectValue /></SelectTrigger></FormControl>
                                     <SelectContent>
-                                        {configData.commissionStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                        {configData.commissionStatuses.filter(s => s !== 'Pago').map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </FormItem>
@@ -717,49 +848,147 @@ export function ProposalForm({
 
             <Separator />
 
+            {/* SEÇÃO 6: CHECK-LIST OPERACIONAL */}
             <div className="space-y-6">
                 <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
-                    <History className="h-4 w-4" /> Histórico & Anotações
+                    <ListChecks className="h-4 w-4" /> Seção 6 – Check-list Operacional
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {[
+                        { id: 'formalization', label: 'Formalização', icon: Send, color: 'text-blue-500' },
+                        { id: 'documentation', label: 'Documentação', icon: FileCheck, color: 'text-orange-500' },
+                        { id: 'signature', label: 'Assinatura', icon: PenTool, color: 'text-purple-500' },
+                        { id: 'approval', label: 'Averbação', icon: ShieldCheck, color: 'text-green-500' }
+                    ].map(step => (
+                        <div 
+                            key={step.id} 
+                            onClick={() => !isReadOnly && setValue(`checklist.${step.id}`, !watch(`checklist.${step.id}`))}
+                            className={cn(
+                                "p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all cursor-pointer select-none",
+                                watch(`checklist.${step.id}`) 
+                                    ? `bg-background border-primary shadow-md` 
+                                    : "bg-muted/30 border-transparent opacity-40 grayscale"
+                            )}
+                        >
+                            <step.icon className={cn("h-6 w-6", watch(`checklist.${step.id}`) && step.color)} />
+                            <span className="text-[10px] font-black uppercase tracking-widest">{step.label}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <Separator />
+
+            {/* SEÇÃO 7: ANEXOS */}
+            <div className="space-y-6">
+                <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
+                    <FolderLock className="h-4 w-4" /> Seção 7 – Anexos da Proposta
+                </h3>
+                <ProposalAttachmentUploader 
+                    userId={user?.uid || ''} 
+                    proposalId={proposal?.id || 'temp'} 
+                    initialAttachments={watch('attachments') || []} 
+                    onAttachmentsChange={(docs) => setValue('attachments', docs)}
+                    isReadOnly={isReadOnly}
+                />
+            </div>
+
+            <Separator />
+
+            {/* SEÇÃO 8: LINHA DO TEMPO / TRÂMITE */}
+            <div className="space-y-6">
+                <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
+                    <History className="h-4 w-4" /> Seção 8 – Linha do Tempo / Histórico
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="space-y-6">
                         {!isReadOnly && (
-                            <div className="flex gap-3">
-                                <Input placeholder="Nova atualização..." value={newHistoryEntry} onChange={e => setNewHistoryEntry(e.target.value)} disabled={isAddingHistory} className="h-12 border-2 rounded-xl px-5 font-medium" />
-                                <Button type="button" size="icon" onClick={() => handleAddHistory(newHistoryEntry)} disabled={isAddingHistory || !newHistoryEntry.trim()} className="h-12 w-12 rounded-xl bg-primary shadow-lg"><Check className="h-5 w-5" /></Button>
+                            <div className="space-y-4">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Registrar Novo Trâmite</Label>
+                                <div className="flex gap-3">
+                                    <Input 
+                                        placeholder="Digite aqui ou escolha um tópico rápido..." 
+                                        value={newHistoryEntry} 
+                                        onChange={e => setNewHistoryEntry(e.target.value)} 
+                                        onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddHistory(newHistoryEntry))}
+                                        className="h-12 border-2 rounded-xl px-5" 
+                                    />
+                                    <Button type="button" size="icon" onClick={() => handleAddHistory(newHistoryEntry)} disabled={!newHistoryEntry.trim()} className="h-12 w-12 rounded-xl bg-primary shadow-lg"><Check className="h-5 w-5" /></Button>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {historyTopics.slice(0, 6).map(topic => (
+                                        <Button 
+                                            key={topic} 
+                                            type="button" 
+                                            variant="outline" 
+                                            size="sm" 
+                                            onClick={() => handleAddHistory(topic)}
+                                            className="h-7 text-[9px] font-bold uppercase rounded-full border-primary/20 bg-primary/5 text-primary"
+                                        >
+                                            <Zap className="h-2.5 w-2.5 mr-1" /> {topic.split(' ').slice(1).join(' ')}
+                                        </Button>
+                                    ))}
+                                </div>
                             </div>
                         )}
-                        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                        <div className="space-y-3 max-h-[400px] overflow-y-auto pr-4 custom-scrollbar">
                             {displayHistory.map(entry => (
-                                <div key={entry.id} className="p-4 rounded-2xl border-2 bg-muted/20 hover:shadow-md transition-all">
+                                <div key={entry.id} className="p-4 rounded-2xl border-2 bg-muted/20 hover:bg-background transition-colors">
                                     <p className="text-[9px] font-black uppercase text-primary/60 mb-1">{format(parseISO(entry.date), "dd/MM/yy HH:mm")} • {entry.userName}</p>
                                     <p className="text-xs font-bold leading-relaxed">{entry.message}</p>
                                 </div>
                             ))}
+                            {displayHistory.length === 0 && (
+                                <div className="py-10 text-center opacity-20 text-[10px] font-black uppercase tracking-widest">Sem registros no histórico.</div>
+                            )}
                         </div>
                     </div>
-                    <FormField
-                        control={form.control}
-                        name="observations"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Observações Adicionais</FormLabel>
-                                <FormControl><Textarea placeholder="Detalhes técnicos, links ou lembretes..." {...field} className="min-h-[200px] rounded-2xl border-2 p-5" readOnly={isReadOnly || isSaving} /></FormControl>
-                            </FormItem>
-                        )}
-                    />
+                    <div className="space-y-4">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Observações Técnicas Gerais</Label>
+                        <FormField
+                            control={form.control}
+                            name="observations"
+                            render={({ field }) => (
+                                <FormControl><Textarea placeholder="Detalhes, tokens de acesso ou anotações internas importantes..." {...field} className="min-h-[250px] rounded-3xl border-2 p-6" readOnly={isReadOnly} /></FormControl>
+                            )}
+                        />
+                    </div>
                 </div>
             </div>
           </div>
         </ScrollArea>
+        
         <div className="sticky bottom-0 px-8 py-6 border-t bg-background z-20 flex justify-end">
             {!isReadOnly && (
-                <Button type="submit" disabled={isSaving || isDuplicateProposal} className="rounded-full px-12 font-black uppercase text-xs tracking-[0.2em] bg-[#00AEEF] hover:bg-[#0096D1] shadow-2xl shadow-[#00AEEF]/30 transition-all border-none h-14">
-                    {isSaving ? <><Loader2 className="mr-3 h-5 w-5 animate-spin" /> Salvando...</> : <><Save className="mr-3 h-5 w-5" /> Salvar Proposta</>}
+                <Button type="submit" disabled={isSaving} className="rounded-full px-12 font-black uppercase text-xs tracking-[0.2em] bg-[#00AEEF] hover:bg-[#0096D1] shadow-2xl shadow-[#00AEEF]/30 transition-all border-none h-14">
+                    {isSaving ? <><Loader2 className="mr-3 h-5 w-5 animate-spin" /> Gravando...</> : <><Save className="mr-3 h-5 w-5" /> Salvar Proposta</>}
                 </Button>
             )}
         </div>
       </form>
     </Form>
   );
+}
+
+function ListChecks(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m3 17 2 2 4-4" />
+      <path d="m3 7 2 2 4-4" />
+      <path d="M13 6h8" />
+      <path d="M13 12h8" />
+      <path d="M13 18h8" />
+    </svg>
+  )
 }

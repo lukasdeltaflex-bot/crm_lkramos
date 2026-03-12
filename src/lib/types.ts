@@ -91,6 +91,8 @@ export type Proposal = {
   product: ProductType;
   table: string;
   term: number;
+  originalTerm?: number; // Novo: Prazo original para Portabilidade
+  remainingInstallments?: number; // Novo: Parcelas restantes para Portabilidade
   installmentAmount: number;
   netAmount: number;
   grossAmount: number;
@@ -117,7 +119,7 @@ export type Proposal = {
   attachments?: Attachment[];
   observations?: string;
   history?: ProposalHistoryEntry[];
-  checklist?: Record<string, boolean>; // Novo: Controle operacional por etapas
+  checklist?: Record<string, boolean>; // Controle operacional por etapas
   originalContractNumber?: string; // Nº do contrato que está sendo portado
   rejectionReason?: string; // Motivo da reprova
 };
