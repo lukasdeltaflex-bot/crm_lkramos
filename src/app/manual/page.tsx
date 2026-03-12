@@ -60,7 +60,9 @@ import {
     FileBadge,
     Printer,
     CheckCircle2,
-    MousePointer2
+    MousePointer2,
+    KeyRound,
+    UserRoundCheck
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -186,10 +188,10 @@ export default function ManualPage() {
                         <div className="grid gap-4 md:grid-cols-2">
                             <div className="p-4 rounded-xl bg-emerald-50/5 border border-emerald-200">
                                 <h4 className="font-bold text-emerald-700 flex items-center gap-2 mb-2">
-                                    <ShieldCheck className="h-4 w-4" /> Itens Obrigatórios
+                                    <UserRoundCheck className="h-4 w-4" /> Validação Silenciosa V2
                                 </h4>
                                 <p className="text-xs text-muted-foreground">
-                                    O campo **Produto** agora é estritamente obrigatório. O sistema impede a gravação de propostas sem classificação para garantir a integridade dos seus relatórios de performance.
+                                    O cadastro de clientes agora realiza uma **consulta direta ao banco de dados** para CPF e Telefone. O sistema bloqueia duplicidades instantaneamente, mesmo que o registro original não esteja visível na lista atual.
                                 </p>
                             </div>
                             <div className="p-4 rounded-xl bg-blue-50/5 border border-blue-200">
@@ -204,13 +206,46 @@ export default function ManualPage() {
                     </AccordionContent>
                 </AccordionItem>
 
-                {/* 5. INTERFACE E USABILIDADE */}
+                {/* 5. SEGURANÇA E ACESSO */}
+                <AccordionItem value="security-access" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-red-500/20">
+                    <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-red-100 text-red-600"><ShieldCheck className="h-5 w-5" /></div>
+                            <div className="text-left">
+                                <p className="font-bold text-sm">5. Segurança e Proteção de Dados</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Acesso Seguro e Anti-SPAM</p>
+                            </div>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="p-4 rounded-xl bg-red-50/5 border border-red-200">
+                                <h4 className="font-bold text-red-700 flex items-center gap-2 mb-2">
+                                    <KeyRound className="h-4 w-4" /> Recuperação de Senha
+                                </h4>
+                                <p className="text-xs text-muted-foreground">
+                                    Implementado fluxo oficial via Firebase. Caso esqueça sua senha, utilize o link **"Esqueci minha senha"** na tela de login para receber um link de redefinição seguro no seu e-mail.
+                                </p>
+                            </div>
+                            <div className="p-4 rounded-xl bg-zinc-50/5 border border-zinc-300">
+                                <h4 className="font-bold text-zinc-700 flex items-center gap-2 mb-2">
+                                    <Lock className="h-4 w-4" /> Firebase App Check
+                                </h4>
+                                <p className="text-xs text-muted-foreground">
+                                    O sistema utiliza **reCAPTCHA v3** de forma invisível. Isso garante que apenas agentes reais acessem o sistema, bloqueando automaticamente tentativas de ataque por robôs e scripts externos.
+                                </p>
+                            </div>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+
+                {/* 6. INTERFACE E USABILIDADE */}
                 <AccordionItem value="ui-usability" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-zinc-500/20">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-zinc-100 text-zinc-600"><Layout className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">5. Navegação em Formatos Elite</p>
+                                <p className="font-bold text-sm">6. Navegação em Formatos Elite</p>
                                 <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Modais de Alta Performance</p>
                             </div>
                         </div>
@@ -218,10 +253,10 @@ export default function ManualPage() {
                     <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
                         <div className="p-4 rounded-xl bg-muted/20 border">
                             <h4 className="font-bold text-foreground flex items-center gap-2 mb-2">
-                                <MousePointer2 className="h-4 w-4 text-primary" /> Rodapés Fixos (Sticky)
+                                <Search className="h-4 w-4 text-primary" /> Busca Global 10x
                             </h4>
                             <p className="text-xs text-muted-foreground">
-                                Todos os formulários de cadastro agora possuem o botão **"Salvar"** fixado no rodapé. Você pode rolar o conteúdo livremente sem perder o acesso à finalização do registro.
+                                O motor de busca global (CTRL + K) foi otimizado. Ele agora carrega instantaneamente os 50 registros mais recentes, priorizando a velocidade sem comprometer a precisão.
                             </p>
                         </div>
                         <div className="p-4 rounded-xl bg-blue-50/5 border border-blue-200 mt-4">
