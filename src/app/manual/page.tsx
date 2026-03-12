@@ -62,7 +62,9 @@ import {
     CheckCircle2,
     MousePointer2,
     KeyRound,
-    UserRoundCheck
+    UserRoundCheck,
+    RefreshCcw,
+    ShieldAlert
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -188,18 +190,18 @@ export default function ManualPage() {
                         <div className="grid gap-4 md:grid-cols-2">
                             <div className="p-4 rounded-xl bg-emerald-50/5 border border-emerald-200">
                                 <h4 className="font-bold text-emerald-700 flex items-center gap-2 mb-2">
-                                    <UserRoundCheck className="h-4 w-4" /> Validação Silenciosa V2
+                                    <UserRoundCheck className="h-4 w-4" /> Validação Silenciosa V3
                                 </h4>
                                 <p className="text-xs text-muted-foreground">
-                                    O cadastro de clientes agora realiza uma **consulta direta ao banco de dados** para CPF e Telefone. O sistema bloqueia duplicidades instantaneamente, mesmo que o registro original não esteja visível na lista atual.
+                                    O cadastro de clientes realiza uma **consulta em tempo real** para CPF e Telefone. O sistema bloqueia duplicidades instantaneamente, com um tempo de espera inteligente (debounce) para não travar a digitação.
                                 </p>
                             </div>
                             <div className="p-4 rounded-xl bg-blue-50/5 border border-blue-200">
                                 <h4 className="font-bold text-blue-700 flex items-center gap-2 mb-2">
-                                    <Wallet className="h-4 w-4" /> Comissões Fixas
+                                    <Wallet className="h-4 w-4" /> Cards Financeiros Mestres
                                 </h4>
                                 <p className="text-xs text-muted-foreground">
-                                    No Financeiro, os cards superiores (Resumo) são **fixos no mês atual**. Eles não são alterados por filtros de busca ou operador, servindo como uma âncora real do seu faturamento mensal.
+                                    No Financeiro, os cards superiores são independentes de filtros. Eles refletem a realidade total do faturamento do mês atual, servindo como uma bússola absoluta para o seu negócio.
                                 </p>
                             </div>
                         </div>
@@ -213,7 +215,7 @@ export default function ManualPage() {
                             <div className="p-2 rounded-xl bg-red-100 text-red-600"><ShieldCheck className="h-5 w-5" /></div>
                             <div className="text-left">
                                 <p className="font-bold text-sm">5. Segurança e Proteção de Dados</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Acesso Seguro e Anti-SPAM</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Blindagem AES-256 e Anti-SPAM</p>
                             </div>
                         </div>
                     </AccordionTrigger>
@@ -221,51 +223,54 @@ export default function ManualPage() {
                         <div className="grid gap-4 md:grid-cols-2">
                             <div className="p-4 rounded-xl bg-red-50/5 border border-red-200">
                                 <h4 className="font-bold text-red-700 flex items-center gap-2 mb-2">
-                                    <KeyRound className="h-4 w-4" /> Recuperação de Senha
+                                    <ShieldAlert className="h-4 w-4" /> Proteção Honeypot
                                 </h4>
                                 <p className="text-xs text-muted-foreground">
-                                    Implementado fluxo oficial via Firebase. Caso esqueça sua senha, utilize o link **"Esqueci minha senha"** na tela de login para receber um link de redefinição seguro no seu e-mail.
+                                    O portal de captura de leads possui um campo invisível "armadilha" que identifica e bloqueia submissões automáticas de robôs de spam, garantindo que você receba apenas clientes reais.
                                 </p>
                             </div>
                             <div className="p-4 rounded-xl bg-zinc-50/5 border border-zinc-300">
                                 <h4 className="font-bold text-zinc-700 flex items-center gap-2 mb-2">
-                                    <Lock className="h-4 w-4" /> Firebase App Check
+                                    <Lock className="h-4 w-4" /> Storage Protegido
+                                    <Badge variant="outline" className="text-[8px] border-zinc-400">Requester Pays</Badge>
                                 </h4>
                                 <p className="text-xs text-muted-foreground">
-                                    O sistema utiliza **reCAPTCHA v3** de forma invisível. Isso garante que apenas agentes reais acessem o sistema, bloqueando automaticamente tentativas de ataque por robôs e scripts externos.
+                                    Seus arquivos e anexos são servidos via URL protegida. O sistema injeta automaticamente o token do projeto para evitar erros de acesso e garantir downloads seguros em qualquer navegador.
                                 </p>
                             </div>
                         </div>
                     </AccordionContent>
                 </AccordionItem>
 
-                {/* 6. INTERFACE E USABILIDADE */}
+                {/* 6. INTERFACE E MANUTENÇÃO */}
                 <AccordionItem value="ui-usability" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-zinc-500/20">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-zinc-100 text-zinc-600"><Layout className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">6. Navegação em Formatos Elite</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Modais de Alta Performance</p>
+                                <p className="font-bold text-sm">6. Navegação e Auto-Reparo</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Performance e Estabilidade de Cache</p>
                             </div>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
-                        <div className="p-4 rounded-xl bg-muted/20 border">
-                            <h4 className="font-bold text-foreground flex items-center gap-2 mb-2">
-                                <Search className="h-4 w-4 text-primary" /> Busca Global 10x
-                            </h4>
-                            <p className="text-xs text-muted-foreground">
-                                O motor de busca global (CTRL + K) foi otimizado. Ele agora carrega instantaneamente os 50 registros mais recentes, priorizando a velocidade sem comprometer a precisão.
-                            </p>
-                        </div>
-                        <div className="p-4 rounded-xl bg-blue-50/5 border border-blue-200 mt-4">
-                            <h4 className="font-bold text-blue-700 flex items-center gap-2 mb-2">
-                                <Snowflake className="h-4 w-4" /> Congelamento V2
-                            </h4>
-                            <p className="text-xs text-muted-foreground">
-                                As tabelas utilizam calibração milimétrica para fixar colunas. Use o seletor **"Congelar"** para manter nomes e IDs visíveis mesmo em telas ultra-largas.
-                            </p>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="p-4 rounded-xl bg-muted/20 border">
+                                <h4 className="font-bold text-foreground flex items-center gap-2 mb-2">
+                                    <RefreshCcw className="h-4 w-4 text-primary" /> Redefinir Interface
+                                </h4>
+                                <p className="text-xs text-muted-foreground">
+                                    Se uma tabela sumir ou colunas ficarem desalinhadas, use o botão **"Redefinir Interface"** nas Configurações. Ele limpa apenas as preferências visuais corrompidas do seu navegador sem apagar dados do banco.
+                                </p>
+                            </div>
+                            <div className="p-4 rounded-xl bg-blue-50/5 border border-blue-200">
+                                <h4 className="font-bold text-blue-700 flex items-center gap-2 mb-2">
+                                    <History className="h-4 w-4" /> Paginação de Performance
+                                </h4>
+                                <p className="text-xs text-muted-foreground">
+                                    O sistema carrega registros em blocos de 150. Se sua base tiver 5.000 clientes, a tela não travará. Use o botão **"Carregar Próximos"** no final da lista para navegar em grandes volumes.
+                                </p>
+                            </div>
                         </div>
                     </AccordionContent>
                 </AccordionItem>
@@ -283,7 +288,7 @@ export default function ManualPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-1">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase">Busca Global</p>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase">Busca Global (Reativa)</p>
                         <p className="text-xs font-bold">CTRL + K</p>
                     </div>
                     <div className="space-y-1">
@@ -296,15 +301,15 @@ export default function ManualPage() {
             <Card className="border-2 border-dashed border-orange-500/20 bg-orange-500/5">
                 <HardDrive className="absolute top-2 right-2 h-4 w-4 text-orange-600/30" />
                 <CardHeader className="pb-2">
-                    <CardTitle className="text-xs font-black uppercase tracking-widest text-orange-600">Armazenamento</CardTitle>
+                    <CardTitle className="text-xs font-black uppercase tracking-widest text-orange-600">PWA Instalado</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center gap-2 text-orange-600">
                         <div className="h-2 w-2 rounded-full bg-current animate-pulse" />
-                        <span className="text-[10px] font-black uppercase">Segurança Cloud</span>
+                        <span className="text-[10px] font-black uppercase">App Nativo</span>
                     </div>
                     <p className="text-[9px] text-muted-foreground mt-2 leading-tight font-medium">
-                        Seus documentos e anexos estão protegidos por criptografia de ponta a ponta e backups diários automáticos.
+                        O App instalado recebe atualizações silenciosas. Sempre que um aviso de "Nova Versão" aparecer, clique para atualizar instantaneamente.
                     </p>
                 </CardContent>
             </Card>
