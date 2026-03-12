@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -245,6 +246,7 @@ export default function SettingsPage() {
       toast({ title: "Visual Restaurado", description: "O padrão de fábrica foi aplicado." });
   };
 
+  // ⚡ PERFORMANCE: Limpeza de preferências do navegador
   const handleResetUI = () => {
       safeStorage.clearAll();
       toast({ 

@@ -1,3 +1,4 @@
+
 'use client';
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -69,6 +70,7 @@ function CustomersPageContent() {
   const [formKey, setFormKey] = React.useState('initial');
   const tableRef = React.useRef<CustomerDataTableHandle>(null);
   
+  // ⚡ PERFORMANCE: Limite de carregamento inicial
   const [loadLimit, setLoadLimit] = React.useState(150);
   
   const initialTab = searchParams.get('tab') || 'active';
@@ -185,6 +187,11 @@ function CustomersPageContent() {
     }
   }, [firestore, user]);
 
+  const columns = React.useMemo(() => getColumns({ 
+    onEdit: handleEditCustomer, 
+    onDelete: handleMoveToTrash 
+  }), [handleEditCustomer, handleMoveToTrash]);
+
   const handleNewCustomer = React.useCallback(() => {
     setSelectedCustomer(undefined);
     setDefaultValues(undefined);
@@ -245,11 +252,6 @@ function CustomersPageContent() {
         setIsSaving(false);
     }
   };
-
-  const columns = React.useMemo(() => getColumns({ 
-    onEdit: handleEditCustomer, 
-    onDelete: handleMoveToTrash 
-  }), [handleEditCustomer, handleMoveToTrash]);
 
   const handleAiFormSubmit = (aiData: any) => {
     const newId = doc(collection(firestore!, 'customers')).id;
@@ -516,6 +518,7 @@ function CustomersPageContent() {
                 rowSelection={rowSelection}
                 setRowSelection={setRowSelection}
             />
+            {/* ⚡ PERFORMANCE: Botão para carregar mais registros */}
             {processedCustomers.length >= loadLimit && !isCustomersLoading && (
                 <div className="flex justify-center pb-10 animate-in fade-in slide-in-from-bottom-2">
                     <Button 

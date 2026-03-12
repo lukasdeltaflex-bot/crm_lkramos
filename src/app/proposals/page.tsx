@@ -1,3 +1,4 @@
+
 'use client';
 import React, { Suspense, useCallback, useState, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -74,6 +75,7 @@ function ProposalsPageContent() {
   const tableRef = React.useRef<ProposalsDataTableHandle>(null);
   const [hasOpenedFromParam, setHasOpenedFromParam] = useState(false);
   
+  // ⚡ PERFORMANCE: Limite de carregamento inicial
   const [loadLimit, setLoadLimit] = useState(150);
 
   const proposalsQuery = useMemoFirebase(() => {
@@ -454,7 +456,7 @@ function ProposalsPageContent() {
             if (proposalToOpen) { handleEditProposal(proposalToOpen); setHasOpenedFromParam(true); setTimeout(() => router.replace('/proposals', { scroll: false }), 300); }
         }
     }
-  }, [searchParams, isLoading, proposalsWithCustomerData, hasOpenedFromParam, handleNewProposal, handleEditProposal, router]);
+  }, [isLoading, proposalsWithCustomerData, hasOpenedFromParam, handleNewProposal, handleEditProposal, router]);
 
   return (
     <>
@@ -528,6 +530,7 @@ function ProposalsPageContent() {
             onBulkStatusChange={handleBulkStatusChange} 
             userSettings={userSettings || null}
         />
+        {/* ⚡ PERFORMANCE: Botão para carregar mais propostas */}
         {proposalsWithCustomerData.length >= loadLimit && !proposalsLoading && (
             <div className="flex justify-center pb-10">
                 <Button variant="outline" onClick={() => setLoadLimit(prev => prev + 150)} className="rounded-full h-12 px-10 font-bold uppercase text-[10px] border-2">
