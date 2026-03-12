@@ -1,4 +1,3 @@
-
 'use client';
 
 /**
@@ -431,16 +430,24 @@ export function ProposalForm({
                             <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nº Benefício Vincular</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly || !selectedCustomer}>
                                 <FormControl>
-                                    <SelectTrigger className="h-12 font-black rounded-xl border-2">
-                                        <SelectValue placeholder="Selecione o NB..." />
+                                    <SelectTrigger className="h-12 rounded-xl border-2 px-4">
+                                        <div className="flex items-center gap-2 overflow-hidden">
+                                            <CreditCard className="h-4 w-4 shrink-0 text-primary/40" />
+                                            <SelectValue placeholder="Selecione o benefício..." />
+                                        </div>
                                     </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
                                     {selectedCustomer?.benefits?.map(b => (
-                                        <SelectItem key={b.number} value={b.number}>{b.number} - {b.species}</SelectItem>
+                                        <SelectItem key={b.number} value={b.number} className="py-3">
+                                            <div className="flex flex-col gap-0.5">
+                                                <span className="font-black text-sm">{b.number}</span>
+                                                <span className="text-[10px] text-muted-foreground uppercase font-bold truncate max-w-[250px]">{b.species || 'Sem espécie informada'}</span>
+                                            </div>
+                                        </SelectItem>
                                     ))}
                                     {(!selectedCustomer?.benefits || selectedCustomer.benefits.length === 0) && (
-                                        <SelectItem value="none" disabled>Nenhum NB cadastrado</SelectItem>
+                                        <SelectItem value="none" disabled>Nenhum benefício cadastrado</SelectItem>
                                     )}
                                 </SelectContent>
                             </Select>
@@ -458,60 +465,108 @@ export function ProposalForm({
                 <Briefcase className="h-4 w-4" /> Seção 2 – Produto Financeiro
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <FormField
-                    control={form.control}
-                    name="product"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tipo de Produto *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
-                        <FormControl><SelectTrigger className="h-12 font-black rounded-xl border-2"><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>{productTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}</SelectContent>
-                        </Select><FormMessage /></FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Status da Esteira *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
-                        <FormControl>
-                            <SelectTrigger 
-                                className="status-custom font-black text-[10px] uppercase tracking-widest border-2 rounded-full h-12 px-8 transition-all"
-                                style={statusColor ? { '--status-color': statusColor } as any : {}}
-                            >
-                                <SelectValue />
-                            </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>{proposalStatuses.map(s => <SelectItem key={s} value={s} className="text-[10px] font-bold uppercase">{s}</SelectItem>)}</SelectContent>
-                        </Select><FormMessage /></FormItem>
-                    )}
-                />
-                {currentStatusValue === 'Reprovado' && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <FormField
+                      control={form.control}
+                      name="product"
+                      render={({ field }) => (
+                      <FormItem>
+                          <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tipo de Produto *</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
+                          <FormControl><SelectTrigger className="h-12 font-black rounded-xl border-2"><SelectValue /></SelectTrigger></FormControl>
+                          <SelectContent>{productTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}</SelectContent>
+                          </Select><FormMessage /></FormItem>
+                      )}
+                  />
+                  <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                      <FormItem>
+                          <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Status da Esteira *</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
+                          <FormControl>
+                              <SelectTrigger 
+                                  className="status-custom font-black text-[10px] uppercase tracking-widest border-2 rounded-full h-12 px-8 transition-all"
+                                  style={statusColor ? { '--status-color': statusColor } as any : {}}
+                              >
+                                  <SelectValue />
+                              </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>{proposalStatuses.map(s => <SelectItem key={s} value={s} className="text-[10px] font-bold uppercase">{s}</SelectItem>)}</SelectContent>
+                          </Select><FormMessage /></FormItem>
+                      )}
+                  />
+                  {currentStatusValue === 'Reprovado' && (
+                      <FormField
+                          control={form.control}
+                          name="rejectionReason"
+                          render={({ field }) => (
+                          <FormItem>
+                              <FormLabel className="text-[10px] font-black uppercase tracking-widest text-red-600">Motivo da Reprova *</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
+                                  <FormControl><SelectTrigger className="h-12 font-black rounded-xl border-2 border-red-200 bg-red-50/30 text-red-700"><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
+                                  <SelectContent>{rejectionReasons.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                              </Select>
+                              <FormMessage />
+                          </FormItem>
+                          )}
+                      />
+                  )}
+                </div>
+
+                {/* 📍 CAMPOS EXCLUSIVOS DE PORTABILIDADE - REALOCADOS CONFORME SOLICITADO */}
+                {productValue === 'Portabilidade' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 rounded-3xl bg-blue-50/30 border-2 border-blue-100 animate-in fade-in slide-in-from-top-2">
                     <FormField
                         control={form.control}
-                        name="rejectionReason"
+                        name="originalContractNumber"
                         render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-red-600">Motivo da Reprova *</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
-                                <FormControl><SelectTrigger className="h-12 font-black rounded-xl border-2 border-red-200 bg-red-50/30 text-red-700"><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
-                                <SelectContent>{rejectionReasons.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
+                            <FormItem>
+                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-blue-600">N° Contrato Origem (Obrigatório) *</FormLabel>
+                                <FormControl><Input placeholder="Número do contrato no banco anterior" {...field} readOnly={isReadOnly} className="h-12 font-black border-2 border-white rounded-xl" /></FormControl>
+                                <FormMessage />
+                            </FormItem>
                         )}
                     />
+                    <FormField
+                        control={form.control}
+                        name="bankOrigin"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-blue-600">Banco Portado (Origem)</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
+                                    <FormControl>
+                                        <SelectTrigger className="h-12 font-bold border-2 border-white rounded-xl">
+                                            <div className="flex items-center gap-2">
+                                                {field.value && <BankIcon bankName={field.value} domain={userSettings?.bankDomains?.[field.value]} showLogo={showLogos} className="h-4 w-4" />}
+                                                <SelectValue placeholder="Selecione o banco de origem..." />
+                                            </div>
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        {banks.map(b => (
+                                            <SelectItem key={b} value={b}>
+                                                <div className="flex items-center gap-2">
+                                                    <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogo={showLogos} className="h-4 w-4" />
+                                                    <span className="font-bold text-xs uppercase">{cleanBankName(b)}</span>
+                                                </div>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </FormItem>
+                        )}
+                    />
+                  </div>
                 )}
               </div>
             </div>
 
             <Separator />
 
-            {/* SEÇÃO 3: DADOS DO CONTRATO E VALORES (FUSÃO SOLICITADA) */}
+            {/* SEÇÃO 3: DADOS DO CONTRATO E VALORES */}
             <div className="space-y-6">
               <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
                 <Landmark className="h-4 w-4" /> Seção 3 – Dados do Contrato & Valores
@@ -557,19 +612,6 @@ export function ProposalForm({
                     </FormItem>
                   )}
                 />
-                {productValue === 'Portabilidade' && (
-                    <FormField
-                        control={form.control}
-                        name="originalContractNumber"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-blue-600">N° Contrato Origem *</FormLabel>
-                                <FormControl><Input placeholder="Contrato Portado" {...field} readOnly={isReadOnly} className="h-12 font-black border-2 border-blue-200 bg-blue-50/20 rounded-xl" /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                )}
                 <FormField
                   control={form.control}
                   name="approvingBody"
@@ -583,9 +625,19 @@ export function ProposalForm({
                     </FormItem>
                   )}
                 />
+                <FormField
+                    control={form.control}
+                    name="operator"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Operador Responsável *</FormLabel>
+                            <FormControl><Input placeholder="Nome do digitador" {...field} readOnly={isReadOnly} className="h-12 font-bold border-2 rounded-xl" /></FormControl>
+                        </FormItem>
+                    )}
+                />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <FormField
                   control={form.control}
                   name="table"
@@ -621,20 +673,10 @@ export function ProposalForm({
                     </FormItem>
                   )}
                 />
-                <FormField
-                    control={form.control}
-                    name="operator"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Operador Responsável *</FormLabel>
-                            <FormControl><Input placeholder="Nome do digitador" {...field} readOnly={isReadOnly} className="h-12 font-bold border-2 rounded-xl" /></FormControl>
-                        </FormItem>
-                    )}
-                />
               </div>
 
               {productValue === 'Portabilidade' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-4 rounded-2xl bg-blue-50/30 border-2 border-blue-100">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-2xl bg-blue-50/30 border-2 border-blue-100">
                       <FormField
                         control={form.control}
                         name="originalTerm"
@@ -652,35 +694,6 @@ export function ProposalForm({
                             <FormItem>
                                 <FormLabel className="text-[10px] font-black uppercase tracking-widest text-blue-600">Parcelas Restantes</FormLabel>
                                 <FormControl><Input type="number" {...field} readOnly={isReadOnly} className="h-12 font-black border-2 border-white rounded-xl" /></FormControl>
-                            </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="bankOrigin"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-blue-600">Banco Portado (Origem)</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
-                                    <FormControl>
-                                        <SelectTrigger className="h-12 font-bold border-2 border-white rounded-xl">
-                                            <div className="flex items-center gap-2">
-                                                {field.value && <BankIcon bankName={field.value} domain={userSettings?.bankDomains?.[field.value]} showLogo={showLogos} className="h-4 w-4" />}
-                                                <SelectValue placeholder="Selecione..." />
-                                            </div>
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {banks.map(b => (
-                                            <SelectItem key={b} value={b}>
-                                                <div className="flex items-center gap-2">
-                                                    <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogo={showLogos} className="h-4 w-4" />
-                                                    <span className="font-bold text-xs uppercase">{cleanBankName(b)}</span>
-                                                </div>
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
                             </FormItem>
                         )}
                       />
@@ -795,7 +808,7 @@ export function ProposalForm({
 
             <Separator />
 
-            {/* SEÇÃO 4: COMISSIONAMENTO (REORGANIZADA) */}
+            {/* SEÇÃO 4: COMISSIONAMENTO */}
             <div className="space-y-6">
                 <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
                     <CircleDollarSign className="h-4 w-4" /> Seção 4 – Repasse de Comissionamento
