@@ -4,6 +4,7 @@ import * as React from "react"
 import { ThemeProvider as NextThemesProvider, useTheme as useNextTheme } from "next-themes"
 import { type ThemeProviderProps } from "next-themes/dist/types"
 import { THEMES } from "@/lib/themes"
+import { safeStorage } from "@/lib/storage-utils"
 
 const RADIUS_OPTIONS = ["reto", "extra-discreto", "discreto", "suave", "moderno", "amigavel", "organico", "capsula"];
 const CONTAINER_STYLES = ["moderno", "glass", "deep", "flat", "glow", "geometrico"];
@@ -20,10 +21,8 @@ const SIDEBAR_OPTIONS = ["padrão", "dark", "light"];
 const AURA_OPTIONS = ["limpo", "nebula", "aurora", "sunset", "ocean", "lavender", "mint", "pearl", "desert", "velvet"];
 
 const DEFAULT_STATUS_COLORS: Record<string, string> = {
-    // 🛡️ DISTINÇÃO VISUAL: Diferenciamos o Contrato Pago ao Cliente da Comissão Recebida pelo Agente
-    "PAGO": "142 76% 36%", // Verde Esmeralda (Contrato Finalizado)
-    "PAGA": "173 80% 40%", // Verde Azulado/Teal (Comissão Recebida)
-    
+    "PAGO": "142 76% 36%", 
+    "PAGA": "173 80% 40%", 
     "SALDO PAGO": "24 95% 53%",
     "EM ANDAMENTO": "45 93% 47%",
     "AGUARDANDO SALDO": "217 91% 60%",
@@ -77,36 +76,29 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     setIsMounted(true);
-    const getSaved = (key: string, def: string) => {
-        if (typeof window === 'undefined') return def;
-        return localStorage.getItem(key) || def;
-    };
-
-    setColorTheme(getSaved("lk-color-theme", "padrão"));
-    setRadius(getSaved("lk-radius-theme", "moderno"));
-    setContainerStyle(getSaved("lk-container-style", "moderno"));
-    setBackgroundTexture(getSaved("lk-texture-theme", "none"));
-    setColorIntensity(getSaved("lk-intensity-theme", "equilibrada"));
-    setAnimationStyle(getSaved("lk-animation-theme", "sutil"));
-    setFontStyle(getSaved("lk-font-theme", "moderno"));
-    setSidebarStyle(getSaved("lk-sidebar-style", "padrão"));
-    setAuraStyle(getSaved("lk-aura-style", "limpo"));
     
-    const savedStatusColors = localStorage.getItem("lk-status-colors");
-    if (savedStatusColors) {
-        try { 
-            const parsed = JSON.parse(savedStatusColors);
-            setStatusColors({ ...DEFAULT_STATUS_COLORS, ...parsed }); 
-        } catch(e) {
-            setStatusColors(DEFAULT_STATUS_COLORS);
-        }
+    // 🛡️ LEITURA BLINDADA: Utiliza o safeStorage para evitar travamentos no boot visual
+    setColorTheme(safeStorage.get("lk-color-theme", "padrão"));
+    setRadius(safeStorage.get("lk-radius-theme", "moderno"));
+    setContainerStyle(safeStorage.get("lk-container-style", "moderno"));
+    setBackgroundTexture(safeStorage.get("lk-texture-theme", "none"));
+    setColorIntensity(safeStorage.get("lk-intensity-theme", "equilibrada"));
+    setAnimationStyle(safeStorage.get("lk-animation-theme", "sutil"));
+    setFontStyle(safeStorage.get("lk-font-theme", "moderno"));
+    setSidebarStyle(safeStorage.get("lk-sidebar-style", "padrão"));
+    setAuraStyle(safeStorage.get("lk-aura-style", "limpo"));
+    
+    const savedColors = safeStorage.get<Record<string, string> | null>("lk-status-colors", null);
+    if (savedColors && typeof savedColors === 'object') {
+        setStatusColors({ ...DEFAULT_STATUS_COLORS, ...savedColors });
+    } else {
+        setStatusColors(DEFAULT_STATUS_COLORS);
     }
   }, []);
 
   React.useEffect(() => {
     if (isMounted) {
       const root = document.documentElement;
-      
       const activeTheme = THEMES.find(t => t.name === colorTheme) || THEMES[0];
       const primaryValue = resolvedTheme === 'dark' ? activeTheme.dark : activeTheme.light;
       root.style.setProperty('--primary', primaryValue);
@@ -134,16 +126,26 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
   }, [colorTheme, radius, containerStyle, backgroundTexture, colorIntensity, animationStyle, fontStyle, sidebarStyle, auraStyle, isMounted, resolvedTheme]);
 
   const value = React.useMemo(() => ({
-    colorTheme, setColorTheme: (val: string) => { setColorTheme(val); localStorage.setItem("lk-color-theme", val); },
-    radius, setRadius: (val: string) => { setRadius(val); localStorage.setItem("lk-radius-theme", val); },
-    containerStyle, setContainerStyle: (val: string) => { setContainerStyle(val); localStorage.setItem("lk-container-style", val); },
-    backgroundTexture, setBackgroundTexture: (val: string) => { setBackgroundTexture(val); localStorage.setItem("lk-texture-theme", val); },
-    colorIntensity, setColorIntensity: (val: string) => { setColorIntensity(val); localStorage.setItem("lk-intensity-theme", val); },
-    animationStyle, setAnimationStyle: (val: string) => { setAnimationStyle(val); localStorage.setItem("lk-animation-theme", val); },
-    fontStyle, setFontStyle: (val: string) => { setFontStyle(val); localStorage.setItem("lk-font-theme", val); },
-    sidebarStyle, setSidebarStyle: (val: string) => { setSidebarStyle(val); localStorage.setItem("lk-sidebar-style", val); },
-    auraStyle, setAuraStyle: (val: string) => { setAuraStyle(val); localStorage.setItem("lk-aura-style", val); },
-    statusColors, setStatusColors: (val: Record<string, string>) => { setStatusColors(val); localStorage.setItem("lk-status-colors", JSON.stringify(val)); }
+    colorTheme, 
+    setColorTheme: (val: string) => { setColorTheme(val); safeStorage.set("lk-color-theme", val); },
+    radius, 
+    setRadius: (val: string) => { setRadius(val); safeStorage.set("lk-radius-theme", val); },
+    containerStyle, 
+    setContainerStyle: (val: string) => { setContainerStyle(val); safeStorage.set("lk-container-style", val); },
+    backgroundTexture, 
+    setBackgroundTexture: (val: string) => { setBackgroundTexture(val); safeStorage.set("lk-texture-theme", val); },
+    colorIntensity, 
+    setColorIntensity: (val: string) => { setColorIntensity(val); safeStorage.set("lk-intensity-theme", val); },
+    animationStyle, 
+    setAnimationStyle: (val: string) => { setAnimationStyle(val); safeStorage.set("lk-animation-theme", val); },
+    fontStyle, 
+    setFontStyle: (val: string) => { setFontStyle(val); safeStorage.set("lk-font-theme", val); },
+    sidebarStyle, 
+    setSidebarStyle: (val: string) => { setSidebarStyle(val); safeStorage.set("lk-sidebar-style", val); },
+    auraStyle, 
+    setAuraStyle: (val: string) => { setAuraStyle(val); safeStorage.set("lk-aura-style", val); },
+    statusColors, 
+    setStatusColors: (val: Record<string, string>) => { setStatusColors(val); safeStorage.set("lk-status-colors", val); }
   }), [colorTheme, radius, containerStyle, backgroundTexture, colorIntensity, animationStyle, fontStyle, sidebarStyle, auraStyle, statusColors]);
 
   return (

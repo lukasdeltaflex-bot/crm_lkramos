@@ -8,7 +8,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { Skeleton } from '../ui/skeleton';
 import type { Customer } from '@/lib/types';
 import { getAge } from '@/lib/utils';
-import { Button } from '../ui/button';
+import { safeStorage } from '@/lib/storage-utils';
 
 type AlertMessage = {
   customerId: string;
@@ -21,7 +21,7 @@ interface BirthdayAlertsProps {
   isLoading: boolean;
 }
 
-const DISMISS_STORAGE_KEY = 'dismissed-birthday-alerts-v1';
+const DISMISS_STORAGE_KEY = 'dismissed-birthday-alerts';
 
 function BirthdayAlertItem({ alert, onDismiss }: { alert: AlertMessage; onDismiss: (id: string) => void }) {
   return (
@@ -48,15 +48,7 @@ export function BirthdayAlerts({ customers, isLoading }: BirthdayAlertsProps) {
 
   useEffect(() => {
     setIsClient(true);
-    try {
-      const storedDismissed = localStorage.getItem(DISMISS_STORAGE_KEY);
-      if (storedDismissed) {
-        setDismissedAlerts(JSON.parse(storedDismissed));
-      }
-    } catch (error) {
-      console.error("Failed to parse dismissed alerts from localStorage", error);
-      localStorage.removeItem(DISMISS_STORAGE_KEY);
-    }
+    setDismissedAlerts(safeStorage.get<string[]>(DISMISS_STORAGE_KEY, []));
   }, []);
 
   const upcoming75 = useMemo(() => {
@@ -98,11 +90,7 @@ export function BirthdayAlerts({ customers, isLoading }: BirthdayAlertsProps) {
   const handleDismiss = (customerId: string) => {
     const newDismissed = [...dismissedAlerts, customerId];
     setDismissedAlerts(newDismissed);
-    try {
-        localStorage.setItem(DISMISS_STORAGE_KEY, JSON.stringify(newDismissed));
-    } catch (error) {
-        console.error("Failed to save dismissed alerts to localStorage", error);
-    }
+    safeStorage.set(DISMISS_STORAGE_KEY, newDismissed);
   };
 
   const visibleAlerts = isClient ? alerts.filter(alert => !dismissedAlerts.includes(alert.customerId)) : [];

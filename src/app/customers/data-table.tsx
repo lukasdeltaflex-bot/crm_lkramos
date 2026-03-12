@@ -61,6 +61,7 @@ import { DraggableHeader } from './columns';
 import type { Customer } from '@/lib/types';
 import { normalizeString, cn } from '@/lib/utils';
 import { useUser } from '@/firebase';
+import { safeStorage } from '@/lib/storage-utils';
 
 const COLUMN_LABELS: Record<string, string> = {
     col_select: "Seleção",
@@ -122,53 +123,39 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     });
   };
 
-  // 🛡️ CARREGAMENTO DE PREFERÊNCIAS ISOLADO POR USUÁRIO
+  // 🛡️ CARREGAMENTO BLINDADO DE PREFERÊNCIAS
   React.useEffect(() => {
     if (!user?.uid) return;
     setIsClient(true);
     const prefix = user.uid;
     
-    try {
-        const savedFrozen = localStorage.getItem(`${prefix}-lk-customers-frozen-count`);
-        if (savedFrozen) setFrozenCount(Number(savedFrozen));
+    // Usando safeStorage para garantir que dados corrompidos não travem a renderização
+    setFrozenCount(safeStorage.get(`${prefix}-cust-frozen`, 2));
+    setColumnVisibility(safeStorage.get(`${prefix}-cust-visibility`, columnVisibility));
+    setColumnSizing(safeStorage.get(`${prefix}-cust-sizing`, {}));
+    
+    const savedPageSize = safeStorage.get(`${prefix}-cust-pageSize`, 10);
+    setPagination(p => ({ ...p, pageSize: savedPageSize }));
 
-        const savedPageSize = localStorage.getItem(`${prefix}-lk-customers-pageSize`);
-        if (savedPageSize) setPagination(p => ({ ...p, pageSize: Number(savedPageSize) }));
-
-        const savedVisibility = localStorage.getItem(`${prefix}-lk-customers-visibility`);
-        if (savedVisibility) setColumnVisibility(JSON.parse(savedVisibility));
-
-        const savedOrder = localStorage.getItem(`${prefix}-lk-customers-order`);
-        if (savedOrder) {
-            const parsed = JSON.parse(savedOrder);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-                const currentIds = initialIds;
-                const validOrder = parsed.filter(id => currentIds.includes(id));
-                const missingIds = currentIds.filter(id => !validOrder.includes(id));
-                setColumnOrder([...validOrder, ...missingIds]);
-            }
-        }
-
-        const savedSizing = localStorage.getItem(`${prefix}-lk-customers-sizing`);
-        if (savedSizing) setColumnSizing(JSON.parse(savedSizing));
-        
-        setIsLoaded(true);
-    } catch (e) {
-        setIsLoaded(true);
+    const savedOrder = safeStorage.get<string[]>(`${prefix}-cust-order`, []);
+    if (savedOrder.length > 0) {
+        const validOrder = savedOrder.filter(id => initialIds.includes(id));
+        const missingIds = initialIds.filter(id => !validOrder.includes(id));
+        setColumnOrder([...validOrder, ...missingIds]);
     }
+
+    setIsLoaded(true);
   }, [initialIds, user?.uid]);
 
-  // 🛡️ SALVAMENTO DE PREFERÊNCIAS ISOLADO POR USUÁRIO
+  // 🛡️ SALVAMENTO DE PREFERÊNCIAS
   React.useEffect(() => {
     if (isClient && isLoaded && user?.uid) {
       const prefix = user.uid;
-      try {
-        localStorage.setItem(`${prefix}-lk-customers-frozen-count`, String(frozenCount));
-        localStorage.setItem(`${prefix}-lk-customers-visibility`, JSON.stringify(columnVisibility));
-        localStorage.setItem(`${prefix}-lk-customers-order`, JSON.stringify(columnOrder));
-        localStorage.setItem(`${prefix}-lk-customers-sizing`, JSON.stringify(columnSizing));
-        localStorage.setItem(`${prefix}-lk-customers-pageSize`, String(pagination.pageSize));
-      } catch(e) {}
+      safeStorage.set(`${prefix}-cust-frozen`, frozenCount);
+      safeStorage.set(`${prefix}-cust-visibility`, columnVisibility);
+      safeStorage.set(`${prefix}-cust-order`, columnOrder);
+      safeStorage.set(`${prefix}-cust-sizing`, columnSizing);
+      safeStorage.set(`${prefix}-cust-pageSize`, pagination.pageSize);
     }
   }, [columnVisibility, columnOrder, columnSizing, frozenCount, isClient, pagination.pageSize, isLoaded, user?.uid]);
 
