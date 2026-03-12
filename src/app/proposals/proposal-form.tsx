@@ -287,6 +287,9 @@ export function ProposalForm({
   const grossAmount = watch('grossAmount');
   const netAmount = watch('netAmount');
   const originalContractNumber = watch('originalContractNumber');
+  const watchBank = watch('bank');
+  const watchBankOrigin = watch('bankOrigin');
+  const watchPromoter = watch('promoter');
 
   const selectedCustomer = useMemo(() => {
     return customers.find(c => c.id === selectedCustomerId);
@@ -524,7 +527,10 @@ export function ProposalForm({
                         <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
                             <FormControl>
                                 <SelectTrigger className="h-12 font-black border-2 rounded-xl">
-                                    <SelectValue placeholder="Banco" />
+                                    <div className="flex items-center gap-2">
+                                        {field.value && <BankIcon bankName={field.value} domain={userSettings?.bankDomains?.[field.value]} showLogo={showLogos} className="h-4 w-4" />}
+                                        <SelectValue placeholder="Banco" />
+                                    </div>
                                 </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -658,7 +664,10 @@ export function ProposalForm({
                                 <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
                                     <FormControl>
                                         <SelectTrigger className="h-12 font-bold border-2 border-white rounded-xl">
-                                            <SelectValue placeholder="Selecione..." />
+                                            <div className="flex items-center gap-2">
+                                                {field.value && <BankIcon bankName={field.value} domain={userSettings?.bankDomains?.[field.value]} showLogo={showLogos} className="h-4 w-4" />}
+                                                <SelectValue placeholder="Selecione..." />
+                                            </div>
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
@@ -846,7 +855,10 @@ export function ProposalForm({
                                 <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
                                     <FormControl>
                                         <SelectTrigger className="h-12 font-bold border-2 rounded-xl">
-                                            <SelectValue placeholder="Selecione..." />
+                                            <div className="flex items-center gap-2">
+                                                {field.value && <BankIcon bankName={field.value} domain={userSettings?.promoterDomains?.[field.value]} showLogo={userSettings?.showPromoterLogos ?? true} className="h-4 w-4" />}
+                                                <SelectValue placeholder="Selecione..." />
+                                            </div>
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
