@@ -435,10 +435,12 @@ export function ProposalForm({
                                 </FormControl>
                                 <SelectContent>
                                     {selectedCustomer?.benefits?.map(b => (
-                                        <SelectItem key={b.number} value={b.number} className="py-3">
-                                            <div className="flex flex-col gap-0.5">
-                                                <span className="font-black text-sm">{b.number}</span>
-                                                <span className="text-[10px] text-muted-foreground uppercase font-bold truncate max-w-[250px]">{b.species || 'Sem espécie informada'}</span>
+                                        <SelectItem key={b.number} value={b.number} className="py-2.5">
+                                            <div className="flex items-baseline gap-2 overflow-hidden">
+                                                <span className="font-black text-sm tracking-tight shrink-0">{b.number}</span>
+                                                <span className="text-[9px] text-muted-foreground uppercase font-black opacity-50 truncate max-w-[200px]">
+                                                    {b.species ? `• ${b.species}` : ''}
+                                                </span>
                                             </div>
                                         </SelectItem>
                                     ))}
