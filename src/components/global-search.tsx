@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -24,14 +25,14 @@ export function GlobalSearch() {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  // 🛡️ PERFORMANCE: Limita a busca global aos 50 registros mais recentes
+  // 🛡️ PERFORMANCE: Limita a busca global aos 200 registros mais recentes
   // Isso impede o travamento do navegador ao carregar milhares de clientes na memória.
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(
         collection(firestore, 'customers'), 
         where('ownerId', '==', user.uid),
-        limit(50)
+        limit(200)
     );
   }, [firestore, user]);
 
@@ -41,7 +42,7 @@ export function GlobalSearch() {
         collection(firestore, 'loanProposals'), 
         where('ownerId', '==', user.uid),
         orderBy('dateDigitized', 'desc'),
-        limit(50)
+        limit(200)
     );
   }, [firestore, user]);
 

@@ -1,3 +1,4 @@
+
 'use client';
 
 /**
@@ -100,7 +101,7 @@ const proposalSchema = z.object({
   selectedBenefitNumber: z.string().optional(),
 
   table: z.string().min(1, 'A tabela é obrigatória.'),
-  term: z.coerce.number().min(1, 'O prazo é obrigatório.'),
+  term: z.coerce.number().optional(),
   originalTerm: z.coerce.number().optional(),
   remainingInstallments: z.coerce.number().optional(),
   interestRate: z.coerce.number().optional(),
@@ -535,10 +536,7 @@ export function ProposalForm({
                                 <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
                                     <FormControl>
                                         <SelectTrigger className="h-12 font-bold border-2 border-white rounded-xl">
-                                            <div className="flex items-center gap-2">
-                                                {field.value && <BankIcon bankName={field.value} domain={userSettings?.bankDomains?.[field.value]} showLogo={showLogosSettings} className="h-4 w-4" />}
-                                                <SelectValue placeholder="Selecione o banco de origem..." />
-                                            </div>
+                                            <SelectValue placeholder="Selecione o banco de origem..." />
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
@@ -577,10 +575,7 @@ export function ProposalForm({
                         <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
                             <FormControl>
                                 <SelectTrigger className="h-12 font-black border-2 rounded-xl">
-                                    <div className="flex items-center gap-2">
-                                        {field.value && <BankIcon bankName={field.value} domain={userSettings?.bankDomains?.[field.value]} showLogo={showLogosSettings} className="h-4 w-4" />}
-                                        <SelectValue placeholder="Banco" />
-                                    </div>
+                                    <SelectValue placeholder="Banco" />
                                 </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -633,16 +628,20 @@ export function ProposalForm({
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="term"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Prazo Digitado (Meses) *</FormLabel>
-                      <FormControl><Input type="number" {...field} readOnly={isReadOnly} className="h-12 font-black border-2 rounded-xl" /></FormControl>
-                    </FormItem>
-                  )}
-                />
+                
+                {productValue !== 'Portabilidade' && (
+                    <FormField
+                        control={form.control}
+                        name="term"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Prazo Digitado (Meses) *</FormLabel>
+                            <FormControl><Input type="number" {...field} readOnly={isReadOnly} className="h-12 font-black border-2 rounded-xl" /></FormControl>
+                            </FormItem>
+                        )}
+                    />
+                )}
+
                 <FormField
                   control={form.control}
                   name="interestRate"
@@ -850,10 +849,7 @@ export function ProposalForm({
                                 <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
                                     <FormControl>
                                         <SelectTrigger className="h-12 font-bold border-2 rounded-xl">
-                                            <div className="flex items-center gap-2">
-                                                {field.value && <BankIcon bankName={field.value} domain={userSettings?.promoterDomains?.[field.value]} showLogo={userSettings?.showPromoterLogos ?? true} className="h-4 w-4" />}
-                                                <SelectValue placeholder="Selecione..." />
-                                            </div>
+                                            <SelectValue placeholder="Selecione..." />
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>

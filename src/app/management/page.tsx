@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -608,9 +609,9 @@ export default function ManagementPage() {
                                             </div>
                                         ))}
 
-                                        {/* EXIBIÇÃO DE IMAGENS (QUE NÃO SÃO A CAPA) */}
+                                        {/* EXIBIÇÃO DE IMAGENS */}
                                         <div className="grid grid-cols-2 gap-4">
-                                            {selectedItem.attachments.filter((a: any) => a.type.startsWith('image/') && a.url !== selectedItem.coverUrl).map((img: any, idx: number) => (
+                                            {selectedItem.attachments.filter((a: any) => a.type.startsWith('image/')).map((img: any, idx: number) => (
                                                 <img key={idx} src={img.url} className="w-full aspect-video object-cover rounded-2xl shadow-md border-2 border-white hover:scale-[1.02] transition-transform cursor-zoom-in" alt="Anexo" onClick={() => window.open(img.url, '_blank')} />
                                             ))}
                                         </div>

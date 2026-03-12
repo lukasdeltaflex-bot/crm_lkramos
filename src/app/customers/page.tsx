@@ -87,12 +87,12 @@ function CustomersPageContent() {
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), limit(100));
+    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), limit(1000));
   }, [firestore, user]);
 
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), limit(100));
+    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), limit(1000));
   }, [firestore, user]);
 
   const settingsDocRef = useMemoFirebase(() => {

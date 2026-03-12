@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -108,12 +109,12 @@ export default function FinancialPage() {
 
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), limit(500));
+    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), limit(1000));
   }, [firestore, user]);
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), limit(500));
+    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), limit(1000));
   }, [firestore, user]);
 
   const expensesQuery = useMemoFirebase(() => {
@@ -787,7 +788,7 @@ export default function FinancialPage() {
 
       <Dialog open={isExpenseFormOpen} onOpenChange={setIsExpenseFormOpen}>
         <DialogContent 
-            className="max-w-md" 
+            className="max-md" 
             onPointerDownOutside={(e) => e.preventDefault()} 
             onInteractOutside={(e) => e.preventDefault()}
         >
