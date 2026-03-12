@@ -1,3 +1,4 @@
+
 'use client';
 import React, { Suspense, useCallback, useState, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -113,6 +114,7 @@ function ProposalsPageContent() {
   const handleNewProposal = useCallback(() => {
     setSelectedProposal(undefined);
     setDefaultValues(undefined);
+    setNewlySelectedCustomer(null);
     setSheetMode('new');
     setFormKey(`new-${Date.now()}`);
     setIsDialogOpen(true);
@@ -121,6 +123,7 @@ function ProposalsPageContent() {
   const handleEditProposal = useCallback((proposal: ProposalWithCustomer) => {
     setSelectedProposal(proposal);
     setDefaultValues(undefined);
+    setNewlySelectedCustomer(null);
     setSheetMode('edit');
     setFormKey(`edit-${proposal.id}`);
     setIsDialogOpen(true);
@@ -129,15 +132,16 @@ function ProposalsPageContent() {
   const handleViewProposal = useCallback((proposal: ProposalWithCustomer) => {
     setSelectedProposal(proposal);
     setDefaultValues(undefined);
+    setNewlySelectedCustomer(null);
     setSheetMode('view');
     setFormKey(`view-${proposal.id}`);
     setIsDialogOpen(true);
   }, []);
 
-  const handleCustomerSelect = useCallback((customer: Customer) => {
+  const handleCustomerSelect = (customer: Customer) => {
     setNewlySelectedCustomer(customer);
     setIsCustomerSearchOpen(false);
-  }, []);
+  };
 
   const handleCustomerSearchSelectionHandled = useCallback(() => {
     setNewlySelectedCustomer(null);
@@ -167,6 +171,7 @@ function ProposalsPageContent() {
     };
     setSelectedProposal(undefined);
     setDefaultValues(duplicatedData);
+    setNewlySelectedCustomer(null);
     setSheetMode('new');
     setFormKey(`dup-${proposal.id}-${Date.now()}`);
     setIsDialogOpen(true);
