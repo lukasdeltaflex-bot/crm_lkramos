@@ -32,7 +32,11 @@ const DEFAULT_STATUS_COLORS: Record<string, string> = {
     "ATIVO": "142 76% 36%",
     "ACTIVE": "142 76% 36%",
     "INATIVO": "240 5% 65%",
-    "INACTIVE": "240 5% 65%"
+    "INACTIVE": "240 5% 65%",
+    "PRODUÇÃO DIGITADA": "217 33% 25%",
+    "COMISSÃO RECEBIDA": "142 76% 36%",
+    "SALDO A RECEBER": "45 93% 47%",
+    "COMISSÃO ESPERADA": "24 95% 53%"
 };
 
 type ColorThemeContextType = {
@@ -77,7 +81,6 @@ function ColorThemeProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     setIsMounted(true);
     
-    // 🛡️ LEITURA BLINDADA: Utiliza o safeStorage para evitar travamentos no boot visual
     setColorTheme(safeStorage.get("lk-color-theme", "padrão"));
     setRadius(safeStorage.get("lk-radius-theme", "moderno"));
     setContainerStyle(safeStorage.get("lk-container-style", "moderno"));

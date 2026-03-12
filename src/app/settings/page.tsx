@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -242,12 +241,7 @@ export default function SettingsPage() {
       toast({ title: "Visual Restaurado", description: "O padrão de fábrica foi aplicado." });
   };
 
-  /**
-   * 🛡️ REDEFINIR INTERFACE (AUTO-REPARO)
-   * Limpa as preferências locais do navegador que podem causar bugs de renderização.
-   */
   const handleResetUI = () => {
-      // Limpa chaves específicas de layout e colunas
       safeStorage.clearAll();
       toast({ 
           title: "Interface Redefinida!", 
@@ -327,7 +321,8 @@ export default function SettingsPage() {
   const colorableStatuses = [
     "EM ANDAMENTO", "AGUARDANDO SALDO", "PAGO", 
     "SALDO PAGO", "PENDENTE", "REPROVADO", 
-    "PAGA", "PARCIAL", "ATIVO", "INATIVO"
+    "PAGA", "PARCIAL", "ATIVO", "INATIVO",
+    "PRODUÇÃO DIGITADA", "COMISSÃO RECEBIDA", "SALDO A RECEBER", "COMISSÃO ESPERADA"
   ];
 
   const FONT_LABELS: Record<string, string> = {

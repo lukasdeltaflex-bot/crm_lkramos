@@ -61,11 +61,7 @@ export function StatsCard({
 
   const getThemeStyles = () => {
     const statusKey = title.toUpperCase();
-    let customColor = statusColors[statusKey] || statusColors[title];
-
-    if (statusKey === "TOTAL DIGITADO" || statusKey === "PRODUÇÃO DIGITADA") {
-        customColor = "240 5% 65%"; 
-    }
+    const customColor = statusColors[statusKey] || statusColors[title];
 
     const cardClasses = cn(
         'hover:shadow-lg transition-all group relative overflow-hidden flex flex-col py-3.5 px-5 min-h-[160px] h-full card border-2',
