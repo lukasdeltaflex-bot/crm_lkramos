@@ -14,7 +14,7 @@ setDefaultOptions({ locale: ptBR });
 
 export const metadata: Metadata = {
   title: 'LK RAMOS',
-  description: 'Gerenciador de propostas e clientes para correspondentes bancários.',
+  description: 'Gerenciador de propostas e clientes para correspondentes bancários de elite.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -41,6 +41,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        <link rel="apple-touch-icon" href="https://picsum.photos/seed/lk-apple/180/180" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+      </head>
       <body
         className={cn(
           'min-h-screen bg-background antialiased'

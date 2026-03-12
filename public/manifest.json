@@ -1,7 +1,7 @@
 {
   "name": "LK RAMOS INVESTIMENTOS",
   "short_name": "LK RAMOS",
-  "description": "Sistema de Gestão de Propostas Bancárias de Alta Performance",
+  "description": "Gestão de Propostas e Clientes de Alta Performance",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -9,16 +9,29 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "https://picsum.photos/seed/lk-pwa-192/192/192",
-      "sizes": "192x192",
+      "src": "https://picsum.photos/seed/lk1/192/192",
       "type": "image/png",
-      "purpose": "maskable"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
-      "src": "https://picsum.photos/seed/lk-pwa-512/512/512",
-      "sizes": "512x512",
+      "src": "https://picsum.photos/seed/lk2/512/512",
       "type": "image/png",
-      "purpose": "any"
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "business"],
+  "shortcuts": [
+    {
+      "name": "Nova Proposta",
+      "url": "/proposals?action=new",
+      "icons": [{ "src": "https://picsum.photos/seed/newprop/192/192", "sizes": "192x192" }]
+    },
+    {
+      "name": "Central de Clientes",
+      "url": "/customers",
+      "icons": [{ "src": "https://picsum.photos/seed/cust/192/192", "sizes": "192x192" }]
     }
   ]
 }
