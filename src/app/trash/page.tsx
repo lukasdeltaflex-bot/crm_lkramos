@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, updateDoc, deleteDoc, query, where, getDocs, writeBatch } from 'firebase/firestore';
+import { collection, doc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
 import type { Customer, Proposal, FollowUp } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { RotateCcw, Trash2, Users, FileText, CalendarClock, AlertTriangle, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -34,9 +33,9 @@ export default function TrashPage() {
   const [itemToDelete, setItemToDelete] = useState<{ collection: string, id: string, type: 'customer' | 'proposal' | 'followup', path?: string } | null>(null);
 
   // Consultas de itens excluídos
-  const customersQuery = useMemoFirebase(() => user ? query(collection(firestore!, 'customers'), where('ownerId', '==', user.uid), where('deleted', '==', true)) : null, [user, firestore]);
-  const proposalsQuery = useMemoFirebase(() => user ? query(collection(firestore!, 'loanProposals'), where('ownerId', '==', user.uid), where('deleted', '==', true)) : null, [user, firestore]);
-  const followUpsQuery = useMemoFirebase(() => user ? query(collection(firestore!, 'users', user.uid, 'followUps'), where('deleted', '==', true)) : null, [user, firestore]);
+  const customersQuery = useMemoFirebase(() => user && firestore ? query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), where('deleted', '==', true)) : null, [user, firestore]);
+  const proposalsQuery = useMemoFirebase(() => user && firestore ? query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), where('deleted', '==', true)) : null, [user, firestore]);
+  const followUpsQuery = useMemoFirebase(() => user && firestore ? query(collection(firestore, 'users', user.uid, 'followUps'), where('deleted', '==', true)) : null, [user, firestore]);
 
   const { data: deletedCustomers, isLoading: loadingCustomers } = useCollection<Customer>(customersQuery);
   const { data: deletedProposals, isLoading: loadingProposals } = useCollection<Proposal>(proposalsQuery);
@@ -58,8 +57,7 @@ export default function TrashPage() {
     } catch (e) {
         toast({ variant: 'destructive', title: 'Erro ao restaurar' });
     } finally {
-        setIsProcessing(true);
-        setTimeout(() => setIsProcessing(false), 500); // UI feedback
+        setIsProcessing(false);
     }
   };
 
@@ -83,7 +81,7 @@ export default function TrashPage() {
   };
 
   const EmptyTrash = ({ title }: { title: string }) => (
-    <div className="py-20 text-center border-2 border-dashed rounded-[2rem] bg-muted/5 opacity-40">
+    <div className="py-20 text-center border-2 border-dashed rounded-[2rem] bg-muted/5 opacity-40 w-full">
         <Trash2 className="h-12 w-12 mx-auto mb-4" />
         <p className="font-black uppercase tracking-widest text-xs">Nenhum {title} na lixeira.</p>
     </div>
