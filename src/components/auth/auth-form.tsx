@@ -215,14 +215,19 @@ export function AuthForm({ type }: AuthFormProps) {
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="text-sm">
+      <CardFooter className="text-sm flex flex-col items-center gap-3">
         {type === 'login' ? (
-          <p>
-            Não tem uma conta?{' '}
-            <Link href="/signup" className="font-semibold text-primary hover:underline">
-              Cadastre-se
+          <>
+            <p>
+              Não tem uma conta?{' '}
+              <Link href="/signup" className="font-semibold text-primary hover:underline">
+                Cadastre-se
+              </Link>
+            </p>
+            <Link href="/forgot-password" title="Recuperar Senha" className="text-muted-foreground hover:text-primary transition-colors text-xs font-medium">
+                Esqueci minha senha
             </Link>
-          </p>
+          </>
         ) : (
           <p>
             Já tem uma conta?{' '}
