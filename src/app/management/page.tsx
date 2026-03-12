@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -60,12 +59,11 @@ import { QuickLinkForm } from './quick-link-form';
 import { decryptPassword } from '@/lib/crypto-utils';
 import { format, parseISO, isAfter, startOfDay } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
-import { cn, cleanFirestoreData, isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
+import { cn, cleanFirestoreData, isWhatsApp, getWhatsAppUrl, getSafeStorageUrl } from '@/lib/utils';
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import Image from 'next/image';
 
 const CopyButton = ({ text, label }: { text?: string; label: string }) => {
     if (!text) return null;
@@ -244,7 +242,8 @@ export default function ManagementPage() {
   };
 
   const handleDownload = (url: string, name: string) => {
-    window.open(url, '_blank');
+    // 🛡️ PROTEÇÃO DE DOWNLOAD: Garante que o userProject vá na URL
+    window.open(getSafeStorageUrl(url), '_blank');
     toast({ title: "Iniciando download...", description: name });
   };
 
@@ -288,12 +287,10 @@ export default function ManagementPage() {
                         <Card key={item.id} className="group overflow-hidden border-2 hover:border-primary/40 transition-all flex flex-col shadow-sm relative cursor-pointer" onClick={() => openNewsReader(item)}>
                             <div className="h-48 overflow-hidden relative bg-muted flex items-center justify-center">
                                 {item.coverUrl ? (
-                                    <Image 
-                                        src={item.coverUrl} 
+                                    <img 
+                                        src={getSafeStorageUrl(item.coverUrl)} 
                                         alt={item.title}
-                                        fill
-                                        className="object-cover transition-transform group-hover:scale-105 duration-500"
-                                        unoptimized
+                                        className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500"
                                     />
                                 ) : (
                                     <div className="p-6 w-full h-full bg-primary/5 flex items-center justify-center text-center overflow-hidden">
@@ -372,7 +369,7 @@ export default function ManagementPage() {
                             >
                                 <div className="flex items-center gap-8">
                                     <Avatar className="h-16 w-16 rounded-2xl border-2 border-primary/10 shadow-sm">
-                                        <AvatarImage src={promoter.photoURL} />
+                                        <AvatarImage src={getSafeStorageUrl(promoter.photoURL)} />
                                         <AvatarFallback className="bg-blue-100 text-blue-600 font-black">
                                             <Building2 className="h-8 w-8" />
                                         </AvatarFallback>
@@ -590,12 +587,10 @@ export default function ManagementPage() {
                         <div className="space-y-10 max-w-3xl mx-auto pb-20">
                             {selectedItem.coverUrl && (
                                 <div className="relative w-full aspect-[16/9] max-w-[85%] mx-auto">
-                                    <Image 
-                                        src={selectedItem.coverUrl} 
+                                    <img 
+                                        src={getSafeStorageUrl(selectedItem.coverUrl)} 
                                         alt={selectedItem.title}
-                                        fill
-                                        className="object-contain rounded-3xl shadow-xl border-4 border-white bg-white"
-                                        unoptimized
+                                        className="w-full h-full object-contain rounded-3xl shadow-xl border-4 border-white bg-white"
                                     />
                                 </div>
                             )}
@@ -618,7 +613,7 @@ export default function ManagementPage() {
                                         {selectedItem.attachments.filter((a: any) => a.type.startsWith('video/')).map((video: any, idx: number) => (
                                             <div key={idx} className="space-y-3">
                                                 <div className="rounded-3xl overflow-hidden shadow-2xl border-4 border-background aspect-video bg-black">
-                                                    <video src={video.url} controls className="w-full h-full" />
+                                                    <video src={getSafeStorageUrl(video.url)} controls className="w-full h-full" />
                                                 </div>
                                                 <p className="text-[10px] font-black uppercase text-center text-muted-foreground">{video.name}</p>
                                             </div>
@@ -627,13 +622,11 @@ export default function ManagementPage() {
                                         {/* EXIBIÇÃO DE IMAGENS */}
                                         <div className="grid grid-cols-2 gap-4">
                                             {selectedItem.attachments.filter((a: any) => a.type.startsWith('image/')).map((img: any, idx: number) => (
-                                                <div key={idx} className="relative aspect-video w-full cursor-zoom-in" onClick={() => window.open(img.url, '_blank')}>
-                                                    <Image 
-                                                        src={img.url} 
+                                                <div key={idx} className="relative aspect-video w-full cursor-zoom-in" onClick={() => window.open(getSafeStorageUrl(img.url), '_blank')}>
+                                                    <img 
+                                                        src={getSafeStorageUrl(img.url)} 
                                                         alt="Anexo"
-                                                        fill
-                                                        className="object-cover rounded-2xl shadow-md border-2 border-white hover:scale-[1.02] transition-transform"
-                                                        unoptimized
+                                                        className="w-full h-full object-cover rounded-2xl shadow-md border-2 border-white hover:scale-[1.02] transition-transform"
                                                     />
                                                 </div>
                                             ))}

@@ -16,6 +16,20 @@ export function formatCurrency(amount: number) {
 }
 
 /**
+ * 🛡️ STORAGE URL PROTECTOR
+ * Adiciona o token de userProject para buckets que possuem "Requester Pays" ativado.
+ * Essencial para evitar o erro UserProjectMissing em buckets do Google Cloud.
+ */
+export function getSafeStorageUrl(url?: string): string {
+    if (!url || typeof url !== 'string') return url || '';
+    if (url.includes('firebasestorage.googleapis.com') && !url.includes('userProject=')) {
+        const separator = url.includes('?') ? '&' : '?';
+        return `${url}${separator}userProject=studio-248448941-9c1c2`;
+    }
+    return url;
+}
+
+/**
  * 🛡️ MOTOR DE DATAS V3 (DETECÇÃO DE FORMATO)
  * Resolve falhas de parsing entre ISO (DB) e BR (Input).
  */

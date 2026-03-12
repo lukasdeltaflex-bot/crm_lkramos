@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@/lib/utils';
+import { cn, getSafeStorageUrl } from '@/lib/utils';
 import React, { useState, useEffect } from 'react';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -98,7 +98,7 @@ export function Logo({ className, forPrinting = false }: { className?: string; f
             className
         )}>
             <img 
-                src={settings.customLogoURL} 
+                src={getSafeStorageUrl(settings.customLogoURL)} 
                 alt="Logo Personalizada" 
                 className={cn(
                     "max-h-full max-w-full object-contain drop-shadow-sm",
