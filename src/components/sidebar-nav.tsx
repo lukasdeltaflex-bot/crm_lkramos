@@ -8,7 +8,7 @@ import {
   SidebarMenuButton,
   useSidebar
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, FileText, Users, CircleDollarSign, Cog, User, CalendarClock, BookOpen, NotebookTabs } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, CircleDollarSign, Cog, User, CalendarClock, BookOpen, NotebookTabs, Trash2 } from 'lucide-react';
 
 const links = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -20,6 +20,7 @@ const links = [
 ];
 
 const bottomLinks = [
+    { href: '/trash', label: 'Lixeira', icon: Trash2 },
     { href: '/manual', label: 'Guia do Usuário', icon: BookOpen },
     { href: '/profile', label: 'Meu Perfil', icon: User },
     { href: '/settings', label: 'Configurações', icon: Cog },

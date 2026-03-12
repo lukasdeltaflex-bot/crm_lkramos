@@ -66,7 +66,7 @@ export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  const [dialogData, setDialogData] = useState<{ title: string; proposals: Proposal[] } | null>(null);
+  const [dialogData, setDialogData] = setDialogData = useState<{ title: string; proposals: Proposal[] } | null>(null);
   const [startDateInput, setStartDateInput] = useState('');
   const [endDateInput, setEndDateInput] = useState('');
   const [appliedDateRange, setAppliedDateRange] = useState<DateRange | undefined>(undefined);
@@ -82,13 +82,23 @@ export default function DashboardPage() {
     return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid));
   }, [firestore, user]);
 
-  const { data: proposals, isLoading: proposalsLoading } = useCollection<Proposal>(proposalsQuery);
+  const { data: rawProposals, isLoading: proposalsLoading } = useCollection<Proposal>(proposalsQuery);
   
+  const proposals = useMemo(() => {
+    if (!rawProposals) return [];
+    return rawProposals.filter(p => p.deleted !== true); // FILTRO LIXEIRA
+  }, [rawProposals]);
+
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid));
   }, [firestore, user]);
-  const { data: customers } = useCollection<Customer>(customersQuery);
+  const { data: rawCustomers } = useCollection<Customer>(customersQuery);
+  
+  const customers = useMemo(() => {
+    if (!rawCustomers) return [];
+    return rawCustomers.filter(c => c.deleted !== true); // FILTRO LIXEIRA
+  }, [rawCustomers]);
 
   const expensesQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;

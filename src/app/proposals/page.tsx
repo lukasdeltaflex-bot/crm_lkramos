@@ -1,4 +1,3 @@
-
 'use client';
 import React, { Suspense, useCallback, useState, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -68,14 +67,13 @@ function ProposalsPageContent() {
 
   const [selectedProposal, setSelectedProposal] = useState<ProposalWithCustomer | undefined>(undefined);
   const [sheetMode, setSheetMode] = useState<'new' | 'edit' | 'view'>('new');
-  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
+  const [rowSelection, setRowSelection] = setRowSelection = useState<Record<string, boolean>>({});
   const [defaultValues, setDefaultValues] = useState<any | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
   const [formKey, setFormKey] = useState('new');
   const tableRef = React.useRef<ProposalsDataTableHandle>(null);
   const [hasOpenedFromParam, setHasOpenedFromParam] = useState(false);
   
-  // ⚡ Estado de Carga Incremental
   const [loadLimit, setLoadLimit] = useState(150);
 
   const proposalsQuery = useMemoFirebase(() => {
@@ -93,7 +91,7 @@ function ProposalsPageContent() {
     return query(
         collection(firestore, 'customers'), 
         where('ownerId', '==', user.uid),
-        limit(500) // Lote de clientes para vínculo rápido
+        limit(500)
     );
   }, [firestore, user]);
 
@@ -108,20 +106,22 @@ function ProposalsPageContent() {
 
   const isLoading = proposalsLoading || customersLoading || isUserLoading;
 
+  const proposalsWithCustomerData: ProposalWithCustomer[] = useMemo(() => {
+    if (!proposals || !customers) return [];
+    const customersMap = new Map(customers.map(c => [c.id, c]));
+    return proposals
+        .filter(p => p.deleted !== true) // Filtro de Lixeira
+        .map(p => ({
+            ...p,
+            customer: customersMap.get(p.customerId),
+        }));
+  }, [proposals, customers]);
+
   const selectedIds = useMemo(() => 
     Object.keys(rowSelection).filter(id => rowSelection[id]),
   [rowSelection]);
 
   const selectedCount = selectedIds.length;
-
-  const proposalsWithCustomerData: ProposalWithCustomer[] = useMemo(() => {
-    if (!proposals || !customers) return [];
-    const customersMap = new Map(customers.map(c => [c.id, c]));
-    return proposals.map(p => ({
-      ...p,
-      customer: customersMap.get(p.customerId),
-    }));
-  }, [proposals, customers]);
 
   const handleNewProposal = useCallback(() => {
     setSelectedProposal(undefined);
@@ -230,135 +230,11 @@ function ProposalsPageContent() {
         toast({ title: 'Status Atualizado em Massa', description: `${selectedCount} propostas alteradas para "${newStatus}".` });
         setRowSelection({});
     } catch (e: any) {
-        if (e.code === 'permission-denied') {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: 'loanProposals',
-                operation: 'update',
-                requestResourceData: { status: newStatus }
-            }));
-        }
-        toast({ variant: 'destructive', title: 'Erro na operação em massa' });
+        toast({ variant: 'destructive', title: 'Erro na operação' });
     } finally {
         setIsSaving(false);
     }
   }, [firestore, user, selectedCount, selectedIds, proposals]);
-
-  const handlePrintCovers = useCallback(async (downloadMode = false) => {
-    const selectedProposals = proposalsWithCustomerData.filter(p => rowSelection[p.id]);
-    if (selectedProposals.length === 0) {
-        toast({ variant: 'destructive', title: 'Nenhuma seleção', description: 'Selecione ao menos uma proposta.' });
-        return;
-    }
-
-    const { default: jsPDF } = await import('jspdf');
-    const { default: autoTable } = await import('jspdf-autotable');
-    const doc = new jsPDF();
-    const primaryColor = [40, 74, 127];
-
-    selectedProposals.forEach((p, index) => {
-        if (index > 0) doc.addPage();
-
-        if (userSettings?.customLogoURL) {
-            try {
-                doc.addImage(userSettings.customLogoURL, 'PNG', 14, 10, 40, 20, undefined, 'FAST');
-            } catch (e) {}
-        }
-
-        doc.setFontSize(22); doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]); doc.setFont("helvetica", "bold"); 
-        doc.text("CAPA DE PROPOSTA BANCÁRIA", 60, 20);
-        
-        doc.setFontSize(10); doc.setTextColor(100); doc.setFont("helvetica", "normal");
-        doc.text(`Responsável: ${user?.displayName || user?.email}`, 60, 28);
-        doc.text(`Data de Emissão: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 60, 33);
-        
-        doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]); doc.setLineWidth(0.5); doc.line(14, 38, 196, 38);
-
-        doc.setFontSize(14); doc.setTextColor(0); doc.setFont("helvetica", "bold");
-        doc.text("DADOS DO CLIENTE", 14, 50);
-        autoTable(doc, {
-            startY: 55,
-            body: [
-                ['Nome do Cliente', p.customer?.name || '---'],
-                ['CPF', p.customer?.cpf || '---'],
-                ['Telefone', p.customer?.phone || '---'],
-                ['Nascimento', formatDateSafe(p.customer?.birthDate)],
-            ],
-            theme: 'plain',
-            styles: { fontSize: 11 },
-            columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50 } }
-        });
-
-        const finalY1 = (doc as any).lastAutoTable.finalY;
-
-        doc.setFontSize(14); doc.setTextColor(0); doc.setFont("helvetica", "bold");
-        doc.text("DETALHES DA OPERAÇÃO", 14, finalY1 + 15);
-        
-        const isPortability = p.product === 'Portabilidade';
-        const isPaid = p.status === 'Pago' || p.status === 'Saldo Pago';
-
-        const operationRows = [
-            ['Nº da Proposta', p.proposalNumber],
-            ['Produto', p.product],
-            ['Órgão Aprovador', p.approvingBody],
-            ['Banco Digitado', cleanBankName(p.bank)],
-            ['Data Digitação', formatDateSafe(p.dateDigitized)],
-            ['Status Atual', p.status],
-        ];
-
-        if (isPortability) {
-            operationRows.push(['Banco Portado (Origem)', cleanBankName(p.bankOrigin) || '---']);
-            if (p.debtBalanceArrivalDate) {
-                operationRows.push(['Retorno do Saldo', formatDateSafe(p.debtBalanceArrivalDate)]);
-            }
-        }
-
-        if (isPaid) {
-            if (p.dateApproved) operationRows.push(['Data Averbação', formatDateSafe(p.dateApproved)]);
-            if (p.datePaidToClient) operationRows.push(['Pagamento ao Cliente', formatDateSafe(p.datePaidToClient)]);
-        }
-
-        autoTable(doc, {
-            startY: finalY1 + 20,
-            body: operationRows,
-            theme: 'plain',
-            styles: { fontSize: 11 },
-            columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50 } }
-        });
-
-        const finalY2 = (doc as any).lastAutoTable.finalY;
-
-        doc.setFontSize(14); doc.setTextColor(0); doc.setFont("helvetica", "bold");
-        doc.text("RESUMO FINANCEIRO", 14, finalY2 + 15);
-        autoTable(doc, {
-            startY: finalY2 + 20,
-            body: [
-                ['Valor Bruto', formatCurrency(p.grossAmount)],
-                ['Valor Líquido', formatCurrency(p.netAmount)],
-                ['Valor da Parcela', formatCurrency(p.installmentAmount)],
-                ['Tabela / Prazo', `${p.table || '---'} / ${p.term} meses`],
-            ],
-            theme: 'grid',
-            styles: { fontSize: 12, cellPadding: 5 },
-            columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50, fillColor: [245, 245, 245] } }
-        });
-
-        const footerY = 250;
-        doc.setDrawColor(150);
-        doc.line(14, footerY, 90, footerY);
-        doc.line(110, footerY, 186, footerY);
-        doc.setFontSize(8); doc.setTextColor(100);
-        doc.text("ASSINATURA DO CLIENTE", 52, footerY + 5, { align: 'center' });
-        doc.text("AGENTE RESPONSÁVEL", 148, footerY + 5, { align: 'center' });
-    });
-
-    if (downloadMode) {
-        doc.save(`Capas_Propostas_${format(new Date(), 'dd_MM_yyyy')}.pdf`);
-        toast({ title: 'Download iniciado!' });
-    } else {
-        window.open(doc.output('bloburl'), '_blank');
-        toast({ title: 'PDF Gerado para visualização!' });
-    }
-  }, [proposalsWithCustomerData, rowSelection, userSettings, user]);
 
   const handleStatusChange = useCallback(async (proposalId: string, payload: { status: ProposalStatus; rejectionReason?: string; quickNote?: string; product?: string }) => {
     if (!firestore || !user) return;
@@ -409,14 +285,7 @@ function ProposalsPageContent() {
         await updateDoc(docRef, cleanFirestoreData(dataToUpdate));
         toast({ title: 'Status Atualizado!' });
     } catch (error: any) {
-        if (error.code === 'permission-denied') {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: `loanProposals/${proposalId}`,
-                operation: 'update',
-                requestResourceData: dataToUpdate
-            }));
-        }
-        toast({ variant: 'destructive', title: 'Erro ao atualizar status' });
+        toast({ variant: 'destructive', title: 'Erro ao atualizar' });
     } finally {
         setIsSaving(false);
     }
@@ -432,115 +301,29 @@ function ProposalsPageContent() {
         await updateDoc(docRef, { [updatePath]: !currentValue });
         toast({ title: "Etapa atualizada!" });
     } catch (e: any) {
-        if (e.code === 'permission-denied') {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: docRef.path,
-                operation: 'update',
-                requestResourceData: { [updatePath]: !currentValue }
-            }));
-        }
         toast({ variant: 'destructive', title: "Erro na atualização" });
     } finally {
         setIsSaving(false);
     }
   }, [firestore, user]);
 
-  const handleDeleteProposal = useCallback(async (id: string) => {
-    if (!firestore) return;
+  const handleMoveToTrash = useCallback(async (id: string) => {
+    if (!firestore || !user) return;
+    setIsSaving(true);
     const docRef = doc(firestore, 'loanProposals', id);
     try {
-        await deleteDoc(docRef);
-        toast({ title: 'Proposta Excluída' });
+        await updateDoc(docRef, {
+            deleted: true,
+            deletedAt: new Date().toISOString(),
+            deletedBy: user.uid
+        });
+        toast({ title: 'Proposta movida para a Lixeira' });
     } catch (error: any) {
-        if (error.code === 'permission-denied') {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: docRef.path,
-                operation: 'delete'
-            }));
-        }
+        toast({ variant: 'destructive', title: 'Erro ao excluir' });
+    } finally {
+        setIsSaving(false);
     }
-  }, [firestore]);
-
-  const handleExportToExcel = async (onlySelected = false) => {
-    const table = tableRef.current?.table;
-    if (!table) return;
-    const { utils, writeFile } = await import('xlsx');
-    
-    const rowsSource = onlySelected ? table.getFilteredSelectedRowModel().rows : table.getFilteredRowModel().rows;
-    
-    const dataToExport = rowsSource.map(r => {
-        const p = r.original;
-        return {
-            'Data Digitação': formatDateSafe(p.dateDigitized),
-            'Promotora': p.promoter,
-            'N° Proposta': p.proposalNumber,
-            'Cliente': p.customer?.name || '---',
-            'CPF': p.customer?.cpf || '---',
-            'Produto': p.product,
-            'Valor Bruto': p.grossAmount,
-            'Comissão': p.commissionValue,
-            'Banco Digitado': cleanBankName(p.bank),
-            'Status': p.status,
-            'Operador': p.operator || '-',
-        };
-    });
-
-    const ws = utils.json_to_sheet(dataToExport);
-    const wb = utils.book_new();
-    utils.book_append_sheet(wb, ws, 'Propostas');
-    writeFile(wb, onlySelected ? 'propostas_selecionadas.xlsx' : 'propostas_completas.xlsx');
-  };
-
-  const handleExportToPdf = async (onlySelected = false) => {
-    const table = tableRef.current?.table;
-    if (!table || !user) return;
-
-    const { default: jsPDF } = await import('jspdf');
-    const { default: autoTable } = await import('jspdf-autotable');
-    
-    const rowsSource = onlySelected ? table.getFilteredSelectedRowModel().rows : table.getFilteredRowModel().rows;
-    const doc = new jsPDF('landscape');
-    
-    if (userSettings?.customLogoURL) {
-        try {
-            doc.addImage(userSettings.customLogoURL, 'PNG', 14, 8, 35, 15, undefined, 'FAST');
-        } catch (e) {}
-    }
-
-    doc.setFontSize(18);
-    doc.setTextColor(40, 74, 127);
-    doc.text(onlySelected ? "RELATÓRIO DE PROPOSTAS (SELEÇÃO)" : "LISTAGEM COMPLETA DE PROPOSTAS", 55, 15);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Gerado por: ${user.displayName || user.email} | Data: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 55, 22);
-
-    const tableData = rowsSource.map(r => {
-        const p = r.original;
-        return [
-            formatDateSafe(p.dateDigitized),
-            p.promoter,
-            p.proposalNumber,
-            p.customer?.name || '-',
-            p.customer?.cpf || '-',
-            p.product,
-            formatCurrency(p.grossAmount),
-            p.status,
-            p.operator || '-'
-        ];
-    });
-
-    autoTable(doc, {
-        startY: 30,
-        head: [['Data', 'Promotora', 'Proposta', 'Cliente', 'CPF', 'Produto', 'Vlr Bruto', 'Status', 'Operador']],
-        body: tableData,
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [40, 74, 127] }
-    });
-
-    doc.save(`propostas_${onlySelected ? 'selecionadas' : 'completas'}.pdf`);
-    toast({ title: 'PDF Gerado!' });
-  };
+  }, [firestore, user]);
 
   const handleFormSubmit = useCallback(async (data: any) => {
     if (!firestore || !user) return;
@@ -559,14 +342,7 @@ function ProposalsPageContent() {
         toast({ title: 'Proposta Salva!' });
         setIsDialogOpen(false);
     } catch (error: any) {
-        if (error.code === 'permission-denied') {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: docRef.path,
-                operation: 'write',
-                requestResourceData: finalData
-            }));
-        }
-        toast({ variant: 'destructive', title: 'Erro ao salvar proposta' });
+        toast({ variant: 'destructive', title: 'Erro ao salvar' });
     } finally {
         setIsSaving(false);
     }
@@ -578,26 +354,95 @@ function ProposalsPageContent() {
     handleNewProposal();
   }, [handleNewProposal]);
 
+  const handleExportToExcel = async (onlySelected = false) => {
+    const table = tableRef.current?.table;
+    if (!table) return;
+    const { utils, writeFile } = await import('xlsx');
+    const rowsSource = onlySelected ? table.getFilteredSelectedRowModel().rows : table.getFilteredRowModel().rows;
+    const dataToExport = rowsSource.map(r => {
+        const p = r.original;
+        return {
+            'Data Digitação': formatDateSafe(p.dateDigitized),
+            'Promotora': p.promoter,
+            'N° Proposta': p.proposalNumber,
+            'Cliente': p.customer?.name || '---',
+            'CPF': p.customer?.cpf || '---',
+            'Produto': p.product,
+            'Valor Bruto': p.grossAmount,
+            'Comissão': p.commissionValue,
+            'Banco Digitado': cleanBankName(p.bank),
+            'Status': p.status,
+            'Operador': p.operator || '-',
+        };
+    });
+    const ws = utils.json_to_sheet(dataToExport);
+    const wb = utils.book_new();
+    utils.book_append_sheet(wb, ws, 'Propostas');
+    writeFile(workbook, onlySelected ? 'propostas_selecionadas.xlsx' : 'propostas_completas.xlsx');
+  };
+
+  const handleExportToPdf = async (onlySelected = false) => {
+    const table = tableRef.current?.table;
+    if (!table || !user) return;
+    const { default: jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
+    const rowsSource = onlySelected ? table.getFilteredSelectedRowModel().rows : table.getFilteredRowModel().rows;
+    const doc = new jsPDF('landscape');
+    if (userSettings?.customLogoURL) {
+        try { doc.addImage(userSettings.customLogoURL, 'PNG', 14, 8, 35, 15, undefined, 'FAST'); } catch (e) {}
+    }
+    doc.setFontSize(18); doc.setTextColor(40, 74, 127);
+    doc.text(onlySelected ? "RELATÓRIO DE PROPOSTAS (SELEÇÃO)" : "LISTAGEM COMPLETA DE PROPOSTAS", 55, 15);
+    doc.setFontSize(10); doc.setTextColor(100);
+    doc.text(`Gerado por: ${user.displayName || user.email} | Data: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 55, 22);
+    const tableData = rowsSource.map(r => [
+        formatDateSafe(r.original.dateDigitized), r.original.promoter, r.original.proposalNumber,
+        r.original.customer?.name || '-', r.original.customer?.cpf || '-', r.original.product,
+        formatCurrency(r.original.grossAmount), r.original.status, r.original.operator || '-'
+    ]);
+    autoTable(doc, { startY: 30, head: [['Data', 'Promotora', 'Proposta', 'Cliente', 'CPF', 'Produto', 'Vlr Bruto', 'Status', 'Operador']], body: tableData, styles: { fontSize: 8 }, headStyles: { fillColor: [40, 74, 127] } });
+    doc.save(`propostas_${onlySelected ? 'selecionadas' : 'completas'}.pdf`);
+    toast({ title: 'PDF Gerado!' });
+  };
+
+  const handlePrintCovers = useCallback(async (downloadMode = false) => {
+    const selectedProposals = proposalsWithCustomerData.filter(p => rowSelection[p.id]);
+    if (selectedProposals.length === 0) return;
+    const { default: jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
+    const doc = new jsPDF();
+    const primaryColor = [40, 74, 127];
+    selectedProposals.forEach((p, index) => {
+        if (index > 0) doc.addPage();
+        if (userSettings?.customLogoURL) { try { doc.addImage(userSettings.customLogoURL, 'PNG', 14, 10, 40, 20, undefined, 'FAST'); } catch (e) {} }
+        doc.setFontSize(22); doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]); doc.setFont("helvetica", "bold"); 
+        doc.text("CAPA DE PROPOSTA BANCÁRIA", 60, 20);
+        doc.setFontSize(10); doc.setTextColor(100); doc.text(`Responsável: ${user?.displayName || user?.email}`, 60, 28);
+        doc.text(`Data de Emissão: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 60, 33);
+        doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]); doc.setLineWidth(0.5); doc.line(14, 38, 196, 38);
+        doc.setFontSize(14); doc.setTextColor(0); doc.text("DADOS DO CLIENTE", 14, 50);
+        autoTable(doc, { startY: 55, body: [['Nome do Cliente', p.customer?.name || '---'], ['CPF', p.customer?.cpf || '---'], ['Telefone', p.customer?.phone || '---'], ['Nascimento', formatDateSafe(p.customer?.birthDate)]], theme: 'plain', styles: { fontSize: 11 }, columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50 } } });
+        const finalY1 = (doc as any).lastAutoTable.finalY;
+        doc.setFontSize(14); doc.text("DETALHES DA OPERAÇÃO", 14, finalY1 + 15);
+        autoTable(doc, { startY: finalY1 + 20, body: [['Nº da Proposta', p.proposalNumber], ['Produto', p.product], ['Banco Digitado', cleanBankName(p.bank)], ['Status Atual', p.status]], theme: 'plain', styles: { fontSize: 11 }, columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50 } } });
+        const finalY2 = (doc as any).lastAutoTable.finalY;
+        doc.setFontSize(14); doc.text("RESUMO FINANCEIRO", 14, finalY2 + 15);
+        autoTable(doc, { startY: finalY2 + 20, body: [['Valor Bruto', formatCurrency(p.grossAmount)], ['Valor Líquido', formatCurrency(p.netAmount)], ['Valor da Parcela', formatCurrency(p.installmentAmount)]], theme: 'grid', styles: { fontSize: 12, cellPadding: 5 }, columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50, fillColor: [245, 245, 245] } } });
+        doc.setDrawColor(150); doc.line(14, 250, 90, 250); doc.line(110, 250, 186, 250);
+        doc.setFontSize(8); doc.text("ASSINATURA DO CLIENTE", 52, 255, { align: 'center' }); doc.text("AGENTE RESPONSÁVEL", 148, 255, { align: 'center' });
+    });
+    if (downloadMode) { doc.save(`Capas_Propostas_${format(new Date(), 'dd_MM_yyyy')}.pdf`); } else { window.open(doc.output('bloburl'), '_blank'); }
+  }, [proposalsWithCustomerData, rowSelection, userSettings, user]);
+
   React.useEffect(() => {
     if (isLoading || proposalsWithCustomerData.length === 0) return;
-
     const action = searchParams.get('action');
     const openId = searchParams.get('open');
-
     if (!hasOpenedFromParam) {
-        if (action === 'new') {
-            handleNewProposal();
-            setHasOpenedFromParam(true);
-            router.replace('/proposals', { scroll: false });
-        } else if (openId) {
+        if (action === 'new') { handleNewProposal(); setHasOpenedFromParam(true); router.replace('/proposals', { scroll: false }); }
+        else if (openId) {
             const proposalToOpen = proposalsWithCustomerData.find(p => p.id === openId);
-            if (proposalToOpen) {
-                handleEditProposal(proposalToOpen);
-                setHasOpenedFromParam(true);
-                setTimeout(() => {
-                    router.replace('/proposals', { scroll: false });
-                }, 300);
-            }
+            if (proposalToOpen) { handleEditProposal(proposalToOpen); setHasOpenedFromParam(true); setTimeout(() => router.replace('/proposals', { scroll: false }), 300); }
         }
     }
   }, [searchParams, isLoading, proposalsWithCustomerData, hasOpenedFromParam, handleNewProposal, handleEditProposal, router]);
@@ -605,22 +450,18 @@ function ProposalsPageContent() {
   const columns = useMemo(() => getColumns(
     handleEditProposal, 
     handleViewProposal, 
-    handleDeleteProposal, 
+    handleMoveToTrash, 
     handleStatusChange, 
     handleDuplicateProposal,
     handleToggleChecklist
-  ), [handleEditProposal, handleViewProposal, handleDeleteProposal, handleStatusChange, handleDuplicateProposal, handleToggleChecklist]);
+  ), [handleEditProposal, handleViewProposal, handleMoveToTrash, handleStatusChange, handleDuplicateProposal, handleToggleChecklist]);
 
   return (
     <>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <PageHeader title="Propostas" />
         <div className="flex items-center gap-3 flex-wrap">
-            <Button 
-                variant="outline" 
-                className="h-10 px-6 rounded-full font-bold bg-background text-foreground border-border/50 hover:bg-muted/50 transition-all text-xs"
-                onClick={() => setIsAiModalOpen(true)}
-            >
+            <Button variant="outline" className="h-10 px-6 rounded-full font-bold border-border/50 hover:bg-muted/50 transition-all text-xs" onClick={() => setIsAiModalOpen(true)}>
                 <Sparkles className="h-4 w-4 mr-2" /> Novo Cliente com IA
             </Button>
 
@@ -628,21 +469,13 @@ function ProposalsPageContent() {
                 <div className="flex items-center gap-2 animate-in slide-in-from-right-2 duration-300">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button 
-                                variant="outline" 
-                                className="h-10 px-6 rounded-full font-bold text-xs gap-2 text-primary border-primary/20 bg-primary/5"
-                                disabled={isSaving}
-                            >
+                            <Button variant="outline" className="h-10 px-6 rounded-full font-bold text-xs gap-2 text-primary border-primary/20 bg-primary/5" disabled={isSaving}>
                                 <FileBadge className="h-4 w-4" /> Capas ({selectedCount}) <ChevronDown className="ml-2 h-3 w-3" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem onSelect={() => handlePrintCovers(false)} className="gap-2">
-                                <Printer className="h-4 w-4" /> Imprimir (Visualizar)
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handlePrintCovers(true)} className="gap-2">
-                                <Download className="h-4 w-4" /> Exportar (Baixar PDF)
-                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handlePrintCovers(false)}>Imprimir (Visualizar)</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handlePrintCovers(true)}>Exportar (Baixar PDF)</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
 
@@ -671,123 +504,62 @@ function ProposalsPageContent() {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Formato Excel</DropdownMenuLabel>
-                    <DropdownMenuItem onSelect={() => handleExportToExcel(false)} className="gap-2">
-                        <FileSpreadsheet className="h-4 w-4 text-green-600" /> Exportar Tudo
-                    </DropdownMenuItem>
-                    {selectedCount > 0 && (
-                        <DropdownMenuItem onSelect={() => handleExportToExcel(true)} className="gap-2 font-bold">
-                            <FileSpreadsheet className="h-4 w-4 text-green-600" /> Exportar Seleção ({selectedCount})
-                        </DropdownMenuItem>
-                    )}
+                    <DropdownMenuItem onSelect={() => handleExportToExcel(false)}>Excel Tudo</DropdownMenuItem>
+                    {selectedCount > 0 && <DropdownMenuItem onSelect={() => handleExportToExcel(true)}>Excel Seleção</DropdownMenuItem>}
                     <DropdownMenuSeparator />
-                    <DropdownMenuLabel>Formato PDF</DropdownMenuLabel>
-                    <DropdownMenuItem onSelect={() => handleExportToPdf(false)} className="gap-2">
-                        <FilePdf className="h-4 w-4 text-red-600" /> Exportar Tudo
-                    </DropdownMenuItem>
-                    {selectedCount > 0 && (
-                        <DropdownMenuItem onSelect={() => handleExportToPdf(true)} className="gap-2 font-bold">
-                            <FilePdf className="h-4 w-4 text-red-600" /> Exportar Seleção ({selectedCount})
-                        </DropdownMenuItem>
-                    )}
+                    <DropdownMenuItem onSelect={() => handleExportToPdf(false)}>PDF Tudo</DropdownMenuItem>
+                    {selectedCount > 0 && <DropdownMenuItem onSelect={() => handleExportToPdf(true)}>PDF Seleção</DropdownMenuItem>}
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button onClick={handleNewProposal} className="h-10 px-8 rounded-full font-bold bg-[#00AEEF] hover:bg-[#0096D1] text-white shadow-lg shadow-[#00AEEF]/20 transition-all border-none text-xs"
-            >
+            <Button onClick={handleNewProposal} className="h-10 px-8 rounded-full font-bold bg-[#00AEEF] hover:bg-[#0096D1] text-white shadow-lg text-xs">
                 <PlusCircle className="mr-2 h-4 w-4" /> Nova Proposta
             </Button>
         </div>
       </div>
 
+      <div className="space-y-6">
+        <ProposalsDataTable 
+            ref={tableRef}
+            columns={columns} 
+            data={proposalsWithCustomerData}
+            rowSelection={rowSelection}
+            setRowSelection={setRowSelection}
+            onBulkStatusChange={handleBulkStatusChange} 
+            userSettings={userSettings || null}
+        />
+        {proposalsWithCustomerData.length >= loadLimit && !proposalsLoading && (
+            <div className="flex justify-center pb-10">
+                <Button variant="outline" onClick={() => setLoadLimit(prev => prev + 150)} className="rounded-full h-12 px-10 font-bold uppercase text-[10px] border-2">
+                    Carregar Próximas Propostas <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+            </div>
+        )}
+      </div>
+
       <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
-        <DialogContent 
-            className="max-w-xl" 
-            onPointerDownOutside={(e) => e.preventDefault()} 
-            onInteractOutside={(e) => e.preventDefault()}
-        >
-            <DialogHeader>
-                <DialogTitle>Assistente Visual de Cadastro</DialogTitle>
-            </DialogHeader>
-            <CustomerAiForm onSubmit={handleAiFormSubmit} />
-        </DialogContent>
+        <DialogContent className="max-w-xl"><CustomerAiForm onSubmit={handleAiFormSubmit} /></DialogContent>
       </Dialog>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent 
-            className="max-w-4xl w-[95vw] h-[90vh] flex flex-col p-0 overflow-hidden rounded-[2rem] border-none shadow-2xl"
-            onPointerDownOutside={(e) => e.preventDefault()}
-            onInteractOutside={(e) => e.preventDefault()}
-        >
+        <DialogContent className="max-w-4xl w-[95vw] h-[90vh] flex flex-col p-0 overflow-hidden rounded-[2rem] border-none shadow-2xl">
           <DialogHeader className="px-8 pt-8 pb-4 shrink-0 bg-muted/5 border-b">
-            <DialogTitle className="text-xl font-black uppercase tracking-tight text-primary">
-                {sheetMode === 'edit' ? 'Editar Registro' : sheetMode === 'view' ? 'Detalhes da Operação' : 'Cadastrar Nova Proposta'}
+            <DialogTitle className="text-xl font-black uppercase text-primary">
+                {sheetMode === 'edit' ? 'Editar Registro' : sheetMode === 'view' ? 'Detalhes' : 'Cadastrar Proposta'}
             </DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-hidden">
-            <ProposalForm 
-                key={formKey}
-                proposal={selectedProposal} 
-                allProposals={proposals || []}
-                customers={customers || []}
-                userSettings={userSettings || null}
-                isReadOnly={sheetMode === 'view'}
-                onSubmit={handleFormSubmit}
-                onDuplicate={handleDuplicateProposal}
-                defaultValues={defaultValues}
-                sheetMode={sheetMode}
-                onOpenCustomerSearch={() => setIsCustomerSearchOpen(true)}
-                selectedCustomerFromSearch={newlySelectedCustomer}
-                onCustomerSearchSelectionHandled={handleCustomerSearchSelectionHandled}
-                isSaving={isSaving}
-            />
+            <ProposalForm key={formKey} onSubmit={handleFormSubmit} proposal={selectedProposal} allProposals={proposals || []} customers={customers || []} userSettings={userSettings || null} isReadOnly={sheetMode === 'view'} defaultValues={defaultValues} sheetMode={sheetMode} onOpenCustomerSearch={() => setIsCustomerSearchOpen(true)} selectedCustomerFromSearch={newlySelectedCustomer} onCustomerSearchSelectionHandled={handleCustomerSearchSelectionHandled} isSaving={isSaving} />
           </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isCustomerSearchOpen} onOpenChange={setIsCustomerSearchOpen}>
-        <DialogContent 
-            className="max-w-2xl overflow-hidden rounded-[2rem] p-0" 
-            onPointerDownOutside={(e) => e.preventDefault()}
-        >
-            <DialogHeader className="px-8 pt-8 pb-2">
-                <DialogTitle className="text-xl font-black uppercase tracking-tight text-primary">Buscar Cliente na Base</DialogTitle>
-            </DialogHeader>
-            <div className="px-8 pb-8">
-                <CustomerSearchDialog
-                    customers={customers?.filter(c => c.name !== 'Cliente Removido') || []}
-                    onSelectCustomer={handleCustomerSelect}
-                />
-            </div>
+        <DialogContent className="max-w-2xl overflow-hidden rounded-[2rem] p-0">
+            <DialogHeader className="px-8 pt-8 pb-2"><DialogTitle className="text-xl font-black uppercase text-primary">Buscar Cliente</DialogTitle></DialogHeader>
+            <div className="px-8 pb-8"><CustomerSearchDialog customers={customers?.filter(c => c.name !== 'Cliente Removido' && c.deleted !== true) || []} onSelectCustomer={handleCustomerSelect} /></div>
         </DialogContent>
       </Dialog>
-
-      {isLoading ? (
-        <ProposalsPageSkeleton />
-      ) : (
-        <div className="space-y-6">
-            <ProposalsDataTable 
-                ref={tableRef}
-                columns={columns} 
-                data={proposalsWithCustomerData}
-                rowSelection={rowSelection}
-                setRowSelection={setRowSelection}
-                onBulkStatusChange={handleBulkStatusChange} 
-                userSettings={userSettings || null}
-            />
-            {proposalsWithCustomerData.length >= loadLimit && !proposalsLoading && (
-                <div className="flex justify-center pb-10 animate-in fade-in slide-in-from-bottom-2">
-                    <Button 
-                        variant="outline" 
-                        onClick={() => setLoadLimit(prev => prev + 150)}
-                        className="rounded-full h-12 px-10 font-black uppercase text-[10px] tracking-[0.2em] border-2 border-primary/20 bg-background hover:bg-primary hover:text-white transition-all shadow-xl"
-                    >
-                        Carregar Próximas Propostas <ChevronRight className="ml-2 h-4 w-4" />
-                    </Button>
-                </div>
-            )}
-        </div>
-      )}
     </>
   );
 }

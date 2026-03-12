@@ -53,6 +53,10 @@ export type Customer = {
   city?: string;
   state?: string;
   documents?: Attachment[]; // Central de documentos fixos
+  // Soft Delete
+  deleted?: boolean;
+  deletedAt?: string;
+  deletedBy?: string;
 };
 
 export type ProductType =
@@ -122,6 +126,10 @@ export type Proposal = {
   checklist?: Record<string, boolean>; // Controle operacional por etapas
   originalContractNumber?: string; // Nº do contrato que está sendo portado
   rejectionReason?: string; // Motivo da reprova
+  // Soft Delete
+  deleted?: boolean;
+  deletedAt?: string;
+  deletedBy?: string;
 };
 
 export type UserSettings = {
@@ -183,6 +191,10 @@ export type FollowUp = {
   createdAt: string;
   completedAt?: string;
   notes?: string;
+  // Soft Delete
+  deleted?: boolean;
+  deletedAt?: string;
+  deletedBy?: string;
 };
 
 export type ExpenseRecurrence = 'none' | 'monthly' | 'annually' | 'semi-annually' | 'installments';

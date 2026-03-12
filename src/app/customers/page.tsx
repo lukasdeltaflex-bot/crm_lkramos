@@ -53,10 +53,6 @@ import { BankIcon } from '@/components/bank-icon';
 import { BirthdayCalendar } from '@/components/customers/birthday-calendar';
 import * as configData from '@/lib/config-data';
 
-/**
- * ⚡ PAGINAÇÃO DE PERFORMANCE V2 (AUDITORIA)
- * Para suportar bases de dados com milhares de registros sem travar o navegador.
- */
 function CustomersPageContent() {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -73,7 +69,6 @@ function CustomersPageContent() {
   const [formKey, setFormKey] = React.useState('initial');
   const tableRef = React.useRef<CustomerDataTableHandle>(null);
   
-  // ⚡ Estado de Carga Incremental
   const [loadLimit, setLoadLimit] = React.useState(150);
   
   const initialTab = searchParams.get('tab') || 'active';
@@ -82,14 +77,6 @@ function CustomersPageContent() {
   const [rmcFilter, setRmcFilter] = React.useState('all');
   const [rccFilter, setRccFilter] = React.useState('all');
   const [tagFilter, setTagFilter] = React.useState('all');
-
-  const hasActiveFilters = rmcFilter !== 'all' || rccFilter !== 'all' || tagFilter !== 'all';
-
-  const handleClearFilters = () => {
-      setRmcFilter('all');
-      setRccFilter('all');
-      setTagFilter('all');
-  };
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -106,7 +93,7 @@ function CustomersPageContent() {
     return query(
         collection(firestore, 'loanProposals'), 
         where('ownerId', '==', user.uid),
-        limit(500) // Lote de propostas recentes para as Smart Tags
+        limit(500)
     );
   }, [firestore, user]);
 
@@ -126,14 +113,16 @@ function CustomersPageContent() {
   const processedCustomers = React.useMemo(() => {
     if (!customers) return [];
     
-    return customers.map(c => {
-        const smartTags = getSmartTags(c, proposals || []);
-        return {
-            ...c,
-            smartTags: smartTags.map(st => st.label),
-            smartTagsFull: smartTags
-        };
-    });
+    return customers
+        .filter(c => c.deleted !== true) // Filtro de Lixeira
+        .map(c => {
+            const smartTags = getSmartTags(c, proposals || []);
+            return {
+                ...c,
+                smartTags: smartTags.map(st => st.label),
+                smartTagsFull: smartTags
+            };
+        });
   }, [customers, proposals]);
 
   const filteredCustomers = React.useMemo(() => {
@@ -177,50 +166,82 @@ function CustomersPageContent() {
 
   const selectedCount = React.useMemo(() => Object.keys(rowSelection).filter(id => rowSelection[id]).length, [rowSelection]);
 
-  const handleBulkAnonymize = async () => {
+  const handleBulkMoveToTrash = async () => {
     if (!firestore || !user || selectedCount === 0) return;
     setIsSaving(true);
     try {
         const batch = writeBatch(firestore);
         const selectedIds = Object.keys(rowSelection).filter(id => rowSelection[id]);
+        const now = new Date().toISOString();
         
         selectedIds.forEach(id => {
             const docRef = doc(firestore, 'customers', id);
             batch.update(docRef, { 
-                name: 'Cliente Removido', 
-                cpf: '000.000.000-00', 
-                phone: '',
-                phone2: '',
-                email: '',
-                benefits: [],
-                status: 'inactive' 
+                deleted: true,
+                deletedAt: now,
+                deletedBy: user.uid
             });
         });
 
         await batch.commit();
-        toast({ title: 'Ação Concluída', description: `${selectedIds.length} registros foram anonimizados conforme LGPD.` });
+        toast({ title: 'Enviados para a Lixeira', description: `${selectedIds.length} registros movidos.` });
         setRowSelection({});
     } catch (e: any) {
-        if (e.code === 'permission-denied') {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: 'customers',
-                operation: 'update',
-                requestResourceData: { status: 'inactive' }
-            }));
-        }
-        toast({ variant: 'destructive', title: 'Erro na operação em massa' });
+        toast({ variant: 'destructive', title: 'Erro na operação' });
     } finally {
         setIsSaving(false);
     }
   };
 
-  React.useEffect(() => {
-    const action = searchParams.get('action');
-    if (action === 'new' && !isDialog && !isCustomersLoading) {
-      handleNewCustomer();
-      router.replace('/customers', { scroll: false });
+  const handleMoveToTrash = async (customerId: string) => {
+    if (!firestore || !user) return;
+    setIsSaving(true);
+    const docRef = doc(firestore, 'customers', customerId);
+    
+    const dataToUpdate = { 
+        deleted: true,
+        deletedAt: new Date().toISOString(),
+        deletedBy: user.uid
+    };
+    
+    try {
+        await updateDoc(docRef, dataToUpdate);
+        toast({ title: 'Movido para a Lixeira' });
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Erro ao excluir' });
+    } finally {
+        setIsSaving(false);
     }
-  }, [searchParams, router, isCustomersLoading, isDialog, handleNewCustomer]);
+  };
+
+  const handleFormSubmit = async (formData: any) => {
+    if (!firestore || !user) return;
+    setIsSaving(true);
+    try {
+        const docId = (sheetMode === 'edit' && selectedCustomer) ? selectedCustomer.id : (defaultValues?.id || doc(collection(firestore, 'customers')).id);
+        const docRef = doc(firestore, 'customers', docId);
+        
+        const finalData = cleanFirestoreData({
+            ...formData,
+            id: docId,
+            ownerId: user.uid,
+            numericId: (sheetMode === 'edit' && selectedCustomer) ? selectedCustomer.numericId : (processedCustomers?.length ? Math.max(...processedCustomers.map(c => c.numericId || 0)) + 1 : 1)
+        });
+
+        await setDoc(docRef, finalData, { merge: true });
+        toast({ title: 'Cliente Salvo!' });
+        setIsDialog(false);
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Erro ao salvar' });
+    } finally {
+        setIsSaving(false);
+    }
+  };
+
+  const columns = React.useMemo(() => getColumns({ 
+    onEdit: handleEditCustomer, 
+    onDelete: handleMoveToTrash 
+  }), []);
 
   const handleEditCustomer = (customer: Customer) => {
     setSelectedCustomer(customer);
@@ -251,70 +272,21 @@ function CustomersPageContent() {
     writeFile(workbook, 'clientes.xlsx');
   };
 
-  const handleAnonymizeCustomer = async (customerId: string) => {
-    if (!firestore) return;
-    setIsSaving(true);
-    const docRef = doc(firestore, 'customers', customerId);
-    
-    const dataToUpdate = { 
-        name: 'Cliente Removido', 
-        cpf: '000.000.000-00', 
-        phone: '',
-        phone2: '',
-        email: '',
-        benefits: [],
-        status: 'inactive' 
-    };
-    
-    try {
-        await updateDoc(docRef, dataToUpdate);
-        toast({ title: 'Cliente Anonimizado (LGPD OK)' });
-    } catch (error: any) {
-        if (error.code === 'permission-denied') {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: docRef.path,
-                operation: 'update',
-                requestResourceData: dataToUpdate
-            }));
-        }
-        toast({ variant: 'destructive', title: 'Erro ao anonimizar cliente' });
-    } finally {
-        setIsSaving(false);
-    }
+  const handleClearFilters = () => {
+      setRmcFilter('all');
+      setRccFilter('all');
+      setTagFilter('all');
   };
 
-  const handleFormSubmit = async (formData: any) => {
-    if (!firestore || !user) return;
-    setIsSaving(true);
-    try {
-        const docId = (sheetMode === 'edit' && selectedCustomer) ? selectedCustomer.id : (defaultValues?.id || doc(collection(firestore, 'customers')).id);
-        const docRef = doc(firestore, 'customers', docId);
-        
-        const finalData = cleanFirestoreData({
-            ...formData,
-            id: docId,
-            ownerId: user.uid,
-            numericId: (sheetMode === 'edit' && selectedCustomer) ? selectedCustomer.numericId : (processedCustomers?.length ? Math.max(...processedCustomers.map(c => c.numericId || 0)) + 1 : 1)
-        });
+  const hasActiveFilters = rmcFilter !== 'all' || rccFilter !== 'all' || tagFilter !== 'all';
 
-        await setDoc(docRef, finalData, { merge: true });
-        toast({ title: 'Cliente Salvo!' });
-        setIsDialog(false);
-    } catch (error: any) {
-        if (error.code === 'permission-denied') {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: docRef.path,
-                operation: 'write',
-                requestResourceData: finalData
-            }));
-        }
-        toast({ variant: 'destructive', title: 'Erro ao salvar cliente' });
-    } finally {
-        setIsSaving(false);
+  React.useEffect(() => {
+    const action = searchParams.get('action');
+    if (action === 'new' && !isDialog && !isCustomersLoading) {
+      handleNewCustomer();
+      router.replace('/customers', { scroll: false });
     }
-  };
-
-  const columns = React.useMemo(() => getColumns({ onEdit: handleEditCustomer, onDelete: handleAnonymizeCustomer }), []);
+  }, [searchParams, router, isCustomersLoading, isDialog, handleNewCustomer]);
 
   return (
     <>
@@ -341,19 +313,19 @@ function CustomersPageContent() {
                                 className="h-10 px-6 rounded-full font-bold shadow-lg"
                                 disabled={isSaving}
                             >
-                                <Trash2 className="mr-2 h-4 w-4" /> Remover ({selectedCount})
+                                <Trash2 className="mr-2 h-4 w-4" /> Mover para Lixeira ({selectedCount})
                             </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                             <AlertDialogHeader>
-                                <AlertDialogTitle>Inativar {selectedCount} Clientes?</AlertDialogTitle>
+                                <AlertDialogTitle>Mover {selectedCount} Clientes para a Lixeira?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    Esta ação irá anonimizar os dados dos registros selecionados para conformidade com a LGPD. Nomes, CPFs, Telefones, E-mails e Benefícios serão eliminados definitivamente.
+                                    Os registros sumirão desta tela mas poderão ser restaurados na aba Lixeira se necessário.
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                                 <AlertDialogCancel>Voltar</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleBulkAnonymize} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Confirmar Remoção</AlertDialogAction>
+                                <AlertDialogAction onClick={handleBulkMoveToTrash} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Mover para Lixeira</AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>
                     </AlertDialog>
