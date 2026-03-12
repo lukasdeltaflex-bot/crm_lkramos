@@ -7,7 +7,7 @@ import { PageHeader } from '@/components/page-header';
 import { ProposalsDataTable, type ProposalsDataTableHandle } from './data-table';
 import { getColumns } from './columns';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, FileDown, Trash2, CheckCircle2, ChevronDown, FileSpreadsheet, FileText as FilePdf, FileBadge, Printer, Download, Sparkles } from 'lucide-react';
+import { PlusCircle, FileDown, Trash2, CheckCircle2, ChevronDown, FileSpreadsheet, FileText as FilePdf, FileBadge, Printer, Download, Sparkles, ChevronRight } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -18,7 +18,7 @@ import { ProposalForm } from './proposal-form';
 import type { Proposal, Customer, ProposalStatus, UserSettings, ProposalHistoryEntry } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { collection, doc, updateDoc, setDoc, query, where, writeBatch, arrayUnion, deleteDoc, limit } from 'firebase/firestore';
+import { collection, doc, updateDoc, setDoc, query, where, writeBatch, arrayUnion, deleteDoc, limit, orderBy } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CustomerSearchDialog } from '@/components/proposals/customer-search-dialog';
 import {
@@ -75,14 +75,26 @@ function ProposalsPageContent() {
   const tableRef = React.useRef<ProposalsDataTableHandle>(null);
   const [hasOpenedFromParam, setHasOpenedFromParam] = useState(false);
   
+  // ⚡ Estado de Carga Incremental
+  const [loadLimit, setLoadLimit] = useState(150);
+
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), limit(1000));
-  }, [firestore, user]);
+    return query(
+        collection(firestore, 'loanProposals'), 
+        where('ownerId', '==', user.uid),
+        orderBy('dateDigitized', 'desc'),
+        limit(loadLimit)
+    );
+  }, [firestore, user, loadLimit]);
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), limit(1000));
+    return query(
+        collection(firestore, 'customers'), 
+        where('ownerId', '==', user.uid),
+        limit(500) // Lote de clientes para vínculo rápido
+    );
   }, [firestore, user]);
 
   const settingsDocRef = useMemoFirebase(() => {
@@ -92,9 +104,9 @@ function ProposalsPageContent() {
   
   const { data: proposals, isLoading: proposalsLoading } = useCollection<Proposal>(proposalsQuery);
   const { data: customers, isLoading: customersLoading } = useCollection<Customer>(customersQuery);
-  const { data: userSettings, isLoading: settingsLoading } = useDoc<UserSettings>(settingsDocRef);
+  const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
 
-  const isLoading = proposalsLoading || customersLoading || isUserLoading || settingsLoading;
+  const isLoading = proposalsLoading || customersLoading || isUserLoading;
 
   const selectedIds = useMemo(() => 
     Object.keys(rowSelection).filter(id => rowSelection[id]),
@@ -753,15 +765,28 @@ function ProposalsPageContent() {
       {isLoading ? (
         <ProposalsPageSkeleton />
       ) : (
-        <ProposalsDataTable 
-            ref={tableRef}
-            columns={columns} 
-            data={proposalsWithCustomerData}
-            rowSelection={rowSelection}
-            setRowSelection={setRowSelection}
-            onBulkStatusChange={handleBulkStatusChange} 
-            userSettings={userSettings || null}
-        />
+        <div className="space-y-6">
+            <ProposalsDataTable 
+                ref={tableRef}
+                columns={columns} 
+                data={proposalsWithCustomerData}
+                rowSelection={rowSelection}
+                setRowSelection={setRowSelection}
+                onBulkStatusChange={handleBulkStatusChange} 
+                userSettings={userSettings || null}
+            />
+            {proposalsWithCustomerData.length >= loadLimit && !proposalsLoading && (
+                <div className="flex justify-center pb-10 animate-in fade-in slide-in-from-bottom-2">
+                    <Button 
+                        variant="outline" 
+                        onClick={() => setLoadLimit(prev => prev + 150)}
+                        className="rounded-full h-12 px-10 font-black uppercase text-[10px] tracking-[0.2em] border-2 border-primary/20 bg-background hover:bg-primary hover:text-white transition-all shadow-xl"
+                    >
+                        Carregar Próximas Propostas <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                </div>
+            )}
+        </div>
       )}
     </>
   );

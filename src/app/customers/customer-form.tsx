@@ -201,7 +201,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
   const watchTags = form.watch('tags') || [];
   const watchBenefits = form.watch('benefits') || [];
 
-  // 🛡️ MOTOR DE VALIDAÇÃO SILENCIOSA (ITEM 3 DA AUDITORIA)
+  // 🛡️ MOTOR DE VALIDAÇÃO SILENCIOSA V3 (DEBOUNCE DE 1 SEGUNDO)
   useEffect(() => {
     if (!isMounted || !firestore || !user) return;
 
@@ -240,7 +240,8 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
         setIsCheckingDuplicity(false);
     };
 
-    const timer = setTimeout(checkDuplicityOnServer, 600);
+    // Aumentado para 1000ms para reduzir carga no Firestore e melhorar performance UI
+    const timer = setTimeout(checkDuplicityOnServer, 1000);
     return () => clearTimeout(timer);
   }, [watchCpf, watchPhone, firestore, user, isMounted, customer?.id, defaultValues?.id]);
 

@@ -7,11 +7,11 @@ import { PageHeader } from '@/components/page-header';
 import { CustomerDataTable, type CustomerDataTableHandle } from './data-table';
 import { getColumns } from './columns';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, FileDown, UserCheck, UserX, Trash2, Sparkles, Landmark, X, Tag, Cake } from 'lucide-react';
+import { PlusCircle, FileDown, UserCheck, UserX, Trash2, Sparkles, Landmark, X, Tag, Cake, ChevronRight } from 'lucide-react';
 import { CustomerForm } from './customer-form';
 import type { Customer, UserSettings, Proposal } from '@/lib/types';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, doc, updateDoc, setDoc, query, where, writeBatch, limit } from 'firebase/firestore';
+import { collection, doc, updateDoc, setDoc, query, where, writeBatch, limit, orderBy } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -54,6 +54,10 @@ import { BankIcon } from '@/components/bank-icon';
 import { BirthdayCalendar } from '@/components/customers/birthday-calendar';
 import * as configData from '@/lib/config-data';
 
+/**
+ * ⚡ PAGINAÇÃO DE PERFORMANCE V2 (AUDITORIA)
+ * Para suportar bases de dados com milhares de registros sem travar o navegador.
+ */
 function CustomersPageContent() {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -70,14 +74,15 @@ function CustomersPageContent() {
   const [formKey, setFormKey] = React.useState('initial');
   const tableRef = React.useRef<CustomerDataTableHandle>(null);
   
+  // ⚡ Estado de Carga Incremental
+  const [loadLimit, setLoadLimit] = React.useState(150);
+  
   const initialTab = searchParams.get('tab') || 'active';
   const [filter, setFilter] = React.useState(initialTab);
   
   const [rmcFilter, setRmcFilter] = React.useState('all');
   const [rccFilter, setRccFilter] = React.useState('all');
   const [tagFilter, setTagFilter] = React.useState('all');
-
-  const hasActiveFilters = rmcFilter !== 'all' || rccFilter !== 'all' || tagFilter !== 'all';
 
   const handleClearFilters = () => {
       setRmcFilter('all');
@@ -87,12 +92,21 @@ function CustomersPageContent() {
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), limit(1000));
-  }, [firestore, user]);
+    return query(
+        collection(firestore, 'customers'), 
+        where('ownerId', '==', user.uid),
+        orderBy('numericId', 'desc'),
+        limit(loadLimit)
+    );
+  }, [firestore, user, loadLimit]);
 
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), limit(1000));
+    return query(
+        collection(firestore, 'loanProposals'), 
+        where('ownerId', '==', user.uid),
+        limit(500) // Lote de propostas recentes para as Smart Tags
+    );
   }, [firestore, user]);
 
   const settingsDocRef = useMemoFirebase(() => {
@@ -151,14 +165,6 @@ function CustomersPageContent() {
         return true;
     });
   }, [processedCustomers, filter, rmcFilter, rccFilter, tagFilter]);
-
-  const activeCount = React.useMemo(() => 
-    processedCustomers.filter(c => c.name !== 'Cliente Removido' && (c.status !== 'inactive' && getAge(c.birthDate) < 75)).length,
-  [processedCustomers]);
-
-  const inactiveCount = React.useMemo(() => 
-    processedCustomers.filter(c => c.name !== 'Cliente Removido' && (c.status === 'inactive' || getAge(c.birthDate) >= 75)).length,
-  [processedCustomers]);
 
   const handleNewCustomer = React.useCallback(() => {
     setSelectedCustomer(undefined);
@@ -391,7 +397,6 @@ function CustomersPageContent() {
             >
                 <UserCheck className="h-3.5 w-3.5" />
                 Ativos
-                <Badge variant="secondary" className="bg-white/20 text-white border-none ml-1.5 h-5 min-w-[20px] p-0 flex items-center justify-center rounded-full text-[10px] font-black">{activeCount}</Badge>
             </TabsTrigger>
             <TabsTrigger 
                 value="inactive" 
@@ -402,7 +407,6 @@ function CustomersPageContent() {
             >
                 <UserX className="h-3.5 w-3.5" />
                 Inativos
-                <Badge variant="secondary" className="bg-white/20 text-white border-none ml-1.5 h-5 min-w-[20px] p-0 flex items-center justify-center rounded-full text-[10px] font-black">{inactiveCount}</Badge>
             </TabsTrigger>
             <TabsTrigger 
                 value="birthdays" 
@@ -531,13 +535,26 @@ function CustomersPageContent() {
               </div>
           )
       ) : (
-          <CustomerDataTable 
-            columns={columns} 
-            data={filteredCustomers} 
-            isLoading={isCustomersLoading}
-            rowSelection={rowSelection}
-            setRowSelection={setRowSelection}
-          />
+          <div className="space-y-6">
+            <CustomerDataTable 
+                columns={columns} 
+                data={filteredCustomers} 
+                isLoading={isCustomersLoading}
+                rowSelection={rowSelection}
+                setRowSelection={setRowSelection}
+            />
+            {processedCustomers.length >= loadLimit && !isCustomersLoading && (
+                <div className="flex justify-center pb-10 animate-in fade-in slide-in-from-bottom-2">
+                    <Button 
+                        variant="outline" 
+                        onClick={() => setLoadLimit(prev => prev + 150)}
+                        className="rounded-full h-12 px-10 font-black uppercase text-[10px] tracking-[0.2em] border-2 border-primary/20 bg-background hover:bg-primary hover:text-white transition-all shadow-xl"
+                    >
+                        Carregar Próximos Registros <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                </div>
+            )}
+          </div>
       )}
     </>
   );
