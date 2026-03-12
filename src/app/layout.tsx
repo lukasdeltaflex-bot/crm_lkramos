@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
@@ -8,12 +8,30 @@ import { ptBR } from 'date-fns/locale';
 import { ThemeProvider } from '@/components/theme-provider';
 import { InteractionFixer } from '@/components/interaction-fixer';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { PwaRegister } from '@/components/pwa-register';
 
 setDefaultOptions({ locale: ptBR });
 
 export const metadata: Metadata = {
   title: 'LK RAMOS',
   description: 'Gerenciador de propostas e clientes para correspondentes bancários.',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'LK RAMOS',
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#2a4a7f',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -36,6 +54,7 @@ export default function RootLayout({
         >
           <TooltipProvider delayDuration={0}>
             <InteractionFixer />
+            <PwaRegister />
             <FirebaseClientProvider>
               {children}
             </FirebaseClientProvider>

@@ -53,15 +53,15 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
     let receivedPrevSum = 0;
 
     rows.forEach(p => {
-        // Ignora reprovados para cálculos de receita/saldo, exceto se já houve pagamento (raro)
+        // 🛡️ REGRA DE NEGÓCIO: Identifica propostas que não devem compor faturamento/digitado
         const isReprovado = p.status === 'Reprovado';
         
         const dDigit = parseDateSafe(p.dateDigitized);
         const dPay = parseDateSafe(p.commissionPaymentDate);
         const dAppr = parseDateSafe(p.dateApproved);
 
-        // 1. PRODUÇÃO DIGITADA (No período selecionado)
-        if (dDigit) {
+        // 1. PRODUÇÃO DIGITADA (No período selecionado) - 🛡️ IGNORA REPROVADOS/CANCELADOS
+        if (dDigit && !isReprovado) {
             if (dDigit >= fromDate && dDigit <= toDate) {
                 digitizedInPeriod.push(p);
             }
@@ -81,7 +81,6 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
         }
 
         // 3. SALDO A RECEBER (Averbados não quitados - Visão GLOBAL de pendência)
-        // Regra: Tem data de averbação, não é reprovado e o status de comissão não é "Paga"
         if (dAppr && !isReprovado && p.commissionStatus !== 'Paga') {
             averbados.push(p);
         }
@@ -98,11 +97,9 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
     const digitizedTrend = digitizedPrevSum > 0 ? ((totalComissaoProducaoDigitada - digitizedPrevSum) / digitizedPrevSum) * 100 : 0;
     const receivedTrend = receivedPrevSum > 0 ? ((totalComissaoRecebida - receivedPrevSum) / receivedPrevSum) * 100 : 0;
 
-    // Cálculo do Saldo (Valor Esperado - Valor Já Pago)
     const totalSaldoAReceber = averbados.reduce((sum, p) => sum + (safeValue(p.commissionValue) - safeValue(p.amountPaid)), 0);
     const totalComissaoEsperada = esperados.reduce((sum, p) => sum + (safeValue(p.commissionValue) - safeValue(p.amountPaid)), 0);
 
-    // Sparklines (Últimos 7 dias de atividade real)
     const last7Days = eachDayOfInterval({ start: subDays(today, 6), end: today });
     
     const productionTrend = last7Days.map(day => {
@@ -110,7 +107,8 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
         const de = endOfDay(day);
         return rows.reduce((sum, p) => {
             const d = parseDateSafe(p.dateDigitized);
-            return (d && d >= ds && d <= de) ? sum + safeValue(p.commissionValue) : sum;
+            // 🛡️ IGNORA REPROVADOS TAMBÉM NO SPARKLINE
+            return (d && d >= ds && d <= de && p.status !== 'Reprovado') ? sum + safeValue(p.commissionValue) : sum;
         }, 0);
     });
 
@@ -152,7 +150,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
                     title="PRODUÇÃO DIGITADA"
                     value={isPrivacyMode ? privacyPlaceholder : formatCurrency(totalComissaoProducaoDigitada)}
                     icon={Activity}
-                    description="COMISSÕES DO PERÍODO"
+                    description="COMISSÕES VIVAS (MÊS)"
                     percentage={digitizedTrend}
                     sparklineData={productionTrend}
                 />
