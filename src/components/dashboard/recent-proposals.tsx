@@ -137,7 +137,7 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                                     <div className="overflow-hidden">
                                         <div className="flex items-center gap-2">
                                             {phone && isWhatsApp(phone) && (
-                                                <span onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(getWhatsAppUrl(phone), '_blank'); }} className="text-green-500 hover:scale-125 transition-transform shrink-0">
+                                                <span onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(getWhatsAppUrl(phone), '_blank'); }} className="text-green-500 hover:scale-125 transition-transform shrink-0 cursor-pointer">
                                                     <WhatsAppIcon className="h-3.5 w-3.5" />
                                                 </span>
                                             )}
@@ -153,7 +153,7 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                             <TableCell className="px-6 py-5">
                                 <Link href={`/proposals?open=${proposal.id}&search=${proposal.proposalNumber}`} className="flex flex-col gap-1.5">
                                     <div className="flex items-center gap-2">
-                                        <BankIcon bankName={proposal.bank} domain={customDomain} showLogo={showLogos} className="h-4 w-4" />
+                                        <BankIcon bankName={proposal.bank} domain={customDomain} showLogos={showLogos} className="h-4 w-4" />
                                         <span className="text-[10px] font-bold text-muted-foreground truncate max-w-[120px]">{cleanBank}</span>
                                     </div>
                                     <Badge variant="secondary" className="bg-muted/50 text-muted-foreground font-bold text-[9px] border-none px-2 py-0 w-fit">
