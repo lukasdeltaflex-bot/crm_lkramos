@@ -434,6 +434,15 @@ function ProposalsPageContent() {
     if (downloadMode) { doc.save(`Capas_Propostas_${format(new Date(), 'dd_MM_yyyy')}.pdf`); } else { window.open(doc.output('bloburl'), '_blank'); }
   }, [proposalsWithCustomerData, rowSelection, userSettings, user]);
 
+  const columns = useMemo(() => getColumns(
+    handleEditProposal, 
+    handleViewProposal, 
+    handleMoveToTrash, 
+    handleStatusChange, 
+    handleDuplicateProposal,
+    handleToggleChecklist
+  ), [handleEditProposal, handleViewProposal, handleMoveToTrash, handleStatusChange, handleDuplicateProposal, handleToggleChecklist]);
+
   React.useEffect(() => {
     if (isLoading || proposalsWithCustomerData.length === 0) return;
     const action = searchParams.get('action');
@@ -446,15 +455,6 @@ function ProposalsPageContent() {
         }
     }
   }, [searchParams, isLoading, proposalsWithCustomerData, hasOpenedFromParam, handleNewProposal, handleEditProposal, router]);
-
-  const columns = useMemo(() => getColumns(
-    handleEditProposal, 
-    handleViewProposal, 
-    handleMoveToTrash, 
-    handleStatusChange, 
-    handleDuplicateProposal,
-    handleToggleChecklist
-  ), [handleEditProposal, handleViewProposal, handleMoveToTrash, handleStatusChange, handleDuplicateProposal, handleToggleChecklist]);
 
   return (
     <>

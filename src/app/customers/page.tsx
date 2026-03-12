@@ -114,7 +114,7 @@ function CustomersPageContent() {
     if (!customers) return [];
     
     return customers
-        .filter(c => c.deleted !== true) // Filtro de Lixeira
+        .filter(c => c.deleted !== true)
         .map(c => {
             const smartTags = getSmartTags(c, proposals || []);
             return {
@@ -156,6 +156,35 @@ function CustomersPageContent() {
     });
   }, [processedCustomers, filter, rmcFilter, rccFilter, tagFilter]);
 
+  const handleEditCustomer = React.useCallback((customer: Customer) => {
+    setSelectedCustomer(customer);
+    setDefaultValues(undefined);
+    setSheetMode('edit');
+    setFormKey(`edit-${customer.id}`);
+    setIsDialog(true);
+  }, []);
+
+  const handleMoveToTrash = React.useCallback(async (customerId: string) => {
+    if (!firestore || !user) return;
+    setIsSaving(true);
+    const docRef = doc(firestore, 'customers', customerId);
+    
+    const dataToUpdate = { 
+        deleted: true,
+        deletedAt: new Date().toISOString(),
+        deletedBy: user.uid
+    };
+    
+    try {
+        await updateDoc(docRef, dataToUpdate);
+        toast({ title: 'Movido para a Lixeira' });
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Erro ao excluir' });
+    } finally {
+        setIsSaving(false);
+    }
+  }, [firestore, user]);
+
   const handleNewCustomer = React.useCallback(() => {
     setSelectedCustomer(undefined);
     setDefaultValues(undefined);
@@ -193,27 +222,6 @@ function CustomersPageContent() {
     }
   };
 
-  const handleMoveToTrash = async (customerId: string) => {
-    if (!firestore || !user) return;
-    setIsSaving(true);
-    const docRef = doc(firestore, 'customers', customerId);
-    
-    const dataToUpdate = { 
-        deleted: true,
-        deletedAt: new Date().toISOString(),
-        deletedBy: user.uid
-    };
-    
-    try {
-        await updateDoc(docRef, dataToUpdate);
-        toast({ title: 'Movido para a Lixeira' });
-    } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Erro ao excluir' });
-    } finally {
-        setIsSaving(false);
-    }
-  };
-
   const handleFormSubmit = async (formData: any) => {
     if (!firestore || !user) return;
     setIsSaving(true);
@@ -241,15 +249,7 @@ function CustomersPageContent() {
   const columns = React.useMemo(() => getColumns({ 
     onEdit: handleEditCustomer, 
     onDelete: handleMoveToTrash 
-  }), []);
-
-  const handleEditCustomer = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setDefaultValues(undefined);
-    setSheetMode('edit');
-    setFormKey(`edit-${customer.id}`);
-    setIsDialog(true);
-  };
+  }), [handleEditCustomer, handleMoveToTrash]);
 
   const handleAiFormSubmit = (aiData: any) => {
     const newId = doc(collection(firestore!, 'customers')).id;
