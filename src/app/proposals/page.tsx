@@ -1,4 +1,3 @@
-
 'use client';
 import React, { Suspense, useCallback, useState, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -26,6 +25,8 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { cleanFirestoreData, formatCurrency, cleanBankName, formatDateSafe } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -442,6 +443,87 @@ function ProposalsPageContent() {
         }
     }
   }, [firestore]);
+
+  const handleExportToExcel = async (onlySelected = false) => {
+    const table = tableRef.current?.table;
+    if (!table) return;
+    const { utils, writeFile } = await import('xlsx');
+    
+    const rowsSource = onlySelected ? table.getFilteredSelectedRowModel().rows : table.getFilteredRowModel().rows;
+    
+    const dataToExport = rowsSource.map(r => {
+        const p = r.original;
+        return {
+            'Data Digitação': formatDateSafe(p.dateDigitized),
+            'Promotora': p.promoter,
+            'N° Proposta': p.proposalNumber,
+            'Cliente': p.customer?.name || '---',
+            'CPF': p.customer?.cpf || '---',
+            'Produto': p.product,
+            'Valor Bruto': p.grossAmount,
+            'Comissão': p.commissionValue,
+            'Banco Digitado': cleanBankName(p.bank),
+            'Status': p.status,
+            'Operador': p.operator || '-',
+        };
+    });
+
+    const ws = utils.json_to_sheet(dataToExport);
+    const wb = utils.book_new();
+    utils.book_append_sheet(wb, ws, 'Propostas');
+    writeFile(wb, onlySelected ? 'propostas_selecionadas.xlsx' : 'propostas_completas.xlsx');
+  };
+
+  const handleExportToPdf = async (onlySelected = false) => {
+    const table = tableRef.current?.table;
+    if (!table || !user) return;
+
+    const { default: jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
+    
+    const rowsSource = onlySelected ? table.getFilteredSelectedRowModel().rows : table.getFilteredRowModel().rows;
+    const doc = new jsPDF('landscape');
+    
+    if (userSettings?.customLogoURL) {
+        try {
+            doc.addImage(userSettings.customLogoURL, 'PNG', 14, 8, 35, 15, undefined, 'FAST');
+        } catch (e) {}
+    }
+
+    doc.setFontSize(18);
+    doc.setTextColor(40, 74, 127);
+    doc.text(onlySelected ? "RELATÓRIO DE PROPOSTAS (SELEÇÃO)" : "LISTAGEM COMPLETA DE PROPOSTAS", 55, 15);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Gerado por: ${user.displayName || user.email} | Data: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 55, 22);
+
+    const tableData = rowsSource.map(r => {
+        const p = r.original;
+        return [
+            formatDateSafe(p.dateDigitized),
+            p.promoter,
+            p.proposalNumber,
+            p.customer?.name || '-',
+            p.customer?.cpf || '-',
+            p.product,
+            formatCurrency(p.grossAmount),
+            p.status,
+            p.operator || '-'
+        ];
+    });
+
+    autoTable(doc, {
+        startY: 30,
+        head: [['Data', 'Promotora', 'Proposta', 'Cliente', 'CPF', 'Produto', 'Vlr Bruto', 'Status', 'Operador']],
+        body: tableData,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [40, 74, 127] }
+    });
+
+    doc.save(`propostas_${onlySelected ? 'selecionadas' : 'completas'}.pdf`);
+    toast({ title: 'PDF Gerado!' });
+  };
 
   const handleFormSubmit = useCallback(async (data: any) => {
     if (!firestore || !user) return;
