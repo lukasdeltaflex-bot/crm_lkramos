@@ -696,7 +696,49 @@ export function ProposalForm({
                   </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 rounded-3xl bg-muted/10 border-2 border-muted mt-6">
+                    <FormField control={form.control} name="installmentAmount" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Valor da Parcela *</FormLabel>
+                            <FormControl>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-3.5 text-[10px] font-black opacity-30">R$</span>
+                                    <Input type="text" className="h-12 pl-10 font-black border-2 rounded-xl" value={formatCurrencyInput(field.value)} onChange={(e) => field.onChange(parseInt(e.target.value.replace(/\D/g, "")) / 100 || 0)} readOnly={isReadOnly} />
+                                </div>
+                            </FormControl>
+                        </FormItem>
+                    )} />
+                    
+                    {productValue !== 'Portabilidade' && !productValue.includes('Cartão - Plástico') && (
+                        <FormField control={form.control} name="netAmount" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Valor liberado ao cliente *</FormLabel>
+                                <FormControl>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-3.5 text-[10px] font-black text-emerald-600/40">R$</span>
+                                        <Input type="text" className="h-12 pl-10 font-black border-2 border-emerald-100 bg-emerald-50/20 text-emerald-600 rounded-xl" value={formatCurrencyInput(field.value)} onChange={(e) => field.onChange(parseInt(e.target.value.replace(/\D/g, "")) / 100 || 0)} readOnly={isReadOnly} />
+                                    </div>
+                                </FormControl>
+                            </FormItem>
+                        )} />
+                    )}
+
+                    <FormField control={form.control} name="grossAmount" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                {productValue.includes('Cartão') ? 'Limite do Cartão (Bruto) *' : 'Valor Bruto (Contrato) *'}
+                            </FormLabel>
+                            <FormControl>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-3.5 text-[10px] font-black opacity-30">R$</span>
+                                    <Input type="text" className="h-12 pl-10 font-black border-2 rounded-xl" value={formatCurrencyInput(field.value)} onChange={(e) => field.onChange(parseInt(e.target.value.replace(/\D/g, "")) / 100 || 0)} readOnly={isReadOnly} />
+                                </div>
+                            </FormControl>
+                        </FormItem>
+                    )} />
+                </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
                 <FormField
                   control={form.control}
                   name="dateDigitized"
@@ -756,48 +798,6 @@ export function ProposalForm({
                     </>
                 )}
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 rounded-3xl bg-muted/10 border-2 border-muted mt-6">
-                    <FormField control={form.control} name="installmentAmount" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Valor da Parcela *</FormLabel>
-                            <FormControl>
-                                <div className="relative">
-                                    <span className="absolute left-4 top-3.5 text-[10px] font-black opacity-30">R$</span>
-                                    <Input type="text" className="h-12 pl-10 font-black border-2 rounded-xl" value={formatCurrencyInput(field.value)} onChange={(e) => field.onChange(parseInt(e.target.value.replace(/\D/g, "")) / 100 || 0)} readOnly={isReadOnly} />
-                                </div>
-                            </FormControl>
-                        </FormItem>
-                    )} />
-                    
-                    {productValue !== 'Portabilidade' && !productValue.includes('Cartão - Plástico') && (
-                        <FormField control={form.control} name="netAmount" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Valor liberado ao cliente *</FormLabel>
-                                <FormControl>
-                                    <div className="relative">
-                                        <span className="absolute left-4 top-3.5 text-[10px] font-black text-emerald-600/40">R$</span>
-                                        <Input type="text" className="h-12 pl-10 font-black border-2 border-emerald-100 bg-emerald-50/20 text-emerald-600 rounded-xl" value={formatCurrencyInput(field.value)} onChange={(e) => field.onChange(parseInt(e.target.value.replace(/\D/g, "")) / 100 || 0)} readOnly={isReadOnly} />
-                                    </div>
-                                </FormControl>
-                            </FormItem>
-                        )} />
-                    )}
-
-                    <FormField control={form.control} name="grossAmount" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                {productValue.includes('Cartão') ? 'Limite do Cartão (Bruto) *' : 'Valor Bruto (Contrato) *'}
-                            </FormLabel>
-                            <FormControl>
-                                <div className="relative">
-                                    <span className="absolute left-4 top-3.5 text-[10px] font-black opacity-30">R$</span>
-                                    <Input type="text" className="h-12 pl-10 font-black border-2 rounded-xl" value={formatCurrencyInput(field.value)} onChange={(e) => field.onChange(parseInt(e.target.value.replace(/\D/g, "")) / 100 || 0)} readOnly={isReadOnly} />
-                                </div>
-                            </FormControl>
-                        </FormItem>
-                    )} />
-                </div>
             </div>
 
             <Separator />
