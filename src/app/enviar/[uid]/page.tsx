@@ -78,6 +78,7 @@ export default function LeadCapturePage() {
   const [isFetchingCep, setIsFetchingCep] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [honeypot, setHoneypot] = useState(''); // 🛡️ PROTEÇÃO ANTI-BOT
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -259,6 +260,14 @@ export default function LeadCapturePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 🛡️ FILTRO HONEYPOT: Se o campo oculto estiver preenchido, é um bot.
+    if (honeypot) {
+        console.warn("🛡️ LK RAMOS: Tentativa de spam detectada via honeypot.");
+        setIsSuccess(true); // Simula sucesso para enganar o bot e evitar novos disparos
+        return;
+    }
+
     if (!firestore || !uid) {
         toast({ variant: 'destructive', title: 'Conexão Perdida', description: 'O serviço não está pronto. Recarregue a página.' });
         return;
@@ -355,6 +364,17 @@ export default function LeadCapturePage() {
             <CardContent className="p-8">
                 <form onSubmit={handleSubmit} className="space-y-12">
                     
+                    {/* 🛡️ HONEYPOT FIELD (Invisível para humanos, armadilha para bots) */}
+                    <div className="sr-only" aria-hidden="true">
+                        <Input 
+                            name="website_verification" 
+                            tabIndex={-1} 
+                            autoComplete="off" 
+                            value={honeypot} 
+                            onChange={(e) => setHoneypot(e.target.value)} 
+                        />
+                    </div>
+
                     <div className="space-y-6">
                         <h3 className="text-sm font-black uppercase text-primary flex items-center gap-2"><User className="h-4 w-4" /> Dados Pessoais</h3>
                         <div className="grid gap-6">
