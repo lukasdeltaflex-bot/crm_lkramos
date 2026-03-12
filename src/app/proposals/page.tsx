@@ -18,7 +18,7 @@ import { ProposalForm } from './proposal-form';
 import type { Proposal, Customer, ProposalStatus, UserSettings, ProposalHistoryEntry } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { collection, doc, updateDoc, setDoc, query, where, writeBatch, arrayUnion, deleteDoc } from 'firebase/firestore';
+import { collection, doc, updateDoc, setDoc, query, where, writeBatch, arrayUnion, deleteDoc, limit } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CustomerSearchDialog } from '@/components/proposals/customer-search-dialog';
 import {
@@ -26,8 +26,6 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-    DropdownMenuSeparator,
-    DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { cleanFirestoreData, formatCurrency, cleanBankName, formatDateSafe } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -77,12 +75,12 @@ function ProposalsPageContent() {
   
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid));
+    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), limit(100));
   }, [firestore, user]);
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid));
+    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), limit(100));
   }, [firestore, user]);
 
   const settingsDocRef = useMemoFirebase(() => {

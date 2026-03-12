@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -5,7 +6,7 @@ import { PageHeader } from '@/components/page-header';
 import { FinancialDataTable, type FinancialDataTableHandle } from './data-table';
 import { getColumns } from './columns';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { collection, query, where, doc, setDoc, deleteField, deleteDoc, writeBatch } from 'firebase/firestore';
+import { collection, query, where, doc, setDoc, deleteField, deleteDoc, writeBatch, limit } from 'firebase/firestore';
 import type { Proposal, Customer, CommissionStatus, UserSettings, Expense } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -108,17 +109,17 @@ export default function FinancialPage() {
 
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid));
+    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), limit(100));
   }, [firestore, user]);
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid));
+    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), limit(100));
   }, [firestore, user]);
 
   const expensesQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return collection(firestore, 'users', user.uid, 'expenses');
+    return query(collection(firestore, 'users', user.uid, 'expenses'), limit(100));
   }, [firestore, user]);
 
   const settingsDocRef = useMemoFirebase(() => {

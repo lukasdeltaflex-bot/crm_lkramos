@@ -11,7 +11,7 @@ import { PlusCircle, FileDown, UserCheck, UserX, Trash2, Sparkles, Landmark, X, 
 import { CustomerForm } from './customer-form';
 import type { Customer, UserSettings, Proposal } from '@/lib/types';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, doc, updateDoc, setDoc, query, where, writeBatch } from 'firebase/firestore';
+import { collection, doc, updateDoc, setDoc, query, where, writeBatch, limit } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -87,12 +87,12 @@ function CustomersPageContent() {
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid));
+    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), limit(100));
   }, [firestore, user]);
 
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid));
+    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), limit(100));
   }, [firestore, user]);
 
   const settingsDocRef = useMemoFirebase(() => {
@@ -310,7 +310,7 @@ function CustomersPageContent() {
   const columns = React.useMemo(() => getColumns({ onEdit: handleEditCustomer, onDelete: handleAnonymizeCustomer }), []);
 
   return (
-    <>
+    <AppLayout>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <PageHeader title="Central de Clientes" />
         <div className="flex items-center gap-3 flex-wrap">
@@ -539,7 +539,7 @@ function CustomersPageContent() {
             setRowSelection={setRowSelection}
           />
       )}
-    </>
+    </AppLayout>
   );
 }
 
