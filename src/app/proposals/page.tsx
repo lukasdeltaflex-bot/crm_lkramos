@@ -67,7 +67,7 @@ function ProposalsPageContent() {
 
   const [selectedProposal, setSelectedProposal] = useState<ProposalWithCustomer | undefined>(undefined);
   const [sheetMode, setSheetMode] = useState<'new' | 'edit' | 'view'>('new');
-  const [rowSelection, setRowSelection] = setRowSelection = useState<Record<string, boolean>>({});
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [defaultValues, setDefaultValues] = useState<any | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
   const [formKey, setFormKey] = useState('new');
@@ -378,7 +378,7 @@ function ProposalsPageContent() {
     const ws = utils.json_to_sheet(dataToExport);
     const wb = utils.book_new();
     utils.book_append_sheet(wb, ws, 'Propostas');
-    writeFile(workbook, onlySelected ? 'propostas_selecionadas.xlsx' : 'propostas_completas.xlsx');
+    writeFile(wb, onlySelected ? 'propostas_selecionadas.xlsx' : 'propostas_completas.xlsx');
   };
 
   const handleExportToPdf = async (onlySelected = false) => {
