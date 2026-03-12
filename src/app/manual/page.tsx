@@ -1,3 +1,4 @@
+
 "use client"
 
 import React from 'react';
@@ -65,7 +66,8 @@ import {
     UserRoundCheck,
     RefreshCcw,
     ShieldAlert,
-    RotateCcw
+    RotateCcw,
+    WifiOff
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -229,20 +231,48 @@ export default function ManualPage() {
                                 Ao clicar em excluir, o registro não é apagado do banco imediatamente. Ele é movido para a **Lixeira**, onde pode ser:
                             </p>
                             <ul className="mt-3 space-y-2 list-disc pl-5 text-xs font-medium">
-                                <li><strong className="text-green-600">Restaurado:</strong> Volta instantaneamente para sua tela de origem com todo o histórico e anexos.</li>
+                                <li><strong className="text-green-600">Restaurado:</strong> Volta instantaneamente para sua tela de origem com todo o histórico e anexos intactos.</li>
                                 <li><strong className="text-red-600">Excluído Permanente:</strong> Removido definitivamente do servidor após confirmação de segurança.</li>
                             </ul>
                         </div>
                     </AccordionContent>
                 </AccordionItem>
 
-                {/* 6. SEGURANÇA E ACESSO */}
+                {/* 6. OPERAÇÃO OFFLINE (NOVO) */}
+                <AccordionItem value="offline-mode" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-zinc-500/20">
+                    <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-zinc-100 text-zinc-600"><WifiOff className="h-5 w-5" /></div>
+                            <div className="text-left">
+                                <p className="font-bold text-sm">6. Operação Offline (PWA)</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Trabalhe mesmo sem internet</p>
+                            </div>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
+                        <div className="p-4 rounded-xl bg-muted/20 border">
+                            <h4 className="font-bold text-foreground flex items-center gap-2 mb-2">
+                                <ShieldCheck className="h-4 w-4 text-green-600" /> Sincronização Automática
+                            </h4>
+                            <p className="text-xs text-muted-foreground">
+                                O sistema possui o **Modo Avião Inteligente**. Se sua conexão cair enquanto você estiver operando:
+                            </p>
+                            <ul className="mt-3 space-y-2 list-disc pl-5 text-xs font-medium">
+                                <li>Você pode continuar visualizando clientes e propostas já carregados.</li>
+                                <li>Alterações feitas offline são salvas localmente no seu dispositivo.</li>
+                                <li>Assim que o sinal de internet voltar, o sistema sincroniza tudo com o servidor automaticamente.</li>
+                            </ul>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+
+                {/* 7. SEGURANÇA E ACESSO */}
                 <AccordionItem value="security-access" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-red-500/20">
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-red-100 text-red-600"><ShieldCheck className="h-5 w-5" /></div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">6. Segurança e Proteção de Dados</p>
+                                <p className="font-bold text-sm">7. Segurança e Proteção de Dados</p>
                                 <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Blindagem AES-256 e Anti-SPAM</p>
                             </div>
                         </div>
@@ -264,39 +294,6 @@ export default function ManualPage() {
                                 </h4>
                                 <p className="text-xs text-muted-foreground">
                                     Seus arquivos e anexos são servidos via URL protegida. O sistema injeta automaticamente o token do projeto para evitar erros de acesso e garantir downloads seguros em qualquer navegador.
-                                </p>
-                            </div>
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
-
-                {/* 7. INTERFACE E MANUTENÇÃO */}
-                <AccordionItem value="ui-usability" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-zinc-500/20">
-                    <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-zinc-100 text-zinc-600"><Layout className="h-5 w-5" /></div>
-                            <div className="text-left">
-                                <p className="font-bold text-sm">7. Navegação e Auto-Reparo</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Performance e Estabilidade de Cache</p>
-                            </div>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <div className="p-4 rounded-xl bg-muted/20 border">
-                                <h4 className="font-bold text-foreground flex items-center gap-2 mb-2">
-                                    <RefreshCcw className="h-4 w-4 text-primary" /> Redefinir Interface
-                                </h4>
-                                <p className="text-xs text-muted-foreground">
-                                    Se uma tabela sumir ou colunas ficarem desalinhadas, use o botão **"Redefinir Interface"** nas Configurações. Ele limpa apenas as preferências visuais corrompidas do seu navegador sem apagar dados do banco.
-                                </p>
-                            </div>
-                            <div className="p-4 rounded-xl bg-blue-50/5 border border-blue-200">
-                                <h4 className="font-bold text-blue-700 flex items-center gap-2 mb-2">
-                                    <History className="h-4 w-4" /> Paginação de Performance
-                                </h4>
-                                <p className="text-xs text-muted-foreground">
-                                    O sistema carrega registros em blocos de 150. Se sua base tiver 5.000 clientes, a tela não travará. Use o botão **"Carregar Próximos"** no final da lista para navegar em grandes volumes.
                                 </p>
                             </div>
                         </div>
