@@ -59,7 +59,8 @@ import {
     SearchX,
     Timer,
     RefreshCcw,
-    Smartphone
+    Smartphone,
+    AlertTriangle
 } from 'lucide-react';
 import { EditableList } from '@/components/settings/editable-list';
 import { BankEditableList } from '@/components/settings/bank-editable-list';
