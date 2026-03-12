@@ -65,6 +65,7 @@ import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import Image from 'next/image';
 
 const CopyButton = ({ text, label }: { text?: string; label: string }) => {
     if (!text) return null;
@@ -287,7 +288,13 @@ export default function ManagementPage() {
                         <Card key={item.id} className="group overflow-hidden border-2 hover:border-primary/40 transition-all flex flex-col shadow-sm relative cursor-pointer" onClick={() => openNewsReader(item)}>
                             <div className="h-48 overflow-hidden relative bg-muted flex items-center justify-center">
                                 {item.coverUrl ? (
-                                    <img src={item.coverUrl} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" alt={item.title} />
+                                    <Image 
+                                        src={item.coverUrl} 
+                                        alt={item.title}
+                                        fill
+                                        className="object-cover transition-transform group-hover:scale-105 duration-500"
+                                        unoptimized
+                                    />
                                 ) : (
                                     <div className="p-6 w-full h-full bg-primary/5 flex items-center justify-center text-center overflow-hidden">
                                         <p className="text-[11px] text-muted-foreground font-medium leading-relaxed italic line-clamp-6">
@@ -295,13 +302,13 @@ export default function ManagementPage() {
                                         </p>
                                     </div>
                                 )}
-                                <div className="absolute top-3 right-3 flex gap-2">
+                                <div className="absolute top-3 right-3 flex gap-2 z-10">
                                     {item.expirationDate && (
-                                        <Badge className="bg-orange-600 text-white font-black text-[8px] uppercase gap-1">
+                                        <Badge className="bg-orange-600 text-white font-black text-[8px] uppercase gap-1 shadow-md">
                                             <Clock className="h-2.5 w-2.5" /> Expira: {format(parseISO(item.expirationDate), 'dd/MM')}
                                         </Badge>
                                     )}
-                                    <Badge className={cn("font-black text-[8px] uppercase", item.status === 'Published' ? "bg-green-600" : "bg-orange-500")}>
+                                    <Badge className={cn("font-black text-[8px] uppercase shadow-md", item.status === 'Published' ? "bg-green-600" : "bg-orange-500")}>
                                         {item.status === 'Published' ? 'Publicado' : 'Rascunho'}
                                     </Badge>
                                 </div>
@@ -582,7 +589,15 @@ export default function ManagementPage() {
                     <ScrollArea className="flex-1 px-8 py-8">
                         <div className="space-y-10 max-w-3xl mx-auto pb-20">
                             {selectedItem.coverUrl && (
-                                <img src={selectedItem.coverUrl} className="max-w-[85%] h-auto mx-auto rounded-3xl shadow-xl border-4 border-white block" alt="Capa" />
+                                <div className="relative w-full aspect-[16/9] max-w-[85%] mx-auto">
+                                    <Image 
+                                        src={selectedItem.coverUrl} 
+                                        alt={selectedItem.title}
+                                        fill
+                                        className="object-contain rounded-3xl shadow-xl border-4 border-white bg-white"
+                                        unoptimized
+                                    />
+                                </div>
                             )}
 
                             <div className="prose prose-zinc dark:prose-invert max-w-none">
@@ -612,7 +627,15 @@ export default function ManagementPage() {
                                         {/* EXIBIÇÃO DE IMAGENS */}
                                         <div className="grid grid-cols-2 gap-4">
                                             {selectedItem.attachments.filter((a: any) => a.type.startsWith('image/')).map((img: any, idx: number) => (
-                                                <img key={idx} src={img.url} className="w-full aspect-video object-cover rounded-2xl shadow-md border-2 border-white hover:scale-[1.02] transition-transform cursor-zoom-in" alt="Anexo" onClick={() => window.open(img.url, '_blank')} />
+                                                <div key={idx} className="relative aspect-video w-full cursor-zoom-in" onClick={() => window.open(img.url, '_blank')}>
+                                                    <Image 
+                                                        src={img.url} 
+                                                        alt="Anexo"
+                                                        fill
+                                                        className="object-cover rounded-2xl shadow-md border-2 border-white hover:scale-[1.02] transition-transform"
+                                                        unoptimized
+                                                    />
+                                                </div>
                                             ))}
                                         </div>
                                     </div>
