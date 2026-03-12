@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Hub central de exportações do Firebase LK RAMOS.
+ * 📦 HUB CENTRAL FIREBASE LK RAMOS
  */
 
 export * from './firebase';
