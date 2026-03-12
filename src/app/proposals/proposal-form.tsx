@@ -53,7 +53,8 @@ import {
     Briefcase,
     Building2,
     UserCircle2,
-    Search
+    Search,
+    ListChecks
 } from 'lucide-react';
 import { format, parse, parseISO, isValid } from 'date-fns';
 import { cn, formatCurrency, cleanBankName, cleanFirestoreData, formatCurrencyInput } from '@/lib/utils';
@@ -197,7 +198,6 @@ export function ProposalForm({
   const { statusColors } = useTheme();
   const [isClient, setIsClient] = useState(false);
   const [newHistoryEntry, setNewHistoryEntry] = useState('');
-  const [isAddingHistory, setIsAddingHistory] = useState(false);
   const [stagedHistory, setStagedHistory] = useState<ProposalHistoryEntry[]>([]);
 
   const productTypes = userSettings?.productTypes || configData.productTypes;
@@ -277,7 +277,6 @@ export function ProposalForm({
     defaultValues: initialValues,
   });
 
-  // 🛡️ SINCRONIZAÇÃO DE HIDRATAÇÃO: Força o preenchimento da data vigente no cliente
   useEffect(() => {
     form.reset(initialValues);
   }, [initialValues, form]);
@@ -291,9 +290,7 @@ export function ProposalForm({
   const grossAmount = watch('grossAmount');
   const netAmount = watch('netAmount');
   const originalContractNumber = watch('originalContractNumber');
-  const watchBank = watch('bank');
-  const watchBankOrigin = watch('bankOrigin');
-  const watchPromoter = watch('promoter');
+  const showLogosSettings = userSettings?.showBankLogos ?? true;
 
   const selectedCustomer = useMemo(() => {
     return customers.find(c => c.id === selectedCustomerId);
@@ -537,7 +534,7 @@ export function ProposalForm({
                                     <FormControl>
                                         <SelectTrigger className="h-12 font-bold border-2 border-white rounded-xl">
                                             <div className="flex items-center gap-2">
-                                                {field.value && <BankIcon bankName={field.value} domain={userSettings?.bankDomains?.[field.value]} showLogo={showLogos} className="h-4 w-4" />}
+                                                {field.value && <BankIcon bankName={field.value} domain={userSettings?.bankDomains?.[field.value]} showLogo={showLogosSettings} className="h-4 w-4" />}
                                                 <SelectValue placeholder="Selecione o banco de origem..." />
                                             </div>
                                         </SelectTrigger>
@@ -546,7 +543,7 @@ export function ProposalForm({
                                         {banks.map(b => (
                                             <SelectItem key={b} value={b}>
                                                 <div className="flex items-center gap-2">
-                                                    <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogo={showLogos} className="h-4 w-4" />
+                                                    <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogo={showLogosSettings} className="h-4 w-4" />
                                                     <span className="font-bold text-xs uppercase">{cleanBankName(b)}</span>
                                                 </div>
                                             </SelectItem>
@@ -568,7 +565,7 @@ export function ProposalForm({
                 <Landmark className="h-4 w-4" /> Seção 3 – Dados do Contrato & Valores
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <FormField
                   control={form.control}
                   name="bank"
@@ -579,7 +576,7 @@ export function ProposalForm({
                             <FormControl>
                                 <SelectTrigger className="h-12 font-black border-2 rounded-xl">
                                     <div className="flex items-center gap-2">
-                                        {field.value && <BankIcon bankName={field.value} domain={userSettings?.bankDomains?.[field.value]} showLogo={showLogos} className="h-4 w-4" />}
+                                        {field.value && <BankIcon bankName={field.value} domain={userSettings?.bankDomains?.[field.value]} showLogo={showLogosSettings} className="h-4 w-4" />}
                                         <SelectValue placeholder="Banco" />
                                     </div>
                                 </SelectTrigger>
@@ -588,7 +585,7 @@ export function ProposalForm({
                                 {banks.map(b => (
                                     <SelectItem key={b} value={b}>
                                         <div className="flex items-center gap-2">
-                                            <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogo={showLogos} className="h-4 w-4" />
+                                            <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogo={showLogosSettings} className="h-4 w-4" />
                                             <span className="font-bold text-xs uppercase">{cleanBankName(b)}</span>
                                         </div>
                                     </SelectItem>
@@ -620,16 +617,6 @@ export function ProposalForm({
                         </Select>
                     </FormItem>
                   )}
-                />
-                <FormField
-                    control={form.control}
-                    name="operator"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Operador Responsável *</FormLabel>
-                            <FormControl><Input placeholder="Nome do digitador" {...field} readOnly={isReadOnly} className="h-12 font-bold border-2 rounded-xl" /></FormControl>
-                        </FormItem>
-                    )}
                 />
               </div>
 
@@ -806,7 +793,7 @@ export function ProposalForm({
                 <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-primary/60 flex items-center gap-2">
                     <CircleDollarSign className="h-4 w-4" /> Seção 4 – Repasse de Comissionamento
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6 rounded-3xl bg-emerald-50/20 border-2 border-emerald-100">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6 rounded-3xl bg-emerald-50/20 border-2 border-emerald-100">
                     <FormField
                         control={form.control}
                         name="commissionBase"
@@ -881,6 +868,16 @@ export function ProposalForm({
                             </FormItem>
                         )}
                     />
+                    <FormField
+                        control={form.control}
+                        name="operator"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="text-[10px] font-black uppercase text-emerald-700">Operador Responsável *</FormLabel>
+                                <FormControl><Input placeholder="Nome do digitador" {...field} readOnly={isReadOnly} className="h-12 font-bold border-2 rounded-xl" /></FormControl>
+                            </FormItem>
+                        )}
+                    />
                 </div>
             </div>
 
@@ -907,7 +904,7 @@ export function ProposalForm({
                                     : "bg-muted/30 border-transparent opacity-40 grayscale"
                             )}
                         >
-                            <step.icon className={cn("h-6 w-6", watch(`checklist.${step.id}`) && step.color)} />
+                            <step.icon className={cn("h-5 w-5", watch(`checklist.${step.id}`) && step.color)} />
                             <span className="text-[10px] font-black uppercase tracking-widest">{step.label}</span>
                         </div>
                     ))}
@@ -1003,27 +1000,4 @@ export function ProposalForm({
       </form>
     </Form>
   );
-}
-
-function ListChecks(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m3 17 2 2 4-4" />
-      <path d="m3 7 2 2 4-4" />
-      <path d="M13 6h8" />
-      <path d="M13 12h8" />
-      <path d="M13 18h8" />
-    </svg>
-  )
 }
