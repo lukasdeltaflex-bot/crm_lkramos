@@ -1,5 +1,3 @@
-'use client';
-
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
 import { initializeFirestore, Firestore, persistentLocalCache, memoryLocalCache, getFirestore } from "firebase/firestore";
@@ -10,6 +8,7 @@ import { firebaseConfig } from "./config";
 
 /**
  * 🛠️ INFRAESTRUTURA DE DADOS LK RAMOS - SINGLETON RESILIENTE
+ * Removido 'use client' do topo para permitir importação em rotas de servidor (build).
  */
 
 let db: Firestore | null = null;
@@ -17,74 +16,58 @@ let auth: Auth | null = null;
 let storage: FirebaseStorage | null = null;
 let analytics: Analytics | null = null;
 
-// Modificado para inicializar os serviços mesmo no lado do servidor (Next.js SSR/Edge)
-// No entanto, Analytics e AppCheck permanecem apenas no lado do cliente.
-try {
-    const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-    
-    if (typeof window !== "undefined") {
-        // 🔐 ATIVAÇÃO APP CHECK (Apenas Cliente)
-        if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("XXXXXXXXXXXX")) {
-            try {
-                initializeAppCheck(app, {
-                    provider: new ReCaptchaV3Provider("6Lf_fYcsAAAAAO6FkYzdDKt5wlcat-yGOxH0otxD"),
-                    isTokenAutoRefreshEnabled: true,
-                });
-                console.log("🛡️ LK RAMOS: App Check inicializado com sucesso.");
-            } catch (e) {
-                console.warn("🛡️ LK RAMOS: Falha ao carregar App Check.");
-            }
-        }
+// Inicialização segura que funciona em ambiente Node (build) e Browser
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-        // 🛡️ INICIALIZAÇÃO SEGURA DO ANALYTICS (Apenas Cliente)
-        if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("XXXXXXXXXXXX")) {
-            isSupported().then(supported => {
-                if (supported) {
-                    analytics = getAnalytics(app);
-                }
-            }).catch(() => {});
-        }
-    }
-
-    // Firestore e Storage podem ser inicializados no servidor para operações básicas (como manifest.ts)
-    try {
-        db = getFirestore(app);
-    } catch (e) {
-        if (typeof window !== "undefined") {
-            const firestoreSettings = {
-                experimentalForceLongPolling: true,
-                experimentalAutoDetectLongPolling: false,
-                useFetchStreams: false,
-                ignoreUndefinedProperties: true,
-            };
-
-            const localCache = (() => {
-                try {
-                    return persistentLocalCache({});
-                } catch (e) {
-                    return memoryLocalCache();
-                }
-            })();
-
-            db = initializeFirestore(app, {
-                ...firestoreSettings,
-                localCache
+if (typeof window !== "undefined") {
+    // 🔐 ATIVAÇÃO APP CHECK (Apenas Cliente)
+    if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("XXXXXXXXXXXX")) {
+        try {
+            initializeAppCheck(app, {
+                provider: new ReCaptchaV3Provider("6Lf_fYcsAAAAAO6FkYzdDKt5wlcat-yGOxH0otxD"),
+                isTokenAutoRefreshEnabled: true,
             });
+        } catch (e) {
+            console.warn("🛡️ App Check não inicializado.");
         }
     }
 
-    auth = getAuth(app);
-    storage = getStorage(app, firebaseConfig.storageBucket);
-    
-    if (typeof window !== "undefined") {
-        console.log("💎 LK RAMOS: Conectividade Firebase estabilizada.");
-    }
-} catch (error) {
-    console.error("❌ Falha crítica na inicialização Firebase:", error);
+    // 🛡️ INICIALIZAÇÃO SEGURA DO ANALYTICS (Apenas Cliente)
+    isSupported().then(supported => {
+        if (supported) {
+            analytics = getAnalytics(app);
+        }
+    }).catch(() => {});
+
+    // Firestore com Cache Persistente (Apenas Cliente)
+    const firestoreSettings = {
+        experimentalForceLongPolling: true,
+        useFetchStreams: false,
+        ignoreUndefinedProperties: true,
+    };
+
+    const localCache = (() => {
+        try {
+            return persistentLocalCache({});
+        } catch (e) {
+            return memoryLocalCache();
+        }
+    })();
+
+    db = initializeFirestore(app, {
+        ...firestoreSettings,
+        localCache
+    });
+} else {
+    // Fallback básico para ambiente de servidor (build)
+    db = getFirestore(app);
 }
+
+auth = getAuth(app);
+storage = getStorage(app, firebaseConfig.storageBucket);
 
 export { db, auth, storage, analytics };
 
-export function initializeFirebase(): FirebaseApp | null {
-  return getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+export function initializeFirebase(): FirebaseApp {
+  return app;
 }

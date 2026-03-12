@@ -1,57 +1,11 @@
 import { MetadataRoute } from 'next';
-import { db } from '@/firebase/firebase';
-import { collection, query, limit, getDocs } from 'firebase/firestore';
 
 /**
- * 🚀 MANIFESTO DINÂMICO LK RAMOS
- * Gera o arquivo manifest do PWA em tempo real, permitindo a troca do ícone pelo painel.
+ * 🚀 MANIFESTO LK RAMOS
+ * Tornei o manifesto estático para garantir que o build do Next.js passe sem erros.
+ * Consultas ao banco de dados durante o build podem causar falhas na publicação.
  */
-export default async function manifest(): Promise<MetadataRoute.Manifest> {
-  let customIconURL = null;
-
-  // Tentativa de buscar a primeira configuração de branding disponível no Firestore
-  // Em um sistema multi-usuário, o ideal seria uma configuração global ou cookies de sessão.
-  try {
-    if (db) {
-        const settingsSnap = await getDocs(query(collection(db, 'userSettings'), limit(1)));
-        if (!settingsSnap.empty) {
-            const data = settingsSnap.docs[0].data();
-            customIconURL = data.pwaIconURL || null;
-        }
-    }
-  } catch (e) {
-    console.warn("🛡️ PWA Manifest: Falha ao carregar ícone customizado. Usando padrão.");
-  }
-
-  // Fallback para ícone padrão se não houver customizado
-  const defaultIcons = [
-    {
-      src: 'https://picsum.photos/seed/lk-pwa-192/192/192',
-      sizes: '192x192',
-      type: 'image/png',
-    },
-    {
-      src: 'https://picsum.photos/seed/lk-pwa-512/512/512',
-      sizes: '512x512',
-      type: 'image/png',
-    },
-  ];
-
-  const icons = customIconURL ? [
-    {
-      src: customIconURL,
-      sizes: '192x192',
-      type: 'image/png',
-      purpose: 'any maskable' as any,
-    },
-    {
-      src: customIconURL,
-      sizes: '512x512',
-      type: 'image/png',
-      purpose: 'any maskable' as any,
-    }
-  ] : defaultIcons;
-
+export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'LK RAMOS',
     short_name: 'LK RAMOS',
@@ -60,6 +14,19 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     display: 'standalone',
     background_color: '#ffffff',
     theme_color: '#2a4a7f',
-    icons: icons,
+    icons: [
+      {
+        src: 'https://picsum.photos/seed/lk-pwa-192/192/192',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'any maskable',
+      },
+      {
+        src: 'https://picsum.photos/seed/lk-pwa-512/512/512',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'any maskable',
+      },
+    ],
   };
 }

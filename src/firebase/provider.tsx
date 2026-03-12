@@ -33,7 +33,10 @@ export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({ children }
   });
 
   useEffect(() => {
-    if (!authInstance) return;
+    if (!authInstance) {
+        setUserAuthState(prev => ({ ...prev, isUserLoading: false }));
+        return;
+    }
     
     const unsubscribe = onAuthStateChanged(
       authInstance,
