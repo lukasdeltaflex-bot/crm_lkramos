@@ -1,4 +1,3 @@
-
 'use client';
 import React, { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -96,7 +95,7 @@ export default function FinancialPage() {
   const [rowSelection, setRowSelection] = React.useState<Record<string, boolean>>({});
   const [isSaving, setIsSaving] = React.useState(false);
   const tableRef = React.useRef<FinancialDataTableHandle>(null);
-  const [dialogData, setDialogData] = React.useState<{ title: string; proposals: ProposalWithCustomer[] } | null>(null);
+  const [dialogData, setDialogData] = React.useState<{ title: string; proposals: Proposal[] } | null>(null);
 
   // Stats Period Filtering
   const [statsStartDate, setStatsStartDate] = useState(format(startOfMonth(new Date()), 'dd/MM/yyyy'));
@@ -109,12 +108,12 @@ export default function FinancialPage() {
 
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), limit(100));
+    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), limit(500));
   }, [firestore, user]);
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), limit(100));
+    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), limit(500));
   }, [firestore, user]);
 
   const expensesQuery = useMemoFirebase(() => {
@@ -164,14 +163,13 @@ export default function FinancialPage() {
     const startOfCurrent = startOfMonth(today);
     const endOfCurrent = endOfMonth(today);
 
-    const filteredProposals = proposals.filter(p => p.status !== 'Reprovado');
-
-    const tableData = filteredProposals
+    // Mapeia clientes para todas as propostas
+    const tableData = proposals
       .map(p => ({
         ...p,
         customer: customersMap.get(p.customerId),
       }))
-      .filter(p => p.customer);
+      .filter(p => p.customer && p.status !== 'Reprovado');
 
     const opMap: Record<string, { name: string; totalPaid: number; count: number; potential: number }> = {};
     
@@ -196,7 +194,7 @@ export default function FinancialPage() {
 
     return { 
       proposalsWithCustomerData: tableData as ProposalWithCustomer[], 
-      summaryProposals: tableData as ProposalWithCustomer[],
+      summaryProposals: proposals, // Passa a lista bruta para o componente de resumo
       currentMonthRange: { from: startOfCurrent, to: endOfCurrent },
       operatorStats: stats
     };
@@ -730,7 +728,7 @@ export default function FinancialPage() {
       ) : (
         <div className="space-y-8">
             <FinancialSummary 
-                rows={proposalsWithCustomerData} 
+                rows={summaryProposals} 
                 currentMonthRange={currentMonthRange} 
                 isPrivacyMode={isPrivacyMode} 
                 onShowDetails={(t, p) => setDialogData({ title: t, proposals: p })} 
