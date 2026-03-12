@@ -15,7 +15,7 @@ setDefaultOptions({ locale: ptBR });
 export const metadata: Metadata = {
   title: 'LK RAMOS',
   description: 'Gerenciador de propostas e clientes para correspondentes bancários de elite.',
-  manifest: '/manifest.json',
+  // Removido manifest fixo para usar o dinâmico gerado pelo manifest.ts automático do Next.js
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',

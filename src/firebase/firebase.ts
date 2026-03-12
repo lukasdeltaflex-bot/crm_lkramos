@@ -17,12 +17,13 @@ let auth: Auth | null = null;
 let storage: FirebaseStorage | null = null;
 let analytics: Analytics | null = null;
 
-if (typeof window !== "undefined") {
-    try {
-        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-        
-        // 🔐 ATIVAÇÃO APP CHECK (Proteção contra Robôs e Acessos Externos)
-        // Nota: A fiscalização (Enforcement) deve ser ativada no console do Firebase após o registro da chave.
+// Modificado para inicializar os serviços mesmo no lado do servidor (Next.js SSR/Edge)
+// No entanto, Analytics e AppCheck permanecem apenas no lado do cliente.
+try {
+    const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+    
+    if (typeof window !== "undefined") {
+        // 🔐 ATIVAÇÃO APP CHECK (Apenas Cliente)
         if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("XXXXXXXXXXXX")) {
             try {
                 initializeAppCheck(app, {
@@ -31,14 +32,25 @@ if (typeof window !== "undefined") {
                 });
                 console.log("🛡️ LK RAMOS: App Check inicializado com sucesso.");
             } catch (e) {
-                console.warn("🛡️ LK RAMOS: Falha ao carregar App Check. Verifique a Site Key.");
+                console.warn("🛡️ LK RAMOS: Falha ao carregar App Check.");
             }
         }
 
-        // 🛡️ VERIFICAÇÃO DE SINGLETON FIRESTORE
-        try {
-            db = getFirestore(app);
-        } catch (e) {
+        // 🛡️ INICIALIZAÇÃO SEGURA DO ANALYTICS (Apenas Cliente)
+        if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("XXXXXXXXXXXX")) {
+            isSupported().then(supported => {
+                if (supported) {
+                    analytics = getAnalytics(app);
+                }
+            }).catch(() => {});
+        }
+    }
+
+    // Firestore e Storage podem ser inicializados no servidor para operações básicas (como manifest.ts)
+    try {
+        db = getFirestore(app);
+    } catch (e) {
+        if (typeof window !== "undefined") {
             const firestoreSettings = {
                 experimentalForceLongPolling: true,
                 experimentalAutoDetectLongPolling: false,
@@ -59,30 +71,20 @@ if (typeof window !== "undefined") {
                 localCache
             });
         }
-
-        auth = getAuth(app);
-        storage = getStorage(app, firebaseConfig.storageBucket);
-
-        // 🛡️ INICIALIZAÇÃO SEGURA DO ANALYTICS
-        if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("XXXXXXXXXXXX")) {
-            isSupported().then(supported => {
-                if (supported) {
-                    analytics = getAnalytics(app);
-                }
-            }).catch(() => {});
-        }
-        
-        console.log("💎 LK RAMOS: Conectividade Firebase estabilizada.");
-    } catch (error) {
-        console.error("❌ Falha crítica na inicialização Firebase:", error);
     }
+
+    auth = getAuth(app);
+    storage = getStorage(app, firebaseConfig.storageBucket);
+    
+    if (typeof window !== "undefined") {
+        console.log("💎 LK RAMOS: Conectividade Firebase estabilizada.");
+    }
+} catch (error) {
+    console.error("❌ Falha crítica na inicialização Firebase:", error);
 }
 
 export { db, auth, storage, analytics };
 
 export function initializeFirebase(): FirebaseApp | null {
-  if (typeof window !== "undefined") {
-    return getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-  }
-  return null;
+  return getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 }

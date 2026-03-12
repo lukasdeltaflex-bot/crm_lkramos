@@ -150,6 +150,7 @@ export type UserSettings = {
   showPromoterLogos?: boolean;
   // Appearance Elite
   customLogoURL?: string;
+  pwaIconURL?: string; // URL do ícone customizado para o PWA
   containerStyle?: string;
   backgroundTexture?: string;
   colorIntensity?: string;

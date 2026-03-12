@@ -58,7 +58,8 @@ import {
     Tags,
     SearchX,
     Timer,
-    RefreshCcw
+    RefreshCcw,
+    Smartphone
 } from 'lucide-react';
 import { EditableList } from '@/components/settings/editable-list';
 import { BankEditableList } from '@/components/settings/bank-editable-list';
@@ -121,9 +122,11 @@ export default function SettingsPage() {
   const theme = useTheme();
   
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isUploadingPwa, setIsUploadingPwa] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [testAnimation, setTestAnimation] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pwaInputRef = useRef<HTMLInputElement>(null);
 
   const [previewStatus, setPreviewStatus] = useState("EM ANDAMENTO");
   const [preview, setPreview] = useState({
@@ -261,6 +264,29 @@ export default function SettingsPage() {
         setIsUploadingLogo(false);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePwaUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validar proporção 1:1 aproximada
+      const img = new Image();
+      img.onload = () => {
+          if (Math.abs(img.width - img.height) > img.width * 0.1) {
+              toast({ variant: 'destructive', title: 'Imagem não quadrada', description: 'Para melhor resultado no ícone do celular, use uma imagem quadrada.' });
+          }
+          setIsUploadingPwa(true);
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const dataUrl = reader.result as string;
+            saveSettingsToFirebase({ pwaIconURL: dataUrl });
+            setIsUploadingPwa(false);
+            toast({ title: "Ícone PWA Atualizado", description: "O novo ícone será usado no manifesto do aplicativo." });
+          };
+          reader.readAsDataURL(file);
+      };
+      img.src = URL.createObjectURL(file);
     }
   };
 
@@ -429,19 +455,50 @@ export default function SettingsPage() {
 
                                 <Separator />
 
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-2"><Monitor className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Branding (Logomarca)</h4></div>
-                                    <div className="flex items-center gap-6 p-6 border rounded-xl bg-muted/20">
-                                        <div className="h-24 w-24 bg-white border flex items-center justify-center rounded-lg overflow-hidden shadow-inner p-2">
-                                            {userSettings?.customLogoURL ? <img src={userSettings.customLogoURL} className="max-h-full max-w-full object-contain" alt="Preview Logo" /> : <Monitor className="h-8 w-8 opacity-20" />}
-                                        </div>
-                                        <div className="space-y-3 flex-1">
-                                            <p className="text-xs font-medium text-muted-foreground leading-relaxed">Sua logo será aplicada na barra lateral, no portal público de leads e em todos os documentos PDF exportados.</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2"><Monitor className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Logomarca do Sistema</h4></div>
+                                        <div className="flex flex-col gap-4 p-4 border rounded-xl bg-muted/20">
+                                            <div className="h-20 w-full bg-white border flex items-center justify-center rounded-lg overflow-hidden shadow-inner p-2">
+                                                {userSettings?.customLogoURL ? <img src={userSettings.customLogoURL} className="max-h-full max-w-full object-contain" alt="Preview Logo" /> : <Monitor className="h-8 w-8 opacity-20" />}
+                                            </div>
                                             <div className="flex gap-2">
                                                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleLogoUpload} />
-                                                <Button size="sm" onClick={() => fileInputRef.current?.click()} disabled={isUploadingLogo} className="font-bold"><Upload className="h-3 w-3 mr-2" /> Alterar Logo</Button>
-                                                {userSettings?.customLogoURL && <Button size="sm" variant="ghost" className="text-destructive font-bold" onClick={() => saveSettingsToFirebase({ customLogoURL: '' })}><X className="h-3 w-3 mr-2" /> Remover</Button>}
+                                                <Button size="sm" className="flex-1 font-bold" onClick={() => fileInputRef.current?.click()} disabled={isUploadingLogo}><Upload className="h-3 w-3 mr-2" /> Alterar</Button>
+                                                {userSettings?.customLogoURL && <Button size="sm" variant="ghost" className="text-destructive font-bold" onClick={() => saveSettingsToFirebase({ customLogoURL: '' })}><X className="h-3 w-3" /></Button>}
                                             </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2"><Smartphone className="h-4 w-4 text-primary" /><h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Ícone do App (PWA)</h4></div>
+                                        <div className="flex flex-col gap-4 p-4 border rounded-xl bg-muted/20">
+                                            <div className="h-20 w-full flex items-center justify-center gap-4">
+                                                <div className="h-16 w-16 bg-white border-2 rounded-2xl overflow-hidden shadow-md flex items-center justify-center p-1">
+                                                    {userSettings?.pwaIconURL ? <img src={userSettings.pwaIconURL} className="h-full w-full object-contain" alt="PWA Icon" /> : <Smartphone className="h-8 w-8 opacity-20" />}
+                                                </div>
+                                                <div className="text-[9px] font-medium text-muted-foreground leading-tight uppercase flex-1">
+                                                    <p className="text-primary font-bold">Ícone de instalação celular</p>
+                                                    <p className="mt-1">Recomendado: 512x512px, formato quadrado (PNG/JPG).</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <input type="file" ref={pwaInputRef} className="hidden" accept="image/*" onChange={handlePwaUpload} />
+                                                <Button size="sm" className="flex-1 font-bold" onClick={() => pwaInputRef.current?.click()} disabled={isUploadingPwa}><Upload className="h-3 w-3 mr-2" /> Alterar Ícone</Button>
+                                                {userSettings?.pwaIconURL && <Button size="sm" variant="ghost" className="text-destructive font-bold" onClick={() => saveSettingsToFirebase({ pwaIconURL: '' })}><X className="h-3 w-3" /></Button>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-4 bg-orange-50/50 border border-orange-200 rounded-xl">
+                                    <div className="flex items-start gap-3">
+                                        <AlertTriangle className="h-5 w-5 text-orange-600 shrink-0 mt-0.5" />
+                                        <div className="space-y-1">
+                                            <p className="text-xs font-bold text-orange-800 uppercase">Aviso sobre o Ícone do PWA</p>
+                                            <p className="text-[10px] text-orange-700 leading-relaxed">
+                                                Para que o novo ícone apareça no atalho do seu celular/computador, é necessário desinstalar o aplicativo atual e instalá-lo novamente através do navegador após salvar a alteração.
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
