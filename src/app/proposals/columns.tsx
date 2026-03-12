@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ColumnDef, Header, flexRender } from '@tanstack/react-table';
@@ -164,20 +165,10 @@ const ProposalStatusCell = ({ p, onStatusChange }: { p: Proposal; onStatusChange
     const [hasMounted, setHasMounted] = useState(false);
     useEffect(() => setHasMounted(true), []);
 
-    // 🛡️ PERFORMANCE: Memoiza cálculos pesados para evitar lag na rolagem da tabela
     const { critical, bizDays } = useMemo(() => {
         if (!hasMounted) return { critical: false, bizDays: 0 };
-        
         const isCrit = isProposalCritical(p);
-        
-        const historyDates = (p.history || []).map(h => h.date);
-        const lastHistoryDate = historyDates.length > 0 ? [...historyDates].sort().reverse()[0] : null;
-        let baseDate = p.statusUpdatedAt || p.dateDigitized;
-        if (p.status === 'Aguardando Saldo' && p.statusAwaitingBalanceAt) {
-            baseDate = p.statusAwaitingBalanceAt;
-        }
-        const referenceDate = (lastHistoryDate && lastHistoryDate > baseDate) ? lastHistoryDate : baseDate;
-        
+        const referenceDate = p.statusAwaitingBalanceAt || p.dateDigitized;
         return {
             critical: isCrit,
             bizDays: calculateBusinessDays(referenceDate)
@@ -211,10 +202,6 @@ const ProposalStatusCell = ({ p, onStatusChange }: { p: Proposal; onStatusChange
                             <p className="text-[11px] font-medium leading-relaxed">
                                 Esta proposta está há <span className="font-black text-red-600">{bizDays} dia(s) úteis</span> sem nenhuma nova interação ou mudança de status.
                             </p>
-                            <div className="pt-1 border-t border-red-100 dark:border-red-900/30">
-                                <p className="text-[9px] font-bold uppercase text-muted-foreground">Dica LK RAMOS:</p>
-                                <p className="text-[9px] italic text-muted-foreground">Adicione uma nota no histórico para pausar este alerta.</p>
-                            </div>
                         </div>
                     </TooltipContent>
                 </Tooltip>
@@ -297,8 +284,6 @@ export const getColumns = (
         return (<div className="flex items-center gap-2"><BankIcon bankName={bank} domain={sett?.bankDomains?.[bank]} showLogo={sett?.showBankLogos ?? true} /><span className="truncate text-sm font-bold">{cleanBankName(bank)}</span></div>)
     }, size: 150 },
   { id: 'col_status', accessorKey: 'status', header: 'Status', cell: ({ row }) => <ProposalStatusCell p={row.original} onStatusChange={onStatusChange} />, size: 180 },
-  { id: 'col_date_appr', accessorKey: 'dateApproved', header: 'Data Averbação', cell: ({ row }) => <span className="text-sm font-medium">{formatDateSafe(row.original.dateApproved)}</span>, size: 130 },
-  { id: 'col_date_paid', accessorKey: 'datePaidToClient', header: 'Data Pgto. Cliente', cell: ({ row }) => <span className="text-sm font-medium">{formatDateSafe(row.original.datePaidToClient)}</span>, size: 130 },
   { id: 'col_date_debt', accessorKey: 'debtBalanceArrivalDate', header: 'Chegada Saldo', cell: ({ row }) => <span className="text-sm font-medium">{formatDateSafe(row.original.debtBalanceArrivalDate)}</span>, size: 130 },
   { id: 'col_operator', accessorKey: 'operator', header: 'Operador', cell: ({ row }) => <span className="text-xs font-bold">{row.original.operator || '-'}</span>, size: 120 },
   { id: 'col_actions', header: 'Ações', cell: (cp) => (<ActionsCell row={cp.row} onEdit={onEdit} onView={onView} onDelete={onDelete} onDuplicate={onDuplicate} />), enableHiding: false, size: 100 },
