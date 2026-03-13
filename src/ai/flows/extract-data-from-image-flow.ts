@@ -104,7 +104,6 @@ const extractDataFromImageFlow = ai.defineFlow(
         } else if (errStr.includes("SAFETY")) {
             userMessage = "Bloqueio de Segurança: O documento não pôde ser lido.";
         } else if (errStr.includes("FETCH") || errStr.includes("NETWORK") || errStr.includes("CONNECT") || errStr.includes("UND_ERR_CONNECT")) {
-            // Inclui o erro técnico real para o usuário ver se for algo como DNS
             userMessage = `Falha de Conexão (${error.message || 'Network Error'}).`;
         }
         
