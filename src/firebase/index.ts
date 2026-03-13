@@ -2,6 +2,7 @@
 
 /**
  * 📦 HUB CENTRAL FIREBASE LK RAMOS
+ * Exportações centralizadas para manter a consistência do projeto.
  */
 
 export * from './firebase';

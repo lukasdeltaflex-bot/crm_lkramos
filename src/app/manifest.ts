@@ -2,8 +2,7 @@ import { MetadataRoute } from 'next';
 
 /**
  * 🚀 MANIFESTO LK RAMOS
- * Tornei o manifesto estático para garantir que o build do Next.js passe sem erros.
- * Consultas ao banco de dados durante o build podem causar falhas na publicação.
+ * Manifesto estático para garantir estabilidade absoluta do build.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {

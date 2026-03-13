@@ -1,13 +1,6 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
-import { getAuth, Auth, connectAuthEmulator } from "firebase/auth";
-import { 
-    initializeFirestore, 
-    Firestore, 
-    persistentLocalCache, 
-    memoryLocalCache, 
-    getFirestore,
-    connectFirestoreEmulator
-} from "firebase/firestore";
+import { getAuth, Auth } from "firebase/auth";
+import { getFirestore, Firestore } from "firebase/firestore";
 import { getStorage, FirebaseStorage } from "firebase/storage";
 import { firebaseConfig } from "./config";
 
@@ -21,25 +14,16 @@ let db: Firestore;
 let auth: Auth;
 let storage: FirebaseStorage;
 
+// Garante que o app seja inicializado apenas uma vez
 if (getApps().length === 0) {
     app = initializeApp(firebaseConfig);
 } else {
     app = getApp();
 }
 
-// 🔐 Inicialização segura do Firestore
-if (typeof window !== "undefined") {
-    // No navegador, usamos cache persistente para suporte Offline
-    db = initializeFirestore(app, {
-        localCache: persistentLocalCache({}),
-        ignoreUndefinedProperties: true,
-    });
-} else {
-    // No servidor (Build/SSR), usamos o Firestore padrão sem cache de disco
-    db = getFirestore(app);
-}
-
+// Inicializa os serviços de forma idempotente
 auth = getAuth(app);
+db = getFirestore(app);
 storage = getStorage(app);
 
 export { app, db, auth, storage };

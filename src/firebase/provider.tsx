@@ -31,15 +31,15 @@ export interface FirebaseContextState {
 export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
 
 export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [mounted, setMounted] = useState(false);
   const [userAuthState, setUserAuthState] = useState<UserAuthState>({
     user: null,
     isUserLoading: true,
     userError: null,
   });
 
-  const [mounted, setMounted] = useState(false);
-
   useEffect(() => {
+    // 🛡️ TRAVA DE MONTAGEM: Garante que o código só rode no cliente
     setMounted(true);
     
     const unsubscribe = onAuthStateChanged(
@@ -66,17 +66,9 @@ export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({ children }
     userError: userAuthState.userError,
   }), [userAuthState]);
 
-  // Previne erros de hidratação garantindo que o conteúdo só renderize após a montagem do cliente
+  // Previne erros de hidratação e travamento de interface
   if (!mounted) {
-    return (
-        <div className="flex h-screen w-screen flex-col items-center justify-center bg-background gap-4">
-            <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin opacity-20" />
-            <div className="text-center">
-                <p className="text-sm font-black opacity-40 uppercase tracking-widest">LK RAMOS</p>
-                <p className="text-[10px] text-muted-foreground uppercase font-bold opacity-30 mt-1">Conectando ao núcleo...</p>
-            </div>
-        </div>
-    );
+    return null;
   }
 
   return (
@@ -90,7 +82,6 @@ export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({ children }
 export const useFirebase = () => {
   const context = useContext(FirebaseContext);
   if (!context) {
-    // Fallback para uso fora do provider se necessário (apenas instâncias estáticas)
     return {
         auth: authInstance,
         firestore: db,
