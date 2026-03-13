@@ -1,3 +1,4 @@
+
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/google-genai';
 
@@ -24,6 +25,9 @@ const apiKey = (
 
 if (!apiKey && typeof window === 'undefined') {
     console.warn("⚠️ ALERTA INFRAESTRUTURA: Chave de API da IA não detectada no ambiente servidor!");
+} else if (typeof window === 'undefined') {
+    // Log discreto para confirmar o carregamento no terminal
+    console.log(`🤖 IA LK RAMOS: Infraestrutura pronta (Chave: ${apiKey.substring(0, 8)}...)`);
 }
 
 export const ai = genkit({
