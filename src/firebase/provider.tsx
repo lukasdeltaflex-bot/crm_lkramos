@@ -39,7 +39,6 @@ export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({ children }
   });
 
   useEffect(() => {
-    // 🛡️ TRAVA DE MONTAGEM: Garante que o código só rode no cliente para evitar erros de hidratação
     setMounted(true);
     
     const unsubscribe = onAuthStateChanged(
@@ -66,11 +65,8 @@ export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({ children }
     userError: userAuthState.userError,
   }), [userAuthState]);
 
-  // Se não estiver montado no navegador, não renderiza nada para evitar ciclos de re-renderização infinitos
-  if (!mounted) {
-    return null;
-  }
-
+  // 🛡️ PREVENÇÃO DE TELA PRETA: Renderiza os filhos com o fundo do tema mesmo antes do mount
+  // Isso evita o flash de tela branca/preta vazia e garante hidratação suave.
   return (
     <FirebaseContext.Provider value={contextValue}>
       <FirebaseErrorListener />

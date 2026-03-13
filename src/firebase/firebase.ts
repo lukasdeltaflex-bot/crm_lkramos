@@ -6,7 +6,8 @@ import { firebaseConfig } from "./config";
 
 /**
  * 🛠️ NÚCLEO DE INFRAESTRUTURA LK RAMOS
- * Inicialização ultra-resiliente para evitar travamentos no SSR e PWA.
+ * Inicialização ultra-resiliente.
+ * Garante que o Firebase não quebre durante o build (SSR).
  */
 
 let app: FirebaseApp;
@@ -14,14 +15,22 @@ let db: Firestore;
 let auth: Auth;
 let storage: FirebaseStorage;
 
-// Garante que o app seja inicializado de forma segura tanto no servidor quanto no cliente
-if (getApps().length === 0) {
-    app = initializeApp(firebaseConfig);
+if (typeof window !== 'undefined') {
+    // Ambiente de Navegador
+    if (getApps().length === 0) {
+        app = initializeApp(firebaseConfig);
+    } else {
+        app = getApp();
+    }
 } else {
-    app = getApp();
+    // Ambiente de Servidor (Build/SSR)
+    if (getApps().length === 0) {
+        app = initializeApp(firebaseConfig);
+    } else {
+        app = getApp();
+    }
 }
 
-// Inicializa os serviços de forma idempotente
 auth = getAuth(app);
 db = getFirestore(app);
 storage = getStorage(app);

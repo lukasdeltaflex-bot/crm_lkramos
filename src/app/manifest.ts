@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 
 /**
  * 🚀 MANIFESTO LK RAMOS
- * Manifesto estático para garantir estabilidade absoluta do build.
+ * Manifesto estático e seguro para o build.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -18,13 +18,13 @@ export default function manifest(): MetadataRoute.Manifest {
         src: 'https://picsum.photos/seed/lk-pwa-192/192/192',
         sizes: '192x192',
         type: 'image/png',
-        purpose: 'any maskable',
+        purpose: 'maskable',
       },
       {
         src: 'https://picsum.photos/seed/lk-pwa-512/512/512',
         sizes: '512x512',
         type: 'image/png',
-        purpose: 'any maskable',
+        purpose: 'any',
       },
     ],
   };
