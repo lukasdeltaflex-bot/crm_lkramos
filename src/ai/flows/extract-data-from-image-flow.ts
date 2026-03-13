@@ -1,7 +1,8 @@
+
 'use server';
 /**
  * @fileOverview Fluxo Genkit para extrair dados de clientes a partir de imagens ou PDFs (OCR).
- * Otimizado para alta performance e tratamento de erros de conexão.
+ * Otimizado com sistema de logs técnicos detalhados para diagnóstico de infraestrutura.
  */
 
 import { ai } from '@/ai/genkit';
@@ -86,28 +87,28 @@ const extractDataFromImageFlow = ai.defineFlow(
 
         return result;
     } catch (error: any) {
-        // Log detalhado para o terminal do desenvolvedor
-        console.error("❌ ERRO CRÍTICO NA IA (DETALHES):", {
-            message: error.message,
-            stack: error.stack,
-            cause: error.cause
-        });
+        // 🔍 SISTEMA DE DIAGNÓSTICO PROFISSIONAL (Visível apenas no Terminal npm run dev)
+        console.error("❌ --- ERRO TÉCNICO IA (LK RAMOS) ---");
+        console.error("MENSAGEM:", error.message);
+        console.error("CÓDIGO:", error.status || error.code);
+        console.error("DETALHES:", JSON.stringify(error, null, 2));
+        console.error("---------------------------------------");
         
-        let msg = "A Inteligência Artificial encontrou um problema técnico.";
+        let userMessage = "A IA encontrou um problema de comunicação.";
         const errStr = String(error).toUpperCase();
         const errMsg = String(error.message || '').toUpperCase();
         
-        if (errStr.includes("API_KEY_INVALID") || errStr.includes("400") || errMsg.includes("API KEY NOT VALID")) {
-            msg = "Chave de API Inválida (Google Rejeitou a Credencial). Gere uma NOVA chave no AI Studio e cole no .env.";
+        if (errStr.includes("API_KEY_INVALID") || errMsg.includes("API KEY NOT VALID") || errMsg.includes("400")) {
+            userMessage = "Erro de Credencial: A chave de API no .env foi rejeitada pelo Google.";
         } else if (errStr.includes("429") || errStr.includes("QUOTA")) {
-            msg = "Limite de uso atingido (Cota do Gemini). Aguarde 60 segundos.";
+            userMessage = "Limite atingido: Muitas requisições em pouco tempo. Aguarde 60s.";
         } else if (errStr.includes("SAFETY")) {
-            msg = "Bloqueado pelos filtros de segurança. Tente uma foto mais clara do documento.";
+            userMessage = "Bloqueio de Segurança: O documento não pôde ser lido por restrições de conteúdo.";
         } else if (errStr.includes("FETCH") || errStr.includes("NETWORK") || errStr.includes("CONNECT") || errStr.includes("UND_ERR_CONNECT")) {
-            msg = "Falha de comunicação com os servidores do Google.";
+            userMessage = "Falha de Conexão: Problema de rede entre o servidor e o Google.";
         }
         
-        throw new Error(`${msg} Certifique-se de que o arquivo está legível e não ultrapassa 4MB.`);
+        throw new Error(`${userMessage} Certifique-se de que o arquivo está legível e não ultrapassa 4MB.`);
     }
   }
 );

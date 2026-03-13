@@ -1,13 +1,14 @@
+
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/google-genai';
 
 /**
  * 🤖 NÚCLEO DE INTELIGÊNCIA ARTIFICIAL - LK RAMOS
- * Configuração central do Genkit v1.x com injeção forçada de chave.
+ * Configuração central do Genkit v1.x com tratamento de segurança de chave.
  */
 
-// Busca a chave em todas as variáveis possíveis e remove espaços
-const apiKey = (
+// Busca a chave e remove espaços invisíveis que podem quebrar a autenticação
+const rawKey = (
     process.env.GOOGLE_GENAI_API_KEY || 
     process.env.GOOGLE_API_KEY || 
     process.env.GEMINI_API_KEY || 
@@ -16,7 +17,7 @@ const apiKey = (
 
 export const ai = genkit({
   plugins: [
-    googleAI({ apiKey: apiKey || undefined })
+    googleAI({ apiKey: rawKey || undefined })
   ],
   model: 'googleai/gemini-1.5-flash',
 });
