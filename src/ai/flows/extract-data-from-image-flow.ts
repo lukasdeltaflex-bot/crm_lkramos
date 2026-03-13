@@ -87,28 +87,28 @@ const extractDataFromImageFlow = ai.defineFlow(
 
         return result;
     } catch (error: any) {
-        // 🔍 SISTEMA DE DIAGNÓSTICO PROFISSIONAL (Visível apenas no Terminal npm run dev)
-        console.error("❌ --- ERRO TÉCNICO IA (LK RAMOS) ---");
+        // 🔍 LOG DE DIAGNÓSTICO REAL (Terminal npm run dev)
+        console.error("❌ --- ERRO TÉCNICO IA ---");
         console.error("MENSAGEM:", error.message);
-        console.error("CÓDIGO:", error.status || error.code);
-        console.error("DETALHES:", JSON.stringify(error, null, 2));
-        console.error("---------------------------------------");
+        console.error("DETALHES COMPLETOS:", JSON.stringify(error, null, 2));
+        console.error("--------------------------");
         
         let userMessage = "A IA encontrou um problema de comunicação.";
         const errStr = String(error).toUpperCase();
         const errMsg = String(error.message || '').toUpperCase();
         
         if (errStr.includes("API_KEY_INVALID") || errMsg.includes("API KEY NOT VALID") || errMsg.includes("400")) {
-            userMessage = "Erro de Credencial: A chave de API no .env foi rejeitada pelo Google.";
+            userMessage = "Erro de Credencial: A chave no .env foi rejeitada pelo Google.";
         } else if (errStr.includes("429") || errStr.includes("QUOTA")) {
-            userMessage = "Limite atingido: Muitas requisições em pouco tempo. Aguarde 60s.";
+            userMessage = "Limite de uso atingido. Aguarde 60 segundos.";
         } else if (errStr.includes("SAFETY")) {
-            userMessage = "Bloqueio de Segurança: O documento não pôde ser lido por restrições de conteúdo.";
+            userMessage = "Bloqueio de Segurança: O documento não pôde ser lido.";
         } else if (errStr.includes("FETCH") || errStr.includes("NETWORK") || errStr.includes("CONNECT") || errStr.includes("UND_ERR_CONNECT")) {
-            userMessage = "Falha de Conexão: Problema de rede entre o servidor e o Google.";
+            // Inclui o erro técnico real para o usuário ver se for algo como DNS
+            userMessage = `Falha de Conexão (${error.message || 'Network Error'}).`;
         }
         
-        throw new Error(`${userMessage} Certifique-se de que o arquivo está legível e não ultrapassa 4MB.`);
+        throw new Error(`${userMessage} Verifique se o arquivo está legível e não ultrapassa 4MB.`);
     }
   }
 );

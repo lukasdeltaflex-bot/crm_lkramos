@@ -15,6 +15,10 @@ const rawKey = (
     ''
 ).trim();
 
+if (!rawKey && typeof window === 'undefined') {
+    console.warn("⚠️ ALERTA INFRAESTRUTURA: Nenhuma chave de API detectada no processo servidor!");
+}
+
 export const ai = genkit({
   plugins: [
     googleAI({ apiKey: rawKey || undefined })
