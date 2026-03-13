@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -59,17 +58,17 @@ export function GlobalSearch() {
             const normalized = normalizeString(searchTerm);
             const isNumber = /^\d+$/.test(searchTerm);
 
-            // 🔍 BUSCA DE CLIENTES (Limitada aos 50 mais relevantes para performance)
+            // 🔍 BUSCA DE CLIENTES (Limitada aos 100 mais relevantes para performance)
             const qCust = query(
                 collection(firestore, 'customers'), 
                 where('ownerId', '==', user.uid),
-                limit(100) // Pega um lote pequeno para filtrar localmente
+                limit(100) 
             );
             const snapCust = await getDocs(qCust);
             const filteredCustomers = snapCust.docs
                 .map(d => ({ ...d.data(), id: d.id } as Customer))
                 .filter(c => {
-                    if (c.name === 'Cliente Removido') return false;
+                    if (c.name === 'Cliente Removido' || c.deleted === true) return false;
                     if (isNumber) {
                         return String(c.numericId).includes(searchTerm) || c.cpf?.replace(/\D/g, '').includes(searchTerm);
                     }
@@ -88,6 +87,7 @@ export function GlobalSearch() {
             const filteredProposals = snapProp.docs
                 .map(d => ({ ...d.data(), id: d.id } as Proposal))
                 .filter(p => {
+                    if (p.deleted === true) return false;
                     if (isNumber) return p.proposalNumber.includes(searchTerm);
                     return normalizeString(p.product).includes(normalized) || normalizeString(p.bank).includes(normalized);
                 })
@@ -130,6 +130,7 @@ export function GlobalSearch() {
             setOpen(isOpen);
             if (!isOpen) setSearchTerm('');
         }}
+        shouldFilter={false}
       >
         <CommandInput 
             placeholder="Digite o ID, Nome ou CPF para buscar na base..." 

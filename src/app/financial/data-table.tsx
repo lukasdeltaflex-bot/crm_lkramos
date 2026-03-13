@@ -62,7 +62,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { X, Filter, Search, Calendar as CalendarIcon, ChevronDown, ChevronsLeft, ChevronsRight, Snowflake, User, Landmark, Building2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { cn, cleanBankName, normalizeString, formatCurrency, isProposalCritical } from '@/lib/utils';
+import { cn, cleanBankName, normalizeString, formatCurrency, isProposalCritical, parseDateSafe } from '@/lib/utils';
 import type { Proposal, Customer, ProposalWithCustomer, UserSettings } from '@/lib/types';
 import { DraggableHeader } from './columns';
 import { Separator } from '@/components/ui/separator';
@@ -254,13 +254,23 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     if (bankFilters.length > 0) list = list.filter(p => bankFilters.includes(p.bank));
     if (promoterFilters.length > 0) list = list.filter(p => promoterFilters.includes(p.promoter));
     if (operatorFilters.length > 0) list = list.filter(p => operatorFilters.includes(p.operator || 'Sem Operador'));
+    
     if (appliedDateRange && appliedDateRange.from) {
         const fromDate = appliedDateRange.from;
         const toDate = appliedDateRange.to ? endOfDay(appliedDateRange.to) : endOfDay(appliedDateRange.from);
+        
         list = list.filter(p => {
-            if (!p.dateDigitized) return false;
-            const d = new Date(p.dateDigitized);
-            return isValid(d) && d >= fromDate && d <= toDate;
+            // INTELIGÊNCIA DE DATA: Se estiver filtrando por PAGAS ou PARCIAL, 
+            // a referência temporal é a data de PAGAMENTO DA COMISSÃO.
+            // Para Pendentes ou Geral, usa-se a DATA DE DIGITAÇÃO (Produção).
+            const dateStr = (statusFilter === 'Paga' || statusFilter === 'Parcial') 
+                ? p.commissionPaymentDate 
+                : p.dateDigitized;
+                
+            if (!dateStr) return false;
+            
+            const d = parseDateSafe(dateStr);
+            return !!(d && d >= fromDate && d <= toDate);
         });
     }
     return list;
@@ -401,7 +411,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild><Button variant="outline" className="h-10 rounded-full font-bold px-6 border-2 border-zinc-300 bg-background shadow-sm text-xs gap-2"><User className="h-4 w-4" /> Operadores <ChevronDown className="h-3 w-3 opacity-50" /></Button></DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56 max-h-80 overflow-y-auto border-2">
-                        {uniqueOperators.map(op => ( <DropdownMenuCheckboxItem key={op} checked={operatorFilters.includes(op)} onCheckedChange={() => toggleOperatorFilter(op)} className="font-bold text-xs uppercase">{op}</DropdownMenuCheckboxItem> ))}
+                        {uniqueOperators.map(op => ( <DropdownMenuCheckboxItem key={op} checked={operatorFilters.includes(op)} onCheckedChange={() => toggleOperatorFilter(op)} className="font-bold text-xs uppercase">{op}</DropdownMenuContributor></DropdownMenuCheckboxItem> ))}
                     </DropdownMenuContent>
                 </DropdownMenu>
                 <DropdownMenu>
