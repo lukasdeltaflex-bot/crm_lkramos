@@ -6,33 +6,12 @@ import { firebaseConfig } from "./config";
 
 /**
  * 🛠️ NÚCLEO DE INFRAESTRUTURA LK RAMOS
- * Inicialização ultra-resiliente.
- * Garante que o Firebase não quebre durante o build (SSR).
+ * Inicialização ultra-resiliente compatível com SSR e Client Side.
  */
 
-let app: FirebaseApp;
-let db: Firestore;
-let auth: Auth;
-let storage: FirebaseStorage;
-
-if (typeof window !== 'undefined') {
-    // Ambiente de Navegador
-    if (getApps().length === 0) {
-        app = initializeApp(firebaseConfig);
-    } else {
-        app = getApp();
-    }
-} else {
-    // Ambiente de Servidor (Build/SSR)
-    if (getApps().length === 0) {
-        app = initializeApp(firebaseConfig);
-    } else {
-        app = getApp();
-    }
-}
-
-auth = getAuth(app);
-db = getFirestore(app);
-storage = getStorage(app);
+const app: FirebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+const db: Firestore = getFirestore(app);
+const auth: Auth = getAuth(app);
+const storage: FirebaseStorage = getStorage(app);
 
 export { app, db, auth, storage };

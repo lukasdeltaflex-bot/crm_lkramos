@@ -70,17 +70,24 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
   };
 
   const handleSummarize = async () => {
-    if (!quickNote || quickNote.trim().length < 10) {
-        toast({ variant: 'destructive', title: 'Texto muito curto', description: 'Escreva um pouco mais para a IA resumir.' });
+    if (!quickNote || quickNote.trim().length < 5) {
+        toast({ variant: 'destructive', title: 'Texto insuficiente', description: 'Escreva um pouco mais para a IA resumir.' });
         return;
     }
+    
     setIsSummarizing(true);
     try {
-        const summary = await summarizeNotes(quickNote);
+        // Se for reprova, envia o motivo selecionado para dar contexto à IA
+        const contextPrefix = pendingStatus === 'Reprovado' && rejectionReason 
+            ? `MOTIVO DE REPROVA: ${rejectionReason}. NOTA ADICIONAL: ` 
+            : "";
+            
+        const summary = await summarizeNotes(`${contextPrefix}${quickNote}`);
         setQuickNote(summary);
         toast({ title: 'Nota resumida com IA!' });
     } catch (e) {
-        toast({ variant: 'destructive', title: 'Erro na IA' });
+        console.error("Summarize failure:", e);
+        toast({ variant: 'destructive', title: 'Erro na IA', description: 'Não foi possível processar o resumo agora.' });
     } finally {
         setIsSummarizing(false);
     }
@@ -94,7 +101,6 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
         return;
     }
 
-    // 🛡️ OTIMIZAÇÃO: Se houver um handler pai, delega a gravação para evitar duplicidade
     if (onStatusChange) {
         onStatusChange(proposalId, {
             status: pendingStatus,
@@ -107,7 +113,6 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
         return;
     }
 
-    // Fallback: Se não houver handler (ex: Dashboard), faz a gravação direta
     setIsUpdating(true);
     const now = new Date().toISOString();
     const currentUser = auth?.currentUser;

@@ -1,6 +1,5 @@
-
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
 import { FinancialDataTable, type FinancialDataTableHandle } from './data-table';
@@ -83,27 +82,27 @@ export type ProposalWithCustomer = Proposal & { customer: Customer | undefined }
 export default function FinancialPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
-  const [isPrivacyMode, setIsPrivacyMode] = React.useState(false);
-  const [isSheetOpen, setIsSheetOpen] = React.useState(false);
-  const [isReconciliationOpen, setIsReconciliationOpen] = React.useState(false);
-  const [isEfficiencyOpen, setIsEfficiencyOpen] = React.useState(false);
-  const [isOperatorsDialogOpen, setIsOperatorsDialogOpen] = React.useState(false);
-  const [isExpenseFormOpen, setIsExpenseFormOpen] = React.useState(false);
+  const [isPrivacyMode, setIsPrivacyMode] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isReconciliationOpen, setIsReconciliationOpen] = useState(false);
+  const [isEfficiencyOpen, setIsEfficiencyOpen] = useState(false);
+  const [isOperatorsDialogOpen, setIsOperatorsDialogOpen] = useState(false);
+  const [isExpenseFormOpen, setIsExpenseFormOpen] = useState(false);
   
-  const [selectedProposal, setSelectedProposal] = React.useState<ProposalWithCustomer | undefined>(undefined);
-  const [selectedExpense, setSelectedExpense] = React.useState<Expense | undefined>(undefined);
-  const [isClient, setIsClient] = React.useState(false);
-  const [rowSelection, setRowSelection] = React.useState<Record<string, boolean>>({});
-  const [isSaving, setIsSaving] = React.useState(false);
+  const [selectedProposal, setSelectedProposal] = useState<ProposalWithCustomer | undefined>(undefined);
+  const [selectedExpense, setSelectedExpense] = useState<Expense | undefined>(undefined);
+  const [isClient, setIsClient] = useState(false);
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
+  const [isSaving, setIsSaving] = useState(false);
   const tableRef = React.useRef<FinancialDataTableHandle>(null);
-  const [dialogData, setDialogData] = React.useState<{ title: string; proposals: Proposal[] } | null>(null);
+  const [dialogData, setDialogData] = useState<{ title: string; proposals: Proposal[] } | null>(null);
 
   // Stats Period Filtering
   const [statsStartDate, setStatsStartDate] = useState(format(startOfMonth(new Date()), 'dd/MM/yyyy'));
   const [statsEndDate, setStatsEndDate] = useState(format(new Date(), 'dd/MM/yyyy'));
   const [appliedStatsRange, setAppliedStatsRange] = useState<{ from: Date; to: Date } | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setIsClient(true);
   }, []);
 
@@ -156,7 +155,7 @@ export default function FinancialPage() {
       setAppliedStatsRange({ from: startOfDay(start), to: endOfDay(end) });
   };
 
-  const { proposalsWithCustomerData, summaryProposals, currentMonthRange, operatorStats } = React.useMemo(() => {
+  const { proposalsWithCustomerData, summaryProposals, currentMonthRange, operatorStats } = useMemo(() => {
     if (!proposals || !customers || !isClient) return { proposalsWithCustomerData: [], summaryProposals: [], currentMonthRange: { from: new Date(), to: new Date() }, operatorStats: [] };
     
     const customersMap = new Map(customers.map(c => [c.id, c]));
@@ -195,13 +194,13 @@ export default function FinancialPage() {
 
     return { 
       proposalsWithCustomerData: tableData as ProposalWithCustomer[], 
-      summaryProposals: proposals, // Passa a lista bruta para o componente de resumo
+      summaryProposals: proposals, 
       currentMonthRange: { from: startOfCurrent, to: endOfCurrent },
       operatorStats: stats
     };
   }, [proposals, customers, isClient, appliedStatsRange]);
 
-  const selectedIds = React.useMemo(() => 
+  const selectedIds = useMemo(() => 
     Object.keys(rowSelection).filter(id => rowSelection[id]),
   [rowSelection]);
 
@@ -497,7 +496,7 @@ export default function FinancialPage() {
     }
   };
 
-  const totalExpensesAmount = React.useMemo(() => {
+  const totalExpensesAmount = useMemo(() => {
     if (!expenses) return 0;
     const now = new Date();
     return expenses
@@ -800,7 +799,7 @@ export default function FinancialPage() {
       <Dialog open={!!dialogData} onOpenChange={(o) => !o && setDialogData(null)}>
         <DialogContent 
             className="max-w-4xl h-[90vh] flex flex-col"
-            onPointerDownOutside={(e) => e.preventDefault()}
+            onPointerDownOutside={(e) => e.preventDefault()} 
             onInteractOutside={(e) => e.preventDefault()}
         >
             <DialogHeader><DialogTitle>{dialogData?.title}</DialogTitle></DialogHeader>

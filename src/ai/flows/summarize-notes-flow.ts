@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview Um fluxo Genkit para resumir anotações de clientes.
+ * @fileOverview Um fluxo Genkit para resumir anotações de clientes e justificativas bancárias.
  *
  * - summarizeNotes - A função para chamar o fluxo de sumarização.
  * - SummarizeNotesInput - O tipo de entrada (objeto com a string).
@@ -11,34 +11,57 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const SummarizeNotesInputSchema = z.object({
-  notes: z.string().describe('As anotações do cliente a serem resumidas.'),
+  notes: z.string().describe('As anotações do cliente ou justificativas de reprova a serem resumidas.'),
 });
 export type SummarizeNotesInput = z.infer<typeof SummarizeNotesInputSchema>;
 
 const SummarizeNotesOutputSchema = z.object({
-  summary: z.string().describe('As anotações do cliente resumidas e bem formatadas.'),
+  summary: z.string().describe('O texto resumido e bem formatado.'),
 });
 export type SummarizeNotesOutput = z.infer<typeof SummarizeNotesOutputSchema>;
 
+/**
+ * Função exportada para ser usada como Server Action.
+ * Agora com tratamento de erro robusto e suporte a textos técnicos.
+ */
 export async function summarizeNotes(notes: string): Promise<string> {
-  const result = await summarizeNotesFlow({ notes });
-  return result.summary;
+  try {
+    const result = await summarizeNotesFlow({ notes });
+    return result.summary || notes;
+  } catch (error) {
+    console.error("AI Summary Error:", error);
+    return notes; // Fallback para o texto original em caso de erro
+  }
 }
 
 const prompt = ai.definePrompt({
   name: 'summarizeNotesPrompt',
   input: {schema: SummarizeNotesInputSchema},
   output: {schema: SummarizeNotesOutputSchema},
-  prompt: `Você é um assistente especialista. Sua tarefa é resumir e formatar anotações de clientes para um agente de crédito.
-As anotações podem estar bagunçadas, conter erros de digitação ou não estarem estruturadas.
-Seu objetivo é criar um resumo limpo, conciso e de fácil leitura.
-Use marcadores para informações importantes.
-A saída deve ser em português do Brasil.
+  config: {
+    // 🛡️ CONFIGURAÇÃO DE SEGURANÇA: Permite termos técnicos como "Reprovado" ou "Dívida"
+    safetySettings: [
+      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+    ],
+  },
+  prompt: `Você é um assistente especialista em correspondentes bancários. Sua tarefa é resumir e organizar anotações.
+O texto pode conter justificativas de reprova de contratos, detalhes de negociação ou anotações bagunçadas.
 
-Aqui estão as anotações:
+OBJETIVO:
+1. Criar um texto limpo, profissional e conciso.
+2. Manter nomes de bancos, números de contratos ou valores se presentes.
+3. Se for uma justificativa de reprova, explique o motivo de forma direta.
+4. Use um tom executivo e de fácil leitura.
+
+Texto para processar:
+"""
 {{{notes}}}
+"""
 
-Gere um resumo bem estruturado no campo "summary" do JSON de saída.`,
+Gere o resumo estruturado no campo "summary" do JSON. Saída em Português do Brasil.`,
 });
 
 const summarizeNotesFlow = ai.defineFlow(
@@ -49,6 +72,11 @@ const summarizeNotesFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    return output!;
+    
+    if (!output || !output.summary) {
+        return { summary: input.notes };
+    }
+    
+    return output;
   }
 );

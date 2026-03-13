@@ -1,15 +1,15 @@
 import type { ProductType, ProposalStatus, CommissionStatus } from './types';
 
-export const productTypes: readonly ProductType[] = ['Margem', 'Margem CLT', 'Saque Complementar', 'Cartão - Plástico', 'Cartão com saque', 'Portabilidade', 'Refin Port', 'Refin', 'Saque FGTS'];
+export const productTypes: ProductType[] = ['Margem', 'Margem CLT', 'Saque Complementar', 'Cartão - Plástico', 'Cartão com saque', 'Portabilidade', 'Refin Port', 'Refin', 'Saque FGTS'];
 // ORDEM SOLICITADA PARA ABAS E SISTEMA
-export const proposalStatuses: readonly ProposalStatus[] = ['Em Andamento', 'Aguardando Saldo', 'Pago', 'Saldo Pago', 'Pendente', 'Reprovado'];
-export const commissionStatuses: readonly CommissionStatus[] = ['Pendente', 'Paga', 'Parcial'];
-export const approvingBodies: readonly string[] = ['INSS', 'SPPREV', 'Federal', 'SIAPE', 'USP', 'GOVERNO', 'CLT', 'Outro'];
-export const expenseCategories: readonly string[] = ['Aluguel', 'Internet', 'Telefonia', 'Tráfego Pago', 'Salários', 'Impostos', 'Outros'];
-export const defaultCustomerTags: readonly string[] = ['💎 VIP', '✅ Margem Livre', '⚠️ Restrição', '📞 Receptivo', '🚀 Prospecção', '👴 Aposentado', '🏦 Servidor', '💼 CLT'];
-export const defaultRejectionReasons: readonly string[] = ['Retenção do cliente', 'Contrato já liquidado', 'Contrato não encontrado', 'Saldo devedor divergente', 'Erro de averbação', 'Desistência do cliente', 'Margem excedida', 'Vínculo empregatício incompatível'];
+export const proposalStatuses: ProposalStatus[] = ['Em Andamento', 'Aguardando Saldo', 'Pago', 'Saldo Pago', 'Pendente', 'Reprovado'];
+export const commissionStatuses: CommissionStatus[] = ['Pendente', 'Paga', 'Parcial'];
+export const approvingBodies: string[] = ['INSS', 'SPPREV', 'Federal', 'SIAPE', 'USP', 'GOVERNO', 'CLT', 'Outro'];
+export const expenseCategories: string[] = ['Aluguel', 'Internet', 'Telefonia', 'Tráfego Pago', 'Salários', 'Impostos', 'Outros'];
+export const defaultCustomerTags: string[] = ['💎 VIP', '✅ Margem Livre', '⚠️ Restrição', '📞 Receptivo', '🚀 Prospecção', '👴 Aposentado', '🏦 Servidor', '💼 CLT'];
+export const defaultRejectionReasons: string[] = ['Retenção do cliente', 'Contrato já liquidado', 'Contrato não encontrado', 'Saldo devedor divergente', 'Erro de averbação', 'Desistência do cliente', 'Margem excedida', 'Vínculo empregatício incompatível'];
 
-export const defaultHistoryTopics: readonly string[] = [
+export const defaultHistoryTopics: string[] = [
   '⏳ Aguardando retorno da CIP (Saldo)',
   '⏳ Aguardando desbloqueio benefício',
   '⏳ Aguardando portabilidade',
@@ -31,7 +31,7 @@ export const operationalSteps = [
   { id: 'approval', label: 'Averbação', icon: 'check' }
 ];
 
-export const banks: readonly string[] = [
+export const banks: string[] = [
   "Banco do Brasil S.A.",
   "Caixa Econômica Federal",
   "Bradesco S.A.",
