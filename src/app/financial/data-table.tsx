@@ -256,7 +256,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     if (operatorFilters.length > 0) list = list.filter(p => operatorFilters.includes(p.operator || 'Sem Operador'));
     
     if (appliedDateRange && appliedDateRange.from) {
-        const fromDate = appliedDateRange.from;
+        const fromDate = startOfDay(appliedDateRange.from);
         const toDate = appliedDateRange.to ? endOfDay(appliedDateRange.to) : endOfDay(appliedDateRange.from);
         
         list = list.filter(p => {
@@ -411,7 +411,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild><Button variant="outline" className="h-10 rounded-full font-bold px-6 border-2 border-zinc-300 bg-background shadow-sm text-xs gap-2"><User className="h-4 w-4" /> Operadores <ChevronDown className="h-3 w-3 opacity-50" /></Button></DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56 max-h-80 overflow-y-auto border-2">
-                        {uniqueOperators.map(op => ( <DropdownMenuCheckboxItem key={op} checked={operatorFilters.includes(op)} onCheckedChange={() => toggleOperatorFilter(op)} className="font-bold text-xs uppercase">{op}</DropdownMenuContributor></DropdownMenuCheckboxItem> ))}
+                        {uniqueOperators.map(op => ( <DropdownMenuCheckboxItem key={op} checked={operatorFilters.includes(op)} onCheckedChange={() => toggleOperatorFilter(op)} className="font-bold text-xs uppercase">{op}</DropdownMenuCheckboxItem> ))}
                     </DropdownMenuContent>
                 </DropdownMenu>
                 <DropdownMenu>
