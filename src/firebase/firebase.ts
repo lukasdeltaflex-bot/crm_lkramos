@@ -6,7 +6,8 @@ import { firebaseConfig } from "./config";
 
 /**
  * 🛠️ NÚCLEO DE INFRAESTRUTURA LK RAMOS
- * Inicialização ultra-resiliente compatível com SSR e Client Side.
+ * Removido 'use client' para permitir que rotas de servidor (como manifest.ts)
+ * importem as instâncias sem quebrar o build do Next.js.
  */
 
 const app: FirebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();

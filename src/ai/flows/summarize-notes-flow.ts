@@ -1,36 +1,37 @@
 'use server';
 /**
- * @fileOverview Um fluxo Genkit para resumir anotações de clientes e justificativas bancárias.
+ * @fileOverview Um fluxo Genkit para resumir e profissionalizar anotações.
  *
  * - summarizeNotes - A função para chamar o fluxo de sumarização.
- * - SummarizeNotesInput - O tipo de entrada (objeto com a string).
- * - SummarizeNotesOutput - O tipo de saída (objeto com a string).
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const SummarizeNotesInputSchema = z.object({
-  notes: z.string().describe('As anotações do cliente ou justificativas de reprova a serem resumidas.'),
+  notes: z.string().describe('As anotações ou justificativas a serem profissionalizadas.'),
 });
 export type SummarizeNotesInput = z.infer<typeof SummarizeNotesInputSchema>;
 
 const SummarizeNotesOutputSchema = z.object({
-  summary: z.string().describe('O texto resumido e bem formatado.'),
+  summary: z.string().describe('O texto reescrito de forma profissional e concisa.'),
 });
 export type SummarizeNotesOutput = z.infer<typeof SummarizeNotesOutputSchema>;
 
 /**
  * Função exportada para ser usada como Server Action.
- * Agora com tratamento de erro robusto e suporte a textos técnicos.
+ * Transformada em um motor de escrita profissional para correspondentes bancários.
  */
 export async function summarizeNotes(notes: string): Promise<string> {
+  if (!notes || notes.trim().length < 2) return notes;
+  
   try {
     const result = await summarizeNotesFlow({ notes });
+    // Se o resultado for idêntico ao original, a IA falhou em processar ou foi bloqueada
     return result.summary || notes;
   } catch (error) {
     console.error("AI Summary Error:", error);
-    return notes; // Fallback para o texto original em caso de erro
+    return notes;
   }
 }
 
@@ -39,7 +40,7 @@ const prompt = ai.definePrompt({
   input: {schema: SummarizeNotesInputSchema},
   output: {schema: SummarizeNotesOutputSchema},
   config: {
-    // 🛡️ CONFIGURAÇÃO DE SEGURANÇA: Permite termos técnicos como "Reprovado" ou "Dívida"
+    // 🛡️ SEGURANÇA TOTAL: Permite termos técnicos do mercado financeiro sem bloqueios
     safetySettings: [
       { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
@@ -47,21 +48,22 @@ const prompt = ai.definePrompt({
       { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
     ],
   },
-  prompt: `Você é um assistente especialista em correspondentes bancários. Sua tarefa é resumir e organizar anotações.
-O texto pode conter justificativas de reprova de contratos, detalhes de negociação ou anotações bagunçadas.
+  prompt: `Você é um redator sênior especializado em Correspondente Bancário.
+Sua missão é PEGAR o texto bruto fornecido e REESCREVÊ-LO de forma profissional, elegante e concisa.
 
-OBJETIVO:
-1. Criar um texto limpo, profissional e conciso.
-2. Manter nomes de bancos, números de contratos ou valores se presentes.
-3. Se for uma justificativa de reprova, explique o motivo de forma direta.
-4. Use um tom executivo e de fácil leitura.
+### REGRAS DE OURO:
+1. **Transformação Total**: Converta gírias e frases soltas em termos técnicos (ex: "cliente não quer" -> "Desistência por parte do proponente").
+2. **Conciliação de Dados**: Mantenha nomes de bancos, números de contratos e valores monetários.
+3. **Tom Executivo**: O texto final deve parecer escrito por um gerente de banco.
+4. **Sem Fallback**: Não retorne o texto original. Mude a estrutura gramatical.
+5. **Justificativas**: Se for uma reprova, descreva o impedimento técnico de forma direta.
 
-Texto para processar:
+TEXTO PARA PROCESSAR:
 """
 {{{notes}}}
 """
 
-Gere o resumo estruturado no campo "summary" do JSON. Saída em Português do Brasil.`,
+Retorne o resultado no campo "summary" do JSON. Saída em Português do Brasil.`,
 });
 
 const summarizeNotesFlow = ai.defineFlow(
@@ -73,8 +75,12 @@ const summarizeNotesFlow = ai.defineFlow(
   async input => {
     const {output} = await prompt(input);
     
-    if (!output || !output.summary) {
-        return { summary: input.notes };
+    if (!output || !output.summary || output.summary.trim() === input.notes.trim()) {
+        // Tenta uma segunda abordagem sem o JSON schema se a primeira falhar ou for bloqueada
+        const { text } = await ai.generate({
+            prompt: `Reescreva profissionalmente este comentário de proposta bancária: "${input.notes}". Seja curto e use termos técnicos.`
+        });
+        return { summary: text.trim() || input.notes };
     }
     
     return output;

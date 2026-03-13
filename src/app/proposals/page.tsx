@@ -1,4 +1,3 @@
-
 'use client';
 import React, { Suspense, useCallback, useState, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -17,8 +16,8 @@ import {
 import { ProposalForm } from './proposal-form';
 import type { Proposal, Customer, ProposalStatus, UserSettings, ProposalHistoryEntry } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
-import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { collection, doc, updateDoc, setDoc, query, where, writeBatch, arrayUnion, deleteDoc, limit, orderBy } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, doc, updateDoc, setDoc, query, where, writeBatch, arrayUnion, limit, orderBy } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CustomerSearchDialog } from '@/components/proposals/customer-search-dialog';
 import {
@@ -32,6 +31,9 @@ import {
 import { cleanFirestoreData, formatCurrency, cleanBankName, formatDateSafe } from '@/lib/utils';
 import { format } from 'date-fns';
 import { CustomerAiForm } from '@/components/customers/customer-ai-form';
+
+// 🛡️ FIX BUILD: Garante que esta rota seja tratada como dinâmica pelo App Hosting
+export const dynamic = 'force-dynamic';
 
 function ProposalsPageSkeleton() {
     return (
@@ -75,7 +77,6 @@ function ProposalsPageContent() {
   const tableRef = React.useRef<ProposalsDataTableHandle>(null);
   const [hasOpenedFromParam, setHasOpenedFromParam] = useState(false);
   
-  // ⚡ PERFORMANCE: Limite de carregamento inicial
   const [loadLimit, setLoadLimit] = useState(150);
 
   const proposalsQuery = useMemoFirebase(() => {
@@ -110,12 +111,12 @@ function ProposalsPageContent() {
 
   const proposalsWithCustomerData: ProposalWithCustomer[] = useMemo(() => {
     if (!proposals || !customers) return [];
-    const customersMap = new Map(customers.map(c => [c.id, c]));
+    const customerMap = new Map(customers.map(c => [c.id, c]));
     return proposals
-        .filter(p => p.deleted !== true) // Filtro de Lixeira
+        .filter(p => p.deleted !== true)
         .map(p => ({
             ...p,
-            customer: customersMap.get(p.customerId),
+            customer: customerMap.get(p.customerId),
         }));
   }, [proposals, customers]);
 
@@ -336,7 +337,6 @@ function ProposalsPageContent() {
         const docId = isEdit ? selectedProposal.id : doc(collection(firestore, 'loanProposals')).id;
         const docRef = doc(firestore, 'loanProposals', docId);
         
-        // Remove campos indesejados que podem ter vindo do join em memória
         const { customer, ...restOfData } = formData;
 
         const finalData = cleanFirestoreData({ 
@@ -349,7 +349,6 @@ function ProposalsPageContent() {
         toast({ title: isEdit ? 'Proposta Atualizada!' : 'Proposta Salva!' });
         
         setIsDialogOpen(false);
-        // Reseta estados para evitar poluição visual em aberturas futuras
         setSelectedProposal(undefined);
         setSheetMode('new');
     } catch (error: any) {
@@ -540,7 +539,6 @@ function ProposalsPageContent() {
             onBulkStatusChange={handleBulkStatusChange} 
             userSettings={userSettings || null}
         />
-        {/* ⚡ PERFORMANCE: Botão para carregar mais propostas */}
         {proposalsWithCustomerData.length >= loadLimit && !proposalsLoading && (
             <div className="flex justify-center pb-10">
                 <Button variant="outline" onClick={() => setLoadLimit(prev => prev + 150)} className="rounded-full h-12 px-10 font-bold uppercase text-[10px] border-2">
