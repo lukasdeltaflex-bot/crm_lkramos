@@ -1,10 +1,10 @@
-
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/google-genai';
 
 /**
  * 🤖 NÚCLEO DE INTELIGÊNCIA ARTIFICIAL - LK RAMOS
  * Configuração central do Genkit com proteção contra espaços em branco nas chaves.
+ * Suporta múltiplas variantes de nomes de variáveis de ambiente.
  */
 const apiKey = (
     process.env.GOOGLE_GENAI_API_KEY || 
