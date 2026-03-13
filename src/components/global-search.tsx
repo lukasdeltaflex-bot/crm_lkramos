@@ -11,15 +11,15 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { collection, query, where, limit, orderBy, getDocs } from 'firebase/firestore';
 import type { Customer, Proposal } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { normalizeString, getSmartTags, cleanBankName } from '@/lib/utils';
+import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA V12
- * Otimizada para não carregar dados desnecessários no boot do sistema.
+ * 🚀 BUSCA GLOBAL REATIVA V13
+ * Corrigido para não filtrar os resultados via frontend (shouldFilter={false}).
  */
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false);
@@ -138,7 +138,7 @@ export function GlobalSearch() {
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
               <span className="font-black uppercase text-[10px] tracking-widest animate-pulse">Consultando base de dados...</span>
             </div>
-          ) : searchTerm.length > 0 && results.customers.length === 0 && results.proposals.length === 0 ? (
+          ) : searchTerm.length >= 2 && results.customers.length === 0 && results.proposals.length === 0 ? (
             <CommandEmpty className="py-10 text-center text-xs font-bold uppercase text-muted-foreground opacity-50">Nenhum resultado para "{searchTerm}"</CommandEmpty>
           ) : null}
 
