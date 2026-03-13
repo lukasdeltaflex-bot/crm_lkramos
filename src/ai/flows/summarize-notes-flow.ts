@@ -27,7 +27,6 @@ export async function summarizeNotes(notes: string): Promise<string> {
   
   try {
     const result = await summarizeNotesFlow({ notes });
-    // Se o resultado for idêntico ao original, a IA falhou em processar ou foi bloqueada
     return result.summary || notes;
   } catch (error) {
     console.error("AI Summary Error:", error);
@@ -40,7 +39,6 @@ const prompt = ai.definePrompt({
   input: {schema: SummarizeNotesInputSchema},
   output: {schema: SummarizeNotesOutputSchema},
   config: {
-    // 🛡️ SEGURANÇA TOTAL: Permite termos técnicos do mercado financeiro sem bloqueios
     safetySettings: [
       { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
@@ -48,22 +46,21 @@ const prompt = ai.definePrompt({
       { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
     ],
   },
-  prompt: `Você é um redator sênior especializado em Correspondente Bancário.
-Sua missão é PEGAR o texto bruto fornecido e REESCREVÊ-LO de forma profissional, elegante e concisa.
+  prompt: `Você é um Redator Executivo Sênior de uma instituição financeira.
+Sua missão é TRANSFORMAR o texto informal abaixo em um parecer técnico formal e elegante.
 
-### REGRAS DE OURO:
-1. **Transformação Total**: Converta gírias e frases soltas em termos técnicos (ex: "cliente não quer" -> "Desistência por parte do proponente").
-2. **Conciliação de Dados**: Mantenha nomes de bancos, números de contratos e valores monetários.
-3. **Tom Executivo**: O texto final deve parecer escrito por um gerente de banco.
-4. **Sem Fallback**: Não retorne o texto original. Mude a estrutura gramatical.
-5. **Justificativas**: Se for uma reprova, descreva o impedimento técnico de forma direta.
+REGRAS OBRIGATÓRIAS:
+1. NÃO DEVOLVA O TEXTO ORIGINAL. Use vocabulário do mercado de crédito consignado.
+2. Seja extremamente direto. Use termos como: "Inviabilidade técnica", "Desistência por parte do proponente", "Impedimento na averbação", "Restrição em órgão gestor".
+3. Mantenha valores e nomes de bancos intactos.
+4. O resultado deve ter cara de "Comentário de Gerente de Banco".
 
-TEXTO PARA PROCESSAR:
+TEXTO BRUTO PARA TRANSFORMAÇÃO:
 """
 {{{notes}}}
 """
 
-Retorne o resultado no campo "summary" do JSON. Saída em Português do Brasil.`,
+Retorne o parecer no campo "summary" do JSON. Saída em Português do Brasil.`,
 });
 
 const summarizeNotesFlow = ai.defineFlow(
@@ -76,9 +73,8 @@ const summarizeNotesFlow = ai.defineFlow(
     const {output} = await prompt(input);
     
     if (!output || !output.summary || output.summary.trim() === input.notes.trim()) {
-        // Tenta uma segunda abordagem sem o JSON schema se a primeira falhar ou for bloqueada
         const { text } = await ai.generate({
-            prompt: `Reescreva profissionalmente este comentário de proposta bancária: "${input.notes}". Seja curto e use termos técnicos.`
+            prompt: `Reescreva como um parecer técnico bancário formal (não use o texto original): "${input.notes}"`
         });
         return { summary: text.trim() || input.notes };
     }
