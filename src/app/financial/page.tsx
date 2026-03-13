@@ -50,6 +50,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription
   } from '@/components/ui/dialog';
 import { CommissionForm, type CommissionFormValues } from './commission-form';
 import { toast } from '@/hooks/use-toast';
@@ -487,7 +488,7 @@ export default function FinancialPage() {
 
         await batch.commit();
         setIsExpenseFormOpen(false);
-        toast({ title: 'Despesas Lançadas!', description: count > 1 ? `${count} parcelas/recorrências geradas.` : 'Gasto registrado com sucesso.' });
+        toast({ title: 'Despesas Lançadas!', description: count > 1 ? `${count} parcelas/recurrências geradas.` : 'Gasto registrado com sucesso.' });
     } catch (e: any) {
         console.error("Expense Batch Error:", e);
         toast({ variant: 'destructive', title: 'Erro ao processar lançamentos' });
@@ -573,152 +574,27 @@ export default function FinancialPage() {
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            <Dialog open={isOperatorsDialogOpen} onOpenChange={setIsOperatorsDialogOpen}>
-                <Button variant="outline" className="h-10 px-6 rounded-full font-bold text-xs" onClick={() => setIsOperatorsDialogOpen(true)}>
-                    <Users className="mr-2 h-4 w-4" /> Performance
-                </Button>
-                <DialogContent 
-                    className="max-w-3xl"
-                    onPointerDownOutside={(e) => e.preventDefault()}
-                    onInteractOutside={(e) => e.preventDefault()}
-                >
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <TrendingUp className="h-5 w-5 text-primary" />
-                            Performance por Período
-                        </DialogTitle>
-                    </DialogHeader>
-                    
-                    <div className="space-y-6 py-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/30 p-4 rounded-2xl border-2 border-dashed">
-                            <div className="space-y-3">
-                                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                                    <CalendarDays className="h-3 w-3" /> Mês Referência
-                                </Label>
-                                <Select onValueChange={handleStatsMonthSelect}>
-                                    <SelectTrigger className="rounded-xl border-2 bg-background font-bold text-xs">
-                                        <SelectValue placeholder="Escolher mês..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {[0,1,2,3,4,5,6,7,8,9,10,11].map(m => (
-                                            <SelectItem key={m} value={String(m)} className="text-xs font-bold uppercase">
-                                                {format(new Date(2024, m, 1), 'MMMM', { locale: ptBR })}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+            <Button variant="outline" className="h-10 px-6 rounded-full font-bold text-xs" onClick={() => setIsOperatorsDialogOpen(true)}>
+                <Users className="mr-2 h-4 w-4" /> Performance
+            </Button>
 
-                            <div className="space-y-3">
-                                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                                    <CalendarIcon className="h-3 w-3" /> Período Manual
-                                </Label>
-                                <div className="flex items-center gap-2 bg-background p-1 px-2 border-2 rounded-xl">
-                                    <Input 
-                                        placeholder="De" 
-                                        value={statsStartDate} 
-                                        onChange={(e) => {
-                                            let v = e.target.value.replace(/\D/g, "").substring(0, 8);
-                                            if (v.length > 4) v = v.replace(/(\d{2})(\d{2})(\d)/, "$1/$2/$3");
-                                            else if (v.length > 2) v = v.replace(/(\d{2})(\d)/, "$1/$2");
-                                            setStatsStartDate(v);
-                                        }}
-                                        className="h-8 border-none bg-transparent text-center text-xs font-bold focus-visible:ring-0"
-                                    />
-                                    <span className="text-muted-foreground font-black opacity-40">-</span>
-                                    <Input 
-                                        placeholder="Até" 
-                                        value={statsEndDate} 
-                                        onChange={(e) => {
-                                            let v = e.target.value.replace(/\D/g, "").substring(0, 8);
-                                            if (v.length > 4) v = v.replace(/(\d{2})(\d{2})(\d)/, "$1/$2/$3");
-                                            else if (v.length > 2) v = v.replace(/(\d{2})(\d)/, "$1/$2");
-                                            setStatsEndDate(v);
-                                        }}
-                                        className="h-8 border-none bg-transparent text-center text-xs font-bold focus-visible:ring-0"
-                                    />
-                                    <Button size="sm" onClick={handleApplyStatsFilter} className="h-7 w-7 p-0 rounded-full shadow-md active:scale-95">
-                                        <CheckCircle2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center justify-between px-2">
-                            <p className="text-[10px] font-bold uppercase text-primary/60 tracking-widest">Resultados filtrados</p>
-                            {appliedStatsRange && (
-                                <Button variant="ghost" size="sm" className="h-6 text-[9px] font-bold uppercase text-red-500" onClick={() => { setStatsStartDate(''); setStatsEndDate(''); setAppliedStatsRange(null); }}>
-                                    <X className="h-3 w-3 mr-1" /> Limpar Filtro
-                                </Button>
-                            )}
-                        </div>
-
-                        <ScrollArea className="h-[400px]">
-                            <div className="space-y-4 pr-4">
-                                {operatorStats.map((op) => (
-                                    <Card key={op.name} className="p-5 flex items-center justify-between border-2 hover:border-primary/20 transition-all">
-                                        <div className="flex items-center gap-4">
-                                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary uppercase">
-                                                {op.name.charAt(0)}
-                                            </div>
-                                            <div>
-                                                <p className="font-bold uppercase text-sm tracking-tight">{op.name}</p>
-                                                <p className="text-[10px] uppercase font-bold text-muted-foreground">{op.count} Propostas no período</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-widest">Recebido Líquido</p>
-                                            <p className="font-bold text-lg text-green-600">{formatCurrency(op.totalPaid)}</p>
-                                            <p className="text-[9px] font-bold text-muted-foreground">Potencial: {formatCurrency(op.potential)}</p>
-                                        </div>
-                                    </Card>
-                                ))}
-                                {operatorStats.length === 0 && (
-                                    <div className="py-20 text-center border-2 border-dashed rounded-3xl opacity-30">
-                                        <Users className="h-10 w-10 mx-auto mb-4" />
-                                        <p className="text-[10px] font-bold uppercase tracking-widest">Nenhuma produção localizada para este período.</p>
-                                    </div>
-                                )}
-                            </div>
-                        </ScrollArea>
-                    </div>
-                </DialogContent>
-            </Dialog>
-
-            <Dialog open={isEfficiencyOpen} onOpenChange={setIsEfficiencyOpen}>
-                <Button variant="outline" className="h-10 px-6 rounded-full font-bold text-xs" onClick={() => setIsEfficiencyOpen(true)}>
-                    <BarChart3 className="mr-2 h-4 w-4" /> Eficiência
-                </Button>
-                <DialogContent 
-                    className="max-w-5xl h-[90vh] flex flex-col"
-                    onPointerDownOutside={(e) => e.preventDefault()}
-                    onInteractOutside={(e) => e.preventDefault()}
-                >
-                    <DialogHeader><DialogTitle>Análise de Eficiência dos Parceiros</DialogTitle></DialogHeader>
-                    <div className="flex-1 overflow-y-auto"><PromoterEfficiencyReport proposals={summaryProposals} /></div>
-                </DialogContent>
-            </Dialog>
+            <Button variant="outline" className="h-10 px-6 rounded-full font-bold text-xs" onClick={() => setIsEfficiencyOpen(true)}>
+                <BarChart3 className="mr-2 h-4 w-4" /> Eficiência
+            </Button>
             
-            <Dialog open={isReconciliationOpen} onOpenChange={setIsReconciliationOpen}>
-                <Button variant="outline" className="h-10 px-6 rounded-full font-bold text-xs" onClick={() => setIsReconciliationOpen(true)}>
-                    <FileCheck2 className="mr-2 h-4 w-4" /> Conciliar IA
-                </Button>
-                <DialogContent 
-                    className="max-w-4xl" 
-                    onPointerDownOutside={(e) => e.preventDefault()} 
-                    onInteractOutside={(e) => e.preventDefault()}
-                >
-                    <DialogHeader><DialogTitle>Conciliação Financeira IA</DialogTitle></DialogHeader>
-                    <CommissionReconciliation proposals={summaryProposals} onFinished={() => setIsReconciliationOpen(false)} />
-                </DialogContent>
-            </Dialog>
+            <Button variant="outline" className="h-10 px-6 rounded-full font-bold text-xs" onClick={() => setIsReconciliationOpen(true)}>
+                <FileCheck2 className="mr-2 h-4 w-4" /> Conciliar IA
+            </Button>
+
             <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsPrivacyMode(!isPrivacyMode)}>{isPrivacyMode ? <EyeOff /> : <Eye />}</Button>
         </div>
       </div>
 
        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetContent className="w-full max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
-          <SheetHeader><SheetTitle>Editar Lançamento de Comissão</SheetTitle></SheetHeader>
+          <SheetHeader>
+            <SheetTitle>Editar Lançamento de Comissão</SheetTitle>
+          </SheetHeader>
           <CommissionForm proposal={selectedProposal} onSubmit={handleFormSubmit} />
         </SheetContent>
       </Sheet>
@@ -785,13 +661,157 @@ export default function FinancialPage() {
         </div>
       )}
 
+      {/* MODAL DE PERFORMANCE POR PERÍODO */}
+      <Dialog open={isOperatorsDialogOpen} onOpenChange={setIsOperatorsDialogOpen}>
+        <DialogContent 
+            className="max-w-3xl"
+            onPointerDownOutside={(e) => e.preventDefault()}
+            onInteractOutside={(e) => e.preventDefault()}
+        >
+            <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                    Performance por Período
+                </DialogTitle>
+                <DialogDescription>Analise os resultados financeiros de cada colaborador no intervalo de tempo selecionado.</DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-6 py-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/30 p-4 rounded-2xl border-2 border-dashed">
+                    <div className="space-y-3">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                            <CalendarDays className="h-3 w-3" /> Mês Referência
+                        </Label>
+                        <Select onValueChange={handleStatsMonthSelect}>
+                            <SelectTrigger className="rounded-xl border-2 bg-background font-bold text-xs">
+                                <SelectValue placeholder="Escolher mês..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {[0,1,2,3,4,5,6,7,8,9,10,11].map(m => (
+                                    <SelectItem key={m} value={String(m)} className="text-xs font-bold uppercase">
+                                        {format(new Date(2024, m, 1), 'MMMM', { locale: ptBR })}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-3">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                            <CalendarIcon className="h-3 w-3" /> Período Manual
+                        </Label>
+                        <div className="flex items-center gap-2 bg-background p-1 px-2 border-2 rounded-xl">
+                            <Input 
+                                placeholder="De" 
+                                value={statsStartDate} 
+                                onChange={(e) => {
+                                    let v = e.target.value.replace(/\D/g, "").substring(0, 8);
+                                    if (v.length > 4) v = v.replace(/(\d{2})(\d{2})(\d)/, "$1/$2/$3");
+                                    else if (v.length > 2) v = v.replace(/(\d{2})(\d)/, "$1/$2");
+                                    setStatsStartDate(v);
+                                }}
+                                className="h-8 border-none bg-transparent text-center text-xs font-bold focus-visible:ring-0"
+                            />
+                            <span className="text-muted-foreground font-black opacity-40">-</span>
+                            <Input 
+                                placeholder="Até" 
+                                value={statsEndDate} 
+                                onChange={(e) => {
+                                    let v = e.target.value.replace(/\D/g, "").substring(0, 8);
+                                    if (v.length > 4) v = v.replace(/(\d{2})(\d{2})(\d)/, "$1/$2/$3");
+                                    else if (v.length > 2) v = v.replace(/(\d{2})(\d)/, "$1/$2");
+                                    setStatsEndDate(v);
+                                }}
+                                className="h-8 border-none bg-transparent text-center text-xs font-bold focus-visible:ring-0"
+                            />
+                            <Button size="sm" onClick={handleApplyStatsFilter} className="h-7 w-7 p-0 rounded-full shadow-md active:scale-95">
+                                <CheckCircle2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between px-2">
+                    <p className="text-[10px] font-bold uppercase text-primary/60 tracking-widest">Resultados filtrados</p>
+                    {appliedStatsRange && (
+                        <Button variant="ghost" size="sm" className="h-6 text-[9px] font-bold uppercase text-red-500" onClick={() => { setStatsStartDate(''); setStatsEndDate(''); setAppliedStatsRange(null); }}>
+                            <X className="h-3 w-3 mr-1" /> Limpar Filtro
+                        </Button>
+                    )}
+                </div>
+
+                <ScrollArea className="h-[400px]">
+                    <div className="space-y-4 pr-4">
+                        {operatorStats.map((op) => (
+                            <Card key={op.name} className="p-5 flex items-center justify-between border-2 hover:border-primary/20 transition-all">
+                                <div className="flex items-center gap-4">
+                                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary uppercase">
+                                        {op.name.charAt(0)}
+                                    </div>
+                                    <div>
+                                        <p className="font-bold uppercase text-sm tracking-tight">{op.name}</p>
+                                        <p className="text-[10px] uppercase font-bold text-muted-foreground">{op.count} Propostas no período</p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-widest">Recebido Líquido</p>
+                                    <p className="font-bold text-lg text-green-600">{formatCurrency(op.totalPaid)}</p>
+                                    <p className="text-[9px] font-bold text-muted-foreground">Potencial: {formatCurrency(op.potential)}</p>
+                                </div>
+                            </Card>
+                        ))}
+                        {operatorStats.length === 0 && (
+                            <div className="py-20 text-center border-2 border-dashed rounded-3xl opacity-30">
+                                <Users className="h-10 w-10 mx-auto mb-4" />
+                                <p className="text-[10px] font-bold uppercase tracking-widest">Nenhuma produção localizada para este período.</p>
+                            </div>
+                        )}
+                    </div>
+                </ScrollArea>
+            </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* MODAL DE EFICIÊNCIA DE PARCEIROS */}
+      <Dialog open={isEfficiencyOpen} onOpenChange={setIsEfficiencyOpen}>
+        <DialogContent 
+            className="max-w-5xl h-[90vh] flex flex-col"
+            onPointerDownOutside={(e) => e.preventDefault()}
+            onInteractOutside={(e) => e.preventDefault()}
+        >
+            <DialogHeader>
+                <DialogTitle>Análise de Eficiência dos Parceiros</DialogTitle>
+                <DialogDescription>Compare prazos de pagamento, ticket médio e volume de produção entre promotoras.</DialogDescription>
+            </DialogHeader>
+            <div className="flex-1 overflow-y-auto"><PromoterEfficiencyReport proposals={summaryProposals} /></div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* MODAL DE CONCILIAÇÃO IA */}
+      <Dialog open={isReconciliationOpen} onOpenChange={setIsReconciliationOpen}>
+        <DialogContent 
+            className="max-w-4xl" 
+            onPointerDownOutside={(e) => e.preventDefault()} 
+            onInteractOutside={(e) => e.preventDefault()}
+        >
+            <DialogHeader>
+                <DialogTitle>Conciliação Financeira IA</DialogTitle>
+                <DialogDescription>Suba um relatório da promotora para baixar comissões em massa automaticamente.</DialogDescription>
+            </DialogHeader>
+            <CommissionReconciliation proposals={summaryProposals} onFinished={() => setIsReconciliationOpen(false)} />
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={isExpenseFormOpen} onOpenChange={setIsExpenseFormOpen}>
         <DialogContent 
             className="max-md" 
             onPointerDownOutside={(e) => e.preventDefault()} 
             onInteractOutside={(e) => e.preventDefault()}
         >
-            <DialogHeader><DialogTitle>{selectedExpense ? 'Editar Pagamento' : 'Novo Gasto Operacional'}</DialogTitle></DialogHeader>
+            <DialogHeader>
+                <DialogTitle>{selectedExpense ? 'Editar Pagamento' : 'Novo Gasto Operacional'}</DialogTitle>
+                <DialogDescription>Registre as despesas da sua operação para cálculo de rentabilidade real.</DialogDescription>
+            </DialogHeader>
             <ExpenseForm expense={selectedExpense} categories={userSettings?.expenseCategories || initialExpenseCategories} onSubmit={handleExpenseSubmit} isSaving={isSaving} />
         </DialogContent>
       </Dialog>
@@ -802,7 +822,10 @@ export default function FinancialPage() {
             onPointerDownOutside={(e) => e.preventDefault()} 
             onInteractOutside={(e) => e.preventDefault()}
         >
-            <DialogHeader><DialogTitle>{dialogData?.title}</DialogTitle></DialogHeader>
+            <DialogHeader>
+                <DialogTitle>{dialogData?.title}</DialogTitle>
+                <DialogDescription>Listagem detalhada de propostas para conferência de valores.</DialogDescription>
+            </DialogHeader>
             <div className="flex-1 overflow-y-auto"><ProposalsStatusTable proposals={dialogData?.proposals || []} customers={customers || []} /></div>
         </DialogContent>
       </Dialog>

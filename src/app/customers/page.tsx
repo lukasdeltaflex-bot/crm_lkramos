@@ -1,4 +1,3 @@
-
 'use client';
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -16,6 +15,7 @@ import { toast } from '@/hooks/use-toast';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -334,23 +334,14 @@ function CustomersPageContent() {
                 </div>
             )}
 
-            <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
-                <Button 
-                    variant="outline" 
-                    className="h-10 px-6 rounded-full font-bold bg-background text-foreground border-border/50 hover:bg-muted/50 transition-all text-xs"
-                    onClick={() => setIsAiModalOpen(true)}
-                >
-                    <Sparkles className="h-4 w-4 mr-2" /> Novo Cliente com IA
-                </Button>
-                <DialogContent 
-                    className="max-w-xl" 
-                    onPointerDownOutside={(e) => e.preventDefault()} 
-                    onInteractOutside={(e) => e.preventDefault()}
-                >
-                    <DialogHeader><DialogTitle>Assistente Visual de Cadastro</DialogTitle></DialogHeader>
-                    <CustomerAiForm onSubmit={handleAiFormSubmit} />
-                </DialogContent>
-            </Dialog>
+            <Button 
+                variant="outline" 
+                className="h-10 px-6 rounded-full font-bold bg-background text-foreground border-border/50 hover:bg-muted/50 transition-all text-xs"
+                onClick={() => setIsAiModalOpen(true)}
+            >
+                <Sparkles className="h-4 w-4 mr-2" /> Novo Cliente com IA
+            </Button>
+
             <Button 
                 onClick={handleNewCustomer} 
                 className="h-10 px-8 rounded-full font-bold bg-[#00AEEF] hover:bg-[#0096D1] text-white shadow-lg shadow-[#00AEEF]/20 transition-all border-none text-xs"
@@ -483,6 +474,7 @@ function CustomersPageContent() {
             <DialogTitle className="text-xl font-black uppercase tracking-tight text-primary">
                 {sheetMode === 'edit' ? 'Editar Cadastro' : 'Novo Registro de Cliente'}
             </DialogTitle>
+            <DialogDescription className="sr-only">Formulário de cadastro e edição de clientes</DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-hidden">
             <CustomerForm
@@ -495,6 +487,17 @@ function CustomersPageContent() {
                 isSaving={isSaving}
             />
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 🤖 MODAL DE IA CONSOLIDADO */}
+      <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
+        <DialogContent className="max-w-xl">
+            <DialogHeader>
+                <DialogTitle>Cadastro Inteligente com IA</DialogTitle>
+                <DialogDescription>Extraia dados de fotos de documentos ou extratos bancários para preencher o formulário.</DialogDescription>
+            </DialogHeader>
+            <CustomerAiForm onSubmit={handleAiFormSubmit} />
         </DialogContent>
       </Dialog>
 

@@ -549,11 +549,12 @@ function ProposalsPageContent() {
         )}
       </div>
 
+      {/* 🤖 MODAL DE IA CONSOLIDADO */}
       <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
         <DialogContent className="max-w-xl">
             <DialogHeader>
-                <DialogTitle>Novo Cliente com IA</DialogTitle>
-                <DialogDescription>Utilize a inteligência artificial para extrair dados de documentos ou textos.</DialogDescription>
+                <DialogTitle>Extração de Dados com IA</DialogTitle>
+                <DialogDescription>A IA processará seu documento ou texto para preencher os dados do cliente automaticamente.</DialogDescription>
             </DialogHeader>
             <CustomerAiForm onSubmit={handleAiFormSubmit} />
         </DialogContent>
@@ -565,6 +566,7 @@ function ProposalsPageContent() {
             <DialogTitle className="text-xl font-black uppercase text-primary">
                 {sheetMode === 'edit' ? 'Editar Registro' : sheetMode === 'view' ? 'Detalhes' : 'Cadastrar Proposta'}
             </DialogTitle>
+            <DialogDescription className="sr-only">Formulário para gerenciamento de propostas bancárias</DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-hidden">
             <ProposalForm key={formKey} onSubmit={handleFormSubmit} proposal={selectedProposal} allProposals={proposals || []} customers={customers || []} userSettings={userSettings || null} isReadOnly={sheetMode === 'view'} defaultValues={defaultValues} sheetMode={sheetMode} onOpenCustomerSearch={() => setIsCustomerSearchOpen(true)} selectedCustomerFromSearch={newlySelectedCustomer} onCustomerSearchSelectionHandled={handleCustomerSearchSelectionHandled} isSaving={isSaving} />
@@ -574,7 +576,10 @@ function ProposalsPageContent() {
 
       <Dialog open={isCustomerSearchOpen} onOpenChange={setIsCustomerSearchOpen}>
         <DialogContent className="max-w-2xl overflow-hidden rounded-[2rem] p-0">
-            <DialogHeader className="px-8 pt-8 pb-2"><DialogTitle className="text-xl font-black uppercase text-primary">Buscar Cliente</DialogTitle></DialogHeader>
+            <DialogHeader className="px-8 pt-8 pb-2">
+                <DialogTitle className="text-xl font-black uppercase text-primary">Buscar Cliente na Base</DialogTitle>
+                <DialogDescription className="text-xs">Localize o cliente pelo nome, ID ou CPF para vincular à nova proposta.</DialogDescription>
+            </DialogHeader>
             <div className="px-8 pb-8"><CustomerSearchDialog customers={customers?.filter(c => c.name !== 'Cliente Removido' && c.deleted !== true) || []} onSelectCustomer={handleCustomerSelect} /></div>
         </DialogContent>
       </Dialog>
