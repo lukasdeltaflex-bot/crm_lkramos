@@ -264,7 +264,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             // a referência temporal é a data de PAGAMENTO DA COMISSÃO.
             // Para Pendentes ou Geral, usa-se a DATA DE DIGITAÇÃO (Produção).
             const dateStr = (statusFilter === 'Paga' || statusFilter === 'Parcial') 
-                ? p.commissionPaymentDate 
+                ? (p.commissionPaymentDate || p.dateDigitized)
                 : p.dateDigitized;
                 
             if (!dateStr) return false;

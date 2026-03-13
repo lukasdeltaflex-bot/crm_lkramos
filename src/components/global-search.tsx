@@ -18,8 +18,8 @@ import { Button } from '@/components/ui/button';
 import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA V13
- * Corrigido para não filtrar os resultados via frontend (shouldFilter={false}).
+ * 🚀 BUSCA GLOBAL REATIVA V14
+ * Ajustado para garantir visibilidade dos itens indexando nome e CPF no valor.
  */
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false);
@@ -144,11 +144,11 @@ export function GlobalSearch() {
 
           {searchTerm.length < 2 && (
               <CommandGroup heading="Sugestões de Acesso">
-                <CommandItem onSelect={() => runCommand(() => router.push('/customers?action=new'))}>
+                <CommandItem onSelect={() => runCommand(() => router.push('/customers?action=new'))} value="novo-cliente-sugestao">
                     <PlusCircle className="mr-2 h-4 w-4 text-blue-500" />
                     <span>Cadastrar Novo Cliente</span>
                 </CommandItem>
-                <CommandItem onSelect={() => runCommand(() => router.push('/proposals?action=new'))}>
+                <CommandItem onSelect={() => runCommand(() => router.push('/proposals?action=new'))} value="nova-proposta-sugestao">
                     <PlusCircle className="mr-2 h-4 w-4 text-green-500" />
                     <span>Nova Proposta Bancária</span>
                 </CommandItem>
@@ -160,7 +160,7 @@ export function GlobalSearch() {
                 {results.customers.map((customer) => (
                     <CommandItem
                         key={customer.id}
-                        value={customer.id}
+                        value={`${customer.name} ${customer.cpf} ${customer.numericId}`}
                         onSelect={() => runCommand(() => router.push(`/customers/${customer.id}`))}
                     >
                         <div className="flex items-center justify-between w-full">
@@ -183,7 +183,7 @@ export function GlobalSearch() {
                 {results.proposals.map((proposal) => (
                     <CommandItem
                         key={proposal.id}
-                        value={proposal.id}
+                        value={`${proposal.proposalNumber} ${proposal.product} ${proposal.bank}`}
                         onSelect={() => runCommand(() => router.push(`/proposals?open=${proposal.id}`))}>
                         <div className="flex items-center justify-between w-full">
                             <div className='flex items-center'>
