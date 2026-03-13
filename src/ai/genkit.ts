@@ -1,9 +1,10 @@
+
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/google-genai';
 
 /**
  * 🤖 NÚCLEO DE INTELIGÊNCIA ARTIFICIAL - LK RAMOS
- * Configuração central do Genkit com proteção contra chaves inválidas.
+ * Configuração central do Genkit v1.x
  */
 const apiKey = (
     process.env.GOOGLE_GENAI_API_KEY || 
@@ -12,13 +13,9 @@ const apiKey = (
     ''
 ).trim();
 
-// Inicializa o Genkit apenas com a chave se ela existir, 
-// caso contrário o plugin tentará ler do ambiente automaticamente.
-const ai = genkit({
+export const ai = genkit({
   plugins: [
-    googleAI(apiKey ? { apiKey } : {})
+    googleAI({ apiKey })
   ],
   model: 'googleai/gemini-1.5-flash',
 });
-
-export {ai};

@@ -1,4 +1,4 @@
-
+npm run dev
 # LK RAMOS
 
 Este é um sistema de gerenciamento completo para correspondentes bancários, construído com Next.js, Firebase e IA generativa.

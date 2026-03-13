@@ -1,8 +1,7 @@
+
 'use server';
 /**
  * @fileOverview Fluxo Genkit para extrair dados de clientes a partir de imagens ou PDFs (OCR).
- *
- * - extractDataFromImage - Função principal para extração via visão computacional multimodal.
  */
 
 import { ai } from '@/ai/genkit';
@@ -90,13 +89,16 @@ const extractDataFromImageFlow = ai.defineFlow(
         
         let msg = "A Inteligência Artificial encontrou um problema técnico.";
         const errStr = String(error).toUpperCase();
+        const errMsg = String(error.message || '').toUpperCase();
         
-        if (errStr.includes("API_KEY_INVALID") || errStr.includes("400") || errStr.includes("INVALID_ARGUMENT")) {
-            msg = "Chave de API Inválida ou Rejeitada. Acesse aistudio.google.com, gere uma NOVA chave e substitua no arquivo .env.";
+        if (errStr.includes("API_KEY_INVALID") || errStr.includes("400") || errMsg.includes("API KEY NOT VALID")) {
+            msg = "Chave de API Inválida. Gere uma NOVA chave no AI Studio e substitua no arquivo .env.";
         } else if (errStr.includes("429") || errStr.includes("QUOTA")) {
-            msg = "Limite de uso da IA atingido. Aguarde 60 segundos e tente novamente.";
+            msg = "Limite de uso atingido. Aguarde 60 segundos.";
         } else if (errStr.includes("SAFETY")) {
-            msg = "O documento foi bloqueado pelos filtros de segurança. Tente uma foto com menos reflexo ou sombras.";
+            msg = "Bloqueado pelos filtros de segurança. Tente uma foto mais clara.";
+        } else if (errStr.includes("FETCH") || errStr.includes("NETWORK")) {
+            msg = "Erro de conexão com o Google. Tente novamente.";
         }
         
         throw new Error(`${msg} Certifique-se de que o arquivo está legível e não ultrapassa 4MB.`);
