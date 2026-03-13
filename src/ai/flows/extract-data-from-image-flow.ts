@@ -63,7 +63,7 @@ const extractDataFromImageFlow = ai.defineFlow(
             3. Formate a data de nascimento como YYYY-MM-DD.
             4. Seja extremamente preciso nos caracteres para evitar erros de digitação.
             5. Se identificar múltiplos benefícios, liste-os individualmente.
-            6. TELEFONES: Se encontrar mais de um número de telefone, separe-os nos campos phone e phone2. NÃO concatene dois números no mesmo campo. Si encontrar apenas um, coloque em phone.` },
+            6. TELEFONES: Se encontrar mais de um número de telefone, separe-os nos campos phone e phone2. NÃO concatene dois números no mesmo campo.` },
             { media: { url: input.photoDataUri, contentType: contentType } }
           ],
           config: {
@@ -102,7 +102,7 @@ const extractDataFromImageFlow = ai.defineFlow(
         } else if (errStr.includes("SAFETY") || errStr.includes("CANDIDATE")) {
             msg = "O documento foi bloqueado pelos filtros de segurança. Tente uma foto mais clara e sem sombras.";
         } else if (errStr.includes("API KEY") || errStr.includes("AUTHENTICATION") || errStr.includes("401")) {
-            msg = "Erro de autenticação da IA. Verifique a chave de API no arquivo .env.";
+            msg = `Erro de autenticação da IA (${error.message || 'Chave Inválida'}). Verifique o arquivo .env.`;
         }
         
         throw new Error(`${msg} Certifique-se de que o arquivo está legível e não ultrapassa 4MB.`);
