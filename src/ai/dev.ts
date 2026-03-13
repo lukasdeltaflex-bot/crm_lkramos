@@ -1,7 +1,11 @@
+
 'use server';
 
-import { config } from 'dotenv';
-config();
+/**
+ * 🛠️ GENKIT DEV UI LOADER
+ * Este arquivo registra todos os fluxos para que fiquem visíveis no console
+ * de desenvolvedor (npm run genkit:watch).
+ */
 
 import '@/ai/flows/customer-birthday-alert.ts';
 import '@/ai/flows/follow-up-reminder.ts';
