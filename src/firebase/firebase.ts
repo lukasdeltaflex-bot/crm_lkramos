@@ -14,7 +14,7 @@ let db: Firestore;
 let auth: Auth;
 let storage: FirebaseStorage;
 
-// Garante que o app seja inicializado apenas uma vez
+// Garante que o app seja inicializado de forma segura tanto no servidor quanto no cliente
 if (getApps().length === 0) {
     app = initializeApp(firebaseConfig);
 } else {

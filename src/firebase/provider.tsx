@@ -39,7 +39,7 @@ export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({ children }
   });
 
   useEffect(() => {
-    // 🛡️ TRAVA DE MONTAGEM: Garante que o código só rode no cliente
+    // 🛡️ TRAVA DE MONTAGEM: Garante que o código só rode no cliente para evitar erros de hidratação
     setMounted(true);
     
     const unsubscribe = onAuthStateChanged(
@@ -66,7 +66,7 @@ export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({ children }
     userError: userAuthState.userError,
   }), [userAuthState]);
 
-  // Previne erros de hidratação e travamento de interface
+  // Se não estiver montado no navegador, não renderiza nada para evitar ciclos de re-renderização infinitos
   if (!mounted) {
     return null;
   }
