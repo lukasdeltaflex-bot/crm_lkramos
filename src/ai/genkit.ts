@@ -3,8 +3,7 @@ import {googleAI} from '@genkit-ai/google-genai';
 
 /**
  * 🤖 NÚCLEO DE INTELIGÊNCIA ARTIFICIAL - LK RAMOS
- * Configuração central do Genkit com proteção contra espaços em branco nas chaves.
- * Suporta múltiplas variantes de nomes de variáveis de ambiente.
+ * Configuração central do Genkit com proteção contra chaves inválidas.
  */
 const apiKey = (
     process.env.GOOGLE_GENAI_API_KEY || 
@@ -13,11 +12,11 @@ const apiKey = (
     ''
 ).trim();
 
+// Inicializa o Genkit apenas com a chave se ela existir, 
+// caso contrário o plugin tentará ler do ambiente automaticamente.
 const ai = genkit({
   plugins: [
-    googleAI({ 
-        apiKey: apiKey 
-    })
+    googleAI(apiKey ? { apiKey } : {})
   ],
   model: 'googleai/gemini-1.5-flash',
 });

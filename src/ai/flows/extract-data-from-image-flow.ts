@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Fluxo Genkit para extrair dados de clientes a partir de imagens ou PDFs (OCR).
@@ -43,7 +42,6 @@ const extractDataFromImageFlow = ai.defineFlow(
     outputSchema: ExtractFromImageOutputSchema,
   },
   async (input) => {
-    // Detecta o mime-type a partir da Data URI para envio correto ao modelo multimodal
     let contentType = 'image/jpeg';
     const match = input.photoDataUri.match(/^data:([^;]+);base64,/);
     if (match) {
@@ -55,15 +53,13 @@ const extractDataFromImageFlow = ai.defineFlow(
           model: 'googleai/gemini-1.5-flash',
           prompt: [
             { text: `Você é um assistente de elite para correspondentes bancários.
-            Analise este documento (RG, CNH, PDF de Extrato de Empréstimos ou Ficha) e extraia os dados estruturados.
+            Analise este documento (RG, CNH, PDF de Extrato ou Ficha) e extraia os dados estruturados.
             
             REGRAS CRÍTICAS:
             1. Identifique Nome, CPF e Nascimento.
-            2. EXTRATOS PDF: Localize todos os Números de Benefício (NB), seus valores de Salário/Mensalidade e bancos de cartões (RMC/RCC).
+            2. Localize Números de Benefício (NB), valores de Salário e bancos de cartões (RMC/RCC).
             3. Formate a data de nascimento como YYYY-MM-DD.
-            4. Seja extremamente preciso nos caracteres para evitar erros de digitação.
-            5. Se identificar múltiplos benefícios, liste-os individualmente.
-            6. TELEFONES: Se encontrar mais de um número de telefone, separe-os nos campos phone e phone2. NÃO concatene dois números no mesmo campo.` },
+            4. Seja preciso. Se encontrar dois telefones, separe-os nos campos phone e phone2.` },
             { media: { url: input.photoDataUri, contentType: contentType } }
           ],
           config: {
@@ -80,7 +76,6 @@ const extractDataFromImageFlow = ai.defineFlow(
 
         const result = output || {};
 
-        // 🛡️ BLINDAGEM CONTRA TELEFONES CONCATENADOS
         if (result.phone && !result.phone2) {
             const phoneMatches = result.phone.match(/\(?\d{2}\)?\s?\d{4,5}-?\d{4}/g);
             if (phoneMatches && phoneMatches.length > 1) {
@@ -93,16 +88,15 @@ const extractDataFromImageFlow = ai.defineFlow(
     } catch (error: any) {
         console.error("AI Generation Error Details:", error);
         
-        // Mensagem de erro mais detalhada para o usuário
-        let msg = `Erro de autenticação da IA (${error.message || 'Chave Rejeitada pelo Google'}).`;
+        let msg = "A Inteligência Artificial encontrou um problema técnico.";
         const errStr = String(error).toUpperCase();
         
-        if (errStr.includes("429") || errStr.includes("QUOTA")) {
-            msg = "Limite de uso da IA atingido (Cota 429). Aguarde um minuto e tente novamente.";
-        } else if (errStr.includes("SAFETY") || errStr.includes("CANDIDATE")) {
-            msg = "O documento foi bloqueado pelos filtros de segurança. Tente uma foto mais clara e sem sombras.";
-        } else if (errStr.includes("API KEY") || errStr.includes("AUTHENTICATION") || errStr.includes("401") || errStr.includes("400")) {
-            msg = `Chave de API Inválida (${error.message}). Acesse aistudio.google.com e gere uma NOVA chave para substituir no .env.`;
+        if (errStr.includes("API_KEY_INVALID") || errStr.includes("400") || errStr.includes("INVALID_ARGUMENT")) {
+            msg = "Chave de API Inválida ou Rejeitada. Acesse aistudio.google.com, gere uma NOVA chave e substitua no arquivo .env.";
+        } else if (errStr.includes("429") || errStr.includes("QUOTA")) {
+            msg = "Limite de uso da IA atingido. Aguarde 60 segundos e tente novamente.";
+        } else if (errStr.includes("SAFETY")) {
+            msg = "O documento foi bloqueado pelos filtros de segurança. Tente uma foto com menos reflexo ou sombras.";
         }
         
         throw new Error(`${msg} Certifique-se de que o arquivo está legível e não ultrapassa 4MB.`);
