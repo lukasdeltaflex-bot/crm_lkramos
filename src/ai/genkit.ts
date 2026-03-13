@@ -1,28 +1,34 @@
-
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/google-genai';
 
 /**
  * 🤖 NÚCLEO DE INTELIGÊNCIA ARTIFICIAL - LK RAMOS
- * Configuração central do Genkit v1.x com tratamento de segurança de chave.
+ * Configuração central do Genkit v1.x.
+ * 
+ * 🛡️ SEGURANÇA: As chaves de API são carregadas apenas no processo servidor.
+ * Este arquivo não deve ser importado por componentes de cliente ('use client').
  */
 
-// Busca a chave em todas as variáveis possíveis e limpa espaços
-const rawKey = (
+// Trava de segurança para impedir vazamento acidental para o cliente
+if (typeof window !== 'undefined') {
+    console.error("ERRO CRÍTICO: Tentativa de carregar lógica de IA no lado do cliente.");
+}
+
+// Busca a chave e limpa espaços ou caracteres de quebra de linha
+const apiKey = (
     process.env.GOOGLE_GENAI_API_KEY || 
     process.env.GOOGLE_API_KEY || 
     process.env.GEMINI_API_KEY || 
     ''
 ).trim();
 
-// Log de diagnóstico silencioso para o terminal npm run dev
-if (!rawKey && typeof window === 'undefined') {
-    console.warn("⚠️ ALERTA INFRAESTRUTURA: Nenhuma chave de API detectada no processo servidor!");
+if (!apiKey && typeof window === 'undefined') {
+    console.warn("⚠️ ALERTA INFRAESTRUTURA: Chave de API da IA não detectada no ambiente servidor!");
 }
 
 export const ai = genkit({
   plugins: [
-    googleAI({ apiKey: rawKey || undefined })
+    googleAI({ apiKey: apiKey || undefined })
   ],
   model: 'googleai/gemini-1.5-flash',
 });
