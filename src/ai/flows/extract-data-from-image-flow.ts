@@ -87,27 +87,29 @@ const extractDataFromImageFlow = ai.defineFlow(
 
         return result;
     } catch (error: any) {
-        // 🔍 LOG DE DIAGNÓSTICO REAL (Terminal npm run dev)
-        console.error("❌ --- ERRO TÉCNICO IA ---");
+        // 🔍 LOG DE DIAGNÓSTICO REAL (Visível no terminal npm run dev)
+        console.error("❌ --- ERRO TÉCNICO IA LK RAMOS ---");
         console.error("MENSAGEM:", error.message);
-        console.error("DETALHES COMPLETOS:", JSON.stringify(error, null, 2));
-        console.error("--------------------------");
+        console.error("DETALHES:", JSON.stringify(error, null, 2));
+        console.error("-----------------------------------");
         
         let userMessage = "A IA encontrou um problema de comunicação.";
         const errStr = String(error).toUpperCase();
         const errMsg = String(error.message || '').toUpperCase();
         
-        if (errStr.includes("API_KEY_INVALID") || errMsg.includes("API KEY NOT VALID") || errMsg.includes("400")) {
-            userMessage = "Erro de Credencial: A chave no .env foi rejeitada pelo Google.";
+        if (errStr.includes("API_KEY_INVALID") || errMsg.includes("API KEY NOT VALID")) {
+            userMessage = "Erro de Credencial: A chave no .env foi rejeitada.";
+        } else if (errStr.includes("403") || errMsg.includes("FORBIDDEN") || errMsg.includes("PERMISSION_DENIED")) {
+            userMessage = "Acesso Negado: Certifique-se de que a 'Generative Language API' está ATIVADA no Google Cloud Console.";
         } else if (errStr.includes("429") || errStr.includes("QUOTA")) {
-            userMessage = "Limite de uso atingido. Aguarde 60 segundos.";
+            userMessage = "Limite atingido: Aguarde 60 segundos antes de tentar novamente.";
         } else if (errStr.includes("SAFETY")) {
-            userMessage = "Bloqueio de Segurança: O documento não pôde ser lido.";
-        } else if (errStr.includes("FETCH") || errStr.includes("NETWORK") || errStr.includes("CONNECT") || errStr.includes("UND_ERR_CONNECT")) {
-            userMessage = `Falha de Conexão (${error.message || 'Network Error'}).`;
+            userMessage = "Bloqueio de Segurança: O documento contém conteúdo que a IA não pode processar.";
+        } else if (errStr.includes("FETCH") || errStr.includes("NETWORK") || errStr.includes("CONNECT")) {
+            userMessage = "Falha de Rede: Problema de conexão entre o servidor e o Google.";
         }
         
-        throw new Error(`${userMessage} Verifique se o arquivo está legível e não ultrapassa 4MB.`);
+        throw new Error(`${userMessage} Certifique-se de que o arquivo está legível e não ultrapassa 4MB.`);
     }
   }
 );
