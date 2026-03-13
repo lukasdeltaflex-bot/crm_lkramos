@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -260,12 +261,10 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         const toDate = appliedDateRange.to ? endOfDay(appliedDateRange.to) : endOfDay(appliedDateRange.from);
         
         list = list.filter(p => {
-            // INTELIGÊNCIA DE DATA: Se estiver filtrando por PAGAS ou PARCIAL, 
-            // a referência temporal é a data de PAGAMENTO DA COMISSÃO.
-            // Para Pendentes ou Geral, usa-se a DATA DE DIGITAÇÃO (Produção).
-            const dateStr = (statusFilter === 'Paga' || statusFilter === 'Parcial') 
-                ? (p.commissionPaymentDate || p.dateDigitized)
-                : p.dateDigitized;
+            // 🛡️ LÓGICA MESTRE DE DATAS LK RAMOS
+            // Se houver data de pagamento, ela é a soberana para o financeiro.
+            // Caso contrário (Pendentes), usamos a data de digitação (produção).
+            const dateStr = p.commissionPaymentDate || p.dateDigitized;
                 
             if (!dateStr) return false;
             

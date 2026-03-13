@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -18,8 +19,8 @@ import { Button } from '@/components/ui/button';
 import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA V14
- * Ajustado para garantir visibilidade dos itens indexando nome e CPF no valor.
+ * 🚀 BUSCA GLOBAL REATIVA V15
+ * Ajustado para garantir visibilidade total ignorando o filtro padrão do cmdk.
  */
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false);
