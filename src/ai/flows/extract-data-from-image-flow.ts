@@ -94,15 +94,15 @@ const extractDataFromImageFlow = ai.defineFlow(
         console.error("AI Generation Error Details:", error);
         
         // Mensagem de erro mais detalhada para o usuário
-        let msg = "A Inteligência Artificial não conseguiu processar este documento.";
+        let msg = `Erro de autenticação da IA (${error.message || 'Chave Rejeitada pelo Google'}).`;
         const errStr = String(error).toUpperCase();
         
         if (errStr.includes("429") || errStr.includes("QUOTA")) {
             msg = "Limite de uso da IA atingido (Cota 429). Aguarde um minuto e tente novamente.";
         } else if (errStr.includes("SAFETY") || errStr.includes("CANDIDATE")) {
             msg = "O documento foi bloqueado pelos filtros de segurança. Tente uma foto mais clara e sem sombras.";
-        } else if (errStr.includes("API KEY") || errStr.includes("AUTHENTICATION") || errStr.includes("401")) {
-            msg = `Erro de autenticação da IA (${error.message || 'Chave Inválida'}). Verifique o arquivo .env.`;
+        } else if (errStr.includes("API KEY") || errStr.includes("AUTHENTICATION") || errStr.includes("401") || errStr.includes("400")) {
+            msg = `Chave de API Inválida (${error.message}). Acesse aistudio.google.com e gere uma NOVA chave para substituir no .env.`;
         }
         
         throw new Error(`${msg} Certifique-se de que o arquivo está legível e não ultrapassa 4MB.`);

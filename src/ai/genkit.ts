@@ -4,13 +4,19 @@ import {googleAI} from '@genkit-ai/google-genai';
 
 /**
  * 🤖 NÚCLEO DE INTELIGÊNCIA ARTIFICIAL - LK RAMOS
- * Configuração central do Genkit com plugin multimodal Google AI.
+ * Configuração central do Genkit com proteção contra espaços em branco nas chaves.
  */
+const apiKey = (
+    process.env.GOOGLE_GENAI_API_KEY || 
+    process.env.GOOGLE_API_KEY || 
+    process.env.GEMINI_API_KEY || 
+    ''
+).trim();
+
 const ai = genkit({
   plugins: [
     googleAI({ 
-        // 🛡️ Blindagem: Tenta capturar a chave de qualquer uma das variáveis comuns
-        apiKey: process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY 
+        apiKey: apiKey 
     })
   ],
   model: 'googleai/gemini-1.5-flash',
