@@ -61,9 +61,18 @@ const extractDataFromImageFlow = ai.defineFlow(
             3. Formate a data de nascimento como YYYY-MM-DD.
             4. Seja extremamente preciso nos caracteres para evitar erros de digitação.
             5. Se identificar múltiplos benefícios, liste-os individualmente.
-            6. TELEFONES: Se encontrar mais de um número de telefone, separe-os nos campos phone e phone2. NÃO concatene dois números no mesmo campo. Se encontrar apenas um, coloque em phone.` },
+            6. TELEFONES: Se encontrar mais de um número de telefone, separe-os nos campos phone e phone2. NÃO concatene dois números no mesmo campo. Si encontrar apenas um, coloque em phone.` },
             { media: { url: input.photoDataUri, contentType: contentType } }
           ],
+          config: {
+            safetySettings: [
+              { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+              { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+              { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+              { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+              { category: 'HARM_CATEGORY_CIVIC_INTEGRITY', threshold: 'BLOCK_NONE' },
+            ],
+          },
           output: { schema: ExtractFromImageOutputSchema }
         });
 
@@ -79,9 +88,15 @@ const extractDataFromImageFlow = ai.defineFlow(
         }
 
         return result;
-    } catch (error) {
+    } catch (error: any) {
         console.error("AI Generation Error:", error);
-        throw new Error("A Inteligência Artificial não conseguiu processar este documento. Verifique se o arquivo não está protegido por senha ou muito pesado.");
+        
+        // Mensagem de erro mais detalhada para o usuário
+        let msg = "A Inteligência Artificial não conseguiu processar este documento.";
+        if (error.message?.includes("429")) msg = "Limite de uso da IA atingido. Aguarde um minuto e tente novamente.";
+        if (error.message?.includes("SAFETY")) msg = "O documento foi bloqueado pelos filtros de segurança. Tente uma foto mais clara.";
+        
+        throw new Error(`${msg} Verifique se o arquivo está legível e não ultrapassa 4MB.`);
     }
   }
 );
