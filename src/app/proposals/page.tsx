@@ -10,6 +10,7 @@ import { PlusCircle, FileDown, Trash2, CheckCircle2, ChevronDown, FileSpreadshee
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -549,7 +550,13 @@ function ProposalsPageContent() {
       </div>
 
       <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
-        <DialogContent className="max-w-xl"><CustomerAiForm onSubmit={handleAiFormSubmit} /></DialogContent>
+        <DialogContent className="max-w-xl">
+            <DialogHeader>
+                <DialogTitle>Novo Cliente com IA</DialogTitle>
+                <DialogDescription>Utilize a inteligência artificial para extrair dados de documentos ou textos.</DialogDescription>
+            </DialogHeader>
+            <CustomerAiForm onSubmit={handleAiFormSubmit} />
+        </DialogContent>
       </Dialog>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
