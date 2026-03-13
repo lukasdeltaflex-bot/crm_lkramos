@@ -16,12 +16,6 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '10mb',
     },
-    allowedDevOrigins: [
-      '*.cloudworkstations.dev',
-      '*.firebaseapp.com',
-      '*.web.app',
-      'localhost:*'
-    ],
   },
   images: {
     remotePatterns: [
