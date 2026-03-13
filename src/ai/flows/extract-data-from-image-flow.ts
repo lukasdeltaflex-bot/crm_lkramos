@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Fluxo Genkit para extrair dados de clientes a partir de imagens ou PDFs (OCR).
@@ -51,6 +52,7 @@ const extractDataFromImageFlow = ai.defineFlow(
 
     try {
         const { output } = await ai.generate({
+          model: 'googleai/gemini-1.5-flash',
           prompt: [
             { text: `Você é um assistente de elite para correspondentes bancários.
             Analise este documento (RG, CNH, PDF de Extrato de Empréstimos ou Ficha) e extraia os dados estruturados.
@@ -89,14 +91,21 @@ const extractDataFromImageFlow = ai.defineFlow(
 
         return result;
     } catch (error: any) {
-        console.error("AI Generation Error:", error);
+        console.error("AI Generation Error Details:", error);
         
         // Mensagem de erro mais detalhada para o usuário
         let msg = "A Inteligência Artificial não conseguiu processar este documento.";
-        if (error.message?.includes("429")) msg = "Limite de uso da IA atingido. Aguarde um minuto e tente novamente.";
-        if (error.message?.includes("SAFETY")) msg = "O documento foi bloqueado pelos filtros de segurança. Tente uma foto mais clara.";
+        const errStr = String(error).toUpperCase();
         
-        throw new Error(`${msg} Verifique se o arquivo está legível e não ultrapassa 4MB.`);
+        if (errStr.includes("429") || errStr.includes("QUOTA")) {
+            msg = "Limite de uso da IA atingido (Cota 429). Aguarde um minuto e tente novamente.";
+        } else if (errStr.includes("SAFETY") || errStr.includes("CANDIDATE")) {
+            msg = "O documento foi bloqueado pelos filtros de segurança. Tente uma foto mais clara e sem sombras.";
+        } else if (errStr.includes("API KEY") || errStr.includes("AUTHENTICATION") || errStr.includes("401")) {
+            msg = "Erro de autenticação da IA. Verifique a chave de API no arquivo .env.";
+        }
+        
+        throw new Error(`${msg} Certifique-se de que o arquivo está legível e não ultrapassa 4MB.`);
     }
   }
 );
