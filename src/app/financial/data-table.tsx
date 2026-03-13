@@ -257,21 +257,24 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     if (operatorFilters.length > 0) list = list.filter(p => operatorFilters.includes(p.operator || 'Sem Operador'));
     
     if (appliedDateRange && appliedDateRange.from) {
-        const fromDate = startOfDay(appliedDateRange.from);
-        const toDate = appliedDateRange.to ? endOfDay(appliedDateRange.to) : endOfDay(appliedDateRange.from);
+        const fromDateStr = format(startOfDay(appliedDateRange.from), 'yyyy-MM-dd');
+        const toDateStr = format(endOfDay(appliedDateRange.to || appliedDateRange.from), 'yyyy-MM-dd');
         
         list = list.filter(p => {
-            // 🛡️ LÓGICA MESTRE DE DATAS LK RAMOS
-            // Se houver data de pagamento, ela é a soberana para o financeiro.
-            // Caso contrário (Pendentes), usamos a data de digitação (produção).
-            const dateStr = p.commissionPaymentDate || p.dateDigitized;
+            // 🛡️ LÓGICA MESTRE DE DATAS LK RAMOS V5
+            // Se a comissão foi paga/parcial, prioriza a data do pagamento.
+            // Caso contrário, usa a data de digitação.
+            const isSettled = p.commissionStatus === 'Paga' || p.commissionStatus === 'Parcial';
+            const dateToCheckStr = isSettled ? (p.commissionPaymentDate || p.dateDigitized) : p.dateDigitized;
                 
-            if (!dateStr) return false;
+            if (!dateToCheckStr) return false;
             
-            const d = parseDateSafe(dateStr);
+            const d = parseDateSafe(dateToCheckStr);
             if (!d) return false;
-            const target = startOfDay(d);
-            return target >= fromDate && target <= toDate;
+            
+            // Compara strings YYYY-MM-DD para evitar conflitos de fuso horário e horas
+            const targetDayStr = format(d, 'yyyy-MM-dd');
+            return targetDayStr >= fromDateStr && targetDayStr <= toDateStr;
         });
     }
     return list;

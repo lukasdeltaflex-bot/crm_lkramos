@@ -19,8 +19,8 @@ import { Button } from '@/components/ui/button';
 import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA V15
- * Ajustado para garantir visibilidade total ignorando o filtro padrão do cmdk.
+ * 🚀 BUSCA GLOBAL REATIVA V16
+ * Otimizado para ignorar o filtro padrão e exibir resultados do banco/IA em tempo real.
  */
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false);
@@ -55,10 +55,11 @@ export function GlobalSearch() {
             const normalized = normalizeString(searchTerm);
             const isNumber = /^\d+$/.test(searchTerm);
 
+            // Busca ampliada para garantir que registros recentes sejam localizados
             const qCust = query(
                 collection(firestore, 'customers'), 
                 where('ownerId', '==', user.uid),
-                limit(100) 
+                limit(500) 
             );
             const snapCust = await getDocs(qCust);
             const filteredCustomers = snapCust.docs
@@ -70,13 +71,13 @@ export function GlobalSearch() {
                     }
                     return normalizeString(c.name).includes(normalized) || normalizeString(c.city || '').includes(normalized);
                 })
-                .slice(0, 10);
+                .slice(0, 8);
 
             const qProp = query(
                 collection(firestore, 'loanProposals'), 
                 where('ownerId', '==', user.uid),
                 orderBy('dateDigitized', 'desc'),
-                limit(100)
+                limit(500)
             );
             const snapProp = await getDocs(qProp);
             const filteredProposals = snapProp.docs
@@ -86,7 +87,7 @@ export function GlobalSearch() {
                     if (isNumber) return p.proposalNumber.includes(searchTerm);
                     return normalizeString(p.product).includes(normalized) || normalizeString(p.bank).includes(normalized);
                 })
-                .slice(0, 10);
+                .slice(0, 8);
 
             setResults({ customers: filteredCustomers, proposals: filteredProposals });
         } catch (error) {
@@ -94,7 +95,7 @@ export function GlobalSearch() {
         } finally {
             setIsSearching(false);
         }
-    }, 400);
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [searchTerm, open, user, firestore]);
@@ -125,10 +126,10 @@ export function GlobalSearch() {
             setOpen(isOpen);
             if (!isOpen) setSearchTerm('');
         }}
-        shouldFilter={false}
+        shouldFilter={false} // CRÍTICO: Desativa filtro padrão para aceitar dados da IA/Banco
       >
         <CommandInput 
-            placeholder="Digite o ID, Nome ou CPF para buscar na base..." 
+            placeholder="ID, Nome, CPF ou Proposta..." 
             value={searchTerm}
             onValueChange={setSearchTerm}
             autoFocus 
@@ -137,27 +138,27 @@ export function GlobalSearch() {
           {isSearching ? (
             <div className="flex items-center justify-center py-10 text-sm text-muted-foreground gap-3">
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <span className="font-black uppercase text-[10px] tracking-widest animate-pulse">Consultando base de dados...</span>
+              <span className="font-black uppercase text-[10px] tracking-widest animate-pulse">Sincronizando base...</span>
             </div>
           ) : searchTerm.length >= 2 && results.customers.length === 0 && results.proposals.length === 0 ? (
-            <CommandEmpty className="py-10 text-center text-xs font-bold uppercase text-muted-foreground opacity-50">Nenhum resultado para "{searchTerm}"</CommandEmpty>
+            <CommandEmpty className="py-10 text-center text-xs font-bold uppercase text-muted-foreground opacity-50">Nenhum registro localizado para "{searchTerm}"</CommandEmpty>
           ) : null}
 
           {searchTerm.length < 2 && (
-              <CommandGroup heading="Sugestões de Acesso">
-                <CommandItem onSelect={() => runCommand(() => router.push('/customers?action=new'))} value="novo-cliente-sugestao">
+              <CommandGroup heading="Ações Rápidas">
+                <CommandItem onSelect={() => runCommand(() => router.push('/customers?action=new'))} value="novo-cliente">
                     <PlusCircle className="mr-2 h-4 w-4 text-blue-500" />
-                    <span>Cadastrar Novo Cliente</span>
+                    <span>Novo Cliente</span>
                 </CommandItem>
-                <CommandItem onSelect={() => runCommand(() => router.push('/proposals?action=new'))} value="nova-proposta-sugestao">
+                <CommandItem onSelect={() => runCommand(() => router.push('/proposals?action=new'))} value="nova-proposta">
                     <PlusCircle className="mr-2 h-4 w-4 text-green-500" />
-                    <span>Nova Proposta Bancária</span>
+                    <span>Nova Proposta</span>
                 </CommandItem>
               </CommandGroup>
           )}
 
           {results.customers.length > 0 && (
-            <CommandGroup heading="Clientes Localizados">
+            <CommandGroup heading="Clientes">
                 {results.customers.map((customer) => (
                     <CommandItem
                         key={customer.id}
@@ -168,8 +169,8 @@ export function GlobalSearch() {
                             <div className='flex items-center'>
                                 <User className="mr-2 h-4 w-4 text-muted-foreground" />
                                 <div className="flex flex-col">
-                                    <span className="font-bold text-sm uppercase">ID {customer.numericId} - {customer.name}</span>
-                                    <span className="text-[10px] text-muted-foreground uppercase font-black">CPF: {customer.cpf}</span>
+                                    <span className="font-bold text-sm uppercase">{customer.name}</span>
+                                    <span className="text-[10px] text-muted-foreground uppercase font-black">ID: {customer.numericId} | CPF: {customer.cpf}</span>
                                 </div>
                             </div>
                             <ArrowRight className='h-3 w-3 opacity-40' />
@@ -180,17 +181,17 @@ export function GlobalSearch() {
           )}
           
           {results.proposals.length > 0 && (
-            <CommandGroup heading="Propostas Relacionadas">
+            <CommandGroup heading="Propostas">
                 {results.proposals.map((proposal) => (
                     <CommandItem
                         key={proposal.id}
-                        value={`${proposal.proposalNumber} ${proposal.product} ${proposal.bank}`}
+                        value={`${proposal.proposalNumber} ${proposal.product}`}
                         onSelect={() => runCommand(() => router.push(`/proposals?open=${proposal.id}`))}>
                         <div className="flex items-center justify-between w-full">
                             <div className='flex items-center'>
                                 <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
                                 <div className="flex flex-col">
-                                    <span className="font-bold uppercase text-xs">Contrato {proposal.proposalNumber}</span>
+                                    <span className="font-bold uppercase text-xs">Prop. {proposal.proposalNumber}</span>
                                     <span className="text-[9px] text-muted-foreground uppercase font-bold">{proposal.product} • {cleanBankName(proposal.bank)}</span>
                                 </div>
                             </div>
