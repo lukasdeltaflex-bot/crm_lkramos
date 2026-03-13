@@ -90,6 +90,7 @@ const extractDataFromImageFlow = ai.defineFlow(
         // 🔍 LOG DE DIAGNÓSTICO REAL (Visível no terminal npm run dev)
         console.error("❌ --- ERRO TÉCNICO IA LK RAMOS ---");
         console.error("MENSAGEM:", error.message);
+        console.error("STACK:", error.stack);
         console.error("DETALHES:", JSON.stringify(error, null, 2));
         console.error("-----------------------------------");
         
