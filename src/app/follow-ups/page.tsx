@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -276,7 +277,10 @@ export default function FollowUpsPage() {
       {/* MODAL DE AÇÃO NO RETORNO */}
       <Dialog open={isActionDialogOpen} onOpenChange={setIsActionDialogOpen}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Realizar Retorno: {selectedFollowUp?.contactName}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Realizar Retorno: {selectedFollowUp?.contactName}</DialogTitle>
+            <DialogDescription>Registre o resultado do contato realizado com o cliente.</DialogDescription>
+          </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="p-3 bg-secondary/30 rounded-md text-sm border">{selectedFollowUp?.description}</div>
             <textarea className="w-full min-h-[100px] p-3 rounded-md border text-sm focus:ring-2 focus:ring-primary outline-none" placeholder="O que foi conversado..." value={actionNotes} onChange={(e) => setActionNotes(e.target.value)} disabled={isSaving} />
@@ -298,11 +302,22 @@ export default function FollowUpsPage() {
       </AlertDialog>
 
       <Dialog open={isRescheduleOpen} onOpenChange={setIsRescheduleOpen}>
-        <DialogContent className="max-w-xs"><DialogHeader><DialogTitle>Nova Data</DialogTitle></DialogHeader><div className="py-4"><Input type="date" value={newDueDate} onChange={(e) => setNewDueDate(e.target.value)} disabled={isSaving} /></div><DialogFooter><Button className="w-full" onClick={handleReschedule} disabled={isSaving}>Confirmar Reagendamento</Button></DialogFooter></DialogContent>
+        <DialogContent className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle>Nova Data</DialogTitle>
+            <DialogDescription>Escolha um novo dia para este retorno.</DialogDescription>
+          </DialogHeader>
+          <div className="py-4"><Input type="date" value={newDueDate} onChange={(e) => setNewDueDate(e.target.value)} disabled={isSaving} /></div><DialogFooter><Button className="w-full" onClick={handleReschedule} disabled={isSaving}>Confirmar Reagendamento</Button></DialogFooter></DialogContent>
       </Dialog>
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-lg"><DialogHeader><DialogTitle>{selectedFollowUp ? 'Editar Retorno' : 'Agendar Novo Retorno'}</DialogTitle></DialogHeader><FollowUpForm customers={customers || []} initialData={selectedFollowUp} onSubmit={handleFormSubmit} isSaving={isSaving} /></DialogContent>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{selectedFollowUp ? 'Editar Retorno' : 'Agendar Novo Retorno'}</DialogTitle>
+            <DialogDescription>Defina os detalhes do contato que precisa ser realizado.</DialogDescription>
+          </DialogHeader>
+          <FollowUpForm customers={customers || []} initialData={selectedFollowUp} onSubmit={handleFormSubmit} isSaving={isSaving} />
+        </DialogContent>
       </Dialog>
     </AppLayout>
   );

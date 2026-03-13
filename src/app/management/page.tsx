@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -41,7 +42,7 @@ import {
 import { useUser, useFirestore, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { collection, query, where, doc, setDoc, deleteDoc, orderBy } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -563,6 +564,7 @@ export default function ManagementPage() {
                     <Newspaper className="h-5 w-5 text-primary" />
                     {selectedItem ? 'Editar Publicação' : 'Criar Nova Notícia'}
                 </DialogTitle>
+                <DialogDescription>Preencha os campos para publicar uma atualização no mural da equipe.</DialogDescription>
             </DialogHeader>
             <div className="flex-1 overflow-hidden px-8 py-4">
                 <NewsForm initialData={selectedItem} onSubmit={(d) => handleSave('managementNews', d, selectedItem?.id)} isSaving={isSaving} />
@@ -581,7 +583,7 @@ export default function ManagementPage() {
                             <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{format(parseISO(selectedItem.date), 'dd/MM/yyyy')}</span>
                         </div>
                         <DialogTitle className="text-2xl font-black uppercase tracking-tight leading-tight">{selectedItem.title}</DialogTitle>
-                        <p className="text-sm text-muted-foreground font-medium mt-1">{selectedItem.subtitle}</p>
+                        <DialogDescription className="text-sm text-muted-foreground font-medium mt-1">{selectedItem.subtitle}</DialogDescription>
                     </DialogHeader>
                     <ScrollArea className="flex-1 px-8 py-8">
                         <div className="space-y-10 max-w-3xl mx-auto pb-20">
@@ -687,11 +689,12 @@ export default function ManagementPage() {
       </Dialog>
 
       <Dialog open={isPromoterModalOpen} onOpenChange={setIsPromoterModalOpen}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-hidden flex flex-col rounded-[2rem] p-0" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
+        <DialogContent className="max-md max-h-[90vh] overflow-hidden flex flex-col rounded-[2rem] p-0" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
             <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
                 <DialogTitle className="text-xl font-black uppercase tracking-tight">
                     {selectedItem ? 'Editar Promotora' : 'Nova Promotora'}
                 </DialogTitle>
+                <DialogDescription>Gerencie contatos e informações técnicas deste parceiro comercial.</DialogDescription>
             </DialogHeader>
             <ScrollArea className="flex-1 px-6 py-2">
                 <PromoterForm initialData={selectedItem} onSubmit={(d) => handleSave('managementPromoters', d, selectedItem?.id)} isSaving={isSaving} />
@@ -705,6 +708,7 @@ export default function ManagementPage() {
                 <DialogTitle className="text-xl font-black uppercase tracking-tight">
                     {selectedItem ? 'Editar Login' : 'Vincular Banco'}
                 </DialogTitle>
+                <DialogDescription>Cadastre credenciais blindadas para acesso rápido aos sistemas bancários.</DialogDescription>
             </DialogHeader>
             <ScrollArea className="flex-1 px-6 py-2">
                 <BankForm initialData={selectedItem} onSubmit={(d) => handleSaveBank(d, selectedItem?.id)} isSaving={isSaving} />
@@ -718,6 +722,7 @@ export default function ManagementPage() {
                 <DialogTitle className="text-xl font-black uppercase tracking-tight">
                     {selectedItem ? 'Editar Atalho' : 'Novo Link'}
                 </DialogTitle>
+                <DialogDescription>Adicione um atalho rápido para sites e ferramentas externas.</DialogDescription>
             </DialogHeader>
             <ScrollArea className="flex-1 px-6 py-2">
                 <QuickLinkForm initialData={selectedItem} onSubmit={(d) => handleSave('managementQuickLinks', d, selectedItem?.id)} isSaving={isSaving} />

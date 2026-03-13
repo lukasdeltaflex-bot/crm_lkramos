@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -24,6 +25,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogFooter,
+    DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -210,6 +212,7 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
                     <MessageSquareText className="h-5 w-5" /> 
                     {pendingStatus === 'Reprovado' ? 'Justificativa de Reprova' : 'Nota de Trâmite'}
                 </DialogTitle>
+                <DialogDescription>Adicione detalhes técnicos sobre a mudança de status desta proposta.</DialogDescription>
             </DialogHeader>
             <ScrollArea className="max-h-[70vh]">
                 <div className="p-6 space-y-6">

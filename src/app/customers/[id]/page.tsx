@@ -57,6 +57,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogFooter,
+    DialogDescription,
 } from '@/components/ui/dialog';
 import { generateSalesPitch } from '@/ai/flows/generate-sales-pitch-flow';
 import { StatsCard } from '@/components/dashboard/stats-card';
@@ -673,6 +674,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 <DialogTitle className="flex items-center gap-2 text-xl font-black uppercase">
                     <MessageSquareText className="h-5 w-5 text-orange-500" /> Smart Pitch IA
                 </DialogTitle>
+                <DialogDescription>Gerador de scripts magnéticos para abordagem comercial via WhatsApp.</DialogDescription>
             </DialogHeader>
             <div className="py-4">
                 {isGeneratingPitch ? (
@@ -698,7 +700,10 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
       <Dialog open={!!dialogData} onOpenChange={(isOpen) => !isOpen && setDialogData(null)}>
             <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
-                <DialogHeader><DialogTitle className="flex items-center gap-2 font-black uppercase"><ArrowRight className="h-5 w-5 text-primary" /> {dialogData?.title}</DialogTitle></DialogHeader>
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2 font-black uppercase"><ArrowRight className="h-5 w-5 text-primary" /> {dialogData?.title}</DialogTitle>
+                    <DialogDescription>Listagem técnica das operações selecionadas no histórico do cliente.</DialogDescription>
+                </DialogHeader>
                 <div className="flex-1 overflow-y-auto">
                     <ProposalsStatusTable proposals={dialogData?.proposals || []} customers={[customer]} />
                 </div>
@@ -713,6 +718,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         >
             <DialogHeader className="px-8 pt-8 pb-4 shrink-0 bg-muted/5 border-b">
                 <DialogTitle className="text-xl font-black uppercase tracking-tight text-primary">Editar Cadastro do Cliente</DialogTitle>
+                <DialogDescription>Atualize as informações cadastrais, benefícios e endereços deste registro.</DialogDescription>
             </DialogHeader>
             <div className="flex-1 overflow-hidden">
                 <CustomerForm 

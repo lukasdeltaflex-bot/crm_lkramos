@@ -21,7 +21,7 @@ import { getWhatsAppUrl, calculateBusinessDays, getAge } from '@/lib/utils';
 import Link from 'next/link';
 import { generateBirthdayMessage } from '@/ai/flows/generate-birthday-message-flow';
 import { toast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
 export function NotificationBell() {
@@ -317,7 +317,7 @@ export function NotificationBell() {
             )}
             style={isClient && hasNewLeadPulse ? { '--status-color': '24 95% 53%' } as any : {}}
         >
-          <Bell className={cn("h-5 w-5", isClient && hasNewLeadPulse && "fill-current")} />
+          < Bell className={cn("h-5 w-5", isClient && hasNewLeadPulse && "fill-current")} />
           {isClient && count > 0 && (
             <Badge className={cn(
                 "absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] animate-in zoom-in",
@@ -415,6 +415,7 @@ export function NotificationBell() {
                     <MessageSquareText className="h-5 w-5 text-pink-500" />
                     Mensagem IA: {selectedBdayCustomer?.name}
                 </DialogTitle>
+                <DialogDescription>Script personalizado gerado por inteligência artificial para parabenizar o cliente.</DialogDescription>
             </DialogHeader>
             <div className="py-4">
                 {isGeneratingBday ? (
