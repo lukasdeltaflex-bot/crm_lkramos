@@ -18,9 +18,8 @@ import { Button } from '@/components/ui/button';
 import { normalizeString, getSmartTags, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA V12 (AUDITORIA APROVADA)
+ * 🚀 BUSCA GLOBAL REATIVA V12
  * Otimizada para não carregar dados desnecessários no boot do sistema.
- * As consultas agora ocorrem de forma assíncrona baseada na interação do usuário.
  */
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false);
@@ -43,8 +42,6 @@ export function GlobalSearch() {
     return () => document.removeEventListener('keydown', down);
   }, []);
 
-  // 🛡️ MOTOR DE BUSCA SOB DEMANDA (REACTIVITY)
-  // Só realiza a consulta pesada se o usuário digitar mais de 2 caracteres
   React.useEffect(() => {
     if (!open || !user || !firestore || searchTerm.length < 2) {
         setResults({ customers: [], proposals: [] });
@@ -57,7 +54,6 @@ export function GlobalSearch() {
             const normalized = normalizeString(searchTerm);
             const isNumber = /^\d+$/.test(searchTerm);
 
-            // 🔍 BUSCA DE CLIENTES (Limitada aos 100 mais relevantes para performance)
             const qCust = query(
                 collection(firestore, 'customers'), 
                 where('ownerId', '==', user.uid),
@@ -75,7 +71,6 @@ export function GlobalSearch() {
                 })
                 .slice(0, 10);
 
-            // 🔍 BUSCA DE PROPOSTAS
             const qProp = query(
                 collection(firestore, 'loanProposals'), 
                 where('ownerId', '==', user.uid),
@@ -98,7 +93,7 @@ export function GlobalSearch() {
         } finally {
             setIsSearching(false);
         }
-    }, 400); // Debounce de 400ms para evitar spam de requisições
+    }, 400);
 
     return () => clearTimeout(timer);
   }, [searchTerm, open, user, firestore]);
@@ -165,6 +160,7 @@ export function GlobalSearch() {
                 {results.customers.map((customer) => (
                     <CommandItem
                         key={customer.id}
+                        value={customer.id}
                         onSelect={() => runCommand(() => router.push(`/customers/${customer.id}`))}
                     >
                         <div className="flex items-center justify-between w-full">
@@ -187,6 +183,7 @@ export function GlobalSearch() {
                 {results.proposals.map((proposal) => (
                     <CommandItem
                         key={proposal.id}
+                        value={proposal.id}
                         onSelect={() => runCommand(() => router.push(`/proposals?open=${proposal.id}`))}>
                         <div className="flex items-center justify-between w-full">
                             <div className='flex items-center'>

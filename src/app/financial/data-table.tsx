@@ -270,7 +270,9 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             if (!dateStr) return false;
             
             const d = parseDateSafe(dateStr);
-            return !!(d && d >= fromDate && d <= toDate);
+            if (!d) return false;
+            const target = startOfDay(d);
+            return target >= fromDate && target <= toDate;
         });
     }
     return list;
