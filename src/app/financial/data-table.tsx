@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -261,18 +260,18 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         const toDateStr = format(endOfDay(appliedDateRange.to || appliedDateRange.from), 'yyyy-MM-dd');
         
         list = list.filter(p => {
-            // 🛡️ LÓGICA MESTRE DE DATAS LK RAMOS V5
-            // Se a comissão foi paga/parcial, prioriza a data do pagamento.
-            // Caso contrário, usa a data de digitação.
+            // 🛡️ REGRA MESTRE LK RAMOS: O Financeiro olha para a DATA DE PAGAMENTO
             const isSettled = p.commissionStatus === 'Paga' || p.commissionStatus === 'Parcial';
-            const dateToCheckStr = isSettled ? (p.commissionPaymentDate || p.dateDigitized) : p.dateDigitized;
+            
+            // Se filtrado por intervalo de datas, a prioridade total é commissionPaymentDate
+            // Caso contrário (Pendente), o registro não entra na visão de caixa por data
+            const dateToCheckStr = p.commissionPaymentDate || (isSettled ? p.dateDigitized : null);
                 
             if (!dateToCheckStr) return false;
             
             const d = parseDateSafe(dateToCheckStr);
             if (!d) return false;
             
-            // Compara strings YYYY-MM-DD para evitar conflitos de fuso horário e horas
             const targetDayStr = format(d, 'yyyy-MM-dd');
             return targetDayStr >= fromDateStr && targetDayStr <= toDateStr;
         });

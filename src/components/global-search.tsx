@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -19,8 +18,8 @@ import { Button } from '@/components/ui/button';
 import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA V16
- * Otimizado para ignorar o filtro padrão e exibir resultados do banco/IA em tempo real.
+ * 🚀 BUSCA GLOBAL REATIVA V17
+ * Correção Crítica: Adicionado shouldFilter={false} para respeitar os resultados do Firebase.
  */
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false);
@@ -55,7 +54,7 @@ export function GlobalSearch() {
             const normalized = normalizeString(searchTerm);
             const isNumber = /^\d+$/.test(searchTerm);
 
-            // Busca ampliada para garantir que registros recentes sejam localizados
+            // Busca ampliada para 500 registros
             const qCust = query(
                 collection(firestore, 'customers'), 
                 where('ownerId', '==', user.uid),
@@ -65,13 +64,14 @@ export function GlobalSearch() {
             const filteredCustomers = snapCust.docs
                 .map(d => ({ ...d.data(), id: d.id } as Customer))
                 .filter(c => {
-                    if (c.name === 'Cliente Removido' || c.deleted === true) return false;
+                    if (c.deleted === true) return false;
+                    const cpfNumeric = (c.cpf || '').replace(/\D/g, '');
                     if (isNumber) {
-                        return String(c.numericId).includes(searchTerm) || c.cpf?.replace(/\D/g, '').includes(searchTerm);
+                        return String(c.numericId).includes(searchTerm) || cpfNumeric.includes(searchTerm);
                     }
                     return normalizeString(c.name).includes(normalized) || normalizeString(c.city || '').includes(normalized);
                 })
-                .slice(0, 8);
+                .slice(0, 10);
 
             const qProp = query(
                 collection(firestore, 'loanProposals'), 
@@ -87,7 +87,7 @@ export function GlobalSearch() {
                     if (isNumber) return p.proposalNumber.includes(searchTerm);
                     return normalizeString(p.product).includes(normalized) || normalizeString(p.bank).includes(normalized);
                 })
-                .slice(0, 8);
+                .slice(0, 10);
 
             setResults({ customers: filteredCustomers, proposals: filteredProposals });
         } catch (error) {
@@ -126,7 +126,7 @@ export function GlobalSearch() {
             setOpen(isOpen);
             if (!isOpen) setSearchTerm('');
         }}
-        shouldFilter={false} // CRÍTICO: Desativa filtro padrão para aceitar dados da IA/Banco
+        shouldFilter={false}
       >
         <CommandInput 
             placeholder="ID, Nome, CPF ou Proposta..." 
