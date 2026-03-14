@@ -38,17 +38,17 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 import {
-    Tabs,
-    TabsList,
-    TabsTrigger,
-  } from '@/components/ui/tabs';
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -192,20 +192,14 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
   const hasActiveFilters = statusFilter !== 'Todos' || bankFilters.length > 0 || promoterFilters.length > 0 || operatorFilters.length > 0 || !!globalFilter || !!appliedDateRange;
 
-  // 🛡️ CARREGAMENTO BLINDADO DE PREFERÊNCIAS
   React.useEffect(() => {
     if (!user?.uid) return;
     setIsClient(true);
     const prefix = user.uid;
     
     setFrozenCount(safeStorage.get(`${prefix}-fin-frozen`, 2));
-    setGlobalFilter(safeStorage.get(`${prefix}-fin-search`, ''));
     setColumnVisibility(safeStorage.get(`${prefix}-fin-visibility`, columnVisibility));
     setColumnSizing(safeStorage.get(`${prefix}-fin-sizing`, {}));
-    setStatusFilter(safeStorage.get(`${prefix}-fin-filter-status`, 'Todos'));
-    setBankFilters(safeStorage.get(`${prefix}-fin-filter-banks`, []));
-    setPromoterFilters(safeStorage.get(`${prefix}-fin-filter-promoters`, []));
-    setOperatorFilters(safeStorage.get(`${prefix}-fin-filter-operators`, []));
     
     const savedPageSize = safeStorage.get(`${prefix}-fin-pageSize`, 10);
     setPagination(p => ({ ...p, pageSize: savedPageSize }));
@@ -218,22 +212,16 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     setIsLoaded(true);
   }, [initialIds, user?.uid]);
 
-  // 🛡️ SALVAMENTO DE PREFERÊNCIAS
   React.useEffect(() => {
     if (isClient && isLoaded && user?.uid) {
         const prefix = user.uid;
         safeStorage.set(`${prefix}-fin-frozen`, frozenCount);
-        safeStorage.set(`${prefix}-fin-search`, globalFilter);
         safeStorage.set(`${prefix}-fin-visibility`, columnVisibility);
         safeStorage.set(`${prefix}-fin-order`, columnOrder);
         safeStorage.set(`${prefix}-fin-sizing`, columnSizing);
         safeStorage.set(`${prefix}-fin-pageSize`, pagination.pageSize);
-        safeStorage.set(`${prefix}-fin-filter-status`, statusFilter);
-        safeStorage.set(`${prefix}-fin-filter-banks`, bankFilters);
-        safeStorage.set(`${prefix}-fin-filter-promoters`, promoterFilters);
-        safeStorage.set(`${prefix}-fin-filter-operators`, operatorFilters);
     }
-  }, [globalFilter, columnVisibility, columnOrder, columnSizing, frozenCount, statusFilter, bankFilters, promoterFilters, operatorFilters, isClient, isLoaded, pagination.pageSize, user?.uid]);
+  }, [columnVisibility, columnOrder, columnSizing, frozenCount, isClient, isLoaded, pagination.pageSize, user?.uid]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor));
 
@@ -250,32 +238,36 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
   const filteredData = React.useMemo(() => {
     let list = data;
-    if (statusFilter !== 'Todos') list = list.filter(p => p.commissionStatus === statusFilter);
+    const initialLen = list.length;
+
+    if (statusFilter !== 'Todos') {
+        list = list.filter(p => p.commissionStatus === statusFilter);
+    }
+    const afterStatusLen = list.length;
+
     if (bankFilters.length > 0) list = list.filter(p => bankFilters.includes(p.bank));
     if (promoterFilters.length > 0) list = list.filter(p => promoterFilters.includes(p.promoter));
     if (operatorFilters.length > 0) list = list.filter(p => operatorFilters.includes(p.operator || 'Sem Operador'));
     
     if (appliedDateRange && appliedDateRange.from) {
-        const fromDateStr = format(startOfDay(appliedDateRange.from), 'yyyy-MM-dd');
-        const toDateStr = format(endOfDay(appliedDateRange.to || appliedDateRange.from), 'yyyy-MM-dd');
+        const start = startOfDay(appliedDateRange.from);
+        const end = appliedDateRange.to ? endOfDay(appliedDateRange.to) : endOfDay(appliedDateRange.from);
         
         list = list.filter(p => {
-            // 🛡️ REGRA MESTRE LK RAMOS: O Financeiro olha para a DATA DE PAGAMENTO
-            const isSettled = p.commissionStatus === 'Paga' || p.commissionStatus === 'Parcial';
-            
-            // Se filtrado por intervalo de datas, a prioridade total é commissionPaymentDate
-            // Caso contrário (Pendente), o registro não entra na visão de caixa por data
-            const dateToCheckStr = p.commissionPaymentDate || (isSettled ? p.dateDigitized : null);
-                
-            if (!dateToCheckStr) return false;
-            
-            const d = parseDateSafe(dateToCheckStr);
+            // 🛡️ REGRA SOBERANA FINANCEIRA: Filtro por data de pagamento apenas
+            const d = parseDateSafe(p.commissionPaymentDate);
             if (!d) return false;
-            
-            const targetDayStr = format(d, 'yyyy-MM-dd');
-            return targetDayStr >= fromDateStr && targetDayStr <= toDateStr;
+            return d >= start && d <= end;
         });
     }
+    const finalLen = list.length;
+
+    // 🔬 DEBUG LOGS PARA VALIDAÇÃO EM TEMPO REAL
+    console.log(`[DEBUG-LK] Financeiro: Recebido(${initialLen}) -> Pós-Status(${afterStatusLen}) -> Final Pós-Data(${finalLen})`);
+    if (appliedDateRange) {
+        console.log(`[DEBUG-LK] Período aplicado: ${format(startOfDay(appliedDateRange.from), 'dd/MM/yyyy')} até ${format(endOfDay(appliedDateRange.to || appliedDateRange.from), 'dd/MM/yyyy')}`);
+    }
+
     return list;
   }, [data, statusFilter, bankFilters, promoterFilters, operatorFilters, appliedDateRange]);
 
@@ -335,13 +327,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     });
     return offsets;
   }, [table.getVisibleLeafColumns(), columnSizing]);
-
-  const handleDateMask = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, "").substring(0, 8);
-    value = value.replace(/(\d{2})(\d)/, '$1/$2').replace(/(\d{2})(\d)/, '$1/$2');
-    e.target.value = value;
-    return value;
-  };
 
   const toggleBankFilter = (bank: string) => { setBankFilters(prev => prev.includes(bank) ? prev.filter(b => b !== bank) : [...prev, bank]); };
   const togglePromoterFilter = (promoter: string) => { setPromoterFilters(prev => prev.includes(promoter) ? prev.filter(p => p !== promoter) : [...prev, promoter]); };
@@ -414,7 +399,16 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild><Button variant="outline" className="h-10 rounded-full font-bold px-6 border-2 border-zinc-300 bg-background shadow-sm text-xs gap-2"><User className="h-4 w-4" /> Operadores <ChevronDown className="h-3 w-3 opacity-50" /></Button></DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56 max-h-80 overflow-y-auto border-2">
-                        {uniqueOperators.map(op => ( <DropdownMenuCheckboxItem key={op} checked={operatorFilters.includes(op)} onCheckedChange={() => toggleOperatorFilter(op)} className="font-bold text-xs uppercase">{op}</DropdownMenuCheckboxItem> ))}
+                        {uniqueOperators.map(op => ( 
+                            <DropdownMenuCheckboxItem 
+                                key={op} 
+                                checked={operatorFilters.includes(op)} 
+                                onCheckedChange={() => toggleOperatorFilter(op)} 
+                                className="font-bold text-xs uppercase"
+                            >
+                                {op}
+                            </DropdownMenuCheckboxItem> 
+                        ))}
                     </DropdownMenuContent>
                 </DropdownMenu>
                 <DropdownMenu>

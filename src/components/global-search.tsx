@@ -18,8 +18,9 @@ import { Button } from '@/components/ui/button';
 import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA V17
- * Correção Crítica: Adicionado shouldFilter={false} para respeitar os resultados do Firebase.
+ * 🚀 BUSCA GLOBAL REATIVA V18
+ * Ajuste: Forçando shouldFilter={false} para evitar que o CMDK oculte resultados válidos do Firebase.
+ * Incluído logs técnicos [DEBUG-LK] para monitoramento de documentos.
  */
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false);
@@ -54,13 +55,13 @@ export function GlobalSearch() {
             const normalized = normalizeString(searchTerm);
             const isNumber = /^\d+$/.test(searchTerm);
 
-            // Busca ampliada para 500 registros
             const qCust = query(
                 collection(firestore, 'customers'), 
                 where('ownerId', '==', user.uid),
                 limit(500) 
             );
             const snapCust = await getDocs(qCust);
+            
             const filteredCustomers = snapCust.docs
                 .map(d => ({ ...d.data(), id: d.id } as Customer))
                 .filter(c => {
@@ -80,6 +81,7 @@ export function GlobalSearch() {
                 limit(500)
             );
             const snapProp = await getDocs(qProp);
+            
             const filteredProposals = snapProp.docs
                 .map(d => ({ ...d.data(), id: d.id } as Proposal))
                 .filter(p => {
@@ -88,6 +90,10 @@ export function GlobalSearch() {
                     return normalizeString(p.product).includes(normalized) || normalizeString(p.bank).includes(normalized);
                 })
                 .slice(0, 10);
+
+            // 🔬 DEBUG LOGS REAIS PARA O USUÁRIO CONFERIR NO CONSOLE
+            console.log(`[DEBUG-LK] Busca Global: Clientes Recebidos(${snapCust.docs.length}) -> Filtrados(${filteredCustomers.length})`);
+            console.log(`[DEBUG-LK] Busca Global: Propostas Recebidas(${snapProp.docs.length}) -> Filtradas(${filteredProposals.length})`);
 
             setResults({ customers: filteredCustomers, proposals: filteredProposals });
         } catch (error) {
@@ -126,7 +132,7 @@ export function GlobalSearch() {
             setOpen(isOpen);
             if (!isOpen) setSearchTerm('');
         }}
-        shouldFilter={false}
+        shouldFilter={false} // 🛡️ CRÍTICO: Desativa o filtro interno do CMDK para respeitar os dados do Firebase
       >
         <CommandInput 
             placeholder="ID, Nome, CPF ou Proposta..." 
@@ -162,6 +168,7 @@ export function GlobalSearch() {
                 {results.customers.map((customer) => (
                     <CommandItem
                         key={customer.id}
+                        // O value DEVE conter todos os termos de busca para evitar bloqueio do Radix
                         value={`${customer.name} ${customer.cpf} ${customer.numericId}`}
                         onSelect={() => runCommand(() => router.push(`/customers/${customer.id}`))}
                     >
@@ -185,7 +192,7 @@ export function GlobalSearch() {
                 {results.proposals.map((proposal) => (
                     <CommandItem
                         key={proposal.id}
-                        value={`${proposal.proposalNumber} ${proposal.product}`}
+                        value={`${proposal.proposalNumber} ${proposal.product} ${cleanBankName(proposal.bank)}`}
                         onSelect={() => runCommand(() => router.push(`/proposals?open=${proposal.id}`))}>
                         <div className="flex items-center justify-between w-full">
                             <div className='flex items-center'>
