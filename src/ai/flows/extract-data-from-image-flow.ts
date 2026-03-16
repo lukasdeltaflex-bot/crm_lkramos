@@ -2,7 +2,6 @@
 'use server';
 /**
  * @fileOverview Fluxo Genkit para extrair dados de clientes a partir de imagens ou PDFs (OCR).
- * Otimizado com sistema de logs técnicos detalhados para diagnóstico de infraestrutura.
  */
 
 import { ai } from '@/ai/genkit';
@@ -50,19 +49,12 @@ const extractDataFromImageFlow = ai.defineFlow(
     }
 
     try {
-        console.log(`🤖 IA LK RAMOS: Iniciando extração de mídia (${contentType})...`);
+        console.log(`🤖 IA LK RAMOS: Processando mídia tipo ${contentType}...`);
         
         const { output } = await ai.generate({
           model: gemini15Flash,
           prompt: [
-            { text: `Você é um assistente de elite para correspondentes bancários.
-            Analise este documento (RG, CNH, PDF de Extrato ou Ficha) e extraia os dados estruturados.
-            
-            REGRAS CRÍTICAS:
-            1. Identifique Nome, CPF e Nascimento.
-            2. Localize Números de Benefício (NB), valores de Salário e bancos de cartões (RMC/RCC).
-            3. Formate a data de nascimento como YYYY-MM-DD.
-            4. Se encontrar múltiplos telefones, separe obrigatoriamente em phone e phone2.` },
+            { text: `Analise este documento de correspondente bancário e extraia: Nome, CPF, Nascimento, NB, Salário e Cartões (RMC/RCC). Formate datas como YYYY-MM-DD.` },
             { media: { url: input.photoDataUri, contentType: contentType } }
           ],
           config: {
@@ -79,7 +71,6 @@ const extractDataFromImageFlow = ai.defineFlow(
 
         const result = output || {};
 
-        // 🛡️ BLINDAGEM CONTRA TELEFONES CONCATENADOS
         if (result.phone && !result.phone2) {
             const phoneMatches = result.phone.match(/\(?\d{2}\)?\s?\d{4,5}-?\d{4}/g);
             if (phoneMatches && phoneMatches.length > 1) {
@@ -88,27 +79,18 @@ const extractDataFromImageFlow = ai.defineFlow(
             }
         }
 
-        console.log("✅ IA LK RAMOS: Dados extraídos com sucesso.");
         return result;
     } catch (error: any) {
-        console.error("❌ --- ERRO TÉCNICO IA LK RAMOS ---");
-        console.error("MENSAGEM:", error.message);
+        console.error("❌ ERRO RAW DA API GEMINI:", error);
         
-        let userMessage = "A IA encontrou um problema de comunicação.";
-        const errStr = String(error).toUpperCase();
-        const errMsg = String(error.message || '').toUpperCase();
+        let msg = "Falha na comunicação com a IA.";
+        const raw = String(error).toUpperCase();
         
-        if (errStr.includes("API_KEY_INVALID") || errMsg.includes("API KEY NOT VALID")) {
-            userMessage = "Erro de Credencial: A chave está incorreta ou não foi reconhecida no servidor.";
-        } else if (errStr.includes("403") || errMsg.includes("FORBIDDEN")) {
-            userMessage = "Acesso Negado: A 'Generative Language API' pode estar desativada no seu Google Cloud Console.";
-        } else if (errStr.includes("429")) {
-            userMessage = "Limite atingido: Muitas requisições simultâneas. Aguarde um minuto.";
-        } else if (errStr.includes("SAFETY")) {
-            userMessage = "Filtro de Segurança: O documento contém conteúdo que a IA não pode processar.";
-        }
+        if (raw.includes("API_KEY_INVALID")) msg = "Chave de API Inválida.";
+        if (raw.includes("403")) msg = "Acesso Negado (Verifique se a API está ativa no Cloud).";
+        if (raw.includes("429")) msg = "Limite de requisições excedido.";
         
-        throw new Error(`${userMessage} Verifique se o arquivo está legível e tente novamente.`);
+        throw new Error(`${msg} Detalhes: ${error.message || 'Erro desconhecido'}`);
     }
   }
 );
