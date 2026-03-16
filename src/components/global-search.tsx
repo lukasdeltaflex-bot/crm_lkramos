@@ -18,8 +18,8 @@ import { Button } from '@/components/ui/button';
 import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V6
- * Navegação inteligente: ao clicar em uma proposta, ela aplica filtro automático.
+ * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V7
+ * Navegação inteligente: ao clicar em uma proposta, ela aplica filtro automático via search param.
  */
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false);
@@ -94,6 +94,7 @@ export function GlobalSearch() {
                 })
                 .slice(0, 10);
 
+            console.log(`[DEBUG-GLOBAL] Termo: "${searchTerm}" | Encontrados: ${filteredCustomers.length} Clientes, ${filteredProposals.length} Propostas`);
             setResults({ customers: filteredCustomers, proposals: filteredProposals });
         } catch (error) {
             console.error("Search Error:", error);
@@ -196,7 +197,10 @@ export function GlobalSearch() {
                         <CommandItem
                             key={proposal.id}
                             value={searchIndex}
-                            onSelect={() => runCommand(() => router.push(`/proposals?open=${proposal.id}&search=${proposal.proposalNumber}`))}>
+                            onSelect={() => {
+                                console.log(`[DEBUG-GLOBAL] Clicado: Proposta ${proposal.proposalNumber} | Rota: /proposals?open=${proposal.id}&search=${proposal.proposalNumber}`);
+                                runCommand(() => router.push(`/proposals?open=${proposal.id}&search=${proposal.proposalNumber}`));
+                            }}>
                             <div className="flex items-center justify-between w-full">
                                 <div className='flex items-center'>
                                     <FileText className="mr-2 h-4 w-4 text-muted-foreground" />

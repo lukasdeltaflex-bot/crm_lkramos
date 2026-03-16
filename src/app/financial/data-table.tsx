@@ -72,52 +72,32 @@ import { useUser } from '@/firebase';
 import { safeStorage } from '@/lib/storage-utils';
 
 /**
- * 🛡️ MOTOR DE DATAS ROBUSTO FINANCEIRO V4
- * Normalização rigorosa para Local Time para evitar bugs de fuso horário (UTC Shift).
+ * 🛡️ MOTOR DE DATAS FINANCEIRO V5
+ * Normalização Local Time para evitar UTC Shift.
  */
 function normalizeDate(value: any): Date | null {
   if (!value) return null;
-  
-  // 1. Firestore Timestamp
   if (value?.seconds) return new Date(value.seconds * 1000);
   if (typeof value.toDate === 'function') return value.toDate();
-  
-  // 2. Objeto Date nativo
   if (value instanceof Date) return new Date(value);
-  
-  // 3. String (ISO ou BR)
   if (typeof value === 'string') {
-    // Tenta formato brasileiro dd/mm/aaaa (Mais comum no input e agora priorizado)
     const brMatch = value.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
-    if (brMatch) {
-      return new Date(parseInt(brMatch[3]), parseInt(brMatch[2]) - 1, parseInt(brMatch[1]));
-    }
-
-    // Tenta formato ISO ou YYYY-MM-DD
+    if (brMatch) return new Date(parseInt(brMatch[3]), parseInt(brMatch[2]) - 1, parseInt(brMatch[1]));
     const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (isoMatch) {
-        return new Date(parseInt(isoMatch[1]), parseInt(isoMatch[2]) - 1, parseInt(isoMatch[3]));
-    }
-
-    // Fallback genérico
+    if (isoMatch) return new Date(parseInt(isoMatch[1]), parseInt(isoMatch[2]) - 1, parseInt(isoMatch[3]));
     const parsed = new Date(value);
     if (!isNaN(parsed.getTime())) return parsed;
   }
   return null;
 }
 
-/**
- * 🛡️ COMPARADOR DE INTERVALO INCLUSIVO
- */
 function isWithinRange(dateValue: Date, start: Date, end: Date) {
   const target = new Date(dateValue);
   const startDate = new Date(start);
   const endDate = new Date(end);
-  
   target.setHours(0, 0, 0, 0);
   startDate.setHours(0, 0, 0, 0);
   endDate.setHours(23, 59, 59, 999);
-  
   return target >= startDate && target <= endDate;
 }
 
@@ -275,40 +255,27 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     }
   };
 
-  /**
-   * 🛡️ MOTOR DE FILTRAGEM FINANCEIRO V4
-   * Filtra rigorosamente pela commissionPaymentDate conforme regra de negócio.
-   */
   const filteredData = React.useMemo(() => {
     let list = data;
-
-    // 1. Filtro de Status de Comissão (Normalizado)
     if (statusFilter !== 'Todos') {
         const target = statusFilter.toUpperCase();
         list = list.filter(p => {
             const currentCommStatus = (p.commissionStatus || 'Pendente').toUpperCase();
-            const normalizedTarget = target.endsWith('S') ? target.slice(0, -1) : target;
-            return currentCommStatus === normalizedTarget;
+            return currentCommStatus === (target.endsWith('S') ? target.slice(0, -1) : target);
         });
     }
-
-    // 2. Filtro de Período (Exclusivo Data de Pagamento)
     if (appliedDateRange && appliedDateRange.from) {
         const start = appliedDateRange.from;
         const end = appliedDateRange.to || appliedDateRange.from;
-        
         list = list.filter(p => {
             const paymentDate = normalizeDate(p.commissionPaymentDate);
             if (!paymentDate) return false;
             return isWithinRange(paymentDate, start, end);
         });
     }
-
-    // 3. Filtros Secundários
     if (bankFilters.length > 0) list = list.filter(p => bankFilters.includes(p.bank));
     if (promoterFilters.length > 0) list = list.filter(p => promoterFilters.includes(p.promoter));
     if (operatorFilters.length > 0) list = list.filter(p => operatorFilters.includes(p.operator || 'Sem Operador'));
-    
     return list;
   }, [data, statusFilter, bankFilters, promoterFilters, operatorFilters, appliedDateRange]);
 
@@ -333,22 +300,14 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     globalFilterFn: (row, columnId, filterValue) => {
         const searchTerm = String(filterValue ?? '').trim();
         if (!searchTerm) return true;
-        
         const customer = row.original.customer;
         const p = row.original;
         const normalizedSearch = normalizeString(searchTerm);
         const cleanDigits = searchTerm.replace(/\D/g, '');
-        
         const searchableFields = [customer?.name, customer?.cpf, p.proposalNumber, p.operator, p.bank, p.promoter, p.product];
         const matchesText = searchableFields.some(field => field && normalizeString(String(field)).includes(normalizedSearch));
-        
         const isPotentialId = cleanDigits.length >= 2;
-        const matchesId = isPotentialId && (
-            String(customer?.numericId).includes(cleanDigits) || 
-            (customer?.cpf || '').replace(/\D/g, '').includes(cleanDigits) ||
-            (p.proposalNumber || '').replace(/\D/g, '').includes(cleanDigits)
-        );
-
+        const matchesId = isPotentialId && (String(customer?.numericId).includes(cleanDigits) || (customer?.cpf || '').replace(/\D/g, '').includes(cleanDigits) || (p.proposalNumber || '').replace(/\D/g, '').includes(cleanDigits));
         return matchesText || matchesId;
     },
     meta: { isPrivacyMode, userSettings, statusColors }
@@ -356,7 +315,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
   React.useImperativeHandle(ref, () => ({ table }));
 
-  const totalTableWidth = table.getTotalSize();
   const numSelected = table.getFilteredSelectedRowModel().rows.length;
   const totalGross = table.getFilteredSelectedRowModel().rows.reduce((acc, r) => acc + (r.original.grossAmount || 0), 0);
   const totalCommission = table.getFilteredSelectedRowModel().rows.reduce((acc, r) => acc + (r.original.commissionValue || 0), 0);
@@ -402,10 +360,10 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                             <div className="flex items-center gap-2"><Snowflake className="h-3.5 w-3.5 text-blue-500" /><SelectValue placeholder="Congelar" /></div>
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="0" className="text-[10px] font-bold uppercase">Nenhuma fixa</SelectItem>
-                            <SelectItem value="1" className="text-[10px] font-bold uppercase">Fixar 1° Coluna</SelectItem>
-                            <SelectItem value="2" className="text-[10px] font-bold uppercase">Fixar 2° Colunas</SelectItem>
-                            <SelectItem value="3" className="text-[10px] font-bold uppercase">Fixar 3° Colunas</SelectItem>
+                            <SelectItem value="0">Nenhuma fixa</SelectItem>
+                            <SelectItem value="1">Fixar 1° Coluna</SelectItem>
+                            <SelectItem value="2">Fixar 2° Colunas</SelectItem>
+                            <SelectItem value="3">Fixar 3° Colunas</SelectItem>
                         </SelectContent>
                     </Select>
                     <DropdownMenu>
@@ -473,7 +431,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             </div>
             <Card className="border-2 border-zinc-300 shadow-xl rounded-xl overflow-hidden bg-card p-1">
                 <ScrollArea className="h-[calc(100vh-280px)] w-full scroll-area-priority">
-                    <Table style={{ width: totalTableWidth, tableLayout: 'fixed' }}>
+                    <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
                         <TableHeader className="bg-background border-b-2 sticky top-0 z-50 shadow-sm">
                             {table.getHeaderGroups().map(hg => (
                                 <TableRow key={hg.id} className="border-b hover:bg-transparent">

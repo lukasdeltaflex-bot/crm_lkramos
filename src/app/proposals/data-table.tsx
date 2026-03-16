@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -154,6 +153,14 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     });
   };
 
+  const toggleBankFilter = (bank: string) => { setBankFilters(prev => prev.includes(bank) ? prev.filter(b => b !== bank) : [...prev, bank]); };
+  const togglePromoterFilter = (promoter: string) => { setPromoterFilters(prev => prev.includes(promoter) ? prev.filter(p => p !== promoter) : [...prev, promoter]); };
+  const toggleOperatorFilter = (op: string) => { setOperatorFilters(prev => prev.includes(op) ? prev.filter(o => o !== op) : [...prev, op]); };
+
+  const uniqueOperators = React.useMemo(() => Array.from(new Set(data.map(p => p.operator || 'Sem Operador'))).sort(), [data]);
+  const uniqueBanks = React.useMemo(() => Array.from(new Set(data.map(p => p.bank))).sort(), [data]);
+  const uniquePromoters = React.useMemo(() => Array.from(new Set(data.map(p => p.promoter))).sort(), [data]);
+
   React.useEffect(() => {
     if (initialGlobalFilter) {
         setGlobalFilter(initialGlobalFilter);
@@ -164,21 +171,17 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     if (!user?.uid) return;
     setIsClient(true);
     const prefix = user.uid;
-    
     setFrozenCount(safeStorage.get(`${prefix}-prop-frozen`, 2));
     setColumnVisibility(safeStorage.get(`${prefix}-prop-visibility`, columnVisibility));
     setColumnSizing(safeStorage.get(`${prefix}-prop-sizing`, {}));
-    
     const savedPageSize = safeStorage.get(`${prefix}-prop-pageSize`, 10);
     setPagination(p => ({ ...p, pageSize: savedPageSize }));
-
     const savedOrder = safeStorage.get<string[]>(`${prefix}-prop-order`, []);
     if (savedOrder.length > 0) {
         const validOrder = savedOrder.filter(id => initialIds.includes(id));
         const missingIds = initialIds.filter(id => !validOrder.includes(id));
         setColumnOrder([...validOrder, ...missingIds]);
     }
-
     setIsLoaded(true);
   }, [initialIds, user?.uid]);
 
@@ -293,34 +296,14 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         const customer = row.original.customer;
         const p = row.original;
         const normalizedSearch = normalizeString(searchTerm);
-        
-        // 🛡️ Lógica inclusiva: Verifica texto e identificadores numéricos em paralelo
         const searchableFields = [customer?.name, customer?.cpf, p.proposalNumber, p.operator, p.bank, cleanBankName(p.bank), p.promoter];
         const matchesText = searchableFields.some(field => field && normalizeString(String(field)).includes(normalizedSearch));
-        
         const isPureNumber = /^\d+$/.test(searchTerm);
-        const matchesId = isPureNumber && (
-            String(customer?.numericId) === searchTerm || 
-            (customer?.cpf || '').replace(/\D/g, '').startsWith(searchTerm) ||
-            (p.proposalNumber || '').replace(/\D/g, '').startsWith(searchTerm)
-        );
-
+        const matchesId = isPureNumber && (String(customer?.numericId) === searchTerm || (customer?.cpf || '').replace(/\D/g, '').startsWith(searchTerm) || (p.proposalNumber || '').replace(/\D/g, '').startsWith(searchTerm));
         return matchesText || matchesId;
     },
     meta: { userSettings }
   });
-
-  // 🛡️ LOGS DE DEBUG PARA VALIDAÇÃO DE FILTRO
-  React.useEffect(() => {
-    if (hasActiveFilters) {
-        console.log(`[DEBUG-FILTER] Tabela Propostas:`, {
-            totalBruto: data.length,
-            aposFiltrosPeriodo: filteredData.length,
-            termoBusca: globalFilter,
-            finalNaTela: table.getFilteredRowModel().rows.length
-        });
-    }
-  }, [data.length, filteredData.length, globalFilter, table.getFilteredRowModel().rows.length, hasActiveFilters]);
 
   React.useImperativeHandle(ref, () => ({ table }));
 
@@ -330,14 +313,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const totalCommission = React.useMemo(() => selectedRows.reduce((acc, row) => acc + (row.original.commissionValue || 0), 0), [selectedRows]);
 
   const totalTableWidth = table.getTotalSize();
-
-  const toggleBankFilter = (bank: string) => { setBankFilters(prev => prev.includes(bank) ? prev.filter(b => b !== bank) : [...prev, bank]); };
-  const togglePromoterFilter = (promoter: string) => { setPromoterFilters(prev => prev.includes(promoter) ? prev.filter(p => p !== promoter) : [...prev, promoter]); };
-  const toggleOperatorFilter = (op: string) => { setOperatorFilters(prev => prev.includes(op) ? prev.filter(o => o !== op) : [...prev, op]); };
-
-  const uniqueOperators = React.useMemo(() => Array.from(new Set(data.map(p => p.operator || 'Sem Operador'))).sort(), [data]);
-  const uniqueBanks = React.useMemo(() => Array.from(new Set(data.map(p => p.bank))).sort(), [data]);
-  const uniquePromoters = React.useMemo(() => Array.from(new Set(data.map(p => p.promoter))).sort(), [data]);
 
   const columnOffsets = React.useMemo(() => {
     const visibleColumns = table.getVisibleLeafColumns();
@@ -377,10 +352,10 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                             <div className="flex items-center gap-2"><Snowflake className="h-3.5 w-3.5 text-blue-500" /><SelectValue placeholder="Congelar" /></div>
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="0" className="text-[10px] font-bold uppercase">Nenhuma fixa</SelectItem>
-                            <SelectItem value="1" className="text-[10px] font-bold uppercase">Fixar 1° Coluna</SelectItem>
-                            <SelectItem value="2" className="text-[10px] font-bold uppercase">Fixar 2° Colunas</SelectItem>
-                            <SelectItem value="3" className="text-[10px] font-bold uppercase">Fixar 3° Colunas</SelectItem>
+                            <SelectItem value="0">Nenhuma fixa</SelectItem>
+                            <SelectItem value="1">Fixar 1° Coluna</SelectItem>
+                            <SelectItem value="2">Fixar 2° Colunas</SelectItem>
+                            <SelectItem value="3">Fixar 3° Colunas</SelectItem>
                         </SelectContent>
                     </Select>
                     <DropdownMenu>
