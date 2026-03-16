@@ -247,11 +247,54 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   };
 
   const filteredData = React.useMemo(() => {
+    // 🛡️ MOTOR DE NORMALIZAÇÃO OBRIGATÓRIO (LK RAMOS)
+    function normalizeDate(value: any) {
+      if (!value) return null;
+      // Firestore Timestamp
+      if (typeof value === 'object' && value.seconds !== undefined) {
+        return new Date(value.seconds * 1000);
+      }
+      // Firestore helper
+      if (typeof value.toDate === 'function') {
+        return value.toDate();
+      }
+      if (value instanceof Date) {
+        return new Date(value);
+      }
+      if (typeof value === 'string') {
+        const parsed = new Date(value);
+        if (!isNaN(parsed.getTime())) return parsed;
+        // Formato BR dd/mm/yyyy (do screenshot)
+        const parts = value.split('/');
+        if (parts.length === 3) {
+            const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+            if (!isNaN(d.getTime())) return d;
+        }
+      }
+      return null;
+    }
+
+    function isWithinRange(dateValue: any, start: Date, end: Date) {
+      const d = normalizeDate(dateValue);
+      if (!d) return false;
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 999);
+      return d >= startDate && d <= endDate;
+    }
+
     let list = data;
 
-    // 1. Filtro por Status Financeiro
+    // 1. Filtro por Status Financeiro (Independente do status comercial)
     if (statusFilter !== 'Todos') {
-        list = list.filter(p => p.commissionStatus === statusFilter);
+        list = list.filter(p => {
+            const s = (p.commissionStatus || '').toUpperCase();
+            const f = statusFilter.toUpperCase();
+            // Mapeamento tolerante: PAGAS -> PAGA, PENDENTES -> PENDENTE
+            const target = f.endsWith('S') ? f.slice(0, -1) : f;
+            return s === target || s === f;
+        });
     }
 
     // 2. Filtros de Categorias
@@ -259,31 +302,27 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     if (promoterFilters.length > 0) list = list.filter(p => promoterFilters.includes(p.promoter));
     if (operatorFilters.length > 0) list = list.filter(p => operatorFilters.includes(p.operator || 'Sem Operador'));
     
-    // 3. 🛡️ FILTRO DE PERÍODO SOBERANO (Data de Pagamento)
+    // 3. 🛡️ FILTRO DE PERÍODO SOBERANO (Baseado sempre na Data de Pagamento)
     if (appliedDateRange && appliedDateRange.from) {
-        const startStr = format(appliedDateRange.from, 'yyyy-MM-dd');
-        const endStr = appliedDateRange.to ? format(appliedDateRange.to, 'yyyy-MM-dd') : startStr;
+        const start = appliedDateRange.from;
+        const end = appliedDateRange.to || start;
         
-        console.log(`[DEBUG-LK] Filtrando registros entre: ${startStr} e ${endStr}`);
+        console.log(`[DEBUG-RECONCILIATION] Iniciando filtro: ${format(start, 'dd/MM/yyyy')} até ${format(end, 'dd/MM/yyyy')}`);
+        console.log(`[DEBUG-RECONCILIATION] Registros iniciais no lote: ${list.length}`);
         
         list = list.filter(p => {
-            // 🛡️ REGRA FINANCEIRA: Normaliza qualquer formato para yyyy-MM-dd
-            const rawDate = p.commissionPaymentDate;
-            if (!rawDate) return false;
-
-            const parsedDate = parseDateSafe(rawDate);
-            if (!parsedDate || !isValid(parsedDate)) return false;
-
-            const pDateStr = format(parsedDate, 'yyyy-MM-dd');
-            const isMatch = pDateStr >= startStr && pDateStr <= endStr;
-
-            if (isMatch) console.log(`[DEBUG-LK] Match encontrado: ${p.customer?.name} pago em ${pDateStr}`);
+            const paymentDate = p.commissionPaymentDate;
+            const match = isWithinRange(paymentDate, start, end);
             
-            return isMatch;
+            if (match) {
+                console.log(`[DEBUG-RECONCILIATION] MATCH ENCONTRADO: ${p.customer?.name} | Data: ${paymentDate}`);
+            }
+            return match;
         });
+        
+        console.log(`[DEBUG-RECONCILIATION] Registros após filtro de data: ${list.length}`);
     }
     
-    console.log(`[DEBUG-LK] Total de registros financeiros pós-filtro: ${list.length}`);
     return list;
   }, [data, statusFilter, bankFilters, promoterFilters, operatorFilters, appliedDateRange]);
 
@@ -366,7 +405,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 </Tabs>
                 <div className="flex items-center gap-3 ml-auto">
                     <Select value={String(frozenCount)} onValueChange={(val) => setFrozenCount(Number(val))}>
-                        <SelectTrigger className="h-10 min-w-[140px] rounded-full text-[10px] font-bold uppercase border-2 border-zinc-300 bg-background shadow-sm">
+                        <SelectTrigger className="h-10 min-w-[140px] rounded-full text-[10px] font-black uppercase border-2 border-zinc-300 bg-background shadow-sm">
                             <div className="flex items-center gap-2"><Snowflake className="h-3.5 w-3.5 text-blue-500" /><SelectValue placeholder="Congelar" /></div>
                         </SelectTrigger>
                         <SelectContent>
