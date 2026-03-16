@@ -72,8 +72,8 @@ import { useUser } from '@/firebase';
 import { safeStorage } from '@/lib/storage-utils';
 
 /**
- * 🛡️ MOTOR DE DATAS ROBUSTO FINANCEIRO
- * Converte qualquer formato de data em Local Date para evitar shift de timezone.
+ * 🛡️ MOTOR DE DATAS ROBUSTO FINANCEIRO V4
+ * Normalização rigorosa para Local Time para evitar bugs de fuso horário (UTC Shift).
  */
 function normalizeDate(value: any): Date | null {
   if (!value) return null;
@@ -87,19 +87,16 @@ function normalizeDate(value: any): Date | null {
   
   // 3. String (ISO ou BR)
   if (typeof value === 'string') {
-    // Tenta formato brasileiro dd/mm/aaaa primeiro (Mais comum no input)
+    // Tenta formato brasileiro dd/mm/aaaa (Mais comum no input e agora priorizado)
     const brMatch = value.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
     if (brMatch) {
-      const d = new Date(parseInt(brMatch[3]), parseInt(brMatch[2]) - 1, parseInt(brMatch[1]));
-      if (!isNaN(d.getTime())) return d;
+      return new Date(parseInt(brMatch[3]), parseInt(brMatch[2]) - 1, parseInt(brMatch[1]));
     }
 
     // Tenta formato ISO ou YYYY-MM-DD
     const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (isoMatch) {
-        // Usamos os componentes numéricos para garantir Local Time e evitar shift UTC
-        const d = new Date(parseInt(isoMatch[1]), parseInt(isoMatch[2]) - 1, parseInt(isoMatch[3]));
-        if (!isNaN(d.getTime())) return d;
+        return new Date(parseInt(isoMatch[1]), parseInt(isoMatch[2]) - 1, parseInt(isoMatch[3]));
     }
 
     // Fallback genérico
@@ -279,11 +276,10 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   };
 
   /**
-   * 🛡️ MOTOR DE FILTRAGEM FINANCEIRO V3
-   * Filtra estritamente pela commissionPaymentDate conforme regra de negócio.
+   * 🛡️ MOTOR DE FILTRAGEM FINANCEIRO V4
+   * Filtra rigorosamente pela commissionPaymentDate conforme regra de negócio.
    */
   const filteredData = React.useMemo(() => {
-    console.log(`[DEBUG-FINANCEIRO] total registros antes do filtro: ${data.length}`);
     let list = data;
 
     // 1. Filtro de Status de Comissão (Normalizado)
@@ -291,14 +287,12 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         const target = statusFilter.toUpperCase();
         list = list.filter(p => {
             const currentCommStatus = (p.commissionStatus || 'Pendente').toUpperCase();
-            // "PAGAS" vira "PAGA", "PENDENTES" vira "PENDENTE", etc.
             const normalizedTarget = target.endsWith('S') ? target.slice(0, -1) : target;
             return currentCommStatus === normalizedTarget;
         });
-        console.log(`[DEBUG-FINANCEIRO] total após filtro de status (${statusFilter}): ${list.length}`);
     }
 
-    // 2. Filtro de Período (Baseado EXCLUSIVAMENTE na Data de Pagamento da Comissão)
+    // 2. Filtro de Período (Exclusivo Data de Pagamento)
     if (appliedDateRange && appliedDateRange.from) {
         const start = appliedDateRange.from;
         const end = appliedDateRange.to || appliedDateRange.from;
@@ -306,19 +300,11 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         list = list.filter(p => {
             const paymentDate = normalizeDate(p.commissionPaymentDate);
             if (!paymentDate) return false;
-
-            const inRange = isWithinRange(paymentDate, start, end);
-            
-            if (inRange) {
-                console.log(`[DEBUG-FINANCEIRO] Match encontrado: Cliente ${p.customer?.name} | Proposta: ${p.proposalNumber} | Data Pgto Normalizada: ${format(paymentDate, 'dd/MM/yyyy HH:mm')}`);
-            }
-            
-            return inRange;
+            return isWithinRange(paymentDate, start, end);
         });
-        console.log(`[DEBUG-FINANCEIRO] total após filtro de período: ${list.length}`);
     }
 
-    // 3. Filtros Secundários (Preservados)
+    // 3. Filtros Secundários
     if (bankFilters.length > 0) list = list.filter(p => bankFilters.includes(p.bank));
     if (promoterFilters.length > 0) list = list.filter(p => promoterFilters.includes(p.promoter));
     if (operatorFilters.length > 0) list = list.filter(p => operatorFilters.includes(p.operator || 'Sem Operador'));
@@ -347,18 +333,20 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     globalFilterFn: (row, columnId, filterValue) => {
         const searchTerm = String(filterValue ?? '').trim();
         if (!searchTerm) return true;
+        
         const customer = row.original.customer;
         const p = row.original;
         const normalizedSearch = normalizeString(searchTerm);
+        const cleanDigits = searchTerm.replace(/\D/g, '');
         
         const searchableFields = [customer?.name, customer?.cpf, p.proposalNumber, p.operator, p.bank, p.promoter, p.product];
         const matchesText = searchableFields.some(field => field && normalizeString(String(field)).includes(normalizedSearch));
         
-        const isPureNumber = /^\d+$/.test(searchTerm);
-        const matchesId = isPureNumber && (
-            String(customer?.numericId) === searchTerm || 
-            (customer?.cpf || '').replace(/\D/g, '').startsWith(searchTerm) ||
-            (p.proposalNumber || '').replace(/\D/g, '').startsWith(searchTerm)
+        const isPotentialId = cleanDigits.length >= 2;
+        const matchesId = isPotentialId && (
+            String(customer?.numericId).includes(cleanDigits) || 
+            (customer?.cpf || '').replace(/\D/g, '').includes(cleanDigits) ||
+            (p.proposalNumber || '').replace(/\D/g, '').includes(cleanDigits)
         );
 
         return matchesText || matchesId;

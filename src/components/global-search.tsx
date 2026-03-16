@@ -18,9 +18,8 @@ import { Button } from '@/components/ui/button';
 import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V5
- * Otimizada para navegação inteligente: ao clicar em uma proposta,
- * ela abre já filtrada na página de Propostas.
+ * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V6
+ * Navegação inteligente: ao clicar em uma proposta, ela aplica filtro automático.
  */
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false);
