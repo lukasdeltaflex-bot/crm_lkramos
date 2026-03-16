@@ -18,9 +18,9 @@ import { Button } from '@/components/ui/button';
 import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V13
- * Localização inclusiva de clientes e propostas com navegação inteligente.
- * Corrigido: Busca de propostas agora aceita strings alfanuméricas e símbolos.
+ * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V15
+ * Correção: Implementada estratégia de busca por igualdade (ID-friendly) + Fetch Amplo.
+ * Isso garante que propostas e CPFs específicos sejam localizados mesmo em bases gigantes.
  */
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false);
@@ -54,61 +54,88 @@ export function GlobalSearch() {
         const normalized = normalizeString(searchTerm);
         const cleanDigits = searchTerm.replace(/\D/g, '');
         const isPotentialId = cleanDigits.length >= 2;
+        const term = searchTerm.trim();
 
-        console.log(`[DEBUG-GLOBAL] Buscando: "${searchTerm}" (Dígitos: ${cleanDigits})`);
+        console.log(`[DEBUG-GLOBAL] Buscando por: "${term}"`);
 
         try {
-            // 🔍 BUSCA DE CLIENTES
-            const qCust = query(
+            // --- 🔍 BUSCA DE CLIENTES ---
+            const customerMap = new Map<string, Customer>();
+            
+            // 1. Busca por CPF exato (Eficiente e Sem Índice Composto)
+            if (isPotentialId) {
+                const qExactCpf = query(
+                    collection(firestore, 'customers'),
+                    where('ownerId', '==', user.uid),
+                    where('cpf', '==', term),
+                    limit(5)
+                );
+                const snapCpf = await getDocs(qExactCpf);
+                snapCpf.docs.forEach(d => customerMap.set(d.id, { ...d.data(), id: d.id } as Customer));
+            }
+
+            // 2. Busca Ampla (Filtro Local para Nome/Cidade/Tags)
+            const qCustRecent = query(
                 collection(firestore, 'customers'), 
                 where('ownerId', '==', user.uid),
-                limit(100)
+                limit(200)
             );
-            const snapCust = await getDocs(qCust);
-            
-            const filteredCustomers = snapCust.docs
-                .map(d => ({ ...d.data(), id: d.id } as Customer))
-                .filter(c => {
-                    if (c.deleted === true) return false;
-                    const cpfNumeric = (c.cpf || '').replace(/\D/g, '');
-                    const nameMatch = normalizeString(c.name || '').includes(normalized);
-                    const idMatch = isPotentialId && (String(c.numericId).includes(cleanDigits) || cpfNumeric.includes(cleanDigits));
-                    return nameMatch || idMatch;
-                })
-                .slice(0, 8);
+            const snapRecent = await getDocs(qCustRecent);
+            snapRecent.docs.forEach(d => {
+                const c = { ...d.data(), id: d.id } as Customer;
+                if (c.deleted !== true && (
+                    normalizeString(c.name || '').includes(normalized) ||
+                    (isPotentialId && (c.cpf || '').replace(/\D/g, '').includes(cleanDigits)) ||
+                    (isPotentialId && String(c.numericId).includes(cleanDigits))
+                )) {
+                    customerMap.set(d.id, c);
+                }
+            });
 
-            // 🔍 BUSCA DE PROPOSTAS (Melhorada para Proposta nº Alfanumérica)
-            const qProp = query(
+            // --- 🔍 BUSCA DE PROPOSTAS ---
+            const proposalMap = new Map<string, Proposal>();
+
+            // 1. Busca por Número de Proposta Exato (Eficiente e Sem Índice Composto)
+            if (isPotentialId) {
+                const qExactProp = query(
+                    collection(firestore, 'loanProposals'),
+                    where('ownerId', '==', user.uid),
+                    where('proposalNumber', '==', term),
+                    limit(5)
+                );
+                const snapPropExact = await getDocs(qExactProp);
+                snapPropExact.docs.forEach(d => proposalMap.set(d.id, { ...d.data(), id: d.id } as Proposal));
+            }
+
+            // 2. Busca Ampla (Filtro Local para Bank/Product/Partial Num)
+            const qPropRecent = query(
                 collection(firestore, 'loanProposals'), 
                 where('ownerId', '==', user.uid),
-                limit(100)
+                limit(500) // Limite aumentado para cobrir base maior
             );
-            const snapProp = await getDocs(qProp);
-            
-            const filteredProposals = snapProp.docs
-                .map(d => ({ ...d.data(), id: d.id } as Proposal))
-                .filter(p => {
-                    if (p.deleted === true) return false;
-                    
+            const snapPropRecent = await getDocs(qPropRecent);
+            snapPropRecent.docs.forEach(d => {
+                const p = { ...d.data(), id: d.id } as Proposal;
+                if (p.deleted !== true) {
                     const pNumStr = normalizeString(p.proposalNumber || '');
-                    // Match 1: String exata ou parcial (incluindo símbolos digitados pelo usuário)
                     const matchesPNum = pNumStr.includes(normalized);
-                    // Match 2: Apenas dígitos (se o usuário digitar apenas números)
                     const matchesPNumDigits = isPotentialId && pNumStr.replace(/\D/g, '').includes(cleanDigits);
-                    
-                    const numMatch = matchesPNum || matchesPNumDigits;
-                    
                     const textMatch = normalizeString(p.bank || '').includes(normalized) || 
                                      normalizeString(p.product || '').includes(normalized);
                     
-                    return numMatch || textMatch;
-                })
-                .slice(0, 8);
+                    if (matchesPNum || matchesPNumDigits || textMatch) {
+                        proposalMap.set(d.id, p);
+                    }
+                }
+            });
 
-            console.log(`[DEBUG-GLOBAL] Encontrados -> Clientes: ${filteredCustomers.length} | Propostas: ${filteredProposals.length}`);
-            setResults({ customers: filteredCustomers, proposals: filteredProposals });
+            const finalCustomers = Array.from(customerMap.values()).slice(0, 8);
+            const finalProposals = Array.from(proposalMap.values()).slice(0, 8);
+
+            console.log(`[DEBUG-GLOBAL] Encontrados: ${finalCustomers.length} clientes, ${finalProposals.length} propostas`);
+            setResults({ customers: finalCustomers, proposals: finalProposals });
         } catch (error) {
-            console.error("[DEBUG-GLOBAL] Erro Firestore:", error);
+            console.error("[DEBUG-GLOBAL] Erro na busca:", error);
         } finally {
             setIsSearching(false);
         }
