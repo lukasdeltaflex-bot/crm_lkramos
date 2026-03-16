@@ -73,7 +73,6 @@ import { safeStorage } from '@/lib/storage-utils';
 
 /**
  * 🛡️ MOTOR DE NORMALIZAÇÃO LK RAMOS
- * Converte qualquer entrada de data (Timestamp, String, Date) para objeto Date estável.
  */
 function normalizeDate(value: any): Date | null {
   if (!value) return null;
