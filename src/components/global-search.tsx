@@ -18,8 +18,8 @@ import { Button } from '@/components/ui/button';
 import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V7
- * Navegação inteligente: ao clicar em uma proposta, ela aplica filtro automático via search param.
+ * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V8
+ * Localização inclusiva de clientes e propostas com navegação inteligente.
  */
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false);
@@ -50,6 +50,7 @@ export function GlobalSearch() {
 
     const timer = setTimeout(async () => {
         setIsSearching(true);
+        console.log(`[DEBUG-GLOBAL] Buscando por: "${searchTerm}"`);
         try {
             const normalized = normalizeString(searchTerm);
             const cleanDigits = searchTerm.replace(/\D/g, '');
@@ -94,7 +95,7 @@ export function GlobalSearch() {
                 })
                 .slice(0, 10);
 
-            console.log(`[DEBUG-GLOBAL] Termo: "${searchTerm}" | Encontrados: ${filteredCustomers.length} Clientes, ${filteredProposals.length} Propostas`);
+            console.log(`[DEBUG-GLOBAL] Resultados: ${filteredCustomers.length} Clientes, ${filteredProposals.length} Propostas`);
             setResults({ customers: filteredCustomers, proposals: filteredProposals });
         } catch (error) {
             console.error("Search Error:", error);
@@ -198,7 +199,7 @@ export function GlobalSearch() {
                             key={proposal.id}
                             value={searchIndex}
                             onSelect={() => {
-                                console.log(`[DEBUG-GLOBAL] Clicado: Proposta ${proposal.proposalNumber} | Rota: /proposals?open=${proposal.id}&search=${proposal.proposalNumber}`);
+                                console.log(`[DEBUG-GLOBAL] Navegando para proposta: ${proposal.proposalNumber}`);
                                 runCommand(() => router.push(`/proposals?open=${proposal.id}&search=${proposal.proposalNumber}`));
                             }}>
                             <div className="flex items-center justify-between w-full">

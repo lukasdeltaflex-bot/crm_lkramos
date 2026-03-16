@@ -72,8 +72,8 @@ import { useUser } from '@/firebase';
 import { safeStorage } from '@/lib/storage-utils';
 
 /**
- * 🛡️ MOTOR DE DATAS FINANCEIRO V5
- * Normalização Local Time para evitar UTC Shift.
+ * 🛡️ MOTOR DE DATAS FINANCEIRO V6 (ROBUSTO)
+ * Normalização Local Time para evitar UTC Shift e tratar múltiplos formatos.
  */
 function normalizeDate(value: any): Date | null {
   if (!value) return null;
@@ -81,10 +81,14 @@ function normalizeDate(value: any): Date | null {
   if (typeof value.toDate === 'function') return value.toDate();
   if (value instanceof Date) return new Date(value);
   if (typeof value === 'string') {
+    // dd/MM/yyyy
     const brMatch = value.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
     if (brMatch) return new Date(parseInt(brMatch[3]), parseInt(brMatch[2]) - 1, parseInt(brMatch[1]));
+    
+    // yyyy-MM-dd
     const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (isoMatch) return new Date(parseInt(isoMatch[1]), parseInt(isoMatch[2]) - 1, parseInt(isoMatch[3]));
+    
     const parsed = new Date(value);
     if (!isNaN(parsed.getTime())) return parsed;
   }
@@ -270,7 +274,11 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         list = list.filter(p => {
             const paymentDate = normalizeDate(p.commissionPaymentDate);
             if (!paymentDate) return false;
-            return isWithinRange(paymentDate, start, end);
+            const inRange = isWithinRange(paymentDate, start, end);
+            if (inRange) {
+                console.log(`[DEBUG-FINANCEIRO] Match encontrado: Cliente ${p.customer?.name} | Data Pgto: ${p.commissionPaymentDate}`);
+            }
+            return inRange;
         });
     }
     if (bankFilters.length > 0) list = list.filter(p => bankFilters.includes(p.bank));

@@ -146,13 +146,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     'col_comm': true,
   });
 
-  const handlePaginationChange = (updater: any) => {
-    setPagination((old) => {
-      const next = typeof updater === 'function' ? updater(old) : updater;
-      return next;
-    });
-  };
-
   const toggleBankFilter = (bank: string) => { setBankFilters(prev => prev.includes(bank) ? prev.filter(b => b !== bank) : [...prev, bank]); };
   const togglePromoterFilter = (promoter: string) => { setPromoterFilters(prev => prev.includes(promoter) ? prev.filter(p => p !== promoter) : [...prev, promoter]); };
   const toggleOperatorFilter = (op: string) => { setOperatorFilters(prev => prev.includes(op) ? prev.filter(o => o !== op) : [...prev, op]); };
@@ -160,6 +153,13 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const uniqueOperators = React.useMemo(() => Array.from(new Set(data.map(p => p.operator || 'Sem Operador'))).sort(), [data]);
   const uniqueBanks = React.useMemo(() => Array.from(new Set(data.map(p => p.bank))).sort(), [data]);
   const uniquePromoters = React.useMemo(() => Array.from(new Set(data.map(p => p.promoter))).sort(), [data]);
+
+  const handlePaginationChange = (updater: any) => {
+    setPagination((old) => {
+      const next = typeof updater === 'function' ? updater(old) : updater;
+      return next;
+    });
+  };
 
   React.useEffect(() => {
     if (initialGlobalFilter) {
@@ -296,6 +296,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         const customer = row.original.customer;
         const p = row.original;
         const normalizedSearch = normalizeString(searchTerm);
+        const cleanDigits = searchTerm.replace(/\D/g, '');
         const searchableFields = [customer?.name, customer?.cpf, p.proposalNumber, p.operator, p.bank, cleanBankName(p.bank), p.promoter];
         const matchesText = searchableFields.some(field => field && normalizeString(String(field)).includes(normalizedSearch));
         const isPureNumber = /^\d+$/.test(searchTerm);
@@ -520,7 +521,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                         <div className="flex items-center gap-2">
                             <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-2 bg-background shadow-sm transition-all hover:bg-primary/5 active:scale-95" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}><ChevronsLeft className="h-4 w-4" /></Button>
                             <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-2 bg-background shadow-sm transition-all hover:bg-primary/5 active:scale-95" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}><ChevronLeft className="h-4 w-4" /></Button>
-                            <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-2 bg-background shadow-sm transition-all hover:bg-primary/5 active:scale-95" onClick={() => table.nextPage()} disabled={!table.getNextPage()}><ChevronRight className="h-4 w-4" /></Button>
+                            <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-2 bg-background shadow-sm transition-all hover:bg-primary/5 active:scale-95" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}><ChevronRight className="h-4 w-4" /></Button>
                             <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-2 bg-background shadow-sm transition-all hover:bg-primary/5 active:scale-95" onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}><ChevronsRight className="h-4 w-4" /></Button>
                         </div>
                     </div>
