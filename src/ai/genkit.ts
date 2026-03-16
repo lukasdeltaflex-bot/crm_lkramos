@@ -1,19 +1,25 @@
-
-import 'dotenv/config';
 import { genkit } from 'genkit';
-import { googleAI } from '@genkit-ai/google-genai';
+import { googleAI, gemini15Flash } from '@genkit-ai/google-genai';
 
 /**
  * 🤖 NÚCLEO DE INTELIGÊNCIA ARTIFICIAL - LK RAMOS
- * Configuração otimizada do Genkit 1.x.
- * Prioriza a GOOGLE_API_KEY conforme solicitado para regularização do ambiente.
+ * Configuração otimizada para Genkit 1.x.
+ * 
+ * 🛡️ SEGURANÇA: Esta instância gerencia todas as chamadas de LLM do sistema.
+ * Prioriza múltiplas variações de nomes de variáveis de ambiente para evitar falhas.
  */
+
+const apiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
+
+if (!apiKey && typeof window === 'undefined') {
+  console.warn("⚠️ AVISO: Nenhuma chave de API de IA foi detectada (GOOGLE_GENAI_API_KEY). As funções de IA podem falhar.");
+}
 
 export const ai = genkit({
   plugins: [
     googleAI({
-      apiKey: process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENAI_API_KEY || process.env.GEMINI_API_KEY
+      apiKey: apiKey
     })
   ],
-  model: 'googleai/gemini-1.5-flash',
+  model: gemini15Flash, // Modelo padrão ultra-rápido para extrações e resumos
 });

@@ -1,2 +1,4 @@
 runConfig:
   maxInstances: 1
+  # 🛡️ OTIMIZAÇÃO IA: Aumenta o timeout para 2 minutos para evitar falhas em OCR/Visão Computacional
+  timeoutSeconds: 120
