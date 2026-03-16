@@ -249,31 +249,41 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const filteredData = React.useMemo(() => {
     let list = data;
 
+    // 1. Filtro por Status Financeiro
     if (statusFilter !== 'Todos') {
         list = list.filter(p => p.commissionStatus === statusFilter);
     }
 
+    // 2. Filtros de Categorias
     if (bankFilters.length > 0) list = list.filter(p => bankFilters.includes(p.bank));
     if (promoterFilters.length > 0) list = list.filter(p => promoterFilters.includes(p.promoter));
     if (operatorFilters.length > 0) list = list.filter(p => operatorFilters.includes(p.operator || 'Sem Operador'));
     
+    // 3. 🛡️ FILTRO DE PERÍODO SOBERANO (Data de Pagamento)
     if (appliedDateRange && appliedDateRange.from) {
-        // Normalização extrema para comparação de strings (Imune a Timezone)
         const startStr = format(appliedDateRange.from, 'yyyy-MM-dd');
         const endStr = appliedDateRange.to ? format(appliedDateRange.to, 'yyyy-MM-dd') : startStr;
         
+        console.log(`[DEBUG-LK] Filtrando registros entre: ${startStr} e ${endStr}`);
+        
         list = list.filter(p => {
-            // 🛡️ REGRA SOBERANA: No financeiro, filtro de data olha apenas commissionPaymentDate
-            const dateToCompare = p.commissionPaymentDate;
-            if (!dateToCompare) return false;
+            // 🛡️ REGRA FINANCEIRA: Normaliza qualquer formato para yyyy-MM-dd
+            const rawDate = p.commissionPaymentDate;
+            if (!rawDate) return false;
+
+            const parsedDate = parseDateSafe(rawDate);
+            if (!parsedDate || !isValid(parsedDate)) return false;
+
+            const pDateStr = format(parsedDate, 'yyyy-MM-dd');
+            const isMatch = pDateStr >= startStr && pDateStr <= endStr;
+
+            if (isMatch) console.log(`[DEBUG-LK] Match encontrado: ${p.customer?.name} pago em ${pDateStr}`);
             
-            // Extrai a parte da data da string ISO ou BR
-            const pDateStr = dateToCompare.includes('T') ? dateToCompare.split('T')[0] : dateToCompare;
-            
-            return pDateStr >= startStr && pDateStr <= endStr;
+            return isMatch;
         });
     }
     
+    console.log(`[DEBUG-LK] Total de registros financeiros pós-filtro: ${list.length}`);
     return list;
   }, [data, statusFilter, bankFilters, promoterFilters, operatorFilters, appliedDateRange]);
 
