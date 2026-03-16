@@ -50,6 +50,8 @@ const extractDataFromImageFlow = ai.defineFlow(
     }
 
     try {
+        console.log(`🤖 IA LK RAMOS: Iniciando extração de mídia (${contentType})...`);
+        
         const { output } = await ai.generate({
           model: gemini15Flash,
           prompt: [
@@ -86,22 +88,24 @@ const extractDataFromImageFlow = ai.defineFlow(
             }
         }
 
+        console.log("✅ IA LK RAMOS: Dados extraídos com sucesso.");
         return result;
     } catch (error: any) {
         console.error("❌ --- ERRO TÉCNICO IA LK RAMOS ---");
         console.error("MENSAGEM:", error.message);
-        console.error("STACK:", error.stack);
         
         let userMessage = "A IA encontrou um problema de comunicação.";
         const errStr = String(error).toUpperCase();
         const errMsg = String(error.message || '').toUpperCase();
         
         if (errStr.includes("API_KEY_INVALID") || errMsg.includes("API KEY NOT VALID")) {
-            userMessage = "Erro de Credencial: A chave está incorreta ou não foi reconhecida.";
+            userMessage = "Erro de Credencial: A chave está incorreta ou não foi reconhecida no servidor.";
         } else if (errStr.includes("403") || errMsg.includes("FORBIDDEN")) {
-            userMessage = "Acesso Negado: Verifique se a 'Generative Language API' está ativada no Google Cloud Console.";
+            userMessage = "Acesso Negado: A 'Generative Language API' pode estar desativada no seu Google Cloud Console.";
         } else if (errStr.includes("429")) {
-            userMessage = "Limite atingido: Muitas requisições. Aguarde um minuto.";
+            userMessage = "Limite atingido: Muitas requisições simultâneas. Aguarde um minuto.";
+        } else if (errStr.includes("SAFETY")) {
+            userMessage = "Filtro de Segurança: O documento contém conteúdo que a IA não pode processar.";
         }
         
         throw new Error(`${userMessage} Verifique se o arquivo está legível e tente novamente.`);

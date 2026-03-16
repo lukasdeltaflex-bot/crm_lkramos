@@ -5,13 +5,16 @@ import { googleAI, gemini15Flash } from '@genkit-ai/google-genai';
 
 /**
  * 🤖 NÚCLEO DE INTELIGÊNCIA ARTIFICIAL - LK RAMOS
- * Configuração otimizada para Genkit 1.x com suporte a ambiente local.
+ * Configuração ultra-robusta para detecção de chaves em múltiplos ambientes.
  */
 
-const apiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
+const apiKey = process.env.GOOGLE_GENAI_API_KEY || 
+               process.env.GEMINI_API_KEY || 
+               process.env.GOOGLE_API_KEY || 
+               process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
 if (!apiKey && typeof window === 'undefined') {
-  console.warn("⚠️ AVISO: Nenhuma chave de API de IA foi detectada. As funções de IA podem falhar.");
+  console.warn("⚠️ AVISO CRÍTICO: Nenhuma chave de API Gemini detectada. Verifique o arquivo .env ou as variáveis do App Hosting.");
 }
 
 export const ai = genkit({
