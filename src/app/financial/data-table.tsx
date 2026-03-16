@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -256,20 +255,18 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const filteredData = React.useMemo(() => {
     let list = data;
 
-    // 1. Filtro por Status Financeiro
     if (statusFilter !== 'Todos') {
         const target = statusFilter.toUpperCase();
-        list = list.filter(p => {
-            const s = (p.commissionStatus || '').toUpperCase();
-            return s === target;
-        });
+        list = list.filter(p => (p.commissionStatus || '').toUpperCase() === target);
     }
 
-    // 2. Filtro por Período (Soberania da Data de Pagamento)
     if (appliedDateRange && appliedDateRange.from) {
-        const start = appliedDateRange.from;
-        const end = appliedDateRange.to || start;
-        list = list.filter(p => isWithinRange(p.commissionPaymentDate, start, end));
+        const start = startOfDay(appliedDateRange.from);
+        const end = endOfDay(appliedDateRange.to || appliedDateRange.from);
+        list = list.filter(p => {
+            const pDate = normalizeDate(p.commissionPaymentDate);
+            return pDate && pDate >= start && pDate <= end;
+        });
     }
 
     if (bankFilters.length > 0) list = list.filter(p => bankFilters.includes(p.bank));
@@ -304,7 +301,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         const p = row.original;
         const normalizedSearch = normalizeString(searchTerm);
         
-        // 🛡️ Lógica inclusiva: Verifica texto e identificadores numéricos em paralelo
         const searchableFields = [customer?.name, customer?.cpf, p.proposalNumber, p.operator, p.bank, p.promoter, p.product];
         const matchesText = searchableFields.some(field => field && normalizeString(String(field)).includes(normalizedSearch));
         
@@ -319,18 +315,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     },
     meta: { isPrivacyMode, userSettings, statusColors }
   });
-
-  // 🛡️ LOGS DE DEBUG PARA VALIDAÇÃO DE FILTRO
-  React.useEffect(() => {
-    if (hasActiveFilters) {
-        console.log(`[DEBUG-FILTER] Tabela Financeiro:`, {
-            totalBruto: data.length,
-            aposStatusEPeriodo: filteredData.length,
-            termoBusca: globalFilter,
-            finalNaTela: table.getFilteredRowModel().rows.length
-        });
-    }
-  }, [data.length, filteredData.length, globalFilter, table.getFilteredRowModel().rows.length, hasActiveFilters]);
 
   React.useImperativeHandle(ref, () => ({ table }));
 

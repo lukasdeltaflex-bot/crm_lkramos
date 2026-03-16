@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -19,8 +18,9 @@ import { Button } from '@/components/ui/button';
 import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V4
- * Otimizada para inclusão total de CPF, Nome e Proposta sem restrições de "gate".
+ * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V5
+ * Otimizada para navegação inteligente: ao clicar em uma proposta,
+ * ela abre já filtrada na página de Propostas.
  */
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false);
@@ -56,7 +56,7 @@ export function GlobalSearch() {
             const cleanDigits = searchTerm.replace(/\D/g, '');
             const isPotentialId = cleanDigits.length >= 2;
 
-            // 🔍 BUSCA DE CLIENTES (Ativos e Lixeira oculta)
+            // 🔍 BUSCA DE CLIENTES
             const qCust = query(
                 collection(firestore, 'customers'), 
                 where('ownerId', '==', user.uid),
@@ -95,7 +95,6 @@ export function GlobalSearch() {
                 })
                 .slice(0, 10);
 
-            console.log(`[DEBUG-GLOBAL] Termo: "${searchTerm}" | Fire: ${snapCust.size + snapProp.size} | Res: ${filteredCustomers.length + filteredProposals.length}`);
             setResults({ customers: filteredCustomers, proposals: filteredProposals });
         } catch (error) {
             console.error("Search Error:", error);
