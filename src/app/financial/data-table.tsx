@@ -71,14 +71,27 @@ import { BankIcon } from '@/components/bank-icon';
 import { useUser } from '@/firebase';
 import { safeStorage } from '@/lib/storage-utils';
 
+/**
+ * 🛡️ MOTOR DE DATAS ROBUSTO LK RAMOS
+ * Converte qualquer formato de data (Timestamp, Date, ISO, BR) em um objeto Date válido.
+ */
 function normalizeDate(value: any): Date | null {
   if (!value) return null;
+  
+  // 1. Firestore Timestamp
   if (value?.seconds) return new Date(value.seconds * 1000);
   if (typeof value.toDate === 'function') return value.toDate();
+  
+  // 2. Objeto Date nativo
   if (value instanceof Date) return new Date(value);
+  
+  // 3. String (ISO ou BR)
   if (typeof value === 'string') {
+    // Tenta ISO primeiro
     let parsed = new Date(value);
     if (!isNaN(parsed.getTime())) return parsed;
+    
+    // Tenta formato brasileiro dd/mm/aaaa
     const parts = value.split('/');
     if (parts.length === 3) {
       const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
@@ -88,14 +101,18 @@ function normalizeDate(value: any): Date | null {
   return null;
 }
 
-function isWithinRange(dateValue: any, start: Date, end: Date) {
-  const d = normalizeDate(dateValue);
-  if (!d) return false;
+/**
+ * 🛡️ COMPARADOR DE INTERVALO INCLUSIVO
+ * Garante que registros do início ou fim do dia sejam capturados.
+ */
+function isWithinRange(dateValue: Date, start: Date, end: Date) {
   const startDate = new Date(start);
   const endDate = new Date(end);
+  
   startDate.setHours(0, 0, 0, 0);
   endDate.setHours(23, 59, 59, 999);
-  return d >= startDate && d <= endDate;
+  
+  return dateValue >= startDate && dateValue <= endDate;
 }
 
 const COLUMN_LABELS: Record<string, string> = {
@@ -252,23 +269,43 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     }
   };
 
+  /**
+   * 🛡️ MOTOR DE FILTRAGEM FINANCEIRO V2
+   * Lógica cirúrgica baseada estritamente na commissionPaymentDate.
+   */
   const filteredData = React.useMemo(() => {
+    console.log(`[DEBUG-FINANCEIRO] total registros antes do filtro: ${data.length}`);
     let list = data;
 
+    // 1. Filtro de Status de Comissão (Normalizado)
     if (statusFilter !== 'Todos') {
         const target = statusFilter.toUpperCase();
-        list = list.filter(p => (p.commissionStatus || '').toUpperCase() === target);
-    }
-
-    if (appliedDateRange && appliedDateRange.from) {
-        const start = startOfDay(appliedDateRange.from);
-        const end = endOfDay(appliedDateRange.to || appliedDateRange.from);
         list = list.filter(p => {
-            const pDate = normalizeDate(p.commissionPaymentDate);
-            return pDate && pDate >= start && pDate <= end;
+            const currentCommStatus = (p.commissionStatus || 'Pendente').toUpperCase();
+            const normalizedTarget = target.endsWith('S') ? target.slice(0, -1) : target;
+            return currentCommStatus === normalizedTarget;
         });
+        console.log(`[DEBUG-FINANCEIRO] total após filtro de status (${statusFilter}): ${list.length}`);
     }
 
+    // 2. Filtro de Período (Baseado exclusivamente na Data de Pagamento Financeira)
+    if (appliedDateRange && appliedDateRange.from) {
+        list = list.filter(p => {
+            const paymentDate = normalizeDate(p.commissionPaymentDate);
+            if (!paymentDate) return false;
+
+            const inRange = isWithinRange(paymentDate, appliedDateRange.from!, appliedDateRange.to || appliedDateRange.from!);
+            
+            if (inRange) {
+                console.log(`[DEBUG-FINANCEIRO] Match encontrado: Cliente ${p.customer?.name} | Data Pgto Normalizada:`, format(paymentDate, 'dd/MM/yyyy HH:mm'));
+            }
+            
+            return inRange;
+        });
+        console.log(`[DEBUG-FINANCEIRO] total após filtro de período: ${list.length}`);
+    }
+
+    // 3. Filtros Secundários
     if (bankFilters.length > 0) list = list.filter(p => bankFilters.includes(p.bank));
     if (promoterFilters.length > 0) list = list.filter(p => promoterFilters.includes(p.promoter));
     if (operatorFilters.length > 0) list = list.filter(p => operatorFilters.includes(p.operator || 'Sem Operador'));
