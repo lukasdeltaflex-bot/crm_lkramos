@@ -18,9 +18,9 @@ import { Button } from '@/components/ui/button';
 import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA V18
- * Ajuste: Forçando shouldFilter={false} para evitar que o CMDK oculte resultados válidos do Firebase.
- * Incluído logs técnicos [DEBUG-LK] para monitoramento de documentos.
+ * 🚀 BUSCA GLOBAL REATIVA V19
+ * Correção: Adicionado o campo 'value' explícito para garantir que o motor interno do CMDK 
+ * não esconda os resultados legítimos do Firebase.
  */
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false);
@@ -91,10 +91,7 @@ export function GlobalSearch() {
                 })
                 .slice(0, 10);
 
-            // 🔬 DEBUG LOGS REAIS PARA O USUÁRIO CONFERIR NO CONSOLE
-            console.log(`[DEBUG-LK] Busca Global: Clientes Recebidos(${snapCust.docs.length}) -> Filtrados(${filteredCustomers.length})`);
-            console.log(`[DEBUG-LK] Busca Global: Propostas Recebidas(${snapProp.docs.length}) -> Filtradas(${filteredProposals.length})`);
-
+            console.log(`[DEBUG-LK] Busca: ${filteredCustomers.length} clientes, ${filteredProposals.length} propostas.`);
             setResults({ customers: filteredCustomers, proposals: filteredProposals });
         } catch (error) {
             console.error("Search Error:", error);
@@ -132,7 +129,7 @@ export function GlobalSearch() {
             setOpen(isOpen);
             if (!isOpen) setSearchTerm('');
         }}
-        shouldFilter={false} // 🛡️ CRÍTICO: Desativa o filtro interno do CMDK para respeitar os dados do Firebase
+        shouldFilter={false}
       >
         <CommandInput 
             placeholder="ID, Nome, CPF ou Proposta..." 
@@ -144,10 +141,10 @@ export function GlobalSearch() {
           {isSearching ? (
             <div className="flex items-center justify-center py-10 text-sm text-muted-foreground gap-3">
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <span className="font-black uppercase text-[10px] tracking-widest animate-pulse">Sincronizando base...</span>
+              <span className="font-black uppercase text-[10px] tracking-widest animate-pulse">Sincronizando...</span>
             </div>
           ) : searchTerm.length >= 2 && results.customers.length === 0 && results.proposals.length === 0 ? (
-            <CommandEmpty className="py-10 text-center text-xs font-bold uppercase text-muted-foreground opacity-50">Nenhum registro localizado para "{searchTerm}"</CommandEmpty>
+            <CommandEmpty className="py-10 text-center text-xs font-bold uppercase text-muted-foreground opacity-50">Nenhum registro localizado.</CommandEmpty>
           ) : null}
 
           {searchTerm.length < 2 && (
@@ -168,7 +165,6 @@ export function GlobalSearch() {
                 {results.customers.map((customer) => (
                     <CommandItem
                         key={customer.id}
-                        // O value DEVE conter todos os termos de busca para evitar bloqueio do Radix
                         value={`${customer.name} ${customer.cpf} ${customer.numericId}`}
                         onSelect={() => runCommand(() => router.push(`/customers/${customer.id}`))}
                     >

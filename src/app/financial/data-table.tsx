@@ -155,11 +155,21 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     });
   };
 
+  const handleDateMask = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let v = e.target.value.replace(/\D/g, "").substring(0, 8);
+    if (v.length > 4) v = v.replace(/(\d{2})(\d{2})(\d)/, "$1/$2/$3");
+    else if (v.length > 2) v = v.replace(/(\d{2})(\d)/, "$1/$2");
+    return v;
+  };
+
   const handleApplyFilter = () => {
     const s = parse(startDateInput, 'dd/MM/yyyy', new Date());
     const e = parse(endDateInput, 'dd/MM/yyyy', new Date());
     if (isValid(s)) {
-        setAppliedDateRange({ from: startOfDay(s), to: isValid(e) ? endOfDay(e) : endOfDay(s) });
+        setAppliedDateRange({ 
+            from: startOfDay(s), 
+            to: isValid(e) ? endOfDay(e) : endOfDay(s) 
+        });
     } else {
         setAppliedDateRange(undefined);
     }
@@ -254,7 +264,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         const end = appliedDateRange.to ? endOfDay(appliedDateRange.to) : endOfDay(appliedDateRange.from);
         
         list = list.filter(p => {
-            // 🛡️ REGRA SOBERANA FINANCEIRA: Filtro por data de pagamento apenas
+            // 🛡️ REGRA SOBERANA FINANCEIRA: Filtro por data de pagamento da comissão apenas
             const d = parseDateSafe(p.commissionPaymentDate);
             if (!d) return false;
             return d >= start && d <= end;
@@ -264,10 +274,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
     // 🔬 DEBUG LOGS PARA VALIDAÇÃO EM TEMPO REAL
     console.log(`[DEBUG-LK] Financeiro: Recebido(${initialLen}) -> Pós-Status(${afterStatusLen}) -> Final Pós-Data(${finalLen})`);
-    if (appliedDateRange) {
-        console.log(`[DEBUG-LK] Período aplicado: ${format(startOfDay(appliedDateRange.from), 'dd/MM/yyyy')} até ${format(endOfDay(appliedDateRange.to || appliedDateRange.from), 'dd/MM/yyyy')}`);
-    }
-
+    
     return list;
   }, [data, statusFilter, bankFilters, promoterFilters, operatorFilters, appliedDateRange]);
 
