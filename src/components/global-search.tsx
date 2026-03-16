@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA (FIX)
+ * 🚀 BUSCA GLOBAL REATIVA LK RAMOS
  * Desativado o filtro interno do Radix para permitir que os dados do Firebase
  * apareçam instantaneamente conforme pesquisados.
  */

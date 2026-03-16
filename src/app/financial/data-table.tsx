@@ -71,6 +71,10 @@ import { BankIcon } from '@/components/bank-icon';
 import { useUser } from '@/firebase';
 import { safeStorage } from '@/lib/storage-utils';
 
+/**
+ * 🛡️ MOTOR DE NORMALIZAÇÃO DE DATAS LK RAMOS
+ * Converte diversos formatos (Timestamp, String ISO, Date) para um objeto Date robusto.
+ */
 function normalizeDate(value: any) {
   if (!value) return null;
   if (value?.seconds) return new Date(value.seconds * 1000);
@@ -88,6 +92,9 @@ function normalizeDate(value: any) {
   return null;
 }
 
+/**
+ * 🛡️ VERIFICADOR DE INTERVALO INCLUSIVO
+ */
 function isWithinRange(dateValue: any, start: Date, end: Date) {
   const d = normalizeDate(dateValue);
   if (!d) return false;
@@ -255,6 +262,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const filteredData = React.useMemo(() => {
     let list = data;
 
+    // 1. Filtro por Status Financeiro (Prioridade Sênior)
     if (statusFilter !== 'Todos') {
         const target = statusFilter.toUpperCase();
         list = list.filter(p => {
@@ -263,6 +271,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         });
     }
 
+    // 2. Filtro por Período (Soberania da Data de Pagamento)
     if (appliedDateRange && appliedDateRange.from) {
         const start = appliedDateRange.from;
         const end = appliedDateRange.to || start;

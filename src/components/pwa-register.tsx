@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 
 /**
- * 🚀 PWA MASTER CONTROLLER V2 (LK RAMOS)
+ * 🚀 PWA MASTER CONTROLLER LK RAMOS
  * Registra o Service Worker e gerencia o fluxo de atualização segura.
  * Adicionada limpeza agressiva para resolver desincronização de ambientes.
  */
