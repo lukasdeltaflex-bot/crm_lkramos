@@ -162,46 +162,52 @@ export function GlobalSearch() {
 
           {results.customers.length > 0 && (
             <CommandGroup heading="Clientes Localizados">
-                {results.customers.map((customer) => (
-                    <CommandItem
-                        key={customer.id}
-                        value={customer.id}
-                        onSelect={() => runCommand(() => router.push(`/customers/${customer.id}`))}
-                    >
-                        <div className="flex items-center justify-between w-full">
-                            <div className='flex items-center'>
-                                <User className="mr-2 h-4 w-4 text-muted-foreground" />
-                                <div className="flex flex-col">
-                                    <span className="font-bold text-sm uppercase">{customer.name}</span>
-                                    <span className="text-[10px] text-muted-foreground uppercase font-black">ID: {customer.numericId} | CPF: {customer.cpf}</span>
+                {results.customers.map((customer) => {
+                    const searchIndex = normalizeString(`${customer.name} ${customer.cpf} ${customer.numericId}`);
+                    return (
+                        <CommandItem
+                            key={customer.id}
+                            value={searchIndex}
+                            onSelect={() => runCommand(() => router.push(`/customers/${customer.id}`))}
+                        >
+                            <div className="flex items-center justify-between w-full">
+                                <div className='flex items-center'>
+                                    <User className="mr-2 h-4 w-4 text-muted-foreground" />
+                                    <div className="flex flex-col">
+                                        <span className="font-bold text-sm uppercase">{customer.name}</span>
+                                        <span className="text-[10px] text-muted-foreground uppercase font-black">ID: {customer.numericId} | CPF: {customer.cpf}</span>
+                                    </div>
                                 </div>
+                                <ArrowRight className='h-3 w-3 opacity-40' />
                             </div>
-                            <ArrowRight className='h-3 w-3 opacity-40' />
-                        </div>
-                    </CommandItem>
-                ))}
+                        </CommandItem>
+                    );
+                })}
             </CommandGroup>
           )}
           
           {results.proposals.length > 0 && (
             <CommandGroup heading="Propostas Localizadas">
-                {results.proposals.map((proposal) => (
-                    <CommandItem
-                        key={proposal.id}
-                        value={proposal.id}
-                        onSelect={() => runCommand(() => router.push(`/proposals?open=${proposal.id}`))}>
-                        <div className="flex items-center justify-between w-full">
-                            <div className='flex items-center'>
-                                <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
-                                <div className="flex flex-col">
-                                    <span className="font-bold uppercase text-xs">Prop. {proposal.proposalNumber}</span>
-                                    <span className="text-[9px] text-muted-foreground uppercase font-bold">{proposal.product} • {cleanBankName(proposal.bank)}</span>
+                {results.proposals.map((proposal) => {
+                    const searchIndex = normalizeString(`${proposal.proposalNumber} ${proposal.product} ${proposal.bank}`);
+                    return (
+                        <CommandItem
+                            key={proposal.id}
+                            value={searchIndex}
+                            onSelect={() => runCommand(() => router.push(`/proposals?open=${proposal.id}`))}>
+                            <div className="flex items-center justify-between w-full">
+                                <div className='flex items-center'>
+                                    <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
+                                    <div className="flex flex-col">
+                                        <span className="font-bold uppercase text-xs">Prop. {proposal.proposalNumber}</span>
+                                        <span className="text-[9px] text-muted-foreground uppercase font-bold">{proposal.product} • {cleanBankName(proposal.bank)}</span>
+                                    </div>
                                 </div>
+                                <Zap className='h-3 w-3 text-orange-500 opacity-40' />
                             </div>
-                            <Zap className='h-3 w-3 text-orange-500 opacity-40' />
-                        </div>
-                    </CommandItem>
-                ))}
+                        </CommandItem>
+                    );
+                })}
             </CommandGroup>
           )}
         </CommandList>

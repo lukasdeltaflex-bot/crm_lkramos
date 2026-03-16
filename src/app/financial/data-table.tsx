@@ -91,6 +91,34 @@ const COLUMN_LABELS: Record<string, string> = {
     col_actions: "Ações"
 };
 
+/**
+ * 🛡️ MOTOR DE DATAS FINANCEIRO (LK RAMOS)
+ */
+function normalizeDate(value: any): Date | null {
+  if (!value) return null;
+  if (value?.seconds) return new Date(value.seconds * 1000);
+  if (typeof value.toDate === 'function') return value.toDate();
+  if (value instanceof Date) return new Date(value);
+  if (typeof value === 'string') {
+    const parsed = new Date(value);
+    if (!isNaN(parsed.getTime())) return parsed;
+    const parts = value.split('/');
+    if (parts.length === 3) {
+      const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+      if (!isNaN(d.getTime())) return d;
+    }
+  }
+  return null;
+}
+
+function isWithinRange(dateValue: any, start: Date, end: Date): boolean {
+  const d = normalizeDate(dateValue);
+  if (!d) return false;
+  const startDate = startOfDay(new Date(start));
+  const endDate = endOfDay(new Date(end));
+  return d >= startDate && d <= endDate;
+}
+
 interface DataTableProps {
   columns: ColumnDef<ProposalWithCustomer, unknown>[];
   data: ProposalWithCustomer[];
@@ -247,53 +275,14 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   };
 
   const filteredData = React.useMemo(() => {
-    // 🛡️ MOTOR DE NORMALIZAÇÃO OBRIGATÓRIO (LK RAMOS)
-    function normalizeDate(value: any) {
-      if (!value) return null;
-      // Firestore Timestamp
-      if (typeof value === 'object' && value.seconds !== undefined) {
-        return new Date(value.seconds * 1000);
-      }
-      // Firestore helper
-      if (typeof value.toDate === 'function') {
-        return value.toDate();
-      }
-      if (value instanceof Date) {
-        return new Date(value);
-      }
-      if (typeof value === 'string') {
-        const parsed = new Date(value);
-        if (!isNaN(parsed.getTime())) return parsed;
-        // Formato BR dd/mm/yyyy (do screenshot)
-        const parts = value.split('/');
-        if (parts.length === 3) {
-            const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-            if (!isNaN(d.getTime())) return d;
-        }
-      }
-      return null;
-    }
-
-    function isWithinRange(dateValue: any, start: Date, end: Date) {
-      const d = normalizeDate(dateValue);
-      if (!d) return false;
-      const startDate = new Date(start);
-      const endDate = new Date(end);
-      startDate.setHours(0, 0, 0, 0);
-      endDate.setHours(23, 59, 59, 999);
-      return d >= startDate && d <= endDate;
-    }
-
     let list = data;
 
-    // 1. Filtro por Status Financeiro (Independente do status comercial)
+    // 1. Filtro por Status Financeiro
     if (statusFilter !== 'Todos') {
+        const target = statusFilter.toUpperCase();
         list = list.filter(p => {
             const s = (p.commissionStatus || '').toUpperCase();
-            const f = statusFilter.toUpperCase();
-            // Mapeamento tolerante: PAGAS -> PAGA, PENDENTES -> PENDENTE
-            const target = f.endsWith('S') ? f.slice(0, -1) : f;
-            return s === target || s === f;
+            return s === target || (target === 'PAGAS' && s === 'PAGA') || (target === 'PENDENTES' && s === 'PENDENTE') || (target === 'PARCIAIS' && s === 'PARCIAL');
         });
     }
 
@@ -302,25 +291,21 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     if (promoterFilters.length > 0) list = list.filter(p => promoterFilters.includes(p.promoter));
     if (operatorFilters.length > 0) list = list.filter(p => operatorFilters.includes(p.operator || 'Sem Operador'));
     
-    // 3. 🛡️ FILTRO DE PERÍODO SOBERANO (Baseado sempre na Data de Pagamento)
+    // 3. 🛡️ FILTRO DE PERÍODO SOBERANO (Data de Pagamento)
     if (appliedDateRange && appliedDateRange.from) {
         const start = appliedDateRange.from;
         const end = appliedDateRange.to || start;
         
-        console.log(`[DEBUG-RECONCILIATION] Iniciando filtro: ${format(start, 'dd/MM/yyyy')} até ${format(end, 'dd/MM/yyyy')}`);
-        console.log(`[DEBUG-RECONCILIATION] Registros iniciais no lote: ${list.length}`);
+        console.log(`[DEBUG-RECONCILIATION] Filtro: ${format(start, 'dd/MM/yyyy')} - ${format(end, 'dd/MM/yyyy')}`);
         
         list = list.filter(p => {
-            const paymentDate = p.commissionPaymentDate;
-            const match = isWithinRange(paymentDate, start, end);
-            
-            if (match) {
-                console.log(`[DEBUG-RECONCILIATION] MATCH ENCONTRADO: ${p.customer?.name} | Data: ${paymentDate}`);
-            }
-            return match;
+            // SOBERANIA: No financeiro, período olha pagamento
+            const payDate = normalizeDate(p.commissionPaymentDate);
+            if (!payDate) return false;
+            return isWithinRange(payDate, start, end);
         });
         
-        console.log(`[DEBUG-RECONCILIATION] Registros após filtro de data: ${list.length}`);
+        console.log(`[DEBUG-RECONCILIATION] Registros encontrados: ${list.length}`);
     }
     
     return list;
