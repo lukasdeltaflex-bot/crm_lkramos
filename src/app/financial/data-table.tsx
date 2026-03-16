@@ -81,11 +81,9 @@ function normalizeDate(value: any): Date | null {
   if (typeof value.toDate === 'function') return value.toDate();
   if (value instanceof Date) return new Date(value);
   if (typeof value === 'string') {
-    // dd/MM/yyyy (BR) - Prioridade máxima para inputs manuais e relatórios nacionais
     const brMatch = value.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
     if (brMatch) return new Date(parseInt(brMatch[3]), parseInt(brMatch[2]) - 1, parseInt(brMatch[1]));
     
-    // yyyy-MM-dd (ISO)
     const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (isoMatch) return new Date(parseInt(isoMatch[1]), parseInt(isoMatch[2]) - 1, parseInt(isoMatch[3]));
     
@@ -335,6 +333,8 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   });
 
   React.useImperativeHandle(ref, () => ({ table }));
+
+  const totalTableWidth = table.getTotalSize();
 
   const numSelected = table.getFilteredSelectedRowModel().rows.length;
   const totalGross = table.getFilteredSelectedRowModel().rows.reduce((acc, r) => acc + (r.original.grossAmount || 0), 0);
