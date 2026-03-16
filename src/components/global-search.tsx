@@ -18,9 +18,9 @@ import { Button } from '@/components/ui/button';
 import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA V19
- * Correção: Adicionado o campo 'value' explícito para garantir que o motor interno do CMDK 
- * não esconda os resultados legítimos do Firebase.
+ * 🚀 BUSCA GLOBAL REATIVA V20
+ * Correção Crítica: Adicionado shouldFilter={false} para permitir que resultados
+ * assíncronos do Firebase apareçam sem bloqueio do filtro interno do Radix.
  */
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false);
@@ -70,7 +70,7 @@ export function GlobalSearch() {
                     if (isNumber) {
                         return String(c.numericId).includes(searchTerm) || cpfNumeric.includes(searchTerm);
                     }
-                    return normalizeString(c.name).includes(normalized) || normalizeString(c.city || '').includes(normalized);
+                    return normalizeString(c.name || '').includes(normalized) || normalizeString(c.city || '').includes(normalized);
                 })
                 .slice(0, 10);
 
@@ -87,11 +87,11 @@ export function GlobalSearch() {
                 .filter(p => {
                     if (p.deleted === true) return false;
                     if (isNumber) return p.proposalNumber.includes(searchTerm);
-                    return normalizeString(p.product).includes(normalized) || normalizeString(p.bank).includes(normalized);
+                    return normalizeString(p.product || '').includes(normalized) || normalizeString(p.bank || '').includes(normalized);
                 })
                 .slice(0, 10);
 
-            console.log(`[DEBUG-LK] Busca: ${filteredCustomers.length} clientes, ${filteredProposals.length} propostas.`);
+            console.log(`[DEBUG-LK] Busca: ${filteredCustomers.length} clientes, ${filteredProposals.length} propostas para o termo "${searchTerm}"`);
             setResults({ customers: filteredCustomers, proposals: filteredProposals });
         } catch (error) {
             console.error("Search Error:", error);
@@ -132,7 +132,7 @@ export function GlobalSearch() {
         shouldFilter={false}
       >
         <CommandInput 
-            placeholder="ID, Nome, CPF ou Proposta..." 
+            placeholder="Digite Nome, CPF, ID ou Proposta..." 
             value={searchTerm}
             onValueChange={setSearchTerm}
             autoFocus 
@@ -141,7 +141,7 @@ export function GlobalSearch() {
           {isSearching ? (
             <div className="flex items-center justify-center py-10 text-sm text-muted-foreground gap-3">
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <span className="font-black uppercase text-[10px] tracking-widest animate-pulse">Sincronizando...</span>
+              <span className="font-black uppercase text-[10px] tracking-widest animate-pulse">Consultando banco...</span>
             </div>
           ) : searchTerm.length >= 2 && results.customers.length === 0 && results.proposals.length === 0 ? (
             <CommandEmpty className="py-10 text-center text-xs font-bold uppercase text-muted-foreground opacity-50">Nenhum registro localizado.</CommandEmpty>
@@ -161,11 +161,11 @@ export function GlobalSearch() {
           )}
 
           {results.customers.length > 0 && (
-            <CommandGroup heading="Clientes">
+            <CommandGroup heading="Clientes Localizados">
                 {results.customers.map((customer) => (
                     <CommandItem
                         key={customer.id}
-                        value={`${customer.name} ${customer.cpf} ${customer.numericId}`}
+                        value={customer.id}
                         onSelect={() => runCommand(() => router.push(`/customers/${customer.id}`))}
                     >
                         <div className="flex items-center justify-between w-full">
@@ -184,11 +184,11 @@ export function GlobalSearch() {
           )}
           
           {results.proposals.length > 0 && (
-            <CommandGroup heading="Propostas">
+            <CommandGroup heading="Propostas Localizadas">
                 {results.proposals.map((proposal) => (
                     <CommandItem
                         key={proposal.id}
-                        value={`${proposal.proposalNumber} ${proposal.product} ${cleanBankName(proposal.bank)}`}
+                        value={proposal.id}
                         onSelect={() => runCommand(() => router.push(`/proposals?open=${proposal.id}`))}>
                         <div className="flex items-center justify-between w-full">
                             <div className='flex items-center'>

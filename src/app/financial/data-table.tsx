@@ -197,7 +197,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     
     setStartDateInput(format(from, 'dd/MM/yyyy'));
     setEndDateInput(format(to, 'dd/MM/yyyy'));
-    setAppliedDateRange({ from, to });
+    setAppliedDateRange({ from, to: endOfDay(to) });
   };
 
   const hasActiveFilters = statusFilter !== 'Todos' || bankFilters.length > 0 || promoterFilters.length > 0 || operatorFilters.length > 0 || !!globalFilter || !!appliedDateRange;
@@ -248,32 +248,31 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
   const filteredData = React.useMemo(() => {
     let list = data;
-    const initialLen = list.length;
 
     if (statusFilter !== 'Todos') {
         list = list.filter(p => p.commissionStatus === statusFilter);
     }
-    const afterStatusLen = list.length;
 
     if (bankFilters.length > 0) list = list.filter(p => bankFilters.includes(p.bank));
     if (promoterFilters.length > 0) list = list.filter(p => promoterFilters.includes(p.promoter));
     if (operatorFilters.length > 0) list = list.filter(p => operatorFilters.includes(p.operator || 'Sem Operador'));
     
     if (appliedDateRange && appliedDateRange.from) {
-        const start = startOfDay(appliedDateRange.from);
-        const end = appliedDateRange.to ? endOfDay(appliedDateRange.to) : endOfDay(appliedDateRange.from);
+        // Normalização extrema para comparação de strings (Imune a Timezone)
+        const startStr = format(appliedDateRange.from, 'yyyy-MM-dd');
+        const endStr = appliedDateRange.to ? format(appliedDateRange.to, 'yyyy-MM-dd') : startStr;
         
         list = list.filter(p => {
-            // 🛡️ REGRA SOBERANA FINANCEIRA: Filtro por data de pagamento da comissão apenas
-            const d = parseDateSafe(p.commissionPaymentDate);
-            if (!d) return false;
-            return d >= start && d <= end;
+            // 🛡️ REGRA SOBERANA: No financeiro, filtro de data olha apenas commissionPaymentDate
+            const dateToCompare = p.commissionPaymentDate;
+            if (!dateToCompare) return false;
+            
+            // Extrai a parte da data da string ISO ou BR
+            const pDateStr = dateToCompare.includes('T') ? dateToCompare.split('T')[0] : dateToCompare;
+            
+            return pDateStr >= startStr && pDateStr <= endStr;
         });
     }
-    const finalLen = list.length;
-
-    // 🔬 DEBUG LOGS PARA VALIDAÇÃO EM TEMPO REAL
-    console.log(`[DEBUG-LK] Financeiro: Recebido(${initialLen}) -> Pós-Status(${afterStatusLen}) -> Final Pós-Data(${finalLen})`);
     
     return list;
   }, [data, statusFilter, bankFilters, promoterFilters, operatorFilters, appliedDateRange]);
@@ -406,16 +405,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild><Button variant="outline" className="h-10 rounded-full font-bold px-6 border-2 border-zinc-300 bg-background shadow-sm text-xs gap-2"><User className="h-4 w-4" /> Operadores <ChevronDown className="h-3 w-3 opacity-50" /></Button></DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56 max-h-80 overflow-y-auto border-2">
-                        {uniqueOperators.map(op => ( 
-                            <DropdownMenuCheckboxItem 
-                                key={op} 
-                                checked={operatorFilters.includes(op)} 
-                                onCheckedChange={() => toggleOperatorFilter(op)} 
-                                className="font-bold text-xs uppercase"
-                            >
-                                {op}
-                            </DropdownMenuCheckboxItem> 
-                        ))}
+                        {uniqueOperators.map(op => ( <DropdownMenuCheckboxItem key={op} checked={operatorFilters.includes(op)} onCheckedChange={() => toggleOperatorFilter(op)} className="font-bold text-xs uppercase">{op}</DropdownMenuCheckboxItem> ))}
                     </DropdownMenuContent>
                 </DropdownMenu>
                 <DropdownMenu>
