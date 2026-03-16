@@ -18,9 +18,9 @@ import { Button } from '@/components/ui/button';
 import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA V21 (ESTABILIZADA)
+ * 🚀 BUSCA GLOBAL REATIVA (FIX)
  * Desativado o filtro interno do Radix para permitir que os dados do Firebase
- * apareçam instantaneamente sem "pente fino" local.
+ * apareçam instantaneamente conforme pesquisados.
  */
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false);
@@ -55,7 +55,7 @@ export function GlobalSearch() {
             const normalized = normalizeString(searchTerm);
             const isNumber = /^\d+$/.test(searchTerm);
 
-            // 🔍 BUSCA DE CLIENTES (Alcance de 500 registros)
+            // 🔍 BUSCA DE CLIENTES
             const qCust = query(
                 collection(firestore, 'customers'), 
                 where('ownerId', '==', user.uid),
@@ -71,7 +71,7 @@ export function GlobalSearch() {
                     if (isNumber) {
                         return String(c.numericId).includes(searchTerm) || cpfNumeric.includes(searchTerm);
                     }
-                    return normalizeString(c.name || '').includes(normalized) || normalizeString(c.city || '').includes(normalized);
+                    return normalizeString(c.name || '').includes(normalized);
                 })
                 .slice(0, 10);
 
@@ -94,7 +94,6 @@ export function GlobalSearch() {
                 })
                 .slice(0, 10);
 
-            console.log(`[DEBUG-LK] Busca Global: ${filteredCustomers.length} clientes, ${filteredProposals.length} propostas localizadas.`);
             setResults({ customers: filteredCustomers, proposals: filteredProposals });
         } catch (error) {
             console.error("Search Error:", error);
@@ -132,7 +131,7 @@ export function GlobalSearch() {
             setOpen(isOpen);
             if (!isOpen) setSearchTerm('');
         }}
-        shouldFilter={false} // CRITICAL: Permite exibição livre de resultados do Firebase
+        shouldFilter={false} 
       >
         <CommandInput 
             placeholder="Digite Nome, CPF, ID ou Proposta..." 
@@ -144,7 +143,7 @@ export function GlobalSearch() {
           {isSearching ? (
             <div className="flex items-center justify-center py-10 text-sm text-muted-foreground gap-3">
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <span className="font-black uppercase text-[10px] tracking-widest animate-pulse">Consultando banco...</span>
+              <span className="font-black uppercase text-[10px] tracking-widest animate-pulse">Consultando...</span>
             </div>
           ) : searchTerm.length >= 2 && results.customers.length === 0 && results.proposals.length === 0 ? (
             <CommandEmpty className="py-10 text-center text-xs font-bold uppercase text-muted-foreground opacity-50">Nenhum registro localizado.</CommandEmpty>
@@ -152,11 +151,11 @@ export function GlobalSearch() {
 
           {searchTerm.length < 2 && (
               <CommandGroup heading="Ações Rápidas">
-                <CommandItem onSelect={() => runCommand(() => router.push('/customers?action=new'))} value="novo-cliente">
+                <CommandItem onSelect={() => runCommand(() => router.push('/customers?action=new'))} value="novo-cliente-action">
                     <PlusCircle className="mr-2 h-4 w-4 text-blue-500" />
                     <span>Novo Cliente</span>
                 </CommandItem>
-                <CommandItem onSelect={() => runCommand(() => router.push('/proposals?action=new'))} value="nova-proposta">
+                <CommandItem onSelect={() => runCommand(() => router.push('/proposals?action=new'))} value="nova-proposta-action">
                     <PlusCircle className="mr-2 h-4 w-4 text-green-500" />
                     <span>Nova Proposta</span>
                 </CommandItem>
@@ -166,7 +165,6 @@ export function GlobalSearch() {
           {results.customers.length > 0 && (
             <CommandGroup heading="Clientes Localizados">
                 {results.customers.map((customer) => {
-                    // Valor de indexação total para evitar que o CMDK esconda o item
                     const searchIndex = `${customer.name} ${customer.cpf} ${customer.numericId}`.toLowerCase();
                     return (
                         <CommandItem

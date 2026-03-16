@@ -72,12 +72,11 @@ import { useUser } from '@/firebase';
 import { safeStorage } from '@/lib/storage-utils';
 
 /**
- * 🛡️ MOTOR DE DATAS FINANCEIRO (NORMALIZAÇÃO SOLICITADA)
+ * 🛡️ MOTOR DE NORMALIZAÇÃO DE DATA FINANCEIRA (REGRAS SOBERANAS)
  */
 function normalizeDate(value: any): Date | null {
   if (!value) return null;
 
-  // Se for Timestamp do Firestore
   if (value?.toDate && typeof value.toDate === 'function') {
     return value.toDate();
   }
@@ -90,11 +89,9 @@ function normalizeDate(value: any): Date | null {
   }
 
   if (typeof value === 'string') {
-    // Tenta formato ISO primeiro
     const parsed = new Date(value);
     if (!isNaN(parsed.getTime())) return parsed;
 
-    // Tenta formato brasileiro dd/mm/aaaa
     if (value.includes('/')) {
         const parts = value.split('/');
         if (parts.length === 3) {
@@ -107,9 +104,6 @@ function normalizeDate(value: any): Date | null {
   return null;
 }
 
-/**
- * 🛡️ VERIFICAÇÃO DE INTERVALO INCLUSIVO (SOLICITADA)
- */
 function isWithinRange(dateValue: any, start: Date, end: Date): boolean {
   const d = normalizeDate(dateValue);
   if (!d) return false;
@@ -273,17 +267,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     setIsLoaded(true);
   }, [initialIds, user?.uid]);
 
-  React.useEffect(() => {
-    if (isClient && isLoaded && user?.uid) {
-        const prefix = user.uid;
-        safeStorage.set(`${prefix}-fin-frozen`, frozenCount);
-        safeStorage.set(`${prefix}-fin-visibility`, columnVisibility);
-        safeStorage.set(`${prefix}-fin-order`, columnOrder);
-        safeStorage.set(`${prefix}-fin-sizing`, columnSizing);
-        safeStorage.set(`${prefix}-fin-pageSize`, pagination.pageSize);
-    }
-  }, [columnVisibility, columnOrder, columnSizing, frozenCount, isClient, isLoaded, pagination.pageSize, user?.uid]);
-
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor));
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -297,18 +280,13 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     }
   };
 
-  /**
-   * 🛡️ MOTOR DE FILTRAGEM REESCRITO (REGRAS SOLICITADAS)
-   */
   const filteredData = React.useMemo(() => {
     let list = data;
 
-    // 1. Filtro por Status Financeiro (Exclusivo)
     if (statusFilter !== 'Todos') {
         const target = statusFilter.toUpperCase();
         list = list.filter(p => {
             const s = (p.commissionStatus || '').toUpperCase();
-            // Mapeia labels da aba para status internos
             if (target === 'PAGAS') return s === 'PAGA';
             if (target === 'PENDENTES') return s === 'PENDENTE';
             if (target === 'PARCIAIS') return s === 'PARCIAL';
@@ -316,22 +294,12 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         });
     }
 
-    // 2. Filtro de Período SOBERANO (Data de Pagamento)
     if (appliedDateRange && appliedDateRange.from) {
         const start = appliedDateRange.from;
         const end = appliedDateRange.to || start;
-        
-        console.log(`[DEBUG-RECONCILIATION] Aplicando filtro de período: ${format(start, 'dd/MM/yyyy')} até ${format(end, 'dd/MM/yyyy')}`);
-        
-        list = list.filter(p => {
-            // REGRA: Financeiro sempre olha commissionPaymentDate
-            return isWithinRange(p.commissionPaymentDate, start, end);
-        });
-        
-        console.log(`[DEBUG-RECONCILIATION] Total de registros que passaram no filtro de data: ${list.length}`);
+        list = list.filter(p => isWithinRange(p.commissionPaymentDate, start, end));
     }
 
-    // 3. Filtros de Categorias
     if (bankFilters.length > 0) list = list.filter(p => bankFilters.includes(p.bank));
     if (promoterFilters.length > 0) list = list.filter(p => promoterFilters.includes(p.promoter));
     if (operatorFilters.length > 0) list = list.filter(p => operatorFilters.includes(p.operator || 'Sem Operador'));
@@ -363,16 +331,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         const customer = row.original.customer;
         const p = row.original;
         const normalizedSearch = normalizeString(searchTerm);
-        const isPureNumber = /^\d+$/.test(searchTerm);
-        if (isPureNumber) {
-            if (String(customer?.numericId) === searchTerm) return true;
-            const cpfNumeric = (customer?.cpf || '').replace(/\D/g, '');
-            if (cpfNumeric.startsWith(searchTerm)) return true;
-            const pNum = (p.proposalNumber || '').replace(/\D/g, '');
-            if (pNum.startsWith(searchTerm)) return true;
-            return false;
-        }
-        const searchableFields = [customer?.name, customer?.cpf, p.proposalNumber, p.operator, p.bank, cleanBankName(p.bank), p.promoter, p.product];
+        const searchableFields = [customer?.name, customer?.cpf, p.proposalNumber, p.operator, p.bank, p.promoter, p.product];
         return searchableFields.some(field => field && normalizeString(String(field)).includes(normalizedSearch));
     },
     meta: { isPrivacyMode, userSettings, statusColors }
@@ -579,7 +538,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                         </div>
                     </div>
                 </div>
-            </div>
+            </Card>
         </div>
     </DndContext>
   );
