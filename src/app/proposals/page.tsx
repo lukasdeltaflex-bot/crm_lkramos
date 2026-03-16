@@ -455,6 +455,8 @@ function ProposalsPageContent() {
     handleToggleChecklist
   ), [handleEditProposal, handleViewProposal, handleMoveToTrash, handleStatusChange, handleDuplicateProposal, handleToggleChecklist]);
 
+  const initialSearchFromUrl = searchParams.get('search') || '';
+
   React.useEffect(() => {
     if (isLoading || proposalsWithCustomerData.length === 0) return;
     const action = searchParams.get('action');
@@ -463,10 +465,10 @@ function ProposalsPageContent() {
         if (action === 'new') { handleNewProposal(); setHasOpenedFromParam(true); router.replace('/proposals', { scroll: false }); }
         else if (openId) {
             const proposalToOpen = proposalsWithCustomerData.find(p => p.id === openId);
-            if (proposalToOpen) { handleEditProposal(proposalToOpen); setHasOpenedFromParam(true); setTimeout(() => router.replace('/proposals', { scroll: false }), 300); }
+            if (proposalToOpen) { handleEditProposal(proposalToOpen); setHasOpenedFromParam(true); }
         }
     }
-  }, [isLoading, proposalsWithCustomerData, hasOpenedFromParam, handleNewProposal, handleEditProposal, router]);
+  }, [isLoading, proposalsWithCustomerData, hasOpenedFromParam, handleNewProposal, handleEditProposal, router, searchParams]);
 
   return (
     <>
@@ -539,6 +541,7 @@ function ProposalsPageContent() {
             setRowSelection={setRowSelection}
             onBulkStatusChange={handleBulkStatusChange} 
             userSettings={userSettings || null}
+            initialGlobalFilter={initialSearchFromUrl}
         />
         {proposalsWithCustomerData.length >= loadLimit && !proposalsLoading && (
             <div className="flex justify-center pb-10">
@@ -549,7 +552,6 @@ function ProposalsPageContent() {
         )}
       </div>
 
-      {/* 🤖 MODAL DE IA CONSOLIDADO */}
       <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
         <DialogContent className="max-w-xl">
             <DialogHeader>

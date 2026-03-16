@@ -99,6 +99,7 @@ interface DataTableProps {
   setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>;
   onBulkStatusChange: (newStatus: ProposalStatus) => void;
   userSettings: UserSettings | null;
+  initialGlobalFilter?: string;
 }
 
 export interface ProposalsDataTableHandle {
@@ -112,11 +113,12 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   setRowSelection,
   onBulkStatusChange,
   userSettings,
+  initialGlobalFilter = '',
 }, ref) => {
   const { user } = useUser();
   const { statusColors } = useTheme();
   const [statusFilter, setStatusFilter] = React.useState('Todos');
-  const [globalFilter, setGlobalFilter] = React.useState('');
+  const [globalFilter, setGlobalFilter] = React.useState(initialGlobalFilter);
   const [frozenCount, setFrozenCount] = React.useState(2);
   
   const [bankFilters, setBankFilters] = React.useState<string[]>([]);
@@ -150,6 +152,13 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
       return next;
     });
   };
+
+  // 🛡️ Sincroniza filtro da busca global
+  React.useEffect(() => {
+    if (initialGlobalFilter) {
+        setGlobalFilter(initialGlobalFilter);
+    }
+  }, [initialGlobalFilter]);
 
   // 🛡️ CARREGAMENTO BLINDADO DE PREFERÊNCIAS
   React.useEffect(() => {

@@ -18,9 +18,8 @@ import { Button } from '@/components/ui/button';
 import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA LK RAMOS
- * Desativado o filtro interno do Radix para permitir que os dados do Firebase
- * apareçam instantaneamente conforme pesquisados.
+ * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V2
+ * Agora navega para a aba proposta aplicando o filtro automático do número digitado.
  */
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false);
@@ -89,7 +88,8 @@ export function GlobalSearch() {
                 .filter(p => {
                     if (p.deleted === true) return false;
                     const pNum = (p.proposalNumber || '').replace(/\D/g, '');
-                    if (isNumber) return pNum.includes(searchTerm);
+                    const cleanTerm = searchTerm.replace(/\D/g, '');
+                    if (isNumber && cleanTerm) return pNum.includes(cleanTerm);
                     return normalizeString(p.product || '').includes(normalized) || normalizeString(p.bank || '').includes(normalized);
                 })
                 .slice(0, 10);
@@ -196,7 +196,7 @@ export function GlobalSearch() {
                         <CommandItem
                             key={proposal.id}
                             value={searchIndex}
-                            onSelect={() => runCommand(() => router.push(`/proposals?open=${proposal.id}`))}>
+                            onSelect={() => runCommand(() => router.push(`/proposals?open=${proposal.id}&search=${proposal.proposalNumber}`))}>
                             <div className="flex items-center justify-between w-full">
                                 <div className='flex items-center'>
                                     <FileText className="mr-2 h-4 w-4 text-muted-foreground" />

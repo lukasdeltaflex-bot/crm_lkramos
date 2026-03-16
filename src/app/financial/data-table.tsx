@@ -72,8 +72,7 @@ import { useUser } from '@/firebase';
 import { safeStorage } from '@/lib/storage-utils';
 
 /**
- * 🛡️ MOTOR DE NORMALIZAÇÃO DE DATAS LK RAMOS
- * Converte diversos formatos (Timestamp, String ISO, Date) para um objeto Date robusto.
+ * 🛡️ MOTOR DE NORMALIZAÇÃO DE DATAS LK RAMOS V4
  */
 function normalizeDate(value: any) {
   if (!value) return null;
@@ -93,7 +92,7 @@ function normalizeDate(value: any) {
 }
 
 /**
- * 🛡️ VERIFICADOR DE INTERVALO INCLUSIVO
+ * 🛡️ VERIFICADOR DE INTERVALO INCLUSIVO (OBJETOS DATE)
  */
 function isWithinRange(dateValue: any, start: Date, end: Date) {
   const d = normalizeDate(dateValue);
@@ -262,7 +261,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const filteredData = React.useMemo(() => {
     let list = data;
 
-    // 1. Filtro por Status Financeiro (Prioridade Sênior)
+    // 1. Filtro por Status Financeiro
     if (statusFilter !== 'Todos') {
         const target = statusFilter.toUpperCase();
         list = list.filter(p => {
