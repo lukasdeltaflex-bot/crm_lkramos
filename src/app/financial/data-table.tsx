@@ -72,7 +72,7 @@ import { useUser } from '@/firebase';
 import { safeStorage } from '@/lib/storage-utils';
 
 /**
- * 🛡️ MOTOR DE DATAS FINANCEIRO V6 (ROBUSTO)
+ * 🛡️ MOTOR DE DATAS FINANCEIRO V7 (ROBUSTO)
  * Normalização Local Time para evitar UTC Shift e tratar múltiplos formatos.
  */
 function normalizeDate(value: any): Date | null {
@@ -261,16 +261,22 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
   const filteredData = React.useMemo(() => {
     let list = data;
+    console.log(`[DEBUG-FINANCEIRO] Iniciando filtragem. Total: ${list.length}`);
+
     if (statusFilter !== 'Todos') {
         const target = statusFilter.toUpperCase();
         list = list.filter(p => {
             const currentCommStatus = (p.commissionStatus || 'Pendente').toUpperCase();
             return currentCommStatus === (target.endsWith('S') ? target.slice(0, -1) : target);
         });
+        console.log(`[DEBUG-FINANCEIRO] Após status "${statusFilter}": ${list.length}`);
     }
+
     if (appliedDateRange && appliedDateRange.from) {
         const start = appliedDateRange.from;
         const end = appliedDateRange.to || appliedDateRange.from;
+        console.log(`[DEBUG-FINANCEIRO] Aplicando intervalo: ${format(start, 'dd/MM/yyyy')} a ${format(end, 'dd/MM/yyyy')}`);
+        
         list = list.filter(p => {
             const paymentDate = normalizeDate(p.commissionPaymentDate);
             if (!paymentDate) return false;
@@ -280,10 +286,13 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             }
             return inRange;
         });
+        console.log(`[DEBUG-FINANCEIRO] Após período: ${list.length}`);
     }
+
     if (bankFilters.length > 0) list = list.filter(p => bankFilters.includes(p.bank));
     if (promoterFilters.length > 0) list = list.filter(p => promoterFilters.includes(p.promoter));
     if (operatorFilters.length > 0) list = list.filter(p => operatorFilters.includes(p.operator || 'Sem Operador'));
+    
     return list;
   }, [data, statusFilter, bankFilters, promoterFilters, operatorFilters, appliedDateRange]);
 

@@ -146,6 +146,13 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     'col_comm': true,
   });
 
+  // 🛡️ REATIVIDADE À BUSCA GLOBAL: Sincroniza o filtro da tabela com a URL
+  React.useEffect(() => {
+    if (initialGlobalFilter) {
+        setGlobalFilter(initialGlobalFilter);
+    }
+  }, [initialGlobalFilter]);
+
   const toggleBankFilter = (bank: string) => { setBankFilters(prev => prev.includes(bank) ? prev.filter(b => b !== bank) : [...prev, bank]); };
   const togglePromoterFilter = (promoter: string) => { setPromoterFilters(prev => prev.includes(promoter) ? prev.filter(p => p !== promoter) : [...prev, promoter]); };
   const toggleOperatorFilter = (op: string) => { setOperatorFilters(prev => prev.includes(op) ? prev.filter(o => o !== op) : [...prev, op]); };
@@ -160,12 +167,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
       return next;
     });
   };
-
-  React.useEffect(() => {
-    if (initialGlobalFilter) {
-        setGlobalFilter(initialGlobalFilter);
-    }
-  }, [initialGlobalFilter]);
 
   React.useEffect(() => {
     if (!user?.uid) return;
@@ -194,7 +195,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         safeStorage.set(`${prefix}-prop-sizing`, columnSizing);
         safeStorage.set(`${prefix}-prop-pageSize`, pagination.pageSize);
     }
-  }, [globalFilter, columnVisibility, columnOrder, columnSizing, frozenCount, isClient, pagination.pageSize, isLoaded, user?.uid]);
+  }, [columnVisibility, columnOrder, columnSizing, frozenCount, isClient, pagination.pageSize, isLoaded, user?.uid]);
 
   const handleDateMask = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, "").substring(0, 8);
@@ -298,9 +299,12 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         const normalizedSearch = normalizeString(searchTerm);
         const cleanDigits = searchTerm.replace(/\D/g, '');
         const searchableFields = [customer?.name, customer?.cpf, p.proposalNumber, p.operator, p.bank, cleanBankName(p.bank), p.promoter];
+        
         const matchesText = searchableFields.some(field => field && normalizeString(String(field)).includes(normalizedSearch));
+        
         const isPureNumber = /^\d+$/.test(searchTerm);
         const matchesId = isPureNumber && (String(customer?.numericId) === searchTerm || (customer?.cpf || '').replace(/\D/g, '').startsWith(searchTerm) || (p.proposalNumber || '').replace(/\D/g, '').startsWith(searchTerm));
+        
         return matchesText || matchesId;
     },
     meta: { userSettings }
@@ -511,7 +515,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                         <div className="flex items-center gap-2">
                             <span>LINHAS:</span>
                             <Select value={String(table.getState().pagination.pageSize)} onValueChange={(val) => table.setPageSize(Number(val))}>
-                                <SelectTrigger className="h-8 w-16 border-2 font-bold text-[10px]"><SelectValue /></SelectTrigger>
+                                <SelectTrigger className="h-8 w-16 border-2 font-black text-[10px]"><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     {[10, 20, 30, 50, 100].map(size => ( <SelectItem key={size} value={String(size)} className="text-[10px] font-bold">{size}</SelectItem> ))}
                                 </SelectContent>

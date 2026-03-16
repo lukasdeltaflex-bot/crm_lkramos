@@ -12,13 +12,13 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { useUser, useFirestore } from '@/firebase';
-import { collection, query, where, limit, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, where, limit, getDocs } from 'firebase/firestore';
 import type { Customer, Proposal } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V8
+ * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V9
  * Localização inclusiva de clientes e propostas com navegação inteligente.
  */
 export function GlobalSearch() {
@@ -50,12 +50,13 @@ export function GlobalSearch() {
 
     const timer = setTimeout(async () => {
         setIsSearching(true);
-        console.log(`[DEBUG-GLOBAL] Buscando por: "${searchTerm}"`);
-        try {
-            const normalized = normalizeString(searchTerm);
-            const cleanDigits = searchTerm.replace(/\D/g, '');
-            const isPotentialId = cleanDigits.length >= 2;
+        const normalized = normalizeString(searchTerm);
+        const cleanDigits = searchTerm.replace(/\D/g, '');
+        const isPotentialId = cleanDigits.length >= 2;
 
+        console.log(`[DEBUG-GLOBAL] Buscando por: "${searchTerm}" (Dígitos: ${cleanDigits})`);
+
+        try {
             // 🔍 BUSCA DE CLIENTES
             const qCust = query(
                 collection(firestore, 'customers'), 
@@ -73,13 +74,12 @@ export function GlobalSearch() {
                     const idMatch = isPotentialId && (String(c.numericId).includes(cleanDigits) || cpfNumeric.includes(cleanDigits));
                     return nameMatch || idMatch;
                 })
-                .slice(0, 10);
+                .slice(0, 8);
 
             // 🔍 BUSCA DE PROPOSTAS
             const qProp = query(
                 collection(firestore, 'loanProposals'), 
                 where('ownerId', '==', user.uid),
-                orderBy('dateDigitized', 'desc'),
                 limit(500)
             );
             const snapProp = await getDocs(qProp);
@@ -90,13 +90,17 @@ export function GlobalSearch() {
                     if (p.deleted === true) return false;
                     const pNum = (p.proposalNumber || '').replace(/\D/g, '');
                     const numMatch = isPotentialId && pNum.includes(cleanDigits);
-                    const textMatch = normalizeString(p.product || '').includes(normalized) || normalizeString(p.bank || '').includes(normalized);
+                    
+                    // Busca cruzada: Se o usuário digitou nome, tenta bater com o nome do cliente associado se disponível
+                    const textMatch = normalizeString(p.product || '').includes(normalized) || 
+                                     normalizeString(p.bank || '').includes(normalized);
+                    
                     return numMatch || textMatch;
                 })
-                .slice(0, 10);
+                .slice(0, 8);
 
-            console.log(`[DEBUG-GLOBAL] Resultados: ${filteredCustomers.length} Clientes, ${filteredProposals.length} Propostas`);
             setResults({ customers: filteredCustomers, proposals: filteredProposals });
+            console.log(`[DEBUG-GLOBAL] Encontrados: ${filteredCustomers.length} Clientes, ${filteredProposals.length} Propostas`);
         } catch (error) {
             console.error("Search Error:", error);
         } finally {
@@ -109,6 +113,7 @@ export function GlobalSearch() {
 
   const runCommand = React.useCallback((command: () => void) => {
     setOpen(false);
+    setSearchTerm('');
     command();
   }, []);
 
@@ -166,55 +171,49 @@ export function GlobalSearch() {
 
           {results.customers.length > 0 && (
             <CommandGroup heading="Clientes Localizados">
-                {results.customers.map((customer) => {
-                    const searchIndex = `${customer.name} ${customer.cpf} ${customer.numericId}`.toLowerCase();
-                    return (
-                        <CommandItem
-                            key={customer.id}
-                            value={searchIndex}
-                            onSelect={() => runCommand(() => router.push(`/customers/${customer.id}`))}
-                        >
-                            <div className="flex items-center justify-between w-full">
-                                <div className='flex items-center'>
-                                    <User className="mr-2 h-4 w-4 text-muted-foreground" />
-                                    <div className="flex flex-col">
-                                        <span className="font-bold text-sm uppercase">{customer.name}</span>
-                                        <span className="text-[10px] text-muted-foreground uppercase font-black">ID: {customer.numericId} | CPF: {customer.cpf}</span>
-                                    </div>
+                {results.customers.map((customer) => (
+                    <CommandItem
+                        key={customer.id}
+                        value={`cust-${customer.id}`}
+                        onSelect={() => runCommand(() => router.push(`/customers/${customer.id}`))}
+                    >
+                        <div className="flex items-center justify-between w-full">
+                            <div className='flex items-center'>
+                                <User className="mr-2 h-4 w-4 text-muted-foreground" />
+                                <div className="flex flex-col">
+                                    <span className="font-bold text-sm uppercase">{customer.name}</span>
+                                    <span className="text-[10px] text-muted-foreground uppercase font-black">ID: {customer.numericId} | CPF: {customer.cpf}</span>
                                 </div>
-                                <ArrowRight className='h-3 w-3 opacity-40' />
                             </div>
-                        </CommandItem>
-                    );
-                })}
+                            <ArrowRight className='h-3 w-3 opacity-40' />
+                        </div>
+                    </CommandItem>
+                ))}
             </CommandGroup>
           )}
           
           {results.proposals.length > 0 && (
             <CommandGroup heading="Propostas Localizadas">
-                {results.proposals.map((proposal) => {
-                    const searchIndex = `${proposal.proposalNumber} ${proposal.product} ${proposal.bank}`.toLowerCase();
-                    return (
-                        <CommandItem
-                            key={proposal.id}
-                            value={searchIndex}
-                            onSelect={() => {
-                                console.log(`[DEBUG-GLOBAL] Navegando para proposta: ${proposal.proposalNumber}`);
-                                runCommand(() => router.push(`/proposals?open=${proposal.id}&search=${proposal.proposalNumber}`));
-                            }}>
-                            <div className="flex items-center justify-between w-full">
-                                <div className='flex items-center'>
-                                    <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
-                                    <div className="flex flex-col">
-                                        <span className="font-bold uppercase text-xs">Prop. {proposal.proposalNumber}</span>
-                                        <span className="text-[9px] text-muted-foreground uppercase font-bold">{proposal.product} • {cleanBankName(proposal.bank)}</span>
-                                    </div>
+                {results.proposals.map((proposal) => (
+                    <CommandItem
+                        key={proposal.id}
+                        value={`prop-${proposal.id}`}
+                        onSelect={() => {
+                            console.log(`[DEBUG-GLOBAL] Navegando para proposta: ${proposal.proposalNumber}`);
+                            runCommand(() => router.push(`/proposals?open=${proposal.id}&search=${proposal.proposalNumber}`));
+                        }}>
+                        <div className="flex items-center justify-between w-full">
+                            <div className='flex items-center'>
+                                <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
+                                <div className="flex flex-col">
+                                    <span className="font-bold uppercase text-xs">Prop. {proposal.proposalNumber}</span>
+                                    <span className="text-[9px] text-muted-foreground uppercase font-bold">{proposal.product} • {cleanBankName(proposal.bank)}</span>
                                 </div>
-                                <Zap className='h-3 w-3 text-orange-500 opacity-40' />
                             </div>
-                        </CommandItem>
-                    );
-                })}
+                            <Zap className='h-3 w-3 text-orange-500 opacity-40' />
+                        </div>
+                    </CommandItem>
+                ))}
             </CommandGroup>
           )}
         </CommandList>
