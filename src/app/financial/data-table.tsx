@@ -71,35 +71,31 @@ import { BankIcon } from '@/components/bank-icon';
 import { useUser } from '@/firebase';
 import { safeStorage } from '@/lib/storage-utils';
 
-/**
- * 🛡️ MOTOR DE NORMALIZAÇÃO LK RAMOS
- */
-function normalizeDate(value: any): Date | null {
+function normalizeDate(value: any) {
   if (!value) return null;
-  if (value?.toDate && typeof value.toDate === 'function') return value.toDate();
   if (value?.seconds) return new Date(value.seconds * 1000);
+  if (typeof value.toDate === 'function') return value.toDate();
   if (value instanceof Date) return new Date(value);
   if (typeof value === 'string') {
-    const parsed = new Date(value);
+    let parsed = new Date(value);
     if (!isNaN(parsed.getTime())) return parsed;
     const parts = value.split('/');
     if (parts.length === 3) {
-        const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-        if (!isNaN(d.getTime())) return d;
+      const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+      if (!isNaN(d.getTime())) return d;
     }
   }
   return null;
 }
 
-/**
- * 🛡️ VALIDADOR DE INTERVALO INCLUSIVO
- */
-function isWithinRange(dateValue: any, start: Date, end: Date): boolean {
+function isWithinRange(dateValue: any, start: Date, end: Date) {
   const d = normalizeDate(dateValue);
   if (!d) return false;
-  const s = new Date(start); s.setHours(0, 0, 0, 0);
-  const e = new Date(end); e.setHours(23, 59, 59, 999);
-  return d >= s && d <= e;
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  startDate.setHours(0, 0, 0, 0);
+  endDate.setHours(23, 59, 59, 999);
+  return d >= startDate && d <= endDate;
 }
 
 const COLUMN_LABELS: Record<string, string> = {
@@ -263,9 +259,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         const target = statusFilter.toUpperCase();
         list = list.filter(p => {
             const s = (p.commissionStatus || '').toUpperCase();
-            if (target === 'PAGAS') return s === 'PAGA';
-            if (target === 'PENDENTES') return s === 'PENDENTE';
-            if (target === 'PARCIAIS') return s === 'PARCIAL';
             return s === target;
         });
     }
