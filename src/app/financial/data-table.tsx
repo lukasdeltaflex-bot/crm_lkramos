@@ -72,8 +72,8 @@ import { useUser } from '@/firebase';
 import { safeStorage } from '@/lib/storage-utils';
 
 /**
- * 🛡️ MOTOR DE DATAS FINANCEIRO V8 (CIRÚRGICO)
- * Normalização forçada para Local Time para evitar bugs de Timezone UTC.
+ * 🛡️ MOTOR DE DATAS FINANCEIRO V11
+ * Normalização robusta para evitar bugs de UTC Shift.
  */
 function normalizeDate(value: any): Date | null {
   if (!value) return null;
@@ -81,7 +81,7 @@ function normalizeDate(value: any): Date | null {
   if (typeof value.toDate === 'function') return value.toDate();
   if (value instanceof Date) return new Date(value);
   if (typeof value === 'string') {
-    // dd/MM/yyyy (BR)
+    // dd/MM/yyyy (BR) - Prioridade máxima para inputs manuais e relatórios nacionais
     const brMatch = value.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
     if (brMatch) return new Date(parseInt(brMatch[3]), parseInt(brMatch[2]) - 1, parseInt(brMatch[1]));
     
@@ -261,7 +261,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
   const filteredData = React.useMemo(() => {
     let list = data;
-    console.log(`[DEBUG-FINANCEIRO] Total inicial: ${list.length}`);
+    console.log(`[DEBUG-FINANCEIRO] total registros antes do filtro: ${list.length}`);
 
     if (statusFilter !== 'Todos') {
         const target = statusFilter.toUpperCase();
@@ -269,21 +269,25 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             const currentCommStatus = (p.commissionStatus || 'Pendente').toUpperCase();
             return currentCommStatus === (target.endsWith('S') ? target.slice(0, -1) : target);
         });
-        console.log(`[DEBUG-FINANCEIRO] Após status "${statusFilter}": ${list.length}`);
+        console.log(`[DEBUG-FINANCEIRO] após filtro de status "${statusFilter}": ${list.length}`);
     }
 
     if (appliedDateRange && appliedDateRange.from) {
         const start = appliedDateRange.from;
         const end = appliedDateRange.to || appliedDateRange.from;
-        console.log(`[DEBUG-FINANCEIRO] Aplicando intervalo: ${format(start, 'dd/MM/yyyy')} a ${format(end, 'dd/MM/yyyy')}`);
+        console.log(`[DEBUG-FINANCEIRO] aplicando intervalo financeiro: ${format(start, 'dd/MM/yyyy')} a ${format(end, 'dd/MM/yyyy')}`);
         
         list = list.filter(p => {
             const paymentDate = normalizeDate(p.commissionPaymentDate);
             if (!paymentDate) return false;
+            
             const inRange = isWithinRange(paymentDate, start, end);
+            if (inRange) {
+                console.log(`[DEBUG-FINANCEIRO] Match encontrado: Cliente ${p.customer?.name} | Data Pgto Normalizada: ${format(paymentDate, 'dd/MM/yyyy HH:mm')}`);
+            }
             return inRange;
         });
-        console.log(`[DEBUG-FINANCEIRO] Após período financeiro: ${list.length}`);
+        console.log(`[DEBUG-FINANCEIRO] após filtro de período: ${list.length}`);
     }
 
     if (bankFilters.length > 0) list = list.filter(p => bankFilters.includes(p.bank));
@@ -429,26 +433,25 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                     <DropdownMenuTrigger asChild><Button variant="outline" className="h-10 rounded-full font-bold px-6 border-2 border-zinc-300 bg-background shadow-sm text-xs gap-2"><Landmark className="h-4 w-4" /> Bancos <ChevronDown className="h-3 w-3 opacity-50" /></Button></DropdownMenuTrigger>
                     <DropdownMenuContent className="w-64 max-h-80 overflow-y-auto border-2">
                         {uniqueBanks.map(bank => (
-                            <DropdownMenuCheckboxItem key={bank} checked={bankFilters.includes(bank)} onCheckedChange={() => toggleBankFilter(bank)} className="font-bold text-[10px] uppercase">
-                                <div className="flex items-center gap-2"><BankIcon bankName={bank} domain={userSettings?.bankDomains?.[bank]} showLogo={userSettings?.showBankLogos ?? true} className="h-3 w-3" /><span className="truncate">{cleanBankName(bank)}</span></div>
-                            </DropdownMenuCheckboxItem>
+                            <DropdownMenuCheckboxItem key={bank} checked={bankFilters.includes(bank)} onCheckedChange={() => toggleBankFilter(bank)} className="font-bold text-xs uppercase">{cleanBankName(bank)}</DropdownMenuCheckboxItem>
                         ))}
                     </DropdownMenuContent>
                 </DropdownMenu>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild><Button variant="outline" className="h-10 rounded-full font-bold px-6 border-2 border-zinc-300 bg-background shadow-sm text-xs gap-2"><Building2 className="h-4 w-4" /> Promotoras <ChevronDown className="h-3 w-3 opacity-50" /></Button></DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56 max-h-80 overflow-y-auto border-2">
-                        {uniquePromoters.map(prom => ( <DropdownMenuCheckboxItem key={prom} checked={promoterFilters.includes(prom)} onCheckedChange={() => togglePromoterFilter(prom)} className="font-bold text-xs uppercase"><div className="flex items-center gap-2"><BankIcon bankName={prom} domain={userSettings?.promoterDomains?.[prom]} showLogo={userSettings?.showPromoterLogos ?? true} className="h-3 w-3" /><span className="truncate">{prom}</span></div></DropdownMenuCheckboxItem> ))}
+                    <DropdownMenuContent className="w-64 max-h-80 overflow-y-auto border-2">
+                        {uniquePromoters.map(promoter => (
+                            <DropdownMenuCheckboxItem key={promoter} checked={promoterFilters.includes(promoter)} onCheckedChange={() => togglePromoterFilter(promoter)} className="font-bold text-xs uppercase">{promoter}</DropdownMenuCheckboxItem>
+                        ))}
                     </DropdownMenuContent>
                 </DropdownMenu>
-                {hasActiveFilters && ( <Button variant="ghost" size="sm" onClick={handleClearAllFilters} className="text-red-600 hover:text-red-700 hover:bg-red-50 font-black text-[10px] uppercase gap-1.5 rounded-full"><X className="h-3 w-3" /> Limpar Filtros</Button> )}
             </div>
             <div className='relative w-full group'>
                 <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80' /><Input placeholder="Busca por ID exato, CPF, Nome ou Proposta..." value={globalFilter ?? ''} onChange={(e) => setGlobalFilter(e.target.value)} className="pl-10 h-11 bg-background border-2 border-zinc-300 rounded-full text-base font-bold shadow-md" />
             </div>
             <Card className="border-2 border-zinc-300 shadow-xl rounded-xl overflow-hidden bg-card p-1">
                 <ScrollArea className="h-[calc(100vh-280px)] w-full scroll-area-priority">
-                    <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
+                    <Table style={{ width: totalTableWidth, tableLayout: 'fixed' }}>
                         <TableHeader className="bg-background border-b-2 sticky top-0 z-50 shadow-sm">
                             {table.getHeaderGroups().map(hg => (
                                 <TableRow key={hg.id} className="border-b hover:bg-transparent">
@@ -472,8 +475,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                                 table.getRowModel().rows.map(row => {
                                     const p = row.original;
                                     const isCritical = isProposalCritical(p);
-                                    const commStatus = p.commissionStatus;
-                                    const effectiveStatus = (commStatus === 'Paga' || commStatus === 'Parcial' || commStatus === 'Pendente') ? commStatus : (p.dateApproved ? 'Pendente' : null);
+                                    const effectiveStatus = (p.commissionStatus === 'Paga' || p.commissionStatus === 'Parcial' || p.commissionStatus === 'Pendente') ? p.commissionStatus : (p.dateApproved ? 'Pendente' : null);
                                     const colorValue = effectiveStatus ? (statusColors[effectiveStatus.toUpperCase()] || statusColors[effectiveStatus]) : undefined;
                                     
                                     return (

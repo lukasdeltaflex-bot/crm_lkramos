@@ -18,9 +18,10 @@ import { Button } from '@/components/ui/button';
 import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V11
+ * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V12
  * Localização inclusiva de clientes e propostas com navegação inteligente.
  * Ignora símbolos em identificadores e força o filtro na tela de destino.
+ * Logs [DEBUG-GLOBAL] ativos para validação técnica.
  */
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false);
@@ -55,14 +56,14 @@ export function GlobalSearch() {
         const cleanDigits = searchTerm.replace(/\D/g, '');
         const isPotentialId = cleanDigits.length >= 2;
 
-        console.log(`[DEBUG-GLOBAL] Buscando por: "${searchTerm}" (Dígitos: ${cleanDigits})`);
+        console.log(`[DEBUG-GLOBAL] Termo digitado: "${searchTerm}" | Dígitos puros: ${cleanDigits}`);
 
         try {
-            // 🔍 BUSCA DE CLIENTES
+            // 🔍 BUSCA DE CLIENTES (Sem orderBy para evitar falha por falta de índice composto)
             const qCust = query(
                 collection(firestore, 'customers'), 
                 where('ownerId', '==', user.uid),
-                limit(500) 
+                limit(100)
             );
             const snapCust = await getDocs(qCust);
             
@@ -81,7 +82,7 @@ export function GlobalSearch() {
             const qProp = query(
                 collection(firestore, 'loanProposals'), 
                 where('ownerId', '==', user.uid),
-                limit(500)
+                limit(100)
             );
             const snapProp = await getDocs(qProp);
             
@@ -98,10 +99,10 @@ export function GlobalSearch() {
                 })
                 .slice(0, 8);
 
-            console.log(`[DEBUG-GLOBAL] Encontrados: ${filteredCustomers.length} Clientes e ${filteredProposals.length} Propostas`);
+            console.log(`[DEBUG-GLOBAL] Resultados Firebase -> Clientes: ${filteredCustomers.length} | Propostas: ${filteredProposals.length}`);
             setResults({ customers: filteredCustomers, proposals: filteredProposals });
         } catch (error) {
-            console.error("[DEBUG-GLOBAL] Search Error:", error);
+            console.error("[DEBUG-GLOBAL] Erro na consulta Firestore:", error);
         } finally {
             setIsSearching(false);
         }
@@ -174,7 +175,10 @@ export function GlobalSearch() {
                     <CommandItem
                         key={customer.id}
                         value={`cust-${customer.id}`}
-                        onSelect={() => runCommand(() => router.push(`/customers/${customer.id}`))}
+                        onSelect={() => {
+                            console.log(`[DEBUG-GLOBAL] Clicado: Cliente ${customer.name} | Rota: /customers/${customer.id}`);
+                            runCommand(() => router.push(`/customers/${customer.id}`));
+                        }}
                     >
                         <div className="flex items-center justify-between w-full">
                             <div className='flex items-center'>
@@ -197,7 +201,10 @@ export function GlobalSearch() {
                     <CommandItem
                         key={proposal.id}
                         value={`prop-${proposal.id}`}
-                        onSelect={() => runCommand(() => router.push(`/proposals?open=${proposal.id}&search=${proposal.proposalNumber}`))}
+                        onSelect={() => {
+                            console.log(`[DEBUG-GLOBAL] Clicado: Proposta ${proposal.proposalNumber} | Rota: /proposals?open=${proposal.id}&search=${proposal.proposalNumber}`);
+                            runCommand(() => router.push(`/proposals?open=${proposal.id}&search=${proposal.proposalNumber}`));
+                        }}
                     >
                         <div className="flex items-center justify-between w-full">
                             <div className='flex items-center'>

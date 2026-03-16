@@ -146,9 +146,9 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     'col_comm': true,
   });
 
-  // 🛡️ REATIVIDADE À BUSCA GLOBAL
+  // 🛡️ REATIVIDADE À BUSCA GLOBAL: Sincroniza o filtro se o parâmetro da URL mudar
   React.useEffect(() => {
-    if (initialGlobalFilter !== undefined) {
+    if (initialGlobalFilter !== undefined && initialGlobalFilter !== globalFilter) {
         setGlobalFilter(initialGlobalFilter);
     }
   }, [initialGlobalFilter]);

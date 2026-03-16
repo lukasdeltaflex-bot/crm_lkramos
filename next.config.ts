@@ -1,4 +1,3 @@
-
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -40,6 +39,32 @@ const nextConfig: NextConfig = {
     ],
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
+  },
+  // 🛡️ PROTEÇÃO CONTRA CACHE EM DESENVOLVIMENTO
+  // Garante que o navegador não armazene arquivos antigos durante a edição do código
+  async headers() {
+    if (process.env.NODE_ENV === 'development') {
+      return [
+        {
+          source: '/(.*)',
+          headers: [
+            {
+              key: 'Cache-Control',
+              value: 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            },
+            {
+              key: 'Pragma',
+              value: 'no-cache',
+            },
+            {
+              key: 'Expires',
+              value: '0',
+            },
+          ],
+        },
+      ];
+    }
+    return [];
   },
 };
 
