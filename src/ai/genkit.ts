@@ -1,12 +1,11 @@
 
+import 'dotenv/config'; // Carrega o .env antes de tudo para o Genkit Dev UI
 import { genkit } from 'genkit';
 import { googleAI, gemini15Flash } from '@genkit-ai/google-genai';
 
 /**
  * 🤖 NÚCLEO DE INTELIGÊNCIA ARTIFICIAL - LK RAMOS
- * Configuração otimizada para Genkit 1.x.
- * 
- * 🛡️ SEGURANÇA: Esta instância gerencia todas as chamadas de LLM do sistema.
+ * Configuração otimizada para Genkit 1.x com suporte a ambiente local.
  */
 
 const apiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
