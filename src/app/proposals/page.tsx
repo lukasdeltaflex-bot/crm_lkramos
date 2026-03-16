@@ -33,7 +33,7 @@ import { cleanFirestoreData, formatCurrency, cleanBankName, formatDateSafe } fro
 import { format } from 'date-fns';
 import { CustomerAiForm } from '@/components/customers/customer-ai-form';
 
-// 🛡️ FIX BUILD: Garante que esta rota seja tratada como dinâmica pelo App Hosting
+// 🛡️ FIX BUILD: Garante que esta rota seja tratada como dinâmica
 export const dynamic = 'force-dynamic';
 
 function ProposalsPageSkeleton() {
@@ -74,7 +74,7 @@ function ProposalsPageContent() {
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [defaultValues, setDefaultValues] = useState<any | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
-  const [formKey, setFormKey] = setFormKey = useState('new');
+  const [formKey, setFormKey] = useState('new');
   const tableRef = React.useRef<ProposalsDataTableHandle>(null);
   const [hasOpenedFromParam, setHasOpenedFromParam] = useState(false);
   

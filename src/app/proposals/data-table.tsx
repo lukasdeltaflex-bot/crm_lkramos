@@ -146,10 +146,9 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     'col_comm': true,
   });
 
-  // 🛡️ REATIVIDADE À BUSCA GLOBAL: Sincroniza o filtro da tabela com a URL em tempo real
+  // 🛡️ REATIVIDADE À BUSCA GLOBAL
   React.useEffect(() => {
     if (initialGlobalFilter !== undefined) {
-        console.log(`[DEBUG-GLOBAL] Tabela Propostas sincronizando filtro: "${initialGlobalFilter}"`);
         setGlobalFilter(initialGlobalFilter);
     }
   }, [initialGlobalFilter]);
@@ -303,8 +302,8 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         const searchableFields = [customer?.name, customer?.cpf, p.proposalNumber, p.operator, p.bank, cleanBankName(p.bank), p.promoter];
         const matchesText = searchableFields.some(field => field && normalizeString(String(field)).includes(normalizedSearch));
         
-        const isPureNumber = /^\d+$/.test(searchTerm);
-        const matchesId = isPureNumber && (String(customer?.numericId) === searchTerm || (customer?.cpf || '').replace(/\D/g, '').startsWith(searchTerm) || (p.proposalNumber || '').replace(/\D/g, '').startsWith(searchTerm));
+        const isPotentialId = cleanDigits.length >= 2;
+        const matchesId = isPotentialId && (String(customer?.numericId) === searchTerm || (customer?.cpf || '').replace(/\D/g, '').startsWith(searchTerm) || (p.proposalNumber || '').replace(/\D/g, '').startsWith(searchTerm));
         
         return matchesText || matchesId;
     },
