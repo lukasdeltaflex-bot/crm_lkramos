@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -153,14 +154,12 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     });
   };
 
-  // 🛡️ Sincroniza filtro da busca global
   React.useEffect(() => {
     if (initialGlobalFilter) {
         setGlobalFilter(initialGlobalFilter);
     }
   }, [initialGlobalFilter]);
 
-  // 🛡️ CARREGAMENTO BLINDADO DE PREFERÊNCIAS
   React.useEffect(() => {
     if (!user?.uid) return;
     setIsClient(true);
@@ -183,7 +182,6 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     setIsLoaded(true);
   }, [initialIds, user?.uid]);
 
-  // 🛡️ SALVAMENTO DE PREFERÊNCIAS
   React.useEffect(() => {
     if (isClient && isLoaded && user?.uid) {
         const prefix = user.uid;
@@ -295,20 +293,34 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         const customer = row.original.customer;
         const p = row.original;
         const normalizedSearch = normalizeString(searchTerm);
-        const isPureNumber = /^\d+$/.test(searchTerm);
-        if (isPureNumber) {
-            if (String(customer?.numericId) === searchTerm) return true;
-            const cpfNumeric = (customer?.cpf || '').replace(/\D/g, '');
-            if (cpfNumeric.startsWith(searchTerm)) return true;
-            const pNum = (p.proposalNumber || '').replace(/\D/g, '');
-            if (pNum.startsWith(searchTerm)) return true;
-            return false;
-        }
+        
+        // 🛡️ Lógica inclusiva: Verifica texto e identificadores numéricos em paralelo
         const searchableFields = [customer?.name, customer?.cpf, p.proposalNumber, p.operator, p.bank, cleanBankName(p.bank), p.promoter];
-        return searchableFields.some(field => field && normalizeString(String(field)).includes(normalizedSearch));
+        const matchesText = searchableFields.some(field => field && normalizeString(String(field)).includes(normalizedSearch));
+        
+        const isPureNumber = /^\d+$/.test(searchTerm);
+        const matchesId = isPureNumber && (
+            String(customer?.numericId) === searchTerm || 
+            (customer?.cpf || '').replace(/\D/g, '').startsWith(searchTerm) ||
+            (p.proposalNumber || '').replace(/\D/g, '').startsWith(searchTerm)
+        );
+
+        return matchesText || matchesId;
     },
     meta: { userSettings }
   });
+
+  // 🛡️ LOGS DE DEBUG PARA VALIDAÇÃO DE FILTRO
+  React.useEffect(() => {
+    if (hasActiveFilters) {
+        console.log(`[DEBUG-FILTER] Tabela Propostas:`, {
+            totalBruto: data.length,
+            aposFiltrosPeriodo: filteredData.length,
+            termoBusca: globalFilter,
+            finalNaTela: table.getFilteredRowModel().rows.length
+        });
+    }
+  }, [data.length, filteredData.length, globalFilter, table.getFilteredRowModel().rows.length, hasActiveFilters]);
 
   React.useImperativeHandle(ref, () => ({ table }));
 
@@ -533,7 +545,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                         <div className="flex items-center gap-2">
                             <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-2 bg-background shadow-sm transition-all hover:bg-primary/5 active:scale-95" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}><ChevronsLeft className="h-4 w-4" /></Button>
                             <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-2 bg-background shadow-sm transition-all hover:bg-primary/5 active:scale-95" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}><ChevronLeft className="h-4 w-4" /></Button>
-                            <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-2 bg-background shadow-sm transition-all hover:bg-primary/5 active:scale-95" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}><ChevronRight className="h-4 w-4" /></Button>
+                            <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-2 bg-background shadow-sm transition-all hover:bg-primary/5 active:scale-95" onClick={() => table.nextPage()} disabled={!table.getNextPage()}><ChevronRight className="h-4 w-4" /></Button>
                             <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-2 bg-background shadow-sm transition-all hover:bg-primary/5 active:scale-95" onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}><ChevronsRight className="h-4 w-4" /></Button>
                         </div>
                     </div>

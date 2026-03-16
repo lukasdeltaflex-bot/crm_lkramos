@@ -72,10 +72,6 @@ import { BankIcon } from '@/components/bank-icon';
 import { useUser } from '@/firebase';
 import { safeStorage } from '@/lib/storage-utils';
 
-/**
- * 🛡️ MOTOR DE NORMALIZAÇÃO DE DATAS LK RAMOS V5
- * Converte qualquer entrada (Timestamp, ISO, Date, BR) para objeto Date puro.
- */
 function normalizeDate(value: any): Date | null {
   if (!value) return null;
   if (value?.seconds) return new Date(value.seconds * 1000);
@@ -93,9 +89,6 @@ function normalizeDate(value: any): Date | null {
   return null;
 }
 
-/**
- * 🛡️ VERIFICADOR DE INTERVALO INCLUSIVO (OBJETOS DATE)
- */
 function isWithinRange(dateValue: any, start: Date, end: Date) {
   const d = normalizeDate(dateValue);
   if (!d) return false;
@@ -310,11 +303,34 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         const customer = row.original.customer;
         const p = row.original;
         const normalizedSearch = normalizeString(searchTerm);
+        
+        // 🛡️ Lógica inclusiva: Verifica texto e identificadores numéricos em paralelo
         const searchableFields = [customer?.name, customer?.cpf, p.proposalNumber, p.operator, p.bank, p.promoter, p.product];
-        return searchableFields.some(field => field && normalizeString(String(field)).includes(normalizedSearch));
+        const matchesText = searchableFields.some(field => field && normalizeString(String(field)).includes(normalizedSearch));
+        
+        const isPureNumber = /^\d+$/.test(searchTerm);
+        const matchesId = isPureNumber && (
+            String(customer?.numericId) === searchTerm || 
+            (customer?.cpf || '').replace(/\D/g, '').startsWith(searchTerm) ||
+            (p.proposalNumber || '').replace(/\D/g, '').startsWith(searchTerm)
+        );
+
+        return matchesText || matchesId;
     },
     meta: { isPrivacyMode, userSettings, statusColors }
   });
+
+  // 🛡️ LOGS DE DEBUG PARA VALIDAÇÃO DE FILTRO
+  React.useEffect(() => {
+    if (hasActiveFilters) {
+        console.log(`[DEBUG-FILTER] Tabela Financeiro:`, {
+            totalBruto: data.length,
+            aposStatusEPeriodo: filteredData.length,
+            termoBusca: globalFilter,
+            finalNaTela: table.getFilteredRowModel().rows.length
+        });
+    }
+  }, [data.length, filteredData.length, globalFilter, table.getFilteredRowModel().rows.length, hasActiveFilters]);
 
   React.useImperativeHandle(ref, () => ({ table }));
 

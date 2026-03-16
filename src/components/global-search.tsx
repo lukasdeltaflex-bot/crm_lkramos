@@ -19,8 +19,8 @@ import { Button } from '@/components/ui/button';
 import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V3
- * Prioriza a navegação direta e o filtro automático.
+ * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V4
+ * Otimizada para inclusão total de CPF, Nome e Proposta sem restrições de "gate".
  */
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false);
@@ -53,9 +53,10 @@ export function GlobalSearch() {
         setIsSearching(true);
         try {
             const normalized = normalizeString(searchTerm);
-            const isNumber = /^\d+$/.test(searchTerm);
+            const cleanDigits = searchTerm.replace(/\D/g, '');
+            const isPotentialId = cleanDigits.length >= 2;
 
-            // 🔍 BUSCA DE CLIENTES
+            // 🔍 BUSCA DE CLIENTES (Ativos e Lixeira oculta)
             const qCust = query(
                 collection(firestore, 'customers'), 
                 where('ownerId', '==', user.uid),
@@ -68,10 +69,9 @@ export function GlobalSearch() {
                 .filter(c => {
                     if (c.deleted === true) return false;
                     const cpfNumeric = (c.cpf || '').replace(/\D/g, '');
-                    if (isNumber) {
-                        return String(c.numericId).includes(searchTerm) || cpfNumeric.includes(searchTerm);
-                    }
-                    return normalizeString(c.name || '').includes(normalized);
+                    const nameMatch = normalizeString(c.name || '').includes(normalized);
+                    const idMatch = isPotentialId && (String(c.numericId).includes(cleanDigits) || cpfNumeric.includes(cleanDigits));
+                    return nameMatch || idMatch;
                 })
                 .slice(0, 10);
 
@@ -89,12 +89,13 @@ export function GlobalSearch() {
                 .filter(p => {
                     if (p.deleted === true) return false;
                     const pNum = (p.proposalNumber || '').replace(/\D/g, '');
-                    const cleanTerm = searchTerm.replace(/\D/g, '');
-                    if (isNumber && cleanTerm) return pNum.includes(cleanTerm);
-                    return normalizeString(p.product || '').includes(normalized) || normalizeString(p.bank || '').includes(normalized);
+                    const numMatch = isPotentialId && pNum.includes(cleanDigits);
+                    const textMatch = normalizeString(p.product || '').includes(normalized) || normalizeString(p.bank || '').includes(normalized);
+                    return numMatch || textMatch;
                 })
                 .slice(0, 10);
 
+            console.log(`[DEBUG-GLOBAL] Termo: "${searchTerm}" | Fire: ${snapCust.size + snapProp.size} | Res: ${filteredCustomers.length + filteredProposals.length}`);
             setResults({ customers: filteredCustomers, proposals: filteredProposals });
         } catch (error) {
             console.error("Search Error:", error);
@@ -144,7 +145,7 @@ export function GlobalSearch() {
           {isSearching ? (
             <div className="flex items-center justify-center py-10 text-sm text-muted-foreground gap-3">
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <span className="font-black uppercase text-[10px] tracking-widest animate-pulse">Consultando...</span>
+              <span className="font-black uppercase text-[10px] tracking-widest animate-pulse">Consultando base...</span>
             </div>
           ) : searchTerm.length >= 2 && results.customers.length === 0 && results.proposals.length === 0 ? (
             <CommandEmpty className="py-10 text-center text-xs font-bold uppercase text-muted-foreground opacity-50">Nenhum registro localizado.</CommandEmpty>
