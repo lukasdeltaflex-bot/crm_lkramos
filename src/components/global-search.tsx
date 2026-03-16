@@ -18,10 +18,9 @@ import { Button } from '@/components/ui/button';
 import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V12
+ * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V13
  * Localização inclusiva de clientes e propostas com navegação inteligente.
- * Ignora símbolos em identificadores e força o filtro na tela de destino.
- * Logs [DEBUG-GLOBAL] ativos para validação técnica.
+ * Corrigido: Busca de propostas agora aceita strings alfanuméricas e símbolos.
  */
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false);
@@ -56,10 +55,10 @@ export function GlobalSearch() {
         const cleanDigits = searchTerm.replace(/\D/g, '');
         const isPotentialId = cleanDigits.length >= 2;
 
-        console.log(`[DEBUG-GLOBAL] Termo digitado: "${searchTerm}" | Dígitos puros: ${cleanDigits}`);
+        console.log(`[DEBUG-GLOBAL] Buscando: "${searchTerm}" (Dígitos: ${cleanDigits})`);
 
         try {
-            // 🔍 BUSCA DE CLIENTES (Sem orderBy para evitar falha por falta de índice composto)
+            // 🔍 BUSCA DE CLIENTES
             const qCust = query(
                 collection(firestore, 'customers'), 
                 where('ownerId', '==', user.uid),
@@ -78,7 +77,7 @@ export function GlobalSearch() {
                 })
                 .slice(0, 8);
 
-            // 🔍 BUSCA DE PROPOSTAS
+            // 🔍 BUSCA DE PROPOSTAS (Melhorada para Proposta nº Alfanumérica)
             const qProp = query(
                 collection(firestore, 'loanProposals'), 
                 where('ownerId', '==', user.uid),
@@ -90,8 +89,15 @@ export function GlobalSearch() {
                 .map(d => ({ ...d.data(), id: d.id } as Proposal))
                 .filter(p => {
                     if (p.deleted === true) return false;
-                    const pNum = (p.proposalNumber || '').replace(/\D/g, '');
-                    const numMatch = isPotentialId && pNum.includes(cleanDigits);
+                    
+                    const pNumStr = normalizeString(p.proposalNumber || '');
+                    // Match 1: String exata ou parcial (incluindo símbolos digitados pelo usuário)
+                    const matchesPNum = pNumStr.includes(normalized);
+                    // Match 2: Apenas dígitos (se o usuário digitar apenas números)
+                    const matchesPNumDigits = isPotentialId && pNumStr.replace(/\D/g, '').includes(cleanDigits);
+                    
+                    const numMatch = matchesPNum || matchesPNumDigits;
+                    
                     const textMatch = normalizeString(p.bank || '').includes(normalized) || 
                                      normalizeString(p.product || '').includes(normalized);
                     
@@ -99,10 +105,10 @@ export function GlobalSearch() {
                 })
                 .slice(0, 8);
 
-            console.log(`[DEBUG-GLOBAL] Resultados Firebase -> Clientes: ${filteredCustomers.length} | Propostas: ${filteredProposals.length}`);
+            console.log(`[DEBUG-GLOBAL] Encontrados -> Clientes: ${filteredCustomers.length} | Propostas: ${filteredProposals.length}`);
             setResults({ customers: filteredCustomers, proposals: filteredProposals });
         } catch (error) {
-            console.error("[DEBUG-GLOBAL] Erro na consulta Firestore:", error);
+            console.error("[DEBUG-GLOBAL] Erro Firestore:", error);
         } finally {
             setIsSearching(false);
         }
@@ -138,10 +144,10 @@ export function GlobalSearch() {
             setOpen(isOpen);
             if (!isOpen) setSearchTerm('');
         }}
-        shouldFilter={false} // CRÍTICO: Usa apenas o nosso filtro manual
+        shouldFilter={false}
       >
         <CommandInput 
-            placeholder="Nome, CPF ou Proposta..." 
+            placeholder="Nome, CPF ou Proposta nº..." 
             value={searchTerm}
             onValueChange={setSearchTerm}
             autoFocus 
@@ -176,7 +182,6 @@ export function GlobalSearch() {
                         key={customer.id}
                         value={`cust-${customer.id}`}
                         onSelect={() => {
-                            console.log(`[DEBUG-GLOBAL] Clicado: Cliente ${customer.name} | Rota: /customers/${customer.id}`);
                             runCommand(() => router.push(`/customers/${customer.id}`));
                         }}
                     >
@@ -200,9 +205,9 @@ export function GlobalSearch() {
                 {results.proposals.map((proposal) => (
                     <CommandItem
                         key={proposal.id}
-                        value={`prop-${proposal.id}`}
+                        value={`prop-${proposal.id}-${proposal.proposalNumber}`}
                         onSelect={() => {
-                            console.log(`[DEBUG-GLOBAL] Clicado: Proposta ${proposal.proposalNumber} | Rota: /proposals?open=${proposal.id}&search=${proposal.proposalNumber}`);
+                            console.log(`[DEBUG-GLOBAL] Navegando para Proposta: ${proposal.proposalNumber}`);
                             runCommand(() => router.push(`/proposals?open=${proposal.id}&search=${proposal.proposalNumber}`));
                         }}
                     >
