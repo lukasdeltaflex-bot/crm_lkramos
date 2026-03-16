@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -18,8 +19,8 @@ import { Button } from '@/components/ui/button';
 import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V2
- * Agora navega para a aba proposta aplicando o filtro automático do número digitado.
+ * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V3
+ * Prioriza a navegação direta e o filtro automático.
  */
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false);

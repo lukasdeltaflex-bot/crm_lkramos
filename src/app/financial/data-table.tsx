@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -72,9 +73,10 @@ import { useUser } from '@/firebase';
 import { safeStorage } from '@/lib/storage-utils';
 
 /**
- * 🛡️ MOTOR DE NORMALIZAÇÃO DE DATAS LK RAMOS V4
+ * 🛡️ MOTOR DE NORMALIZAÇÃO DE DATAS LK RAMOS V5
+ * Converte qualquer entrada (Timestamp, ISO, Date, BR) para objeto Date puro.
  */
-function normalizeDate(value: any) {
+function normalizeDate(value: any): Date | null {
   if (!value) return null;
   if (value?.seconds) return new Date(value.seconds * 1000);
   if (typeof value.toDate === 'function') return value.toDate();
