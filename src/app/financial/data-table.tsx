@@ -62,7 +62,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { X, Filter, Search, Calendar as CalendarIcon, ChevronDown, ChevronsLeft, ChevronsRight, Snowflake, User, Landmark, Building2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { cn, cleanBankName, normalizeString, formatCurrency, isProposalCritical } from '@/lib/utils';
+import { cn, cleanBankName, normalizeString, formatCurrency, isProposalCritical, parseDateSafe } from '@/lib/utils';
 import type { ProposalWithCustomer, UserSettings, CommissionStatus } from '@/lib/types';
 import { DraggableHeader } from './columns';
 import { Separator } from '@/components/ui/separator';
@@ -72,49 +72,35 @@ import { useUser } from '@/firebase';
 import { safeStorage } from '@/lib/storage-utils';
 
 /**
- * 🛡️ MOTOR DE NORMALIZAÇÃO DE DATA FINANCEIRA (REGRAS SOBERANAS)
+ * 🛡️ MOTOR DE NORMALIZAÇÃO LK RAMOS
+ * Converte qualquer entrada de data (Timestamp, String, Date) para objeto Date estável.
  */
 function normalizeDate(value: any): Date | null {
   if (!value) return null;
-
-  if (value?.toDate && typeof value.toDate === 'function') {
-    return value.toDate();
-  }
-  if (value?.seconds) {
-    return new Date(value.seconds * 1000);
-  }
-
-  if (value instanceof Date) {
-    return new Date(value);
-  }
-
+  if (value?.toDate && typeof value.toDate === 'function') return value.toDate();
+  if (value?.seconds) return new Date(value.seconds * 1000);
+  if (value instanceof Date) return new Date(value);
   if (typeof value === 'string') {
     const parsed = new Date(value);
     if (!isNaN(parsed.getTime())) return parsed;
-
-    if (value.includes('/')) {
-        const parts = value.split('/');
-        if (parts.length === 3) {
-            const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-            if (!isNaN(d.getTime())) return d;
-        }
+    const parts = value.split('/');
+    if (parts.length === 3) {
+        const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+        if (!isNaN(d.getTime())) return d;
     }
   }
-
   return null;
 }
 
+/**
+ * 🛡️ VALIDADOR DE INTERVALO INCLUSIVO
+ */
 function isWithinRange(dateValue: any, start: Date, end: Date): boolean {
   const d = normalizeDate(dateValue);
   if (!d) return false;
-
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-
-  startDate.setHours(0, 0, 0, 0);
-  endDate.setHours(23, 59, 59, 999);
-
-  return d >= startDate && d <= endDate;
+  const s = new Date(start); s.setHours(0, 0, 0, 0);
+  const e = new Date(end); e.setHours(23, 59, 59, 999);
+  return d >= s && d <= e;
 }
 
 const COLUMN_LABELS: Record<string, string> = {
@@ -211,10 +197,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     const s = parse(startDateInput, 'dd/MM/yyyy', new Date());
     const e = parse(endDateInput, 'dd/MM/yyyy', new Date());
     if (isValid(s)) {
-        setAppliedDateRange({ 
-            from: startOfDay(s), 
-            to: isValid(e) ? endOfDay(e) : endOfDay(s) 
-        });
+        setAppliedDateRange({ from: s, to: isValid(e) ? e : s });
     } else {
         setAppliedDateRange(undefined);
     }
@@ -236,13 +219,13 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     let from = startOfMonth(now);
     let to = now;
     if (range === 'today') from = startOfDay(now);
-    if (range === 'yesterday') { from = startOfDay(subDays(now, 1)); to = endOfDay(subDays(now, 1)); }
-    if (range === 'week') from = startOfDay(subDays(now, 7));
+    if (range === 'yesterday') { from = startOfDay(subDays(now, 1)); to = subDays(now, 1); }
+    if (range === 'week') from = subDays(now, 7);
     if (range === 'month') { from = startOfMonth(now); to = endOfMonth(now); }
     
     setStartDateInput(format(from, 'dd/MM/yyyy'));
     setEndDateInput(format(to, 'dd/MM/yyyy'));
-    setAppliedDateRange({ from, to: endOfDay(to) });
+    setAppliedDateRange({ from, to });
   };
 
   const hasActiveFilters = statusFilter !== 'Todos' || bankFilters.length > 0 || promoterFilters.length > 0 || operatorFilters.length > 0 || !!globalFilter || !!appliedDateRange;
@@ -251,19 +234,13 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     if (!user?.uid) return;
     setIsClient(true);
     const prefix = user.uid;
-    
     setFrozenCount(safeStorage.get(`${prefix}-fin-frozen`, 2));
     setColumnVisibility(safeStorage.get(`${prefix}-fin-visibility`, columnVisibility));
     setColumnSizing(safeStorage.get(`${prefix}-fin-sizing`, {}));
-    
     const savedPageSize = safeStorage.get(`${prefix}-fin-pageSize`, 10);
     setPagination(p => ({ ...p, pageSize: savedPageSize }));
-
     const savedOrder = safeStorage.get<string[]>(`${prefix}-fin-order`, []);
-    if (savedOrder.length === initialIds.length) {
-        setColumnOrder(savedOrder);
-    }
-
+    if (savedOrder.length === initialIds.length) setColumnOrder(savedOrder);
     setIsLoaded(true);
   }, [initialIds, user?.uid]);
 

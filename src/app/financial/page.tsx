@@ -170,7 +170,7 @@ export default function FinancialPage() {
         ...p,
         customer: customersMap.get(p.customerId),
       }))
-      .filter(p => p.customer && p.status !== 'Reprovado');
+      .filter(p => p.customer); // 🛡️ LK RAMOS: Mostra tudo independente do status de esteira
 
     const opMap: Record<string, { name: string; totalPaid: number; count: number; potential: number }> = {};
     
