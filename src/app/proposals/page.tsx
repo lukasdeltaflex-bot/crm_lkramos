@@ -74,7 +74,7 @@ function ProposalsPageContent() {
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [defaultValues, setDefaultValues] = useState<any | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
-  const [formKey, setFormKey] = useState('new');
+  const [formKey, setFormKey] = setFormKey = useState('new');
   const tableRef = React.useRef<ProposalsDataTableHandle>(null);
   const [hasOpenedFromParam, setHasOpenedFromParam] = useState(false);
   

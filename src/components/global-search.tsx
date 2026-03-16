@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V9
+ * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V10
  * Localização inclusiva de clientes e propostas com navegação inteligente.
  */
 export function GlobalSearch() {
@@ -54,10 +54,10 @@ export function GlobalSearch() {
         const cleanDigits = searchTerm.replace(/\D/g, '');
         const isPotentialId = cleanDigits.length >= 2;
 
-        console.log(`[DEBUG-GLOBAL] Buscando por: "${searchTerm}" (Dígitos: ${cleanDigits})`);
+        console.log(`[DEBUG-GLOBAL] Termo: "${searchTerm}" | Digitos: "${cleanDigits}"`);
 
         try {
-            // 🔍 BUSCA DE CLIENTES
+            // 🔍 BUSCA DE CLIENTES (Nome ou CPF/ID)
             const qCust = query(
                 collection(firestore, 'customers'), 
                 where('ownerId', '==', user.uid),
@@ -90,19 +90,17 @@ export function GlobalSearch() {
                     if (p.deleted === true) return false;
                     const pNum = (p.proposalNumber || '').replace(/\D/g, '');
                     const numMatch = isPotentialId && pNum.includes(cleanDigits);
-                    
-                    // Busca cruzada: Se o usuário digitou nome, tenta bater com o nome do cliente associado se disponível
-                    const textMatch = normalizeString(p.product || '').includes(normalized) || 
-                                     normalizeString(p.bank || '').includes(normalized);
+                    const textMatch = normalizeString(p.bank || '').includes(normalized) || 
+                                     normalizeString(p.product || '').includes(normalized);
                     
                     return numMatch || textMatch;
                 })
                 .slice(0, 8);
 
+            console.log(`[DEBUG-GLOBAL] Firebase retornou: ${filteredCustomers.length} Clientes, ${filteredProposals.length} Propostas`);
             setResults({ customers: filteredCustomers, proposals: filteredProposals });
-            console.log(`[DEBUG-GLOBAL] Encontrados: ${filteredCustomers.length} Clientes, ${filteredProposals.length} Propostas`);
         } catch (error) {
-            console.error("Search Error:", error);
+            console.error("[DEBUG-GLOBAL] Search Error:", error);
         } finally {
             setIsSearching(false);
         }
@@ -138,7 +136,7 @@ export function GlobalSearch() {
             setOpen(isOpen);
             if (!isOpen) setSearchTerm('');
         }}
-        shouldFilter={false} 
+        shouldFilter={false} // CRÍTICO: Desativa o filtro interno do CMDK para usar nossos resultados do Firebase
       >
         <CommandInput 
             placeholder="Digite Nome, CPF, ID ou Proposta..." 
@@ -175,7 +173,10 @@ export function GlobalSearch() {
                     <CommandItem
                         key={customer.id}
                         value={`cust-${customer.id}`}
-                        onSelect={() => runCommand(() => router.push(`/customers/${customer.id}`))}
+                        onSelect={() => {
+                            console.log(`[DEBUG-GLOBAL] Navegando para cliente: ${customer.name}`);
+                            runCommand(() => router.push(`/customers/${customer.id}`));
+                        }}
                     >
                         <div className="flex items-center justify-between w-full">
                             <div className='flex items-center'>
@@ -200,6 +201,7 @@ export function GlobalSearch() {
                         value={`prop-${proposal.id}`}
                         onSelect={() => {
                             console.log(`[DEBUG-GLOBAL] Navegando para proposta: ${proposal.proposalNumber}`);
+                            // Envia o número da proposta para o filtro e o ID para o modal de abertura
                             runCommand(() => router.push(`/proposals?open=${proposal.id}&search=${proposal.proposalNumber}`));
                         }}>
                         <div className="flex items-center justify-between w-full">
