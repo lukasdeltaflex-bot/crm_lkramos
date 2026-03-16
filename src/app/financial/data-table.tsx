@@ -72,8 +72,8 @@ import { useUser } from '@/firebase';
 import { safeStorage } from '@/lib/storage-utils';
 
 /**
- * 🛡️ MOTOR DE DATAS ROBUSTO LK RAMOS
- * Converte qualquer formato de data (Timestamp, Date, ISO, BR) em um objeto Date válido.
+ * 🛡️ MOTOR DE DATAS ROBUSTO FINANCEIRO
+ * Converte qualquer formato de data em Local Date para evitar shift de timezone.
  */
 function normalizeDate(value: any): Date | null {
   if (!value) return null;
@@ -87,32 +87,41 @@ function normalizeDate(value: any): Date | null {
   
   // 3. String (ISO ou BR)
   if (typeof value === 'string') {
-    // Tenta ISO primeiro
-    let parsed = new Date(value);
-    if (!isNaN(parsed.getTime())) return parsed;
-    
-    // Tenta formato brasileiro dd/mm/aaaa
-    const parts = value.split('/');
-    if (parts.length === 3) {
-      const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+    // Tenta formato brasileiro dd/mm/aaaa primeiro (Mais comum no input)
+    const brMatch = value.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+    if (brMatch) {
+      const d = new Date(parseInt(brMatch[3]), parseInt(brMatch[2]) - 1, parseInt(brMatch[1]));
       if (!isNaN(d.getTime())) return d;
     }
+
+    // Tenta formato ISO ou YYYY-MM-DD
+    const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (isoMatch) {
+        // Usamos os componentes numéricos para garantir Local Time e evitar shift UTC
+        const d = new Date(parseInt(isoMatch[1]), parseInt(isoMatch[2]) - 1, parseInt(isoMatch[3]));
+        if (!isNaN(d.getTime())) return d;
+    }
+
+    // Fallback genérico
+    const parsed = new Date(value);
+    if (!isNaN(parsed.getTime())) return parsed;
   }
   return null;
 }
 
 /**
  * 🛡️ COMPARADOR DE INTERVALO INCLUSIVO
- * Garante que registros do início ou fim do dia sejam capturados.
  */
 function isWithinRange(dateValue: Date, start: Date, end: Date) {
+  const target = new Date(dateValue);
   const startDate = new Date(start);
   const endDate = new Date(end);
   
+  target.setHours(0, 0, 0, 0);
   startDate.setHours(0, 0, 0, 0);
   endDate.setHours(23, 59, 59, 999);
   
-  return dateValue >= startDate && dateValue <= endDate;
+  return target >= startDate && target <= endDate;
 }
 
 const COLUMN_LABELS: Record<string, string> = {
@@ -270,8 +279,8 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   };
 
   /**
-   * 🛡️ MOTOR DE FILTRAGEM FINANCEIRO V2
-   * Lógica cirúrgica baseada estritamente na commissionPaymentDate.
+   * 🛡️ MOTOR DE FILTRAGEM FINANCEIRO V3
+   * Filtra estritamente pela commissionPaymentDate conforme regra de negócio.
    */
   const filteredData = React.useMemo(() => {
     console.log(`[DEBUG-FINANCEIRO] total registros antes do filtro: ${data.length}`);
@@ -282,22 +291,26 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         const target = statusFilter.toUpperCase();
         list = list.filter(p => {
             const currentCommStatus = (p.commissionStatus || 'Pendente').toUpperCase();
+            // "PAGAS" vira "PAGA", "PENDENTES" vira "PENDENTE", etc.
             const normalizedTarget = target.endsWith('S') ? target.slice(0, -1) : target;
             return currentCommStatus === normalizedTarget;
         });
         console.log(`[DEBUG-FINANCEIRO] total após filtro de status (${statusFilter}): ${list.length}`);
     }
 
-    // 2. Filtro de Período (Baseado exclusivamente na Data de Pagamento Financeira)
+    // 2. Filtro de Período (Baseado EXCLUSIVAMENTE na Data de Pagamento da Comissão)
     if (appliedDateRange && appliedDateRange.from) {
+        const start = appliedDateRange.from;
+        const end = appliedDateRange.to || appliedDateRange.from;
+        
         list = list.filter(p => {
             const paymentDate = normalizeDate(p.commissionPaymentDate);
             if (!paymentDate) return false;
 
-            const inRange = isWithinRange(paymentDate, appliedDateRange.from!, appliedDateRange.to || appliedDateRange.from!);
+            const inRange = isWithinRange(paymentDate, start, end);
             
             if (inRange) {
-                console.log(`[DEBUG-FINANCEIRO] Match encontrado: Cliente ${p.customer?.name} | Data Pgto Normalizada:`, format(paymentDate, 'dd/MM/yyyy HH:mm'));
+                console.log(`[DEBUG-FINANCEIRO] Match encontrado: Cliente ${p.customer?.name} | Proposta: ${p.proposalNumber} | Data Pgto Normalizada: ${format(paymentDate, 'dd/MM/yyyy HH:mm')}`);
             }
             
             return inRange;
@@ -305,7 +318,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         console.log(`[DEBUG-FINANCEIRO] total após filtro de período: ${list.length}`);
     }
 
-    // 3. Filtros Secundários
+    // 3. Filtros Secundários (Preservados)
     if (bankFilters.length > 0) list = list.filter(p => bankFilters.includes(p.bank));
     if (promoterFilters.length > 0) list = list.filter(p => promoterFilters.includes(p.promoter));
     if (operatorFilters.length > 0) list = list.filter(p => operatorFilters.includes(p.operator || 'Sem Operador'));
