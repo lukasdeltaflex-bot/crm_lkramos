@@ -1,3 +1,5 @@
+'use client';
+
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
@@ -6,8 +8,8 @@ import { firebaseConfig } from "./config";
 
 /**
  * 🛠️ NÚCLEO DE INFRAESTRUTURA LK RAMOS
- * Removido 'use client' para permitir que rotas de servidor (como manifest.ts)
- * importem as instâncias sem quebrar o build do Next.js.
+ * Restaurado 'use client' conforme diretrizes críticas para garantir
+ * que o SDK seja inicializado apenas no contexto do navegador.
  */
 
 const app: FirebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
