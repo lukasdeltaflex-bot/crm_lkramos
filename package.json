@@ -1,6 +1,7 @@
+
 {
   "name": "nextn",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "private": true,
   "engines": {
     "node": ">=20.0.0"

@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Fluxo Genkit para extrair dados de clientes a partir de imagens ou PDFs (OCR).
@@ -89,20 +90,21 @@ const extractDataFromImageFlow = ai.defineFlow(
     } catch (error: any) {
         console.error("❌ --- ERRO TÉCNICO IA LK RAMOS ---");
         console.error("MENSAGEM:", error.message);
+        console.error("STACK:", error.stack);
         
         let userMessage = "A IA encontrou um problema de comunicação.";
         const errStr = String(error).toUpperCase();
         const errMsg = String(error.message || '').toUpperCase();
         
         if (errStr.includes("API_KEY_INVALID") || errMsg.includes("API KEY NOT VALID")) {
-            userMessage = "Erro de Credencial: A chave no Firebase Console está incorreta ou ausente.";
+            userMessage = "Erro de Credencial: A chave está incorreta ou não foi reconhecida.";
         } else if (errStr.includes("403") || errMsg.includes("FORBIDDEN")) {
-            userMessage = "Acesso Negado: Ative a 'Generative Language API' no Google Cloud Console.";
+            userMessage = "Acesso Negado: Verifique se a 'Generative Language API' está ativada no Google Cloud Console.";
         } else if (errStr.includes("429")) {
-            userMessage = "Limite atingido: Aguarde 60 segundos antes de tentar novamente.";
+            userMessage = "Limite atingido: Muitas requisições. Aguarde um minuto.";
         }
         
-        throw new Error(`${userMessage} Certifique-se de que o arquivo está legível e não ultrapassa 4MB.`);
+        throw new Error(`${userMessage} Verifique se o arquivo está legível e tente novamente.`);
     }
   }
 );
