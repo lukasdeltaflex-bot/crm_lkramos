@@ -27,7 +27,7 @@ import {
     DragEndEvent,
 } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
-import { format, parse, isValid, startOfDay, endOfDay, subDays, startOfMonth, endOfMonth } from 'date-fns';
+import { format, startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, isValid, parse } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 
 import {
@@ -62,14 +62,66 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { X, Filter, Search, Calendar as CalendarIcon, ChevronDown, ChevronsLeft, ChevronsRight, Snowflake, User, Landmark, Building2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { cn, cleanBankName, normalizeString, formatCurrency, isProposalCritical, parseDateSafe } from '@/lib/utils';
-import type { Proposal, Customer, ProposalWithCustomer, UserSettings } from '@/lib/types';
+import { cn, cleanBankName, normalizeString, formatCurrency, isProposalCritical } from '@/lib/utils';
+import type { ProposalWithCustomer, UserSettings, CommissionStatus } from '@/lib/types';
 import { DraggableHeader } from './columns';
 import { Separator } from '@/components/ui/separator';
 import { useTheme } from '@/components/theme-provider';
 import { BankIcon } from '@/components/bank-icon';
 import { useUser } from '@/firebase';
 import { safeStorage } from '@/lib/storage-utils';
+
+/**
+ * 🛡️ MOTOR DE DATAS FINANCEIRO (NORMALIZAÇÃO SOLICITADA)
+ */
+function normalizeDate(value: any): Date | null {
+  if (!value) return null;
+
+  // Se for Timestamp do Firestore
+  if (value?.toDate && typeof value.toDate === 'function') {
+    return value.toDate();
+  }
+  if (value?.seconds) {
+    return new Date(value.seconds * 1000);
+  }
+
+  if (value instanceof Date) {
+    return new Date(value);
+  }
+
+  if (typeof value === 'string') {
+    // Tenta formato ISO primeiro
+    const parsed = new Date(value);
+    if (!isNaN(parsed.getTime())) return parsed;
+
+    // Tenta formato brasileiro dd/mm/aaaa
+    if (value.includes('/')) {
+        const parts = value.split('/');
+        if (parts.length === 3) {
+            const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+            if (!isNaN(d.getTime())) return d;
+        }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * 🛡️ VERIFICAÇÃO DE INTERVALO INCLUSIVO (SOLICITADA)
+ */
+function isWithinRange(dateValue: any, start: Date, end: Date): boolean {
+  const d = normalizeDate(dateValue);
+  if (!d) return false;
+
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+
+  startDate.setHours(0, 0, 0, 0);
+  endDate.setHours(23, 59, 59, 999);
+
+  return d >= startDate && d <= endDate;
+}
 
 const COLUMN_LABELS: Record<string, string> = {
     col_select: "Seleção",
@@ -81,8 +133,7 @@ const COLUMN_LABELS: Record<string, string> = {
     col_product: "Produto",
     col_gross: "Valor Bruto",
     col_comm: "Comissão (%)",
-    col_paga: "Vlr Pago",
-    col_comm_val: "Vlr Comissão",
+    col_comm_val: "Valor Comissão",
     col_proposal_status: "Status Proposta",
     col_comm_status: "Status Comissão",
     col_payment_date: "Data Pagamento",
@@ -90,34 +141,6 @@ const COLUMN_LABELS: Record<string, string> = {
     col_operator: "Operador",
     col_actions: "Ações"
 };
-
-/**
- * 🛡️ MOTOR DE DATAS FINANCEIRO (LK RAMOS)
- */
-function normalizeDate(value: any): Date | null {
-  if (!value) return null;
-  if (value?.seconds) return new Date(value.seconds * 1000);
-  if (typeof value.toDate === 'function') return value.toDate();
-  if (value instanceof Date) return new Date(value);
-  if (typeof value === 'string') {
-    const parsed = new Date(value);
-    if (!isNaN(parsed.getTime())) return parsed;
-    const parts = value.split('/');
-    if (parts.length === 3) {
-      const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-      if (!isNaN(d.getTime())) return d;
-    }
-  }
-  return null;
-}
-
-function isWithinRange(dateValue: any, start: Date, end: Date): boolean {
-  const d = normalizeDate(dateValue);
-  if (!d) return false;
-  const startDate = startOfDay(new Date(start));
-  const endDate = endOfDay(new Date(end));
-  return d >= startDate && d <= endDate;
-}
 
 interface DataTableProps {
   columns: ColumnDef<ProposalWithCustomer, unknown>[];
@@ -274,39 +297,44 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     }
   };
 
+  /**
+   * 🛡️ MOTOR DE FILTRAGEM REESCRITO (REGRAS SOLICITADAS)
+   */
   const filteredData = React.useMemo(() => {
     let list = data;
 
-    // 1. Filtro por Status Financeiro
+    // 1. Filtro por Status Financeiro (Exclusivo)
     if (statusFilter !== 'Todos') {
         const target = statusFilter.toUpperCase();
         list = list.filter(p => {
             const s = (p.commissionStatus || '').toUpperCase();
-            return s === target || (target === 'PAGAS' && s === 'PAGA') || (target === 'PENDENTES' && s === 'PENDENTE') || (target === 'PARCIAIS' && s === 'PARCIAL');
+            // Mapeia labels da aba para status internos
+            if (target === 'PAGAS') return s === 'PAGA';
+            if (target === 'PENDENTES') return s === 'PENDENTE';
+            if (target === 'PARCIAIS') return s === 'PARCIAL';
+            return s === target;
         });
     }
 
-    // 2. Filtros de Categorias
-    if (bankFilters.length > 0) list = list.filter(p => bankFilters.includes(p.bank));
-    if (promoterFilters.length > 0) list = list.filter(p => promoterFilters.includes(p.promoter));
-    if (operatorFilters.length > 0) list = list.filter(p => operatorFilters.includes(p.operator || 'Sem Operador'));
-    
-    // 3. 🛡️ FILTRO DE PERÍODO SOBERANO (Data de Pagamento)
+    // 2. Filtro de Período SOBERANO (Data de Pagamento)
     if (appliedDateRange && appliedDateRange.from) {
         const start = appliedDateRange.from;
         const end = appliedDateRange.to || start;
         
-        console.log(`[DEBUG-RECONCILIATION] Filtro: ${format(start, 'dd/MM/yyyy')} - ${format(end, 'dd/MM/yyyy')}`);
+        console.log(`[DEBUG-RECONCILIATION] Aplicando filtro de período: ${format(start, 'dd/MM/yyyy')} até ${format(end, 'dd/MM/yyyy')}`);
         
         list = list.filter(p => {
-            // SOBERANIA: No financeiro, período olha pagamento
-            const payDate = normalizeDate(p.commissionPaymentDate);
-            if (!payDate) return false;
-            return isWithinRange(payDate, start, end);
+            // REGRA: Financeiro sempre olha commissionPaymentDate
+            return isWithinRange(p.commissionPaymentDate, start, end);
         });
         
-        console.log(`[DEBUG-RECONCILIATION] Registros encontrados: ${list.length}`);
+        console.log(`[DEBUG-RECONCILIATION] Total de registros que passaram no filtro de data: ${list.length}`);
     }
+
+    // 3. Filtros de Categorias
+    if (bankFilters.length > 0) list = list.filter(p => bankFilters.includes(p.bank));
+    if (promoterFilters.length > 0) list = list.filter(p => promoterFilters.includes(p.promoter));
+    if (operatorFilters.length > 0) list = list.filter(p => operatorFilters.includes(p.operator || 'Sem Operador'));
     
     return list;
   }, [data, statusFilter, bankFilters, promoterFilters, operatorFilters, appliedDateRange]);
@@ -376,6 +404,8 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const uniqueBanks = React.useMemo(() => Array.from(new Set(data.map(p => p.bank))).sort(), [data]);
   const uniquePromoters = React.useMemo(() => Array.from(new Set(data.map(p => p.promoter))).sort(), [data]);
 
+  if (!isClient) return <div className="h-96 w-full bg-muted/10 animate-pulse rounded-xl" />;
+
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
         <div className="space-y-4 w-full">
@@ -384,7 +414,9 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                     <TabsList className="bg-transparent p-0 gap-1 h-auto flex-wrap">
                         <TabsTrigger value="Todos" className="font-bold px-4 h-9">Todos</TabsTrigger>
                         {['Paga', 'Pendente', 'Parcial'].map(s => (
-                            <TabsTrigger key={s} value={s} className="status-tab font-black uppercase text-[10px] tracking-widest px-4 h-9 border-2 border-transparent data-[state=active]:bg-background" style={{ '--status-color': statusColors[s.toUpperCase()] || statusColors[s] } as any}>{s === 'Paga' ? 'PAGAS' : s === 'Pendente' ? 'PENDENTES' : 'PARCIAIS'}</TabsTrigger>
+                            <TabsTrigger key={s} value={s} className="status-tab font-black uppercase text-[10px] tracking-widest px-4 h-9 border-2 border-transparent data-[state=active]:bg-background" style={{ '--status-color': statusColors[s.toUpperCase()] || statusColors[s] } as any}>
+                                {s === 'Paga' ? 'PAGAS' : s === 'Pendente' ? 'PENDENTES' : 'PARCIAIS'}
+                            </TabsTrigger>
                         ))}
                     </TabsList>
                 </Tabs>
@@ -547,7 +579,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                         </div>
                     </div>
                 </div>
-            </Card>
+            </div>
         </div>
     </DndContext>
   );

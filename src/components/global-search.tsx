@@ -18,9 +18,9 @@ import { Button } from '@/components/ui/button';
 import { normalizeString, cleanBankName } from '@/lib/utils';
 
 /**
- * 🚀 BUSCA GLOBAL REATIVA V20
- * Correção Crítica: Adicionado shouldFilter={false} para permitir que resultados
- * assíncronos do Firebase apareçam sem bloqueio do filtro interno do Radix.
+ * 🚀 BUSCA GLOBAL REATIVA V21 (ESTABILIZADA)
+ * Desativado o filtro interno do Radix para permitir que os dados do Firebase
+ * apareçam instantaneamente sem "pente fino" local.
  */
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false);
@@ -55,6 +55,7 @@ export function GlobalSearch() {
             const normalized = normalizeString(searchTerm);
             const isNumber = /^\d+$/.test(searchTerm);
 
+            // 🔍 BUSCA DE CLIENTES (Alcance de 500 registros)
             const qCust = query(
                 collection(firestore, 'customers'), 
                 where('ownerId', '==', user.uid),
@@ -74,6 +75,7 @@ export function GlobalSearch() {
                 })
                 .slice(0, 10);
 
+            // 🔍 BUSCA DE PROPOSTAS
             const qProp = query(
                 collection(firestore, 'loanProposals'), 
                 where('ownerId', '==', user.uid),
@@ -86,12 +88,13 @@ export function GlobalSearch() {
                 .map(d => ({ ...d.data(), id: d.id } as Proposal))
                 .filter(p => {
                     if (p.deleted === true) return false;
-                    if (isNumber) return p.proposalNumber.includes(searchTerm);
+                    const pNum = (p.proposalNumber || '').replace(/\D/g, '');
+                    if (isNumber) return pNum.includes(searchTerm);
                     return normalizeString(p.product || '').includes(normalized) || normalizeString(p.bank || '').includes(normalized);
                 })
                 .slice(0, 10);
 
-            console.log(`[DEBUG-LK] Busca: ${filteredCustomers.length} clientes, ${filteredProposals.length} propostas para o termo "${searchTerm}"`);
+            console.log(`[DEBUG-LK] Busca Global: ${filteredCustomers.length} clientes, ${filteredProposals.length} propostas localizadas.`);
             setResults({ customers: filteredCustomers, proposals: filteredProposals });
         } catch (error) {
             console.error("Search Error:", error);
@@ -129,7 +132,7 @@ export function GlobalSearch() {
             setOpen(isOpen);
             if (!isOpen) setSearchTerm('');
         }}
-        shouldFilter={false}
+        shouldFilter={false} // CRITICAL: Permite exibição livre de resultados do Firebase
       >
         <CommandInput 
             placeholder="Digite Nome, CPF, ID ou Proposta..." 
@@ -163,7 +166,8 @@ export function GlobalSearch() {
           {results.customers.length > 0 && (
             <CommandGroup heading="Clientes Localizados">
                 {results.customers.map((customer) => {
-                    const searchIndex = normalizeString(`${customer.name} ${customer.cpf} ${customer.numericId}`);
+                    // Valor de indexação total para evitar que o CMDK esconda o item
+                    const searchIndex = `${customer.name} ${customer.cpf} ${customer.numericId}`.toLowerCase();
                     return (
                         <CommandItem
                             key={customer.id}
@@ -189,7 +193,7 @@ export function GlobalSearch() {
           {results.proposals.length > 0 && (
             <CommandGroup heading="Propostas Localizadas">
                 {results.proposals.map((proposal) => {
-                    const searchIndex = normalizeString(`${proposal.proposalNumber} ${proposal.product} ${proposal.bank}`);
+                    const searchIndex = `${proposal.proposalNumber} ${proposal.product} ${proposal.bank}`.toLowerCase();
                     return (
                         <CommandItem
                             key={proposal.id}

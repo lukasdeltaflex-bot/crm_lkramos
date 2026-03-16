@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 
 /**
- * 🚀 PWA MASTER CONTROLLER
+ * 🚀 PWA MASTER CONTROLLER V2 (LK RAMOS)
  * Registra o Service Worker e gerencia o fluxo de atualização segura.
+ * Resolve o problema de "código antigo" preso no navegador do usuário.
  */
 export function PwaRegister() {
   useEffect(() => {
@@ -15,6 +16,12 @@ export function PwaRegister() {
 
     const registerServiceWorker = async () => {
       try {
+        // Limpeza de cache bruta no registro (Opcional, mas segura para desincronização)
+        if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(name => caches.delete(name)));
+        }
+
         const registration = await navigator.serviceWorker.register('/sw.js');
 
         // Monitora atualizações do Service Worker
@@ -43,17 +50,18 @@ export function PwaRegister() {
   const showUpdateToast = (registration: ServiceWorkerRegistration) => {
     toast({
       title: "🚀 Nova Versão Disponível!",
-      description: "Uma atualização crítica de performance foi publicada.",
-      duration: 10000,
+      description: "Uma atualização crítica foi publicada. Recarregue para aplicar.",
+      duration: 30000, // 30 segundos visível
       action: (
         <Button 
           size="sm" 
           variant="default" 
-          className="bg-primary text-white font-bold h-8 px-4 rounded-full"
+          className="bg-primary text-white font-bold h-8 px-4 rounded-full shadow-lg"
           onClick={() => {
             if (registration.waiting) {
               registration.waiting.postMessage({ type: 'SKIP_WAITING' });
             }
+            // Limpa cache do navegador e recarrega
             window.location.reload();
           }}
         >
