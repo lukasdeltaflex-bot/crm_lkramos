@@ -43,7 +43,7 @@ const extractDataFromImageFlow = ai.defineFlow(
     }
 
     try {
-        console.log(`🤖 IA LK RAMOS: Processando mídia tipo ${contentType}...`);
+        console.log(`🤖 IA LK RAMOS: Processando mídia com Gemini 2.0 Flash...`);
         
         const { output } = await ai.generate({
           model: 'googleai/gemini-2.0-flash',
@@ -75,16 +75,8 @@ const extractDataFromImageFlow = ai.defineFlow(
 
         return result;
     } catch (error: any) {
-        console.error("❌ ERRO RAW DA API GEMINI:", error);
-        
-        let msg = "Falha na comunicação com a IA.";
-        const raw = String(error).toUpperCase();
-        
-        if (raw.includes("API_KEY_INVALID")) msg = "Chave de API Inválida.";
-        if (raw.includes("403")) msg = "Acesso Negado (Verifique se a API está ativa no Cloud).";
-        if (raw.includes("429")) msg = "Limite de requisições excedido.";
-        
-        throw new Error(`${msg} Detalhes: ${error.message || 'Erro desconhecido'}`);
+        console.error("❌ ERRO NA CHAMADA DA IA:", error);
+        throw new Error(`Falha na comunicação com a IA. Detalhes: ${error.message || 'Erro desconhecido'}`);
     }
   }
 );
