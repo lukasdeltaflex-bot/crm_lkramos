@@ -1,13 +1,11 @@
-
 'use server';
 
 /**
  * @fileOverview Fluxo de IA para descobrir o domínio oficial de um banco pelo nome.
- *
- * - getBankDomain - A função para chamar o fluxo de busca de domínio.
  */
 
 import { ai } from '@/ai/genkit';
+import { gemini15Flash } from '@genkit-ai/google-genai';
 import { z } from 'genkit';
 
 const GetBankDomainInputSchema = z.object({
@@ -30,6 +28,7 @@ const getBankDomainFlow = ai.defineFlow(
   },
   async (input) => {
     const { text } = await ai.generate({
+        model: gemini15Flash,
         prompt: `Você é um assistente técnico especialista em instituições financeiras brasileiras. 
         Sua tarefa é retornar APENAS o domínio (URL principal) do site oficial do banco: "${input.bankName}".
         

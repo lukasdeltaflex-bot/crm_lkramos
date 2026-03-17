@@ -1,10 +1,10 @@
-
 'use server';
 /**
  * @fileOverview Fluxo Genkit para extrair dados de clientes a partir de imagens ou PDFs (OCR).
  */
 
 import { ai } from '@/ai/genkit';
+import { gemini15Flash } from '@genkit-ai/google-genai';
 import { z } from 'genkit';
 
 const BenefitFromImageSchema = z.object({
@@ -50,9 +50,9 @@ const extractDataFromImageFlow = ai.defineFlow(
     try {
         console.log(`🤖 IA LK RAMOS: Processando mídia tipo ${contentType}...`);
         
-        // 🚀 FIX: Usando ID do modelo como string para evitar erro de inicialização 'INVALID_ARGUMENT'
+        // 🚀 FIX: Usando a referência direta gemini15Flash para evitar erro 404 de v1beta
         const { output } = await ai.generate({
-          model: 'googleai/gemini-1.5-flash',
+          model: gemini15Flash,
           prompt: [
             { text: `Analise este documento de correspondente bancário e extraia: Nome, CPF, Nascimento, NB, Salário e Cartões (RMC/RCC). Formate datas como YYYY-MM-DD.` },
             { media: { url: input.photoDataUri, contentType: contentType } }

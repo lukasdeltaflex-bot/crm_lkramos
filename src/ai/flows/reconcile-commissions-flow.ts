@@ -1,10 +1,10 @@
 'use server';
 /**
  * @fileOverview Fluxo de IA V2 para extrair e conciliar dados de comissões.
- * Suporta entrada de texto ou arquivos (PDF/Imagens) via visão computacional.
  */
 
 import { ai } from '@/ai/genkit';
+import { gemini15Flash } from '@genkit-ai/google-genai';
 import { z } from 'genkit';
 
 const CommissionDataSchema = z.object({
@@ -58,6 +58,7 @@ const reconcileCommissionsFlow = ai.defineFlow(
     }
 
     const { output } = await ai.generate({
+        model: gemini15Flash,
         prompt: promptParts,
         output: { schema: ReconcileCommissionsOutputSchema }
     });
