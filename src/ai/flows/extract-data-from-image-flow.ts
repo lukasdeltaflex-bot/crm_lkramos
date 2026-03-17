@@ -6,7 +6,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { gemini15Flash } from '@genkit-ai/google-genai';
 
 const BenefitFromImageSchema = z.object({
     number: z.string().optional().describe('Número do benefício INSS.'),
@@ -51,8 +50,9 @@ const extractDataFromImageFlow = ai.defineFlow(
     try {
         console.log(`🤖 IA LK RAMOS: Processando mídia tipo ${contentType}...`);
         
+        // 🚀 FIX: Usando ID do modelo como string para evitar erro de inicialização 'INVALID_ARGUMENT'
         const { output } = await ai.generate({
-          model: gemini15Flash,
+          model: 'googleai/gemini-1.5-flash',
           prompt: [
             { text: `Analise este documento de correspondente bancário e extraia: Nome, CPF, Nascimento, NB, Salário e Cartões (RMC/RCC). Formate datas como YYYY-MM-DD.` },
             { media: { url: input.photoDataUri, contentType: contentType } }
