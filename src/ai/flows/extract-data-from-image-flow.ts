@@ -49,10 +49,10 @@ const extractDataFromImageFlow = ai.defineFlow(
     }
 
     try {
-        console.log(`🤖 IA LK RAMOS: Processando mídia com Gemini 2.0 Flash...`);
+        console.log(`🤖 IA LK RAMOS: Processando mídia com Gemini 1.5 Flash...`);
         
         const { output } = await ai.generate({
-          model: 'googleai/gemini-2.0-flash',
+          model: 'googleai/gemini-1.5-flash',
           prompt: [
             { text: `Analise este documento de correspondente bancário e extraia: Nome, CPF, Nascimento, NB, Salário e Cartões (RMC/RCC). Formate datas como YYYY-MM-DD.` },
             { media: { url: input.photoDataUri, contentType: contentType } }
@@ -83,7 +83,13 @@ const extractDataFromImageFlow = ai.defineFlow(
         return result;
     } catch (error: any) {
         console.error("❌ ERRO NA CHAMADA DA IA:", error);
-        throw new Error(`Falha na comunicação com a IA. Detalhes: ${error.message || 'Erro desconhecido'}`);
+        
+        const raw = String(error.message || "");
+        let msg = "A IA encontrou um problema de comunicação.";
+        if (raw.includes("404")) msg = "Modelo de IA não localizado ou indisponível para esta chave.";
+        if (raw.includes("429")) msg = "Limite de requisições excedido.";
+        
+        throw new Error(`${msg} Detalhes: ${error.message || 'Erro desconhecido'}`);
     }
   }
 );
