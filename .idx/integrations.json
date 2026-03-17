@@ -1,9 +1,5 @@
 {
   "firebase_hosting": {
     "deploymentHostingUrl": "https://studio-248448941-9c1c2.web.app"
-  },
-  "cloud_run_deploy": {},
-  "gemini_api": {},
-  "google_maps_platform": {},
-  "secrets_manager": {}
+  }
 }
