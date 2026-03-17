@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Fluxo Genkit para extrair dados de clientes a partir de imagens ou PDFs (OCR).
- *
+ * 
  * - extractDataFromImage - Server Action para processar documentos.
  * - ExtractFromImageOutput - O tipo de saída com os dados mapeados.
  */
@@ -31,32 +31,26 @@ const ExtractFromImageOutputSchema = z.object({
 export type ExtractFromImageOutput = z.infer<typeof ExtractFromImageOutputSchema>;
 
 /**
- * Definição do fluxo Genkit.
- * Registrado antes da exportação da Action para garantir o registro no manifesto do Next.js.
+ * Server Action exportada para ser consumida pela UI.
+ * Refatorada para ser uma função autônoma, garantindo o registro correto no Next.js 15.
  */
-const extractDataFromImageFlow = ai.defineFlow(
-  {
-    name: 'extractDataFromImageFlow',
-    inputSchema: z.object({
-      photoDataUri: z.string().describe("A imagem ou PDF do documento como data URI Base64."),
-    }),
-    outputSchema: ExtractFromImageOutputSchema,
-  },
-  async (input) => {
+export async function extractDataFromImage(photoDataUri: string): Promise<ExtractFromImageOutput> {
+    if (!photoDataUri) throw new Error("Documento não fornecido.");
+
     let contentType = 'image/jpeg';
-    const match = input.photoDataUri.match(/^data:([^;]+);base64,/);
+    const match = photoDataUri.match(/^data:([^;]+);base64,/);
     if (match) {
         contentType = match[1];
     }
 
     try {
-        console.log(`🤖 IA LK RAMOS: Processando mídia com motor de visão...`);
+        console.log(`🤖 IA LK RAMOS: Processando mídia via Server Action...`);
         
         const { output } = await ai.generate({
           model: 'googleai/gemini-1.5-flash',
           prompt: [
-            { text: `Analise este documento de correspondente bancário e extraia: Nome, CPF, Nascimento, NB, Salário e Cartões (RMC/RCC). Formate datas como YYYY-MM-DD.` },
-            { media: { url: input.photoDataUri, contentType: contentType } }
+            { text: `Analise este documento de correspondente bancário e extraia: Nome, CPF, Nascimento, NB, Salário e Cartões (RMC/RCC). Formate datas como YYYY-MM-DD. Se encontrar mais de um telefone, separe-os em phone e phone2.` },
+            { media: { url: photoDataUri, contentType: contentType } }
           ],
           output: { schema: ExtractFromImageOutputSchema }
         });
@@ -75,15 +69,11 @@ const extractDataFromImageFlow = ai.defineFlow(
         return result;
     } catch (error: any) {
         console.error("❌ ERRO NA CHAMADA DA IA:", error);
-        throw new Error(`Falha na comunicação com a IA. Detalhes: ${error.message || 'Erro desconhecido'}`);
+        let msg = "Falha na comunicação com a IA.";
+        const raw = String(error.message || '');
+        if (raw.includes("404")) msg = "Modelo de IA temporariamente indisponível.";
+        if (raw.includes("429")) msg = "Limite de requisições excedido.";
+        
+        throw new Error(`${msg} Detalhes: ${error.message || 'Erro desconhecido'}`);
     }
-  }
-);
-
-/**
- * Server Action exportada para ser consumida pela UI.
- * Definida como função assíncrona explícita para compatibilidade com Next.js 15.
- */
-export async function extractDataFromImage(photoDataUri: string): Promise<ExtractFromImageOutput> {
-  return await extractDataFromImageFlow({ photoDataUri });
 }

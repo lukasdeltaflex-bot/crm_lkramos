@@ -36,53 +36,47 @@ const ExtractCustomerDataOutputSchema = z.object({
 
 export type ExtractCustomerDataOutput = z.infer<typeof ExtractCustomerDataOutputSchema>;
 
-const prompt = ai.definePrompt({
-  name: 'extractCustomerDataPrompt',
-  input: { schema: z.string() },
-  output: { schema: ExtractCustomerDataOutputSchema },
-  prompt: `Você é um assistente de extração de dados especializado em correspondentes bancários. Sua função é analisar o TEXTO e extrair informações para um JSON estruturado.
-
-### REGRAS CRÍTICAS DE NEGÓCIO:
-1. CPF / Benefício: Extraia da primeira linha ou campos identificados. 
-2. Salário: Identifique o valor bruto ou líquido do benefício se disponível.
-3. Cartões RMC/RCC: Se identificar bancos vinculados a reservas de cartão (RMC ou RCC/Benefício), inclua no objeto do benefício correspondente.
-4. Data de Nascimento: Converta para YYYY-MM-DD.
-5. Telefones: Se houver mais de um número no texto, separe-os obrigatoriamente nos campos phone e phone2.
-6. OMISSÃO: Se um campo não existir, NÃO o invente.
-
-### TEXTO PARA PROCESSAR:
-"""
-{{{input}}}
-"""`,
-});
-
-const extractCustomerDataFlow = ai.defineFlow(
-  {
-    name: 'extractCustomerDataFlow',
-    inputSchema: z.string(),
-    outputSchema: ExtractCustomerDataOutputSchema,
-  },
-  async (input) => {
-    if (!input || input.trim() === '') return {};
-    const { output } = await prompt(input);
-    const result = output || {};
-
-    // 🛡️ BLINDAGEM CONTRA TELEFONES CONCATENADOS
-    if (result.phone && !result.phone2) {
-        const phoneMatches = result.phone.match(/\(?\d{2}\)?\s?\d{4,5}-?\d{4}/g);
-        if (phoneMatches && phoneMatches.length > 1) {
-            result.phone = phoneMatches[0];
-            result.phone2 = phoneMatches[1];
-        }
-    }
-
-    return result;
-  }
-);
-
 /**
  * Server Action para extração de texto.
+ * Refatorada para ser uma função autônoma, garantindo o registro correto no Next.js 15.
  */
 export async function extractCustomerData(text: string): Promise<ExtractCustomerDataOutput> {
-  return await extractCustomerDataFlow(text);
+    if (!text || text.trim() === '') return {};
+
+    try {
+        const { output } = await ai.generate({
+            model: 'googleai/gemini-1.5-flash',
+            prompt: `Você é um assistente de extração de dados especializado em correspondentes bancários. Sua função é analisar o TEXTO e extrair informações para um JSON estruturado.
+
+            ### REGRAS CRÍTICAS DE NEGÓCIO:
+            1. CPF / Benefício: Extraia da primeira linha ou campos identificados. 
+            2. Salário: Identifique o valor bruto ou líquido do benefício se disponível.
+            3. Cartões RMC/RCC: Se identificar bancos vinculados a reservas de cartão (RMC ou RCC/Benefício), inclua no objeto do benefício correspondente.
+            4. Data de Nascimento: Converta para YYYY-MM-DD.
+            5. Telefones: Se houver mais de um número no texto, separe-os obrigatoriamente nos campos phone e phone2.
+            6. OMISSÃO: Se um campo não existir, NÃO o invente.
+
+            ### TEXTO PARA PROCESSAR:
+            """
+            ${text}
+            """`,
+            output: { schema: ExtractCustomerDataOutputSchema }
+        });
+
+        const result = output || {};
+
+        // 🛡️ BLINDAGEM CONTRA TELEFONES CONCATENADOS
+        if (result.phone && !result.phone2) {
+            const phoneMatches = result.phone.match(/\(?\d{2}\)?\s?\d{4,5}-?\d{4}/g);
+            if (phoneMatches && phoneMatches.length > 1) {
+                result.phone = phoneMatches[0];
+                result.phone2 = phoneMatches[1];
+            }
+        }
+
+        return result;
+    } catch (error: any) {
+        console.error("❌ ERRO NA EXTRAÇÃO DE TEXTO:", error);
+        throw new Error(`Falha na extração de dados via IA.`);
+    }
 }
