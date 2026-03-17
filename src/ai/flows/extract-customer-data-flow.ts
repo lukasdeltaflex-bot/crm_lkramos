@@ -3,12 +3,11 @@
  * @fileOverview Um fluxo Genkit para extrair dados estruturados de clientes a partir de um texto não estruturado.
  *
  * - extractCustomerData - A função para chamar o fluxo de extração.
- * - ExtractCustomerDataInput - O tipo de entrada (string com o texto).
  * - ExtractCustomerDataOutput - O tipo de saída (objeto com os dados do cliente).
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
+import { z } from 'genkit';
 
 const BenefitSchema = z.object({
     number: z.string().describe("O número do benefício INSS do cliente."),
@@ -34,11 +33,8 @@ const ExtractCustomerDataOutputSchema = z.object({
     city: z.string().optional().describe('A cidade do cliente.'),
     state: z.string().optional().describe('O estado (UF) do cliente.'),
 }).describe('Os dados extraídos do cliente.');
-export type ExtractCustomerDataOutput = z.infer<typeof ExtractCustomerDataOutputSchema>;
 
-export async function extractCustomerData(text: string): Promise<ExtractCustomerDataOutput> {
-  return extractCustomerDataFlow(text);
-}
+export type ExtractCustomerDataOutput = z.infer<typeof ExtractCustomerDataOutputSchema>;
 
 const prompt = ai.definePrompt({
   name: 'extractCustomerDataPrompt',
@@ -47,30 +43,17 @@ const prompt = ai.definePrompt({
   prompt: `Você é um assistente de extração de dados especializado em correspondentes bancários. Sua função é analisar o TEXTO e extrair informações para um JSON estruturado.
 
 ### REGRAS CRÍTICAS DE NEGÓCIO:
-
-1.  **CPF / Benefício**: Extraia da primeira linha ou campos identificados. 
-2.  **Salário**: Identifique o valor bruto ou líquido do benefício se disponível.
-3.  **Cartões RMC/RCC**: Se identificar bancos vinculados a reservas de cartão (RMC ou RCC/Benefício), inclua no objeto do benefício correspondente.
-4.  **Data de Nascimento**: Converta para YYYY-MM-DD.
-5.  **Telefones**: Se houver mais de um número no texto, separe-os obrigatoriamente nos campos phone e phone2. Não os concatene.
-6.  **OMISSÃO**: Se um campo não existir, NÃO o invente.
-
-### EXEMPLO DE EXTRATO:
-*Entrada:*
-Nome: JOAO SILVA
-CPF: 123.456.789-00
-NB: 158.806.323-0 - Salário: R$ 1.412,00 - RMC: BANCO PAN / RCC: BANCO ITAU
-Endereço: RUA TESTE 100 - SP
-
-*Saída:*
-{"name":"JOAO SILVA","cpf":"123.456.789-00","benefits":[{"number":"1588063230","salary":1412,"rmcBank":"PAN S.A.","rccBank":"Itaú Unibanco S.A."}],"street":"RUA TESTE","number":"100","state":"SP"}
+1. CPF / Benefício: Extraia da primeira linha ou campos identificados. 
+2. Salário: Identifique o valor bruto ou líquido do benefício se disponível.
+3. Cartões RMC/RCC: Se identificar bancos vinculados a reservas de cartão (RMC ou RCC/Benefício), inclua no objeto do benefício correspondente.
+4. Data de Nascimento: Converta para YYYY-MM-DD.
+5. Telefones: Se houver mais de um número no texto, separe-os obrigatoriamente nos campos phone e phone2.
+6. OMISSÃO: Se um campo não existir, NÃO o invente.
 
 ### TEXTO PARA PROCESSAR:
-\`\`\`
+"""
 {{{input}}}
-\`\`\`
-
-Processe o texto e retorne apenas o JSON.`,
+"""`,
 });
 
 const extractCustomerDataFlow = ai.defineFlow(
@@ -80,9 +63,7 @@ const extractCustomerDataFlow = ai.defineFlow(
     outputSchema: ExtractCustomerDataOutputSchema,
   },
   async (input) => {
-    if (!input || input.trim() === '') {
-        return {};
-    }
+    if (!input || input.trim() === '') return {};
     const { output } = await prompt(input);
     const result = output || {};
 
@@ -98,3 +79,10 @@ const extractCustomerDataFlow = ai.defineFlow(
     return result;
   }
 );
+
+/**
+ * Server Action para extração de texto.
+ */
+export async function extractCustomerData(text: string): Promise<ExtractCustomerDataOutput> {
+  return await extractCustomerDataFlow(text);
+}

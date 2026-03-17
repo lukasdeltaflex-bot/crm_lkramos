@@ -1,18 +1,16 @@
-import 'dotenv/config';
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 
 /**
  * 🤖 NÚCLEO DE INTELIGÊNCIA ARTIFICIAL - LK RAMOS
- * Configuração de segurança: A chave da API é lida exclusivamente via variável de ambiente.
+ * Configuração de segurança: A chave da API é lida automaticamente do ambiente.
+ * Modelo padrão: gemini-1.5-flash para máxima estabilidade e compatibilidade multimodal.
  */
 
 export const ai = genkit({
   plugins: [
-    googleAI({ 
-      apiKey: process.env.GOOGLE_GENAI_API_KEY || process.env.GEMINI_API_KEY 
-    })
+    googleAI()
   ],
-  // Define o modelo de nova geração como padrão para todos os fluxos
-  model: 'googleai/gemini-2.0-flash',
+  // 🛡️ ESTABILIDADE: gemini-1.5-flash é o modelo de produção mais resiliente
+  model: 'googleai/gemini-1.5-flash',
 });

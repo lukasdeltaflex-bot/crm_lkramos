@@ -32,6 +32,7 @@ export type ExtractFromImageOutput = z.infer<typeof ExtractFromImageOutputSchema
 
 /**
  * Definição do fluxo Genkit.
+ * Registrado antes da exportação da Action para garantir o registro no manifesto do Next.js.
  */
 const extractDataFromImageFlow = ai.defineFlow(
   {
@@ -49,7 +50,7 @@ const extractDataFromImageFlow = ai.defineFlow(
     }
 
     try {
-        console.log(`🤖 IA LK RAMOS: Processando mídia com Gemini 1.5 Flash...`);
+        console.log(`🤖 IA LK RAMOS: Processando mídia com motor de visão...`);
         
         const { output } = await ai.generate({
           model: 'googleai/gemini-1.5-flash',
@@ -57,15 +58,6 @@ const extractDataFromImageFlow = ai.defineFlow(
             { text: `Analise este documento de correspondente bancário e extraia: Nome, CPF, Nascimento, NB, Salário e Cartões (RMC/RCC). Formate datas como YYYY-MM-DD.` },
             { media: { url: input.photoDataUri, contentType: contentType } }
           ],
-          config: {
-            safetySettings: [
-              { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-              { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-              { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
-              { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-              { category: 'HARM_CATEGORY_CIVIC_INTEGRITY', threshold: 'BLOCK_NONE' },
-            ],
-          },
           output: { schema: ExtractFromImageOutputSchema }
         });
 
@@ -83,22 +75,15 @@ const extractDataFromImageFlow = ai.defineFlow(
         return result;
     } catch (error: any) {
         console.error("❌ ERRO NA CHAMADA DA IA:", error);
-        
-        const raw = String(error.message || "");
-        let msg = "A IA encontrou um problema de comunicação.";
-        if (raw.includes("404")) msg = "Modelo de IA não localizado ou indisponível para esta chave.";
-        if (raw.includes("429")) msg = "Limite de requisições excedido.";
-        
-        throw new Error(`${msg} Detalhes: ${error.message || 'Erro desconhecido'}`);
+        throw new Error(`Falha na comunicação com a IA. Detalhes: ${error.message || 'Erro desconhecido'}`);
     }
   }
 );
 
 /**
  * Server Action exportada para ser consumida pela UI.
- * Definida como função explícita para garantir o registro no Next.js.
+ * Definida como função assíncrona explícita para compatibilidade com Next.js 15.
  */
 export async function extractDataFromImage(photoDataUri: string): Promise<ExtractFromImageOutput> {
-  const result = await extractDataFromImageFlow({ photoDataUri });
-  return result;
+  return await extractDataFromImageFlow({ photoDataUri });
 }
