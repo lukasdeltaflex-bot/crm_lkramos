@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Fluxo Genkit para extrair dados de clientes a partir de imagens ou PDFs (OCR).
@@ -28,10 +29,7 @@ const ExtractFromImageOutputSchema = z.object({
 
 export type ExtractFromImageOutput = z.infer<typeof ExtractFromImageOutputSchema>;
 
-export async function extractDataFromImage(photoDataUri: string): Promise<ExtractFromImageOutput> {
-  return extractDataFromImageFlow({ photoDataUri });
-}
-
+// 🛡️ FIX: Definindo o fluxo ANTES da função exportada para garantir o registro da Server Action
 const extractDataFromImageFlow = ai.defineFlow(
   {
     name: 'extractDataFromImageFlow',
@@ -50,7 +48,6 @@ const extractDataFromImageFlow = ai.defineFlow(
     try {
         console.log(`🤖 IA LK RAMOS: Processando mídia tipo ${contentType}...`);
         
-        // 🚀 FIX: Usando a referência direta gemini15Flash para evitar erro 404 de v1beta
         const { output } = await ai.generate({
           model: gemini15Flash,
           prompt: [
@@ -94,3 +91,10 @@ const extractDataFromImageFlow = ai.defineFlow(
     }
   }
 );
+
+/**
+ * Server Action exportada para ser utilizada pelos componentes Client.
+ */
+export async function extractDataFromImage(photoDataUri: string): Promise<ExtractFromImageOutput> {
+  return extractDataFromImageFlow({ photoDataUri });
+}

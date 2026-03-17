@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Fluxo de IA V2 para extrair e conciliar dados de comissões.
@@ -25,10 +26,7 @@ const ReconcileInputSchema = z.object({
     fileDataUri: z.string().optional().describe("Data URI do arquivo (PDF ou Imagem)"),
 });
 
-export async function reconcileCommissions(input: z.infer<typeof ReconcileInputSchema>): Promise<ReconcileCommissionsOutput> {
-  return reconcileCommissionsFlow(input);
-}
-
+// 🛡️ FIX: Definindo o fluxo ANTES da função exportada para garantir o registro da Server Action
 const reconcileCommissionsFlow = ai.defineFlow(
   {
     name: 'reconcileCommissionsFlow',
@@ -66,3 +64,10 @@ const reconcileCommissionsFlow = ai.defineFlow(
     return output || { commissions: [] };
   }
 );
+
+/**
+ * Server Action exportada para ser utilizada pelos componentes Client.
+ */
+export async function reconcileCommissions(input: z.infer<typeof ReconcileInputSchema>): Promise<ReconcileCommissionsOutput> {
+  return reconcileCommissionsFlow(input);
+}
