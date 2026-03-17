@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useTransition } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Loader2, Upload, Image as ImageIcon, FileText, X, Info, FileSearch, FileType, AlertTriangle } from 'lucide-react';
@@ -19,34 +19,37 @@ export function CustomerAiForm({ onSubmit }: CustomerAiFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [fileType, setFileType] = useState<'image' | 'pdf' | null>(null);
+  const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleTextExtract = async () => {
+  const handleTextExtract = () => {
     if (!text.trim()) {
       toast({ variant: 'destructive', title: 'Texto vazio' });
       return;
     }
+    
     setIsLoading(true);
-    try {
-      const extractedData = await extractCustomerData(text);
-      if (!extractedData || !extractedData.name) {
-          toast({ variant: 'destructive', title: 'Falha na Extração', description: 'A IA não conseguiu identificar os dados no texto.' });
+    startTransition(async () => {
+        try {
+          const extractedData = await extractCustomerData(text);
+          if (!extractedData || !extractedData.name) {
+              toast({ variant: 'destructive', title: 'Falha na Extração', description: 'A IA não conseguiu identificar os dados no texto.' });
+              setIsLoading(false);
+              return;
+          }
+          toast({ title: 'Dados extraídos com sucesso!' });
+          onSubmit(extractedData);
+        } catch (error) {
+          toast({ variant: 'destructive', title: 'Erro ao extrair dados' });
+        } finally {
           setIsLoading(false);
-          return;
-      }
-      toast({ title: 'Dados extraídos com sucesso!' });
-      onSubmit(extractedData);
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Erro ao extrair dados' });
-    } finally {
-      setIsLoading(false);
-    }
+        }
+    });
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // 🛡️ PROTEÇÃO DE CARGA ÚTIL V2: Limita a 4MB para evitar timeouts no motor de IA
       const MAX_SIZE_MB = 4;
       const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
@@ -54,7 +57,7 @@ export function CustomerAiForm({ onSubmit }: CustomerAiFormProps) {
           toast({ 
               variant: 'destructive', 
               title: 'Arquivo muito pesado', 
-              description: `O limite para análise via IA é de ${MAX_SIZE_MB}MB. Reduza a resolução da foto ou o tamanho do PDF antes de enviar.` 
+              description: `O limite para análise via IA é de ${MAX_SIZE_MB}MB.` 
           });
           if (event.target) event.target.value = '';
           return;
@@ -75,29 +78,32 @@ export function CustomerAiForm({ onSubmit }: CustomerAiFormProps) {
     }
   };
 
-  const handleFileExtract = async () => {
+  const handleFileExtract = () => {
     if (!selectedFile) return;
+    
     setIsLoading(true);
-    try {
-      const extractedData = await extractDataFromImage(selectedFile);
-      if (!extractedData || !extractedData.name) {
-          toast({ variant: 'destructive', title: 'IA não reconheceu dados', description: 'Certifique-se de que o documento está legível e sem senhas.' });
+    startTransition(async () => {
+        try {
+          const extractedData = await extractDataFromImage(selectedFile);
+          if (!extractedData || !extractedData.name) {
+              toast({ variant: 'destructive', title: 'IA não reconheceu dados', description: 'Certifique-se de que o documento está legível e sem senhas.' });
+              setIsLoading(false);
+              return;
+          }
+          
+          toast({ title: 'Documento processado com IA!' });
+          onSubmit(extractedData);
+        } catch (error: any) {
+          console.error("Extraction failed:", error);
+          toast({ 
+              variant: 'destructive', 
+              title: 'Erro no processamento', 
+              description: 'A ação do servidor não pôde ser concluída. Verifique sua conexão.' 
+          });
+        } finally {
           setIsLoading(false);
-          return;
-      }
-      
-      toast({ title: 'Documento processado com IA!' });
-      onSubmit(extractedData);
-    } catch (error: any) {
-      console.error("Extraction failed:", error);
-      toast({ 
-          variant: 'destructive', 
-          title: 'Erro no processamento', 
-          description: error.message || 'A conexão foi interrompida. Tente um arquivo menor ou mais simples.' 
-      });
-    } finally {
-      setIsLoading(false);
-    }
+        }
+    });
   };
 
   return (
@@ -165,9 +171,9 @@ export function CustomerAiForm({ onSubmit }: CustomerAiFormProps) {
                     <Button 
                         className="w-full h-14 text-sm font-black uppercase tracking-widest bg-primary shadow-xl rounded-full" 
                         onClick={handleFileExtract} 
-                        disabled={isLoading}
+                        disabled={isLoading || isPending}
                     >
-                        {isLoading ? (
+                        {isLoading || isPending ? (
                             <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Mapeando Dados com IA...</>
                         ) : (
                             <><Sparkles className="mr-2 h-5 w-5 fill-current" /> Sincronizar com IA</>
@@ -182,15 +188,15 @@ export function CustomerAiForm({ onSubmit }: CustomerAiFormProps) {
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     rows={12}
-                    disabled={isLoading}
+                    disabled={isLoading || isPending}
                     className="resize-none border-2 rounded-3xl p-6 focus-visible:ring-primary/20 font-medium"
                 />
                 <Button 
                     className="w-full h-14 font-black uppercase tracking-widest rounded-full" 
                     onClick={handleTextExtract} 
-                    disabled={isLoading}
+                    disabled={isLoading || isPending}
                 >
-                    {isLoading ? (
+                    {isLoading || isPending ? (
                         <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Interpretando Dados...</>
                     ) : (
                         <><Sparkles className="mr-2 h-5 w-5" /> Analisar e Preencher</>
@@ -203,7 +209,7 @@ export function CustomerAiForm({ onSubmit }: CustomerAiFormProps) {
             <Info className="h-4 w-4 text-orange-600" />
             <AlertTitle className="text-xs font-black uppercase tracking-widest text-orange-700">Blindagem de Performance</AlertTitle>
             <AlertDescription className="text-[10px] leading-tight text-orange-600/80 font-bold uppercase">
-                O limite para análise via IA é de 4MB por arquivo. Para fotos tiradas diretamente da câmera, use o modo de baixa resolução ou envie via WhatsApp para si mesmo antes de subir aqui.
+                A IA processa documentos via Server Action estabilizada. Se o erro persistir, recarregue a página (F5) para sincronizar o manifesto de ações.
             </AlertDescription>
         </Alert>
     </div>
