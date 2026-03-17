@@ -47,7 +47,7 @@ export async function extractDataFromImage(photoDataUri: string): Promise<Extrac
         console.log(`🤖 IA LK RAMOS: Processando mídia via Server Action...`);
         
         const { output } = await ai.generate({
-model: 'googleai/gemini-2.5-flash-lite',
+          model: 'googleai/gemini-1.5-flash',
           prompt: [
             { text: `Analise este documento de correspondente bancário e extraia: Nome, CPF, Nascimento, NB, Salário e Cartões (RMC/RCC). Formate datas como YYYY-MM-DD. Se encontrar mais de um telefone, separe-os em phone e phone2.` },
             { media: { url: photoDataUri, contentType: contentType } }

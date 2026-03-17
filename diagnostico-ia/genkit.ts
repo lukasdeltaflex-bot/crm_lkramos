@@ -11,5 +11,6 @@ export const ai = genkit({
   plugins: [
     googleAI()
   ],
-model: 'googleai/gemini-2.5-flash-lite',
+  // 🛡️ ESTABILIDADE: gemini-1.5-flash é o modelo de produção mais resiliente
+  model: 'googleai/gemini-1.5-flash',
 });
