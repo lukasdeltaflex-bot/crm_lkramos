@@ -1,4 +1,3 @@
-
 'use client';
 
 /**
@@ -891,7 +890,7 @@ export function ProposalForm({
                     {[
                         { id: 'formalization', label: 'Formalização', icon: Send, color: 'text-blue-500' },
                         { id: 'documentation', label: 'Documentação', icon: FileCheck, color: 'text-orange-500' },
-                        { id: 'signature', label: 'Assinatura', icon: PenTool, color: 'text-purple-500' },
+                        { id: 'signature', label: 'Checklist Promotora', icon: PenTool, color: 'text-purple-500' },
                         { id: 'approval', label: 'Averbação', icon: ShieldCheck, color: 'text-green-500' }
                     ].map(step => (
                         <div 

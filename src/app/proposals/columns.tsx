@@ -235,7 +235,12 @@ export const getColumns = (
   { id: 'col_date', accessorKey: 'dateDigitized', header: 'Data Digitação', cell: ({ row }) => <span className="text-sm font-bold text-muted-foreground">{formatDateSafe(row.original.dateDigitized)}</span>, size: 130 },
   { id: 'col_steps', header: 'Etapas', cell: ({ row }) => {
         const p = row.original;
-        const steps = [{ id: 'formalization', icon: Send, color: 'text-blue-500' }, { id: 'documentation', icon: FileCheck, color: 'text-orange-500' }, { id: 'signature', icon: PenTool, color: 'text-purple-500' }, { id: 'approval', icon: ShieldCheck, color: 'text-green-500' }];
+        const steps = [
+            { id: 'formalization', icon: Send, color: 'text-blue-500', label: 'Formalização' }, 
+            { id: 'documentation', icon: FileCheck, color: 'text-orange-500', label: 'Documentação' }, 
+            { id: 'signature', icon: PenTool, color: 'text-purple-500', label: 'Checklist Promotora' }, 
+            { id: 'approval', icon: ShieldCheck, color: 'text-green-500', label: 'Averbação' }
+        ];
         return (
             <div className="flex items-center gap-3">
                 {steps.map(s => { 
@@ -243,6 +248,7 @@ export const getColumns = (
                     return (
                         <button 
                             key={s.id} 
+                            title={s.label}
                             onClick={(e) => { e.stopPropagation(); onToggleChecklist(p.id, s.id, !!act); }} 
                             className="hover:scale-125 transition-transform p-1 rounded-md hover:bg-muted"
                         >
