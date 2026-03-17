@@ -46,7 +46,7 @@ const extractDataFromImageFlow = ai.defineFlow(
         console.log(`🤖 IA LK RAMOS: Processando mídia tipo ${contentType}...`);
         
         const { output } = await ai.generate({
-          model: 'googleai/gemini-1.5-flash',
+          model: 'googleai/gemini-2.0-flash',
           prompt: [
             { text: `Analise este documento de correspondente bancário e extraia: Nome, CPF, Nascimento, NB, Salário e Cartões (RMC/RCC). Formate datas como YYYY-MM-DD.` },
             { media: { url: input.photoDataUri, contentType: contentType } }
