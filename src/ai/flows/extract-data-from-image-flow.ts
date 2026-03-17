@@ -1,6 +1,9 @@
 'use server';
 /**
  * @fileOverview Fluxo Genkit para extrair dados de clientes a partir de imagens ou PDFs (OCR).
+ *
+ * - extractDataFromImage - Server Action para processar documentos.
+ * - ExtractFromImageOutput - O tipo de saída com os dados mapeados.
  */
 
 import { ai } from '@/ai/genkit';
@@ -27,6 +30,9 @@ const ExtractFromImageOutputSchema = z.object({
 
 export type ExtractFromImageOutput = z.infer<typeof ExtractFromImageOutputSchema>;
 
+/**
+ * Definição do fluxo Genkit.
+ */
 const extractDataFromImageFlow = ai.defineFlow(
   {
     name: 'extractDataFromImageFlow',
@@ -65,6 +71,7 @@ const extractDataFromImageFlow = ai.defineFlow(
 
         const result = output || {};
 
+        // 🛡️ TRATAMENTO DE TELEFONES: Separa números se vierem concatenados
         if (result.phone && !result.phone2) {
             const phoneMatches = result.phone.match(/\(?\d{2}\)?\s?\d{4,5}-?\d{4}/g);
             if (phoneMatches && phoneMatches.length > 1) {
@@ -81,6 +88,11 @@ const extractDataFromImageFlow = ai.defineFlow(
   }
 );
 
+/**
+ * Server Action exportada para ser consumida pela UI.
+ * Definida como função explícita para garantir o registro no Next.js.
+ */
 export async function extractDataFromImage(photoDataUri: string): Promise<ExtractFromImageOutput> {
-  return extractDataFromImageFlow({ photoDataUri });
+  const result = await extractDataFromImageFlow({ photoDataUri });
+  return result;
 }
