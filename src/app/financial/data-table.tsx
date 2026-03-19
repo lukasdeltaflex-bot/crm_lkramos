@@ -164,6 +164,14 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     });
   };
 
+  const toggleBankFilter = (bank: string) => { setBankFilters(prev => prev.includes(bank) ? prev.filter(b => b !== bank) : [...prev, bank]); };
+  const togglePromoterFilter = (promoter: string) => { setPromoterFilters(prev => prev.includes(promoter) ? prev.filter(p => p !== promoter) : [...prev, promoter]); };
+  const toggleOperatorFilter = (op: string) => { setOperatorFilters(prev => prev.includes(op) ? prev.filter(o => o !== op) : [...prev, op]); };
+
+  const uniqueOperators = React.useMemo(() => Array.from(new Set(data.map(p => p.operator || 'Sem Operador'))).sort(), [data]);
+  const uniqueBanks = React.useMemo(() => Array.from(new Set(data.map(p => p.bank))).sort(), [data]);
+  const uniquePromoters = React.useMemo(() => Array.from(new Set(data.map(p => p.promoter))).sort(), [data]);
+
   const handleDateMask = (e: React.ChangeEvent<HTMLInputElement>) => {
     let v = e.target.value.replace(/\D/g, "").substring(0, 8);
     if (v.length > 4) v = v.replace(/(\d{2})(\d{2})(\d)/, "$1/$2/$3");
@@ -209,7 +217,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const hasActiveFilters = statusFilter !== 'Todos' || bankFilters.length > 0 || promoterFilters.length > 0 || operatorFilters.length > 0 || !!globalFilter || !!appliedDateRange;
 
   React.useEffect(() => {
-    if (!user?.uid) return; // 🛡️ Evita crash no usuário externo
+    if (!user?.uid) return;
     setIsClient(true);
     const prefix = user.uid;
     setFrozenCount(safeStorage.get(`${prefix}-fin-frozen`, 2));
@@ -236,7 +244,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   };
 
   const baseFinancialData = React.useMemo(() => {
-    // 🛡️ REGRA CRÍTICA: Exclui propostas reprovadas de toda a lógica financeira
     return data.filter(p => p.status !== 'Reprovado');
   }, [data]);
 
