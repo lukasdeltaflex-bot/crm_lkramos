@@ -1,4 +1,51 @@
-[33m49aac04[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Antes de continuar qualquer alteração no projeto, crie um checkpoint de
+[33m0bdc992[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m ⚠️ AJUSTE CIRÚRGICO — NÃO ALTERAR MAIS NADA NO SISTEMA ⚠️
+[33m20ba110[m[33m ([m[1;31morigin/main[m[33m)[m A IA funciona no link local, mas no web publicado e no PWA dá erro de pr
+[33m16e14f3[m Corrija APENAS os seguintes pontos no sistema, sem alterar absolutamente
+[33m5bcf52e[m checkpoint - sistema funcionando no link local
+[33m3144c93[m A correção anterior NÃO resolveu.
+[33m8b31fa0[m A correção anterior NÃO resolveu.
+[33m799640f[m I see this error with the app, reported by NextJS, please fix it. The er
+[33m06123a7[m Corrija APENAS o model da IA no arquivo:
+[33m1946e6d[m Corrija APENAS o erro de Server Action da tela /customers.
+[33m79e06a3[m Quero regularizar a configuração da API do Gemini no meu projeto.
+[33m3532f0d[m Corrija APENAS o model da IA no arquivo:
+[33m5accf75[m Corrija APENAS o erro da integração da IA no arquivo:
+[33md2a30ad[m checkpoint - antes de corrigir model da IA
+[33mcad1ca7[m Try fixing this error: `Console UnrecognizedActionError: Server Action "
+[33m60adaee[m deu esse erro agora ## Error Type Console Error
+[33m480149f[m deu esse erro agora ## Error Type Console Error
+[33mf361bc7[m vou enviar duas telas pra ver se te ajuda
+[33md6fe939[m deu esse erro
+[33m3b95a00[m deu isso e normal ?
+[33m31f3b5f[m essa é minha chave: AIzaSyCxK96ETorOa-WU1EOsDwvT-CjDwUIApXk
+[33m5349d36[m meçhor reiniciar o terminal da ia qual e o comando
+[33m79dcb20[m deu esse erro e nao consegir usar aqui## Error Type Console Error
+[33m27f6cb5[m essa é minha chace: AIzaSyCmZxVd32ZwfVoZGs9PD8y-iV4Dl7YJ1zE
+[33mffd8919[m agora quero ativar o uso da ia no sistema que nao esta funcionando
+[33m48caea0[m posso criar um lançamento daqui  e como sei que e o mesmo codigo do sist
+[33m993401e[m deu isso no terminal studio-248448941:~/studio{main}$ git add. git: 'ad
+[33m1f17504[m deu certo mas nao publiquei como sei se meu codigo esta certo e atual no
+[33m3de8f7d[m prei primeiro como faço para jogar essa versao no github atualizada!
+[33m5afce5c[m fiz tudoque voce falou e deu erro
+[33ma24f011[m Use como referência o último build bem-sucedido do projeto, que terminou
+[33m61139d6[m FAÇO OS DOIS COMANDOS JUNTOS ?
+[33mfb67185[m A ULTIMA PUBLICAÇÃO PELO BOTÃO AZUL ESTAVA ASSIM VOU MANDAR PARA VOCE TE
+[33me0ac96d[m AINDA ESA COM ERRO DE PUBLICAÃO TENTO PUBLICAR NO BOTÃO AZUL DA ERRO
+[33m3838087[m DEU ERRO AO PUBLICAR: Ocorreu um erro ao criar a sua publicação de hospe
+[33mec3cb5a[m fix: sincroniza dependencias e configuracao do firebase para deploy
+[33mdd1fc73[m na busca global esta perfeito e nos filtros taMbem so nao estou consegui
+[33m9188402[m na busca globalesta perfeito e nos filtros tabem so nao estou conseguind
+[33ma516978[m checkpoint - sistema restaurado e servidor funcionando 02
+[33m28652f7[m checkpoint - descrição do que está funcionando
+[33mbef9e79[m ## Error Type Runtime ReferenceError
+[33m3d44de4[m Agora precisamos corrigir um problema de cache no ambiente de desenvolvi
+[33mb2b43df[m checkpoint - sistema restaurado e servidor funcionando
+[33mb3b8093[m agora parou os dois arrume o filtro do financeiro e a busca global os do
+[33m5189d01[m o filtro voltou mas a busca global nao entao arrume a busca global e nao
+[33m6d3e33a[m todos os erros voltaram tanto da busca global quanto do filtro do financ
+[33m4beb7d1[m todos os erros voltaram tanto da busca global quanto do filtro do financ
+[33mabc7b6e[m studio-248448941:~/studio{main}$ git status On branch main Your branch a
+[33m49aac04[m Antes de continuar qualquer alteração no projeto, crie um checkpoint de
 [33m5aba6fd[m Corrija APENAS o filtro do Financeiro.
 [33m760a648[m Quero corrigir APENAS o filtro do FINANCEIRO.
 [33m49d7175[m O preview do Firebase Studio está falhando com:
@@ -39,3 +86,25 @@
 [33m5bd12e4[m Chave de API AIzaSyCpn_1Oif3geIlwDzs2G0wCdjO8Pa8npWg
 [33m9771bfe[m ## Error Type Console Error
 [33m6507077[m Try fixing this error: `Console Error: A Inteligência Artificial encontr
+[33m67bfa4d[m Try fixing this error: `Console Error: Chave de API Inválida (INVALID_AR
+[33m07b33d4[m no segundo terminal deu isso é normal? studio-248448941:~/studio{main}$
+[33mab14f24[m essa e minha chave nova
+[33mf268ae6[m Try fixing this error: `Console Error: Erro de autenticação da IA (Faile
+[33m93c471e[m o primeiro terminal deu isso é normal ?
+[33md54f692[m Try fixing this error: `Console Error: Erro de autenticação da IA. Verif
+[33m797495a[m Try fixing this error: `Console Error: A Inteligência Artificial não con
+[33m0102748[m Try fixing this error: `Console Error: A Inteligência Artificial não con
+[33md1da945[m quais são os terminais e quais são os comandos?
+[33m6850f7f[m onde eu pego essa api key?
+[33m3664820[m As funções de IA do projeto pararam de funcionar, mas o restante do sist
+[33mcaeb051[m ## Error Type Console Error
+[33m0f39286[m Try fixing this error: `Console Error: `DialogContent` requires a `Dialo
+[33m3718e80[m ## Error Type Console Error
+[33m3f04c5d[m vem a notificação que foi resumido mas na pratica a ia nao resumiu nada
+[33m21e05e1[m A ferramenta resumir com IA do comentário adicional na opção justificati
+[33m899daa0[m tela preta!
+[33m2b32a98[m 2026-03-12T23:46:02Z [web] <Firebase Studio> Starting preview... 2026-03
+[33m631c0bf[m nao abre
+[33m7495c8b[m esta a mema coisa nao abre
+[33m56f614c[m não abre só fica assim agora
+[33mf7c7a4e[m em propostas cliquei nos 3 pon
