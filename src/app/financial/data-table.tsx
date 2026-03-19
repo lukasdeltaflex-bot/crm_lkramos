@@ -325,14 +325,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     return offsets;
   }, [table.getVisibleLeafColumns(), columnSizing]);
 
-  const toggleBankFilter = (bank: string) => { setBankFilters(prev => prev.includes(bank) ? prev.filter(b => b !== bank) : [...prev, bank]); };
-  const togglePromoterFilter = (promoter: string) => { setPromoterFilters(prev => prev.includes(promoter) ? prev.filter(p => p !== promoter) : [...prev, promoter]); };
-  const toggleOperatorFilter = (op: string) => { setOperatorFilters(prev => prev.includes(op) ? prev.filter(o => o !== op) : [...prev, op]); };
-
-  const uniqueOperators = React.useMemo(() => Array.from(new Set(baseFinancialData.map(p => p.operator || 'Sem Operador'))).sort(), [baseFinancialData]);
-  const uniqueBanks = React.useMemo(() => Array.from(new Set(baseFinancialData.map(p => p.bank))).sort(), [baseFinancialData]);
-  const uniquePromoters = React.useMemo(() => Array.from(new Set(baseFinancialData.map(p => p.promoter))).sort(), [baseFinancialData]);
-
   if (!isClient) return <div className="h-96 w-full bg-muted/10 animate-pulse rounded-xl" />;
 
   return (
@@ -400,8 +392,16 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild><Button variant="outline" className="h-10 rounded-full font-bold px-6 border-2 border-zinc-300 bg-background shadow-sm text-xs gap-2"><User className="h-4 w-4" /> Operadores <ChevronDown className="h-3 w-3 opacity-50" /></Button></DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56 max-h-80 overflow-y-auto border-2">
-                        {uniqueOperators.map(op => ( <DropdownMenuCheckboxItem key={op} checked={operatorFilters.includes(op)} onCheckedChange={() => toggleOperatorFilter(op)} className="font-bold text-xs uppercase">{op}</DropdownMenuicipants => (
-                            <DropdownMenuCheckboxItem key={op} checked={operatorFilters.includes(op)} onCheckedChange={() => toggleOperatorFilter(op)} className="font-bold text-xs uppercase">{op}</DropdownMenuCheckboxItem> ))}
+                        {uniqueOperators.map(op => ( 
+                            <DropdownMenuCheckboxItem 
+                                key={op} 
+                                checked={operatorFilters.includes(op)} 
+                                onCheckedChange={() => toggleOperatorFilter(op)} 
+                                className="font-bold text-xs uppercase"
+                            >
+                                {op}
+                            </DropdownMenuCheckboxItem> 
+                        ))}
                     </DropdownMenuContent>
                 </DropdownMenu>
                 <DropdownMenu>
