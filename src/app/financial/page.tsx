@@ -88,7 +88,7 @@ export default function FinancialPage() {
   const [isReconciliationOpen, setIsReconciliationOpen] = useState(false);
   const [isEfficiencyOpen, setIsEfficiencyOpen] = useState(false);
   const [isOperatorsDialogOpen, setIsOperatorsDialogOpen] = useState(false);
-  const [isExpenseFormOpen, setIsExpenseFormOpen] = useState(false);
+  const [isExpenseOpen, setIsExpenseOpen] = useState(false);
   
   const [selectedProposal, setSelectedProposal] = useState<ProposalWithCustomer | undefined>(undefined);
   const [selectedExpense, setSelectedExpense] = useState<Expense | undefined>(undefined);
