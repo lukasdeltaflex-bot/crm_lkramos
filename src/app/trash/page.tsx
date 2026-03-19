@@ -11,8 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { RotateCcw, Trash2, Users, FileText, CalendarClock, AlertTriangle, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { format, parseISO } from 'date-fns';
-import { cn, formatCurrency } from '@/lib/utils';
+import { format } from 'date-fns';
+import { cn, formatCurrency, formatDateSafe } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
     AlertDialog,
@@ -24,6 +24,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from '@/components/ui/badge';
 
 export default function TrashPage() {
   const { user } = useUser();
@@ -65,7 +66,15 @@ export default function TrashPage() {
     if (!firestore || !itemToDelete) return;
     setIsProcessing(true);
     
-    const path = itemToDelete.path || (itemToDelete.type === 'customer' ? 'customers' : 'loanProposals');
+    // 🛡️ CORREÇÃO DE LÓGICA DE COLEÇÃO: Garante que o path correto seja usado
+    const path = itemToDelete.path || (itemToDelete.type === 'customer' ? 'customers' : itemToDelete.type === 'proposal' ? 'loanProposals' : null);
+    
+    if (!path) {
+        toast({ variant: 'destructive', title: 'Erro técnico', description: 'Caminho do documento não localizado.' });
+        setIsProcessing(false);
+        return;
+    }
+
     const docRef = doc(firestore, path, itemToDelete.id);
     
     try {
@@ -122,7 +131,8 @@ export default function TrashPage() {
                             </CardHeader>
                             <CardContent className="p-5 space-y-4">
                                 <div className="text-[10px] font-medium text-muted-foreground uppercase">
-                                    <p>Excluído em: {c.deletedAt ? format(parseISO(c.deletedAt), 'dd/MM/yyyy HH:mm') : '---'}</p>
+                                    {/* 🛡️ CORREÇÃO DE CRASH: Usando formatDateSafe para evitar erro de parse */}
+                                    <p>Excluído em: {formatDateSafe(c.deletedAt, 'dd/MM/yyyy HH:mm')}</p>
                                 </div>
                                 <div className="flex gap-2 pt-2">
                                     <Button variant="outline" size="sm" className="flex-1 rounded-full font-bold h-9 text-[10px] uppercase gap-2" onClick={() => handleRestore('customer', c.id)} disabled={isProcessing}>
@@ -150,16 +160,19 @@ export default function TrashPage() {
                         <Card key={p.id} className="border-2 hover:border-primary/20 transition-all overflow-hidden">
                             <CardHeader className="p-5 bg-muted/10 border-b">
                                 <div className="flex justify-between items-start">
-                                    <div>
+                                    <div className="min-w-0">
                                         <CardTitle className="text-sm font-black uppercase truncate">Prop. {p.proposalNumber}</CardTitle>
-                                        <CardDescription className="text-[10px] font-bold uppercase">{p.product} • {p.bank}</CardDescription>
+                                        <CardDescription className="text-[10px] font-bold uppercase truncate">{p.product} • {p.bank}</CardDescription>
                                     </div>
-                                    <Badge className="bg-primary text-[8px]">{formatCurrency(p.grossAmount)}</Badge>
+                                    <Badge className="bg-primary text-[8px] shrink-0">
+                                        {/* 🛡️ CORREÇÃO DE CRASH: formatCurrency com fallback seguro */}
+                                        {formatCurrency(p.grossAmount)}
+                                    </Badge>
                                 </div>
                             </CardHeader>
                             <CardContent className="p-5 space-y-4">
                                 <div className="text-[10px] font-medium text-muted-foreground uppercase">
-                                    <p>Excluído em: {p.deletedAt ? format(parseISO(p.deletedAt), 'dd/MM/yyyy HH:mm') : '---'}</p>
+                                    <p>Excluído em: {formatDateSafe(p.deletedAt, 'dd/MM/yyyy HH:mm')}</p>
                                 </div>
                                 <div className="flex gap-2 pt-2">
                                     <Button variant="outline" size="sm" className="flex-1 rounded-full font-bold h-9 text-[10px] uppercase gap-2" onClick={() => handleRestore('proposal', p.id)} disabled={isProcessing}>
@@ -187,18 +200,18 @@ export default function TrashPage() {
                         <Card key={f.id} className="border-2 hover:border-primary/20 transition-all overflow-hidden">
                             <CardHeader className="p-5 bg-muted/10 border-b">
                                 <CardTitle className="text-sm font-black uppercase truncate">{f.contactName}</CardTitle>
-                                <CardDescription className="text-[10px] font-bold">Vencimento: {f.dueDate}</CardDescription>
+                                <CardDescription className="text-[10px] font-bold">Vencimento: {formatDateSafe(f.dueDate)}</CardDescription>
                             </CardHeader>
                             <CardContent className="p-5 space-y-4">
-                                <p className="text-xs text-muted-foreground italic line-clamp-2">"{f.description}"</p>
+                                <p className="text-xs text-muted-foreground italic line-clamp-2">"{f.description || 'Sem descrição.'}"</p>
                                 <div className="text-[10px] font-medium text-muted-foreground uppercase pt-2">
-                                    <p>Excluído em: {f.deletedAt ? format(parseISO(f.deletedAt), 'dd/MM/yyyy HH:mm') : '---'}</p>
+                                    <p>Excluído em: {formatDateSafe(f.deletedAt, 'dd/MM/yyyy HH:mm')}</p>
                                 </div>
                                 <div className="flex gap-2 pt-2">
-                                    <Button variant="outline" size="sm" className="flex-1 rounded-full font-bold h-9 text-[10px] uppercase gap-2" onClick={() => handleRestore('followup', f.id, `users/${user.uid}/followUps/${f.id}`)} disabled={isProcessing}>
+                                    <Button variant="outline" size="sm" className="flex-1 rounded-full font-bold h-9 text-[10px] uppercase gap-2" onClick={() => handleRestore('followup', f.id, `users/${user?.uid}/followUps/${f.id}`)} disabled={isProcessing}>
                                         <RotateCcw className="h-3.5 w-3.5" /> Restaurar
                                     </Button>
-                                    <Button variant="destructive" size="sm" className="h-9 w-10 rounded-full px-0" onClick={() => { setItemToDelete({ collection: 'followUps', id: f.id, type: 'followup', path: `users/${user.uid}/followUps/${f.id}` }); setDeleteConfirmOpen(true); }} disabled={isProcessing}>
+                                    <Button variant="destructive" size="sm" className="h-9 w-10 rounded-full px-0" onClick={() => { setItemToDelete({ collection: 'followUps', id: f.id, type: 'followup', path: `users/${user?.uid}/followUps/${f.id}` }); setDeleteConfirmOpen(true); }} disabled={isProcessing}>
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </div>

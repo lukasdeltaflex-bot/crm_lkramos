@@ -169,7 +169,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   };
 
   React.useEffect(() => {
-    if (!user?.uid) return;
+    if (!user?.uid) return; // 🛡️ Evita crash no usuário externo
     setIsClient(true);
     const prefix = user.uid;
     setFrozenCount(safeStorage.get(`${prefix}-prop-frozen`, 2));

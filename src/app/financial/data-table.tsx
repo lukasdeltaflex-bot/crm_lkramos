@@ -62,7 +62,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { X, Filter, Search, Calendar as CalendarIcon, ChevronDown, ChevronsLeft, ChevronsRight, Snowflake, User, Landmark, Building2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { cn, cleanBankName, normalizeString, formatCurrency, isProposalCritical } from '@/lib/utils';
+import { cn, cleanBankName, normalizeString, formatCurrency, isProposalCritical, parseDateSafe } from '@/lib/utils';
 import type { ProposalWithCustomer, UserSettings, CommissionStatus } from '@/lib/types';
 import { DraggableHeader } from './columns';
 import { Separator } from '@/components/ui/separator';
@@ -70,28 +70,6 @@ import { useTheme } from '@/components/theme-provider';
 import { BankIcon } from '@/components/bank-icon';
 import { useUser } from '@/firebase';
 import { safeStorage } from '@/lib/storage-utils';
-
-/**
- * 🛡️ MOTOR DE DATAS FINANCEIRO V11
- * Normalização robusta para evitar bugs de UTC Shift.
- */
-function normalizeDate(value: any): Date | null {
-  if (!value) return null;
-  if (value?.seconds) return new Date(value.seconds * 1000);
-  if (typeof value.toDate === 'function') return value.toDate();
-  if (value instanceof Date) return new Date(value);
-  if (typeof value === 'string') {
-    const brMatch = value.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
-    if (brMatch) return new Date(parseInt(brMatch[3]), parseInt(brMatch[2]) - 1, parseInt(brMatch[1]));
-    
-    const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (isoMatch) return new Date(parseInt(isoMatch[1]), parseInt(isoMatch[2]) - 1, parseInt(isoMatch[3]));
-    
-    const parsed = new Date(value);
-    if (!isNaN(parsed.getTime())) return parsed;
-  }
-  return null;
-}
 
 function isWithinRange(dateValue: Date, start: Date, end: Date) {
   const target = new Date(dateValue);
@@ -231,7 +209,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const hasActiveFilters = statusFilter !== 'Todos' || bankFilters.length > 0 || promoterFilters.length > 0 || operatorFilters.length > 0 || !!globalFilter || !!appliedDateRange;
 
   React.useEffect(() => {
-    if (!user?.uid) return;
+    if (!user?.uid) return; // 🛡️ Evita crash no usuário externo
     setIsClient(true);
     const prefix = user.uid;
     setFrozenCount(safeStorage.get(`${prefix}-fin-frozen`, 2));
@@ -278,7 +256,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         const end = appliedDateRange.to || appliedDateRange.from;
         
         list = list.filter(p => {
-            const paymentDate = normalizeDate(p.commissionPaymentDate);
+            const paymentDate = parseDateSafe(p.commissionPaymentDate);
             if (!paymentDate) return false;
             return isWithinRange(paymentDate, start, end);
         });
@@ -422,7 +400,8 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild><Button variant="outline" className="h-10 rounded-full font-bold px-6 border-2 border-zinc-300 bg-background shadow-sm text-xs gap-2"><User className="h-4 w-4" /> Operadores <ChevronDown className="h-3 w-3 opacity-50" /></Button></DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56 max-h-80 overflow-y-auto border-2">
-                        {uniqueOperators.map(op => ( <DropdownMenuCheckboxItem key={op} checked={operatorFilters.includes(op)} onCheckedChange={() => toggleOperatorFilter(op)} className="font-bold text-xs uppercase">{op}</DropdownMenuCheckboxItem> ))}
+                        {uniqueOperators.map(op => ( <DropdownMenuCheckboxItem key={op} checked={operatorFilters.includes(op)} onCheckedChange={() => toggleOperatorFilter(op)} className="font-bold text-xs uppercase">{op}</DropdownMenuicipants => (
+                            <DropdownMenuCheckboxItem key={op} checked={operatorFilters.includes(op)} onCheckedChange={() => toggleOperatorFilter(op)} className="font-bold text-xs uppercase">{op}</DropdownMenuCheckboxItem> ))}
                     </DropdownMenuContent>
                 </DropdownMenu>
                 <DropdownMenu>

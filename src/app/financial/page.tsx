@@ -164,13 +164,14 @@ export default function FinancialPage() {
     const startOfCurrent = startOfMonth(today);
     const endOfCurrent = endOfMonth(today);
 
-    // Mapeia clientes para todas as propostas
+    // 🛡️ CORREÇÃO DE DUPLICIDADE: Filtra itens excluídos (deleted !== true)
     const tableData = proposals
+      .filter(p => p.deleted !== true)
       .map(p => ({
         ...p,
         customer: customersMap.get(p.customerId),
       }))
-      .filter(p => p.customer); // 🛡️ LK RAMOS: Mostra tudo independente do status de esteira
+      .filter(p => p.customer);
 
     const opMap: Record<string, { name: string; totalPaid: number; count: number; potential: number }> = {};
     
@@ -195,7 +196,7 @@ export default function FinancialPage() {
 
     return { 
       proposalsWithCustomerData: tableData as ProposalWithCustomer[], 
-      summaryProposals: proposals, 
+      summaryProposals: proposals.filter(p => p.deleted !== true), 
       currentMonthRange: { from: startOfCurrent, to: endOfCurrent },
       operatorStats: stats
     };

@@ -125,11 +125,10 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
 
   // 🛡️ CARREGAMENTO BLINDADO DE PREFERÊNCIAS
   React.useEffect(() => {
-    if (!user?.uid) return;
+    if (!user?.uid) return; // 🛡️ Evita crash no usuário externo
     setIsClient(true);
     const prefix = user.uid;
     
-    // Usando safeStorage para garantir que dados corrompidos não travem a renderização
     setFrozenCount(safeStorage.get(`${prefix}-cust-frozen`, 2));
     setColumnVisibility(safeStorage.get(`${prefix}-cust-visibility`, columnVisibility));
     setColumnSizing(safeStorage.get(`${prefix}-cust-sizing`, {}));

@@ -8,11 +8,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatCurrency(amount: number) {
+export function formatCurrency(amount: number | undefined | null) {
+  const val = Number(amount) || 0;
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
-  }).format(amount);
+  }).format(val);
 }
 
 /**
@@ -33,24 +34,29 @@ export function getSafeStorageUrl(url?: string): string {
  * 🛡️ MOTOR DE DATAS V3 (DETECÇÃO DE FORMATO)
  * Resolve falhas de parsing entre ISO (DB) e BR (Input).
  */
-export function parseDateSafe(dateStr: string | undefined | null): Date | null {
+export function parseDateSafe(dateStr: any): Date | null {
     if (!dateStr) return null;
     
+    // Suporte para Timestamps do Firebase
+    if (dateStr?.seconds) return new Date(dateStr.seconds * 1000);
+    if (typeof dateStr.toDate === 'function') return dateStr.toDate();
+
     try {
+        const str = String(dateStr);
         // 1. Tenta formato ISO (YYYY-MM-DD...)
-        if (dateStr.includes('-') && dateStr.indexOf('-') === 4) {
-            const date = parseISO(dateStr);
+        if (str.includes('-') && str.indexOf('-') === 4) {
+            const date = parseISO(str);
             if (isValid(date)) return date;
         }
 
         // 2. Tenta formato BR (DD/MM/YYYY)
-        if (dateStr.includes('/')) {
-            const date = parse(dateStr, 'dd/MM/yyyy', new Date());
+        if (str.includes('/')) {
+            const date = parse(str, 'dd/MM/yyyy', new Date());
             if (isValid(date)) return date;
         }
 
         // 3. Fallback genérico
-        const fallback = new Date(dateStr);
+        const fallback = new Date(str);
         return isValid(fallback) ? fallback : null;
     } catch (e) {
         return null;
@@ -167,7 +173,7 @@ export function calculateBusinessDays(startDateStr: string | Date): number {
  * Determina se uma proposta está em atraso crítico.
  */
 export function isProposalCritical(p: Proposal): boolean {
-    if (p.status === 'Reprovado' || p.status === 'Pago' || p.status === 'Saldo Pago') return false;
+    if (p.status === 'Reprovado' || p.status === 'Pago' || p.status === 'Saldo Pago' || p.deleted === true) return false;
 
     // Captura a data da última ação no histórico
     const historyDates = (p.history || []).map(h => h.date);
@@ -253,7 +259,7 @@ export function getSmartTags(customer: Customer, proposals: Proposal[] = []): { 
         tags.push({ label: 'ALERTA 75 ANOS', color: 'bg-red-500' });
     }
 
-    const customerProposals = proposals.filter(p => p.customerId === customer.id);
+    const customerProposals = proposals.filter(p => p.customerId === customer.id && p.deleted !== true);
     const totalComm = customerProposals.reduce((s, p) => s + (p.amountPaid || 0), 0);
     
     if (totalComm >= 5000) tags.push({ label: '💎 ELITE', color: 'bg-amber-500' });
