@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -37,7 +36,6 @@ export function NotificationBell() {
   const [selectedBdayCustomer, setSelectedBdayCustomer] = useState<Customer | null>(null);
   const [isBdayModalOpen, setIsBdayModalOpen] = useState(false);
 
-  // 🛡️ HIDRATAÇÃO SEGURA: Garantimos que o estado inicial seja idêntico ao servidor.
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -47,6 +45,7 @@ export function NotificationBell() {
     return query(
         collection(firestore, 'customers'), 
         where('ownerId', '==', user.uid),
+        where('deleted', '==', false),
         limit(100)
     );
   }, [firestore, user]);
@@ -56,6 +55,7 @@ export function NotificationBell() {
     return query(
         collection(firestore, 'loanProposals'), 
         where('ownerId', '==', user.uid),
+        where('deleted', '==', false),
         limit(100)
     );
   }, [firestore, user]);
@@ -65,6 +65,7 @@ export function NotificationBell() {
     return query(
         collection(firestore, 'users', user.uid, 'followUps'), 
         where('status', '==', 'pending'),
+        where('deleted', '==', false),
         limit(50)
     );
   }, [firestore, user]);
@@ -119,7 +120,6 @@ export function NotificationBell() {
   const dismissedIds = userSettings?.dismissedAlerts || [];
 
   const notifications = React.useMemo(() => {
-    // 🛡️ Trava de Hidratação: Só calcula se estiver no cliente
     if (!isClient) return [];
     
     const alerts: { id: string; title: string; type: 'birthday' | 'commission' | 'followup' | 'debt' | 'partial' | 'radar' | 'age' | 'news' | 'lead'; date: string; link: string; customerId?: string }[] = [];
@@ -302,8 +302,6 @@ export function NotificationBell() {
 
   const count = visibleNotifications.length;
 
-  // 🛡️ RENDERIZAÇÃO ESTÁVEL: O shell do botão é idêntico no servidor e cliente.
-  // Somente o Badge e o conteúdo do Menu são dinâmicos após hidratação.
   return (
     <>
     <DropdownMenu onOpenChange={(open) => open && setHasNewLeadPulse(false)}>

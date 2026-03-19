@@ -29,6 +29,7 @@ async function getEncryptionKey(uid: string) {
 }
 
 export async function encryptPassword(password: string, uid: string): Promise<string> {
+    if (typeof window === "undefined") return ""; // 🛡️ SSR Safe
     if (!password) return "";
     try {
         const key = await getEncryptionKey(uid);
@@ -50,6 +51,7 @@ export async function encryptPassword(password: string, uid: string): Promise<st
 }
 
 export async function decryptPassword(encryptedData: string, uid: string): Promise<string> {
+    if (typeof window === "undefined") return ""; // 🛡️ SSR Safe
     if (!encryptedData || !encryptedData.includes(':')) return "";
     try {
         const [ivHex, cipherHex] = encryptedData.split(':');

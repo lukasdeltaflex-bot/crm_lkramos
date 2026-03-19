@@ -78,6 +78,7 @@ function ProposalsPageContent() {
   const tableRef = React.useRef<ProposalsDataTableHandle>(null);
   const [hasOpenedFromParam, setHasOpenedFromParam] = useState(false);
   
+  // ⚡ PERFORMANCE: Limite reduzido para estabilidade inicial
   const [loadLimit, setLoadLimit] = useState(150);
 
   const proposalsQuery = useMemoFirebase(() => {

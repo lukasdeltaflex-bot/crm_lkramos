@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -115,7 +114,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
             await setDoc(doc(firestore, 'userSettings', user.uid), {
                 dismissedAlerts: [...currentDismissed, itemId]
             }, { merge: true });
-            toast({ title: "Alerta removido globalmente" });
+            toast({ title: "Alerta removido" });
         }
     } catch (e) {
         console.error("Failed to sync dismiss state:", e);
@@ -128,7 +127,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
         await setDoc(doc(firestore, 'userSettings', user.uid), {
             dismissedAlerts: []
         }, { merge: true });
-        toast({ title: "Alertas Restaurados!", description: "Toda a sua inteligência diária voltou a ficar visível." });
+        toast({ title: "Alertas Restaurados!" });
     } catch (e) {
         toast({ variant: "destructive", title: "Erro ao restaurar" });
     }
@@ -139,11 +138,10 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
 
     const now = new Date();
     const todayIso = format(now, 'yyyy-MM-dd');
-    const todayStr = format(now, 'MM-dd');
     const customerMap = new Map(customers.map(c => [c.id, c]));
 
     const birthdayAlerts = customers
-        .filter(c => c.status !== 'inactive' && getAge(c.birthDate) >= 74 && getAge(c.birthDate) < 75)
+        .filter(c => c.deleted !== true && c.status !== 'inactive' && getAge(c.birthDate) >= 74 && getAge(c.birthDate) < 75)
         .map(c => ({ 
             id: `age-${c.id}`,
             customerId: c.id,
@@ -153,10 +151,10 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
         }));
 
     const radarAlerts = customers
-        .filter(c => c.status !== 'inactive' && getAge(c.birthDate) < 75)
+        .filter(c => c.deleted !== true && c.status !== 'inactive' && getAge(c.birthDate) < 75)
         .filter(c => {
             return proposals.some(p => {
-                if (p.customerId !== c.id) return false;
+                if (p.deleted === true || p.customerId !== c.id) return false;
                 if (p.status !== 'Pago' && p.status !== 'Saldo Pago') return false;
                 if (!p.datePaidToClient) return false;
                 const paidDate = parseDateSafe(p.datePaidToClient);
@@ -171,7 +169,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
         }));
 
     const followUpReminders = proposals
-      .filter(p => p.status === 'Em Andamento' && p.dateDigitized)
+      .filter(p => p.deleted !== true && p.status === 'Em Andamento' && p.dateDigitized)
       .map(p => {
           const digitDate = parseDateSafe(p.dateDigitized);
           return { ...p, digitDate };
@@ -187,6 +185,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
 
     const commissionReminders = proposals
       .filter(p => 
+        p.deleted !== true &&
         (p.status === 'Pago' || p.status === 'Saldo Pago') && 
         p.commissionStatus === 'Pendente' &&
         p.datePaidToClient
@@ -206,6 +205,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
 
     const debtBalanceReminders = proposals
         .filter(p => 
+            p.deleted !== true &&
             p.product === 'Portabilidade' &&
             p.status === 'Aguardando Saldo' &&
             p.dateDigitized &&
@@ -221,6 +221,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
     
     const partialCommissionReminders = proposals
         .filter(p => 
+            p.deleted !== true &&
             p.commissionStatus === 'Parcial' &&
             p.commissionPaymentDate
         )
@@ -240,7 +241,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
         }));
 
     const manualFollowUps = (followUps || [])
-        .filter(f => f.status === 'pending' && f.dueDate <= todayIso)
+        .filter(f => f.deleted !== true && f.status === 'pending' && f.dueDate <= todayIso)
         .map(f => ({
             id: `fup-${f.id}`,
             contactName: f.contactName,
@@ -265,7 +266,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
         });
 
     return { birthdayAlerts, followUpReminders, commissionReminders, debtBalanceReminders, partialCommissionReminders, manualFollowUps, radarAlerts, expenseAlerts };
-  }, [proposals, customers, followUps, expenses, isClient]);
+  }, [isClient, proposals, customers, followUps, expenses]);
   
   const visibleBirthdayAlerts = alertData.birthdayAlerts.filter(a => !dismissedItems.includes(a.id));
   const visibleFollowUpReminders = alertData.followUpReminders.filter(r => !dismissedItems.includes(r.id));
@@ -310,7 +311,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
       });
 
       if (result.success) {
-        toast({ title: 'E-mail Enviado!', description: `Resumo enviado para ${userProfile.email}.` });
+        toast({ title: 'E-mail Enviado!' });
       }
     } catch (error) {
       console.error('Error sending summary email:', error);
@@ -346,6 +347,8 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
     setIsBdayModalOpen(false);
   };
 
+  if (!isClient) return null;
+
   return (
     <>
     <Card className="h-full flex flex-col border-border/50 shadow-lg overflow-hidden bg-card">
@@ -366,7 +369,6 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
                     size="sm" 
                     onClick={handleRestoreAlerts}
                     className="h-9 px-3 rounded-full text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all"
-                    title="Restaurar alertas fechados"
                 >
                     <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Restaurar
                 </Button>
@@ -388,10 +390,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
             <div className="flex h-[400px] flex-col items-center justify-center text-center text-muted-foreground p-8 border-2 border-dashed border-border/50 rounded-xl bg-muted/5">
                 <Info className="h-10 w-10 mb-4 opacity-20" />
                 <p className="font-bold text-sm text-foreground/80 tracking-tight">Esteira Limpa!</p>
-                <p className="text-[11px] opacity-60 mt-1 uppercase font-bold tracking-tighter">Nenhuma pendência ou alerta estratégico para agora.</p>
-                {dismissedItems.length > 0 && (
-                    <Button variant="outline" size="sm" onClick={handleRestoreAlerts} className="mt-4 rounded-full font-bold text-[10px] uppercase">Ver alertas fechados</Button>
-                )}
+                <p className="text-[11px] opacity-60 mt-1 uppercase font-bold tracking-tighter">Nenhuma pendência para agora.</p>
             </div>
         ) : (
             <ScrollArea className="h-[450px] w-full">
@@ -408,7 +407,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
                                         id={e.id}
                                         icon={<Receipt className={cn("h-4.5 w-4.5", e.isLate ? "text-red-600 animate-pulse" : "text-red-400")} />}
                                         title={e.title}
-                                        description={`Vencimento: ${e.date} | Valor: ${formatCurrency(e.amount)}. ${e.isLate ? 'DESPESA ATRASADA!' : 'Pendente de pagamento.'}`}
+                                        description={`Vencimento: ${e.date} | Valor: ${formatCurrency(e.amount)}. ${e.isLate ? 'ATRASADA!' : ''}`}
                                         link={e.link}
                                         onDismiss={handleDismiss}
                                     />
@@ -429,7 +428,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
                                         id={reminder.id}
                                         icon={<Hourglass className="h-4.5 w-4.5 text-red-500" />}
                                         title={reminder.customerName}
-                                        description={`Proposta ${reminder.proposalNumber} aguardando saldo há ${reminder.daysWaiting} dias úteis. Prazo de 5 dias atingido.`}
+                                        description={`Proposta ${reminder.proposalNumber} aguardando saldo há ${reminder.daysWaiting} dias úteis.`}
                                         link={reminder.link}
                                         onDismiss={handleDismiss}
                                     />
@@ -450,7 +449,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
                                         id={reminder.id}
                                         icon={<BadgePercent className="h-4.5 w-4.5 text-blue-500" />}
                                         title={reminder.customerName}
-                                        description={`Comissão da Prop. ${reminder.proposalNumber} não identificada há ${reminder.daysPending} dias.`}
+                                        description={`Comissão da Prop. ${reminder.proposalNumber} pendente há ${reminder.daysPending} dias.`}
                                         link={reminder.link}
                                         onDismiss={handleDismiss}
                                     />
@@ -461,7 +460,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
                                         id={reminder.id}
                                         icon={<Coins className="h-4.5 w-4.5 text-blue-500" />}
                                         title={reminder.customerName}
-                                        description={`Recebido R$ ${reminder.amountPaid.toFixed(2)} de R$ ${reminder.totalCommission.toFixed(2)} há ${reminder.daysSincePayment} dias. Cobrar saldo.`}
+                                        description={`Recebido R$ ${reminder.amountPaid.toFixed(2)} de R$ ${reminder.totalCommission.toFixed(2)}. Cobrar saldo.`}
                                         link={reminder.link}
                                         onDismiss={handleDismiss}
                                     />
@@ -482,7 +481,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
                                         id={r.id}
                                         icon={<Zap className="h-4.5 w-4.5 text-orange-500 fill-orange-500" />}
                                         title={r.customerName}
-                                        description="Contrato pago há mais de 12 meses. Oportunidade de Refinanciamento identificada."
+                                        description="Contrato pago há mais de 12 meses. Oportunidade de Refinanciamento."
                                         link={r.link}
                                         onDismiss={handleDismiss}
                                     />
@@ -524,7 +523,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
                                         id={alert.id}
                                         icon={<Cake className="h-4.5 w-4.5 text-pink-500" />}
                                         title={alert.customerName}
-                                        description={`Próximo aos ${alert.age} anos. Verifique as restrições de crédito vigentes.`}
+                                        description={`Próximo aos ${alert.age} anos. Verifique restrições.`}
                                         link={alert.link}
                                         onDismiss={handleDismiss}
                                         action={
@@ -534,7 +533,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
                                                 className="h-8 text-[10px] font-black uppercase border-pink-200 text-pink-600 hover:bg-pink-50"
                                                 onClick={() => handleGenerateBdayMessage(alert.customerId)}
                                             >
-                                                <Bot className="mr-2 h-3.5 w-3.5" /> Gerar Mensagem WhatsApp
+                                                <Bot className="mr-2 h-3.5 w-3.5" /> Gerar Mensagem IA
                                             </Button>
                                         }
                                     />
@@ -546,15 +545,10 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
             </ScrollArea>
         )}
       </CardContent>
-      <div className="px-6 py-3 border-t border-border/10 bg-muted/5">
-          <p className="text-[9px] text-center text-muted-foreground/50 font-black uppercase tracking-[0.3em]">
-              CENTRAL DE NOTIFICAÇÕES E ALERTAS INTELIGENTES
-          </p>
-      </div>
     </Card>
 
     <Dialog open={isBdayModalOpen} onOpenChange={setIsBdayModalOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md rounded-[2rem]">
             <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                     <MessageSquareText className="h-5 w-5 text-pink-500" />
@@ -569,15 +563,15 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
                     </div>
                 ) : (
                     <textarea 
-                        className="w-full min-h-[150px] p-4 rounded-lg border bg-muted/30 text-sm focus:ring-2 focus:ring-primary outline-none"
+                        className="w-full min-h-[150px] p-4 rounded-3xl border-2 bg-muted/30 text-sm focus:ring-2 focus:ring-primary outline-none"
                         value={generatedBdayMessage}
                         onChange={(e) => setGeneratedBdayMessage(e.target.value)}
                     />
                 )}
             </div>
             <DialogFooter>
-                <Button variant="ghost" onClick={() => setIsBdayModalOpen(false)}>Cancelar</Button>
-                <Button onClick={handleSendToWhatsApp} disabled={isGeneratingBday || !generatedBdayMessage}>
+                <Button variant="ghost" className="rounded-full font-bold" onClick={() => setIsBdayModalOpen(false)}>Cancelar</Button>
+                <Button onClick={handleSendToWhatsApp} className="rounded-full font-bold" disabled={isGeneratingBday || !generatedBdayMessage}>
                     Enviar para WhatsApp
                 </Button>
             </DialogFooter>

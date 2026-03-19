@@ -17,15 +17,15 @@ export function formatCurrency(amount: number | undefined | null) {
 }
 
 /**
- * 🛡️ STORAGE URL PROTECTOR
- * Adiciona o token de userProject para buckets que possuem "Requester Pays" ativado.
- * Essencial para evitar o erro UserProjectMissing em buckets do Google Cloud.
+ * 🛡️ STORAGE URL PROTECTOR V2
+ * Utiliza variável de ambiente para o Project ID, evitando erros em múltiplos ambientes.
  */
 export function getSafeStorageUrl(url?: string): string {
     if (!url || typeof url !== 'string') return url || '';
     if (url.includes('firebasestorage.googleapis.com') && !url.includes('userProject=')) {
+        const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'studio-248448941-9c1c2';
         const separator = url.includes('?') ? '&' : '?';
-        return `${url}${separator}userProject=studio-248448941-9c1c2`;
+        return `${url}${separator}userProject=${projectId}`;
     }
     return url;
 }

@@ -61,6 +61,7 @@ import { HallOfFame } from '@/components/dashboard/hall-of-fame';
 import { toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -86,7 +87,7 @@ export default function DashboardPage() {
   
   const proposals = useMemo(() => {
     if (!rawProposals) return [];
-    return rawProposals.filter(p => p.deleted !== true); // FILTRO LIXEIRA
+    return rawProposals.filter(p => p.deleted !== true);
   }, [rawProposals]);
 
   const customersQuery = useMemoFirebase(() => {
@@ -97,7 +98,7 @@ export default function DashboardPage() {
   
   const customers = useMemo(() => {
     if (!rawCustomers) return [];
-    return rawCustomers.filter(c => c.deleted !== true); // FILTRO LIXEIRA
+    return rawCustomers.filter(c => c.deleted !== true);
   }, [rawCustomers]);
 
   const expensesQuery = useMemoFirebase(() => {
@@ -170,7 +171,7 @@ export default function DashboardPage() {
   };
 
   const stats = useMemo(() => {
-    if (!proposals || !isClient) return null;
+    if (!isClient || !proposals) return null;
 
     const today = new Date();
     const fromDate = appliedDateRange?.from || startOfMonth(today);
@@ -267,9 +268,11 @@ export default function DashboardPage() {
         proposals: { digitadoNoMes: digitizedInPeriod, pagoNoMes: paidInPeriod },
         hotStatus: Object.entries(statusAnalysis).filter(([n]) => n !== 'Reprovado').sort((a: any, b: any) => b[1].total - a[1].total)[0]?.[0]
     };
-  }, [proposals, appliedDateRange, isClient]);
+  }, [isClient, proposals, appliedDateRange]);
 
-  if (!stats) return null;
+  if (!isClient || !stats) {
+    return <AppLayout><div className="space-y-8 animate-pulse"><Skeleton className="h-32 w-full rounded-2xl" /><div className="grid grid-cols-1 md:grid-cols-3 gap-4"><Skeleton className="h-40 w-full rounded-2xl" /><Skeleton className="h-40 w-full rounded-2xl" /><Skeleton className="h-40 w-full rounded-2xl" /></div></div></AppLayout>;
+  }
 
   return (
     <AppLayout>

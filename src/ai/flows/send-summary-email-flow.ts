@@ -78,12 +78,15 @@ const sendSummaryEmailFlow = ai.defineFlow(
     outputSchema: SendSummaryEmailOutputSchema,
   },
   async (input) => {
-    // Verifica se as credenciais de e-mail estão configuradas no ambiente
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.error('As credenciais de e-mail (EMAIL_USER, EMAIL_PASS) não estão configuradas no arquivo .env');
+    // 🛡️ VALIDAÇÃO DE CREDENCIAIS V2
+    const EMAIL_USER = process.env.EMAIL_USER;
+    const EMAIL_PASS = process.env.EMAIL_PASS;
+
+    if (!EMAIL_USER || !EMAIL_PASS) {
+      console.warn('🛡️ LK RAMOS: E-mail não configurado em produção (EMAIL_USER/EMAIL_PASS ausentes).');
       return {
           success: false,
-          message: 'O serviço de e-mail não está configurado. Verifique as variáveis de ambiente.',
+          message: 'Serviço de e-mail temporariamente indisponível. Contate o administrador.',
       };
     }
     
@@ -148,8 +151,8 @@ const sendSummaryEmailFlow = ai.defineFlow(
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
+            user: EMAIL_USER,
+            pass: EMAIL_PASS,
         },
     });
 
@@ -170,7 +173,7 @@ const sendSummaryEmailFlow = ai.defineFlow(
     `.trim();
 
     const mailOptions = {
-        from: `"Assistente LK Ramos" <${process.env.EMAIL_USER}>`,
+        from: `"Assistente LK Ramos" <${EMAIL_USER}>`,
         to: input.recipientEmail,
         subject: 'Seu Resumo Diário de Pendências',
         html: emailHtmlBody,
@@ -178,11 +181,10 @@ const sendSummaryEmailFlow = ai.defineFlow(
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`E-mail de resumo enviado para: ${input.recipientEmail}`);
-        return { success: true, message: 'E-mail de resumo enviado com sucesso!' };
+        return { success: true, message: 'E-mail enviado com sucesso!' };
     } catch (error) {
-        console.error('Erro ao enviar e-mail:', error);
-        return { success: false, message: 'Falha ao enviar e-mail. Verifique as credenciais e a conexão.' };
+        console.error('🛡️ Erro no disparo SMTP:', error);
+        return { success: false, message: 'Falha técnica no envio do e-mail.' };
     }
   }
 );

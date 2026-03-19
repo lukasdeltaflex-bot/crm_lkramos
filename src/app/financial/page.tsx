@@ -109,12 +109,12 @@ export default function FinancialPage() {
 
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), limit(1000));
+    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), limit(150));
   }, [firestore, user]);
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), limit(1000));
+    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), limit(150));
   }, [firestore, user]);
 
   const expensesQuery = useMemoFirebase(() => {
@@ -489,7 +489,7 @@ export default function FinancialPage() {
 
         await batch.commit();
         setIsExpenseFormOpen(false);
-        toast({ title: 'Despesas Lançadas!', description: count > 1 ? `${count} parcelas/recurrências geradas.` : 'Gasto registrado com sucesso.' });
+        toast({ title: 'Despesas Lançadas!' });
     } catch (e: any) {
         console.error("Expense Batch Error:", e);
         toast({ variant: 'destructive', title: 'Erro ao processar lançamentos' });
