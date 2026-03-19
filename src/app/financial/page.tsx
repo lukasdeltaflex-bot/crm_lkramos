@@ -109,17 +109,18 @@ export default function FinancialPage() {
 
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), limit(150));
+    // Restaurado limite original de 1000 para manter consistência nos cálculos de totalizadores
+    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), limit(1000));
   }, [firestore, user]);
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), limit(150));
+    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), limit(1000));
   }, [firestore, user]);
 
   const expensesQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'users', user.uid, 'expenses'), limit(100));
+    return query(collection(firestore, 'users', user.uid, 'expenses'), limit(500));
   }, [firestore, user]);
 
   const settingsDocRef = useMemoFirebase(() => {
@@ -164,7 +165,6 @@ export default function FinancialPage() {
     const startOfCurrent = startOfMonth(today);
     const endOfCurrent = endOfMonth(today);
 
-    // 🛡️ CORREÇÃO DE DUPLICIDADE: Filtra itens excluídos (deleted !== true)
     const tableData = proposals
       .filter(p => p.deleted !== true)
       .map(p => ({
@@ -488,7 +488,7 @@ export default function FinancialPage() {
         }
 
         await batch.commit();
-        setIsExpenseFormOpen(false);
+        setIsExpenseOpen(false);
         toast({ title: 'Despesas Lançadas!' });
     } catch (e: any) {
         console.error("Expense Batch Error:", e);
@@ -635,11 +635,11 @@ export default function FinancialPage() {
                 <TabsContent value="expenses" className="space-y-6">
                     <div className="flex justify-between items-center bg-muted/10 p-4 rounded-2xl border">
                         <StatsCard title="Total Despesas (Mês)" value={isPrivacyMode ? '•••••' : formatCurrency(totalExpensesAmount)} icon={Wallet} className="bg-red-50/10 border-red-200" />
-                        <Button className="rounded-full font-bold bg-primary hover:bg-primary/90" onClick={() => { setSelectedExpense(undefined); setIsExpenseFormOpen(true); }} disabled={isSaving}><PlusCircle className="mr-2 h-4 w-4" /> Lançar Despesa</Button>
+                        <Button className="rounded-full font-bold bg-primary hover:bg-primary/90" onClick={() => { setSelectedExpense(undefined); setIsExpenseOpen(true); }} disabled={isSaving}><PlusCircle className="mr-2 h-4 w-4" /> Lançar Despesa</Button>
                     </div>
                     <ExpenseTable 
                         expenses={expenses || []} 
-                        onEdit={(e) => { setSelectedExpense(e); setIsExpenseFormOpen(true); }} 
+                        onEdit={(e) => { setSelectedExpense(e); setIsExpenseOpen(true); }} 
                         onDelete={async (id) => {
                             if (!firestore || !user) return;
                             const docRef = doc(firestore, 'users', user.uid, 'expenses', id);
@@ -803,7 +803,7 @@ export default function FinancialPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isExpenseFormOpen} onOpenChange={setIsExpenseFormOpen}>
+      <Dialog open={isExpenseOpen} onOpenChange={setIsExpenseOpen}>
         <DialogContent 
             className="max-md" 
             onPointerDownOutside={(e) => e.preventDefault()} 

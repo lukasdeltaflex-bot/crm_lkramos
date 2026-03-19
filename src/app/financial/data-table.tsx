@@ -243,6 +243,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     }
   };
 
+  // 🛡️ REGRAS DE NEGÓCIO: Exclui REPROVADOS da listagem financeira globalmente
   const baseFinancialData = React.useMemo(() => {
     return data.filter(p => p.status !== 'Reprovado');
   }, [data]);

@@ -8,7 +8,7 @@ import { Hourglass, CircleDollarSign, Activity, Wallet } from 'lucide-react';
 import { startOfMonth, endOfMonth, subMonths, eachDayOfInterval, subDays, startOfDay, endOfDay, isSameMonth } from 'date-fns';
 
 interface FinancialSummaryProps {
-  rows: Proposal[]; // Agora recebe a lista bruta para cálculo fiel
+  rows: Proposal[]; 
   currentMonthRange: { from: Date; to: Date };
   isPrivacyMode: boolean;
   userSettings: UserSettings | null;
@@ -35,7 +35,6 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
     const fromDate = currentMonthRange?.from || startOfMonth(today);
     const toDate = currentMonthRange?.to || endOfMonth(today);
     
-    // Período anterior para cálculo de tendência
     const prevMonthStart = startOfMonth(subMonths(fromDate, 1));
     const prevMonthEnd = endOfMonth(subMonths(fromDate, 1));
 
@@ -53,14 +52,12 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
     let receivedPrevSum = 0;
 
     rows.forEach(p => {
-        // 🛡️ REGRA DE NEGÓCIO: Identifica propostas que não devem compor faturamento/digitado
         const isReprovado = p.status === 'Reprovado';
         
         const dDigit = parseDateSafe(p.dateDigitized);
         const dPay = parseDateSafe(p.commissionPaymentDate);
         const dAppr = parseDateSafe(p.dateApproved);
 
-        // 1. PRODUÇÃO DIGITADA (No período selecionado) - 🛡️ IGNORA REPROVADOS/CANCELADOS
         if (dDigit && !isReprovado) {
             if (dDigit >= fromDate && dDigit <= toDate) {
                 digitizedInPeriod.push(p);
@@ -70,7 +67,6 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
             }
         }
 
-        // 2. COMISSÃO RECEBIDA (Baseada na data de pagamento do relatório)
         if (dPay && (p.commissionStatus === 'Paga' || p.commissionStatus === 'Parcial')) {
             if (dPay >= fromDate && dPay <= toDate) {
                 receivedInPeriod.push(p);
@@ -80,12 +76,10 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
             }
         }
 
-        // 3. SALDO A RECEBER (Averbados não quitados - Visão GLOBAL de pendência)
         if (dAppr && !isReprovado && p.commissionStatus !== 'Paga') {
             averbados.push(p);
         }
 
-        // 4. ESTEIRA ATIVA (Tudo que não é Reprovado nem Pago ainda - Expectativa)
         if (!isReprovado && !['Pago', 'Saldo Pago'].includes(p.status)) {
             esperados.push(p);
         }
@@ -107,7 +101,6 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
         const de = endOfDay(day);
         return rows.reduce((sum, p) => {
             const d = parseDateSafe(p.dateDigitized);
-            // 🛡️ IGNORA REPROVADOS TAMBÉM NO SPARKLINE
             return (d && d >= ds && d <= de && p.status !== 'Reprovado') ? sum + safeValue(p.commissionValue) : sum;
         }, 0);
     });
