@@ -1,11 +1,10 @@
 'use server';
 /**
  * @fileOverview Um fluxo Genkit para resumir e profissionalizar anotações.
- *
- * - summarizeNotes - A função para chamar o fluxo de sumarização via Gemini API.
  */
 
 import { ai } from '@/ai/genkit';
+import { gemini15Flash } from '@genkit-ai/google-genai';
 import { z } from 'genkit';
 
 const SummarizeNotesOutputSchema = z.object({
@@ -21,7 +20,7 @@ export async function summarizeNotes(notes: string): Promise<string> {
   
   try {
     const { output } = await ai.generate({
-      model: 'googleai/gemini-1.5-flash',
+      model: gemini15Flash,
       prompt: `Você é um Redator Executivo Sênior de uma instituição financeira.
       Sua missão é TRANSFORMAR o texto informal abaixo em um parecer técnico formal e elegante.
 
@@ -48,7 +47,6 @@ export async function summarizeNotes(notes: string): Promise<string> {
     return output.summary;
   } catch (error: any) {
     console.error("❌ AI Summary Error:", error);
-    // Retorna o original em caso de falha para não travar a UI
     return notes;
   }
 }

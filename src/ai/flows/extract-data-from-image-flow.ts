@@ -4,6 +4,7 @@
  */
 
 import { ai } from '@/ai/genkit';
+import { gemini15Flash } from '@genkit-ai/google-genai';
 import { z } from 'genkit';
 
 const BenefitFromImageSchema = z.object({
@@ -43,7 +44,7 @@ export async function extractDataFromImage(photoDataUri: string): Promise<Extrac
         console.log(`🤖 IA LK RAMOS: Iniciando Vision OCR via Gemini 1.5 Flash...`);
         
         const { output } = await ai.generate({
-          model: 'googleai/gemini-1.5-flash',
+          model: gemini15Flash,
           prompt: [
             { text: `Analise este documento de correspondente bancário e extraia: Nome, CPF, Nascimento, NB, Salário e Cartões (RMC/RCC). Formate datas como YYYY-MM-DD. Se encontrar mais de um telefone, separe-os em phone e phone2.` },
             { media: { url: photoDataUri, contentType: contentType } }

@@ -1,5 +1,5 @@
 import { genkit } from 'genkit';
-import { googleAI } from '@genkit-ai/google-genai';
+import { googleAI, gemini15Flash } from '@genkit-ai/google-genai';
 
 /**
  * 🤖 NÚCLEO DE INTELIGÊNCIA ARTIFICIAL - LK RAMOS
@@ -13,8 +13,8 @@ export const ai = genkit({
   plugins: [
     googleAI({ apiKey })
   ],
-  // 🛡️ ESTABILIDADE: gemini-1.5-flash é o modelo de produção recomendado
-  model: 'googleai/gemini-1.5-flash',
+  // 🛡️ ESTABILIDADE: Utiliza a constante oficial para garantir o endpoint correto
+  model: gemini15Flash,
 });
 
 /**
@@ -23,7 +23,7 @@ export const ai = genkit({
  * @param prompt O texto de comando para a IA.
  * @param model Opcional: modelo específico (padrão gemini-1.5-flash).
  */
-export async function gerarTextoIA(prompt: string, model: string = 'googleai/gemini-1.5-flash'): Promise<string> {
+export async function gerarTextoIA(prompt: string, model: any = gemini15Flash): Promise<string> {
     if (!prompt || !apiKey) {
         console.error("❌ Erro IA: Prompt vazio ou API Key não configurada.");
         return '';
