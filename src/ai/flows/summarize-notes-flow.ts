@@ -4,7 +4,6 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { gemini15Flash } from '@genkit-ai/google-genai';
 import { z } from 'genkit';
 
 const SummarizeNotesOutputSchema = z.object({
@@ -20,7 +19,7 @@ export async function summarizeNotes(notes: string): Promise<string> {
   
   try {
     const { output } = await ai.generate({
-      model: gemini15Flash,
+      model: 'googleai/gemini-1.5-flash',
       prompt: `Você é um Redator Executivo Sênior de uma instituição financeira.
       Sua missão é TRANSFORMAR o texto informal abaixo em um parecer técnico formal e elegante.
 

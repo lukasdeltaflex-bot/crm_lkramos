@@ -4,7 +4,6 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { gemini15Flash } from '@genkit-ai/google-genai';
 import { z } from 'genkit';
 
 const BenefitSchema = z.object({
@@ -37,7 +36,7 @@ export async function extractCustomerData(text: string): Promise<ExtractCustomer
 
     try {
         const { output } = await ai.generate({
-            model: gemini15Flash,
+            model: 'googleai/gemini-1.5-flash',
             prompt: `Você é um assistente de extração de dados especializado em correspondentes bancários brasileiros. Analise o TEXTO e extraia informações para um JSON estruturado.
 
             ### REGRAS:

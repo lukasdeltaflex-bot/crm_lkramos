@@ -4,7 +4,6 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { gemini15Flash } from '@genkit-ai/google-genai';
 import { z } from 'genkit';
 
 const CommissionDataSchema = z.object({
@@ -49,7 +48,7 @@ export async function reconcileCommissions(input: z.infer<typeof ReconcileInputS
 
     try {
         const { output } = await ai.generate({
-            model: gemini15Flash,
+            model: 'googleai/gemini-1.5-flash',
             prompt: promptParts,
             output: { schema: ReconcileCommissionsOutputSchema }
         });
