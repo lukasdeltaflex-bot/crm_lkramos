@@ -1,9 +1,6 @@
 'use server';
 /**
  * @fileOverview Um fluxo Genkit para extrair dados estruturados de clientes a partir de um texto não estruturado.
- *
- * - extractCustomerData - A função para chamar o fluxo de extração.
- * - ExtractCustomerDataOutput - O tipo de saída (objeto com os dados do cliente).
  */
 
 import { ai } from '@/ai/genkit';
@@ -20,16 +17,11 @@ const BenefitSchema = z.object({
 const ExtractCustomerDataOutputSchema = z.object({
     name: z.string().optional().describe('O nome completo do cliente.'),
     cpf: z.string().optional().describe('O CPF do cliente (formato 000.000.000-00).'),
-    benefits: z.array(BenefitSchema).optional().describe('Uma lista de benefícios do cliente, cada um com número, espécie, salário e bancos de cartões.'),
-    phone: z.string().optional().describe('O número de telefone principal do cliente (formato (00) 90000-0000).'),
-    phone2: z.string().optional().describe('Um segundo número de telefone do cliente, se houver (formato (00) 90000-0000).'),
+    benefits: z.array(BenefitSchema).optional().describe('Uma lista de benefícios do cliente.'),
+    phone: z.string().optional().describe('O número de telefone principal do cliente.'),
+    phone2: z.string().optional().describe('Um segundo número de telefone do cliente.'),
     email: z.string().optional().describe('O endereço de e-mail do cliente.'),
     birthDate: z.string().optional().describe('A data de nascimento do cliente no formato YYYY-MM-DD.'),
-    cep: z.string().optional().describe('O CEP do endereço do cliente (formato 00000-000).'),
-    street: z.string().optional().describe('O logradouro (rua, avenida) do cliente.'),
-    number: z.string().optional().describe('O número do endereço do cliente.'),
-    complement: z.string().optional().describe('O complemento do endereço (apto, bloco).'),
-    neighborhood: z.string().optional().describe('O bairro do cliente.'),
     city: z.string().optional().describe('A cidade do cliente.'),
     state: z.string().optional().describe('O estado (UF) do cliente.'),
 }).describe('Os dados extraídos do cliente.');
@@ -37,8 +29,7 @@ const ExtractCustomerDataOutputSchema = z.object({
 export type ExtractCustomerDataOutput = z.infer<typeof ExtractCustomerDataOutputSchema>;
 
 /**
- * Server Action para extração de texto.
- * Refatorada para ser uma função autônoma, garantindo o registro correto no Next.js 15.
+ * Server Action para extração de texto estruturado.
  */
 export async function extractCustomerData(text: string): Promise<ExtractCustomerDataOutput> {
     if (!text || text.trim() === '') return {};
@@ -46,37 +37,22 @@ export async function extractCustomerData(text: string): Promise<ExtractCustomer
     try {
         const { output } = await ai.generate({
             model: 'googleai/gemini-1.5-flash',
-            prompt: `Você é um assistente de extração de dados especializado em correspondentes bancários. Sua função é analisar o TEXTO e extrair informações para um JSON estruturado.
+            prompt: `Você é um assistente de extração de dados especializado em correspondentes bancários brasileiros. Analise o TEXTO e extraia informações para um JSON estruturado.
 
-            ### REGRAS CRÍTICAS DE NEGÓCIO:
+            ### REGRAS:
             1. CPF / Benefício: Extraia da primeira linha ou campos identificados. 
             2. Salário: Identifique o valor bruto ou líquido do benefício se disponível.
-            3. Cartões RMC/RCC: Se identificar bancos vinculados a reservas de cartão (RMC ou RCC/Benefício), inclua no objeto do benefício correspondente.
-            4. Data de Nascimento: Converta para YYYY-MM-DD.
-            5. Telefones: Se houver mais de um número no texto, separe-os obrigatoriamente nos campos phone e phone2.
-            6. OMISSÃO: Se um campo não existir, NÃO o invente.
+            3. Data de Nascimento: Converta para YYYY-MM-DD.
+            4. Telefones: Se houver mais de um número, separe-os nos campos phone e phone2.
 
-            ### TEXTO PARA PROCESSAR:
-            """
-            ${text}
-            """`,
+            ### TEXTO:
+            "${text}"`,
             output: { schema: ExtractCustomerDataOutputSchema }
         });
 
-        const result = output || {};
-
-        // 🛡️ BLINDAGEM CONTRA TELEFONES CONCATENADOS
-        if (result.phone && !result.phone2) {
-            const phoneMatches = result.phone.match(/\(?\d{2}\)?\s?\d{4,5}-?\d{4}/g);
-            if (phoneMatches && phoneMatches.length > 1) {
-                result.phone = phoneMatches[0];
-                result.phone2 = phoneMatches[1];
-            }
-        }
-
-        return result;
+        return output || {};
     } catch (error: any) {
-        console.error("❌ ERRO NA EXTRAÇÃO DE TEXTO:", error);
-        throw new Error(`Falha na extração de dados via IA.`);
+        console.error("❌ ERRO NA EXTRAÇÃO Gemini:", error);
+        throw new Error(`Falha na extração de dados via Gemini API.`);
     }
 }

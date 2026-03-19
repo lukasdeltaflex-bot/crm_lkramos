@@ -2,25 +2,19 @@
 /**
  * @fileOverview Um fluxo Genkit para resumir e profissionalizar anotações.
  *
- * - summarizeNotes - A função para chamar o fluxo de sumarização.
+ * - summarizeNotes - A função para chamar o fluxo de sumarização via Gemini API.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-const SummarizeNotesInputSchema = z.object({
-  notes: z.string().describe('As anotações ou justificativas a serem profissionalizadas.'),
-});
-export type SummarizeNotesInput = z.infer<typeof SummarizeNotesInputSchema>;
-
 const SummarizeNotesOutputSchema = z.object({
   summary: z.string().describe('O texto reescrito de forma profissional e concisa.'),
 });
-export type SummarizeNotesOutput = z.infer<typeof SummarizeNotesOutputSchema>;
 
 /**
  * Server Action para resumir notas.
- * Refatorada para chamada direta ao ai.generate para garantir estabilidade no Next.js 15.
+ * Utiliza Gemini 1.5 Flash para transformar textos informais em pareceres técnicos.
  */
 export async function summarizeNotes(notes: string): Promise<string> {
   if (!notes || notes.trim().length < 2) return notes;
@@ -33,33 +27,28 @@ export async function summarizeNotes(notes: string): Promise<string> {
 
       REGRAS OBRIGATÓRIAS:
       1. NÃO DEVOLVA O TEXTO ORIGINAL. Use vocabulário do mercado de crédito consignado.
-      2. Seja extremamente direto. Use termos como: "Inviabilidade técnica", "Desistência por parte do proponente", "Impedimento na averbação", "Restrição em órgão gestor".
+      2. Seja extremamente direto. Use termos como: "Inviabilidade técnica", "Desistência por parte do proponente", "Impedimento na averbação".
       3. Mantenha valores e nomes de bancos intactos.
-      4. O resultado deve ter cara de "Comentário de Gerente de Banco".
+      4. O resultado deve ser conciso (máximo 3 frases).
 
-      TEXTO BRUTO PARA TRANSFORMAÇÃO:
+      TEXTO BRUTO:
       """
       ${notes}
       """`,
       output: { schema: SummarizeNotesOutputSchema },
       config: {
-        safetySettings: [
-          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
-          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-        ],
+        temperature: 0.2,
       },
     });
 
     if (!output || !output.summary) {
-        throw new Error("Retorno vazio da IA.");
+        return notes;
     }
 
     return output.summary;
   } catch (error: any) {
     console.error("❌ AI Summary Error:", error);
-    // Lança o erro para que o componente UI possa tratar e exibir o toast apropriado
-    throw new Error(`Falha no processamento da IA: ${error.message || 'Erro desconhecido'}`);
+    // Retorna o original em caso de falha para não travar a UI
+    return notes;
   }
 }

@@ -1,11 +1,9 @@
-
 'use server';
 /**
- * @fileOverview Fluxo de IA V2 para extrair e conciliar dados de comissões.
+ * @fileOverview Fluxo de IA para extrair e conciliar dados de comissões de relatórios financeiros.
  */
 
 import { ai } from '@/ai/genkit';
-import { gemini15Flash } from '@genkit-ai/google-genai';
 import { z } from 'genkit';
 
 const CommissionDataSchema = z.object({
@@ -26,22 +24,15 @@ const ReconcileInputSchema = z.object({
     fileDataUri: z.string().optional().describe("Data URI do arquivo (PDF ou Imagem)"),
 });
 
-// 🛡️ FIX: Definindo o fluxo ANTES da função exportada para garantir o registro da Server Action
-const reconcileCommissionsFlow = ai.defineFlow(
-  {
-    name: 'reconcileCommissionsFlow',
-    inputSchema: ReconcileInputSchema,
-    outputSchema: ReconcileCommissionsOutputSchema,
-  },
-  async (input) => {
+/**
+ * Server Action para conciliação financeira via Gemini 1.5 Flash.
+ */
+export async function reconcileCommissions(input: z.infer<typeof ReconcileInputSchema>): Promise<ReconcileCommissionsOutput> {
     const promptParts: any[] = [
-        { text: `Você é um assistente financeiro de elite para correspondentes bancários.
+        { text: `Você é um assistente financeiro sênior para correspondentes bancários.
         Sua tarefa é extrair uma lista de pagamentos de comissão de um relatório.
-        
-        REGRAS:
-        1. Capture CPF (formatado), Número da Proposta/Contrato e o Valor Pago (numérico).
-        2. Seja extremamente rigoroso com os valores decimais.
-        3. Se houver múltiplos contratos para o mesmo CPF, liste cada um individualmente.` }
+        Capture CPF (formatado), Número da Proposta/Contrato e o Valor Pago (numérico).
+        Seja extremamente rigoroso com os valores decimais.` }
     ];
 
     if (input.fileDataUri) {
@@ -52,22 +43,19 @@ const reconcileCommissionsFlow = ai.defineFlow(
     }
 
     if (input.text) {
-        promptParts.push({ text: `Texto do Relatório:\n${input.text}` });
+        promptParts.push({ text: `Dados do Relatório:\n${input.text}` });
     }
 
-    const { output } = await ai.generate({
-        model: gemini15Flash,
-        prompt: promptParts,
-        output: { schema: ReconcileCommissionsOutputSchema }
-    });
+    try {
+        const { output } = await ai.generate({
+            model: 'googleai/gemini-1.5-flash',
+            prompt: promptParts,
+            output: { schema: ReconcileCommissionsOutputSchema }
+        });
 
-    return output || { commissions: [] };
-  }
-);
-
-/**
- * Server Action exportada para ser utilizada pelos componentes Client.
- */
-export async function reconcileCommissions(input: z.infer<typeof ReconcileInputSchema>): Promise<ReconcileCommissionsOutput> {
-  return reconcileCommissionsFlow(input);
+        return output || { commissions: [] };
+    } catch (error: any) {
+        console.error("❌ Erro na Conciliação IA:", error);
+        throw new Error("Falha ao processar o relatório via IA.");
+    }
 }

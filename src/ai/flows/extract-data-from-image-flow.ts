@@ -1,9 +1,6 @@
 'use server';
 /**
  * @fileOverview Fluxo Genkit para extrair dados de clientes a partir de imagens ou PDFs (OCR).
- * 
- * - extractDataFromImage - Server Action para processar documentos.
- * - ExtractFromImageOutput - O tipo de saída com os dados mapeados.
  */
 
 import { ai } from '@/ai/genkit';
@@ -31,8 +28,7 @@ const ExtractFromImageOutputSchema = z.object({
 export type ExtractFromImageOutput = z.infer<typeof ExtractFromImageOutputSchema>;
 
 /**
- * Server Action exportada para ser consumida pela UI.
- * Refatorada para ser uma função autônoma, garantindo o registro correto no Next.js 15.
+ * Server Action exportada para processar documentos via Vision API.
  */
 export async function extractDataFromImage(photoDataUri: string): Promise<ExtractFromImageOutput> {
     if (!photoDataUri) throw new Error("Documento não fornecido.");
@@ -44,10 +40,10 @@ export async function extractDataFromImage(photoDataUri: string): Promise<Extrac
     }
 
     try {
-        console.log(`🤖 IA LK RAMOS: Processando mídia via Server Action...`);
+        console.log(`🤖 IA LK RAMOS: Iniciando Vision OCR via Gemini 1.5 Flash...`);
         
         const { output } = await ai.generate({
-model: 'googleai/gemini-2.5-flash-lite',
+          model: 'googleai/gemini-1.5-flash',
           prompt: [
             { text: `Analise este documento de correspondente bancário e extraia: Nome, CPF, Nascimento, NB, Salário e Cartões (RMC/RCC). Formate datas como YYYY-MM-DD. Se encontrar mais de um telefone, separe-os em phone e phone2.` },
             { media: { url: photoDataUri, contentType: contentType } }
@@ -68,12 +64,7 @@ model: 'googleai/gemini-2.5-flash-lite',
 
         return result;
     } catch (error: any) {
-        console.error("❌ ERRO NA CHAMADA DA IA:", error);
-        let msg = "Falha na comunicação com a IA.";
-        const raw = String(error.message || '');
-        if (raw.includes("404")) msg = "Modelo de IA temporariamente indisponível.";
-        if (raw.includes("429")) msg = "Limite de requisições excedido.";
-        
-        throw new Error(`${msg} Detalhes: ${error.message || 'Erro desconhecido'}`);
+        console.error("❌ ERRO NA CHAMADA DA IA (Vision):", error);
+        throw new Error(`Falha na comunicação com a IA. Detalhes: ${error.message || 'Erro de rede'}`);
     }
 }
