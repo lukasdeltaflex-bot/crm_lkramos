@@ -28,7 +28,7 @@ export async function gerarTextoIA(prompt: string): Promise<string> {
     
     try {
         const { text } = await ai.generate({
-            model: 'googleai/gemini-1.5-flash',
+            model: 'googleai/gemini-2.0-flash',
             prompt,
             config: {
                 maxOutputTokens: 2048,

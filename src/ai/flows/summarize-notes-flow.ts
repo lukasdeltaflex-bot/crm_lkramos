@@ -19,7 +19,7 @@ export async function summarizeNotes(notes: string): Promise<string> {
   
   try {
     const { output } = await ai.generate({
-      model: 'googleai/gemini-1.5-flash',
+      model: 'googleai/gemini-2.0-flash',
       prompt: `Você é um Redator Executivo Sênior de uma instituição financeira.
       Sua missão é TRANSFORMAR o texto informal abaixo em um parecer técnico formal e elegante.
 

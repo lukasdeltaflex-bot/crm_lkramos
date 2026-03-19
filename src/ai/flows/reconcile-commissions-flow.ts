@@ -48,7 +48,7 @@ export async function reconcileCommissions(input: z.infer<typeof ReconcileInputS
 
     try {
         const { output } = await ai.generate({
-            model: 'googleai/gemini-1.5-flash',
+            model: 'googleai/gemini-2.0-flash',
             prompt: promptParts,
             output: { schema: ReconcileCommissionsOutputSchema }
         });

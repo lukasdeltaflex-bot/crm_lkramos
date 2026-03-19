@@ -36,7 +36,7 @@ export async function extractCustomerData(text: string): Promise<ExtractCustomer
 
     try {
         const { output } = await ai.generate({
-model: "googleai/gemini-2.0-flash",
+,
             prompt: `Você é um assistente de extração de dados especializado em correspondentes bancários brasileiros. Analise o TEXTO e extraia informações para um JSON estruturado.
 
             ### REGRAS:
