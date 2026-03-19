@@ -40,9 +40,12 @@ export function SidebarNav() {
     <>
     <SidebarMenu>
       {links.map((link) => {
-        const isActive = link.href === '/' 
-            ? pathname === '/' 
-            : pathname.startsWith(link.href);
+        // 🛡️ SEGURANÇA: pathname pode ser null no Next.js App Router em certos estados de renderização
+        const isActive = !pathname 
+            ? false 
+            : link.href === '/' 
+                ? pathname === '/' 
+                : pathname.startsWith(link.href);
 
         return (
             <SidebarMenuItem key={link.href}>
@@ -67,7 +70,7 @@ export function SidebarNav() {
             <SidebarMenuItem key={link.href}>
                 <SidebarMenuButton
                 asChild
-                isActive={pathname.startsWith(link.href)}
+                isActive={pathname?.startsWith(link.href)}
                 tooltip={link.label}
                 onClick={handleNavClick}
                 >

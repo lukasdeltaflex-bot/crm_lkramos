@@ -26,7 +26,7 @@ export function HallOfFame({ proposals, customers, isLoading }: HallOfFameProps)
     if (!hasMounted || !proposals || !customers) return null;
     const now = new Date();
     
-    // Filtra propostas do mês atual
+    // 🛡️ SEGURANÇA: Filtra propostas com datas válidas para o mês atual
     const currentMonthProposals = proposals.filter(p => {
         if (!p.dateDigitized) return false;
         try {
@@ -43,8 +43,11 @@ export function HallOfFame({ proposals, customers, isLoading }: HallOfFameProps)
     // 2. Pico de Produção (Dia)
     const dailyVolume: Record<string, number> = {};
     currentMonthProposals.forEach(p => {
+        if (!p.dateDigitized) return;
         const day = p.dateDigitized.split('T')[0];
-        dailyVolume[day] = (dailyVolume[day] || 0) + (p.grossAmount || 0);
+        if (day) {
+            dailyVolume[day] = (dailyVolume[day] || 0) + (p.grossAmount || 0);
+        }
     });
     const peakDay = Object.entries(dailyVolume).sort((a,b) => b[1] - a[1])[0];
 
@@ -78,7 +81,7 @@ export function HallOfFame({ proposals, customers, isLoading }: HallOfFameProps)
 
   const getFullShortName = (name?: string) => {
     if (!name) return '---';
-    const parts = name.split(' ');
+    const parts = name.trim().split(/\s+/);
     if (parts.length > 1) {
         return `${parts[0]} ${parts[1]}`;
     }

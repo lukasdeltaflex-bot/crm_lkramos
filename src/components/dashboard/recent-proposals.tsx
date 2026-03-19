@@ -55,16 +55,16 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
   const showLogos = userSettings?.showBankLogos ?? true;
 
   const recentProposals = useMemo(() => {
-    const customerMap = new Map(customers.map(c => [c.id, c]));
-    return [...proposals]
+    const customerMap = new Map((customers || []).map(c => [c.id, c]));
+    return [...(proposals || [])]
         .sort((a, b) => new Date(b.dateDigitized).getTime() - new Date(a.dateDigitized).getTime())
         .slice(0, 10)
         .map(p => ({...p, customer: customerMap.get(p.customerId)}))
   }, [proposals, customers]);
 
   const getInitials = (name?: string) => {
-    if (!name) return '??';
-    return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+    if (!name || typeof name !== 'string') return '??';
+    return name.trim().split(/\s+/).map(n => n[0]).slice(0, 2).join('').toUpperCase();
   }
 
   return (
@@ -153,7 +153,7 @@ export function RecentProposals({ proposals, customers, isLoading }: RecentPropo
                             <TableCell className="px-6 py-5">
                                 <Link href={`/proposals?open=${proposal.id}&search=${proposal.proposalNumber}`} className="flex flex-col gap-1.5">
                                     <div className="flex items-center gap-2">
-                                        <BankIcon bankName={proposal.bank} domain={customDomain} showLogos={showLogos} className="h-4 w-4" />
+                                        <BankIcon bankName={proposal.bank} domain={customDomain} showLogo={showLogos} className="h-4 w-4" />
                                         <span className="text-[10px] font-bold text-muted-foreground truncate max-w-[120px]">{cleanBank}</span>
                                     </div>
                                     <Badge variant="secondary" className="bg-muted/50 text-muted-foreground font-bold text-[9px] border-none px-2 py-0 w-fit">

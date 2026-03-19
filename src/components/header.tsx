@@ -53,22 +53,29 @@ export function Header({ className }: { className?: string }) {
     }
   };
 
+  /**
+   * 🛡️ MOTOR DE INICIAIS BLINDADO
+   * Suporta nomes vazios, nulos, apenas espaços ou caracteres especiais sem quebrar.
+   */
   const getInitials = (name?: string | null) => {
-    if (!name) return '..';
-    const names = name.split(' ');
-    if (names.length > 1) {
-        return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+    if (!name || typeof name !== 'string' || name.trim() === '') return '..';
+    
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length > 1) {
+        const first = parts[0]?.[0] || '';
+        const last = parts[parts.length - 1]?.[0] || '';
+        return `${first}${last}`.toUpperCase();
     }
-    return name.substring(0, 2).toUpperCase();
+    
+    return name.trim().substring(0, 2).toUpperCase();
   };
 
-  const displayName = userProfile?.displayName || userProfile?.fullName || auth.currentUser?.email;
+  const displayName = userProfile?.displayName || userProfile?.fullName || auth.currentUser?.email || 'Usuário';
 
   return (
     <header className={cn("flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6", className)}>
       <SidebarTrigger />
       <div className="flex-1 flex items-center gap-4">
-        {/* 🛡️ RESPONSIVIDADE HEADER: Esconde relógio em telas médias para evitar colisão com a busca */}
         <div className="hidden xl:block">
             <LiveClock />
         </div>
@@ -81,25 +88,25 @@ export function Header({ className }: { className?: string }) {
         <ThemeToggle />
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-            <Button variant="secondary" size="icon" className="rounded-full">
+            <Button variant="secondary" size="icon" className="rounded-full overflow-hidden">
                 <Avatar>
                 <AvatarImage src={userProfile?.photoURL || ''} data-ai-hint="rosto de pessoa" />
-                <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
+                <AvatarFallback className="font-bold">{getInitials(displayName)}</AvatarFallback>
                 </Avatar>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+            <DropdownMenuLabel className="max-w-[200px] truncate">{displayName}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <Link href="/profile" passHref>
-                <DropdownMenuItem>Meu Perfil</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer">Meu Perfil</DropdownMenuItem>
             </Link>
             <Link href="/settings" passHref>
-                <DropdownMenuItem>Configurações</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer">Configurações</DropdownMenuItem>
             </Link>
-            <DropdownMenuItem>Suporte</DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">Suporte</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut}>Sair</DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive" onClick={handleSignOut}>Sair</DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
       </div>
