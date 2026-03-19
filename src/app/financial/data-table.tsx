@@ -257,9 +257,13 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     }
   };
 
+  const baseFinancialData = React.useMemo(() => {
+    // 🛡️ REGRA CRÍTICA: Exclui propostas reprovadas de toda a lógica financeira
+    return data.filter(p => p.status !== 'Reprovado');
+  }, [data]);
+
   const filteredData = React.useMemo(() => {
-    let list = data;
-    console.log(`[DEBUG-FINANCEIRO] total registros antes do filtro: ${list.length}`);
+    let list = baseFinancialData;
 
     if (statusFilter !== 'Todos') {
         const target = statusFilter.toUpperCase();
@@ -267,25 +271,17 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
             const currentCommStatus = (p.commissionStatus || 'Pendente').toUpperCase();
             return currentCommStatus === (target.endsWith('S') ? target.slice(0, -1) : target);
         });
-        console.log(`[DEBUG-FINANCEIRO] após filtro de status "${statusFilter}": ${list.length}`);
     }
 
     if (appliedDateRange && appliedDateRange.from) {
         const start = appliedDateRange.from;
         const end = appliedDateRange.to || appliedDateRange.from;
-        console.log(`[DEBUG-FINANCEIRO] aplicando intervalo financeiro: ${format(start, 'dd/MM/yyyy')} a ${format(end, 'dd/MM/yyyy')}`);
         
         list = list.filter(p => {
             const paymentDate = normalizeDate(p.commissionPaymentDate);
             if (!paymentDate) return false;
-            
-            const inRange = isWithinRange(paymentDate, start, end);
-            if (inRange) {
-                console.log(`[DEBUG-FINANCEIRO] Match encontrado: Cliente ${p.customer?.name} | Data Pgto Normalizada: ${format(paymentDate, 'dd/MM/yyyy HH:mm')}`);
-            }
-            return inRange;
+            return isWithinRange(paymentDate, start, end);
         });
-        console.log(`[DEBUG-FINANCEIRO] após filtro de período: ${list.length}`);
     }
 
     if (bankFilters.length > 0) list = list.filter(p => bankFilters.includes(p.bank));
@@ -293,7 +289,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     if (operatorFilters.length > 0) list = list.filter(p => operatorFilters.includes(p.operator || 'Sem Operador'));
     
     return list;
-  }, [data, statusFilter, bankFilters, promoterFilters, operatorFilters, appliedDateRange]);
+  }, [baseFinancialData, statusFilter, bankFilters, promoterFilters, operatorFilters, appliedDateRange]);
 
   const table = useReactTable({
     data: filteredData,
@@ -355,9 +351,9 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const togglePromoterFilter = (promoter: string) => { setPromoterFilters(prev => prev.includes(promoter) ? prev.filter(p => p !== promoter) : [...prev, promoter]); };
   const toggleOperatorFilter = (op: string) => { setOperatorFilters(prev => prev.includes(op) ? prev.filter(o => o !== op) : [...prev, op]); };
 
-  const uniqueOperators = React.useMemo(() => Array.from(new Set(data.map(p => p.operator || 'Sem Operador'))).sort(), [data]);
-  const uniqueBanks = React.useMemo(() => Array.from(new Set(data.map(p => p.bank))).sort(), [data]);
-  const uniquePromoters = React.useMemo(() => Array.from(new Set(data.map(p => p.promoter))).sort(), [data]);
+  const uniqueOperators = React.useMemo(() => Array.from(new Set(baseFinancialData.map(p => p.operator || 'Sem Operador'))).sort(), [baseFinancialData]);
+  const uniqueBanks = React.useMemo(() => Array.from(new Set(baseFinancialData.map(p => p.bank))).sort(), [baseFinancialData]);
+  const uniquePromoters = React.useMemo(() => Array.from(new Set(baseFinancialData.map(p => p.promoter))).sort(), [baseFinancialData]);
 
   if (!isClient) return <div className="h-96 w-full bg-muted/10 animate-pulse rounded-xl" />;
 
@@ -433,7 +429,12 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                     <DropdownMenuTrigger asChild><Button variant="outline" className="h-10 rounded-full font-bold px-6 border-2 border-zinc-300 bg-background shadow-sm text-xs gap-2"><Landmark className="h-4 w-4" /> Bancos <ChevronDown className="h-3 w-3 opacity-50" /></Button></DropdownMenuTrigger>
                     <DropdownMenuContent className="w-64 max-h-80 overflow-y-auto border-2">
                         {uniqueBanks.map(bank => (
-                            <DropdownMenuCheckboxItem key={bank} checked={bankFilters.includes(bank)} onCheckedChange={() => toggleBankFilter(bank)} className="font-bold text-xs uppercase">{cleanBankName(bank)}</DropdownMenuCheckboxItem>
+                            <DropdownMenuCheckboxItem key={bank} checked={bankFilters.includes(bank)} onCheckedChange={() => toggleBankFilter(bank)} className="font-bold text-xs uppercase">
+                                <div className="flex items-center gap-2">
+                                    <BankIcon bankName={bank} domain={userSettings?.bankDomains?.[bank]} showLogo={userSettings?.showBankLogos ?? true} className="h-4 w-4" />
+                                    <span className="truncate">{cleanBankName(bank)}</span>
+                                </div>
+                            </DropdownMenuCheckboxItem>
                         ))}
                     </DropdownMenuContent>
                 </DropdownMenu>
@@ -441,7 +442,12 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                     <DropdownMenuTrigger asChild><Button variant="outline" className="h-10 rounded-full font-bold px-6 border-2 border-zinc-300 bg-background shadow-sm text-xs gap-2"><Building2 className="h-4 w-4" /> Promotoras <ChevronDown className="h-3 w-3 opacity-50" /></Button></DropdownMenuTrigger>
                     <DropdownMenuContent className="w-64 max-h-80 overflow-y-auto border-2">
                         {uniquePromoters.map(promoter => (
-                            <DropdownMenuCheckboxItem key={promoter} checked={promoterFilters.includes(promoter)} onCheckedChange={() => togglePromoterFilter(promoter)} className="font-bold text-xs uppercase">{promoter}</DropdownMenuCheckboxItem>
+                            <DropdownMenuCheckboxItem key={promoter} checked={promoterFilters.includes(promoter)} onCheckedChange={() => togglePromoterFilter(promoter)} className="font-bold text-xs uppercase">
+                                <div className="flex items-center gap-2">
+                                    <BankIcon bankName={promoter} domain={userSettings?.promoterDomains?.[promoter]} showLogo={userSettings?.showPromoterLogos ?? true} className="h-4 w-4" />
+                                    <span className="truncate">{promoter}</span>
+                                </div>
+                            </DropdownMenuCheckboxItem>
                         ))}
                     </DropdownMenuContent>
                 </DropdownMenu>
