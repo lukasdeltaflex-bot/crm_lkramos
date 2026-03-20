@@ -25,7 +25,8 @@ import {
   Loader2,
   User as UserIcon,
   CircleDollarSign,
-  Target
+  Target,
+  Trophy
 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, isValid, startOfDay, subDays, endOfDay, subMonths, parse, eachDayOfInterval } from 'date-fns';
 import { formatCurrency, cn, calculateBusinessDays, cleanFirestoreData } from '@/lib/utils';
@@ -62,6 +63,7 @@ import { toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -274,6 +276,9 @@ export default function DashboardPage() {
     return <AppLayout><div className="space-y-8 animate-pulse"><Skeleton className="h-32 w-full rounded-2xl" /><div className="grid grid-cols-1 md:grid-cols-3 gap-4"><Skeleton className="h-40 w-full rounded-2xl" /><Skeleton className="h-40 w-full rounded-2xl" /><Skeleton className="h-40 w-full rounded-2xl" /></div></div></AppLayout>;
   }
 
+  const currentMonthlyProduction = stats.proposals.pagoNoMes.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
+  const isGoalReached = currentMonthlyProduction >= (userSettings?.monthlyGoal || 150000);
+
   return (
     <AppLayout>
        <div className="space-y-8 animate-in fade-in duration-500 w-full max-w-full pb-10">
@@ -344,8 +349,17 @@ export default function DashboardPage() {
         </div>
 
         <div className="w-full">
+            {isGoalReached && (
+                <Alert className="bg-amber-500/10 border-amber-500/50 rounded-2xl mb-6 animate-in slide-in-from-top duration-700">
+                    <Trophy className="h-5 w-5 text-amber-600" />
+                    <AlertTitle className="text-amber-800 font-black uppercase text-xs tracking-widest">Meta de Produção Atingida! 🏆</AlertTitle>
+                    <AlertDescription className="text-amber-700 text-sm font-medium">
+                        Parabéns pela performance extraordinária! Você alcançou 100% da sua meta mensal.
+                    </AlertDescription>
+                </Alert>
+            )}
             <GoalCard 
-                currentProduction={stats.proposals.pagoNoMes.reduce((sum, p) => sum + (p.grossAmount || 0), 0)} 
+                currentProduction={currentMonthlyProduction} 
                 totalDigitized={stats.totalDigitado}
                 monthlyGoal={userSettings?.monthlyGoal || 150000}
                 onGoalChange={handleGoalChange}
@@ -353,6 +367,7 @@ export default function DashboardPage() {
                 onValueClick={() => setDialogData({ title: 'Contratos Pagos no Período', proposals: stats.proposals.pagoNoMes })}
                 topContributor={stats.topTotal}
                 sparklineData={stats.productionTrend}
+                isHot={isGoalReached}
             />
         </div>
 

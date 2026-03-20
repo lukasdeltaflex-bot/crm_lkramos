@@ -69,7 +69,7 @@ export function GoalCard({
         <svg width={width} height={height} className="opacity-50" preserveAspectRatio="none">
             <polyline
                 fill="none"
-                stroke="#16a34a"
+                stroke={isHot ? "#d4af37" : "#16a34a"}
                 strokeWidth="3"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -84,20 +84,25 @@ export function GoalCard({
   return (
     <Card className={cn(
         'relative overflow-hidden bg-green-50/50 dark:bg-green-900/10 border-2 border-green-200 dark:border-green-800 shadow-md rounded-2xl w-full transition-all duration-500', 
-        isHot && 'ring-2 ring-orange-500 ring-offset-2 scale-[1.01]',
+        isHot && 'ring-2 ring-amber-500 ring-offset-2 scale-[1.01] border-amber-500 bg-amber-50/30 dark:bg-amber-900/10 shadow-[0_0_25px_rgba(212,175,55,0.3)]',
         className
     )}>
       <CardContent className="p-4 sm:p-5">
         <div className="flex items-start justify-between mb-2">
           <div className="flex items-center gap-4">
             <div className={cn(
-                "p-2 rounded-xl bg-green-100 dark:bg-green-900/40",
-                isHot && "bg-orange-100 dark:bg-orange-900/40 animate-pulse"
+                "p-2 rounded-xl transition-all duration-700",
+                isHot ? "bg-amber-100 dark:bg-amber-900/40 animate-pulse scale-110" : "bg-green-100 dark:bg-green-900/40"
             )}>
-                {isHot ? <Zap className="h-4 w-4 text-orange-600" /> : <Trophy className="h-4 w-4 text-green-600" />}
+                <Trophy className={cn("h-4 w-4", isHot ? "text-amber-600" : "text-green-600")} />
             </div>
             <div>
-              <h3 className="text-xs font-black text-green-800 dark:text-green-400 uppercase tracking-widest">Meta de Produção</h3>
+              <h3 className={cn(
+                  "text-xs font-black uppercase tracking-widest transition-colors",
+                  isHot ? "text-amber-800 dark:text-amber-400" : "text-green-800 dark:text-green-400"
+              )}>
+                  {isHot ? 'Objetivo Conquistado' : 'Meta de Produção'}
+              </h3>
               <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tighter">Performance real acumulada</p>
             </div>
           </div>
@@ -124,7 +129,12 @@ export function GoalCard({
           ) : (
             <div className="flex items-center gap-3">
               <div className="hidden md:block">{renderSparkline()}</div>
-              <div className="text-[10px] font-black text-green-700 dark:text-green-400 bg-white/90 dark:bg-zinc-950/60 px-3 py-1 rounded-full border border-green-100 dark:border-green-900/50 shadow-sm animate-in fade-in">
+              <div className={cn(
+                  "text-[10px] font-black px-3 py-1 rounded-full border shadow-sm animate-in fade-in transition-colors",
+                  isHot 
+                    ? "text-amber-700 bg-amber-50/80 border-amber-200" 
+                    : "text-green-700 dark:text-green-400 bg-white/90 dark:bg-zinc-950/60 border-green-100 dark:border-green-900/50"
+              )}>
                 META: {isPrivacyMode ? '•••••' : formatCurrency(monthlyGoal)}
               </div>
               <Button variant="ghost" size="icon" className="h-7 w-7 opacity-40 hover:opacity-100 transition-opacity" onClick={() => setIsEditing(true)}>
@@ -136,17 +146,23 @@ export function GoalCard({
 
         <div className="flex items-end justify-between mb-2" onClick={onValueClick}>
           <div className="space-y-2 cursor-pointer group">
-            <div className="text-2xl sm:text-3xl font-light tracking-tighter text-green-600 dark:text-green-400 group-hover:translate-x-1 transition-transform">
+            <div className={cn(
+                "text-2xl sm:text-3xl font-light tracking-tighter group-hover:translate-x-1 transition-all duration-500",
+                isHot ? "text-amber-600 dark:text-amber-400" : "text-green-600 dark:text-green-400"
+            )}>
               {isPrivacyMode ? '•••••' : formatCurrency(currentProduction)}
             </div>
             <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-              <TrendingUp className="h-3.5 w-3.5 text-green-500" />
+              <TrendingUp className={cn("h-3.5 w-3.5", isHot ? "text-amber-500" : "text-green-500")} />
               Conversão: <span className="text-foreground">{conversionRate.toFixed(1)}%</span>
             </div>
           </div>
 
           <div className="text-right space-y-2">
-            <div className="text-xl sm:text-2xl font-light text-green-600 dark:text-green-400 tracking-tighter animate-in slide-in-from-right-2">
+            <div className={cn(
+                "text-xl sm:text-2xl font-light tracking-tighter animate-in slide-in-from-right-2",
+                isHot ? "text-amber-600 dark:text-amber-400" : "text-green-600 dark:text-green-400"
+            )}>
               {percentageOfGoal.toFixed(1)}%
             </div>
             <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">Atingido</p>
@@ -154,17 +170,30 @@ export function GoalCard({
         </div>
 
         <div className="relative pt-1.5">
-            <Progress value={percentageOfGoal} className="h-1.5 bg-green-100 dark:bg-green-900/30 transition-all duration-1000" />
+            <Progress 
+                value={percentageOfGoal} 
+                className={cn(
+                    "h-1.5 transition-all duration-1000",
+                    isHot ? "bg-amber-100 dark:bg-amber-900/30 [&>div]:bg-amber-500" : "bg-green-100 dark:bg-green-900/30"
+                )} 
+            />
         </div>
 
         {topContributor && (
-            <div className="mt-3 pt-3 border-t border-green-200/50 flex items-center justify-between">
+            <div className={cn(
+                "mt-3 pt-3 border-t flex items-center justify-between",
+                isHot ? "border-amber-200/50" : "border-green-200/50"
+            )}>
                 <div className="flex items-center gap-2">
-                    <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                    <div className={cn("h-1.5 w-1.5 rounded-full animate-pulse", isHot ? "bg-amber-500" : "bg-green-500")} />
                     <span className="text-[10px] font-bold text-muted-foreground uppercase">Líder:</span>
                     <span className="text-[10px] font-black text-primary uppercase">{topContributor}</span>
                 </div>
-                {isHot && (
+                {isHot ? (
+                    <div className="flex items-center gap-2 text-[9px] font-black text-amber-600 animate-in zoom-in">
+                        <Trophy className="h-2.5 w-2.5 fill-current" /> META BATIDA
+                    </div>
+                ) : (
                     <div className="flex items-center gap-2 text-[9px] font-black text-orange-600">
                         <Zap className="h-2.5 w-2.5 fill-current" /> PERFORMANCE ALTA
                     </div>
