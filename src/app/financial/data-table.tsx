@@ -266,8 +266,16 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     if (statusFilter !== 'Todos') {
         const target = statusFilter.toUpperCase();
         list = list.filter(p => {
-            const currentCommStatus = (p.commissionStatus || 'Pendente').toUpperCase();
-            return currentCommStatus === (target.endsWith('S') ? target.slice(0, -1) : target);
+            // 🎯 LÓGICA DE PADRÃO CORRIGIDA: Sincronizada com effectiveStatus da célula
+            const effectiveStatus = (p.commissionStatus === 'Paga' || p.commissionStatus === 'Parcial') 
+                ? p.commissionStatus 
+                : (p.dateApproved ? 'Pendente' : null);
+            
+            if (!effectiveStatus) return false;
+
+            const currentCommStatus = effectiveStatus.toUpperCase();
+            const targetNormal = target.endsWith('S') ? target.slice(0, -1) : target;
+            return currentCommStatus === targetNormal;
         });
     }
 
