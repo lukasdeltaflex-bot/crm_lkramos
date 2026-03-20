@@ -216,6 +216,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 
   const hasActiveFilters = statusFilter !== 'Todos' || bankFilters.length > 0 || promoterFilters.length > 0 || operatorFilters.length > 0 || !!globalFilter || !!appliedDateRange;
 
+  // 🛡️ CARREGAMENTO BLINDADO DE PREFERÊNCIAS
   React.useEffect(() => {
     if (!user?.uid) return;
     setIsClient(true);
@@ -229,6 +230,18 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     if (savedOrder.length === initialIds.length) setColumnOrder(savedOrder);
     setIsLoaded(true);
   }, [initialIds, user?.uid]);
+
+  // 🛡️ SALVAMENTO DE PREFERÊNCIAS
+  React.useEffect(() => {
+    if (isClient && isLoaded && user?.uid) {
+      const prefix = user.uid;
+      safeStorage.set(`${prefix}-fin-frozen`, frozenCount);
+      safeStorage.set(`${prefix}-fin-visibility`, columnVisibility);
+      safeStorage.set(`${prefix}-fin-order`, columnOrder);
+      safeStorage.set(`${prefix}-fin-sizing`, columnSizing);
+      safeStorage.set(`${prefix}-fin-pageSize`, pagination.pageSize);
+    }
+  }, [columnVisibility, columnOrder, columnSizing, frozenCount, isClient, pagination.pageSize, isLoaded, user?.uid]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor));
 
