@@ -45,7 +45,6 @@ export function NotificationBell() {
     return query(
         collection(firestore, 'customers'), 
         where('ownerId', '==', user.uid),
-        where('deleted', '==', false),
         limit(100)
     );
   }, [firestore, user]);
@@ -55,7 +54,6 @@ export function NotificationBell() {
     return query(
         collection(firestore, 'loanProposals'), 
         where('ownerId', '==', user.uid),
-        where('deleted', '==', false),
         limit(100)
     );
   }, [firestore, user]);
@@ -65,7 +63,6 @@ export function NotificationBell() {
     return query(
         collection(firestore, 'users', user.uid, 'followUps'), 
         where('status', '==', 'pending'),
-        where('deleted', '==', false),
         limit(50)
     );
   }, [firestore, user]);
@@ -86,7 +83,7 @@ export function NotificationBell() {
         collection(firestore, 'leads'),
         where('ownerId', '==', user.uid),
         orderBy('createdAt', 'desc'),
-        limit(1)
+        limit(5)
     );
   }, [firestore, user]);
 
@@ -151,7 +148,7 @@ export function NotificationBell() {
         }
     });
 
-    customers?.forEach(c => {
+    customers?.filter(c => c.deleted !== true).forEach(c => {
       const age = getAge(c.birthDate);
       const isInactive = c.status === 'inactive' || age >= 75;
       if (isInactive) return;
@@ -179,7 +176,7 @@ export function NotificationBell() {
       }
 
       const hasMatured = proposals?.some(p => {
-          if (p.customerId !== c.id) return false;
+          if (p.deleted === true || p.customerId !== c.id) return false;
           if (p.status !== 'Pago' && p.status !== 'Saldo Pago') return false;
           if (!p.datePaidToClient) return false;
           return differenceInMonths(now, new Date(p.datePaidToClient)) >= 12;
@@ -196,7 +193,7 @@ export function NotificationBell() {
       }
     });
 
-    followUps?.forEach(f => {
+    followUps?.filter(f => f.deleted !== true).forEach(f => {
         if (f.dueDate <= todayIso) {
             alerts.push({
                 id: `fup-${f.id}`,
@@ -208,7 +205,7 @@ export function NotificationBell() {
         }
     });
 
-    proposals?.forEach(p => {
+    proposals?.filter(p => p.deleted !== true).forEach(p => {
       if ((p.status === 'Pago' || p.status === 'Saldo Pago') && p.commissionStatus === 'Pendente' && p.datePaidToClient) {
         const days = differenceInDays(now, new Date(p.datePaidToClient));
         if (days > 7) {
@@ -223,7 +220,7 @@ export function NotificationBell() {
       }
 
       if (p.product === 'Portabilidade' && p.status === 'Aguardando Saldo' && p.dateDigitized) {
-          const bizDays = calculateBusinessDays(new Date(p.dateDigitized));
+          const bizDays = calculateBusinessDays(p.dateDigitized);
           if (bizDays >= 5) {
               alerts.push({
                   id: `debt-${p.id}`,

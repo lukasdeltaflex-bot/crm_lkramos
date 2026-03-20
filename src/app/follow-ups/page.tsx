@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -99,6 +98,23 @@ export default function FollowUpsPage() {
     setSelectedFollowUp(followUp);
     setActionNotes('');
     setIsActionDialogOpen(true);
+  };
+
+  const handleSummarizeAction = async () => {
+    if (!actionNotes || actionNotes.trim().length < 5) {
+        toast({ variant: 'destructive', title: 'Texto curto', description: 'Escreva um pouco para a IA resumir.' });
+        return;
+    }
+    setIsSummarizingAction(true);
+    try {
+        const summary = await summarizeNotes(actionNotes);
+        setActionNotes(summary);
+        toast({ title: 'Resultado resumido com IA!' });
+    } catch (e) {
+        toast({ variant: 'destructive', title: 'Falha na IA' });
+    } finally {
+        setIsSummarizingAction(false);
+    }
   };
 
   const handleUpdateStatus = async (status: FollowUp['status'], extraData: any = {}) => {
@@ -283,12 +299,34 @@ export default function FollowUpsPage() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="p-3 bg-secondary/30 rounded-md text-sm border">{selectedFollowUp?.description}</div>
-            <textarea className="w-full min-h-[100px] p-3 rounded-md border text-sm focus:ring-2 focus:ring-primary outline-none" placeholder="O que foi conversado..." value={actionNotes} onChange={(e) => setActionNotes(e.target.value)} disabled={isSaving} />
+            
+            <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Anotações da Conversa</label>
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-7 px-3 rounded-full text-[10px] font-bold border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all"
+                        onClick={handleSummarizeAction}
+                        disabled={isSummarizingAction || !actionNotes}
+                    >
+                        {isSummarizingAction ? <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> : <Sparkles className="h-3 w-3 mr-1.5" />}
+                        Resumir com IA
+                    </Button>
+                </div>
+                <textarea 
+                    className="w-full min-h-[120px] p-4 rounded-2xl border-2 bg-muted/5 text-sm focus:ring-2 focus:ring-primary outline-none font-medium" 
+                    placeholder="O que foi conversado..." 
+                    value={actionNotes} 
+                    onChange={(e) => setActionNotes(e.target.value)} 
+                    disabled={isSaving || isSummarizingAction} 
+                />
+            </div>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => setIsTrashConfirmOpen(true)} disabled={isSaving}><Trash2 className="mr-2 h-4 w-4" /> Lixeira</Button>
             <Button variant="outline" onClick={() => setIsRescheduleOpen(true)} disabled={isSaving}><RefreshCw className="mr-2 h-4 w-4" /> Reagendar</Button>
-            <Button onClick={() => handleUpdateStatus('completed')} disabled={isSaving}>{isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="mr-2 h-4 w-4" />} Concluído</Button>
+            <Button onClick={() => handleUpdateStatus('completed')} disabled={isSaving || isSummarizingAction}>{isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="mr-2 h-4 w-4" />} Concluído</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

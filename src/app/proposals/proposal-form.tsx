@@ -54,7 +54,8 @@ import {
     Building2,
     UserCircle2,
     Search,
-    ListChecks
+    ListChecks,
+    Sparkles
 } from 'lucide-react';
 import { format, parse, parseISO, isValid } from 'date-fns';
 import { cn, formatCurrency, cleanBankName, cleanFirestoreData, formatCurrencyInput } from '@/lib/utils';
@@ -73,6 +74,7 @@ import { BankIcon } from '@/components/bank-icon';
 import { useTheme } from '@/components/theme-provider';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { summarizeNotes } from '@/ai/flows/summarize-notes-flow';
 
 const attachmentSchema = z.object({
   name: z.string(),
@@ -199,6 +201,7 @@ export function ProposalForm({
   const [isClient, setIsClient] = useState(false);
   const [newHistoryEntry, setNewHistoryEntry] = useState('');
   const [stagedHistory, setStagedHistory] = useState<ProposalHistoryEntry[]>([]);
+  const [isSummarizingObs, setIsSummarizingObs] = useState(false);
 
   const productTypes = userSettings?.productTypes || configData.productTypes;
   const proposalStatuses = userSettings?.proposalStatuses || configData.proposalStatuses;
@@ -291,6 +294,7 @@ export function ProposalForm({
   const netAmount = watch('netAmount');
   const originalContractNumber = watch('originalContractNumber');
   const showLogosSettings = userSettings?.showBankLogos ?? true;
+  const watchObservations = watch('observations');
 
   const selectedCustomer = useMemo(() => {
     return customers.find(c => c.id === selectedCustomerId);
@@ -329,6 +333,23 @@ export function ProposalForm({
         setValue('commissionValue', calculated);
     }
   }, [commissionBase, commissionPercentage, grossAmount, netAmount, setValue, isReadOnly, watch]);
+
+  const handleSummarizeObs = async () => {
+    if (!watchObservations || watchObservations.trim().length < 10) {
+        toast({ variant: 'destructive', title: 'Texto curto', description: 'Escreva um parecer para a IA resumir.' });
+        return;
+    }
+    setIsSummarizingObs(true);
+    try {
+        const summary = await summarizeNotes(watchObservations);
+        setValue('observations', summary, { shouldValidate: true });
+        toast({ title: 'Observações resumidas com IA!' });
+    } catch (e) {
+        toast({ variant: 'destructive', title: 'Falha na IA' });
+    } finally {
+        setIsSummarizingObs(false);
+    }
+  };
 
   const handleAddHistory = (customMessage: string) => {
     if (!customMessage || !user) return;
@@ -985,12 +1006,27 @@ export function ProposalForm({
                         </div>
                     </div>
                     <div className="space-y-4">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Observações Técnicas Gerais</Label>
+                        <div className="flex items-center justify-between">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Observações Técnicas Gerais</Label>
+                            {!isReadOnly && (
+                                <Button 
+                                    type="button" 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="h-7 rounded-full text-[10px] font-bold px-3 border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all"
+                                    onClick={handleSummarizeObs}
+                                    disabled={isSummarizingObs || !watchObservations}
+                                >
+                                    {isSummarizingObs ? <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> : <Sparkles className="h-3 w-3 mr-1.5" />}
+                                    Resumir com IA
+                                </Button>
+                            )}
+                        </div>
                         <FormField
                             control={form.control}
                             name="observations"
                             render={({ field }) => (
-                                <FormControl><Textarea placeholder="Detalhes, tokens de acesso ou anotações internas importantes..." {...field} className="min-h-[250px] rounded-3xl border-2 p-6" readOnly={isReadOnly} /></FormControl>
+                                <FormControl><Textarea placeholder="Detalhes, tokens de acesso ou anotações internas importantes..." {...field} className="min-h-[250px] rounded-3xl border-2 p-6" readOnly={isReadOnly || isSummarizingObs} /></FormControl>
                             )}
                         />
                     </div>
@@ -1001,7 +1037,7 @@ export function ProposalForm({
         
         <div className="sticky bottom-0 px-8 py-6 border-t bg-background z-20 flex justify-end">
             {!isReadOnly && (
-                <Button type="submit" disabled={isSaving} className="rounded-full px-12 font-black uppercase text-xs tracking-[0.2em] bg-[#00AEEF] hover:bg-[#0096D1] shadow-2xl shadow-[#00AEEF]/30 transition-all border-none h-14">
+                <Button type="submit" disabled={isSaving || isSummarizingObs} className="rounded-full px-12 font-black uppercase text-xs tracking-[0.2em] bg-[#00AEEF] hover:bg-[#0096D1] shadow-2xl shadow-[#00AEEF]/30 transition-all border-none h-14">
                     {isSaving ? <><Loader2 className="mr-3 h-5 w-5 animate-spin" /> Gravando...</> : <><Save className="mr-3 h-5 w-5" /> Salvar Proposta</>}
                 </Button>
             )}
