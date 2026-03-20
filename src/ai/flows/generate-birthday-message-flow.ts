@@ -25,6 +25,7 @@ export async function generateBirthdayMessage(input: BirthdayMessageInput): Prom
 
 const prompt = ai.definePrompt({
   name: 'generateBirthdayMessagePrompt',
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: BirthdayMessageInputSchema },
   output: { schema: BirthdayMessageOutputSchema },
   prompt: `Você é um assistente de relacionamento de um correspondente bancário de elite chamado LK RAMOS.

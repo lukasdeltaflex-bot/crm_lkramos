@@ -134,9 +134,10 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
   }
 
   const alertData = useMemo(() => {
-    if (!isClient || !proposals || !customers) return { birthdayAlerts: [], followUpReminders: [], commissionReminders: [], debtBalanceReminders: [], partialCommissionReminders: [], manualFollowUps: [], radarAlerts: [], expenseAlerts: [] };
+    if (!isClient || !proposals || !customers) return { birthdayAlerts: [], birthdayTodayAlerts: [], followUpReminders: [], commissionReminders: [], debtBalanceReminders: [], partialCommissionReminders: [], manualFollowUps: [], radarAlerts: [], expenseAlerts: [] };
 
     const now = new Date();
+    const todayStr = format(now, 'MM-dd');
     const todayIso = format(now, 'yyyy-MM-dd');
     const customerMap = new Map(customers.map(c => [c.id, c]));
 
@@ -147,6 +148,15 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
             customerId: c.id,
             customerName: c.name, 
             age: 75,
+            link: `/customers/${c.id}`
+        }));
+
+    const birthdayTodayAlerts = customers
+        .filter(c => c.deleted !== true && c.status !== 'inactive' && c.birthDate?.substring(5) === todayStr)
+        .map(c => ({
+            id: `bday-today-${c.id}`,
+            customerId: c.id,
+            customerName: c.name,
             link: `/customers/${c.id}`
         }));
 
@@ -265,10 +275,11 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
             };
         });
 
-    return { birthdayAlerts, followUpReminders, commissionReminders, debtBalanceReminders, partialCommissionReminders, manualFollowUps, radarAlerts, expenseAlerts };
+    return { birthdayAlerts, birthdayTodayAlerts, followUpReminders, commissionReminders, debtBalanceReminders, partialCommissionReminders, manualFollowUps, radarAlerts, expenseAlerts };
   }, [isClient, proposals, customers, followUps, expenses]);
   
   const visibleBirthdayAlerts = alertData.birthdayAlerts.filter(a => !dismissedItems.includes(a.id));
+  const visibleBirthdayTodayAlerts = alertData.birthdayTodayAlerts.filter(a => !dismissedItems.includes(a.id));
   const visibleFollowUpReminders = alertData.followUpReminders.filter(r => !dismissedItems.includes(r.id));
   const visibleCommissionReminders = alertData.commissionReminders.filter(r => !dismissedItems.includes(r.id));
   const visibleDebtBalanceReminders = alertData.debtBalanceReminders.filter(r => !dismissedItems.includes(r.id));
@@ -279,6 +290,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
 
   const hasVisibleAlerts = 
     visibleBirthdayAlerts.length > 0 ||
+    visibleBirthdayTodayAlerts.length > 0 ||
     visibleFollowUpReminders.length > 0 ||
     visibleCommissionReminders.length > 0 ||
     visibleDebtBalanceReminders.length > 0 ||
@@ -410,6 +422,37 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
                                         description={`Vencimento: ${e.date} | Valor: ${formatCurrency(e.amount)}. ${e.isLate ? 'ATRASADA!' : ''}`}
                                         link={e.link}
                                         onDismiss={handleDismiss}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {visibleBirthdayTodayAlerts.length > 0 && (
+                        <div className="space-y-3">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-pink-600 flex items-center gap-2 px-1">
+                                <Cake className="h-3.5 w-3.5" /> Aniversariantes de Hoje
+                            </h3>
+                            <div className="grid gap-2.5">
+                                {visibleBirthdayTodayAlerts.map(alert => (
+                                    <SummaryAlertItem 
+                                        key={alert.id}
+                                        id={alert.id}
+                                        icon={<Cake className="h-4.5 w-4.5 text-pink-500" />}
+                                        title={alert.customerName}
+                                        description="Hoje é o aniversário deste cliente! Envie uma mensagem personalizada."
+                                        link={alert.link}
+                                        onDismiss={handleDismiss}
+                                        action={
+                                            <Button 
+                                                size="sm" 
+                                                variant="outline" 
+                                                className="h-8 text-[10px] font-black uppercase border-pink-200 text-pink-600 hover:bg-pink-50"
+                                                onClick={() => handleGenerateBdayMessage(alert.customerId)}
+                                            >
+                                                <Bot className="mr-2 h-3.5 w-3.5" /> Gerar Mensagem IA
+                                            </Button>
+                                        }
                                     />
                                 ))}
                             </div>
