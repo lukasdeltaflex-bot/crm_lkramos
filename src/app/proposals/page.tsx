@@ -71,7 +71,7 @@ function ProposalsPageContent() {
 
   const [selectedProposal, setSelectedProposal] = useState<ProposalWithCustomer | undefined>(undefined);
   const [sheetMode, setSheetMode] = useState<'new' | 'edit' | 'view'>('new');
-  const [rowSelection, setRowSelection] = setRowSelection({});
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [defaultValues, setDefaultValues] = useState<any | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
   const [formKey, setFormKey] = React.useState('new');
