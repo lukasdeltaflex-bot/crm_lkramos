@@ -270,13 +270,11 @@ export function NotificationBell() {
     }
   };
 
-  const handleBdayClick = async (e: React.MouseEvent | React.PointerEvent | React.SyntheticEvent, customerId: string) => {
+  const handleBdayClick = async (e: React.MouseEvent | React.SyntheticEvent, customerId: string) => {
+    // 🛡️ ISOLAMENTO TOTAL: Impede que o clique dispare navegação no Link pai ou feche o DropdownMenu
     if (e) {
         e.preventDefault();
         e.stopPropagation();
-        if ('nativeEvent' in e && e.nativeEvent) {
-            e.nativeEvent.stopImmediatePropagation();
-        }
     }
     
     const customer = customers?.find(c => c.id === customerId);
@@ -288,10 +286,12 @@ export function NotificationBell() {
     setIsBdayModalOpen(true);
 
     try {
-        const { message } = await generateBirthdayMessage({ customerName: customer.name });
-        setGeneratedBdayMessage(message);
+        const result = await generateBirthdayMessage({ customerName: customer.name });
+        setGeneratedBdayMessage(result.message);
     } catch (error) {
-        setIsBdayModalOpen(false);
+        console.error("Erro na geração de parabéns:", error);
+        toast({ variant: 'destructive', title: 'Erro na IA', description: 'Não foi possível gerar a mensagem agora.' });
+        // Mantemos o modal aberto para não dar a impressão de "apenas fechou"
     } finally {
         setIsGeneratingBday(false);
     }
@@ -389,18 +389,7 @@ export function NotificationBell() {
                                     variant="ghost" 
                                     size="icon" 
                                     className="absolute right-10 top-1/2 -translate-y-1/2 h-8 w-8 text-pink-500 hover:bg-pink-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20"
-                                    onPointerDown={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        if (e.nativeEvent) e.nativeEvent.stopImmediatePropagation();
-                                        handleBdayClick(e, n.customerId!);
-                                    }}
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        if (e.nativeEvent) e.nativeEvent.stopImmediatePropagation();
-                                        handleBdayClick(e, n.customerId!);
-                                    }}
+                                    onClick={(e) => handleBdayClick(e, n.customerId!)}
                                     title="Gerar Mensagem WhatsApp"
                                 >
                                     <Bot className="h-4 w-4" />
@@ -440,7 +429,7 @@ export function NotificationBell() {
                     </div>
                 ) : (
                     <textarea 
-                        className="w-full min-h-[150px] p-4 rounded-3xl border-2 bg-muted/30 text-sm focus:ring-2 focus:ring-primary outline-none"
+                        className="w-full min-h-[150px] p-4 rounded-3xl border-2 bg-muted/30 text-sm focus:ring-2 focus:ring-primary outline-none font-medium leading-relaxed"
                         value={generatedBdayMessage}
                         onChange={(e) => setGeneratedBdayMessage(e.target.value)}
                     />

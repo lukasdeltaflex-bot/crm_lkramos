@@ -333,8 +333,10 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
   };
 
   const handleGenerateBdayMessage = async (e: React.MouseEvent, customerId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
     
     const customer = customers.find(c => c.id === customerId);
     if (!customer) return;
@@ -345,10 +347,12 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
     setIsBdayModalOpen(true);
 
     try {
-        const { message } = await generateBirthdayMessage({ customerName: customer.name });
-        setGeneratedBdayMessage(message);
+        const result = await generateBirthdayMessage({ customerName: customer.name });
+        setGeneratedBdayMessage(result.message);
     } catch (error) {
-        setIsBdayModalOpen(false);
+        console.error("Erro na IA de parabéns:", error);
+        toast({ variant: 'destructive', title: 'Erro na IA', description: 'Não foi possível gerar a mensagem.' });
+        // Mantemos aberto para evitar o comportamento de "apenas fechar"
     } finally {
         setIsGeneratingBday(false);
     }
@@ -609,7 +613,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
                     </div>
                 ) : (
                     <textarea 
-                        className="w-full min-h-[150px] p-4 rounded-3xl border-2 bg-muted/30 text-sm focus:ring-2 focus:ring-primary outline-none"
+                        className="w-full min-h-[150px] p-4 rounded-3xl border-2 bg-muted/30 text-sm focus:ring-2 focus:ring-primary outline-none font-medium leading-relaxed"
                         value={generatedBdayMessage}
                         onChange={(e) => setGeneratedBdayMessage(e.target.value)}
                     />
