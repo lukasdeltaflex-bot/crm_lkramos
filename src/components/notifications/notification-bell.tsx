@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -45,7 +46,7 @@ export function NotificationBell() {
     return query(
         collection(firestore, 'customers'), 
         where('ownerId', '==', user.uid),
-        limit(100)
+        limit(1000) // ⚡ PERFORMANCE: Aumentado para 1000 para evitar omissão de aniversariantes
     );
   }, [firestore, user]);
 
@@ -150,9 +151,11 @@ export function NotificationBell() {
 
     customers?.filter(c => c.deleted !== true).forEach(c => {
       const age = getAge(c.birthDate);
-      const isInactive = c.status === 'inactive' || age >= 75;
-      if (isInactive) return;
       
+      // 🛡️ FILTRO DE ATIVOS: Apenas clientes com status 'active' recebem notificações
+      if (c.status === 'inactive') return;
+      
+      // 1. Alerta de Idade Crítica (74 anos prestes a fazer 75)
       if (age === 74) {
         alerts.push({
           id: `age-${c.id}`,
@@ -164,9 +167,10 @@ export function NotificationBell() {
         });
       }
 
+      // 2. Alerta de Aniversário (Independente da idade, desde que ativo)
       if (c.birthDate && c.birthDate.substring(5) === todayStr) {
         alerts.push({
-          id: `bday-${c.id}-${todayStr}`,
+          id: `bday-${c.id}-${todayStr}`, // ID inclui a data para resetar anualmente
           title: `Aniversário: ${c.name}`,
           type: 'birthday',
           date: 'Hoje',
@@ -267,9 +271,10 @@ export function NotificationBell() {
     }
   };
 
-  const handleBdayClick = async (e: React.MouseEvent, customerId: string) => {
+  const handleBdayClick = async (e: React.MouseEvent | React.PointerEvent, customerId: string) => {
     e.preventDefault();
     e.stopPropagation();
+    if (e.nativeEvent) e.nativeEvent.stopImmediatePropagation();
     
     const customer = customers?.find(c => c.id === customerId);
     if (!customer) return;
@@ -303,7 +308,7 @@ export function NotificationBell() {
     <>
     <DropdownMenu onOpenChange={(open) => open && setHasNewLeadPulse(false)}>
       <DropdownMenuTrigger asChild>
-        <Button 
+        < Button 
             variant="ghost" 
             size="icon" 
             className={cn(
@@ -377,10 +382,22 @@ export function NotificationBell() {
                             </Link>
                             {n.type === 'birthday' && n.customerId && (
                                 <Button 
+                                    type="button"
                                     variant="ghost" 
                                     size="icon" 
-                                    className="absolute right-10 top-1/2 -translate-y-1/2 h-8 w-8 text-pink-500 hover:bg-pink-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                    onClick={(e) => handleBdayClick(e, n.customerId!)}
+                                    className="absolute right-10 top-1/2 -translate-y-1/2 h-8 w-8 text-pink-500 hover:bg-pink-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                    onPointerDown={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        if (e.nativeEvent) e.nativeEvent.stopImmediatePropagation();
+                                        handleBdayClick(e, n.customerId!);
+                                    }}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        if (e.nativeEvent) e.nativeEvent.stopImmediatePropagation();
+                                        handleBdayClick(e, n.customerId!);
+                                    }}
                                     title="Gerar Mensagem WhatsApp"
                                 >
                                     <Bot className="h-4 w-4" />
