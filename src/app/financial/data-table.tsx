@@ -146,16 +146,11 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(initialIds);
 
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
-    'col_promoter': false,
-    'col_operator': true,
-    'col_payment_date': true,
-    'col_bank': true,
-    'col_product': true
+    'col_phone2': true,
+    'col_city': true,
+    'col_state': true,
+    'col_obs': false,
   });
-  
-  const [startDateInput, setStartDateInput] = React.useState('');
-  const [endDateInput, setEndDateInput] = React.useState('');
-  const [appliedDateRange, setAppliedDateRange] = React.useState<DateRange | undefined>(undefined);
 
   const handlePaginationChange = (updater: any) => {
     setPagination((old) => {
@@ -215,6 +210,10 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   };
 
   const hasActiveFilters = statusFilter !== 'Todos' || bankFilters.length > 0 || promoterFilters.length > 0 || operatorFilters.length > 0 || !!globalFilter || !!appliedDateRange;
+
+  const [startDateInput, setStartDateInput] = React.useState('');
+  const [endDateInput, setEndDateInput] = React.useState('');
+  const [appliedDateRange, setAppliedDateRange] = React.useState<DateRange | undefined>(undefined);
 
   // 🛡️ CARREGAMENTO BLINDADO DE PREFERÊNCIAS
   React.useEffect(() => {
@@ -481,7 +480,13 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                                 table.getRowModel().rows.map(row => {
                                     const p = row.original;
                                     const isCritical = isProposalCritical(p);
-                                    const effectiveStatus = (p.commissionStatus === 'Paga' || p.commissionStatus === 'Parcial' || p.commissionStatus === 'Pendente') ? p.commissionStatus : (p.dateApproved ? 'Pendente' : null);
+                                    
+                                    // 🎯 LÓGICA DE PADRÃO CORRIGIDA:
+                                    // O status visual 'Pendente' (cor da linha) agora depende exclusivamente da existência de data de averbação.
+                                    const effectiveStatus = (p.commissionStatus === 'Paga' || p.commissionStatus === 'Parcial') 
+                                        ? p.commissionStatus 
+                                        : (p.dateApproved ? 'Pendente' : null);
+                                        
                                     const colorValue = effectiveStatus ? (statusColors[effectiveStatus.toUpperCase()] || statusColors[effectiveStatus]) : undefined;
                                     
                                     return (

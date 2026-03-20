@@ -29,10 +29,10 @@ export function CommissionStatusCell({ proposal, onStatusUpdate, onEdit }: Commi
     const isReprovado = status === 'Reprovado';
     const canInteract = !isReprovado;
 
-    // 🎯 LÓGICA DE PADRÃO RECONSTITUÍDA (CONFORME COMBINADO): 
-    // Prioriza o status salvo no banco (Paga, Parcial ou Pendente).
-    // Se o campo estiver vazio, usa a data de averbação como gatilho para mostrar "Pendente".
-    const effectiveStatus = (commissionStatus === 'Paga' || commissionStatus === 'Parcial' || commissionStatus === 'Pendente')
+    // 🎯 LÓGICA DE PADRÃO CORRIGIDA: 
+    // Prioriza status 'Paga' ou 'Parcial'. 
+    // O status 'Pendente' agora depende exclusivamente da existência de data de averbação (dateApproved).
+    const effectiveStatus = (commissionStatus === 'Paga' || commissionStatus === 'Parcial')
         ? commissionStatus
         : (dateApproved ? 'Pendente' : null);
     
