@@ -71,10 +71,10 @@ function ProposalsPageContent() {
 
   const [selectedProposal, setSelectedProposal] = useState<ProposalWithCustomer | undefined>(undefined);
   const [sheetMode, setSheetMode] = useState<'new' | 'edit' | 'view'>('new');
-  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
+  const [rowSelection, setRowSelection] = setRowSelection({});
   const [defaultValues, setDefaultValues] = useState<any | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
-  const [formKey, setFormKey] = setFormKey('new');
+  const [formKey, setFormKey] = React.useState('new');
   const tableRef = React.useRef<ProposalsDataTableHandle>(null);
   const [hasOpenedFromParam, setHasOpenedFromParam] = useState(false);
   
