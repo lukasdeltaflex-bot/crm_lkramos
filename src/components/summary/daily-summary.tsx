@@ -332,7 +332,10 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
     }
   };
 
-  const handleGenerateBdayMessage = async (customerId: string) => {
+  const handleGenerateBdayMessage = async (e: React.MouseEvent, customerId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     const customer = customers.find(c => c.id === customerId);
     if (!customer) return;
 
@@ -448,7 +451,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
                                                 size="sm" 
                                                 variant="outline" 
                                                 className="h-8 text-[10px] font-black uppercase border-pink-200 text-pink-600 hover:bg-pink-50"
-                                                onClick={() => handleGenerateBdayMessage(alert.customerId)}
+                                                onClick={(e) => handleGenerateBdayMessage(e, alert.customerId)}
                                             >
                                                 <Bot className="mr-2 h-3.5 w-3.5" /> Gerar Mensagem IA
                                             </Button>
@@ -574,7 +577,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
                                                 size="sm" 
                                                 variant="outline" 
                                                 className="h-8 text-[10px] font-black uppercase border-pink-200 text-pink-600 hover:bg-pink-50"
-                                                onClick={() => handleGenerateBdayMessage(alert.customerId)}
+                                                onClick={(e) => handleGenerateBdayMessage(e, alert.customerId)}
                                             >
                                                 <Bot className="mr-2 h-3.5 w-3.5" /> Gerar Mensagem IA
                                             </Button>

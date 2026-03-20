@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -271,10 +270,14 @@ export function NotificationBell() {
     }
   };
 
-  const handleBdayClick = async (e: React.MouseEvent | React.PointerEvent, customerId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.nativeEvent) e.nativeEvent.stopImmediatePropagation();
+  const handleBdayClick = async (e: React.MouseEvent | React.PointerEvent | React.SyntheticEvent, customerId: string) => {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if ('nativeEvent' in e && e.nativeEvent) {
+            e.nativeEvent.stopImmediatePropagation();
+        }
+    }
     
     const customer = customers?.find(c => c.id === customerId);
     if (!customer) return;
