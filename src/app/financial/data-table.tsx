@@ -127,19 +127,18 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
 }, ref) => {
   const { user } = useUser();
   const { statusColors } = useTheme();
+  
+  // State Declarations
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'col_date', desc: true }]);
   const [statusFilter, setStatusFilter] = React.useState('Todos');
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [frozenCount, setFrozenCount] = React.useState(2);
-  
   const [bankFilters, setBankFilters] = React.useState<string[]>([]);
   const [promoterFilters, setPromoterFilters] = React.useState<string[]>([]);
   const [operatorFilters, setOperatorFilters] = React.useState<string[]>([]);
-
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [isClient, setIsClient] = React.useState(false);
   const [isLoaded, setIsLoaded] = React.useState(false);
-
   const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   
   const initialIds = React.useMemo(() => columns.map(c => c.id!).filter(Boolean), [columns]);
@@ -152,6 +151,11 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
     'col_obs': false,
   });
 
+  const [startDateInput, setStartDateInput] = React.useState('');
+  const [endDateInput, setEndDateInput] = React.useState('');
+  const [appliedDateRange, setAppliedDateRange] = React.useState<DateRange | undefined>(undefined);
+
+  // Derived Values
   const handlePaginationChange = (updater: any) => {
     setPagination((old) => {
       const next = typeof updater === 'function' ? updater(old) : updater;
@@ -210,10 +214,6 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   };
 
   const hasActiveFilters = statusFilter !== 'Todos' || bankFilters.length > 0 || promoterFilters.length > 0 || operatorFilters.length > 0 || !!globalFilter || !!appliedDateRange;
-
-  const [startDateInput, setStartDateInput] = React.useState('');
-  const [endDateInput, setEndDateInput] = React.useState('');
-  const [appliedDateRange, setAppliedDateRange] = React.useState<DateRange | undefined>(undefined);
 
   // 🛡️ CARREGAMENTO BLINDADO DE PREFERÊNCIAS
   React.useEffect(() => {
