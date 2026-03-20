@@ -69,7 +69,7 @@ export function GoalCard({
         <svg width={width} height={height} className="opacity-50" preserveAspectRatio="none">
             <polyline
                 fill="none"
-                stroke={isHot ? "#d4af37" : "#16a34a"}
+                stroke={isHot ? "#10b981" : "#16a34a"}
                 strokeWidth="3"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -84,7 +84,7 @@ export function GoalCard({
   return (
     <Card className={cn(
         'relative overflow-hidden bg-green-50/50 dark:bg-green-900/10 border-2 border-green-200 dark:border-green-800 shadow-md rounded-2xl w-full transition-all duration-500', 
-        isHot && 'ring-2 ring-amber-500 ring-offset-2 scale-[1.01] border-amber-500 bg-amber-50/30 dark:bg-amber-900/10 shadow-[0_0_25px_rgba(212,175,55,0.3)]',
+        isHot && 'ring-2 ring-emerald-500 ring-offset-2 scale-[1.01] border-emerald-500 bg-emerald-50/30 dark:bg-emerald-900/10 shadow-[0_0_25px_rgba(16,185,129,0.3)]',
         className
     )}>
       <CardContent className="p-4 sm:p-5">
@@ -92,14 +92,14 @@ export function GoalCard({
           <div className="flex items-center gap-4">
             <div className={cn(
                 "p-2 rounded-xl transition-all duration-700",
-                isHot ? "bg-amber-100 dark:bg-amber-900/40 animate-pulse scale-110" : "bg-green-100 dark:bg-green-900/40"
+                isHot ? "bg-emerald-100 dark:bg-emerald-900/40 animate-pulse scale-110" : "bg-green-100 dark:bg-green-900/40"
             )}>
-                <Trophy className={cn("h-4 w-4", isHot ? "text-amber-600" : "text-green-600")} />
+                <Trophy className={cn("h-4 w-4", isHot ? "text-emerald-600" : "text-green-600")} />
             </div>
             <div>
               <h3 className={cn(
                   "text-xs font-black uppercase tracking-widest transition-colors",
-                  isHot ? "text-amber-800 dark:text-amber-400" : "text-green-800 dark:text-green-400"
+                  isHot ? "text-emerald-800 dark:text-emerald-400" : "text-green-800 dark:text-green-400"
               )}>
                   {isHot ? 'Objetivo Conquistado' : 'Meta de Produção'}
               </h3>
@@ -132,7 +132,7 @@ export function GoalCard({
               <div className={cn(
                   "text-[10px] font-black px-3 py-1 rounded-full border shadow-sm animate-in fade-in transition-colors",
                   isHot 
-                    ? "text-amber-700 bg-amber-50/80 border-amber-200" 
+                    ? "text-emerald-700 bg-emerald-50/80 border-emerald-200" 
                     : "text-green-700 dark:text-green-400 bg-white/90 dark:bg-zinc-950/60 border-green-100 dark:border-green-900/50"
               )}>
                 META: {isPrivacyMode ? '•••••' : formatCurrency(monthlyGoal)}
@@ -148,12 +148,12 @@ export function GoalCard({
           <div className="space-y-2 cursor-pointer group">
             <div className={cn(
                 "text-2xl sm:text-3xl font-light tracking-tighter group-hover:translate-x-1 transition-all duration-500",
-                isHot ? "text-amber-600 dark:text-amber-400" : "text-green-600 dark:text-green-400"
+                isHot ? "text-emerald-600 dark:text-emerald-400" : "text-green-600 dark:text-green-400"
             )}>
               {isPrivacyMode ? '•••••' : formatCurrency(currentProduction)}
             </div>
             <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-              <TrendingUp className={cn("h-3.5 w-3.5", isHot ? "text-amber-500" : "text-green-500")} />
+              <TrendingUp className={cn("h-3.5 w-3.5", isHot ? "text-emerald-500" : "text-green-500")} />
               Conversão: <span className="text-foreground">{conversionRate.toFixed(1)}%</span>
             </div>
           </div>
@@ -161,7 +161,7 @@ export function GoalCard({
           <div className="text-right space-y-2">
             <div className={cn(
                 "text-xl sm:text-2xl font-light tracking-tighter animate-in slide-in-from-right-2",
-                isHot ? "text-amber-600 dark:text-amber-400" : "text-green-600 dark:text-green-400"
+                isHot ? "text-emerald-600 dark:text-emerald-400" : "text-green-600 dark:text-green-400"
             )}>
               {percentageOfGoal.toFixed(1)}%
             </div>
@@ -174,7 +174,7 @@ export function GoalCard({
                 value={percentageOfGoal} 
                 className={cn(
                     "h-1.5 transition-all duration-1000",
-                    isHot ? "bg-amber-100 dark:bg-amber-900/30 [&>div]:bg-amber-500" : "bg-green-100 dark:bg-green-900/30"
+                    isHot ? "bg-emerald-100 dark:bg-emerald-900/30 [&>div]:bg-emerald-500" : "bg-green-100 dark:bg-green-900/30"
                 )} 
             />
         </div>
@@ -182,15 +182,15 @@ export function GoalCard({
         {topContributor && (
             <div className={cn(
                 "mt-3 pt-3 border-t flex items-center justify-between",
-                isHot ? "border-amber-200/50" : "border-green-200/50"
+                isHot ? "border-emerald-200/50" : "border-green-200/50"
             )}>
                 <div className="flex items-center gap-2">
-                    <div className={cn("h-1.5 w-1.5 rounded-full animate-pulse", isHot ? "bg-amber-500" : "bg-green-500")} />
+                    <div className={cn("h-1.5 w-1.5 rounded-full animate-pulse", isHot ? "bg-emerald-500" : "bg-green-500")} />
                     <span className="text-[10px] font-bold text-muted-foreground uppercase">Líder:</span>
                     <span className="text-[10px] font-black text-primary uppercase">{topContributor}</span>
                 </div>
                 {isHot ? (
-                    <div className="flex items-center gap-2 text-[9px] font-black text-amber-600 animate-in zoom-in">
+                    <div className="flex items-center gap-2 text-[9px] font-black text-emerald-600 animate-in zoom-in">
                         <Trophy className="h-2.5 w-2.5 fill-current" /> META BATIDA
                     </div>
                 ) : (

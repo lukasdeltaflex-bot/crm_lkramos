@@ -350,10 +350,10 @@ export default function DashboardPage() {
 
         <div className="w-full">
             {isGoalReached && (
-                <Alert className="bg-amber-500/10 border-amber-500/50 rounded-2xl mb-6 animate-in slide-in-from-top duration-700">
-                    <Trophy className="h-5 w-5 text-amber-600" />
-                    <AlertTitle className="text-amber-800 font-black uppercase text-xs tracking-widest">Meta de Produção Atingida! 🏆</AlertTitle>
-                    <AlertDescription className="text-amber-700 text-sm font-medium">
+                <Alert className="bg-emerald-500/10 border-emerald-500/50 rounded-2xl mb-6 animate-in slide-in-from-top duration-700">
+                    <Trophy className="h-5 w-5 text-emerald-600" />
+                    <AlertTitle className="text-emerald-800 dark:text-emerald-400 font-black uppercase text-xs tracking-widest">Meta de Produção Atingida! 🏆</AlertTitle>
+                    <AlertDescription className="text-emerald-700 dark:text-emerald-300 text-sm font-medium">
                         Parabéns pela performance extraordinária! Você alcançou 100% da sua meta mensal.
                     </AlertDescription>
                 </Alert>
