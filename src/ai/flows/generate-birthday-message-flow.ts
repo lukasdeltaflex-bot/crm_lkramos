@@ -29,7 +29,7 @@ export async function generateBirthdayMessage(input: BirthdayMessageInput): Prom
     console.log(`🤖 IA LK RAMOS: Iniciando geração de parabéns para "${input.customerName}"...`);
 
     const response = await ai.generate({
-      model: 'googleai/gemini-1.5-flash',
+      model: 'googleai/gemini-2.5-flash-lite',
       prompt: `Você é um assistente de relacionamento do correspondente bancário LK RAMOS.
       Sua tarefa é criar uma mensagem de parabéns curta, calorosa e profissional para o cliente ${input.customerName}.
       
@@ -63,7 +63,6 @@ export async function generateBirthdayMessage(input: BirthdayMessageInput): Prom
     throw new Error('A IA não retornou um conteúdo válido ou a resposta veio vazia.');
   } catch (error: any) {
     // 🛡️ REVELANDO A CAUSA REAL NO LOG DO SERVIDOR
-    // Isso permite identificar se o problema é API Key, Quota (429) ou Segurança
     console.error("❌ ERRO REAL DA GEMINI API:", error.message || error);
     
     // Repassa o erro detalhado para o frontend sem mascarar com mensagem genérica
