@@ -74,11 +74,12 @@ function ProposalsPageContent() {
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [defaultValues, setDefaultValues] = useState<any | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
-  const [formKey, setFormKey] = useState('new');
+  const [formKey, setFormKey] = setFormKey('new');
   const tableRef = React.useRef<ProposalsDataTableHandle>(null);
   const [hasOpenedFromParam, setHasOpenedFromParam] = useState(false);
   
-  const [loadLimit, setLoadLimit] = useState(150);
+  // ⚡ PERFORMANCE: Limite de carregamento inicial expandido para garantir visibilidade histórica
+  const [loadLimit, setLoadLimit] = useState(1000);
 
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -95,7 +96,7 @@ function ProposalsPageContent() {
     return query(
         collection(firestore, 'customers'), 
         where('ownerId', '==', user.uid),
-        limit(1000)
+        limit(5000) // Aumentado para garantir vínculo de nomes em bases grandes
     );
   }, [firestore, user]);
 
@@ -450,7 +451,7 @@ function ProposalsPageContent() {
         />
         {proposalsWithCustomerData.length >= loadLimit && !proposalsLoading && (
             <div className="flex justify-center pb-10">
-                <Button variant="outline" onClick={() => setLoadLimit(prev => prev + 150)} className="rounded-full h-12 px-10 font-bold uppercase text-[10px] border-2">
+                <Button variant="outline" onClick={() => setLoadLimit(prev => prev + 1000)} className="rounded-full h-12 px-10 font-bold uppercase text-[10px] border-2">
                     Carregar Próximas Propostas <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
             </div>
