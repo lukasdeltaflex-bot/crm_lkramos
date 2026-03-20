@@ -3,7 +3,7 @@
 /**
  * @fileOverview Fluxo Genkit para gerar mensagens de aniversário personalizadas.
  * 
- * Refatorado para chamada direta do modelo para máxima estabilidade em Server Actions.
+ * Refatorado para chamada direta do modelo com tratamento de erro transparente e fallback.
  */
 
 import { ai } from '@/ai/genkit';
@@ -21,33 +21,53 @@ export type BirthdayMessageOutput = z.infer<typeof BirthdayMessageOutputSchema>;
 
 /**
  * Gera uma mensagem de aniversário personalizada via Gemini.
- * Chamada direta via ai.generate para evitar instabilidades de registro de fluxos.
+ * @param input Objeto contendo o nome do cliente.
+ * @returns Objeto com a mensagem gerada (JSON estruturado ou texto de fallback).
  */
 export async function generateBirthdayMessage(input: BirthdayMessageInput): Promise<BirthdayMessageOutput> {
   try {
-    const { output } = await ai.generate({
+    console.log(`🤖 IA LK RAMOS: Iniciando geração de parabéns para "${input.customerName}"...`);
+
+    const response = await ai.generate({
       model: 'googleai/gemini-1.5-flash',
-      prompt: `Você é um assistente de relacionamento de um correspondente bancário de elite chamado LK RAMOS.
-      Sua tarefa é gerar uma mensagem de aniversário para o cliente ${input.customerName}.
-
-      REGRAS:
-      1. O tom deve ser profissional, caloroso e de gratidão pela parceria.
-      2. Deseje saúde, paz e prosperidade.
-      3. A mensagem deve ser curta (máximo 3 parágrafos pequenos) para facilitar a leitura no WhatsApp.
-      4. Use emojis de forma moderada e elegante (🎂, ✨, 🚀).
-      5. Não mencione valores de empréstimo ou propostas específicas, foque no dia do cliente.
-
-      Saída em Português do Brasil.`,
-      output: { schema: BirthdayMessageOutputSchema }
+      prompt: `Você é um assistente de relacionamento do correspondente bancário LK RAMOS.
+      Sua tarefa é criar uma mensagem de parabéns curta, calorosa e profissional para o cliente ${input.customerName}.
+      
+      DIRETRIZES:
+      - Deseje saúde, paz e prosperidade.
+      - Use emojis de forma moderada e elegante (🎂, ✨, 🚀).
+      - A mensagem deve ter no máximo 3 parágrafos pequenos.
+      - O objetivo é fortalecer o vínculo com o cliente no dia dele.
+      - Retorne a resposta obrigatoriamente no campo "message" do JSON.`,
+      output: { 
+        schema: BirthdayMessageOutputSchema 
+      },
+      config: {
+        temperature: 0.7,
+      }
     });
 
-    if (!output || !output.message) {
-      throw new Error('A IA não retornou um conteúdo válido.');
+    // 🛡️ Tenta extrair o output estruturado (JSON)
+    const output = response.output;
+
+    if (output && output.message) {
+      return output;
     }
 
-    return output;
-  } catch (error) {
-    console.error("❌ ERRO NA GERAÇÃO DE MENSAGEM IA:", error);
-    throw new Error("Falha ao gerar mensagem de aniversário via IA.");
+    // 🛡️ FALLBACK: Se o parsing do JSON falhar mas houver texto na resposta
+    if (response.text) {
+      console.warn("⚠️ IA retornou texto puro em vez de JSON estruturado. Usando fallback.");
+      return { message: response.text };
+    }
+
+    throw new Error('A IA não retornou um conteúdo válido ou a resposta veio vazia.');
+  } catch (error: any) {
+    // 🛡️ REVELANDO A CAUSA REAL NO LOG DO SERVIDOR
+    // Isso permite identificar se o problema é API Key, Quota (429) ou Segurança
+    console.error("❌ ERRO REAL DA GEMINI API:", error.message || error);
+    
+    // Repassa o erro detalhado para o frontend sem mascarar com mensagem genérica
+    const detail = error.message || 'Erro desconhecido na API do Google';
+    throw new Error(`Falha na IA: ${detail}`);
   }
 }
