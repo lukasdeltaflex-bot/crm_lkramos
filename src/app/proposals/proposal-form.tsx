@@ -63,7 +63,7 @@ import * as configData from '@/lib/config-data';
 import type { Proposal, Customer, ProposalStatus, UserSettings, ProposalHistoryEntry } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { ProposalAttachmentUploader } from '@/components/proposals/proposal-attachment-uploader';
 import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { doc, collection, updateDoc, arrayUnion, setDoc } from 'firebase/firestore';
@@ -329,10 +329,11 @@ export function ProposalForm({
     if (isReadOnly) return;
     const baseVal = commissionBase === 'gross' ? (grossAmount || 0) : (netAmount || 0);
     const calculated = parseFloat((baseVal * ((commissionPercentage || 0) / 100)).toFixed(2));
-    if (watch('commissionValue') !== calculated) {
-        setValue('commissionValue', calculated);
+    // 🛡️ PERFORMANCE: Evita atualização de estado se o valor for idêntico
+    if (Math.abs(form.getValues('commissionValue') - calculated) > 0.001) {
+        setValue('commissionValue', calculated, { shouldDirty: true });
     }
-  }, [commissionBase, commissionPercentage, grossAmount, netAmount, setValue, isReadOnly, watch]);
+  }, [commissionBase, commissionPercentage, grossAmount, netAmount, setValue, isReadOnly]);
 
   const handleSummarizeObs = async () => {
     if (!watchObservations || watchObservations.trim().length < 10) {
@@ -351,7 +352,7 @@ export function ProposalForm({
     }
   };
 
-  const handleAddHistory = (customMessage: string) => {
+  const handleAddHistory = useCallback((customMessage: string) => {
     if (!customMessage || !user) return;
     const now = new Date().toISOString();
     const entry: ProposalHistoryEntry = {
@@ -362,7 +363,7 @@ export function ProposalForm({
     };
     setStagedHistory(prev => [entry, ...prev]);
     setNewHistoryEntry('');
-  };
+  }, [user]);
 
   const displayHistory = useMemo(() => {
     const existing = Array.isArray(proposal?.history) ? proposal!.history : [];
@@ -385,7 +386,6 @@ export function ProposalForm({
         datePaidToClient: convertToIso(data.datePaidToClient),
         debtBalanceArrivalDate: convertToIso(data.debtBalanceArrivalDate),
         commissionPaymentDate: convertToIso(data.commissionPaymentDate),
-        // Preserva o histórico existente e anexa os novos trâmites criados no modal
         history: [...(proposal?.history || []), ...stagedHistory]
     };
 
@@ -673,7 +673,7 @@ export function ProposalForm({
                     <FormItem>
                         <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Órgão Aprovador</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
-                            <FormControl><SelectTrigger className="h-12 font-black border-2 rounded-xl"><SelectValue /></SelectTrigger></FormControl>
+                            <FormControl><SelectTrigger className="h-12 font-black rounded-xl border-2"><SelectValue /></SelectTrigger></FormControl>
                             <SelectContent>{approvingBodies.map(body => <SelectItem key={body} value={body}>{body}</SelectItem>)}</SelectContent>
                         </Select>
                     </FormItem>

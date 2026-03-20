@@ -146,30 +146,29 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     'col_comm': true,
   });
 
-  // 🛡️ REATIVIDADE À BUSCA GLOBAL: Sincroniza o filtro se o parâmetro da URL mudar
   React.useEffect(() => {
     if (initialGlobalFilter !== undefined && initialGlobalFilter !== globalFilter) {
         setGlobalFilter(initialGlobalFilter);
     }
   }, [initialGlobalFilter]);
 
-  const toggleBankFilter = (bank: string) => { setBankFilters(prev => prev.includes(bank) ? prev.filter(b => b !== bank) : [...prev, bank]); };
-  const togglePromoterFilter = (promoter: string) => { setPromoterFilters(prev => prev.includes(promoter) ? prev.filter(p => p !== promoter) : [...prev, promoter]); };
-  const toggleOperatorFilter = (op: string) => { setOperatorFilters(prev => prev.includes(op) ? prev.filter(o => o !== op) : [...prev, op]); };
+  const toggleBankFilter = useCallback((bank: string) => { setBankFilters(prev => prev.includes(bank) ? prev.filter(b => b !== bank) : [...prev, bank]); }, []);
+  const togglePromoterFilter = useCallback((promoter: string) => { setPromoterFilters(prev => prev.includes(promoter) ? prev.filter(p => p !== promoter) : [...prev, promoter]); }, []);
+  const toggleOperatorFilter = useCallback((op: string) => { setOperatorFilters(prev => prev.includes(op) ? prev.filter(o => o !== op) : [...prev, op]); }, []);
 
   const uniqueOperators = React.useMemo(() => Array.from(new Set(data.map(p => p.operator || 'Sem Operador'))).sort(), [data]);
   const uniqueBanks = React.useMemo(() => Array.from(new Set(data.map(p => p.bank))).sort(), [data]);
   const uniquePromoters = React.useMemo(() => Array.from(new Set(data.map(p => p.promoter))).sort(), [data]);
 
-  const handlePaginationChange = (updater: any) => {
+  const handlePaginationChange = useCallback((updater: any) => {
     setPagination((old) => {
       const next = typeof updater === 'function' ? updater(old) : updater;
       return next;
     });
-  };
+  }, []);
 
   React.useEffect(() => {
-    if (!user?.uid) return; // 🛡️ Evita crash no usuário externo
+    if (!user?.uid) return;
     setIsClient(true);
     const prefix = user.uid;
     setFrozenCount(safeStorage.get(`${prefix}-prop-frozen`, 2));
