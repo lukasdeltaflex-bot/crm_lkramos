@@ -77,6 +77,8 @@ export function useCollection<T = any>(
           }
         );
     } catch (e: any) {
+        console.error("🚨 Critical Firestore Hook Crash:", e);
+        setError(e);
         setIsLoading(false);
     }
 

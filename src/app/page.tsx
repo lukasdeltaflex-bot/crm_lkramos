@@ -59,6 +59,8 @@ import { CommissionChart } from '@/components/dashboard/commission-chart';
 import { ProductBreakdownChart } from '@/components/dashboard/product-breakdown-chart';
 import { RadarWidget } from '@/components/dashboard/radar-widget';
 import { HallOfFame } from '@/components/dashboard/hall-of-fame';
+import { GamificationPanel } from '@/components/dashboard/gamification-panel';
+import { SystemHealthPanel } from '@/components/dashboard/system-health-panel';
 import { toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -431,6 +433,12 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <RadarWidget proposals={proposals || []} customers={customers || []} isLoading={proposalsLoading} />
             <DailySummary proposals={proposals || []} customers={customers || []} userProfile={userProfile || null} expenses={expenses || []} />
+        </div>
+
+        {/* ⚡ NOVAS FUNCIONALIDADES ISOLADAS */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <GamificationPanel currentProduction={currentMonthlyProduction} monthlyGoal={userSettings?.monthlyGoal || 150000} />
+            <SystemHealthPanel totalCustomers={customers.length} totalProposals={proposals.length} />
         </div>
 
         <div className="w-full"><RecentProposals proposals={proposals || []} customers={customers || []} isLoading={proposalsLoading} /></div>

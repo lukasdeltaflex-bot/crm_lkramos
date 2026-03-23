@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
+import { useUser, useFirestore } from '@/firebase';
+import { collection, doc, updateDoc, deleteDoc, query, where, getDocs } from 'firebase/firestore';
 import type { Customer, Proposal, FollowUp } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -33,14 +33,36 @@ export default function TrashPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ collection: string, id: string, type: 'customer' | 'proposal' | 'followup', path?: string } | null>(null);
 
-  // Consultas de itens excluídos
-  const customersQuery = useMemoFirebase(() => user && firestore ? query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), where('deleted', '==', true)) : null, [user, firestore]);
-  const proposalsQuery = useMemoFirebase(() => user && firestore ? query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), where('deleted', '==', true)) : null, [user, firestore]);
-  const followUpsQuery = useMemoFirebase(() => user && firestore ? query(collection(firestore, 'users', user.uid, 'followUps'), where('deleted', '==', true)) : null, [user, firestore]);
+  const [deletedCustomers, setDeletedCustomers] = useState<Customer[] | null>(null);
+  const [deletedProposals, setDeletedProposals] = useState<Proposal[] | null>(null);
+  const [deletedFollowUps, setDeletedFollowUps] = useState<FollowUp[] | null>(null);
+  const [isLoadingMain, setIsLoadingMain] = useState(true);
 
-  const { data: deletedCustomers, isLoading: loadingCustomers } = useCollection<Customer>(customersQuery);
-  const { data: deletedProposals, isLoading: loadingProposals } = useCollection<Proposal>(proposalsQuery);
-  const { data: deletedFollowUps, isLoading: loadingFollowUps } = useCollection<FollowUp>(followUpsQuery);
+  const fetchTrashData = React.useCallback(async () => {
+    if (!firestore || !user) return;
+    setIsLoadingMain(true);
+    try {
+        const cQ = query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), where('deleted', '==', true));
+        const pQ = query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), where('deleted', '==', true));
+        const fQ = query(collection(firestore, 'users', user.uid, 'followUps'), where('deleted', '==', true));
+
+        const [cSnap, pSnap, fSnap] = await Promise.all([
+            getDocs(cQ), getDocs(pQ), getDocs(fQ)
+        ]);
+
+        setDeletedCustomers(cSnap.docs.map(d => ({ ...d.data(), id: d.id } as Customer)));
+        setDeletedProposals(pSnap.docs.map(d => ({ ...d.data(), id: d.id } as Proposal)));
+        setDeletedFollowUps(fSnap.docs.map(d => ({ ...d.data(), id: d.id } as FollowUp)));
+    } catch (e) {
+        console.error("Erro ao carregar lixeira:", e);
+    } finally {
+        setIsLoadingMain(false);
+    }
+  }, [firestore, user]);
+
+  React.useEffect(() => {
+    fetchTrashData();
+  }, [fetchTrashData]);
 
   const handleRestore = async (type: 'customer' | 'proposal' | 'followup', id: string, path?: string) => {
     if (!firestore || !user) return;
@@ -55,6 +77,7 @@ export default function TrashPage() {
             deletedBy: null
         });
         toast({ title: 'Registro Restaurado!', description: 'O item voltou para sua tela de origem.' });
+        fetchTrashData();
     } catch (e) {
         toast({ variant: 'destructive', title: 'Erro ao restaurar' });
     } finally {
@@ -82,6 +105,7 @@ export default function TrashPage() {
         toast({ title: 'Excluído Permanente', description: 'O registro foi removido definitivamente do banco de dados.' });
         setDeleteConfirmOpen(false);
         setItemToDelete(null);
+        fetchTrashData();
     } catch (e) {
         toast({ variant: 'destructive', title: 'Erro na exclusão definitiva' });
     } finally {
@@ -103,9 +127,14 @@ export default function TrashPage() {
             <PageHeader title="Lixeira do Sistema" />
             <p className="text-sm text-muted-foreground -mt-6">Itens excluídos permanecem aqui por segurança e podem ser restaurados.</p>
         </div>
-        <div className="bg-orange-500/10 p-3 rounded-xl border border-orange-500/20 flex items-center gap-3">
-            <AlertTriangle className="h-5 w-5 text-orange-600" />
-            <span className="text-[10px] font-black uppercase text-orange-700 tracking-widest leading-none">Atenção: Exclusão definitiva não pode ser desfeita.</span>
+        <div className="bg-orange-500/10 p-3 rounded-xl border border-orange-500/20 flex flex-col sm:flex-row items-center gap-3">
+            <div className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-orange-600" />
+                <span className="text-[10px] font-black uppercase text-orange-700 tracking-widest leading-none">Atenção: Exclusão definitiva não pode ser desfeita.</span>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => fetchTrashData()} disabled={isLoadingMain} className="h-7 text-[10px] font-bold rounded-full border-orange-500/30 text-orange-700">
+                <RotateCcw className={cn("h-3 w-3 mr-2", isLoadingMain && "animate-spin")} /> Recarregar
+            </Button>
         </div>
       </div>
 
@@ -118,7 +147,7 @@ export default function TrashPage() {
 
         <TabsContent value="customers" className="animate-in fade-in duration-500">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {loadingCustomers ? (
+                {isLoadingMain ? (
                     Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-48 w-full rounded-2xl" />)
                 ) : !deletedCustomers || deletedCustomers.length === 0 ? (
                     <EmptyTrash title="cliente" />
@@ -151,7 +180,7 @@ export default function TrashPage() {
 
         <TabsContent value="proposals" className="animate-in fade-in duration-500">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {loadingProposals ? (
+                {isLoadingMain ? (
                     Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-48 w-full rounded-2xl" />)
                 ) : !deletedProposals || deletedProposals.length === 0 ? (
                     <EmptyTrash title="proposta" />
@@ -191,7 +220,7 @@ export default function TrashPage() {
 
         <TabsContent value="followups" className="animate-in fade-in duration-500">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {loadingFollowUps ? (
+                {isLoadingMain ? (
                     Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-48 w-full rounded-2xl" />)
                 ) : !deletedFollowUps || deletedFollowUps.length === 0 ? (
                     <EmptyTrash title="retorno" />

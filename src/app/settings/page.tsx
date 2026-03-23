@@ -65,8 +65,8 @@ import {
 } from 'lucide-react';
 import { EditableList } from '@/components/settings/editable-list';
 import { BankEditableList } from '@/components/settings/bank-editable-list';
-import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { collection, doc, setDoc, query, where } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, doc, setDoc, query, where, getDocs } from 'firebase/firestore';
 import type { UserSettings, Customer, Proposal } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -149,19 +149,7 @@ export default function SettingsPage() {
     return doc(firestore, 'userSettings', user.uid);
   }, [firestore, user]);
 
-  const customersQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid));
-  }, [firestore, user]);
-
-  const proposalsQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid));
-  }, [firestore, user]);
-
   const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
-  const { data: customers } = useCollection<Customer>(customersQuery);
-  const { data: proposals } = useCollection<Proposal>(proposalsQuery);
 
   const [hasLoadedSettings, setHasLoadedSettings] = useState(false);
 
@@ -294,13 +282,26 @@ export default function SettingsPage() {
   };
 
   const handleBackupExport = async () => {
-    if (!customers || !proposals) {
-        toast({ variant: "destructive", title: "Erro no Backup", description: "Dados ainda não carregados." });
+    if (!user || !firestore) {
+        toast({ variant: "destructive", title: "Erro no Backup", description: "Sessão não autenticada." });
         return;
     }
 
     setIsExporting(true);
     try {
+        const cQ = query(collection(firestore, 'customers'), where('ownerId', '==', user.uid));
+        const pQ = query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid));
+        
+        const [cSnap, pSnap] = await Promise.all([getDocs(cQ), getDocs(pQ)]);
+        
+        const customers = cSnap.docs.map(d => ({ ...d.data(), id: d.id } as Customer));
+        const proposals = pSnap.docs.map(d => ({ ...d.data(), id: d.id } as Proposal));
+
+        if (!customers.length && !proposals.length) {
+            toast({ variant: "destructive", title: "Erro no Backup", description: "Base de dados vazia." });
+            setIsExporting(false);
+            return;
+        }
         const { utils, writeFile } = await import('xlsx');
         const customersSheetData = customers.map(c => ({
             ID: c.numericId,

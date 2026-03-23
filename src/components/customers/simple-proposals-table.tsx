@@ -124,7 +124,7 @@ export function SimpleProposalsTable({ proposals, userSettings }: { proposals: P
         
         const savedSizing = localStorage.getItem('lk-customer-history-sizing');
         if (savedSizing) setColumnSizing(JSON.parse(savedSizing));
-    } catch (e) {}
+    } catch (e) { console.warn("Error loading table settings", e); }
   }, []);
 
   // Salva configurações ao mudar
@@ -133,7 +133,7 @@ export function SimpleProposalsTable({ proposals, userSettings }: { proposals: P
         try {
             localStorage.setItem('lk-customer-history-order', JSON.stringify(columnOrder));
             localStorage.setItem('lk-customer-history-sizing', JSON.stringify(columnSizing));
-        } catch (e) {}
+        } catch (e) { console.warn("Error saving table settings", e); }
     }
   }, [columnOrder, columnSizing, isClient]);
 

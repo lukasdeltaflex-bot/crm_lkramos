@@ -25,7 +25,7 @@ export function PwaRegister() {
           try {
             const cacheNames = await caches.keys();
             await Promise.all(cacheNames.map(name => caches.delete(name)));
-          } catch (e) {}
+          } catch (e) { console.warn("PWA Event Error", e); }
         }
         
         if ('serviceWorker' in navigator) {
@@ -35,7 +35,7 @@ export function PwaRegister() {
               await registration.unregister();
               console.log("💎 LK RAMOS: Service Worker removido para garantir código fresco em desenvolvimento.");
             }
-          } catch (e) {}
+          } catch (e) { console.warn("PWA Event Error", e); }
         }
         return; 
       }
@@ -99,7 +99,7 @@ export function PwaRegister() {
                 // Nova versão detectada!
                 triggerUpdatePrompt(undefined, data.version);
             }
-        } catch (e) {}
+        } catch (e) { console.warn("PWA Event Error", e); }
     };
 
     // Checa versão a cada 5 minutos
