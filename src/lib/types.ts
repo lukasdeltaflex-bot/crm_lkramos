@@ -163,6 +163,7 @@ export type UserSettings = {
   auraStyle?: string;
   // Cloud Sync
   monthlyGoal?: number;
+  dailyGoal?: number;
   dismissedAlerts?: string[];
 };
 

@@ -143,6 +143,16 @@ export default function DashboardPage() {
     }
   };
 
+  const handleGoalsChange = async (monthly: number, daily: number) => {
+    if (!user || !firestore) return;
+    try {
+        await setDoc(doc(firestore, 'userSettings', user.uid), { monthlyGoal: monthly, dailyGoal: daily }, { merge: true });
+        toast({ title: 'Metas Atualizadas' });
+    } catch (e) {
+        toast({ variant: 'destructive', title: 'Erro ao salvar metas' });
+    }
+  };
+
   const handleApplyFilter = () => {
     const startDate = parse(startDateInput, 'dd/MM/yyyy', new Date());
     const endDate = parse(endDateInput, 'dd/MM/yyyy', new Date());
@@ -289,6 +299,17 @@ export default function DashboardPage() {
   }
 
   const currentMonthlyProduction = stats.proposals.pagoNoMes.reduce((sum, p) => sum + (p.grossAmount || 0), 0);
+  
+  const currentDailyProduction = (() => {
+      const today = startOfDay(new Date());
+      const endToday = endOfDay(new Date());
+      return stats.proposals.pagoNoMes.reduce((sum, p) => {
+          if (!p.datePaidToClient) return sum;
+          const pd = new Date(p.datePaidToClient);
+          return (isValid(pd) && pd >= today && pd <= endToday) ? sum + (p.commissionValue || 0) : sum;
+      }, 0);
+  })();
+
   const isGoalReached = currentMonthlyProduction >= (userSettings?.monthlyGoal || 150000);
 
   return (
@@ -437,7 +458,13 @@ export default function DashboardPage() {
 
         {/* ⚡ NOVAS FUNCIONALIDADES ISOLADAS */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <GamificationPanel currentProduction={currentMonthlyProduction} monthlyGoal={userSettings?.monthlyGoal || 150000} />
+            <GamificationPanel 
+                currentProduction={currentMonthlyProduction} 
+                monthlyGoal={userSettings?.monthlyGoal || 150000} 
+                currentDailyProduction={currentDailyProduction}
+                dailyGoal={userSettings?.dailyGoal || 5000}
+                onGoalsChange={handleGoalsChange}
+            />
             <SystemHealthPanel totalCustomers={customers.length} totalProposals={proposals.length} />
         </div>
 
