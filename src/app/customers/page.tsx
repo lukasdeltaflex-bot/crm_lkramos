@@ -73,6 +73,7 @@ function CustomersPageContent() {
   // ⚡ PERFORMANCE: Limite de carregamento inicial
   const [staticCustomers, setStaticCustomers] = React.useState<Customer[]>([]);
   const [isLoadingMore, setIsLoadingMore] = React.useState(false);
+  const [hasMoreCustomers, setHasMoreCustomers] = React.useState(true);
   const LOAD_CHUNK_SIZE = 150;
   
   const initialTab = searchParams.get('tab') || 'active';
@@ -124,7 +125,8 @@ function CustomersPageContent() {
       setIsLoadingMore(true);
       try {
           const lastCustomer = customers[customers.length - 1];
-          const lastId = lastCustomer?.numericId || 0;
+          // Fallback cirúrgico: se cliente muito velho não tem numericId, usamos 1 como margem de segurança
+          const lastId = lastCustomer?.numericId || 1;
 
           const q = query(
               collection(firestore, 'customers'),
@@ -138,7 +140,11 @@ function CustomersPageContent() {
           
           if (newCustomers.length > 0) {
               setStaticCustomers(prev => [...prev, ...newCustomers]);
+              if (newCustomers.length < LOAD_CHUNK_SIZE) {
+                  setHasMoreCustomers(false);
+              }
           } else {
+              setHasMoreCustomers(false);
               toast({ title: "Todos os registros carregados!", description: "Fim da lista alcançado." });
           }
       } catch (e) {
@@ -563,7 +569,7 @@ function CustomersPageContent() {
                 setRowSelection={setRowSelection}
             />
             {/* ⚡ PERFORMANCE: Botão para carregar mais registros (Manual) */}
-            {processedCustomers.length >= LOAD_CHUNK_SIZE && !isCustomersLoading && (
+            {hasMoreCustomers && processedCustomers.length >= LOAD_CHUNK_SIZE && !isCustomersLoading && (
                 <div className="flex justify-center pb-10 animate-in fade-in slide-in-from-bottom-2">
                     <Button 
                         variant="outline" 

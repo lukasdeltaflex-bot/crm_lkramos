@@ -80,10 +80,20 @@ export default function DashboardPage() {
     setIsClient(true);
   }, []);
 
+  const timeWindowStr = useMemo(() => {
+      const d = new Date();
+      d.setFullYear(d.getFullYear() - 2); // 2 anos de janela para cobrir a maturidade do RadarWidget com folga
+      return d.toISOString().substring(0, 10);
+  }, []);
+
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), limit(1500));
-  }, [firestore, user]);
+    return query(
+        collection(firestore, 'loanProposals'), 
+        where('ownerId', '==', user.uid), 
+        where('dateDigitized', '>=', timeWindowStr) // ⚡ Requer índice: ownerId + dateDigitized
+    );
+  }, [firestore, user, timeWindowStr]);
 
   const { data: rawProposals, isLoading: proposalsLoading } = useCollection<Proposal>(proposalsQuery);
   
@@ -94,7 +104,7 @@ export default function DashboardPage() {
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), limit(1500));
+    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid)); // Limite removido para não afetar base de clientes do Dashboard
   }, [firestore, user]);
   const { data: rawCustomers } = useCollection<Customer>(customersQuery);
   

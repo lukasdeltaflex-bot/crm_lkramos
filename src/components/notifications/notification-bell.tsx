@@ -45,8 +45,8 @@ export function NotificationBell() {
     return query(
         collection(firestore, 'customers'), 
         where('ownerId', '==', user.uid),
-        orderBy('numericId', 'desc'),
-        limit(300) // ⚡ PERFORMANCE: Reduzido de 1000 para 300 ativos mais recentes
+        // IMPORTANTE: Adicionado filtro de status ativo para não puxar lixo. Requer índice (ownerId + status) no Firebase.
+        where('status', '==', 'active') 
     );
   }, [firestore, user]);
 
@@ -55,7 +55,8 @@ export function NotificationBell() {
     return query(
         collection(firestore, 'loanProposals'), 
         where('ownerId', '==', user.uid),
-        limit(80) // ⚡ PERFORMANCE: Teto ajustado para focar na esteira recente
+        // IMPORTANTE: Foco apenas em propostas passíveis de atraso/comissão. Requer índice (ownerId + status IN) no Firebase.
+        where('status', 'in', ['Pago', 'Saldo Pago', 'Aguardando Saldo']) 
     );
   }, [firestore, user]);
 
