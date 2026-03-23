@@ -1,18 +1,27 @@
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 
+// Bloqueia a execução no lado do cliente
+if (typeof window !== 'undefined') {
+  throw new Error('⚠️ Genkit e a API Key NÃO podem ser executados no lado do cliente.');
+}
+
+// Log de depuração (obrigatório) - verifica especificamente o GEMINI_API_KEY
+console.log('API KEY loaded:', !!process.env.GEMINI_API_KEY);
+
 /**
  * 🤖 NÚCLEO DE INTELIGÊNCIA ARTIFICIAL - LK RAMOS
  * Configuração estabilizada para Google AI Studio (Gemini).
- * Utiliza exclusivamente a API Key do ambiente para garantir independência.
+ * Utiliza a API Key do ambiente com fallback para garantir compatibilidade local e Vercel.
  */
+const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENAI_API_KEY;
 
-const apiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
+if (!apiKey) {
+  console.warn("❌ Erro Crítico IA: Nenhuma API Key do Gemini/Google AI foi encontrada. Verifique as variáveis de ambiente.");
+}
 
 export const ai = genkit({
-  plugins: [
-    googleAI({ apiKey })
-  ],
+  plugins: apiKey ? [googleAI({ apiKey })] : [googleAI()],
 });
 
 /**

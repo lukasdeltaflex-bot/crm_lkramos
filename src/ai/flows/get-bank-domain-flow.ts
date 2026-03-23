@@ -5,7 +5,6 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { googleAI } from '@genkit-ai/google-genai';
 import { z } from 'genkit';
 
 const GetBankDomainInputSchema = z.object({
@@ -28,7 +27,7 @@ const getBankDomainFlow = ai.defineFlow(
   },
   async (input) => {
     const { text } = await ai.generate({
-        model: googleAI.model('gemini-2.5-flash-lite'),
+        model: 'googleai/gemini-2.5-flash-lite',
         prompt: `Você é um assistente técnico especialista em instituições financeiras brasileiras. 
         Sua tarefa é retornar APENAS o domínio (URL principal) do site oficial do banco: "${input.bankName}".
         
