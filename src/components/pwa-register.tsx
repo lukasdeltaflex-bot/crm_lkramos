@@ -1,16 +1,18 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 
 /**
  * 🚀 PWA MASTER CONTROLLER LK RAMOS
- * Registra o Service Worker APENAS em produção para evitar cache persistente em desenvolvimento.
- * Em modo dev, remove qualquer worker residual para garantir atualizações de código instantâneas.
+ * Registra o Service Worker APENAS em produção e gerencia atualizações.
+ * Detecta via SW ou polling de fallback (version.json).
  */
 export function PwaRegister() {
+  const updateFound = useRef(false);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -19,7 +21,6 @@ export function PwaRegister() {
 
       // 🛡️ LIMPEZA DE CACHE E WORKERS EM DESENVOLVIMENTO
       if (!isProd) {
-        // Limpa caches do navegador para evitar assets antigos
         if ('caches' in window) {
           try {
             const cacheNames = await caches.keys();
@@ -27,7 +28,6 @@ export function PwaRegister() {
           } catch (e) {}
         }
         
-        // Desregistra workers antigos que travam o ambiente local
         if ('serviceWorker' in navigator) {
           try {
             const registrations = await navigator.serviceWorker.getRegistrations();
@@ -37,7 +37,7 @@ export function PwaRegister() {
             }
           } catch (e) {}
         }
-        return; // Interrompe o registro no modo desenvolvimento
+        return; 
       }
 
       // 🚀 REGISTRO APENAS EM PRODUÇÃO
@@ -46,16 +46,32 @@ export function PwaRegister() {
       try {
         const registration = await navigator.serviceWorker.register('/sw.js');
 
+        // Se já tiver alguma att pendente esperando (ignorado na sessão anterior)
+        if (registration.waiting) {
+            triggerUpdatePrompt(registration);
+        }
+
+        // Listener de quando o SW descobre uma nova versão no background
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           if (!newWorker) return;
 
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              showUpdateToast(registration);
+              triggerUpdatePrompt(registration);
             }
           });
         });
+
+        // Quando o SW de fato ativar, a página pode dar refresh automaticamente para carregar a nova versão
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+          }
+        });
+
       } catch (err) {
         console.error('🛡️ LK RAMOS: Erro ao registrar PWA:', err);
       }
@@ -64,26 +80,83 @@ export function PwaRegister() {
     syncEnvironment();
   }, []);
 
-  const showUpdateToast = (registration: ServiceWorkerRegistration) => {
-    toast({
-      title: "🚀 Nova Versão Disponível!",
-      description: "Uma atualização crítica foi publicada. Recarregue para aplicar.",
-      duration: 30000,
-      action: (
-        <Button 
-          size="sm" 
-          variant="default" 
-          className="bg-primary text-white font-bold h-8 px-4 rounded-full shadow-lg"
-          onClick={() => {
-            if (registration.waiting) {
-              registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+  // FALLBACK WEB: Polling do version.json para forçar updates se o SW falhar na checagem
+  useEffect(() => {
+    if (typeof window === 'undefined' || process.env.NODE_ENV !== 'production') return;
+
+    const checkFallbackVersion = async () => {
+        if (updateFound.current) return;
+        try {
+            const res = await fetch('/version.json?t=' + Date.now(), { cache: 'no-store' });
+            if (!res.ok) return;
+            const data = await res.json();
+            const currentVersion = localStorage.getItem('lk-app-version');
+            
+            if (!currentVersion) {
+                // Primeira vez, salva a versão
+                localStorage.setItem('lk-app-version', data.version);
+            } else if (currentVersion !== data.version) {
+                // Nova versão detectada!
+                triggerUpdatePrompt(undefined, data.version);
             }
-            window.location.reload();
-          }}
-        >
-          <RefreshCw className="mr-2 h-3 w-3" />
-          Atualizar Agora
-        </Button>
+        } catch (e) {}
+    };
+
+    // Checa versão a cada 5 minutos
+    const interval = setInterval(checkFallbackVersion, 5 * 60 * 1000);
+    // Também checa assim que a pessoa retorna pra aba
+    window.addEventListener('focus', checkFallbackVersion);
+
+    return () => {
+        clearInterval(interval);
+        window.removeEventListener('focus', checkFallbackVersion);
+    };
+  }, []);
+
+  const triggerUpdatePrompt = (registration?: ServiceWorkerRegistration, newVersionFallback?: string) => {
+    if (updateFound.current) return;
+    updateFound.current = true;
+
+    toast({
+      title: "🚀 Nova versão disponível",
+      description: "Deseja atualizar para a versão mais recente e estável do CRM?",
+      duration: 120000, // 2 minutos esperando clique
+      action: (
+        <div className="flex items-center gap-2 mt-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-8 px-3 text-xs"
+            onClick={() => {
+                // Ao clicar aqui, o toast se descarta nativamente, 
+                // e como updateFound.current é true, ele não incomodará tão cedo nessa mesma sessão
+                console.log("LK RAMOS: Atualização adiada.")
+            }}
+          >
+            Depois
+          </Button>
+          <Button 
+            size="sm" 
+            variant="default" 
+            className="bg-primary hover:bg-primary/90 text-white font-bold h-8 px-3 text-xs"
+            onClick={() => {
+              if (newVersionFallback) {
+                  localStorage.setItem('lk-app-version', newVersionFallback);
+              }
+              if (registration?.waiting) {
+                // Manda o worker waiting virar o worker active
+                registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                // O page reload ocorrerá no 'controllerchange'
+              } else {
+                // Força reload no caso de fallback JSON apenas
+                window.location.reload();
+              }
+            }}
+          >
+            <RefreshCw className="mr-2 h-3 w-3" />
+            Atualizar agora
+          </Button>
+        </div>
       ),
     });
   };

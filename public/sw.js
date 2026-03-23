@@ -21,7 +21,8 @@ self.addEventListener('install', (event) => {
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
-  self.skipWaiting();
+  // Removido self.skipWaiting() automático.
+  // Devemos aguardar o usuário clicar em "Atualizar Agora" para enviar a mensagem SKIP_WAITING.
 });
 
 self.addEventListener('activate', (event) => {
