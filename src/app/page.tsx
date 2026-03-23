@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, where, doc, setDoc, orderBy } from 'firebase/firestore';
+import { collection, query, where, doc, setDoc, orderBy, limit } from 'firebase/firestore';
 import {
   FileText,
   Clock,
@@ -82,7 +82,7 @@ export default function DashboardPage() {
 
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid));
+    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), limit(1500));
   }, [firestore, user]);
 
   const { data: rawProposals, isLoading: proposalsLoading } = useCollection<Proposal>(proposalsQuery);
@@ -94,7 +94,7 @@ export default function DashboardPage() {
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid));
+    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), limit(1500));
   }, [firestore, user]);
   const { data: rawCustomers } = useCollection<Customer>(customersQuery);
   

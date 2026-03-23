@@ -10,7 +10,7 @@ import { PlusCircle, FileDown, UserCheck, UserX, Trash2, Sparkles, Landmark, X, 
 import { CustomerForm } from './customer-form';
 import type { Customer, UserSettings, Proposal } from '@/lib/types';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, doc, updateDoc, setDoc, query, where, writeBatch, limit, orderBy } from 'firebase/firestore';
+import { collection, doc, updateDoc, setDoc, query, where, writeBatch, limit, orderBy, getDocs } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -71,7 +71,9 @@ function CustomersPageContent() {
   const tableRef = React.useRef<CustomerDataTableHandle>(null);
   
   // ⚡ PERFORMANCE: Limite de carregamento inicial
-  const [loadLimit, setLoadLimit] = React.useState(150);
+  const [staticCustomers, setStaticCustomers] = React.useState<Customer[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = React.useState(false);
+  const LOAD_CHUNK_SIZE = 150;
   
   const initialTab = searchParams.get('tab') || 'active';
   const [filter, setFilter] = React.useState(initialTab);
@@ -86,9 +88,9 @@ function CustomersPageContent() {
         collection(firestore, 'customers'), 
         where('ownerId', '==', user.uid),
         orderBy('numericId', 'desc'),
-        limit(loadLimit)
+        limit(LOAD_CHUNK_SIZE) // ⚡ Fixo em 150 para proteger o backend
     );
-  }, [firestore, user, loadLimit]);
+  }, [firestore, user]);
 
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -104,9 +106,48 @@ function CustomersPageContent() {
     return doc(firestore, 'userSettings', user.uid);
   }, [firestore, user]);
 
-  const { data: customers, isLoading: isCustomersLoading } = useCollection<Customer>(customersQuery);
+  const { data: realTimeCustomers, isLoading: isCustomersLoading } = useCollection<Customer>(customersQuery);
   const { data: proposals } = useCollection<Proposal>(proposalsQuery);
   const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
+
+  const customers = React.useMemo(() => {
+      if (!realTimeCustomers) return staticCustomers.length ? staticCustomers : [];
+      // Mescla realTime + static sem duplicatas
+      const map = new Map();
+      staticCustomers.forEach(c => map.set(c.id, c));
+      realTimeCustomers.forEach(c => map.set(c.id, c));
+      return Array.from(map.values()).sort((a: any,b: any) => (b.numericId || 0) - (a.numericId || 0));
+  }, [realTimeCustomers, staticCustomers]);
+
+  const loadMoreCustomers = async () => {
+      if (!firestore || !user || !customers.length) return;
+      setIsLoadingMore(true);
+      try {
+          const lastCustomer = customers[customers.length - 1];
+          const lastId = lastCustomer?.numericId || 0;
+
+          const q = query(
+              collection(firestore, 'customers'),
+              where('ownerId', '==', user.uid),
+              where('numericId', '<', lastId),
+              orderBy('numericId', 'desc'),
+              limit(LOAD_CHUNK_SIZE)
+          );
+          const snap = await getDocs(q);
+          const newCustomers = snap.docs.map(d => ({ ...d.data(), id: d.id } as Customer));
+          
+          if (newCustomers.length > 0) {
+              setStaticCustomers(prev => [...prev, ...newCustomers]);
+          } else {
+              toast({ title: "Todos os registros carregados!", description: "Fim da lista alcançado." });
+          }
+      } catch (e) {
+          console.error(e);
+          toast({ variant: 'destructive', title: "Erro ao buscar mais dados" });
+      } finally {
+          setIsLoadingMore(false);
+      }
+  };
 
   const banks = userSettings?.banks || configData.banks;
   const availableTags = userSettings?.customerTags || configData.defaultCustomerTags;
@@ -521,15 +562,16 @@ function CustomersPageContent() {
                 rowSelection={rowSelection}
                 setRowSelection={setRowSelection}
             />
-            {/* ⚡ PERFORMANCE: Botão para carregar mais registros */}
-            {processedCustomers.length >= loadLimit && !isCustomersLoading && (
+            {/* ⚡ PERFORMANCE: Botão para carregar mais registros (Manual) */}
+            {processedCustomers.length >= LOAD_CHUNK_SIZE && !isCustomersLoading && (
                 <div className="flex justify-center pb-10 animate-in fade-in slide-in-from-bottom-2">
                     <Button 
                         variant="outline" 
-                        onClick={() => setLoadLimit(prev => prev + 150)}
+                        onClick={loadMoreCustomers}
+                        disabled={isLoadingMore}
                         className="rounded-full h-12 px-10 font-black uppercase text-[10px] tracking-[0.2em] border-2 border-primary/20 bg-background hover:bg-primary hover:text-white transition-all shadow-xl"
                     >
-                        Carregar Próximos Registros <ChevronRight className="ml-2 h-4 w-4" />
+                        {isLoadingMore ? "Carregando..." : "Carregar Próximos Registros"} <ChevronRight className="ml-2 h-4 w-4" />
                     </Button>
                 </div>
             )}

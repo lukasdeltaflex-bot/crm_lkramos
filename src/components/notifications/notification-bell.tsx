@@ -45,7 +45,8 @@ export function NotificationBell() {
     return query(
         collection(firestore, 'customers'), 
         where('ownerId', '==', user.uid),
-        limit(1000) // ⚡ PERFORMANCE: Aumentado para 1000 para evitar omissão de aniversariantes
+        orderBy('numericId', 'desc'),
+        limit(300) // ⚡ PERFORMANCE: Reduzido de 1000 para 300 ativos mais recentes
     );
   }, [firestore, user]);
 
@@ -54,7 +55,7 @@ export function NotificationBell() {
     return query(
         collection(firestore, 'loanProposals'), 
         where('ownerId', '==', user.uid),
-        limit(100)
+        limit(80) // ⚡ PERFORMANCE: Teto ajustado para focar na esteira recente
     );
   }, [firestore, user]);
 
