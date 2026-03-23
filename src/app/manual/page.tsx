@@ -142,6 +142,17 @@ export default function ManualPage() {
                                 </p>
                             </div>
                         </div>
+                        <div className="p-4 rounded-xl bg-blue-50/5 border border-blue-500/20 mt-4">
+                            <h4 className="font-bold text-blue-700 flex items-center gap-2 mb-2">
+                                <RefreshCcw className="h-4 w-4" /> Gestão e Recuperação de Retornos
+                            </h4>
+                            <p className="text-xs text-muted-foreground mb-2">
+                                <strong>Reabertura:</strong> Acesse a aba "Histórico" e clique em "Reabrir" em qualquer retorno concluído para trazê-lo de volta aos pendentes e ao calendário.
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                                <strong>Segurança e Controle Visual:</strong> Acompanhe o status rapidamente pelas novas etiquetas (Amarelo para Pendentes e Verde para Concluídos). Adicionalmente, ações críticas como Excluir, Concluir e Reagendar agora solicitam confirmação prévia para evitar cliques acidentais.
+                            </p>
+                        </div>
                     </AccordionContent>
                 </AccordionItem>
 

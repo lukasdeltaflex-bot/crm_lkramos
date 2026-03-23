@@ -176,7 +176,7 @@ export type UserProfile = {
   phone?: string;
 }
 
-export type FollowUpStatus = 'pending' | 'completed' | 'rescheduled' | 'cancelled';
+export type FollowUpStatus = 'pending' | 'completed' | 'rescheduled' | 'cancelled' | 'pendente' | 'concluido';
 
 export type FollowUp = {
   id: string;

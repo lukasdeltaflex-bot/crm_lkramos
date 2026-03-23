@@ -44,6 +44,9 @@ export default function FollowUpsPage() {
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
   const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
   const [isTrashConfirmOpen, setIsTrashConfirmOpen] = useState(false);
+  const [isFinishConfirmOpen, setIsFinishConfirmOpen] = useState(false);
+  const [isRescheduleConfirmOpen, setIsRescheduleConfirmOpen] = useState(false);
+  const [isReopenConfirmOpen, setIsReopenConfirmOpen] = useState(false);
   const [actionNotes, setActionNotes] = useState('');
   const [isSummarizingAction, setIsSummarizingAction] = useState(false);
   const [newDueDate, setNewDueDate] = useState(format(addDays(new Date(), 7), 'yyyy-MM-dd'));
@@ -72,7 +75,7 @@ export default function FollowUpsPage() {
     if (!followUps) return [];
     let list = followUps
         .filter(f => f.deleted !== true) // Filtro de Lixeira
-        .filter(f => tab === 'history' ? f.status !== 'pending' : f.status === 'pending');
+        .filter(f => tab === 'history' ? (f.status !== 'pending' && f.status !== 'pendente') : (f.status === 'pending' || f.status === 'pendente'));
     
     if (dateFilter && tab === 'pending') {
         const dateStr = format(dateFilter, 'yyyy-MM-dd');
@@ -195,7 +198,16 @@ export default function FollowUpsPage() {
     const id = selectedFollowUp?.id || doc(collection(firestore, 'users', user.uid, 'followUps')).id;
     const customerId = data.customerId === 'none' || !data.customerId ? null : data.customerId;
     const docRef = doc(firestore, 'users', user.uid, 'followUps', id);
-    const finalData = cleanFirestoreData({ ...data, customerId, id, ownerId: user.uid, createdAt: selectedFollowUp?.createdAt || new Date().toISOString(), status: 'pending' });
+    const finalData = cleanFirestoreData({ 
+        ...data, 
+        customerId, 
+        id, 
+        ownerId: user.uid, 
+        createdAt: selectedFollowUp?.createdAt || new Date().toISOString(), 
+        status: 'pendente',
+        title: data.contactName, // Padronização Firestore
+        date: data.dueDate // Padronização Firestore
+    });
     try {
         await setDoc(docRef, finalData, { merge: true });
         toast({ title: 'Agendado com sucesso!' });
@@ -267,7 +279,7 @@ export default function FollowUpsPage() {
                                             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground"><span className="flex items-center gap-1"><CalendarIcon className="h-3 w-3" />{format(new Date(f.dueDate.replace(/-/g, '/')), "dd 'de' MMMM", { locale: ptBR })}</span>{f.dueTime && <span className="font-bold text-primary">{f.dueTime}</span>}</div>
                                             <p className="mt-2 text-sm line-clamp-1 opacity-80 italic">"{f.description}"</p>
                                         </div>
-                                        <Button variant="ghost" size="icon" className="shrink-0 group-hover:bg-primary group-hover:text-white transition-colors" disabled={isSaving}><CheckCircle2 className="h-5 w-5" /></Button>
+                                        <Button variant="ghost" size="icon" className="shrink-0 group-hover:bg-primary group-hover:text-white transition-colors" disabled={isSaving} onClick={(e) => { e.stopPropagation(); setSelectedFollowUp(f); setIsFinishConfirmOpen(true); }}><CheckCircle2 className="h-5 w-5" /></Button>
                                     </div>
                                 </Card>
                             ))
@@ -280,7 +292,17 @@ export default function FollowUpsPage() {
                     <div className="grid gap-4">
                         {filteredFollowUps.map((f) => (
                             <Card key={f.id} className="opacity-80 grayscale-[0.5] hover:grayscale-0 transition-all">
-                                <div className="p-4"><div className="flex items-center justify-between mb-2"><h4>{f.contactName}</h4>{getStatusBadge(f)}</div><p className="text-xs text-muted-foreground italic">"{f.notes || 'Sem observações.'}"</p></div>
+                                <div className="p-4"><div className="flex items-center justify-between mb-2">
+      <h4>{f.contactName}</h4>
+      <div className="flex items-center gap-2">
+          {getStatusBadge(f)}
+          {(f.status === 'concluido' || f.status === 'completed') && (
+              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setSelectedFollowUp(f); setIsReopenConfirmOpen(true); }}>
+                  <RefreshCw className="w-3 h-3 mr-1" /> Reabrir
+              </Button>
+          )}
+      </div>
+  </div><p className="text-xs text-muted-foreground italic">"{f.notes || 'Sem observações.'}"</p></div>
                             </Card>
                         ))}
                     </div>
@@ -326,10 +348,34 @@ export default function FollowUpsPage() {
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => setIsTrashConfirmOpen(true)} disabled={isSaving}><Trash2 className="mr-2 h-4 w-4" /> Lixeira</Button>
             <Button variant="outline" onClick={() => setIsRescheduleOpen(true)} disabled={isSaving}><RefreshCw className="mr-2 h-4 w-4" /> Reagendar</Button>
-            <Button onClick={() => handleUpdateStatus('completed')} disabled={isSaving || isSummarizingAction}>{isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="mr-2 h-4 w-4" />} Concluído</Button>
+            <Button onClick={() => setIsFinishConfirmOpen(true)} disabled={isSaving || isSummarizingAction}>{isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="mr-2 h-4 w-4" />} Concluído</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* CONFIRMAÇÃO DE FINALIZAÇÃO */}
+      <AlertDialog open={isFinishConfirmOpen} onOpenChange={setIsFinishConfirmOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader><AlertDialogTitle>Concluir Retorno?</AlertDialogTitle><AlertDialogDescription>Tem certeza que deseja finalizar e marcar este retorno como concluído?</AlertDialogDescription></AlertDialogHeader>
+            <AlertDialogFooter><AlertDialogCancel disabled={isSaving}>Voltar</AlertDialogCancel><AlertDialogAction onClick={() => handleUpdateStatus('concluido')} className="bg-green-600 text-white hover:bg-green-700" disabled={isSaving}>Confirmar Conclusão</AlertDialogAction></AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* CONFIRMAÇÃO DE REAGENDAMENTO (Secundária) */}
+      <AlertDialog open={isRescheduleConfirmOpen} onOpenChange={setIsRescheduleConfirmOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader><AlertDialogTitle>Confirmar Reagendamento?</AlertDialogTitle><AlertDialogDescription>Tem certeza que deseja reagendar este retorno para a nova data escolhida?</AlertDialogDescription></AlertDialogHeader>
+            <AlertDialogFooter><AlertDialogCancel disabled={isSaving}>Cancelar</AlertDialogCancel><AlertDialogAction onClick={handleReschedule} disabled={isSaving}>Sim, Reagendar</AlertDialogAction></AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* CONFIRMAÇÃO PARA REABRIR */}
+      <AlertDialog open={isReopenConfirmOpen} onOpenChange={setIsReopenConfirmOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader><AlertDialogTitle>Reabrir Retorno?</AlertDialogTitle><AlertDialogDescription>Tem certeza que deseja reabrir este retorno? O status voltará a ser "Pendente" e ele aparecerá no seu calendário e lista de pendências.</AlertDialogDescription></AlertDialogHeader>
+            <AlertDialogFooter><AlertDialogCancel disabled={isSaving}>Cancelar</AlertDialogCancel><AlertDialogAction onClick={() => { handleUpdateStatus('pendente'); setTab('pending'); }} disabled={isSaving}>Sim, Reabrir</AlertDialogAction></AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* CONFIRMAÇÃO DE LIXEIRA */}
       <AlertDialog open={isTrashConfirmOpen} onOpenChange={setIsTrashConfirmOpen}>
@@ -345,7 +391,7 @@ export default function FollowUpsPage() {
             <DialogTitle>Nova Data</DialogTitle>
             <DialogDescription>Escolha um novo dia para este retorno.</DialogDescription>
           </DialogHeader>
-          <div className="py-4"><Input type="date" value={newDueDate} onChange={(e) => setNewDueDate(e.target.value)} disabled={isSaving} /></div><DialogFooter><Button className="w-full" onClick={handleReschedule} disabled={isSaving}>Confirmar Reagendamento</Button></DialogFooter></DialogContent>
+          <div className="py-4"><Input type="date" value={newDueDate} onChange={(e) => setNewDueDate(e.target.value)} disabled={isSaving} /></div><DialogFooter><Button className="w-full" onClick={() => setIsRescheduleConfirmOpen(true)} disabled={isSaving}>Confirmar Nova Data</Button></DialogFooter></DialogContent>
       </Dialog>
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
