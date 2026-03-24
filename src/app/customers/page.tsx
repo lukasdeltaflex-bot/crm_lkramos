@@ -98,7 +98,8 @@ function CustomersPageContent() {
     return query(
         collection(firestore, 'loanProposals'), 
         where('ownerId', '==', user.uid),
-        limit(500)
+        orderBy('dateDigitized', 'desc'),
+        limit(300)
     );
   }, [firestore, user]);
 

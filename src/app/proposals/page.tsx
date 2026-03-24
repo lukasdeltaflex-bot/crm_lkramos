@@ -79,7 +79,7 @@ function ProposalsPageContent() {
   const [hasOpenedFromParam, setHasOpenedFromParam] = useState(false);
   
   // ⚡ PERFORMANCE: Limite de carregamento inicial expandido para garantir visibilidade histórica
-  const [loadLimit, setLoadLimit] = useState(1000);
+  const [loadLimit, setLoadLimit] = useState(150);
 
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -96,7 +96,8 @@ function ProposalsPageContent() {
     return query(
         collection(firestore, 'customers'), 
         where('ownerId', '==', user.uid),
-        limit(5000) // Aumentado para garantir vínculo de nomes em bases grandes
+        orderBy('numericId', 'desc'),
+        limit(1500) // Reduzido de 5000 para proteger quotas, com orderBy para garantir os mais recentes
     );
   }, [firestore, user]);
 

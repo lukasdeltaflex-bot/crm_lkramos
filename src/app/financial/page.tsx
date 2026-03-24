@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/page-header';
 import { FinancialDataTable, type FinancialDataTableHandle } from './data-table';
 import { getColumns } from './columns';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { collection, query, where, doc, setDoc, deleteField, deleteDoc, writeBatch, limit } from 'firebase/firestore';
+import { collection, query, where, doc, setDoc, deleteField, deleteDoc, writeBatch, limit, orderBy } from 'firebase/firestore';
 import type { Proposal, Customer, CommissionStatus, UserSettings, Expense } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -109,13 +109,12 @@ export default function FinancialPage() {
 
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    // Restaurado limite original de 1000 para manter consistência nos cálculos de totalizadores
-    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), limit(1000));
+    return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid), orderBy('dateDigitized', 'desc'), limit(500));
   }, [firestore, user]);
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), limit(1000));
+    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), orderBy('numericId', 'desc'), limit(500));
   }, [firestore, user]);
 
   const expensesQuery = useMemoFirebase(() => {
