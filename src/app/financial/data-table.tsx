@@ -331,8 +331,8 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
         const normalizedSearch = normalizeString(searchTerm);
         const cleanDigits = searchTerm.replace(/\D/g, '');
         
-        const searchableFields = [customer?.name, customer?.cpf, p.proposalNumber, p.operator, p.bank, p.promoter, p.product];
-        const matchesText = searchableFields.some(field => field && normalizeString(String(field)).includes(normalizedSearch));
+        const checkText = (f: any) => f && normalizeString(String(f)).includes(normalizedSearch);
+        const matchesText = checkText(customer?.name) || checkText(customer?.cpf) || checkText(p.proposalNumber) || checkText(p.operator) || checkText(p.bank) || checkText(p.promoter) || checkText(p.product);
         
         const isPotentialId = cleanDigits.length >= 2;
         const matchesId = isPotentialId && (String(customer?.numericId).includes(cleanDigits) || (customer?.cpf || '').replace(/\D/g, '').includes(cleanDigits) || (p.proposalNumber || '').replace(/\D/g, '').includes(cleanDigits));

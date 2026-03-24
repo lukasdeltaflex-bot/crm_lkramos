@@ -308,8 +308,8 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         const normalizedSearch = normalizeString(searchTerm);
         const cleanDigits = searchTerm.replace(/\D/g, '');
         
-        const searchableFields = [customer?.name, customer?.cpf, p.proposalNumber, p.operator, p.bank, cleanBankName(p.bank), p.promoter];
-        const matchesText = searchableFields.some(field => field && normalizeString(String(field)).includes(normalizedSearch));
+        const checkText = (f: any) => f && normalizeString(String(f)).includes(normalizedSearch);
+        const matchesText = checkText(customer?.name) || checkText(customer?.cpf) || checkText(p.proposalNumber) || checkText(p.operator) || checkText(p.bank) || checkText(cleanBankName(p.bank)) || checkText(p.promoter);
         
         const isPotentialId = cleanDigits.length >= 2;
         const matchesId = isPotentialId && (String(customer?.numericId) === searchTerm || (customer?.cpf || '').replace(/\D/g, '').startsWith(searchTerm) || (p.proposalNumber || '').replace(/\D/g, '').startsWith(searchTerm));

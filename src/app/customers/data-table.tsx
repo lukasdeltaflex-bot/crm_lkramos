@@ -212,8 +212,11 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
             if (cpfNumeric.startsWith(searchTerm)) return true;
             return false;
         }
-        const searchableFields = [customer.name, customer.city, customer.email, customer.observations, ...(customer.tags || []), ...((customer as any).smartTags || [])];
-        return searchableFields.some(field => field && normalizeString(String(field)).includes(normalizedSearch));
+        const check = (f: any) => f && normalizeString(String(f)).includes(normalizedSearch);
+        if (check(customer.name) || check(customer.city) || check(customer.email) || check(customer.observations)) return true;
+        if (customer.tags?.some(check)) return true;
+        if ((customer as any).smartTags?.some(check)) return true;
+        return false;
     },
   });
 
