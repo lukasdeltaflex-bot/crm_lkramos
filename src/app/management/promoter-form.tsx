@@ -21,15 +21,15 @@ import { useRef, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const promoterSchema = z.object({
-  name: z.string().min(2, 'O nome da promotora é obrigatório.'),
+  name: z.string().min(1, 'O nome da promotora é obrigatório.'),
   partnerCode: z.string().optional(),
   photoURL: z.string().optional(),
   contactName: z.string().optional(),
   phone: z.string().optional(),
   whatsapp: z.string().optional(),
   supportPhone: z.string().optional(),
-  email: z.string().email('E-mail inválido.').or(z.literal('')).optional(),
-  managerEmail: z.string().email('E-mail inválido.').or(z.literal('')).optional(),
+  email: z.string().optional(),
+  managerEmail: z.string().optional(),
   observations: z.string().optional(),
 });
 
@@ -125,6 +125,7 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
                     <FormItem>
                     <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><Hash className="h-3.5 w-3.5 text-primary" /> Código de Parceiro</FormLabel>
                     <FormControl><Input placeholder="Seu ID no sistema deles" {...field} className="font-mono font-bold h-10" /></FormControl>
+                    <FormMessage />
                     </FormItem>
                 )}
             />
@@ -138,6 +139,7 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
                     <FormItem>
                     <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><UserIcon className="h-3.5 w-3.5 text-primary" /> Nome do Gerente</FormLabel>
                     <FormControl><Input placeholder="Ex: Maria Clara" {...field} className="h-10" /></FormControl>
+                    <FormMessage />
                     </FormItem>
                 )}
             />
@@ -170,6 +172,7 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
                     <FormItem>
                     <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><Phone className="h-3.5 w-3.5 text-primary" /> Telefone Fixo</FormLabel>
                     <FormControl><Input placeholder="(00) 0000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} className="h-10" /></FormControl>
+                    <FormMessage />
                     </FormItem>
                 )}
             />
@@ -226,6 +229,7 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
             <FormItem>
               <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><MessageSquareText className="h-3.5 w-3.5" /> Anotações Internas</FormLabel>
               <FormControl><Textarea placeholder="Prazos, taxas médias, horários de corte..." {...field} className="min-h-[80px]" /></FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />

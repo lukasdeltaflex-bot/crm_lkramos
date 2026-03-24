@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 
@@ -12,6 +12,8 @@ import { RefreshCw } from 'lucide-react';
  */
 export function PwaRegister() {
   const updateFound = useRef(false);
+  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { toast, dismiss } = useToast();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -117,6 +119,17 @@ export function PwaRegister() {
     if (updateFound.current) return;
     updateFound.current = true;
 
+    // Agenda a liberação do prompt para 30 minutos, independente de ação.
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    
+    toastTimeoutRef.current = setTimeout(() => {
+        updateFound.current = false;
+        // PWA manual re-trigger
+        if (registration && registration.waiting) {
+            triggerUpdatePrompt(registration, newVersionFallback);
+        }
+    }, 30 * 60 * 1000);
+
     toast({
       title: "🚀 Nova versão disponível",
       description: "Deseja atualizar para a versão mais recente e estável do CRM?",
@@ -128,9 +141,8 @@ export function PwaRegister() {
             size="sm" 
             className="h-8 px-3 text-xs"
             onClick={() => {
-                // Ao clicar aqui, o toast se descarta nativamente, 
-                // e como updateFound.current é true, ele não incomodará tão cedo nessa mesma sessão
-                console.log("LK RAMOS: Atualização adiada.")
+                dismiss();
+                console.log("LK RAMOS: Atualização adiada para daqui a 30 min.");
             }}
           >
             Depois
@@ -140,6 +152,7 @@ export function PwaRegister() {
             variant="default" 
             className="bg-primary hover:bg-primary/90 text-white font-bold h-8 px-3 text-xs"
             onClick={() => {
+              dismiss();
               if (newVersionFallback) {
                   localStorage.setItem('lk-app-version', newVersionFallback);
               }
