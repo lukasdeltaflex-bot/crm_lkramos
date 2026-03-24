@@ -5,7 +5,7 @@
  * Os dados (clientes/propostas) são gerenciados pelo cache interno do Firestore.
  */
 
-const CACHE_NAME = 'lk-ramos-cache-v1.2';
+const CACHE_NAME = 'lk-ramos-cache-v1.3';
 const OFFLINE_URL = '/';
 
 // Assets essenciais para o funcionamento básico
@@ -51,6 +51,24 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Network First para navegação (HTML) para sempre exibir a tela atualizada
+  if (event.request.mode === 'navigate' || (event.request.headers.get('accept') || '').includes('text/html')) {
+    event.respondWith(
+      fetch(event.request).then((response) => {
+        return caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, response.clone());
+          return response;
+        });
+      }).catch(() => {
+        return caches.match(event.request).then((response) => {
+          return response || caches.match(OFFLINE_URL);
+        });
+      })
+    );
+    return;
+  }
+
+  // Cache First para o restante (CSS, JS, Imagens, etc)
   event.respondWith(
     caches.match(event.request).then((response) => {
       // Retorna do cache se existir, senão busca na rede
@@ -68,11 +86,6 @@ self.addEventListener('fetch', (event) => {
         }
         return fetchResponse;
       });
-    }).catch(() => {
-      // Se falhar (offline total) e for uma navegação, retorna a página inicial
-      if (event.request.mode === 'navigate') {
-        return caches.match(OFFLINE_URL);
-      }
     })
   );
 });

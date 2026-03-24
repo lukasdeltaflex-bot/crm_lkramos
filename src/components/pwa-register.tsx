@@ -162,7 +162,18 @@ export function PwaRegister() {
                 // O page reload ocorrerá no 'controllerchange'
               } else {
                 // Força reload no caso de fallback JSON apenas
-                window.location.reload();
+                // Para garantir que o usuário não fique preso no cache antigo do SW, limpamos tudo forçadamente:
+                if ('caches' in window) {
+                    caches.keys().then(names => Promise.all(names.map(name => caches.delete(name))));
+                }
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(regs => {
+                         for (const reg of regs) reg.unregister();
+                         window.location.reload();
+                    });
+                } else {
+                    window.location.reload();
+                }
               }
             }}
           >
