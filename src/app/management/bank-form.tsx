@@ -21,9 +21,9 @@ import { useUser } from '@/firebase';
 
 const bankSchema = z.object({
   bankName: z.string().min(2, 'Nome do banco é obrigatório.'),
-  accessUrl: z.string().url('URL inválida.').or(z.literal('')),
-  login: z.string().min(1, 'Login obrigatório.'),
-  password: z.string().min(1, 'Senha obrigatória.'),
+  accessUrl: z.string().optional(),
+  login: z.string().min(1, 'Login obrigatório.').or(z.literal('')),
+  password: z.string().min(1, 'Senha obrigatória.').or(z.literal('')),
   observations: z.string().optional(),
 });
 
@@ -104,6 +104,7 @@ export function BankForm({ initialData, onSubmit, isSaving = false }: BankFormPr
                     <FormItem>
                     <FormLabel className="flex items-center gap-2"><LinkIcon className="h-3.5 w-3.5" /> Link do Sistema</FormLabel>
                     <FormControl><Input placeholder="https://..." {...field} /></FormControl>
+                    <FormMessage />
                     </FormItem>
                 )}
             />
@@ -117,6 +118,7 @@ export function BankForm({ initialData, onSubmit, isSaving = false }: BankFormPr
                     <FormItem>
                     <FormLabel className="flex items-center gap-2"><User className="h-3.5 w-3.5" /> Usuário / CPF</FormLabel>
                     <FormControl><Input placeholder="Digite seu login" {...field} /></FormControl>
+                    <FormMessage />
                     </FormItem>
                 )}
             />
@@ -144,6 +146,7 @@ export function BankForm({ initialData, onSubmit, isSaving = false }: BankFormPr
                             </button>
                         </div>
                     </FormControl>
+                    <FormMessage />
                     </FormItem>
                 )}
             />
