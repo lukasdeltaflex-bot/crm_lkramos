@@ -163,6 +163,8 @@ export default function ManagementPage() {
             closeModals();
         })
         .catch(async (e) => {
+            console.error("🔥 Erro Crítico ao Salvar:", e);
+            toast({ title: 'Falha no Banco de Dados', description: e.message || 'Erro gravando informações.', variant: 'destructive' });
             errorEmitter.emit('permission-error', new FirestorePermissionError({
                 path: docRef.path,
                 operation: 'write',
@@ -191,6 +193,8 @@ export default function ManagementPage() {
             closeModals();
         })
         .catch(async (e) => {
+            console.error("🔥 Erro Crítico ao Salvar Banco:", e);
+            toast({ title: 'Falha no Banco de Dados', description: e.message || 'Erro gravando dados bancários.', variant: 'destructive' });
             errorEmitter.emit('permission-error', new FirestorePermissionError({
                 path: docRef.path,
                 operation: 'write',
