@@ -159,20 +159,32 @@ function CustomersPageContent() {
   const availableTags = userSettings?.customerTags || configData.defaultCustomerTags;
   const showLogos = userSettings?.showBankLogos ?? true;
 
+  const proposalsByCustomer = React.useMemo(() => {
+      const map = new Map<string, Proposal[]>();
+      if (proposals) {
+          proposals.forEach(p => {
+              if (!map.has(p.customerId)) map.set(p.customerId, []);
+              map.get(p.customerId)!.push(p);
+          });
+      }
+      return map;
+  }, [proposals]);
+
   const processedCustomers = React.useMemo(() => {
     if (!customers) return [];
     
     return customers
         .filter(c => c.deleted !== true)
         .map(c => {
-            const smartTags = getSmartTags(c, proposals || []);
+            const customerProposals = proposalsByCustomer.get(c.id) || [];
+            const smartTags = getSmartTags(c, customerProposals);
             return {
                 ...c,
                 smartTags: smartTags.map(st => st.label),
                 smartTagsFull: smartTags
             };
         });
-  }, [customers, proposals]);
+  }, [customers, proposalsByCustomer]);
 
   const filteredCustomers = React.useMemo(() => {
     return processedCustomers.filter(c => {

@@ -120,6 +120,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   const { statusColors } = useTheme();
   const [statusFilter, setStatusFilter] = React.useState('Todos');
   const [globalFilter, setGlobalFilter] = React.useState(initialGlobalFilter);
+  const [localGlobalFilter, setLocalGlobalFilter] = React.useState(initialGlobalFilter);
   const [frozenCount, setFrozenCount] = React.useState(2);
   
   const [bankFilters, setBankFilters] = React.useState<string[]>([]);
@@ -150,8 +151,16 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   React.useEffect(() => {
     if (initialGlobalFilter !== undefined && initialGlobalFilter !== globalFilter) {
         setGlobalFilter(initialGlobalFilter);
+        setLocalGlobalFilter(initialGlobalFilter);
     }
   }, [initialGlobalFilter]);
+
+  React.useEffect(() => {
+      const timeoutId = setTimeout(() => {
+          setGlobalFilter(localGlobalFilter);
+      }, 300);
+      return () => clearTimeout(timeoutId);
+  }, [localGlobalFilter]);
 
   const toggleBankFilter = useCallback((bank: string) => { setBankFilters(prev => prev.includes(bank) ? prev.filter(b => b !== bank) : [...prev, bank]); }, []);
   const togglePromoterFilter = useCallback((promoter: string) => { setPromoterFilters(prev => prev.includes(promoter) ? prev.filter(p => p !== promoter) : [...prev, promoter]); }, []);
@@ -263,12 +272,12 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
     if (promoterFilters.length > 0) list = list.filter(p => promoterFilters.includes(p.promoter));
     if (operatorFilters.length > 0) list = list.filter(p => operatorFilters.includes(p.operator || 'Sem Operador'));
     if (appliedDateRange && appliedDateRange.from) {
-        const fromDate = appliedDateRange.from;
-        const toDate = appliedDateRange.to ? endOfDay(appliedDateRange.to) : endOfDay(appliedDateRange.from);
+        const fromTime = appliedDateRange.from.getTime();
+        const toTime = (appliedDateRange.to ? endOfDay(appliedDateRange.to) : endOfDay(appliedDateRange.from)).getTime();
         list = list.filter(p => {
             if (!p.dateDigitized) return false;
-            const d = new Date(p.dateDigitized);
-            return isValid(d) && d >= fromDate && d <= toDate;
+            const dTime = Date.parse(p.dateDigitized);
+            return !isNaN(dTime) && dTime >= fromTime && dTime <= toTime;
         });
     }
     return list;
@@ -436,7 +445,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
                 {hasActiveFilters && ( <Button variant="ghost" size="sm" onClick={handleClearAllFilters} className="text-red-600 hover:text-red-700 hover:bg-red-50 font-bold text-[10px] uppercase gap-1.5 rounded-full"><X className="h-3 w-3" /> Limpar Filtros</Button> )}
             </div>
             <div className='relative w-full group'>
-                <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80' /><Input placeholder="Busca por ID exato, CPF, Nome ou Proposta..." value={globalFilter ?? ''} onChange={(e) => setGlobalFilter(e.target.value)} className="pl-10 h-11 bg-background border-2 border-zinc-300 rounded-full text-base font-bold shadow-md" />
+                <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80' /><Input placeholder="Busca por ID exato, CPF, Nome ou Proposta..." value={localGlobalFilter ?? ''} onChange={(e) => setLocalGlobalFilter(e.target.value)} className="pl-10 h-11 bg-background border-2 border-zinc-300 rounded-full text-base font-bold shadow-md" />
             </div>
             <Card className="border-2 border-zinc-300 shadow-xl rounded-xl overflow-hidden bg-card p-1">
                 <ScrollArea className="h-[calc(100vh-280px)] w-full scroll-area-priority">

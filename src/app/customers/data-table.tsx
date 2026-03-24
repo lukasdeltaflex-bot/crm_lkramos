@@ -100,9 +100,17 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'col_id', desc: true }]);
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [globalFilter, setGlobalFilter] = React.useState('');
+  const [localGlobalFilter, setLocalGlobalFilter] = React.useState('');
   const [frozenCount, setFrozenCount] = React.useState(2);
   const [isClient, setIsClient] = React.useState(false);
   const [isLoaded, setIsLoaded] = React.useState(false);
+
+  React.useEffect(() => {
+      const timeoutId = setTimeout(() => {
+          setGlobalFilter(localGlobalFilter);
+      }, 300);
+      return () => clearTimeout(timeoutId);
+  }, [localGlobalFilter]);
 
   const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   
@@ -233,7 +241,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
           <div className="flex items-center justify-between px-4 py-2 gap-4">
             <div className='relative w-full max-md group'>
                 <Search className='absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80' />
-                <Input placeholder="Busca por ID exato, Nome, CPF..." value={globalFilter ?? ''} onChange={(e) => setGlobalFilter(e.target.value)} className="pl-11 w-full bg-background border-2 border-zinc-300 h-11 rounded-full shadow-md font-bold text-sm" />
+                <Input placeholder="Busca por ID exato, Nome, CPF..." value={localGlobalFilter ?? ''} onChange={(e) => setLocalGlobalFilter(e.target.value)} className="pl-11 w-full bg-background border-2 border-zinc-300 h-11 rounded-full shadow-md font-bold text-sm" />
             </div>
             <div className="flex items-center gap-3">
                 <Select value={String(frozenCount)} onValueChange={(val) => setFrozenCount(Number(val))}>

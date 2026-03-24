@@ -132,8 +132,16 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'col_date', desc: true }]);
   const [statusFilter, setStatusFilter] = React.useState('Todos');
   const [globalFilter, setGlobalFilter] = React.useState('');
+  const [localGlobalFilter, setLocalGlobalFilter] = React.useState('');
   const [frozenCount, setFrozenCount] = React.useState(2);
   const [bankFilters, setBankFilters] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+      const timeoutId = setTimeout(() => {
+          setGlobalFilter(localGlobalFilter);
+      }, 300);
+      return () => clearTimeout(timeoutId);
+  }, [localGlobalFilter]);
   const [promoterFilters, setPromoterFilters] = React.useState<string[]>([]);
   const [operatorFilters, setOperatorFilters] = React.useState<string[]>([]);
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
@@ -460,7 +468,7 @@ export const FinancialDataTable = React.forwardRef<FinancialDataTableHandle, Dat
                 </DropdownMenu>
             </div>
             <div className='relative w-full group'>
-                <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80' /><Input placeholder="Busca por ID exato, CPF, Nome ou Proposta..." value={globalFilter ?? ''} onChange={(e) => setGlobalFilter(e.target.value)} className="pl-10 h-11 bg-background border-2 border-zinc-300 rounded-full text-base font-bold shadow-md" />
+                <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-80' /><Input placeholder="Busca por ID exato, CPF, Nome ou Proposta..." value={localGlobalFilter ?? ''} onChange={(e) => setLocalGlobalFilter(e.target.value)} className="pl-10 h-11 bg-background border-2 border-zinc-300 rounded-full text-base font-bold shadow-md" />
             </div>
             <Card className="border-2 border-zinc-300 shadow-xl rounded-xl overflow-hidden bg-card p-1">
                 <ScrollArea className="h-[calc(100vh-280px)] w-full scroll-area-priority">

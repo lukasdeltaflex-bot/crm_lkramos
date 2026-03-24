@@ -157,50 +157,55 @@ export default function FinancialPage() {
       setAppliedStatsRange({ from: startOfDay(start), to: endOfDay(end) });
   };
 
-  const { proposalsWithCustomerData, summaryProposals, currentMonthRange, operatorStats } = useMemo(() => {
-    if (!proposals || !customers || !isClient) return { proposalsWithCustomerData: [], summaryProposals: [], currentMonthRange: { from: new Date(), to: new Date() }, operatorStats: [] };
-    
-    const customersMap = new Map(customers.map(c => [c.id, c]));
-    const today = new Date();
-    const startOfCurrent = startOfMonth(today);
-    const endOfCurrent = endOfMonth(today);
+  const customersMap = useMemo(() => {
+      if (!customers) return new Map();
+      return new Map(customers.map(c => [c.id, c]));
+  }, [customers]);
 
-    const tableData = proposals
-      .filter(p => p.deleted !== true)
-      .map(p => ({
-        ...p,
-        customer: customersMap.get(p.customerId),
-      }))
-      .filter(p => p.customer);
+  const summaryProposals = useMemo(() => {
+      if (!proposals) return [];
+      return proposals.filter(p => p.deleted !== true);
+  }, [proposals]);
 
-    const opMap: Record<string, { name: string; totalPaid: number; count: number; potential: number }> = {};
-    
-    const statsData = appliedStatsRange 
-        ? tableData.filter(p => {
-            const d = p.dateDigitized ? new Date(p.dateDigitized) : null;
-            return d && d >= appliedStatsRange.from && d <= appliedStatsRange.to;
-        })
-        : tableData;
+  const proposalsWithCustomerData = useMemo(() => {
+      if (!proposals || !isClient) return [];
+      return proposals
+        .filter(p => p.deleted !== true)
+        .map(p => ({
+          ...p,
+          customer: customersMap.get(p.customerId),
+        }))
+        .filter(p => p.customer) as ProposalWithCustomer[];
+  }, [proposals, customersMap, isClient]);
 
-    statsData.forEach(p => {
-        const op = p.operator || 'Sem Operador';
-        if (!opMap[op]) opMap[op] = { name: op, totalPaid: 0, count: 0, potential: 0 };
-        opMap[op].count++;
-        opMap[op].potential += (p.commissionValue || 0);
-        if (p.commissionStatus === 'Paga' || p.commissionStatus === 'Parcial') {
-            opMap[op].totalPaid += (p.amountPaid || 0);
-        }
-    });
+  const currentMonthRange = useMemo(() => {
+      const today = new Date();
+      return { from: startOfMonth(today), to: endOfMonth(today) };
+  }, []);
 
-    const stats = Object.values(opMap).sort((a,b) => b.potential - a.potential);
+  const operatorStats = useMemo(() => {
+      const opMap: Record<string, { name: string; totalPaid: number; count: number; potential: number }> = {};
+      
+      const statsData = appliedStatsRange 
+          ? proposalsWithCustomerData.filter(p => {
+              if (!p.dateDigitized) return false;
+              const dTime = Date.parse(p.dateDigitized);
+              return !isNaN(dTime) && dTime >= appliedStatsRange.from.getTime() && dTime <= appliedStatsRange.to.getTime();
+          })
+          : proposalsWithCustomerData;
 
-    return { 
-      proposalsWithCustomerData: tableData as ProposalWithCustomer[], 
-      summaryProposals: proposals.filter(p => p.deleted !== true), 
-      currentMonthRange: { from: startOfCurrent, to: endOfCurrent },
-      operatorStats: stats
-    };
-  }, [proposals, customers, isClient, appliedStatsRange]);
+      statsData.forEach(p => {
+          const op = p.operator || 'Sem Operador';
+          if (!opMap[op]) opMap[op] = { name: op, totalPaid: 0, count: 0, potential: 0 };
+          opMap[op].count++;
+          opMap[op].potential += (p.commissionValue || 0);
+          if (p.commissionStatus === 'Paga' || p.commissionStatus === 'Parcial') {
+              opMap[op].totalPaid += (p.amountPaid || 0);
+          }
+      });
+
+      return Object.values(opMap).sort((a,b) => b.potential - a.potential);
+  }, [proposalsWithCustomerData, appliedStatsRange]);
 
   const selectedIds = useMemo(() => 
     Object.keys(rowSelection).filter(id => rowSelection[id]),

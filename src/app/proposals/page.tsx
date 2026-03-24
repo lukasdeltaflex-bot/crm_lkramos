@@ -111,16 +111,20 @@ function ProposalsPageContent() {
 
   const isLoading = proposalsLoading || customersLoading || isUserLoading;
 
+  const customerMap = useMemo(() => {
+    if (!customers) return new Map();
+    return new Map(customers.map(c => [c.id, c]));
+  }, [customers]);
+
   const proposalsWithCustomerData: ProposalWithCustomer[] = useMemo(() => {
     if (!proposals || !customers) return [];
-    const customerMap = new Map(customers.map(c => [c.id, c]));
     return proposals
         .filter(p => p.deleted !== true)
         .map(p => ({
             ...p,
             customer: customerMap.get(p.customerId),
         }));
-  }, [proposals, customers]);
+  }, [proposals, customerMap, customers]);
 
   const selectedIds = useMemo(() => 
     Object.keys(rowSelection).filter(id => rowSelection[id]),
