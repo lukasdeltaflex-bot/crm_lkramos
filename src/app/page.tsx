@@ -303,9 +303,9 @@ export default function DashboardPage() {
   const currentDailyProduction = (() => {
       const today = startOfDay(new Date());
       const endToday = endOfDay(new Date());
-      return stats.proposals.pagoNoMes.reduce((sum, p) => {
-          if (!p.datePaidToClient) return sum;
-          const pd = new Date(p.datePaidToClient);
+      return stats.proposals.digitadoNoMes.reduce((sum, p) => {
+          if (!p.dateDigitized) return sum;
+          const pd = new Date(p.dateDigitized);
           return (isValid(pd) && pd >= today && pd <= endToday) ? sum + (p.commissionValue || 0) : sum;
       }, 0);
   })();

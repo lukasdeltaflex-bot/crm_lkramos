@@ -311,6 +311,51 @@ export default function ManualPage() {
                     </AccordionContent>
                 </AccordionItem>
 
+                {/* 8. PERFORMANCE E METAS */}
+                <AccordionItem value="perf-goals" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-teal-500/20">
+                    <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-teal-100 text-teal-600"><TrendingUp className="h-5 w-5" /></div>
+                            <div className="text-left">
+                                <p className="font-bold text-sm">8. Novidades: Performance e Metas</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Painel de Metas e Velocidade</p>
+                            </div>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
+                        <div className="p-4 rounded-xl bg-teal-50/5 border border-teal-500/20 mb-4">
+                            <h4 className="font-bold text-teal-700 flex items-center gap-2 mb-2">
+                                <Trophy className="h-4 w-4" /> Gestão de Metas Separadas
+                            </h4>
+                            <p className="text-xs text-muted-foreground mt-2">
+                                <strong>Meta Diária (Comissão):</strong> O progresso do dia agora mede apenas o valor de repasse (sua comissão real) das vendas digitadas no dia. O restante reflete exatamente o quanto falta para bater a meta de lucro diária.
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-2">
+                                <strong>Meta Mensal (Contrato):</strong> Continua operando tradicionalmente via "Valor Bruto" dos contratos pagos, ditando o ritmo macro do mês.
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-2">
+                                <strong>Modo Privacidade:</strong> Utilize o novo botão de "Olhinho" <EyeOff className="inline h-3 w-3 relative top-0.5" /> no topo do painel de metas para ocultar instantaneamente todos os valores financeiros da tela, garantindo privacidade em público.
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-xl border">
+                                <Zap className="h-4 w-4 text-amber-500" />
+                                <div>
+                                    <div className="text-[11px] font-bold uppercase">Turbo nas Abas</div>
+                                    <div className="text-[9px] text-muted-foreground mt-1">As abas Propostas, Clientes e Financeiro abrem mais rápido consumindo menos internet.</div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-xl border">
+                                <Search className="h-4 w-4 text-indigo-500" />
+                                <div>
+                                    <div className="text-[11px] font-bold uppercase">Buscas Fluidas</div>
+                                    <div className="text-[9px] text-muted-foreground mt-1">As barras de busca rápida e de filtros agora respondem sem travar a tela.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+
             </Accordion>
         </div>
 
