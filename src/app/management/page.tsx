@@ -65,6 +65,7 @@ import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { BankIcon } from '@/components/bank-icon';
 
 const CopyButton = ({ text, label }: { text?: string; label: string }) => {
     if (!text) return null;
@@ -480,7 +481,7 @@ export default function ManagementPage() {
                                                 <Card key={bank.id} className="bg-background border-2 shadow-sm p-5 space-y-5 group/bank">
                                                     <div className="flex justify-between items-start">
                                                         <div className="flex items-center gap-2.5">
-                                                            <Landmark className="h-5 w-5 text-primary" />
+                                                            <BankIcon bankName={bank.bankName} className="h-5 w-5 text-primary" showLogo={true} />
                                                             <span className="font-black text-xs uppercase truncate max-w-[140px]">{bank.bankName}</span>
                                                         </div>
                                                         <div className="flex gap-1.5 opacity-0 group-hover/bank:opacity-100 transition-opacity">
@@ -584,7 +585,7 @@ export default function ManagementPage() {
       {/* MODAL DE LEITURA DE NOTÍCIA (READER) */}
       <Dialog open={isReadingNewsModalOpen} onOpenChange={setIsReadingNewsModalOpen}>
         <DialogContent className="max-w-4xl h-[90vh] overflow-hidden flex flex-col rounded-[2.5rem] p-0">
-            {selectedItem && (
+            {isReadingNewsModalOpen && selectedItem && (
                 <>
                     <DialogHeader className="px-8 pt-8 pb-4 shrink-0 border-b bg-muted/5">
                         <div className="flex items-center gap-3 mb-2">
