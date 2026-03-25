@@ -79,7 +79,7 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 pb-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 pb-6" noValidate>
         {/* FOTO/LOGO DA PROMOTORA */}
         <div className="flex flex-col items-center gap-2 py-1">
             <div className="relative group">

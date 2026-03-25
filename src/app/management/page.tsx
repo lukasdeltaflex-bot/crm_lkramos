@@ -107,7 +107,7 @@ export default function ManagementPage() {
 
   const newsQuery = useMemoFirebase(() => query(collection(firestore!, 'managementNews'), orderBy('date', 'desc')), []);
   const linksQuery = useMemoFirebase(() => query(collection(firestore!, 'managementQuickLinks'), orderBy('name', 'asc')), []);
-  const promotersQuery = useMemoFirebase(() => user ? query(collection(firestore!, 'managementPromoters'), where('ownerId', '==', user.uid), orderBy('name', 'asc')) : null, [user]);
+  const promotersQuery = useMemoFirebase(() => user ? query(collection(firestore!, 'managementPromoters'), where('ownerId', '==', user.uid)) : null, [user]);
 
   const { data: rawNews, isLoading: loadingNews } = useCollection(newsQuery);
   const { data: promoters, isLoading: loadingPromoters } = useCollection(promotersQuery);
@@ -115,6 +115,11 @@ export default function ManagementPage() {
 
   const [bankLogins, setBankLogins] = useState<any[]>([]);
   const [loadingLogins, setLoadingLogins] = useState(false);
+
+  const sortedPromoters = React.useMemo(() => {
+      if (!promoters) return [];
+      return [...promoters].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  }, [promoters]);
 
   const news = React.useMemo(() => {
     if (!rawNews || !isMounted) return [];
@@ -360,7 +365,7 @@ export default function ManagementPage() {
             </div>
 
             <div className="space-y-6">
-                {promoters?.map((promoter) => {
+                {sortedPromoters?.map((promoter) => {
                     const isSupportWhatsApp = promoter.supportPhone && isWhatsApp(promoter.supportPhone);
                     
                     return (
