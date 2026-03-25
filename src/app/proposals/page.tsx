@@ -78,8 +78,8 @@ function ProposalsPageContent() {
   const tableRef = React.useRef<ProposalsDataTableHandle>(null);
   const [hasOpenedFromParam, setHasOpenedFromParam] = useState(false);
   
-  // ⚡ PERFORMANCE: Limite de carregamento inicial expandido para garantir visibilidade histórica
-  const [loadLimit, setLoadLimit] = useState(150);
+  // ⚡ PERFORMANCE: Limite de carregamento inicial equalizado com Financeiro para garantir consistência
+  const [loadLimit, setLoadLimit] = useState(500);
 
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;

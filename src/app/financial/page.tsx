@@ -114,7 +114,7 @@ export default function FinancialPage() {
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), orderBy('numericId', 'desc'), limit(500));
+    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid), orderBy('numericId', 'desc'), limit(1500));
   }, [firestore, user]);
 
   const expensesQuery = useMemoFirebase(() => {
