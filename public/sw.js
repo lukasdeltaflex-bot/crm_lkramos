@@ -51,15 +51,23 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network First para navegação (HTML) para sempre exibir a tela atualizada
-  if (event.request.mode === 'navigate' || (event.request.headers.get('accept') || '').includes('text/html')) {
+  const isHtml = (event.request.headers.get('accept') || '').includes('text/html');
+  const isRSC = event.request.headers.has('RSC') || event.request.url.includes('_rsc=');
+
+  // Network First para navegação (HTML) e payloads do Next.js App Router (RSC)
+  if (event.request.mode === 'navigate' || isHtml || isRSC) {
     event.respondWith(
       fetch(event.request).then((response) => {
+        console.log(`[SW Flow] 🟢 Network First (Success): ${event.request.url}`);
         return caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, response.clone());
+          // Apenas faz cache da navegação HTML pura, não sujamos o cache com payloads RSC
+          if (!isRSC) {
+              cache.put(event.request, response.clone());
+          }
           return response;
         });
-      }).catch(() => {
+      }).catch((err) => {
+        console.warn(`[SW Flow] 🔴 Network First (Failed, falling back to cache): ${event.request.url}`, err);
         return caches.match(event.request).then((response) => {
           return response || caches.match(OFFLINE_URL);
         });

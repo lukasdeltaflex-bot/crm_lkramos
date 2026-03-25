@@ -94,21 +94,34 @@ export function PwaRegister() {
     if (typeof window === 'undefined' || process.env.NODE_ENV !== 'production') return;
 
     const checkFallbackVersion = async () => {
-        if (updateFound.current) return;
+        if (updateFound.current) {
+            console.log("[PWA Flow] ⏳ checkFallbackVersion ignorado pois updateFound já é true.");
+            return;
+        }
         try {
+            console.log("[PWA Flow] 🔍 Buscando /version.json...");
             const res = await fetch('/version.json?t=' + Date.now(), { cache: 'no-store' });
-            if (!res.ok) return;
+            if (!res.ok) {
+                console.warn("[PWA Flow] ⚠️ Falha ao buscar version.json. Status:", res.status);
+                return;
+            }
             const data = await res.json();
             const currentVersion = localStorage.getItem('lk-app-version');
             
+            console.log(`[PWA Flow] 📊 Versão Local: ${currentVersion} | Versão Servidor: ${data.version}`);
+
             if (!currentVersion) {
+                console.log("[PWA Flow] 📥 Versão local inexistente. Salvando primeira vez.");
                 // Primeira vez, salva a versão
                 localStorage.setItem('lk-app-version', data.version);
             } else if (currentVersion !== data.version) {
+                console.log("[PWA Flow] 🚨 DIVERGÊNCIA DE VERSÃO DETECTADA!");
                 // Nova versão detectada!
                 triggerUpdatePrompt(undefined, data.version);
+            } else {
+                console.log("[PWA Flow] ✅ Versões coincidem. Nenhuma ação necessária.");
             }
-        } catch (e) { console.warn("PWA Event Error", e); }
+        } catch (e) { console.warn("[PWA Flow] 🔴 PWA Event Error", e); }
     };
 
     // 🔥 Executa imediatamente ao carregar a página
@@ -129,11 +142,14 @@ export function PwaRegister() {
     if (updateFound.current) return;
     updateFound.current = true;
 
+    console.log(`[PWA Flow] 🚨 Disparando aviso de nova versão. SW Waiting? ${!!registration?.waiting}. Novo Fallback? ${newVersionFallback}`);
+
     // Agenda a liberação do prompt para 30 minutos, independente de ação.
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
     
     toastTimeoutRef.current = setTimeout(() => {
         updateFound.current = false;
+        console.log(`[PWA Flow] 🕒 30 min se passaram. Re-trigger prompt.`);
         // PWA manual re-trigger
         if (registration && registration.waiting) {
             triggerUpdatePrompt(registration, newVersionFallback);
@@ -154,7 +170,7 @@ export function PwaRegister() {
             className="h-8 px-3 text-xs"
             onClick={() => {
                 dismiss();
-                console.log("LK RAMOS: Atualização adiada para daqui a 30 min.");
+                console.log("[PWA Flow] ⏭️ Atualização adiada para daqui a 30 min.");
             }}
           >
             Depois
@@ -165,31 +181,37 @@ export function PwaRegister() {
             className="bg-primary hover:bg-primary/90 text-white font-bold h-8 px-3 text-xs"
             onClick={() => {
               dismiss();
+              console.log("[PWA Flow] ⚡ Botão ATUALIZAR AGORA clicado.");
               if (newVersionFallback) {
+                  console.log(`[PWA Flow] Salvando versão ${newVersionFallback} no localStorage.`);
                   localStorage.setItem('lk-app-version', newVersionFallback);
               }
               if (registration?.waiting) {
-                // Manda o worker waiting virar o worker active
+                console.log("[PWA Flow] Mando mensagem SKIP_WAITING para o SW.");
                 registration.waiting.postMessage({ type: 'SKIP_WAITING' });
                 // O page reload ocorrerá no 'controllerchange'
               } else {
-                // Força reload no caso de fallback JSON apenas
-                // Para garantir que o usuário não fique preso no cache antigo do SW, limpamos tudo forçadamente:
+                console.log("[PWA Flow] SW sem estado waiting. Entrando na limpeza manual de cache.");
                 const clearCacheAndReload = async () => {
                     try {
                         if ('caches' in window) {
+                            console.log("[PWA Flow] 🧹 Limpando caches do navegador...");
                             const names = await caches.keys();
                             await Promise.all(names.map(name => caches.delete(name)));
+                            console.log("[PWA Flow] ✅ Caches limpos.");
                         }
                         if ('serviceWorker' in navigator) {
+                            console.log("[PWA Flow] 🔌 Desregistrando Service Workers ativos...");
                             const regs = await navigator.serviceWorker.getRegistrations();
                             for (const reg of regs) {
                                 await reg.unregister();
                             }
+                            console.log("[PWA Flow] ✅ SWs desregistrados.");
                         }
                     } catch (e) {
-                        console.error("LK RAMOS: Erro ao limpar cache interno", e);
+                        console.error("[PWA Flow] 🔴 Erro ao limpar cache interno", e);
                     } finally {
+                        console.log("[PWA Flow] 🔄 Forçando reload bypass...");
                         window.location.href = window.location.pathname + '?v=' + new Date().getTime();
                     }
                 };
