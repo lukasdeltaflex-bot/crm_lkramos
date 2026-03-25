@@ -48,6 +48,13 @@ export function PwaRegister() {
       try {
         const registration = await navigator.serviceWorker.register('/sw.js');
 
+        // 🔥 Força a checagem com o servidor ignorando o cache do navegador
+        try {
+            await registration.update();
+        } catch (e) {
+            console.warn("SW Update check failed", e);
+        }
+
         // Se já tiver alguma att pendente esperando (ignorado na sessão anterior)
         if (registration.waiting) {
             triggerUpdatePrompt(registration);
@@ -104,6 +111,9 @@ export function PwaRegister() {
         } catch (e) { console.warn("PWA Event Error", e); }
     };
 
+    // 🔥 Executa imediatamente ao carregar a página
+    checkFallbackVersion();
+
     // Checa versão a cada 5 minutos
     const interval = setInterval(checkFallbackVersion, 5 * 60 * 1000);
     // Também checa assim que a pessoa retorna pra aba
@@ -127,6 +137,8 @@ export function PwaRegister() {
         // PWA manual re-trigger
         if (registration && registration.waiting) {
             triggerUpdatePrompt(registration, newVersionFallback);
+        } else if (newVersionFallback) {
+            triggerUpdatePrompt(undefined, newVersionFallback);
         }
     }, 30 * 60 * 1000);
 

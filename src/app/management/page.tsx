@@ -481,7 +481,7 @@ export default function ManagementPage() {
                                                 <Card key={bank.id} className="bg-background border-2 shadow-sm p-5 space-y-5 group/bank">
                                                     <div className="flex justify-between items-start">
                                                         <div className="flex items-center gap-2.5">
-                                                            <BankIcon bankName={bank.bankName} className="h-5 w-5 text-primary" showLogo={true} />
+                                                            <BankIcon bankName={bank.bankName} domain={bank.accessUrl ? bank.accessUrl.replace(/^https?:\/\//, '').split('/')[0] : undefined} className="h-5 w-5 text-primary" showLogo={true} />
                                                             <span className="font-black text-xs uppercase truncate max-w-[140px]">{bank.bankName}</span>
                                                         </div>
                                                         <div className="flex gap-1.5 opacity-0 group-hover/bank:opacity-100 transition-opacity">

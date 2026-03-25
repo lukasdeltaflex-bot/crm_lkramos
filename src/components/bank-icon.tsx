@@ -59,7 +59,35 @@ export function BankIcon({ bankName, domain, className, showLogo = true }: BankI
   }
   
   const cleanedName = cleanBankName(bankName);
-  const finalDomain = domain || domainMap[cleanedName] || domainMap[bankName] || null;
+  
+  // Estratégia de busca flexível para lidar com digitação livre
+  const searchKey = cleanedName.toLowerCase();
+  const flexibleMap: Record<string, string> = {
+      'itau': 'itau.com.br',
+      'itaú': 'itau.com.br',
+      'bradesco': 'bradesco.com.br',
+      'caixa': 'caixa.gov.br',
+      'bb': 'bb.com.br',
+      'banco do brasil': 'bb.com.br',
+      'santander': 'santander.com.br',
+      'nubank': 'nubank.com.br',
+      'banco inter': 'bancointer.com.br',
+      'inter': 'bancointer.com.br',
+      'bmg': 'bancobmg.com.br',
+      'banco bmg': 'bancobmg.com.br',
+      'pan': 'bancopan.com.br',
+      'banco pan': 'bancopan.com.br',
+      'c6': 'c6bank.com.br',
+      'c6 bank': 'c6bank.com.br',
+      'safra': 'safra.com.br',
+      'banco safra': 'safra.com.br',
+      'votorantim': 'bv.com.br',
+      'bv': 'bv.com.br',
+      'daycoval': 'daycoval.com.br',
+      'banco daycoval': 'daycoval.com.br'
+  };
+
+  const finalDomain = domain || domainMap[cleanedName] || domainMap[bankName] || flexibleMap[searchKey] || null;
 
   if (!finalDomain || hasError) {
     return <Landmark className={cn("h-4 w-4 text-muted-foreground/40", className)} />;
