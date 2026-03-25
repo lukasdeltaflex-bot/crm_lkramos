@@ -175,17 +175,25 @@ export function PwaRegister() {
               } else {
                 // Força reload no caso de fallback JSON apenas
                 // Para garantir que o usuário não fique preso no cache antigo do SW, limpamos tudo forçadamente:
-                if ('caches' in window) {
-                    caches.keys().then(names => Promise.all(names.map(name => caches.delete(name))));
-                }
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.getRegistrations().then(regs => {
-                         for (const reg of regs) reg.unregister();
-                         window.location.reload();
-                    });
-                } else {
-                    window.location.reload();
-                }
+                const clearCacheAndReload = async () => {
+                    try {
+                        if ('caches' in window) {
+                            const names = await caches.keys();
+                            await Promise.all(names.map(name => caches.delete(name)));
+                        }
+                        if ('serviceWorker' in navigator) {
+                            const regs = await navigator.serviceWorker.getRegistrations();
+                            for (const reg of regs) {
+                                await reg.unregister();
+                            }
+                        }
+                    } catch (e) {
+                        console.error("LK RAMOS: Erro ao limpar cache interno", e);
+                    } finally {
+                        window.location.href = window.location.pathname + '?v=' + new Date().getTime();
+                    }
+                };
+                clearCacheAndReload();
               }
             }}
           >
