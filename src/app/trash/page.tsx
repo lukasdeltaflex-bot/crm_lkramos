@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { RotateCcw, Trash2, Users, FileText, CalendarClock, AlertTriangle, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
+import { format, differenceInDays, addDays } from 'date-fns';
 import { cn, formatCurrency, formatDateSafe } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -25,6 +25,21 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from '@/components/ui/badge';
+
+const getExpirationText = (deletedAt?: string | null) => {
+    if (!deletedAt) return null;
+    const deletedDate = new Date(deletedAt);
+    if (isNaN(deletedDate.getTime())) return null;
+    
+    const expirationDate = addDays(deletedDate, 30);
+    const daysRemaining = differenceInDays(expirationDate, new Date());
+    
+    if (daysRemaining < 0) return 'Expirado (Aguardando exclusão)';
+    if (daysRemaining === 0) return 'Expira hoje';
+    if (daysRemaining === 1) return 'Expira amanhã';
+    return `Expira em: ${daysRemaining} dias`;
+};
+
 
 export default function TrashPage() {
   const { user } = useUser();
@@ -159,9 +174,13 @@ export default function TrashPage() {
                                 <CardDescription className="text-[10px] font-bold">CPF: {c.cpf}</CardDescription>
                             </CardHeader>
                             <CardContent className="p-5 space-y-4">
-                                <div className="text-[10px] font-medium text-muted-foreground uppercase">
-                                    {/* 🛡️ CORREÇÃO DE CRASH: Usando formatDateSafe para evitar erro de parse */}
-                                    <p>Excluído em: {formatDateSafe(c.deletedAt, 'dd/MM/yyyy HH:mm')}</p>
+                                <div className="text-[10px] font-medium text-muted-foreground uppercase space-y-1.5">
+                                    <p>Excluído: {formatDateSafe(c.deletedAt, 'dd/MM/yyyy HH:mm')}</p>
+                                    {c.deletedAt && (
+                                        <p className="text-red-500 font-black tracking-widest bg-red-500/10 w-fit px-2 py-0.5 rounded-sm border border-red-500/20">
+                                            {getExpirationText(c.deletedAt)}
+                                        </p>
+                                    )}
                                 </div>
                                 <div className="flex gap-2 pt-2">
                                     <Button variant="outline" size="sm" className="flex-1 rounded-full font-bold h-9 text-[10px] uppercase gap-2" onClick={() => handleRestore('customer', c.id)} disabled={isProcessing}>
@@ -200,8 +219,13 @@ export default function TrashPage() {
                                 </div>
                             </CardHeader>
                             <CardContent className="p-5 space-y-4">
-                                <div className="text-[10px] font-medium text-muted-foreground uppercase">
-                                    <p>Excluído em: {formatDateSafe(p.deletedAt, 'dd/MM/yyyy HH:mm')}</p>
+                                <div className="text-[10px] font-medium text-muted-foreground uppercase space-y-1.5">
+                                    <p>Excluído: {formatDateSafe(p.deletedAt, 'dd/MM/yyyy HH:mm')}</p>
+                                    {p.deletedAt && (
+                                        <p className="text-red-500 font-black tracking-widest bg-red-500/10 w-fit px-2 py-0.5 rounded-sm border border-red-500/20">
+                                            {getExpirationText(p.deletedAt)}
+                                        </p>
+                                    )}
                                 </div>
                                 <div className="flex gap-2 pt-2">
                                     <Button variant="outline" size="sm" className="flex-1 rounded-full font-bold h-9 text-[10px] uppercase gap-2" onClick={() => handleRestore('proposal', p.id)} disabled={isProcessing}>
@@ -233,8 +257,13 @@ export default function TrashPage() {
                             </CardHeader>
                             <CardContent className="p-5 space-y-4">
                                 <p className="text-xs text-muted-foreground italic line-clamp-2">"{f.description || 'Sem descrição.'}"</p>
-                                <div className="text-[10px] font-medium text-muted-foreground uppercase pt-2">
-                                    <p>Excluído em: {formatDateSafe(f.deletedAt, 'dd/MM/yyyy HH:mm')}</p>
+                                <div className="text-[10px] font-medium text-muted-foreground uppercase pt-2 space-y-1.5 border-t">
+                                    <p>Excluído: {formatDateSafe(f.deletedAt, 'dd/MM/yyyy HH:mm')}</p>
+                                    {f.deletedAt && (
+                                        <p className="text-red-500 font-black tracking-widest bg-red-500/10 w-fit px-2 py-0.5 rounded-sm border border-red-500/20">
+                                            {getExpirationText(f.deletedAt)}
+                                        </p>
+                                    )}
                                 </div>
                                 <div className="flex gap-2 pt-2">
                                     <Button variant="outline" size="sm" className="flex-1 rounded-full font-bold h-9 text-[10px] uppercase gap-2" onClick={() => handleRestore('followup', f.id, `users/${user?.uid}/followUps/${f.id}`)} disabled={isProcessing}>

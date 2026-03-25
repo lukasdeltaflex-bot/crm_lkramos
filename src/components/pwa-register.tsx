@@ -98,6 +98,13 @@ export function PwaRegister() {
             console.log("[PWA Flow] ⏳ checkFallbackVersion ignorado pois updateFound já é true.");
             return;
         }
+
+        const snoozeUntil = localStorage.getItem('lk-pwa-snooze');
+        if (snoozeUntil && Date.now() < parseInt(snoozeUntil, 10)) {
+            console.log("[PWA Flow] ⏳ Atualização adiada pelo usuário (Snooze ativo).");
+            return;
+        }
+
         try {
             console.log("[PWA Flow] 🔍 Buscando /version.json...");
             const res = await fetch('/version.json?t=' + Date.now(), { cache: 'no-store' });
@@ -144,18 +151,9 @@ export function PwaRegister() {
 
     console.log(`[PWA Flow] 🚨 Disparando aviso de nova versão. SW Waiting? ${!!registration?.waiting}. Novo Fallback? ${newVersionFallback}`);
 
-    // Agenda a liberação do prompt para 30 minutos, independente de ação.
-    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-    
     toastTimeoutRef.current = setTimeout(() => {
         updateFound.current = false;
-        console.log(`[PWA Flow] 🕒 30 min se passaram. Re-trigger prompt.`);
-        // PWA manual re-trigger
-        if (registration && registration.waiting) {
-            triggerUpdatePrompt(registration, newVersionFallback);
-        } else if (newVersionFallback) {
-            triggerUpdatePrompt(undefined, newVersionFallback);
-        }
+        console.log(`[PWA Flow] 🕒 30 min se passaram pelo timer. Reseta updateFound para nova checagem.`);
     }, 30 * 60 * 1000);
 
     toast({
@@ -170,7 +168,9 @@ export function PwaRegister() {
             className="h-8 px-3 text-xs"
             onClick={() => {
                 dismiss();
-                console.log("[PWA Flow] ⏭️ Atualização adiada para daqui a 30 min.");
+                updateFound.current = false;
+                localStorage.setItem('lk-pwa-snooze', (Date.now() + 30 * 60 * 1000).toString());
+                console.log("[PWA Flow] ⏭️ Atualização adiada para daqui a 30 min (Snooze LocalStorage).");
             }}
           >
             Depois

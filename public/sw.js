@@ -46,7 +46,8 @@ self.addEventListener('fetch', (event) => {
     event.request.url.includes('firestore.googleapis.com') ||
     event.request.url.includes('firebasestorage.googleapis.com') ||
     event.request.url.includes('google-analytics.com') ||
-    event.request.url.includes('/api/')
+    event.request.url.includes('/api/') ||
+    event.request.url.includes('version.json')
   ) {
     return;
   }
