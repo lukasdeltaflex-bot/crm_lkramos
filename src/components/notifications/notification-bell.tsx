@@ -61,11 +61,9 @@ export function NotificationBell() {
   const followUpsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(
-        collection(firestore, 'followUps'), 
-        where('ownerId', '==', user.uid),
-        // Adicionando indexação composta requerida na Firestore -> ownerId ASC + status ASC
-        where('status', '==', 'pending'),
-        limit(50)
+        collection(firestore, 'users', user.uid, 'followUps'), 
+        // Removemos o filtro de status da query do Firestore para aceitar 'pending' e 'pendente' via loop local
+        limit(100)
     );
   }, [firestore, user]);
 
@@ -198,7 +196,11 @@ export function NotificationBell() {
       }
     });
 
-    followUps?.filter(f => f.deleted !== true && f.dueDate).forEach(f => {
+    followUps?.filter(f => {
+        if (f.deleted === true || !f.dueDate) return false;
+        // Aceita ambos os status usados pelo sistema (inglês/português)
+        return f.status === 'pending' || f.status === 'pendente';
+    }).forEach(f => {
         const dueDateStr = f.dueDate.substring(0, 10);
         if (dueDateStr <= todayIso) {
             alerts.push({

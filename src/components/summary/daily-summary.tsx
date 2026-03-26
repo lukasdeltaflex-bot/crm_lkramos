@@ -14,7 +14,7 @@ import { sendSummaryEmail } from '@/ai/flows/send-summary-email-flow';
 import { generateBirthdayMessage } from '@/ai/flows/generate-birthday-message-flow';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, doc, setDoc, query, where } from 'firebase/firestore';
+import { collection, doc, setDoc } from 'firebase/firestore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import Link from 'next/link';
 
@@ -89,10 +89,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
 
   const followUpsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(
-        collection(firestore, 'followUps'),
-        where('ownerId', '==', user.uid)
-    );
+    return collection(firestore, 'users', user.uid, 'followUps');
   }, [firestore, user]);
 
   const settingsDocRef = useMemoFirebase(() => {
@@ -255,7 +252,10 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
 
     const manualFollowUps = (followUps || [])
         .filter(f => {
-            if (f.deleted === true || f.status !== 'pending' || !f.dueDate) return false;
+            if (f.deleted === true || !f.dueDate) return false;
+            // Validação bilíngue de status (Pendente / Pending)
+            if (f.status !== 'pending' && f.status !== 'pendente') return false;
+            
             const dueDateStr = f.dueDate.substring(0, 10);
             return dueDateStr <= todayIso;
         })
