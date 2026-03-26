@@ -61,7 +61,9 @@ export function NotificationBell() {
   const followUpsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(
-        collection(firestore, 'users', user.uid, 'followUps'), 
+        collection(firestore, 'followUps'), 
+        where('ownerId', '==', user.uid),
+        // Adicionando indexação composta requerida na Firestore -> ownerId ASC + status ASC
         where('status', '==', 'pending'),
         limit(50)
     );

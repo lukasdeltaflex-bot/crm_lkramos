@@ -14,7 +14,7 @@ import { sendSummaryEmail } from '@/ai/flows/send-summary-email-flow';
 import { generateBirthdayMessage } from '@/ai/flows/generate-birthday-message-flow';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, doc, setDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, query, where } from 'firebase/firestore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import Link from 'next/link';
 
@@ -89,7 +89,10 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
 
   const followUpsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return collection(firestore, 'users', user.uid, 'followUps');
+    return query(
+        collection(firestore, 'followUps'),
+        where('ownerId', '==', user.uid)
+    );
   }, [firestore, user]);
 
   const settingsDocRef = useMemoFirebase(() => {

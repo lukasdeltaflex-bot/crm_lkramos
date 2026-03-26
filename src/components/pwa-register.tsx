@@ -57,7 +57,12 @@ export function PwaRegister() {
 
         // Se já tiver alguma att pendente esperando (ignorado na sessão anterior)
         if (registration.waiting) {
-            triggerUpdatePrompt(registration);
+            const snoozeUntil = localStorage.getItem('lk-pwa-snooze');
+            if (!snoozeUntil || Date.now() > parseInt(snoozeUntil, 10)) {
+                triggerUpdatePrompt(registration);
+            } else {
+                console.log("[PWA Flow] ⏳ Atualização silenciada pelo SNOOZE ativo na inicialização.");
+            }
         }
 
         // Listener de quando o SW descobre uma nova versão no background
@@ -135,7 +140,28 @@ export function PwaRegister() {
     checkFallbackVersion();
 
     // Checa versão a cada 5 minutos
-    const interval = setInterval(checkFallbackVersion, 5 * 60 * 1000);
+    const interval = setInterval(async () => {
+        if ('serviceWorker' in navigator) {
+            try {
+                const regs = await navigator.serviceWorker.getRegistrations();
+                for (const reg of regs) {
+                    if (reg.waiting) {
+                        const snooze = localStorage.getItem('lk-pwa-snooze');
+                        if (!snooze || Date.now() > parseInt(snooze, 10)) {
+                            console.log("[PWA Flow] 🕒 Resgatando SNOOZE expirado pelo setInterval. Mostrando popup!");
+                            triggerUpdatePrompt(reg);
+                        }
+                    } else {
+                        // Força navegador a rechecar novo sw.js
+                        reg.update().catch(() => {});
+                    }
+                }
+            } catch (e) {
+                console.warn("[PWA Flow] Error checking SW regs via interval:", e);
+            }
+        }
+        checkFallbackVersion();
+    }, 5 * 60 * 1000);
     // Também checa assim que a pessoa retorna pra aba
     window.addEventListener('focus', checkFallbackVersion);
 
