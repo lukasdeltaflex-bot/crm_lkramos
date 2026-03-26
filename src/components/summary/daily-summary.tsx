@@ -251,14 +251,21 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
         }));
 
     const manualFollowUps = (followUps || [])
-        .filter(f => f.deleted !== true && f.status === 'pending' && f.dueDate <= todayIso)
-        .map(f => ({
-            id: `fup-${f.id}`,
-            contactName: f.contactName,
-            description: f.description,
-            isToday: f.dueDate === todayIso,
-            link: '/follow-ups'
-        }));
+        .filter(f => {
+            if (f.deleted === true || f.status !== 'pending' || !f.dueDate) return false;
+            const dueDateStr = f.dueDate.substring(0, 10);
+            return dueDateStr <= todayIso;
+        })
+        .map(f => {
+            const dueDateStr = f.dueDate.substring(0, 10);
+            return {
+                id: `fup-${f.id}`,
+                contactName: f.contactName,
+                description: f.description,
+                isToday: dueDateStr === todayIso,
+                link: '/follow-ups'
+            };
+        });
 
     const expenseAlerts = (expenses || [])
         .filter(e => !e.paid)

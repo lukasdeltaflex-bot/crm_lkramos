@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Bot, Loader2, Sparkles, Target, Settings2, Eye, EyeOff } from 'lucide-react';
+import { Bot, Loader2, Sparkles, Target, Settings2, Eye, EyeOff, Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatCurrency, cn } from '@/lib/utils';
 import { generateMotivationMessage } from '@/ai/flows/generate-motivation-flow';
@@ -11,6 +11,7 @@ import { useUser } from '@/firebase';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { getDay, format, isToday } from 'date-fns';
 
 interface GamificationPanelProps {
   currentProduction: number;
@@ -18,6 +19,7 @@ interface GamificationPanelProps {
   currentDailyProduction?: number;
   dailyGoal?: number;
   onGoalsChange?: (monthly: number, daily: number) => void;
+  dailyHistory?: { date: Date, commission: number, contract: number }[];
 }
 
 export function GamificationPanel({ 
@@ -25,7 +27,8 @@ export function GamificationPanel({
     monthlyGoal, 
     currentDailyProduction = 0, 
     dailyGoal = 5000,
-    onGoalsChange 
+    onGoalsChange,
+    dailyHistory
 }: GamificationPanelProps) {
   const { user } = useUser();
   const [motivationMsg, setMotivationMsg] = useState('');
@@ -141,6 +144,49 @@ export function GamificationPanel({
             </div>
           )}
         </div>
+        
+        {/* CALENDÁRIO DIÁRIO INTEGRADO - EXCLUSIVO DA TELA DIÁRIA */}
+        {title === 'Diário' && dailyHistory && dailyHistory.length > 0 && (
+           <div className="mt-4 pt-4 border-t border-border/50">
+              <p className="text-[10px] font-black uppercase text-muted-foreground mb-3 text-center flex items-center justify-center gap-1.5">
+                  <CalendarIcon className="h-3 w-3" /> Desempenho do Mês
+              </p>
+              <div className="grid grid-cols-7 gap-1">
+                 {['D','S','T','Q','Q','S','S'].map((d, i) => (
+                    <div key={`header-${i}`} className="text-[8px] font-black text-center text-muted-foreground/50 mb-1">{d}</div>
+                 ))}
+                 {Array.from({ length: getDay(dailyHistory[0].date) }).map((_, i) => (
+                    <div key={`empty-${i}`} className="h-8" />
+                 ))}
+                 {dailyHistory.map((dayData, i) => {
+                     const reached = dayData.commission >= goal; // meta do dia batida
+                     const today = isToday(dayData.date);
+                     const hasProd = dayData.commission > 0 || dayData.contract > 0;
+                     return (
+                         <div 
+                             key={`day-${i}`} 
+                             className={cn(
+                                 "h-8 rounded-[4px] flex flex-col items-center justify-center relative group transition-colors select-none",
+                                 today && "ring-2 ring-primary bg-primary/10",
+                                 !today && reached ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : (!today && hasProd ? "bg-primary/5" : (!today && "hover:bg-muted/50 dark:hover:bg-muted/30"))
+                             )}
+                             title={isPrivacyMode ? 'Valores Ocultos' : `${format(dayData.date, 'dd/MM')} - Prod: ${formatCurrency(dayData.contract)} | Meta: ${formatCurrency(dayData.commission)}`}
+                         >
+                             <span className={cn("text-[9px] font-black z-10", reached && !today ? "text-emerald-700 dark:text-emerald-400" : (today ? "text-primary" : "text-foreground/70"))}>
+                                 {format(dayData.date, 'd')}
+                             </span>
+                             {hasProd && !reached && (
+                                 <div className="w-1 h-1 rounded-full bg-primary/40 mt-0.5" />
+                             )}
+                             {reached && (
+                                 <Target className="absolute w-5 h-5 text-emerald-500/20 z-0" />
+                             )}
+                         </div>
+                     );
+                 })}
+              </div>
+           </div>
+        )}
       </div>
   );
 

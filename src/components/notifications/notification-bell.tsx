@@ -44,9 +44,7 @@ export function NotificationBell() {
     if (!firestore || !user) return null;
     return query(
         collection(firestore, 'customers'), 
-        where('ownerId', '==', user.uid),
-        // IMPORTANTE: Adicionado filtro de status ativo para não puxar lixo. Requer índice (ownerId + status) no Firebase.
-        where('status', '==', 'active') 
+        where('ownerId', '==', user.uid)
     );
   }, [firestore, user]);
 
@@ -153,7 +151,7 @@ export function NotificationBell() {
     customers?.filter(c => c.deleted !== true).forEach(c => {
       const age = getAge(c.birthDate);
       
-      // 🛡️ FILTRO DE ATIVOS: Apenas clientes com status 'active' recebem notificações
+      // 🛡️ FILTRO DE ATIVOS IGUAL AO DAILY SUMMARY: Apenas clientes sem status 'inactive' recebem notificações
       if (c.status === 'inactive') return;
       
       // 1. Alerta de Idade Crítica (74 anos prestes a fazer 75)
@@ -198,13 +196,14 @@ export function NotificationBell() {
       }
     });
 
-    followUps?.filter(f => f.deleted !== true).forEach(f => {
-        if (f.dueDate <= todayIso) {
+    followUps?.filter(f => f.deleted !== true && f.dueDate).forEach(f => {
+        const dueDateStr = f.dueDate.substring(0, 10);
+        if (dueDateStr <= todayIso) {
             alerts.push({
                 id: `fup-${f.id}`,
                 title: `Retorno: ${f.contactName}`,
                 type: 'followup',
-                date: f.dueDate === todayIso ? 'Hoje' : 'Atrasado',
+                date: dueDateStr === todayIso ? 'Hoje' : 'Atrasado',
                 link: '/follow-ups'
             });
         }

@@ -464,6 +464,26 @@ export default function DashboardPage() {
                 currentDailyProduction={currentDailyProduction}
                 dailyGoal={userSettings?.dailyGoal || 5000}
                 onGoalsChange={handleGoalsChange}
+                dailyHistory={(() => {
+                    if (!stats) return [];
+                    const today = new Date();
+                    const days = eachDayOfInterval({ start: startOfMonth(today), end: endOfMonth(today) });
+                    return days.map(day => {
+                        const ds = startOfDay(day);
+                        const de = endOfDay(day);
+                        let commission = 0;
+                        let contract = 0;
+                        stats.proposals.digitadoNoMes.forEach(p => {
+                            if (!p.dateDigitized) return;
+                            const pd = new Date(p.dateDigitized);
+                            if (isValid(pd) && pd >= ds && pd <= de) {
+                                commission += (p.commissionValue || 0);
+                                contract += (p.grossAmount || 0);
+                            }
+                        });
+                        return { date: day, commission, contract };
+                    });
+                })()}
             />
             <SystemHealthPanel totalCustomers={customers.length} totalProposals={proposals.length} />
         </div>

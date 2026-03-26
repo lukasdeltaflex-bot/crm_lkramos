@@ -296,6 +296,20 @@ export function ProposalForm({
   const showLogosSettings = userSettings?.showBankLogos ?? true;
   const watchObservations = watch('observations');
 
+  const bankDomainsMap = userSettings?.bankDomains;
+
+  // 🛡️ OTIMIZAÇÃO: Memoização da lista de bancos para curar o gargalo massivo de renders
+  const memoizedBankOptions = useMemo(() => {
+      return banks.map(b => (
+          <SelectItem key={b} value={b}>
+              <div className="flex items-center gap-2">
+                  <BankIcon bankName={b} domain={bankDomainsMap?.[b]} showLogo={showLogosSettings} className="h-4 w-4" />
+                  <span className="font-bold text-xs uppercase">{cleanBankName(b)}</span>
+              </div>
+          </SelectItem>
+      ));
+  }, [banks, bankDomainsMap, showLogosSettings]);
+
   const selectedCustomer = useMemo(() => {
     return customers.find(c => c.id === selectedCustomerId);
   }, [customers, selectedCustomerId]);
@@ -562,14 +576,7 @@ export function ProposalForm({
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        {banks.map(b => (
-                                            <SelectItem key={b} value={b}>
-                                                <div className="flex items-center gap-2">
-                                                    <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogo={showLogosSettings} className="h-4 w-4" />
-                                                    <span className="font-bold text-xs uppercase">{cleanBankName(b)}</span>
-                                                </div>
-                                            </SelectItem>
-                                        ))}
+                                        {memoizedBankOptions}
                                     </SelectContent>
                                 </Select>
                             </FormItem>
@@ -643,14 +650,7 @@ export function ProposalForm({
                                 </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                                {banks.map(b => (
-                                    <SelectItem key={b} value={b}>
-                                        <div className="flex items-center gap-2">
-                                            <BankIcon bankName={b} domain={userSettings?.bankDomains?.[b]} showLogo={showLogosSettings} className="h-4 w-4" />
-                                            <span className="font-bold text-xs uppercase">{cleanBankName(b)}</span>
-                                        </div>
-                                    </SelectItem>
-                                ))}
+                                {memoizedBankOptions}
                             </SelectContent>
                         </Select>
                     </FormItem>

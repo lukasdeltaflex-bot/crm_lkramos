@@ -332,18 +332,24 @@ export default function ManualPage() {
                                 <strong>Meta Diária (Comissão):</strong> O progresso do dia agora mede apenas o valor de repasse (sua comissão real) das vendas digitadas no dia. O restante reflete exatamente o quanto falta para bater a meta de lucro diária.
                             </p>
                             <p className="text-xs text-muted-foreground mt-2">
+                                <strong>Calendário Visual:</strong> Um novo mini-calendário do mês foi adicionado logo abaixo da meta diária. Ele mostra as comissões e valores do dia (basta passar o mouse) e sinaliza automaticamente os dias em que você bateu a sua meta.
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-2">
+                                <strong>Sininho Inteligente:</strong> As notificações do sininho no topo passaram a ter 100% de precisão e paridade com as notificações da aba "Inteligência Diária" no seu dashboard, nunca perdendo aniversariantes.
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-2">
                                 <strong>Meta Mensal (Contrato):</strong> Continua operando tradicionalmente via "Valor Bruto" dos contratos pagos, ditando o ritmo macro do mês.
                             </p>
                             <p className="text-xs text-muted-foreground mt-2">
-                                <strong>Modo Privacidade:</strong> Utilize o novo botão de "Olhinho" <EyeOff className="inline h-3 w-3 relative top-0.5" /> no topo do painel de metas para ocultar instantaneamente todos os valores financeiros da tela, garantindo privacidade em público.
+                                <strong>Modo Privacidade:</strong> Utilize o novo botão de "Olhinho" <EyeOff className="inline h-3 w-3 relative top-0.5" /> no topo do painel de metas para ocultar instantaneamente todos os valores financeiros da tela, incluindo os valores do mini-calendário, garantindo privacidade em público.
                             </p>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-xl border">
                                 <Zap className="h-4 w-4 text-amber-500" />
                                 <div>
-                                    <div className="text-[11px] font-bold uppercase">Turbo nas Abas</div>
-                                    <div className="text-[9px] text-muted-foreground mt-1">As abas Propostas, Clientes e Financeiro abrem mais rápido consumindo menos internet.</div>
+                                    <div className="text-[11px] font-bold uppercase">Turbo na Criação de Propostas</div>
+                                    <div className="text-[9px] text-muted-foreground mt-1">O seletor de Bancos agora memoriza as imagens usando IA, o que elimina totalmente qualquer lentidão durante a digitação de propostas longas.</div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-xl border">
