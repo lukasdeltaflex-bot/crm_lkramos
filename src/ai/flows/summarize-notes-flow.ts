@@ -20,16 +20,19 @@ export async function summarizeNotes(notes: string): Promise<string> {
   try {
     const { output } = await ai.generate({
       model: 'googleai/gemini-2.5-flash-lite',
-      prompt: `Você é um Redator Executivo Sênior de uma instituição financeira.
-      Sua missão é TRANSFORMAR o texto informal abaixo em um parecer técnico formal e elegante.
+      prompt: `Atue como um compressor de texto altamente fiel e neutro.
+      Sua missão é resumir o conteúdo informado sem adicionar qualquer interpretação, conclusão ou julgamento.
 
       REGRAS OBRIGATÓRIAS:
-      1. NÃO DEVOLVA O TEXTO ORIGINAL. Use vocabulário do mercado de crédito consignado.
-      2. Seja extremamente direto. Use termos como: "Inviabilidade técnica", "Desistência por parte do proponente", "Impedimento na averbação".
-      3. Mantenha valores e nomes de bancos intactos.
-      4. O resultado deve ser conciso (máximo 3 frases).
+      1. NÃO adicione nenhuma informação que não esteja no texto original.
+      2. NÃO faça inferências ou deduções de intenção.
+      3. NÃO conclua nada além do que foi explicitamente informado. Mantenha o desfecho aberto se o texto assim indicar.
+      4. PROIBIDO usar palavras como: "inviável", "desistência", "não prosseguir", "rejeição", a menos que estejam explicitamente no texto original.
+      5. NÃO assuma desistência ou inviabilidade por conta própria.
+      6. Mantenha neutralidade total e preserve valores e nomes de bancos.
+      7. O resultado deve ser curto e direto (máximo 3 frases).
 
-      TEXTO BRUTO:
+      TEXTO ORIGINAL:
       """
       ${notes}
       """`,
