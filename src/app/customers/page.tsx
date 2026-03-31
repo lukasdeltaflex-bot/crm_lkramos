@@ -331,18 +331,40 @@ function CustomersPageContent() {
     if (!firestore || !user) return;
     setIsSaving(true);
     try {
-        const docId = (sheetMode === 'edit' && selectedCustomer) ? selectedCustomer.id : (defaultValues?.id || doc(collection(firestore, 'customers')).id);
+        const isLead = sheetMode === 'edit' && selectedCustomer?.tags?.includes('LEAD DO PORTAL');
+        
+        const docId = (sheetMode === 'edit' && selectedCustomer && !isLead) ? selectedCustomer.id : (defaultValues?.id || doc(collection(firestore, 'customers')).id);
         const docRef = doc(firestore, 'customers', docId);
         
+        let targetNumericId = formData.numericId;
+        if (sheetMode === 'edit' && selectedCustomer && !isLead) {
+            targetNumericId = selectedCustomer.numericId;
+        } else {
+            const realCustomers = processedCustomers?.filter(c => !c.tags?.includes('LEAD DO PORTAL')) || [];
+            targetNumericId = realCustomers.length > 0 ? Math.max(...realCustomers.map(c => c.numericId || 0)) + 1 : 1;
+        }
+
+        const cleanTags = formData.tags?.filter((t: string) => t !== 'LEAD DO PORTAL') || [];
+
         const finalData = cleanFirestoreData({
             ...formData,
             id: docId,
             ownerId: user.uid,
-            numericId: (sheetMode === 'edit' && selectedCustomer) ? selectedCustomer.numericId : (processedCustomers?.length ? Math.max(...processedCustomers.map(c => c.numericId || 0)) + 1 : 1)
+            numericId: targetNumericId,
+            tags: cleanTags
         });
 
-        await setDoc(docRef, finalData, { merge: true });
-        toast({ title: 'Cliente Salvo!' });
+        const batch = writeBatch(firestore);
+        batch.set(docRef, finalData, { merge: true });
+
+        if (isLead && selectedCustomer) {
+            const leadRef = doc(firestore, 'leads', selectedCustomer.id);
+            batch.update(leadRef, { status: 'approved', customerId: docId });
+        }
+
+        await batch.commit();
+
+        toast({ title: isLead ? 'Lead convertido em Cliente!' : 'Cliente Salvo!' });
         setIsDialog(false);
     } catch (error: any) {
         toast({ variant: 'destructive', title: 'Erro ao salvar' });

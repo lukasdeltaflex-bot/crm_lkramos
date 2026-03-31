@@ -102,7 +102,7 @@ export function PwaRegister() {
 
   // FALLBACK WEB: Polling do version.json para forçar updates se o SW falhar na checagem
   useEffect(() => {
-    if (typeof window === 'undefined' || process.env.NODE_ENV !== 'production') return;
+    if (typeof window === 'undefined') return;
 
     const checkFallbackVersion = async () => {
         if (updateFound.current) {
@@ -179,13 +179,18 @@ export function PwaRegister() {
 
   const triggerUpdatePrompt = (registration?: ServiceWorkerRegistration, newVersionFallback?: string) => {
     if (updateFound.current) return;
+    
+    // Limpa dismissals pendentes de renderizações anteriores para garantir frescor
+    dismiss();
+    
     updateFound.current = true;
 
     console.log(`[PWA Flow] 🚨 Disparando aviso de nova versão. SW Waiting? ${!!registration?.waiting}. Novo Fallback? ${newVersionFallback}`);
 
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
     toastTimeoutRef.current = setTimeout(() => {
         updateFound.current = false;
-        console.log(`[PWA Flow] 🕒 30 min se passaram pelo timer. Reseta updateFound para nova checagem.`);
+        console.log(`[PWA Flow] 🕒 30 min se passaram pelo timer da notificação. Reseta updateFound para nova checagem.`);
     }, 30 * 60 * 1000);
 
     toast({

@@ -102,6 +102,7 @@ export const DraggableHeader = ({ header, className, style: customStyle }: { hea
 
 const ActionsCell = ({ row, onEdit, onDelete }: any) => {
   const customer = row.original;
+  const isLead = customer.tags?.includes('LEAD DO PORTAL');
   const [isAlertOpen, setIsAlertOpen] = useState(false);
 
   return (
@@ -114,7 +115,9 @@ const ActionsCell = ({ row, onEdit, onDelete }: any) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48 shadow-xl border-2">
           <DropdownMenuLabel>Opções</DropdownMenuLabel>
-          <DropdownMenuItem onSelect={() => onEdit(customer)} className="font-bold">Editar Cadastro</DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => onEdit(customer)} className="font-bold">
+              {isLead ? 'Aprovar / Editar Lead' : 'Editar Cadastro'}
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => setIsAlertOpen(true)} className="text-destructive font-bold">Remover Registro</DropdownMenuItem>
         </DropdownMenuContent>
@@ -155,11 +158,23 @@ export const getColumns = ({ onEdit, onDelete }: any): ColumnDef<Customer>[] => 
   { id: 'col_name', accessorFn: (row) => row.name, header: 'Nome', cell: ({ row }) => {
       const customer = row.original;
       const smartTags = (customer as any).smartTagsFull || [];
+      const isLead = customer.tags?.includes('LEAD DO PORTAL');
+      
       return (
           <div className="flex flex-col gap-1 py-1">
-              <Link href={`/customers/${customer.id}`} className="font-bold text-primary hover:underline uppercase text-sm truncate block" onClick={(e) => { e.stopPropagation(); }}>
-                  {customer.name}
-              </Link>
+              {isLead ? (
+                <button 
+                  type="button" 
+                  className="text-left font-bold text-primary hover:underline uppercase text-sm truncate block" 
+                  onClick={(e) => { e.stopPropagation(); onEdit(customer); }}
+                >
+                    {customer.name}
+                </button>
+              ) : (
+                <Link href={`/customers/${customer.id}`} className="font-bold text-primary hover:underline uppercase text-sm truncate block" onClick={(e) => { e.stopPropagation(); }}>
+                    {customer.name}
+                </Link>
+              )}
               <div className="flex flex-wrap gap-1">
                   {smartTags.map((tag: any) => (
                       <Badge 
