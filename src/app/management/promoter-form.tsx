@@ -129,7 +129,7 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-5 pb-6" noValidate>
+      <form id="promoter-form" onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6 pb-4" noValidate>
         {/* CABEÇALHO: LOGO + DADOS BÁSICOS */}
         <div className="flex flex-col md:flex-row gap-6 items-start pb-4 border-b border-primary/5">
             <div className="flex flex-col items-center gap-2 shrink-0">
@@ -205,20 +205,21 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
                 />
                 <FormField
                     control={form.control}
-                    name="supportPhone"
+                    name="whatsapp"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest text-blue-600"><Headset className="h-3.5 w-3.5" /> Suporte / Central 0800</FormLabel>
+                        <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest text-green-600"><Phone className="h-3.5 w-3.5" /> WhatsApp Direto Gerente</FormLabel>
                         <FormControl>
                             <div className="relative">
-                                <Input placeholder="(00) 0000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} className="h-10" />
-                                {isWhatsApp(watchSupport || '') && (
+                                <Input placeholder="(00) 00000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} className="h-10" />
+                                {isWhatsApp(watchWhatsapp || '') && (
                                     <div className="absolute right-3 top-2 flex items-center">
                                         <WhatsAppIcon className="h-4 w-4" />
                                     </div>
                                 )}
                             </div>
                         </FormControl>
+                        <FormMessage />
                         </FormItem>
                     )}
                 />
@@ -247,20 +248,21 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
                 />
                 <FormField
                     control={form.control}
-                    name="whatsapp"
+                    name="supportPhone"
                     render={({ field }) => (
                         <FormItem className="md:col-span-2">
-                        <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest text-green-600"><Phone className="h-3.5 w-3.5" /> WhatsApp Direto Gerente</FormLabel>
+                        <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest text-blue-600"><Headset className="h-3.5 w-3.5" /> Suporte / Central 0800</FormLabel>
                         <FormControl>
                             <div className="relative">
-                                <Input placeholder="(00) 00000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} className="h-10" />
-                                {isWhatsApp(watchWhatsapp || '') && (
+                                <Input placeholder="(00) 0000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} className="h-10" />
+                                {isWhatsApp(watchSupport || '') && (
                                     <div className="absolute right-3 top-2 flex items-center">
                                         <WhatsAppIcon className="h-4 w-4" />
                                     </div>
                                 )}
                             </div>
                         </FormControl>
+                        <FormMessage />
                         </FormItem>
                     )}
                 />
@@ -411,12 +413,6 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
                     </FormItem>
                 )}
             />
-        </div>
-
-        <div className="sticky bottom-0 bg-background pt-6 pb-2 border-t mt-4 flex gap-4">
-            <Button type="submit" disabled={isSaving} className="flex-1 rounded-full h-14 font-black uppercase text-sm tracking-[0.2em] shadow-2xl bg-primary hover:scale-[1.02] active:scale-95 transition-all">
-                {isSaving ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Gravando...</> : <><Save className="mr-2 h-5 w-5" /> Confirmar e Salvar</>}
-            </Button>
         </div>
       </form>
     </Form>

@@ -778,16 +778,22 @@ export default function ManagementPage() {
       </Dialog>
 
       <Dialog open={isPromoterModalOpen} onOpenChange={setIsPromoterModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col rounded-[2rem] p-0" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
+        <DialogContent className="w-[95vw] sm:max-w-xl max-h-[90vh] overflow-hidden flex flex-col rounded-[2rem] p-0" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
             <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
-                <DialogTitle className="text-xl font-black uppercase tracking-tight">
+                <DialogTitle className="text-xl font-black uppercase tracking-tight text-primary flex items-center gap-2">
+                    {selectedItem ? <Edit className="h-5 w-5" /> : <PlusCircle className="h-5 w-5" />}
                     {selectedItem ? 'Editar Promotora' : 'Nova Promotora'}
                 </DialogTitle>
-                <DialogDescription>Gerencie contatos e informações técnicas deste parceiro comercial.</DialogDescription>
+                <DialogDescription className="text-[10px] font-medium uppercase tracking-wider opacity-70">Gerenciamento técnico e credenciais do parceiro.</DialogDescription>
             </DialogHeader>
-            <ScrollArea className="flex-1 px-6 py-2">
+            <ScrollArea className="flex-1 px-6 py-2 overflow-y-auto">
                 <PromoterForm initialData={selectedItem} onSubmit={(d) => handleSave('managementPromoters', d, selectedItem?.id)} isSaving={isSaving} />
             </ScrollArea>
+            <div className="p-6 pt-2 shrink-0 border-t bg-muted/5">
+                <Button type="submit" form="promoter-form" disabled={isSaving} className="w-full rounded-full h-12 font-black uppercase text-xs tracking-[0.2em] shadow-xl bg-primary hover:scale-[1.02] active:scale-95 transition-all">
+                    {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Gravando...</> : <><Save className="mr-2 h-4 w-4" /> Finalizar & Salvar</>}
+                </Button>
+            </div>
         </DialogContent>
       </Dialog>
 
