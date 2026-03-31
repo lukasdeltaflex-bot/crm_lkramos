@@ -53,7 +53,6 @@ export type Customer = {
   city?: string;
   state?: string;
   documents?: Attachment[]; // Central de documentos fixos
-  // Soft Delete
   deleted?: boolean;
   deletedAt?: string;
   deletedBy?: string;

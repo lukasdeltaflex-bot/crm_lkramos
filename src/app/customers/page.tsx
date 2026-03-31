@@ -8,7 +8,7 @@ import { getColumns } from './columns';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, FileDown, UserCheck, UserX, Trash2, Sparkles, Landmark, X, Tag, Cake, ChevronRight } from 'lucide-react';
 import { CustomerForm } from './customer-form';
-import type { Customer, UserSettings, Proposal } from '@/lib/types';
+import type { Customer, UserSettings, Proposal, Lead } from '@/lib/types';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, doc, updateDoc, setDoc, query, where, writeBatch, limit, orderBy, getDocs } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
@@ -38,7 +38,8 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getAge, cn, cleanBankName, cleanFirestoreData, getSmartTags } from '@/lib/utils';
+import { getAge, cn, cleanBankName, cleanFirestoreData, getSmartTags, parseDateSafe } from '@/lib/utils';
+import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/firebase/error-emitter';

@@ -1,0 +1,62 @@
+﻿diagnostico-ia/customer-ai-form.tsx(10,53): error TS2307: Cannot find module '../ui/alert' or its corresponding type declarations.
+diagnostico-ia/page.tsx(6,65): error TS2307: Cannot find module './data-table' or its corresponding type declarations.
+diagnostico-ia/page.tsx(7,28): error TS2307: Cannot find module './columns' or its corresponding type declarations.
+diagnostico-ia/page.tsx(10,30): error TS2307: Cannot find module './customer-form' or its corresponding type declarations.
+diagnostico-ia/page.tsx(271,52): error TS7006: Parameter 'r' implicitly has an 'any' type.
+src/app/agenda/reminder-form.tsx(20,15): error TS2305: Module '"@/lib/types"' has no exported member 'Reminder'.
+src/app/customers/[id]/page.tsx(441,49): error TS2353: Object literal may only specify known properties, and 'width' does not exist in type 'Partial<Styles>'.
+src/app/customers/[id]/page.tsx(457,17): error TS18048: 'b.salary' is possibly 'undefined'.
+src/app/customers/[id]/page.tsx(461,27): error TS2322: Type 'number[]' is not assignable to type 'Color | undefined'.
+  Type 'number[]' is not assignable to type '[number, number, number]'.
+    Target requires 3 element(s) but source may have fewer.
+src/app/customers/customer-form.tsx(354,7): error TS2322: Type '{ number: string; species?: string | null | undefined; salary?: number | undefined; rmcBank?: string | undefined; rccBank?: string | undefined; }[]' is not assignable to type 'Benefit[]'.
+  Type '{ number: string; species?: string | null | undefined; salary?: number | undefined; rmcBank?: string | undefined; rccBank?: string | undefined; }' is not assignable to type 'Benefit'.
+    Types of property 'species' are incompatible.
+      Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+        Type 'null' is not assignable to type 'string | undefined'.
+src/app/customers/page.tsx(121,41): error TS2304: Cannot find name 'Lead'.
+src/app/customers/page.tsx(135,36): error TS2304: Cannot find name 'parseDateSafe'.
+src/app/customers/page.tsx(146,78): error TS2304: Cannot find name 'parseDateSafe'.
+src/app/customers/page.tsx(146,107): error TS2552: Cannot find name 'format'. Did you mean 'FormData'?
+src/app/customers/page.tsx(146,114): error TS2304: Cannot find name 'parseDateSafe'.
+src/app/customers/page.tsx(240,45): error TS7006: Parameter 'b' implicitly has an 'any' type.
+src/app/customers/page.tsx(245,45): error TS7006: Parameter 'b' implicitly has an 'any' type.
+src/app/financial/data-table.tsx(66,15): error TS2305: Module '"@/lib/types"' has no exported member 'ProposalWithCustomer'.
+src/app/profile/profile-form.tsx(107,7): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+src/app/profile/profile-form.tsx(108,7): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+src/app/profile/profile-form.tsx(109,7): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+src/app/profile/profile-form.tsx(110,7): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+src/app/profile/profile-form.tsx(112,7): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+src/app/proposals/page.tsx(485,14): error TS2741: Property 'onDuplicate' is missing in type '{ key: string; onSubmit: (formData: any) => Promise<void>; proposal: ProposalWithCustomer | undefined; allProposals: WithId<Proposal>[]; ... 8 more ...; isSaving: boolean; }' but required in type 'ProposalFormProps'.
+src/components/dashboard/agenda-section.tsx(9,15): error TS2305: Module '"@/lib/types"' has no exported member 'Reminder'.
+src/components/dashboard/agenda-section.tsx(183,9): error TS2322: Type '{ open: boolean; onOpenChange: Dispatch<SetStateAction<boolean>>; customers: WithId<Customer>[]; onSelectCustomer: (c: Customer) => void; }' is not assignable to type 'IntrinsicAttributes & CustomerSearchDialogProps'.
+  Property 'open' does not exist on type 'IntrinsicAttributes & CustomerSearchDialogProps'.
+src/components/dashboard/proposals-status-table.tsx(159,20): error TS2322: Type 'ColumnDef<ProposalWithCustomer>[]' is not assignable to type 'ColumnDef<ProposalWithCustomer, unknown>[]'.
+  Type 'ColumnDef<ProposalWithCustomer>' is not assignable to type 'ColumnDef<ProposalWithCustomer, unknown>'.
+    Type 'ColumnDefBase<ProposalWithCustomer, unknown> & StringHeaderIdentifier' is not assignable to type 'ColumnDef<ProposalWithCustomer, unknown>'.
+      Type 'ColumnDefBase<ProposalWithCustomer, unknown> & StringHeaderIdentifier' is not assignable to type 'AccessorFnColumnDefBase<ProposalWithCustomer, unknown> & IdIdentifier<ProposalWithCustomer, unknown>'.
+        Property 'accessorFn' is missing in type 'ColumnDefBase<ProposalWithCustomer, unknown> & StringHeaderIdentifier' but required in type 'AccessorFnColumnDefBase<ProposalWithCustomer, unknown>'.
+src/components/dashboard/recent-proposals.tsx(145,115): error TS2322: Type '{ className: string; title: string; }' is not assignable to type 'IntrinsicAttributes & Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>'.
+  Property 'title' does not exist on type 'IntrinsicAttributes & Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>'.
+src/components/financial/commission-reconciliation.tsx(263,44): error TS2322: Type '"ghost"' is not assignable to type '"secondary" | "destructive" | "default" | "outline" | null | undefined'.
+src/components/summary/daily-summary.tsx(487,87): error TS2339: Property 'isLate' does not exist on type '{ id: string; description: string; amount: number; days: number; link: string; }'.
+src/components/summary/daily-summary.tsx(488,50): error TS2339: Property 'title' does not exist on type '{ id: string; description: string; amount: number; days: number; link: string; }'.
+src/components/summary/daily-summary.tsx(489,71): error TS2339: Property 'date' does not exist on type '{ id: string; description: string; amount: number; days: number; link: string; }'.
+src/components/summary/daily-summary.tsx(489,119): error TS2339: Property 'isLate' does not exist on type '{ id: string; description: string; amount: number; days: number; link: string; }'.
+src/components/summary/daily-summary.tsx(571,48): error TS2304: Cannot find name 'Coins'.
+src/components/theme-provider.tsx(5,41): error TS2307: Cannot find module 'next-themes/dist/types' or its corresponding type declarations.
+src/components/ui/calendar.tsx(58,9): error TS2353: Object literal may only specify known properties, and 'IconLeft' does not exist in type 'Partial<CustomComponents>'.
+src/components/ui/calendar.tsx(58,22): error TS7031: Binding element 'className' implicitly has an 'any' type.
+src/components/ui/calendar.tsx(61,23): error TS7031: Binding element 'className' implicitly has an 'any' type.
+src/components/ui/sidebar.tsx(450,34): error TS2339: Property 'showOnHover' does not exist on type 'Omit<ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & { asChild?: boolean | undefined; }, "ref">'.
+src/firebase/provider.tsx(6,10): error TS2305: Module '"firebase/storage"' has no exported member 'Storage'.
+src/lib/data.ts(4,3): error TS2741: Property 'numericId' is missing in type '{ name: string; cpf: string; benefits: { number: string; species: string; }[]; phone: string; email: string; birthDate: string; observations: string; cep: string; street: string; number: string; complement: string; neighborhood: string; city: string; state: string; }' but required in type 'Omit<Customer, "id" | "ownerId">'.
+src/lib/data.ts(20,3): error TS2741: Property 'numericId' is missing in type '{ name: string; cpf: string; benefits: { number: string; species: string; }[]; phone: string; email: string; birthDate: string; observations: string; cep: string; street: string; number: string; complement: string; neighborhood: string; city: string; state: string; }' but required in type 'Omit<Customer, "id" | "ownerId">'.
+src/lib/data.ts(36,3): error TS2741: Property 'numericId' is missing in type '{ name: string; cpf: string; benefits: { number: string; species: string; }[]; phone: string; email: string; birthDate: string; observations: string; cep: string; street: string; number: string; complement: string; neighborhood: string; city: string; state: string; }' but required in type 'Omit<Customer, "id" | "ownerId">'.
+src/lib/data.ts(52,3): error TS2741: Property 'numericId' is missing in type '{ name: string; cpf: string; benefits: { number: string; species: string; }[]; phone: string; email: string; birthDate: string; observations: string; cep: string; street: string; number: string; complement: string; neighborhood: string; city: string; state: string; }' but required in type 'Omit<Customer, "id" | "ownerId">'.
+src/lib/data.ts(68,3): error TS2741: Property 'numericId' is missing in type '{ name: string; cpf: string; benefits: { number: string; species: string; }[]; phone: string; email: string; birthDate: string; observations: string; cep: string; street: string; number: string; complement: string; neighborhood: string; city: string; state: string; }' but required in type 'Omit<Customer, "id" | "ownerId">'.
