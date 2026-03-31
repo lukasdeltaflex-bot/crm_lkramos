@@ -11,6 +11,7 @@ import {
     Bot,
     Camera,
     Sparkles,
+    Building2,
     Search,
     Zap,
     Layout,
@@ -208,7 +209,7 @@ export default function ManualPage() {
                                     <UserRoundCheck className="h-4 w-4" /> Validação Silenciosa V3
                                 </h4>
                                 <p className="text-xs text-muted-foreground">
-                                    O cadastro de clientes realiza uma **consulta em tempo real** para CPF e Telefone. O sistema bloqueia duplicidades instantaneamente, com um tempo de espera inteligente (debounce) para não travar a digitação.
+                                    O cadastro de clientes realiza uma **consulta em tempo real** para CPF e Telefone. O sistema bloqueia duplicidades instantaneamente. Ao converter um Lead em Cliente, um **novo modal de confirmação** permite revisar e salvar os dados sem sair da tela atual.
                                 </p>
                             </div>
                             <div className="p-4 rounded-xl bg-blue-50/5 border border-blue-200">
@@ -244,7 +245,8 @@ export default function ManualPage() {
                             </p>
                             <ul className="mt-3 space-y-2 list-disc pl-5 text-xs font-medium">
                                 <li><strong className="text-green-600">Restaurado:</strong> Volta instantaneamente para sua tela de origem com todo o histórico e anexos intactos.</li>
-                                <li><strong className="text-red-600">Excluído Permanente:</strong> Removido definitivamente do servidor após confirmação de segurança.</li>
+                                <li><strong className="text-orange-600">Contagem Regressiva:</strong> Um contador visual exibe quantos dias restam para a exclusão automática definitiva.</li>
+                                <li><strong className="text-red-600">Excluído Permanente:</strong> Removido definitivamente do servidor após confirmação de segurança ou término do prazo.</li>
                             </ul>
                         </div>
                     </AccordionContent>
@@ -272,6 +274,7 @@ export default function ManualPage() {
                             <ul className="mt-3 space-y-2 list-disc pl-5 text-xs font-medium">
                                 <li>Você pode continuar visualizando clientes e propostas já carregados.</li>
                                 <li>Alterações feitas offline são salvas localmente no seu dispositivo.</li>
+                                <li>O sistema agora possui **versionamento automatizado**, garantindo que você receba um aviso imediato sempre que uma nova atualização estiver disponível no servidor.</li>
                                 <li>Assim que o sinal de internet voltar, o sistema sincroniza tudo com o servidor automaticamente.</li>
                             </ul>
                         </div>
@@ -359,6 +362,35 @@ export default function ManualPage() {
                                     <div className="text-[9px] text-muted-foreground mt-1">As barras de busca rápida e de filtros agora respondem sem travar a tela.</div>
                                 </div>
                             </div>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+
+                {/* 9. GESTÃO DE PARCEIROS E CREDENCIAIS (NOVO) */}
+                <AccordionItem value="partner-mgmt" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-blue-600/20">
+                    <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-blue-50 text-blue-600"><Building2 className="h-5 w-5" /></div>
+                            <div className="text-left">
+                                <p className="font-bold text-sm">9. Gestão de Parceiros & Credenciais</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Acesso Rápido e Segurança Blindada</p>
+                            </div>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
+                        <div className="p-4 rounded-xl bg-blue-50/5 border border-blue-600/20 mb-4">
+                            <h4 className="font-bold text-blue-700 flex items-center gap-2 mb-2">
+                                <ShieldCheck className="h-4 w-4" /> Credenciais do Portal da Promotora
+                            </h4>
+                            <p className="text-xs text-muted-foreground">
+                                Agora você pode salvar as credenciais de acesso ao portal de cada promotora diretamente no cadastro dela.
+                            </p>
+                            <ul className="mt-3 space-y-2 list-disc pl-5 text-xs font-medium">
+                                <li><strong>Usuário, Senha e Contrasenha:</strong> Armazenamento seguro de todas as chaves de acesso necessárias.</li>
+                                <li><strong>Criptografia AES-256:</strong> As senhas são blindadas e só podem ser visualizadas por quem tem permissão, através do ícone de "olhinho".</li>
+                                <li><strong>Botões de Cópia:</strong> Ícones dedicados para copiar usuário e senhas instantaneamente, agilizando o login em sites externos.</li>
+                                <li><strong>Abrir Sistema:</strong> Botão direto que abre o portal da promotora em uma nova aba, usando o link cadastrado.</li>
+                            </ul>
                         </div>
                     </AccordionContent>
                 </AccordionItem>

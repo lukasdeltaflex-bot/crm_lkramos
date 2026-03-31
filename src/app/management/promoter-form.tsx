@@ -14,11 +14,13 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Save, Building2, Phone, User as UserIcon, Headset, MessageSquareText, Mail, Hash, Upload, X, Camera } from 'lucide-react';
+import { Loader2, Save, Building2, Phone, User as UserIcon, Headset, MessageSquareText, Mail, Hash, Upload, X, Camera, ShieldCheck, Lock, Globe, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { handlePhoneMask, isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { encryptPassword, decryptPassword } from '@/lib/crypto-utils';
+import { useUser } from '@/firebase';
 
 const promoterSchema = z.object({
   name: z.string().min(1, 'O nome da promotora é obrigatório.'),
@@ -31,6 +33,10 @@ const promoterSchema = z.object({
   email: z.string().optional(),
   managerEmail: z.string().optional(),
   observations: z.string().optional(),
+  username: z.string().optional(),
+  password: z.string().optional(),
+  secondaryPassword: z.string().optional(),
+  website: z.string().optional(),
 });
 
 type PromoterFormValues = z.infer<typeof promoterSchema>;
@@ -58,8 +64,52 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
       email: '',
       managerEmail: '',
       observations: '',
+      username: '',
+      password: '',
+      secondaryPassword: '',
+      website: '',
     },
   });
+
+  const { user } = useUser();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showSecondaryPassword, setShowSecondaryPassword] = useState(false);
+  const [isDecrypting, setIsDecrypting] = useState(false);
+
+  // 🛡️ DESCRIPTOGRAFIA SEGURA PARA EDIÇÃO
+  useEffect(() => {
+    async function loadPasswords() {
+        if (!user?.uid || !initialData) return;
+        
+        setIsDecrypting(true);
+        if (initialData.password) {
+            const dec = await decryptPassword(initialData.password, user.uid);
+            form.setValue('password', dec);
+        }
+        if (initialData.secondaryPassword) {
+            const dec = await decryptPassword(initialData.secondaryPassword, user.uid);
+            form.setValue('secondaryPassword', dec);
+        }
+        setIsDecrypting(false);
+    }
+    loadPasswords();
+  }, [initialData, user, form]);
+
+  const handleFormSubmit = async (values: PromoterFormValues) => {
+    if (!user?.uid) return;
+    
+    setIsDecrypting(true); // Reutilizando loader para o submit
+    const dataToSave = { ...values };
+    
+    if (values.password) {
+        dataToSave.password = await encryptPassword(values.password, user.uid);
+    }
+    if (values.secondaryPassword) {
+        dataToSave.secondaryPassword = await encryptPassword(values.secondaryPassword, user.uid);
+    }
+    
+    onSubmit(dataToSave);
+  };
 
   const watchWhatsapp = form.watch('whatsapp');
   const watchSupport = form.watch('supportPhone');
@@ -79,7 +129,7 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 pb-6" noValidate>
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-5 pb-6" noValidate>
         {/* FOTO/LOGO DA PROMOTORA */}
         <div className="flex flex-col items-center gap-2 py-1">
             <div className="relative group">
@@ -220,6 +270,100 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
                     </FormItem>
                 )}
             />
+        </div>
+
+        {/* CREDENCIAIS DO PORTAL */}
+        <div className="space-y-4 pt-2">
+            <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex items-start gap-3 mb-2">
+                <ShieldCheck className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <p className="text-[10px] font-bold text-primary uppercase leading-relaxed tracking-widest">
+                    Acesso ao Portal: Credenciais protegidas por criptografia de ponta a ponta.
+                </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                    control={form.control}
+                    name="username"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><UserIcon className="h-3.5 w-3.5 text-primary" /> Usuário Portal</FormLabel>
+                        <FormControl><Input placeholder="Login de acesso" {...field} className="h-10" /></FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="website"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><Globe className="h-3.5 w-3.5 text-primary" /> Link do Portal</FormLabel>
+                        <FormControl><Input placeholder="https://sistema.promotora.com" {...field} className="h-10" /></FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><Lock className="h-3.5 w-3.5 text-primary" /> Senha Principal</FormLabel>
+                        <FormControl>
+                            <div className="relative">
+                                <Input 
+                                    type={showPassword ? "text" : "password"} 
+                                    placeholder={isDecrypting && initialData?.password ? "Descriptografando..." : "Sua senha"} 
+                                    {...field} 
+                                    className="h-10 pr-10 font-mono" 
+                                    disabled={isDecrypting && initialData?.password}
+                                />
+                                <button 
+                                    type="button" 
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-2.5 text-muted-foreground hover:text-primary transition-colors"
+                                >
+                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </button>
+                            </div>
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="secondaryPassword"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest text-blue-600"><KeyRound className="h-3.5 w-3.5" /> Contrasenha / Relatórios</FormLabel>
+                        <FormControl>
+                             <div className="relative">
+                                <Input 
+                                    type={showSecondaryPassword ? "text" : "password"} 
+                                    placeholder={isDecrypting && initialData?.secondaryPassword ? "Descriptografando..." : "Senha secundária"} 
+                                    {...field} 
+                                    className="h-10 pr-10 font-mono" 
+                                    disabled={isDecrypting && initialData?.secondaryPassword}
+                                />
+                                <button 
+                                    type="button" 
+                                    onClick={() => setShowSecondaryPassword(!showSecondaryPassword)}
+                                    className="absolute right-3 top-2.5 text-muted-foreground hover:text-primary transition-colors"
+                                >
+                                    {showSecondaryPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </button>
+                            </div>
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
         </div>
 
         <FormField

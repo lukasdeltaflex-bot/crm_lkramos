@@ -37,7 +37,8 @@ import {
     Video as VideoIcon,
     FileText,
     ImageIcon,
-    PlayCircle
+    PlayCircle,
+    KeyRound
 } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { collection, query, where, doc, setDoc, deleteDoc, orderBy } from 'firebase/firestore';
@@ -462,6 +463,84 @@ export default function ManagementPage() {
 
                             {expandedPromoter === promoter.id && (
                                 <div className="p-8 bg-muted/10 space-y-8 animate-in slide-in-from-top-2 duration-300">
+                                    {/* CREDENCIAIS DO PORTAL DA PROMOTORA */}
+                                    <div className="space-y-5">
+                                        <div className="flex items-center justify-between border-b pb-5">
+                                            <h4 className="text-[11px] font-black uppercase tracking-[0.25em] text-blue-600 flex items-center gap-2.5">
+                                                <ShieldCheck className="h-4 w-4" /> Credenciais do Portal
+                                            </h4>
+                                            {promoter.website && (
+                                                <Button size="sm" variant="outline" className="rounded-full h-9 px-5 font-bold text-[11px] uppercase gap-2 border-blue-200 text-blue-600 hover:bg-blue-50" asChild>
+                                                    <a href={promoter.website.startsWith('http') ? promoter.website : `https://${promoter.website}`} target="_blank" rel="noopener noreferrer">
+                                                        <ExternalLink className="h-3.5 w-3.5" /> Abrir Sistema
+                                                    </a>
+                                                </Button>
+                                            )}
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                            {/* USUÁRIO */}
+                                            <Card className="bg-background border-2 shadow-sm p-4 space-y-3 group/cred">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <UserIcon className="h-3.5 w-3.5 text-blue-500" />
+                                                    <span className="text-[10px] font-black uppercase text-muted-foreground tracking-tight">Usuário Portal</span>
+                                                </div>
+                                                <div className="flex items-center justify-between bg-muted/20 p-3 rounded-xl border">
+                                                    <span className="text-xs font-bold truncate pr-2">{promoter.username || '---'}</span>
+                                                    <CopyButton text={promoter.username} label="Usuário" />
+                                                </div>
+                                            </Card>
+
+                                            {/* SENHA PRINCIPAL */}
+                                            <Card className="bg-background border-2 shadow-sm p-4 space-y-3 group/cred">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <Lock className="h-3.5 w-3.5 text-blue-500" />
+                                                    <span className="text-[10px] font-black uppercase text-muted-foreground tracking-tight">Senha Principal</span>
+                                                </div>
+                                                <div className="flex items-center justify-between bg-muted/20 p-3 rounded-xl border">
+                                                    <span className="text-xs font-mono tracking-widest truncate">
+                                                        {decryptedPasswords[promoter.id + '_pass'] ? decryptedPasswords[promoter.id + '_pass'] : '••••••••'}
+                                                    </span>
+                                                    <div className="flex items-center gap-1">
+                                                        {promoter.password && (
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); handleShowPassword(promoter.id + '_pass', promoter.password); }} 
+                                                                className="h-7 w-7 flex items-center justify-center text-blue-500 hover:bg-blue-50 rounded-full transition-colors"
+                                                            >
+                                                                {decryptedPasswords[promoter.id + '_pass'] ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                                                            </button>
+                                                        )}
+                                                        <CopyButton text={decryptedPasswords[promoter.id + '_pass']} label="Senha" />
+                                                    </div>
+                                                </div>
+                                            </Card>
+
+                                            {/* CONTRASENHA */}
+                                            <Card className="bg-background border-2 shadow-sm p-4 space-y-3 group/cred">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <KeyRound className="h-3.5 w-3.5 text-blue-500" />
+                                                    <span className="text-[10px] font-black uppercase text-muted-foreground tracking-tight">Contrasenha / Relatórios</span>
+                                                </div>
+                                                <div className="flex items-center justify-between bg-muted/20 p-3 rounded-xl border">
+                                                    <span className="text-xs font-mono tracking-widest truncate">
+                                                        {decryptedPasswords[promoter.id + '_sec'] ? decryptedPasswords[promoter.id + '_sec'] : '••••••••'}
+                                                    </span>
+                                                    <div className="flex items-center gap-1">
+                                                        {promoter.secondaryPassword && (
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); handleShowPassword(promoter.id + '_sec', promoter.secondaryPassword); }} 
+                                                                className="h-7 w-7 flex items-center justify-center text-blue-500 hover:bg-blue-50 rounded-full transition-colors"
+                                                            >
+                                                                {decryptedPasswords[promoter.id + '_sec'] ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                                                            </button>
+                                                        )}
+                                                        <CopyButton text={decryptedPasswords[promoter.id + '_sec']} label="Contrasenha" />
+                                                    </div>
+                                                </div>
+                                            </Card>
+                                        </div>
+                                    </div>
+
                                     <div className="flex items-center justify-between border-b pb-5">
                                         <h4 className="text-[11px] font-black uppercase tracking-[0.25em] text-muted-foreground flex items-center gap-2.5">
                                             <Lock className="h-4 w-4" /> Logins Bancários Blindados
