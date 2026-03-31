@@ -81,9 +81,7 @@ export function NotificationBell() {
     if (!firestore || !user) return null;
     return query(
         collection(firestore, 'leads'),
-        where('ownerId', '==', user.uid),
-        orderBy('createdAt', 'desc'),
-        limit(5)
+        where('ownerId', '==', user.uid)
     );
   }, [firestore, user]);
 
@@ -101,7 +99,8 @@ export function NotificationBell() {
 
   useEffect(() => {
     if (leads && leads.length > 0) {
-        const latestLead = leads[0];
+        const sortedLeads = [...leads].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        const latestLead = sortedLeads[0];
         if (lastLeadIdRef.current && lastLeadIdRef.current !== latestLead.id) {
             setHasNewLeadPulse(true);
             toast({ 
@@ -125,7 +124,7 @@ export function NotificationBell() {
     const todayIso = format(now, 'yyyy-MM-dd');
     const threeDaysAgo = subDays(now, 3);
 
-    leads?.filter(l => l.status === 'pending').forEach(lead => {
+    [...(leads || [])].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()).filter(l => l.status === 'pending').forEach(lead => {
         alerts.push({
             id: `lead-${lead.id}`,
             title: `Lead: ${lead.name}`,
