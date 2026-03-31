@@ -38,7 +38,8 @@ import {
     FileText,
     ImageIcon,
     PlayCircle,
-    KeyRound
+    KeyRound,
+    Save
 } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { collection, query, where, doc, setDoc, deleteDoc, orderBy } from 'firebase/firestore';
