@@ -103,6 +103,14 @@ function CustomersPageContent() {
     );
   }, [firestore, user]);
 
+  const leadsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(
+        collection(firestore, 'leads'),
+        where('ownerId', '==', user.uid)
+    );
+  }, [firestore, user]);
+
   const settingsDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return doc(firestore, 'userSettings', user.uid);
@@ -110,16 +118,44 @@ function CustomersPageContent() {
 
   const { data: realTimeCustomers, isLoading: isCustomersLoading } = useCollection<Customer>(customersQuery);
   const { data: proposals } = useCollection<Proposal>(proposalsQuery);
+  const { data: leads } = useCollection<Lead>(leadsQuery);
   const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
 
   const customers = React.useMemo(() => {
-      if (!realTimeCustomers) return staticCustomers.length ? staticCustomers : [];
-      // Mescla realTime + static sem duplicatas
       const map = new Map();
-      staticCustomers.forEach(c => map.set(c.id, c));
-      realTimeCustomers.forEach(c => map.set(c.id, c));
-      return Array.from(map.values()).sort((a: any,b: any) => (b.numericId || 0) - (a.numericId || 0));
-  }, [realTimeCustomers, staticCustomers]);
+      if (staticCustomers.length) {
+          staticCustomers.forEach(c => map.set(c.id, c));
+      }
+      if (realTimeCustomers) {
+          realTimeCustomers.forEach(c => map.set(c.id, c));
+      }
+      if (leads) {
+          leads.filter(l => l.status === 'pending').forEach(l => {
+              // Converte visualmente o lead para o formato Customer
+              map.set(l.id, {
+                  id: l.id,
+                  numericId: Number.MAX_SAFE_INTEGER - new Date(l.createdAt || 0).getTime() % 1000000, 
+                  name: l.name + ' (🔥 LEAD DO PORTAL)',
+                  cpf: l.cpf,
+                  phone: l.phone,
+                  birthDate: l.birthDate,
+                  ownerId: l.ownerId,
+                  status: 'active',
+                  tags: ['LEAD DO PORTAL'],
+                  observations: `Lead gerado pelo portal em ${l.createdAt ? format(parseISO(l.createdAt), 'dd/MM/yyyy HH:mm') : 'desconhecido'}.\nValor desejado: ${l.requestedAmount || 0}\n\n${l.observations || ''}`,
+                  cep: l.cep,
+                  street: l.street,
+                  number: l.number,
+                  complement: l.complement,
+                  neighborhood: l.neighborhood,
+                  city: l.city,
+                  state: l.state
+              } as unknown as Customer);
+          });
+      }
+      const arr = Array.from(map.values()).sort((a: any,b: any) => (b.numericId || 0) - (a.numericId || 0));
+      return arr.length ? arr : [];
+  }, [realTimeCustomers, staticCustomers, leads]);
 
   const loadMoreCustomers = async () => {
       if (!firestore || !user || !customers.length) return;

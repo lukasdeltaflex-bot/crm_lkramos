@@ -70,6 +70,12 @@ export function PwaRegister() {
           const newWorker = registration.installing;
           if (!newWorker) return;
 
+          // 🛡️ Previne race condition se o Service Worker for instalado excessivamente rápido
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+             triggerUpdatePrompt(registration);
+             return;
+          }
+
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               triggerUpdatePrompt(registration);
@@ -127,7 +133,7 @@ export function PwaRegister() {
                 // Primeira vez, salva a versão
                 localStorage.setItem('lk-app-version', data.version);
             } else if (currentVersion !== data.version) {
-                console.log("[PWA Flow] 🚨 DIVERGÊNCIA DE VERSÃO DETECTADA!");
+                console.log(`[PWA Flow] 🚨 DIVERGÊNCIA DE VERSÃO DETECTADA! Servidor: ${data.version} | Local: ${currentVersion}`);
                 // Nova versão detectada!
                 triggerUpdatePrompt(undefined, data.version);
             } else {

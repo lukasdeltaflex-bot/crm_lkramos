@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Bot, Send, X, Loader2, CalendarClock, Cake, Hourglass, BadgePercent, Zap, Info, ChevronRight, MessageSquareText, Wallet, Receipt, RotateCcw } from 'lucide-react';
-import type { Customer, Proposal, UserProfile, FollowUp, UserSettings, Expense } from '@/lib/types';
+import type { Customer, Proposal, UserProfile, FollowUp, UserSettings, Expense, Lead } from '@/lib/types';
 import { differenceInDays, format, differenceInMonths, startOfDay, isBefore, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { calculateBusinessDays, getAge, cn, getWhatsAppUrl, formatCurrency, parseDateSafe } from '@/lib/utils';
@@ -92,12 +92,18 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
     return collection(firestore, 'users', user.uid, 'followUps');
   }, [firestore, user]);
 
+  const leadsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, 'leads');
+  }, [firestore, user]);
+
   const settingsDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return doc(firestore, 'userSettings', user.uid);
   }, [firestore, user]);
 
   const { data: followUps } = useCollection<FollowUp>(followUpsQuery);
+  const { data: leadsData } = useCollection<Lead>(leadsQuery);
   const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
 
   useEffect(() => {
@@ -134,7 +140,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
   }
 
   const alertData = useMemo(() => {
-    if (!isClient || !proposals || !customers) return { birthdayAlerts: [], birthdayTodayAlerts: [], followUpReminders: [], commissionReminders: [], debtBalanceReminders: [], partialCommissionReminders: [], manualFollowUps: [], radarAlerts: [], expenseAlerts: [] };
+    if (!isClient || !proposals || !customers) return { birthdayAlerts: [], birthdayTodayAlerts: [], followUpReminders: [], commissionReminders: [], debtBalanceReminders: [], partialCommissionReminders: [], manualFollowUps: [], radarAlerts: [], expenseAlerts: [], leadAlerts: [] };
 
     const now = new Date();
     const todayStr = format(now, 'MM-dd');
@@ -270,33 +276,55 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
             };
         });
 
-    const expenseAlerts = (expenses || [])
+    const expenseAlerts = expenses
         .filter(e => !e.paid)
         .map(e => {
-            const dueDate = parseDateSafe(e.date) || new Date();
-            const isLate = isBefore(dueDate, startOfDay(now));
-            return {
-                id: `exp-${e.id}`,
-                title: e.description,
-                amount: e.amount,
-                date: format(dueDate, 'dd/MM/yyyy'),
-                isLate,
-                link: '/financial'
-            };
-        });
+            const expDate = parseDateSafe(e.date);
+            return { ...e, expDate };
+        })
+        .filter(e => e.expDate && (differenceInDays(e.expDate, now) <= 5 || isBefore(e.expDate, startOfDay(now))))
+        .map(e => ({
+            id: `exp-${e.id}`,
+            description: e.description,
+            amount: e.amount,
+            days: e.expDate ? differenceInDays(e.expDate, startOfDay(now)) : 0,
+            link: `/financial?tab=expenses`
+        }));
 
-    return { birthdayAlerts, birthdayTodayAlerts, followUpReminders, commissionReminders, debtBalanceReminders, partialCommissionReminders, manualFollowUps, radarAlerts, expenseAlerts };
-  }, [isClient, proposals, customers, followUps, expenses]);
+    const leadAlerts = (leadsData || [])
+        .filter(l => l.status === 'pending' && l.ownerId === user?.uid)
+        .map(l => ({
+            id: `lead-${l.id}`,
+            name: l.name,
+            requestedAmount: l.requestedAmount || 0,
+            dateStr: l.createdAt ? format(parseDateSafe(l.createdAt) || now, 'dd/MM/yyyy') : '',
+            link: `/customers`
+        }));
+
+    return { 
+        birthdayAlerts, 
+        birthdayTodayAlerts,
+        followUpReminders, 
+        commissionReminders, 
+        debtBalanceReminders, 
+        partialCommissionReminders,
+        manualFollowUps,
+        radarAlerts,
+        expenseAlerts,
+        leadAlerts
+    };
+  }, [isClient, proposals, customers, followUps, expenses, leadsData, user?.uid]);
   
   const visibleBirthdayAlerts = alertData.birthdayAlerts.filter(a => !dismissedItems.includes(a.id));
   const visibleBirthdayTodayAlerts = alertData.birthdayTodayAlerts.filter(a => !dismissedItems.includes(a.id));
-  const visibleFollowUpReminders = alertData.followUpReminders.filter(r => !dismissedItems.includes(r.id));
-  const visibleCommissionReminders = alertData.commissionReminders.filter(r => !dismissedItems.includes(r.id));
-  const visibleDebtBalanceReminders = alertData.debtBalanceReminders.filter(r => !dismissedItems.includes(r.id));
-  const visiblePartialCommissionReminders = alertData.partialCommissionReminders.filter(r => !dismissedItems.includes(r.id));
-  const visibleManualFollowUps = alertData.manualFollowUps.filter(f => !dismissedItems.includes(f.id));
-  const visibleRadarAlerts = alertData.radarAlerts.filter(r => !dismissedItems.includes(r.id));
-  const visibleExpenseAlerts = alertData.expenseAlerts.filter(e => !dismissedItems.includes(e.id));
+  const visibleFollowUpReminders = alertData.followUpReminders.filter(a => !dismissedItems.includes(a.id));
+  const visibleCommissionReminders = alertData.commissionReminders.filter(a => !dismissedItems.includes(a.id));
+  const visibleDebtBalanceReminders = alertData.debtBalanceReminders.filter(a => !dismissedItems.includes(a.id));
+  const visiblePartialCommissionReminders = alertData.partialCommissionReminders.filter(a => !dismissedItems.includes(a.id));
+  const visibleManualFollowUps = alertData.manualFollowUps.filter(a => !dismissedItems.includes(a.id));
+  const visibleRadarAlerts = alertData.radarAlerts.filter(a => !dismissedItems.includes(a.id));
+  const visibleExpenseAlerts = alertData.expenseAlerts.filter(a => !dismissedItems.includes(a.id));
+  const visibleLeadAlerts = alertData.leadAlerts.filter(a => !dismissedItems.includes(a.id));
 
   const hasVisibleAlerts = 
     visibleBirthdayAlerts.length > 0 ||
@@ -307,7 +335,8 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
     visiblePartialCommissionReminders.length > 0 ||
     visibleManualFollowUps.length > 0 ||
     visibleRadarAlerts.length > 0 ||
-    visibleExpenseAlerts.length > 0;
+    visibleExpenseAlerts.length > 0 ||
+    visibleLeadAlerts.length > 0;
 
   const handleSendEmail = async () => {
     if (!userProfile || !userProfile.email) {
@@ -424,6 +453,27 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
         ) : (
             <ScrollArea className="h-[450px] w-full">
                 <div className="space-y-6 pr-4 pb-10">
+                    {visibleLeadAlerts.length > 0 && (
+                        <div className="space-y-3">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-orange-600 flex items-center gap-2 px-1">
+                                <Zap className="h-3.5 w-3.5" /> Novos Leads do Portal ({visibleLeadAlerts.length})
+                            </h3>
+                            <div className="grid gap-2.5">
+                                {visibleLeadAlerts.map((alert: any) => (
+                                    <SummaryAlertItem
+                                        key={alert.id}
+                                        id={alert.id}
+                                        icon={<div className="h-5 w-5 rounded-full bg-orange-500/10 flex items-center justify-center border border-orange-500/20"><Zap className="h-3 w-3 text-orange-500" /></div>}
+                                        title={<span className="text-orange-600">Lead: {alert.name}</span> as any}
+                                        description={`Desejado: ${formatCurrency(alert.requestedAmount)} (${alert.dateStr}). Clique para ver na aba Clientes.`}
+                                        link={alert.link}
+                                        onDismiss={handleDismiss}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {visibleExpenseAlerts.length > 0 && (
                         <div className="space-y-3">
                             <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-red-600 flex items-center gap-2 px-1">

@@ -130,7 +130,7 @@ export function NotificationBell() {
             title: `Lead: ${lead.name}`,
             type: 'lead',
             date: lead.createdAt ? format(parseISO(lead.createdAt), 'dd/MM HH:mm') : 'Pendente',
-            link: '/'
+            link: '/customers'
         });
     });
 
