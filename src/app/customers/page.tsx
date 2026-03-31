@@ -132,9 +132,10 @@ function CustomersPageContent() {
       if (leads) {
           leads.filter(l => l.status === 'pending').forEach(l => {
               // Converte visualmente o lead para o formato Customer
+              const safeLeadDate = parseDateSafe(l.createdAt) || new Date();
               map.set(l.id, {
                   id: l.id,
-                  numericId: Number.MAX_SAFE_INTEGER - new Date(l.createdAt || 0).getTime() % 1000000, 
+                  numericId: Number.MAX_SAFE_INTEGER - safeLeadDate.getTime() % 1000000, 
                   name: l.name + ' (🔥 LEAD DO PORTAL)',
                   cpf: l.cpf,
                   phone: l.phone,
@@ -142,7 +143,7 @@ function CustomersPageContent() {
                   ownerId: l.ownerId,
                   status: 'active',
                   tags: ['LEAD DO PORTAL'],
-                  observations: `Lead gerado pelo portal em ${l.createdAt ? format(parseISO(l.createdAt), 'dd/MM/yyyy HH:mm') : 'desconhecido'}.\nValor desejado: ${l.requestedAmount || 0}\n\n${l.observations || ''}`,
+                  observations: `Lead gerado pelo portal em ${l.createdAt && parseDateSafe(l.createdAt) ? format(parseDateSafe(l.createdAt)!, 'dd/MM/yyyy HH:mm') : 'desconhecido'}.\nValor desejado: ${l.requestedAmount || 0}\n\n${l.observations || ''}`,
                   cep: l.cep,
                   street: l.street,
                   number: l.number,

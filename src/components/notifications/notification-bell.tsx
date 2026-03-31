@@ -16,7 +16,7 @@ import { useCollection, useFirestore, useUser, useMemoFirebase, useDoc } from '@
 import { collection, query, where, doc, setDoc, orderBy, limit } from 'firebase/firestore';
 import type { Customer, Proposal, FollowUp, UserSettings, Lead } from '@/lib/types';
 import { differenceInDays, format, differenceInMonths, parseISO, isAfter, subDays } from 'date-fns';
-import { getWhatsAppUrl, calculateBusinessDays, getAge } from '@/lib/utils';
+import { getWhatsAppUrl, calculateBusinessDays, getAge, parseDateSafe } from '@/lib/utils';
 import Link from 'next/link';
 import { generateBirthdayMessage } from '@/ai/flows/generate-birthday-message-flow';
 import { toast } from '@/hooks/use-toast';
@@ -124,12 +124,12 @@ export function NotificationBell() {
     const todayIso = format(now, 'yyyy-MM-dd');
     const threeDaysAgo = subDays(now, 3);
 
-    [...(leads || [])].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()).filter(l => l.status === 'pending').forEach(lead => {
+    [...(leads || [])].sort((a, b) => (parseDateSafe(b.createdAt)?.getTime() || 0) - (parseDateSafe(a.createdAt)?.getTime() || 0)).filter(l => l.status === 'pending').forEach(lead => {
         alerts.push({
             id: `lead-${lead.id}`,
             title: `Lead: ${lead.name}`,
             type: 'lead',
-            date: lead.createdAt ? format(parseISO(lead.createdAt), 'dd/MM HH:mm') : 'Pendente',
+            date: lead.createdAt && parseDateSafe(lead.createdAt) ? format(parseDateSafe(lead.createdAt)!, 'dd/MM HH:mm') : 'Pendente',
             link: '/customers'
         });
     });
