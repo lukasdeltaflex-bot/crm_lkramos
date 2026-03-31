@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/page-header';
 import { CustomerDataTable, type CustomerDataTableHandle } from './data-table';
 import { getColumns } from './columns';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, FileDown, UserCheck, UserX, Trash2, Sparkles, Landmark, X, Tag, Cake, ChevronRight } from 'lucide-react';
+import { PlusCircle, FileDown, UserCheck, UserX, Trash2, Sparkles, Landmark, X, Tag, Cake, ChevronRight, Zap } from 'lucide-react';
 import { CustomerForm } from './customer-form';
 import type { Customer, UserSettings, Proposal, Lead } from '@/lib/types';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
@@ -229,6 +229,12 @@ function CustomersPageContent() {
     return processedCustomers.filter(c => {
         if (filter === 'birthdays') return false;
         if (c.name === 'Cliente Removido') return false;
+
+        const isLead = c.tags?.includes('LEAD DO PORTAL');
+
+        // Lógica de separação: Leads só aparecem na aba Leads
+        if (filter === 'leads') return isLead;
+        if (isLead) return false;
 
         const age = getAge(c.birthDate);
         const isStatusMatch = filter === 'active' 
@@ -536,6 +542,16 @@ function CustomersPageContent() {
             >
                 <Cake className="h-3.5 w-3.5" />
                 Aniversariantes
+            </TabsTrigger>
+            <TabsTrigger 
+                value="leads" 
+                className={cn(
+                    "gap-2 rounded-full font-bold px-6 h-9 transition-all text-xs",
+                    "data-[state=active]:bg-orange-500 data-[state=active]:text-white shadow-none"
+                )}
+            >
+                <Zap className="h-3.5 w-3.5" />
+                Leads do Portal
             </TabsTrigger>
             </TabsList>
         </Tabs>
