@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, Cake, BadgePercent, X, CalendarClock, Bot, Loader2, MessageSquareText, Hourglass, Coins, Zap, AlertTriangle, Newspaper, UserPlus, ChevronRight } from 'lucide-react';
+import { Bell, Cake, BadgePercent, X, CalendarClock, Bot, Loader2, MessageSquareText, Hourglass, Coins, Zap, AlertTriangle, Newspaper, UserPlus, ChevronRight, Download } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -130,7 +130,7 @@ export function NotificationBell() {
             title: `Lead: ${lead.name}`,
             type: 'lead',
             date: lead.createdAt && parseDateSafe(lead.createdAt) ? format(parseDateSafe(lead.createdAt)!, 'dd/MM HH:mm') : 'Pendente',
-            link: '/customers'
+            link: `/customers?editLead=${lead.id}`
         });
     });
 
@@ -274,6 +274,15 @@ export function NotificationBell() {
     }
   };
 
+  const dismissQuietly = async (id: string) => {
+    if (!user || !firestore) return;
+    try {
+        await setDoc(doc(firestore, 'userSettings', user.uid), {
+            dismissedAlerts: [...dismissedIds, id]
+        }, { merge: true });
+    } catch (err) {}
+  };
+
   const handleBdayClick = async (e: React.MouseEvent | React.SyntheticEvent, customerId: string) => {
     // 🛡️ ISOLAMENTO TOTAL: Impede que o clique dispare navegação no Link pai ou feche o DropdownMenu
     if (e) {
@@ -368,15 +377,13 @@ export function NotificationBell() {
                     {visibleNotifications.map((n) => (
                     <div key={n.id} className="relative group">
                         <div className="flex items-center pr-10">
-                            <Link href={n.link} passHref className="flex-1">
-                                <DropdownMenuItem className="cursor-pointer p-3">
-                                <div className="flex items-start gap-3">
-                                    {n.type === 'lead' && <UserPlus className="h-4 w-4 text-orange-600 mt-1 animate-pulse" />}
-                                    {n.type === 'birthday' && <Cake className="h-4 w-4 text-pink-500 mt-1" />}
-                                    {n.type === 'age' && <AlertTriangle className="h-4 w-4 text-red-500 mt-1" />}
-                                    {n.type === 'radar' && <Zap className="h-4 w-4 text-orange-500 fill-orange-500 mt-1" />}
-                                    {n.type === 'commission' && <BadgePercent className="h-4 w-4 text-blue-500 mt-1" />}
-                                    {n.type === 'followup' && <CalendarClock className="h-4 w-4 text-purple-500 mt-1" />}
+                            <Link href={n.link} passHref className="flex-1" onClick={() => dismissQuietly(n.id)}>
+                                <DropdownMenuItem className="w-full p-2 pl-4 focus:bg-muted/30 cursor-pointer border-b">
+                                <div className="flex items-start gap-3 w-full">
+                                    {n.type === 'lead' && <Zap className="h-5 w-5 text-purple-500 mt-1" />}
+                                    {n.type === 'birthday' && <Cake className="h-5 w-5 text-pink-500 mt-1" />}
+                                    {n.type === 'commission' && <Download className="h-4 w-4 text-emerald-500 mt-1" />}
+                                    {n.type === 'followup' && <CalendarClock className="h-4 w-4 text-blue-500 mt-1" />}
                                     {n.type === 'debt' && <Hourglass className="h-4 w-4 text-red-500 mt-1" />}
                                     {n.type === 'partial' && <Coins className="h-4 w-4 text-blue-500 mt-1" />}
                                     {n.type === 'news' && <Newspaper className="h-4 w-4 text-emerald-500 mt-1" />}

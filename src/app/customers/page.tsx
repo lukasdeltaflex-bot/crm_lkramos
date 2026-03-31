@@ -264,26 +264,49 @@ function CustomersPageContent() {
     setIsDialog(true);
   }, []);
 
+  React.useEffect(() => {
+      const editLeadId = searchParams.get('editLead');
+      if (editLeadId && processedCustomers.length > 0) {
+          const lead = processedCustomers.find(c => c.id === editLeadId && c.tags?.includes('LEAD DO PORTAL'));
+          if (lead && !isDialog) {
+              handleEditCustomer(lead);
+              const url = new URL(window.location.href);
+              url.searchParams.delete('editLead');
+              window.history.replaceState({}, '', url.toString());
+          }
+      }
+  }, [searchParams, processedCustomers, handleEditCustomer, isDialog]);
+
   const handleMoveToTrash = React.useCallback(async (customerId: string) => {
     if (!firestore || !user) return;
     setIsSaving(true);
-    const docRef = doc(firestore, 'customers', customerId);
     
-    const dataToUpdate = { 
+    // Identifica dinamicamente a qual coleção a ID pertencia (customers ou leads)
+    const activeItem = processedCustomers?.find(c => c.id === customerId);
+    const isLead = activeItem?.tags?.includes('LEAD DO PORTAL');
+    const targetCollection = isLead ? 'leads' : 'customers';
+    
+    const docRef = doc(firestore, targetCollection, customerId);
+    
+    const dataToUpdate: any = { 
         deleted: true,
         deletedAt: new Date().toISOString(),
         deletedBy: user.uid
     };
+
+    if (isLead) {
+        dataToUpdate.status = 'refused';
+    }
     
     try {
         await updateDoc(docRef, dataToUpdate);
-        toast({ title: 'Movido para a Lixeira' });
+        toast({ title: isLead ? 'Lead deletado' : 'Movido para a Lixeira' });
     } catch (error: any) {
         toast({ variant: 'destructive', title: 'Erro ao excluir' });
     } finally {
         setIsSaving(false);
     }
-  }, [firestore, user]);
+  }, [firestore, user, processedCustomers]);
 
   const columns = React.useMemo(() => getColumns({ 
     onEdit: handleEditCustomer, 
@@ -309,12 +332,22 @@ function CustomersPageContent() {
         const now = new Date().toISOString();
         
         selectedIds.forEach(id => {
-            const docRef = doc(firestore, 'customers', id);
-            batch.update(docRef, { 
+            const activeItem = processedCustomers?.find(c => c.id === id);
+            const isLead = activeItem?.tags?.includes('LEAD DO PORTAL');
+            const targetCollection = isLead ? 'leads' : 'customers';
+
+            const docRef = doc(firestore, targetCollection, id);
+            const dataToUpdate: any = { 
                 deleted: true,
                 deletedAt: now,
                 deletedBy: user.uid
-            });
+            };
+
+            if (isLead) {
+                dataToUpdate.status = 'refused';
+            }
+
+            batch.update(docRef, dataToUpdate);
         });
 
         await batch.commit();

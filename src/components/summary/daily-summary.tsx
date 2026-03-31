@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bot, Send, X, Loader2, CalendarClock, Cake, Hourglass, BadgePercent, Zap, Info, ChevronRight, MessageSquareText, Wallet, Receipt, RotateCcw } from 'lucide-react';
+import { Bot, Send, X, Loader2, CalendarClock, Cake, Hourglass, BadgePercent, Zap, Info, ChevronRight, MessageSquareText, Wallet, Receipt, RotateCcw, Coins } from 'lucide-react';
 import type { Customer, Proposal, UserProfile, FollowUp, UserSettings, Expense, Lead } from '@/lib/types';
 import { differenceInDays, format, differenceInMonths, startOfDay, isBefore, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -44,7 +44,7 @@ function SummaryAlertItem({
 }) {
   return (
     <div className="relative group">
-        <Link href={link} className="block">
+        <Link href={link} className="block" onClick={() => onDismiss(id)}>
             <Alert className="bg-card shadow-sm border-border/50 py-4 cursor-pointer hover:border-primary/40 hover:bg-muted/5 transition-all group-hover:shadow-md">
                 <div className="flex items-start gap-4">
                     <div className="mt-1 shrink-0">{icon}</div>
@@ -285,8 +285,11 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
         .filter(e => e.expDate && (differenceInDays(e.expDate, now) <= 5 || isBefore(e.expDate, startOfDay(now))))
         .map(e => ({
             id: `exp-${e.id}`,
+            title: e.description,
             description: e.description,
+            date: e.date,
             amount: e.amount,
+            isLate: e.expDate ? isBefore(e.expDate, startOfDay(now)) : false,
             days: e.expDate ? differenceInDays(e.expDate, startOfDay(now)) : 0,
             link: `/financial?tab=expenses`
         }));
@@ -298,7 +301,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
             name: l.name,
             requestedAmount: l.requestedAmount || 0,
             dateStr: l.createdAt ? format(parseDateSafe(l.createdAt) || now, 'dd/MM/yyyy') : '',
-            link: `/customers`
+            link: `/customers?editLead=${l.id}`
         }));
 
     return { 
