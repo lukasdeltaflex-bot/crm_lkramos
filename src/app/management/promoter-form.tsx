@@ -130,154 +130,180 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-5 pb-6" noValidate>
-        {/* FOTO/LOGO DA PROMOTORA */}
-        <div className="flex flex-col items-center gap-2 py-1">
-            <div className="relative group">
-                <Avatar className="h-20 w-24 border-4 border-primary/10 shadow-xl rounded-2xl">
-                    <AvatarImage src={photoPreview || undefined} className="object-contain" />
-                    <AvatarFallback className="bg-muted text-muted-foreground rounded-2xl">
-                        <Building2 className="h-8 w-8 opacity-20" />
-                    </AvatarFallback>
-                </Avatar>
-                <div className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                    <Camera className="text-white h-5 w-5" />
+        {/* CABEÇALHO: LOGO + DADOS BÁSICOS */}
+        <div className="flex flex-col md:flex-row gap-6 items-start pb-4 border-b border-primary/5">
+            <div className="flex flex-col items-center gap-2 shrink-0">
+                <div className="relative group">
+                    <Avatar className="h-24 w-28 border-4 border-primary/10 shadow-xl rounded-2xl">
+                        <AvatarImage src={photoPreview || undefined} className="object-contain" />
+                        <AvatarFallback className="bg-muted text-muted-foreground rounded-2xl">
+                            <Building2 className="h-10 w-10 opacity-20" />
+                        </AvatarFallback>
+                    </Avatar>
+                    <div className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                        <Camera className="text-white h-5 w-5" />
+                    </div>
+                    {photoPreview && (
+                        <button 
+                            type="button" 
+                            onClick={(e) => { e.stopPropagation(); setPhotoPreview(null); form.setValue('photoURL', ''); }}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 shadow-lg hover:bg-red-600 transition-colors z-10"
+                        >
+                            <X className="h-3 w-3" />
+                        </button>
+                    )}
                 </div>
-                {photoPreview && (
-                    <button 
-                        type="button" 
-                        onClick={() => { setPhotoPreview(null); form.setValue('photoURL', ''); }}
-                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 transition-colors"
-                    >
-                        <X className="h-3 w-3" />
-                    </button>
-                )}
+                <p className="text-[8px] font-black uppercase text-muted-foreground tracking-[0.2em]">Logo Parceiro</p>
+                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handlePhotoUpload} />
             </div>
-            <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Logo do Parceiro</p>
-            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handlePhotoUpload} />
+
+            <div className="flex-1 w-full space-y-4">
+                <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><Building2 className="h-3.5 w-3.5 text-primary" /> Nome da Promotora *</FormLabel>
+                        <FormControl><Input placeholder="Ex: Master Promotora" {...field} className="font-bold h-11 text-base" /></FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="partnerCode"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest text-muted-foreground"><Hash className="h-3.5 w-3.5" /> ID / Código Interno de Parceiro</FormLabel>
+                        <FormControl><Input placeholder="Cód. Identificador" {...field} className="font-mono font-bold h-10 bg-muted/30" /></FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><Building2 className="h-3.5 w-3.5 text-primary" /> Nome da Promotora *</FormLabel>
-                    <FormControl><Input placeholder="Ex: Master Promotora" {...field} className="font-bold h-10" /></FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="partnerCode"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><Hash className="h-3.5 w-3.5 text-primary" /> Código de Parceiro</FormLabel>
-                    <FormControl><Input placeholder="Seu ID no sistema deles" {...field} className="font-mono font-bold h-10" /></FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-            />
+        {/* SEÇÃO 1: GESTÃO & APOIO */}
+        <div className="space-y-4">
+            <div className="flex items-center gap-3">
+                <div className="h-px bg-primary/10 flex-1" />
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-primary/40 leading-none">Gestão & Apoio</span>
+                <div className="h-px bg-primary/10 flex-1" />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <FormField
+                    control={form.control}
+                    name="contactName"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><UserIcon className="h-3.5 w-3.5 text-primary" /> Nome do Gerente / Contato</FormLabel>
+                        <FormControl><Input placeholder="Ex: Maria Clara" {...field} className="h-10" /></FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="supportPhone"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest text-blue-600"><Headset className="h-3.5 w-3.5" /> Suporte / Central 0800</FormLabel>
+                        <FormControl>
+                            <div className="relative">
+                                <Input placeholder="(00) 0000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} className="h-10" />
+                                {isWhatsApp(watchSupport || '') && (
+                                    <div className="absolute right-3 top-2 flex items-center">
+                                        <WhatsAppIcon className="h-4 w-4" />
+                                    </div>
+                                )}
+                            </div>
+                        </FormControl>
+                        </FormItem>
+                    )}
+                />
+            </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-                control={form.control}
-                name="contactName"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><UserIcon className="h-3.5 w-3.5 text-primary" /> Nome do Gerente</FormLabel>
-                    <FormControl><Input placeholder="Ex: Maria Clara" {...field} className="h-10" /></FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="supportPhone"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest text-blue-600"><Headset className="h-3.5 w-3.5" /> Suporte / Central</FormLabel>
-                    <FormControl>
-                        <div className="relative">
-                            <Input placeholder="(00) 0000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} className="h-10" />
-                            {isWhatsApp(watchSupport || '') && (
-                                <div className="absolute right-3 top-2 flex items-center">
-                                    <WhatsAppIcon className="h-4 w-4" />
-                                </div>
-                            )}
-                        </div>
-                    </FormControl>
-                    </FormItem>
-                )}
-            />
+        {/* SEÇÃO 2: CONTATOS DIGITAIS & E-MAILS */}
+        <div className="space-y-4">
+            <div className="flex items-center gap-3">
+                <div className="h-px bg-primary/10 flex-1" />
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-primary/40 leading-none">Contatos & E-mails</span>
+                <div className="h-px bg-primary/10 flex-1" />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><Phone className="h-3.5 w-3.5 text-primary" /> Fixo</FormLabel>
+                        <FormControl><Input placeholder="(00) 0000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} className="h-10" /></FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="whatsapp"
+                    render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                        <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest text-green-600"><Phone className="h-3.5 w-3.5" /> WhatsApp Direto Gerente</FormLabel>
+                        <FormControl>
+                            <div className="relative">
+                                <Input placeholder="(00) 00000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} className="h-10" />
+                                {isWhatsApp(watchWhatsapp || '') && (
+                                    <div className="absolute right-3 top-2 flex items-center">
+                                        <WhatsAppIcon className="h-4 w-4" />
+                                    </div>
+                                )}
+                            </div>
+                        </FormControl>
+                        </FormItem>
+                    )}
+                />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><Mail className="h-3.5 w-3.5 text-primary" /> E-mail da Promotora</FormLabel>
+                        <FormControl><Input placeholder="contato@promotora.com" {...field} type="email" className="h-10" /></FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="managerEmail"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest text-blue-600"><Mail className="h-3.5 w-3.5" /> E-mail do Gerente</FormLabel>
+                        <FormControl><Input placeholder="gerente@promotora.com" {...field} type="email" className="h-10" /></FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><Phone className="h-3.5 w-3.5 text-primary" /> Telefone Fixo</FormLabel>
-                    <FormControl><Input placeholder="(00) 0000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} className="h-10" /></FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="whatsapp"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest text-green-600"><Phone className="h-3.5 w-3.5" /> WhatsApp Gerente</FormLabel>
-                    <FormControl>
-                        <div className="relative">
-                            <Input placeholder="(00) 00000-0000" {...field} onChange={(e) => field.onChange(handlePhoneMask(e.target.value))} className="h-10" />
-                            {isWhatsApp(watchWhatsapp || '') && (
-                                <div className="absolute right-3 top-2 flex items-center">
-                                    <WhatsAppIcon className="h-4 w-4" />
-                                </div>
-                            )}
-                        </div>
-                    </FormControl>
-                    </FormItem>
-                )}
-            />
-        </div>
+        {/* SEÇÃO 3: ACESSO AO PORTAL */}
+        <div className="space-y-4">
+            <div className="flex items-center gap-3">
+                <div className="h-px bg-primary/10 flex-1" />
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-primary/40 leading-none">Acesso ao Portal</span>
+                <div className="h-px bg-primary/10 flex-1" />
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><Mail className="h-3.5 w-3.5 text-primary" /> E-mail Promotora</FormLabel>
-                    <FormControl><Input placeholder="contato@promotora.com" {...field} type="email" className="h-10" /></FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="managerEmail"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><Mail className="h-3.5 w-3.5 text-blue-600" /> E-mail do Gerente</FormLabel>
-                    <FormControl><Input placeholder="gerente@promotora.com" {...field} type="email" className="h-10" /></FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-            />
-        </div>
-
-        {/* CREDENCIAIS DO PORTAL */}
-        <div className="space-y-4 pt-2">
-            <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex items-start gap-3 mb-2">
-                <ShieldCheck className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <p className="text-[10px] font-bold text-primary uppercase leading-relaxed tracking-widest">
-                    Acesso ao Portal: Credenciais protegidas por criptografia de ponta a ponta.
+            <div className="bg-primary/5 p-5 rounded-3xl border border-primary/10 flex items-start gap-4 mb-2">
+                <ShieldCheck className="h-6 w-6 text-primary shrink-0 mt-0.5" />
+                <p className="text-[10px] font-bold text-primary/80 uppercase leading-relaxed tracking-widest">
+                    As credenciais abaixo são protegidas por criptografia AES-256 e visualizadas apenas mediante solicitação via ícone de visibilidade.
                 </p>
             </div>
 
@@ -306,7 +332,7 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
                 />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <FormField
                     control={form.control}
                     name="password"
@@ -317,14 +343,14 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
                             <div className="relative">
                                 <Input 
                                     type={showPassword ? "text" : "password"} 
-                                    placeholder={isDecrypting && initialData?.password ? "Descriptografando..." : "Sua senha"} 
+                                    placeholder={isDecrypting && initialData?.password ? "Descriptografando..." : "Digite a senha"} 
                                     {...field} 
-                                    className="h-10 pr-10 font-mono" 
+                                    className="h-10 pr-10 font-mono tracking-widest text-xs" 
                                     disabled={isDecrypting && initialData?.password}
                                 />
                                 <button 
                                     type="button" 
-                                    onClick={() => setShowPassword(!showPassword)}
+                                    onClick={(e) => { e.preventDefault(); setShowPassword(!showPassword); }}
                                     className="absolute right-3 top-2.5 text-muted-foreground hover:text-primary transition-colors"
                                 >
                                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -340,19 +366,19 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
                     name="secondaryPassword"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest text-blue-600"><KeyRound className="h-3.5 w-3.5" /> Contrasenha / Relatórios</FormLabel>
+                        <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest text-blue-600"><KeyRound className="h-3.5 w-3.5" /> Senha Relatórios (Contrasenha)</FormLabel>
                         <FormControl>
                              <div className="relative">
                                 <Input 
                                     type={showSecondaryPassword ? "text" : "password"} 
-                                    placeholder={isDecrypting && initialData?.secondaryPassword ? "Descriptografando..." : "Senha secundária"} 
+                                    placeholder={isDecrypting && initialData?.secondaryPassword ? "Descriptografando..." : "Senha alternativa"} 
                                     {...field} 
-                                    className="h-10 pr-10 font-mono" 
+                                    className="h-10 pr-10 font-mono tracking-widest text-xs" 
                                     disabled={isDecrypting && initialData?.secondaryPassword}
                                 />
                                 <button 
                                     type="button" 
-                                    onClick={() => setShowSecondaryPassword(!showSecondaryPassword)}
+                                    onClick={(e) => { e.preventDefault(); setShowSecondaryPassword(!showSecondaryPassword); }}
                                     className="absolute right-3 top-2.5 text-muted-foreground hover:text-primary transition-colors"
                                 >
                                     {showSecondaryPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -366,22 +392,31 @@ export function PromoterForm({ initialData, onSubmit, isSaving = false }: Promot
             </div>
         </div>
 
-        <FormField
-          control={form.control}
-          name="observations"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><MessageSquareText className="h-3.5 w-3.5" /> Anotações Internas</FormLabel>
-              <FormControl><Textarea placeholder="Prazos, taxas médias, horários de corte..." {...field} className="min-h-[80px]" /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* SEÇÃO 4: NOTAS EXTRAS */}
+        <div className="space-y-4">
+            <div className="flex items-center gap-3">
+                <div className="h-px bg-primary/10 flex-1" />
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-primary/40 leading-none">Anotações Internas</span>
+                <div className="h-px bg-primary/10 flex-1" />
+            </div>
 
-        <div className="flex justify-end pt-4 border-t">
-          <Button type="submit" disabled={isSaving} className="w-full rounded-full h-12 font-black uppercase text-xs tracking-widest shadow-xl bg-primary">
-            {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Gravando...</> : <><Save className="mr-2 h-4 w-4" /> Salvar Cadastro</>}
-          </Button>
+            <FormField
+                control={form.control}
+                name="observations"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel className="flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest"><MessageSquareText className="h-3.5 w-3.5" /> Observações e Regras do Parceiro</FormLabel>
+                    <FormControl><Textarea placeholder="Prazos, taxas médias, horários de corte..." {...field} className="min-h-[120px] rounded-3xl" /></FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+        </div>
+
+        <div className="sticky bottom-0 bg-background pt-6 pb-2 border-t mt-4 flex gap-4">
+            <Button type="submit" disabled={isSaving} className="flex-1 rounded-full h-14 font-black uppercase text-sm tracking-[0.2em] shadow-2xl bg-primary hover:scale-[1.02] active:scale-95 transition-all">
+                {isSaving ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Gravando...</> : <><Save className="mr-2 h-5 w-5" /> Confirmar e Salvar</>}
+            </Button>
         </div>
       </form>
     </Form>

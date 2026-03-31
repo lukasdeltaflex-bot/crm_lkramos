@@ -778,7 +778,7 @@ export default function ManagementPage() {
       </Dialog>
 
       <Dialog open={isPromoterModalOpen} onOpenChange={setIsPromoterModalOpen}>
-        <DialogContent className="max-md max-h-[90vh] overflow-hidden flex flex-col rounded-[2rem] p-0" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col rounded-[2rem] p-0" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
             <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
                 <DialogTitle className="text-xl font-black uppercase tracking-tight">
                     {selectedItem ? 'Editar Promotora' : 'Nova Promotora'}
