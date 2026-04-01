@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { useCollection, useFirestore, useUser, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, where, doc, setDoc, orderBy, limit } from 'firebase/firestore';
 import type { Customer, Proposal, FollowUp, UserSettings, Lead, Expense } from '@/lib/types';
-import { differenceInDays, format, differenceInMonths, parseISO, isAfter, subDays } from 'date-fns';
+import { differenceInDays, format, differenceInMonths, parseISO, isAfter, subDays, startOfDay, isBefore } from 'date-fns';
 import { getWhatsAppUrl, calculateBusinessDays, getAge, parseDateSafe } from '@/lib/utils';
 import Link from 'next/link';
 import { generateBirthdayMessage } from '@/ai/flows/generate-birthday-message-flow';
