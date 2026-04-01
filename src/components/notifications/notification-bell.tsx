@@ -389,18 +389,18 @@ export function NotificationBell() {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
+      <DropdownMenuContent align="end" className="w-[320px] sm:w-[380px] p-2">
         {!isClient ? (
             <div className="p-8 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto opacity-20" /></div>
         ) : (
             <>
-                <div className="flex items-center justify-between p-2 px-3">
-                    <DropdownMenuLabel className="p-0">Notificações</DropdownMenuLabel>
+                <div className="flex items-center justify-between px-3 py-2">
+                    <DropdownMenuLabel className="p-0 text-base font-bold">Notificações</DropdownMenuLabel>
                     {dismissedIds.length > 0 && (
                         <Button 
                             variant="ghost" 
                             size="sm" 
-                            className="h-auto p-0 text-[10px] text-muted-foreground hover:text-primary"
+                            className="h-auto p-0 text-xs text-muted-foreground hover:text-primary transition-colors"
                             onClick={async () => {
                                 if (user && firestore) {
                                     await setDoc(doc(firestore, 'userSettings', user.uid), { 
@@ -414,31 +414,33 @@ export function NotificationBell() {
                         </Button>
                     )}
                 </div>
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator className="mb-2" />
                 {count === 0 ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">
                     <Bell className="h-8 w-8 mx-auto mb-2 opacity-20" />
                     Nenhum alerta novo.
                 </div>
                 ) : (
-                <div className="max-h-96 overflow-y-auto">
+                <div className="max-h-[400px] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
                     {visibleNotifications.map((n) => (
-                    <div key={n.id} className="relative group">
-                        <div className="flex items-center pr-10">
-                            <Link href={n.link} passHref className="flex-1" onClick={() => dismissQuietly(n.id)}>
-                                <DropdownMenuItem className="w-full p-2 pl-4 focus:bg-muted/30 cursor-pointer border-b">
+                    <div key={n.id} className="relative group rounded-xl border border-transparent hover:border-border hover:bg-muted/10 transition-all">
+                        <div className="flex items-center pr-8">
+                            <Link href={n.link} passHref className="flex-1 min-w-0" onClick={() => dismissQuietly(n.id)}>
+                                <DropdownMenuItem className="w-full p-3 h-auto cursor-pointer flex-1 min-w-0 rounded-xl focus:bg-muted/30">
                                 <div className="flex items-start gap-3 w-full">
-                                    {n.type === 'lead' && <Zap className="h-5 w-5 text-purple-500 mt-1" />}
-                                    {n.type === 'birthday' && <Cake className="h-5 w-5 text-pink-500 mt-1" />}
-                                    {n.type === 'commission' && <Download className="h-4 w-4 text-emerald-500 mt-1" />}
-                                    {n.type === 'followup' && <CalendarClock className="h-4 w-4 text-blue-500 mt-1" />}
-                                    {n.type === 'debt' && <Hourglass className="h-4 w-4 text-red-500 mt-1" />}
-                                    {n.type === 'partial' && <Coins className="h-4 w-4 text-blue-500 mt-1" />}
-                                    {n.type === 'news' && <Newspaper className="h-4 w-4 text-emerald-500 mt-1" />}
-                                    {n.type === 'expense' && <Receipt className="h-4 w-4 text-red-500 mt-1" />}
-                                    <div className="space-y-1 overflow-hidden">
-                                    <p className="text-xs font-bold leading-none truncate">{n.title}</p>
-                                    <p className="text-[10px] text-muted-foreground">{n.date}</p>
+                                    <div className="shrink-0 pt-0.5">
+                                        {n.type === 'lead' && <Zap className="h-5 w-5 text-purple-500" />}
+                                        {n.type === 'birthday' && <Cake className="h-5 w-5 text-pink-500" />}
+                                        {n.type === 'commission' && <Download className="h-5 w-5 text-emerald-500" />}
+                                        {n.type === 'followup' && <CalendarClock className="h-5 w-5 text-blue-500" />}
+                                        {n.type === 'debt' && <Hourglass className="h-5 w-5 text-red-500" />}
+                                        {n.type === 'partial' && <Coins className="h-5 w-5 text-blue-500" />}
+                                        {n.type === 'news' && <Newspaper className="h-5 w-5 text-emerald-500" />}
+                                        {n.type === 'expense' && <Receipt className="h-5 w-5 text-red-500" />}
+                                    </div>
+                                    <div className="flex flex-col gap-1 min-w-0 flex-1">
+                                        <p className="text-sm font-bold leading-tight break-words whitespace-normal text-foreground">{n.title}</p>
+                                        <p className="text-xs font-medium text-muted-foreground">{n.date}</p>
                                     </div>
                                 </div>
                                 </DropdownMenuItem>
@@ -448,7 +450,7 @@ export function NotificationBell() {
                                     type="button"
                                     variant="ghost" 
                                     size="icon" 
-                                    className="absolute right-10 top-1/2 -translate-y-1/2 h-8 w-8 text-pink-500 hover:bg-pink-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                    className="absolute right-8 top-1/2 -translate-y-1/2 h-8 w-8 text-pink-500 hover:bg-pink-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20"
                                     onClick={(e) => handleBdayClick(e, n.customerId!)}
                                     title="Gerar Mensagem WhatsApp"
                                 >
@@ -458,7 +460,7 @@ export function NotificationBell() {
                         </div>
                         <button
                             onClick={(e) => handleDismiss(e, n.id)}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted rounded-md"
+                            className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted/80 rounded-full bg-background/50 shadow-sm border"
                             title="Remover"
                         >
                             <X className="h-3 w-3 text-muted-foreground" />
