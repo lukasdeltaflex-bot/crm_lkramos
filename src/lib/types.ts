@@ -164,6 +164,7 @@ export type UserSettings = {
   monthlyGoal?: number;
   dailyGoal?: number;
   dismissedAlerts?: string[];
+  readAlerts?: string[];
 };
 
 export type UserProfile = {

@@ -44,7 +44,7 @@ function SummaryAlertItem({
 }) {
   return (
     <div className="relative group">
-        <Link href={link} className="block" onClick={() => onDismiss(id)}>
+        <Link href={link} className="block">
             <Alert className="bg-card shadow-sm border-border/50 py-4 cursor-pointer hover:border-primary/40 hover:bg-muted/5 transition-all group-hover:shadow-md">
                 <div className="flex items-start gap-4">
                     <div className="mt-1 shrink-0">{icon}</div>

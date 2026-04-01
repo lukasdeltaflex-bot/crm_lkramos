@@ -64,13 +64,16 @@ export default function ProfilePage() {
 
         const monthlyStats: Record<string, { volume: number, label: string }> = {};
         paidProposals.forEach(p => {
-            if (!p.dateDigitized) return;
-            const d = parseISO(p.dateDigitized);
+            // Usa apenas a data em que foi pago ao cliente
+            if (!p.datePaidToClient) return;
+            const d = parseISO(p.datePaidToClient);
             if (!isValid(d)) return;
             const key = format(d, 'yyyy-MM');
             const label = format(d, 'MMMM/yyyy', { locale: ptBR });
             if (!monthlyStats[key]) monthlyStats[key] = { volume: 0, label };
-            monthlyStats[key].volume += (p.grossAmount || 0);
+            
+            // "não usar valor de contrato bruto" -> usar o valor líquido efetivamente pago
+            monthlyStats[key].volume += (p.netAmount || 0);
         });
 
         const bestMonth = Object.values(monthlyStats).sort((a,b) => b.volume - a.volume)[0];

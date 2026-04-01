@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, Cake, BadgePercent, X, CalendarClock, Bot, Loader2, MessageSquareText, Hourglass, Coins, Zap, AlertTriangle, Newspaper, UserPlus, ChevronRight, Download } from 'lucide-react';
+import { Bell, Cake, BadgePercent, X, CalendarClock, Bot, Loader2, MessageSquareText, Hourglass, Coins, Zap, AlertTriangle, Newspaper, UserPlus, ChevronRight, Download, Receipt } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCollection, useFirestore, useUser, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, where, doc, setDoc, orderBy, limit } from 'firebase/firestore';
-import type { Customer, Proposal, FollowUp, UserSettings, Lead } from '@/lib/types';
+import type { Customer, Proposal, FollowUp, UserSettings, Lead, Expense } from '@/lib/types';
 import { differenceInDays, format, differenceInMonths, parseISO, isAfter, subDays } from 'date-fns';
 import { getWhatsAppUrl, calculateBusinessDays, getAge, parseDateSafe } from '@/lib/utils';
 import Link from 'next/link';
@@ -54,8 +54,13 @@ export function NotificationBell() {
         collection(firestore, 'loanProposals'), 
         where('ownerId', '==', user.uid),
         // IMPORTANTE: Foco apenas em propostas passíveis de atraso/comissão. Requer índice (ownerId + status IN) no Firebase.
-        where('status', 'in', ['Pago', 'Saldo Pago', 'Aguardando Saldo']) 
+        where('status', 'in', ['Pago', 'Saldo Pago', 'Aguardando Saldo', 'Em Andamento']) 
     );
+  }, [firestore, user]);
+
+  const expensesQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, 'users', user.uid, 'expenses');
   }, [firestore, user]);
 
   const followUpsQuery = useMemoFirebase(() => {
@@ -95,6 +100,7 @@ export function NotificationBell() {
   const { data: followUps } = useCollection<FollowUp>(followUpsQuery);
   const { data: news } = useCollection<any>(newsQuery);
   const { data: leads } = useCollection<Lead>(leadsQuery);
+  const { data: expenses } = useCollection<Expense>(expensesQuery);
   const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
 
   useEffect(() => {
@@ -118,22 +124,25 @@ export function NotificationBell() {
   const notifications = React.useMemo(() => {
     if (!isClient) return [];
     
-    const alerts: { id: string; title: string; type: 'birthday' | 'commission' | 'followup' | 'debt' | 'partial' | 'radar' | 'age' | 'news' | 'lead'; date: string; link: string; customerId?: string }[] = [];
+    const alerts: { id: string; title: string; type: 'birthday' | 'commission' | 'followup' | 'debt' | 'partial' | 'radar' | 'age' | 'news' | 'lead' | 'expense'; date: string; link: string; customerId?: string }[] = [];
     const now = new Date();
     const todayStr = format(now, 'MM-dd');
     const todayIso = format(now, 'yyyy-MM-dd');
     const threeDaysAgo = subDays(now, 3);
+    const startOfToday = startOfDay(now);
 
+    // 1. LEADS DO PORTAL (Novos)
     [...(leads || [])].sort((a, b) => (parseDateSafe(b.createdAt)?.getTime() || 0) - (parseDateSafe(a.createdAt)?.getTime() || 0)).filter(l => l.status === 'pending').forEach(lead => {
         alerts.push({
             id: `lead-${lead.id}`,
-            title: `Lead: ${lead.name}`,
+            title: `Portal: ${lead.name}`,
             type: 'lead',
             date: lead.createdAt && parseDateSafe(lead.createdAt) ? format(parseDateSafe(lead.createdAt)!, 'dd/MM HH:mm') : 'Pendente',
             link: `/customers?editLead=${lead.id}`
         });
     });
 
+    // 2. NOVIDADES (Sino Especial)
     news?.forEach(item => {
         const publishDate = parseISO(item.date);
         if (isAfter(publishDate, threeDaysAgo)) {
@@ -147,29 +156,39 @@ export function NotificationBell() {
         }
     });
 
-    customers?.filter(c => c.deleted !== true).forEach(c => {
+    // 3. CONTAS A PAGAR (Operacional) - NOVO NO SINO
+    expenses?.filter(e => !e.paid).forEach(e => {
+        const expDate = parseDateSafe(e.date);
+        if (expDate && (differenceInDays(expDate, now) <= 5 || isBefore(expDate, startOfToday))) {
+            alerts.push({
+                id: `exp-${e.id}`,
+                title: `Pagar: ${e.description}`,
+                type: 'expense',
+                date: isBefore(expDate, startOfToday) ? 'Atrasada!' : e.date,
+                link: '/financial?tab=expenses'
+            });
+        }
+    });
+
+    // 4. CLIENTES (Aniversário, Idade, Radar)
+    customers?.filter(c => c.deleted !== true && c.status !== 'inactive').forEach(c => {
       const age = getAge(c.birthDate);
       
-      // 🛡️ FILTRO DE ATIVOS IGUAL AO DAILY SUMMARY: Apenas clientes sem status 'inactive' recebem notificações
-      if (c.status === 'inactive') return;
-      
-      // 1. Alerta de Idade Crítica (74 anos prestes a fazer 75)
       if (age === 74) {
         alerts.push({
           id: `age-${c.id}`,
           title: `Atenção Idade: ${c.name}`,
           type: 'age',
-          date: 'Próximo aos 75 anos',
+          date: 'Fará 75 anos',
           link: `/customers/${c.id}`,
           customerId: c.id
         });
       }
 
-      // 2. Alerta de Aniversário (Independente da idade, desde que ativo)
       if (c.birthDate && c.birthDate.substring(5) === todayStr) {
         alerts.push({
-          id: `bday-${c.id}-${todayStr}`, // ID inclui a data para resetar anualmente
-          title: `Aniversário: ${c.name}`,
+          id: `bday-today-${c.id}`, // Sincronizado com DailySummary
+          title: `Parabéns: ${c.name}`,
           type: 'birthday',
           date: 'Hoje',
           link: `/customers/${c.id}`,
@@ -179,12 +198,13 @@ export function NotificationBell() {
 
       const hasMatured = proposals?.some(p => {
           if (p.deleted === true || p.customerId !== c.id) return false;
-          if (p.status !== 'Pago' && p.status !== 'Saldo Pago') return false;
+          if (!['Pago', 'Saldo Pago'].includes(p.status)) return false;
           if (!p.datePaidToClient) return false;
-          return differenceInMonths(now, new Date(p.datePaidToClient)) >= 12;
+          const paidDate = parseDateSafe(p.datePaidToClient);
+          return paidDate && differenceInMonths(now, paidDate) >= 12;
       });
 
-      if (hasMatured) {
+      if (hasMatured && age < 75) {
           alerts.push({
               id: `radar-${c.id}`,
               title: `Radar: ${c.name}`,
@@ -195,9 +215,9 @@ export function NotificationBell() {
       }
     });
 
+    // 5. RETORNOS AGENDADOS (Follow-ups Manuais)
     followUps?.filter(f => {
         if (f.deleted === true || !f.dueDate) return false;
-        // Aceita ambos os status usados pelo sistema (inglês/português)
         return f.status === 'pending' || f.status === 'pendente';
     }).forEach(f => {
         const dueDateStr = f.dueDate.substring(0, 10);
@@ -212,13 +232,16 @@ export function NotificationBell() {
         }
     });
 
+    // 6. PROPOSTAS (Comissões e Pendências Operacionais)
     proposals?.filter(p => p.deleted !== true).forEach(p => {
-      if ((p.status === 'Pago' || p.status === 'Saldo Pago') && p.commissionStatus === 'Pendente' && p.datePaidToClient) {
-        const days = differenceInDays(now, new Date(p.datePaidToClient));
+      // Comissão Pendente
+      if (['Pago', 'Saldo Pago'].includes(p.status) && p.commissionStatus === 'Pendente' && p.datePaidToClient) {
+        const paidDate = parseDateSafe(p.datePaidToClient);
+        const days = paidDate ? differenceInDays(now, paidDate) : 0;
         if (days > 7) {
           alerts.push({
             id: `comm-${p.id}`,
-            title: `Comissão Pendente: ${p.proposalNumber}`,
+            title: `Comissão: ${p.proposalNumber}`,
             type: 'commission',
             date: `${days} dias`,
             link: `/proposals?open=${p.id}`
@@ -226,12 +249,13 @@ export function NotificationBell() {
         }
       }
 
+      // Saldo Atrasado (Portabilidade)
       if (p.product === 'Portabilidade' && p.status === 'Aguardando Saldo' && p.dateDigitized) {
           const bizDays = calculateBusinessDays(p.dateDigitized);
           if (bizDays >= 5) {
               alerts.push({
                   id: `debt-${p.id}`,
-                  title: `Saldo Atrasado: ${p.proposalNumber}`,
+                  title: `Saldo: ${p.proposalNumber}`,
                   type: 'debt',
                   date: `${bizDays} dias úteis`,
                   link: `/proposals?open=${p.id}`
@@ -239,14 +263,31 @@ export function NotificationBell() {
           }
       }
 
+      // Cobrança de Saldo (Parcial)
       if (p.commissionStatus === 'Parcial' && p.commissionPaymentDate) {
-          const daysSince = differenceInDays(now, new Date(p.commissionPaymentDate));
+          const lastPayDate = parseDateSafe(p.commissionPaymentDate);
+          const daysSince = lastPayDate ? differenceInDays(now, lastPayDate) : 0;
           if (daysSince > 15) {
               alerts.push({
                   id: `part-${p.id}`,
-                  title: `Cobrar Saldo: ${p.proposalNumber}`,
+                  title: `Saldo: ${p.proposalNumber}`,
                   type: 'partial',
                   date: `${daysSince} dias`,
+                  link: `/proposals?open=${p.id}`
+              });
+          }
+      }
+
+      // Lembrete de Acompanhamento (Em Andamento há muito tempo) - NOVO NO SINO
+      if (p.status === 'Em Andamento' && p.dateDigitized) {
+          const digitDate = parseDateSafe(p.dateDigitized);
+          const days = digitDate ? differenceInDays(now, digitDate) : 0;
+          if (days > 20) {
+              alerts.push({
+                  id: `fup-prop-${p.id}`,
+                  title: `Atrasada: ${p.proposalNumber}`,
+                  type: 'followup',
+                  date: `${days} dias`,
                   link: `/proposals?open=${p.id}`
               });
           }
@@ -254,11 +295,12 @@ export function NotificationBell() {
     });
 
     return alerts;
-  }, [customers, proposals, followUps, news, leads, isClient]);
+  }, [customers, proposals, followUps, news, leads, expenses, isClient]);
 
   const visibleNotifications = React.useMemo(() => {
-    return notifications.filter(n => !dismissedIds.includes(n.id));
-  }, [notifications, dismissedIds]);
+    const readIds = userSettings?.readAlerts || [];
+    return notifications.filter(n => !dismissedIds.includes(n.id) && !readIds.includes(n.id));
+  }, [notifications, dismissedIds, userSettings?.readAlerts]);
 
   const handleDismiss = async (e: React.MouseEvent, id: string) => {
     e.preventDefault();
@@ -277,9 +319,12 @@ export function NotificationBell() {
   const dismissQuietly = async (id: string) => {
     if (!user || !firestore) return;
     try {
-        await setDoc(doc(firestore, 'userSettings', user.uid), {
-            dismissedAlerts: [...dismissedIds, id]
-        }, { merge: true });
+        const readIds = userSettings?.readAlerts || [];
+        if (!readIds.includes(id)) {
+            await setDoc(doc(firestore, 'userSettings', user.uid), {
+                readAlerts: [...readIds, id]
+            }, { merge: true });
+        }
     } catch (err) {}
   };
 
@@ -358,7 +403,10 @@ export function NotificationBell() {
                             className="h-auto p-0 text-[10px] text-muted-foreground hover:text-primary"
                             onClick={async () => {
                                 if (user && firestore) {
-                                    await setDoc(doc(firestore, 'userSettings', user.uid), { dismissedAlerts: [] }, { merge: true });
+                                    await setDoc(doc(firestore, 'userSettings', user.uid), { 
+                                        dismissedAlerts: [],
+                                        readAlerts: [] 
+                                    }, { merge: true });
                                 }
                             }}
                         >
@@ -387,8 +435,9 @@ export function NotificationBell() {
                                     {n.type === 'debt' && <Hourglass className="h-4 w-4 text-red-500 mt-1" />}
                                     {n.type === 'partial' && <Coins className="h-4 w-4 text-blue-500 mt-1" />}
                                     {n.type === 'news' && <Newspaper className="h-4 w-4 text-emerald-500 mt-1" />}
+                                    {n.type === 'expense' && <Receipt className="h-4 w-4 text-red-500 mt-1" />}
                                     <div className="space-y-1 overflow-hidden">
-                                    <p className="text-sm font-bold leading-none truncate">{n.title}</p>
+                                    <p className="text-xs font-bold leading-none truncate">{n.title}</p>
                                     <p className="text-[10px] text-muted-foreground">{n.date}</p>
                                     </div>
                                 </div>

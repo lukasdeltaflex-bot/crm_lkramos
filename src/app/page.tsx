@@ -305,6 +305,10 @@ export default function DashboardPage() {
       const endToday = endOfDay(new Date());
       return stats.proposals.digitadoNoMes.reduce((sum, p) => {
           if (!p.dateDigitized) return sum;
+          // 🛡️ REGRA: Somente propostas não canceladas/reprovadas entram na meta diária (R$)
+          const isInvalid = p.status === 'Reprovado' || p.status === 'Cancelado' || p.status === 'Cancelada';
+          if (isInvalid) return sum;
+
           const pd = new Date(p.dateDigitized);
           return (isValid(pd) && pd >= today && pd <= endToday) ? sum + (p.commissionValue || 0) : sum;
       }, 0);
@@ -477,8 +481,12 @@ export default function DashboardPage() {
                             if (!p.dateDigitized) return;
                             const pd = new Date(p.dateDigitized);
                             if (isValid(pd) && pd >= ds && pd <= de) {
-                                commission += (p.commissionValue || 0);
-                                contract += (p.grossAmount || 0);
+                                // 🛡️ SINCRONIA: Aplicar o mesmo filtro do 'currentDailyProduction' para consistência visual
+                                const isInvalid = p.status === 'Reprovado' || p.status === 'Cancelado' || p.status === 'Cancelada';
+                                if (!isInvalid) {
+                                    commission += (p.commissionValue || 0);
+                                    contract += (p.grossAmount || 0);
+                                }
                             }
                         });
                         return { date: day, commission, contract };
