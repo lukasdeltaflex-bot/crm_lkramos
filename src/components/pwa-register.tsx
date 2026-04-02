@@ -1,202 +1,40 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 
 /**
- * 🚀 PWA MASTER CONTROLLER LK RAMOS
- * Registra o Service Worker APENAS em produção e gerencia atualizações.
- * Detecta via SW ou polling de fallback (version.json).
+ * 🚀 PWA MASTER CONTROLLER LK RAMOS V2
+ * Gerencia o ciclo de vida do Service Worker e atualizações do sistema.
+ * Otimizado para funcionamento em APPs instalados (Standalone).
  */
 export function PwaRegister() {
   const updateFound = useRef(false);
-  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast, dismiss } = useToast();
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
+  const triggerUpdatePrompt = useCallback((registration?: ServiceWorkerRegistration, newVersionFallback?: string) => {
+    // 🛡️ Impedir duplicidade e respeitar o SNOOZE
+    const snoozeUntil = localStorage.getItem('lk-pwa-snooze');
+    if (snoozeUntil && Date.now() < parseInt(snoozeUntil, 10)) {
+        console.log("[PWA Stage: UI] ⏳ Aviso suprimido pelo SNOOZE ativo.");
+        return;
+    }
 
-    const syncEnvironment = async () => {
-      const isProd = process.env.NODE_ENV === 'production';
-
-      // 🛡️ LIMPEZA DE CACHE E WORKERS EM DESENVOLVIMENTO
-      if (!isProd) {
-        if ('caches' in window) {
-          try {
-            const cacheNames = await caches.keys();
-            await Promise.all(cacheNames.map(name => caches.delete(name)));
-          } catch (e) { console.warn("PWA Event Error", e); }
-        }
-        
-        if ('serviceWorker' in navigator) {
-          try {
-            const registrations = await navigator.serviceWorker.getRegistrations();
-            for (const registration of registrations) {
-              await registration.unregister();
-              console.log("💎 LK RAMOS: Service Worker removido para garantir código fresco em desenvolvimento.");
-            }
-          } catch (e) { console.warn("PWA Event Error", e); }
-        }
-        return; 
-      }
-
-      // 🚀 REGISTRO APENAS EM PRODUÇÃO
-      if (!('serviceWorker' in navigator)) return;
-
-      try {
-        const registration = await navigator.serviceWorker.register('/sw.js');
-
-        // 🔥 Força a checagem com o servidor ignorando o cache do navegador
-        try {
-            await registration.update();
-        } catch (e) {
-            console.warn("SW Update check failed", e);
-        }
-
-        // Se já tiver alguma att pendente esperando (ignorado na sessão anterior)
-        if (registration.waiting) {
-            const snoozeUntil = localStorage.getItem('lk-pwa-snooze');
-            if (!snoozeUntil || Date.now() > parseInt(snoozeUntil, 10)) {
-                triggerUpdatePrompt(registration);
-            } else {
-                console.log("[PWA Flow] ⏳ Atualização silenciada pelo SNOOZE ativo na inicialização.");
-            }
-        }
-
-        // Listener de quando o SW descobre uma nova versão no background
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          if (!newWorker) return;
-
-          // 🛡️ Previne race condition se o Service Worker for instalado excessivamente rápido
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-             triggerUpdatePrompt(registration);
-             return;
-          }
-
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              triggerUpdatePrompt(registration);
-            }
-          });
-        });
-
-        // Quando o SW de fato ativar, a página pode dar refresh automaticamente para carregar a nova versão
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!refreshing) {
-            refreshing = true;
-            window.location.reload();
-          }
-        });
-
-      } catch (err) {
-        console.error('🛡️ LK RAMOS: Erro ao registrar PWA:', err);
-      }
-    };
-
-    syncEnvironment();
-  }, []);
-
-  // FALLBACK WEB: Polling do version.json para forçar updates se o SW falhar na checagem
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const checkFallbackVersion = async () => {
-        if (updateFound.current) {
-            console.log("[PWA Flow] ⏳ checkFallbackVersion ignorado pois updateFound já é true.");
-            return;
-        }
-
-        const snoozeUntil = localStorage.getItem('lk-pwa-snooze');
-        if (snoozeUntil && Date.now() < parseInt(snoozeUntil, 10)) {
-            console.log("[PWA Flow] ⏳ Atualização adiada pelo usuário (Snooze ativo).");
-            return;
-        }
-
-        try {
-            console.log("[PWA Flow] 🔍 Buscando /version.json...");
-            const res = await fetch('/version.json?t=' + Date.now(), { cache: 'no-store' });
-            if (!res.ok) {
-                console.warn("[PWA Flow] ⚠️ Falha ao buscar version.json. Status:", res.status);
-                return;
-            }
-            const data = await res.json();
-            const currentVersion = localStorage.getItem('lk-app-version');
-            
-            console.log(`[PWA Flow] 📊 Versão Local: ${currentVersion} | Versão Servidor: ${data.version}`);
-
-            if (!currentVersion) {
-                console.log("[PWA Flow] 📥 Versão local inexistente. Salvando primeira vez.");
-                // Primeira vez, salva a versão
-                localStorage.setItem('lk-app-version', data.version);
-            } else if (currentVersion !== data.version) {
-                console.log(`[PWA Flow] 🚨 DIVERGÊNCIA DE VERSÃO DETECTADA! Servidor: ${data.version} | Local: ${currentVersion}`);
-                // Nova versão detectada!
-                triggerUpdatePrompt(undefined, data.version);
-            } else {
-                console.log("[PWA Flow] ✅ Versões coincidem. Nenhuma ação necessária.");
-            }
-        } catch (e) { console.warn("[PWA Flow] 🔴 PWA Event Error", e); }
-    };
-
-    // 🔥 Executa imediatamente ao carregar a página
-    checkFallbackVersion();
-
-    // Checa versão a cada 5 minutos
-    const interval = setInterval(async () => {
-        if ('serviceWorker' in navigator) {
-            try {
-                const regs = await navigator.serviceWorker.getRegistrations();
-                for (const reg of regs) {
-                    if (reg.waiting) {
-                        const snooze = localStorage.getItem('lk-pwa-snooze');
-                        if (!snooze || Date.now() > parseInt(snooze, 10)) {
-                            console.log("[PWA Flow] 🕒 Resgatando SNOOZE expirado pelo setInterval. Mostrando popup!");
-                            triggerUpdatePrompt(reg);
-                        }
-                    } else {
-                        // Força navegador a rechecar novo sw.js
-                        reg.update().catch(() => {});
-                    }
-                }
-            } catch (e) {
-                console.warn("[PWA Flow] Error checking SW regs via interval:", e);
-            }
-        }
-        checkFallbackVersion();
-    }, 5 * 60 * 1000);
-    // Também checa assim que a pessoa retorna pra aba
-    window.addEventListener('focus', checkFallbackVersion);
-
-    return () => {
-        clearInterval(interval);
-        window.removeEventListener('focus', checkFallbackVersion);
-    };
-  }, []);
-
-  const triggerUpdatePrompt = (registration?: ServiceWorkerRegistration, newVersionFallback?: string) => {
-    if (updateFound.current) return;
+    if (updateFound.current) {
+        console.log("[PWA Stage: UI] ⏳ Aviso já está em exibição ou processamento.");
+        return;
+    }
     
-    // Limpa dismissals pendentes de renderizações anteriores para garantir frescor
+    console.log(`[PWA Stage: UI] 🚨 Disparando Toast de Atualização. SW Waiting: ${!!registration?.waiting}`);
     dismiss();
-    
     updateFound.current = true;
-
-    console.log(`[PWA Flow] 🚨 Disparando aviso de nova versão. SW Waiting? ${!!registration?.waiting}. Novo Fallback? ${newVersionFallback}`);
-
-    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-    toastTimeoutRef.current = setTimeout(() => {
-        updateFound.current = false;
-        console.log(`[PWA Flow] 🕒 30 min se passaram pelo timer da notificação. Reseta updateFound para nova checagem.`);
-    }, 30 * 60 * 1000);
 
     toast({
       title: "🚀 Nova versão disponível",
-      description: "Deseja atualizar para a versão mais recente e estável do CRM?",
-      duration: 120000, // 2 minutos esperando clique
+      description: "Uma nova versão do CRM foi detectada. Deseja atualizar agora?",
+      duration: Infinity, // Mantém aberto até interação no PWA
       action: (
         <div className="flex items-center gap-2 mt-2">
           <Button 
@@ -206,8 +44,9 @@ export function PwaRegister() {
             onClick={() => {
                 dismiss();
                 updateFound.current = false;
-                localStorage.setItem('lk-pwa-snooze', (Date.now() + 30 * 60 * 1000).toString());
-                console.log("[PWA Flow] ⏭️ Atualização adiada para daqui a 30 min (Snooze LocalStorage).");
+                const thirtyMins = Date.now() + 30 * 60 * 1000;
+                localStorage.setItem('lk-pwa-snooze', thirtyMins.toString());
+                console.log("[PWA Stage: Action] ⏭️ Atualização adiada por 30 minutos.");
             }}
           >
             Depois
@@ -218,41 +57,28 @@ export function PwaRegister() {
             className="bg-primary hover:bg-primary/90 text-white font-bold h-8 px-3 text-xs"
             onClick={() => {
               dismiss();
-              console.log("[PWA Flow] ⚡ Botão ATUALIZAR AGORA clicado.");
+              console.log("[PWA Stage: Action] ⚡ Atualização iniciada pelo usuário.");
+              
               if (newVersionFallback) {
-                  console.log(`[PWA Flow] Salvando versão ${newVersionFallback} no localStorage.`);
                   localStorage.setItem('lk-app-version', newVersionFallback);
               }
+
               if (registration?.waiting) {
-                console.log("[PWA Flow] Mando mensagem SKIP_WAITING para o SW.");
                 registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-                // O page reload ocorrerá no 'controllerchange'
               } else {
-                console.log("[PWA Flow] SW sem estado waiting. Entrando na limpeza manual de cache.");
-                const clearCacheAndReload = async () => {
+                // Caso onde o SW não está em waiting mas detectamos mudança via version.json
+                const forceHardReload = async () => {
                     try {
                         if ('caches' in window) {
-                            console.log("[PWA Flow] 🧹 Limpando caches do navegador...");
                             const names = await caches.keys();
                             await Promise.all(names.map(name => caches.delete(name)));
-                            console.log("[PWA Flow] ✅ Caches limpos.");
                         }
-                        if ('serviceWorker' in navigator) {
-                            console.log("[PWA Flow] 🔌 Desregistrando Service Workers ativos...");
-                            const regs = await navigator.serviceWorker.getRegistrations();
-                            for (const reg of regs) {
-                                await reg.unregister();
-                            }
-                            console.log("[PWA Flow] ✅ SWs desregistrados.");
-                        }
-                    } catch (e) {
-                        console.error("[PWA Flow] 🔴 Erro ao limpar cache interno", e);
-                    } finally {
-                        console.log("[PWA Flow] 🔄 Forçando reload bypass...");
-                        window.location.href = window.location.pathname + '?v=' + new Date().getTime();
-                    }
+                        const regs = await navigator.serviceWorker.getRegistrations();
+                        for (const r of regs) await r.unregister();
+                    } catch (e) {}
+                    window.location.href = window.location.pathname + '?refresh=' + Date.now();
                 };
-                clearCacheAndReload();
+                forceHardReload();
               }
             }}
           >
@@ -262,7 +88,127 @@ export function PwaRegister() {
         </div>
       ),
     });
-  };
+  }, [dismiss, toast]);
+
+  const checkUpdates = useCallback(async () => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
+
+    console.log("[PWA Stage: Check] 🔍 Iniciando verificação de atualizações...");
+
+    // 1. Verificar via Service Worker
+    try {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const reg of registrations) {
+            // Tenta forçar o navegador a baixar o sw.js novamente
+            await reg.update().catch(() => {});
+
+            if (reg.waiting) {
+                console.log("[PWA Stage: Check] 📦 Service Worker em estado WAITING detectado.");
+                triggerUpdatePrompt(reg);
+                return;
+            }
+
+            if (reg.installing) {
+                console.log("[PWA Stage: Check] ⚙️ Service Worker em estado INSTALLING detectado. Aguardando...");
+                reg.installing.addEventListener('statechange', (e: any) => {
+                    if (e.target.state === 'installed') {
+                        console.log("[PWA Stage: Check] ✅ SW instalado com sucesso durante a sessão.");
+                        triggerUpdatePrompt(reg);
+                    }
+                });
+            }
+        }
+    } catch (e) {
+        console.warn("[PWA Stage: Check] Erro na checagem do SW", e);
+    }
+
+    // 2. Verificar via Fallback (version.json)
+    try {
+        const res = await fetch('/version.json?t=' + Date.now(), { cache: 'no-store' });
+        if (res.ok) {
+            const data = await res.json();
+            const currentVersion = localStorage.getItem('lk-app-version');
+            
+            if (currentVersion && currentVersion !== data.version) {
+                console.log(`[PWA Stage: Check] 🚨 Versão detectada via fallback: ${data.version}`);
+                triggerUpdatePrompt(undefined, data.version);
+            } else if (!currentVersion) {
+                localStorage.setItem('lk-app-version', data.version);
+            }
+        }
+    } catch (e) {
+        console.warn("[PWA Stage: Check] Erro na checagem do version.json", e);
+    }
+  }, [triggerUpdatePrompt]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // 🚀 Lógica de inicialização de ambiente
+    const isProd = process.env.NODE_ENV === 'production';
+    if (!isProd) return;
+
+    if (!('serviceWorker' in navigator)) return;
+
+    const initPwa = async () => {
+        try {
+            console.log("[PWA Stage: Init] 🚀 Registrando Service Worker...");
+            const registration = await navigator.serviceWorker.register('/sw.js');
+            
+            // Listener de atualizações futuras na mesma sessão
+            registration.addEventListener('updatefound', () => {
+                console.log("[PWA Stage: Event] 💡 Novo conteúdo encontrado (updatefound).");
+                const newWorker = registration.installing;
+                if (newWorker) {
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            console.log("[PWA Stage: Event] ✅ Novo worker instalado.");
+                            triggerUpdatePrompt(registration);
+                        }
+                    });
+                }
+            });
+
+            // Refresh automático quando o novo SW assume o controle
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (!refreshing) {
+                    refreshing = true;
+                    console.log("[PWA Stage: Lifecycle] 🔄 Controller alterado. Recarregando...");
+                    window.location.reload();
+                }
+            });
+
+            // Checagem inicial
+            await checkUpdates();
+
+        } catch (err) {
+            console.error('[PWA Stage: Init] 🛡️ Erro fatal no PWA:', err);
+        }
+    };
+
+    initPwa();
+
+    // 🕒 Polling de segurança (A cada 15 minutos)
+    const interval = setInterval(checkUpdates, 15 * 60 * 1000);
+
+    // ⚡ Monitor de Retorno ao App (Essencial para Standalone/PWA Instalado)
+    const handleActivity = () => {
+        if (document.visibilityState === 'visible') {
+            console.log("[PWA Stage: Resume] 📡 App voltou para o primeiro plano. Checando atualizações...");
+            checkUpdates();
+        }
+    };
+
+    window.addEventListener('focus', handleActivity);
+    document.addEventListener('visibilitychange', handleActivity);
+
+    return () => {
+        clearInterval(interval);
+        window.removeEventListener('focus', handleActivity);
+        document.removeEventListener('visibilitychange', handleActivity);
+    };
+  }, [checkUpdates, triggerUpdatePrompt]);
 
   return null;
 }
