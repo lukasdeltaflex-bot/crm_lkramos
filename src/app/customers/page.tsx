@@ -691,7 +691,7 @@ function CustomersPageContent() {
                 setRowSelection={setRowSelection}
             />
             {/* ⚡ PERFORMANCE: Botão para carregar mais registros (Manual) */}
-            {hasMoreCustomers && processedCustomers.length >= LOAD_CHUNK_SIZE && !isCustomersLoading && (
+            {hasMoreCustomers && ((realTimeCustomers?.length || 0) + staticCustomers.length) >= LOAD_CHUNK_SIZE && !isCustomersLoading && (
                 <div className="flex justify-center pb-10 animate-in fade-in slide-in-from-bottom-2">
                     <Button 
                         variant="outline" 
