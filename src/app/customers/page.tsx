@@ -238,8 +238,8 @@ function CustomersPageContent() {
 
         const age = getAge(c.birthDate);
         const isStatusMatch = filter === 'active' 
-            ? (c.status !== 'inactive' && age < 75)
-            : (c.status === 'inactive' || age >= 75);
+            ? (c.status === 'active' || (!c.status && age < 75))
+            : (c.status === 'inactive' || (!c.status && age >= 75));
         
         if (!isStatusMatch) return false;
 
