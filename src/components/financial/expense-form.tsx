@@ -62,18 +62,16 @@ const applyDateMask = (value: string) => {
 
 export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }: ExpenseFormProps) {
   const finalCategories = useMemo(() => {
-    // Garantir que a lista de categorias seja um array válido
     const baseList = Array.isArray(categories) ? [...categories] : [];
-    const list = baseList.filter(c => !!c); // Remove itens nulos ou vazios
+    const list = baseList.map(c => c?.trim()).filter(c => !!c);
     
-    // Se o registro tem uma categoria (mesmo que não esteja na lista mestre), forçamos sua presença
-    if (expense?.category && !list.includes(expense.category)) {
-        list.push(expense.category);
+    const expCat = expense?.category?.trim();
+    if (expCat && !list.includes(expCat)) {
+        list.push(expCat);
     }
     
-    // Se a lista ainda estiver vazia, garantimos ao menos a categoria do registro ou um fallback
-    if (list.length === 0 && expense?.category) {
-        list.push(expense.category);
+    if (list.length === 0 && expCat) {
+        list.push(expCat);
     }
     
     return list;
@@ -94,15 +92,14 @@ export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }:
 
   useEffect(() => {
     if (expense) {
-      // Prioridade absoluta para o valor que já está no banco de dados
-      const savedCategory = expense.category;
-      const fallbackCategory = categories && categories.length > 0 ? categories[0] : '';
+      const savedCategory = expense.category?.trim();
+      const fallbackCategory = categories && categories.length > 0 ? categories[0]?.trim() : '';
       
       form.reset({
         description: expense.description || '',
         amount: expense.amount ?? 0,
         date: formatDateSafe(expense.date),
-        category: savedCategory || fallbackCategory,
+        category: savedCategory || fallbackCategory || '',
         paid: expense.paid ?? false,
         recurrence: expense.recurrence || 'none',
         installmentsCount: expense.installmentsCount || 1,
@@ -112,7 +109,7 @@ export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }:
             description: '',
             amount: 0,
             date: format(new Date(), 'dd/MM/yyyy'),
-            category: categories && categories.length > 0 ? categories[0] : '',
+            category: categories && categories.length > 0 ? categories[0]?.trim() : '',
             paid: false,
             recurrence: 'none',
             installmentsCount: 1,
@@ -200,7 +197,8 @@ export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }:
             render={({ field }) => (
                 <FormItem>
                 <FormLabel>Categoria</FormLabel>
-                <Select 
+                <Select
+                    key={`${expense?.id || 'new'}-${finalCategories.length}-${field.value}`}
                     onValueChange={field.onChange} 
                     value={field.value} 
                     disabled={isSaving}
