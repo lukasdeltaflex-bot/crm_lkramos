@@ -138,6 +138,61 @@ export function formatDateSafe(dateString?: string, formatStr: string = "dd/MM/y
  * ⚡ CÁLCULO DE DIAS ÚTEIS (OTIMIZADO)
  * Conta os dias entre datas pulando fins de semana.
  */
+/**
+ * 🇧🇷 CÁLCULO DE FERIADOS NACIONAIS
+ * Retorna um Set de strings no formato YYYY-MM-DD com os feriados do ano.
+ */
+function getBrazilianHolidays(year: number): Set<string> {
+    const holidays = new Set<string>();
+    
+    // Feriados Fixos
+    holidays.add(`${year}-01-01`); // Ano Novo
+    holidays.add(`${year}-04-21`); // Tiradentes
+    holidays.add(`${year}-05-01`); // Dia do Trabalho
+    holidays.add(`${year}-07-09`); // Revolução Constitucionalista (SP - Comum em CRMs BR, mas nacional são os abaixo)
+    holidays.add(`${year}-09-07`); // Independência
+    holidays.add(`${year}-10-12`); // Nossa Senhora Aparecida
+    holidays.add(`${year}-11-02`); // Finados
+    holidays.add(`${year}-11-15`); // Proclamação da República
+    holidays.add(`${year}-11-20`); // Dia da Consciência Negra (Nacional a partir de 2024)
+    holidays.add(`${year}-12-25`); // Natal
+
+    // Cálculo da Páscoa (Algoritmo de Gauss)
+    const a = year % 19;
+    const b = Math.floor(year / 100);
+    const c = year % 100;
+    const d = Math.floor(b / 4);
+    const e = b % 4;
+    const f = Math.floor((b + 8) / 25);
+    const g = Math.floor((b - f + 1) / 3);
+    const h = (19 * a + b - d - g + 15) % 30;
+    const i = Math.floor(c / 4);
+    const k = c % 4;
+    const l = (32 + 2 * e + 2 * i - h - k) % 7;
+    const m = Math.floor((a + 11 * h + 22 * l) / 451);
+    const month = Math.floor((h + l - 7 * m + 114) / 31);
+    const day = ((h + l - 7 * m + 114) % 31) + 1;
+    
+    const easter = new Date(year, month - 1, day);
+    
+    const addDate = (base: Date, days: number) => {
+        const d = new Date(base);
+        d.setDate(d.getDate() + days);
+        holidays.add(d.toISOString().split('T')[0]);
+    };
+
+    addDate(easter, -48); // Segunda de Carnaval
+    addDate(easter, -47); // Terça de Carnaval
+    addDate(easter, -2);  // Sexta-feira Santa
+    addDate(easter, 60);  // Corpus Christi
+
+    return holidays;
+}
+
+/**
+ * ⚡ CÁLCULO DE DIAS ÚTEIS (OTIMIZADO + FERIADOS)
+ * Conta os dias entre datas pulando fins de semana e feriados nacionais.
+ */
 export function calculateBusinessDays(startDateStr: string | Date): number {
     const start = typeof startDateStr === 'string' ? parseDateSafe(startDateStr) : startDateStr;
     if (!start || isNaN(start.getTime())) return 0;
@@ -148,19 +203,30 @@ export function calculateBusinessDays(startDateStr: string | Date): number {
     const curDate = new Date(start);
     curDate.setHours(0, 0, 0, 0);
     
-    // 🛡️ SEGURANÇA: Impede loops infinitos se a data for no futuro ou muito antiga
     if (curDate > now) return 0;
     
     const diffDays = Math.abs(differenceInDays(now, curDate));
-    if (diffDays > 365) return 260; // Retorno máximo (aprox 1 ano de dias úteis)
+    if (diffDays > 365) return 260;
 
     let count = 0;
-    // Iniciamos a contagem a partir do dia seguinte à abertura/mudança
     curDate.setDate(curDate.getDate() + 1);
 
+    // Cache de feriados por ano para evitar recálculo no loop
+    const holidayCache: Record<number, Set<string>> = {};
+
     while (curDate <= now) {
+        const year = curDate.getFullYear();
+        if (!holidayCache[year]) {
+            holidayCache[year] = getBrazilianHolidays(year);
+        }
+
         const dayOfWeek = curDate.getDay();
-        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        const dateStr = curDate.toISOString().split('T')[0];
+        
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+        const isHoliday = holidayCache[year].has(dateStr);
+
+        if (!isWeekend && !isHoliday) {
             count++;
         }
         curDate.setDate(curDate.getDate() + 1);

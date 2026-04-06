@@ -122,7 +122,7 @@ export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }:
             <FormItem>
               <FormLabel>Descrição da Despesa</FormLabel>
               <FormControl>
-                <Input placeholder="Ex: Aluguel, Internet, etc." {...field} value={field.value ?? ''} disabled={isSaving || !!expense} />
+                <Input placeholder="Ex: Aluguel, Internet, etc." {...field} value={field.value ?? ''} disabled={isSaving} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -149,7 +149,7 @@ export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }:
                                     field.onChange(num);
                                 }}
                                 placeholder="0,00"
-                                disabled={isSaving || !!expense} 
+                                disabled={isSaving} 
                             />
                         </div>
                     </FormControl>
@@ -170,7 +170,7 @@ export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }:
                             value={field.value ?? ''} 
                             onChange={(e) => field.onChange(applyDateMask(e.target.value))}
                             maxLength={10}
-                            disabled={isSaving || !!expense} 
+                            disabled={isSaving} 
                         />
                     </FormControl>
                     <FormMessage />
@@ -189,7 +189,7 @@ export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }:
                 <Select 
                     onValueChange={field.onChange} 
                     value={field.value} 
-                    disabled={isSaving || !!expense}
+                    disabled={isSaving}
                 >
                     <FormControl>
                     <SelectTrigger>

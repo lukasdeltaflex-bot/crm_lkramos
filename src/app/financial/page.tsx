@@ -456,33 +456,36 @@ export default function FinancialPage() {
     try {
         const batch = writeBatch(firestore);
         const parsedDate = parse(data.date, 'dd/MM/yyyy', new Date());
-        const groupId = data.groupId || (data.recurrence !== 'none' ? crypto.randomUUID() : undefined);
+        const isEditing = !!selectedExpense;
+        const groupId = isEditing ? selectedExpense.groupId : (data.recurrence !== 'none' ? crypto.randomUUID() : undefined);
         
-        const count = data.recurrence === 'none' ? 1 : (data.installmentsCount || 1);
+        // Se estiver editando, processamos apenas 1 (a selecionada). 
+        // Se for novo, processamos o count da recorrência.
+        const count = isEditing ? 1 : (data.recurrence === 'none' ? 1 : (data.installmentsCount || 1));
 
         for (let i = 0; i < count; i++) {
             let nextDate: Date;
-            if (data.recurrence === 'monthly' || data.recurrence === 'installments') {
+            if (!isEditing && (data.recurrence === 'monthly' || data.recurrence === 'installments')) {
                 nextDate = addMonths(parsedDate, i);
-            } else if (data.recurrence === 'semi-annually') {
+            } else if (!isEditing && data.recurrence === 'semi-annually') {
                 nextDate = addMonths(parsedDate, i * 6);
-            } else if (data.recurrence === 'annually') {
+            } else if (!isEditing && data.recurrence === 'annually') {
                 nextDate = addMonths(parsedDate, i * 12);
             } else {
                 nextDate = parsedDate;
             }
 
-            const expenseId = (i === 0 && selectedExpense?.id) ? selectedExpense.id : doc(collection(firestore, 'users', user.uid, 'expenses')).id;
+            const expenseId = isEditing ? selectedExpense.id : doc(collection(firestore, 'users', user.uid, 'expenses')).id;
             const expenseData: any = {
                 ...data,
                 id: expenseId,
                 ownerId: user.uid,
                 date: format(nextDate, 'yyyy-MM-dd'),
                 groupId: groupId,
-                paid: i === 0 ? data.paid : false,
-                installmentNumber: i + 1,
-                installmentsCount: count,
-                description: count > 1 
+                paid: isEditing ? data.paid : (i === 0 ? data.paid : false),
+                installmentNumber: isEditing ? selectedExpense.installmentNumber : i + 1,
+                installmentsCount: isEditing ? selectedExpense.installmentsCount : count,
+                description: (!isEditing && count > 1) 
                     ? `${data.description} (${i + 1}/${count})` 
                     : data.description
             };
