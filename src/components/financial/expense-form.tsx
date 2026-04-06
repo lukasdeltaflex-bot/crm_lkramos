@@ -62,10 +62,20 @@ const applyDateMask = (value: string) => {
 
 export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }: ExpenseFormProps) {
   const finalCategories = useMemo(() => {
-    const list = [...categories];
+    // Garantir que a lista de categorias seja um array válido
+    const baseList = Array.isArray(categories) ? [...categories] : [];
+    const list = baseList.filter(c => !!c); // Remove itens nulos ou vazios
+    
+    // Se o registro tem uma categoria (mesmo que não esteja na lista mestre), forçamos sua presença
     if (expense?.category && !list.includes(expense.category)) {
         list.push(expense.category);
     }
+    
+    // Se a lista ainda estiver vazia, garantimos ao menos a categoria do registro ou um fallback
+    if (list.length === 0 && expense?.category) {
+        list.push(expense.category);
+    }
+    
     return list;
   }, [categories, expense?.category]);
 
@@ -84,11 +94,15 @@ export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }:
 
   useEffect(() => {
     if (expense) {
+      // Prioridade absoluta para o valor que já está no banco de dados
+      const savedCategory = expense.category;
+      const fallbackCategory = categories && categories.length > 0 ? categories[0] : '';
+      
       form.reset({
         description: expense.description || '',
         amount: expense.amount ?? 0,
         date: formatDateSafe(expense.date),
-        category: expense.category || categories[0] || '',
+        category: savedCategory || fallbackCategory,
         paid: expense.paid ?? false,
         recurrence: expense.recurrence || 'none',
         installmentsCount: expense.installmentsCount || 1,
@@ -98,13 +112,13 @@ export function ExpenseForm({ expense, categories, onSubmit, isSaving = false }:
             description: '',
             amount: 0,
             date: format(new Date(), 'dd/MM/yyyy'),
-            category: categories[0] || '',
+            category: categories && categories.length > 0 ? categories[0] : '',
             paid: false,
             recurrence: 'none',
             installmentsCount: 1,
         });
     }
-  }, [expense, form, categories]);
+  }, [expense?.id, form, categories]); // Usando expense.id como dependência para evitar resets em re-renders do mesmo objeto
 
   const watchRecurrence = form.watch('recurrence');
 
