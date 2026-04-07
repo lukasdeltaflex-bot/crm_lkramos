@@ -204,7 +204,7 @@ export default function FollowUpsPage() {
         id, 
         ownerId: user.uid, 
         createdAt: selectedFollowUp?.createdAt || new Date().toISOString(), 
-        status: 'pendente',
+        status: 'pending',
         title: data.contactName, // Padronização Firestore
         date: data.dueDate // Padronização Firestore
     });
@@ -347,6 +347,7 @@ export default function FollowUpsPage() {
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => setIsTrashConfirmOpen(true)} disabled={isSaving}><Trash2 className="mr-2 h-4 w-4" /> Lixeira</Button>
+            <Button variant="outline" className="text-primary hover:bg-primary/10 border-primary/20" onClick={() => { setIsActionDialogOpen(false); setIsFormOpen(true); }} disabled={isSaving}><PlusCircle className="mr-2 h-4 w-4" /> Editar Dados</Button>
             <Button variant="outline" onClick={() => setIsRescheduleOpen(true)} disabled={isSaving}><RefreshCw className="mr-2 h-4 w-4" /> Reagendar</Button>
             <Button onClick={() => setIsFinishConfirmOpen(true)} disabled={isSaving || isSummarizingAction}>{isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="mr-2 h-4 w-4" />} Concluído</Button>
           </DialogFooter>
@@ -373,7 +374,7 @@ export default function FollowUpsPage() {
       <AlertDialog open={isReopenConfirmOpen} onOpenChange={setIsReopenConfirmOpen}>
         <AlertDialogContent>
             <AlertDialogHeader><AlertDialogTitle>Reabrir Retorno?</AlertDialogTitle><AlertDialogDescription>Tem certeza que deseja reabrir este retorno? O status voltará a ser "Pendente" e ele aparecerá no seu calendário e lista de pendências.</AlertDialogDescription></AlertDialogHeader>
-            <AlertDialogFooter><AlertDialogCancel disabled={isSaving}>Cancelar</AlertDialogCancel><AlertDialogAction onClick={() => { handleUpdateStatus('pendente'); setTab('pending'); }} disabled={isSaving}>Sim, Reabrir</AlertDialogAction></AlertDialogFooter>
+            <AlertDialogFooter><AlertDialogCancel disabled={isSaving}>Cancelar</AlertDialogCancel><AlertDialogAction onClick={() => { handleUpdateStatus('pending'); setTab('pending'); }} disabled={isSaving}>Sim, Reabrir</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 

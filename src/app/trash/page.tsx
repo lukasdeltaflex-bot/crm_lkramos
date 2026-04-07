@@ -113,7 +113,7 @@ export default function TrashPage() {
         return;
     }
 
-    const docRef = doc(firestore, path, itemToDelete.id);
+    const docRef = itemToDelete.path ? doc(firestore, itemToDelete.path) : doc(firestore, path, itemToDelete.id);
     
     try {
         await deleteDoc(docRef);

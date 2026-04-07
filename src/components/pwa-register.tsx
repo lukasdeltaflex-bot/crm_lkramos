@@ -162,12 +162,18 @@ export function PwaRegister() {
                 if (newWorker) {
                     newWorker.addEventListener('statechange', () => {
                         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            console.log("[PWA Stage: Event] ✅ Novo worker instalado.");
+                            console.log("[PWA Stage: Event] ✅ Novo worker instalado. Disparando prompt...");
                             triggerUpdatePrompt(registration);
                         }
                     });
                 }
             });
+
+            // 🛡️ VERIFICAÇÃO IMEDIATA: Caso o worker já esteja em WAITING logo após o registro
+            if (registration.waiting) {
+                console.log("[PWA Stage: Init] 📦 Worker já estava em estado WAITING.");
+                triggerUpdatePrompt(registration);
+            }
 
             // Refresh automático quando o novo SW assume o controle
             let refreshing = false;
@@ -195,7 +201,11 @@ export function PwaRegister() {
     // ⚡ Monitor de Retorno ao App (Essencial para Standalone/PWA Instalado)
     const handleActivity = () => {
         if (document.visibilityState === 'visible') {
-            console.log("[PWA Stage: Resume] 📡 App voltou para o primeiro plano. Checando atualizações...");
+            console.log("[PWA Stage: Resume] 📡 App voltou para o primeiro plano. Forçando verificação...");
+            // Força o navegador a verificar o arquivo sw.js no servidor
+            navigator.serviceWorker.getRegistrations().then(regs => {
+                for (const reg of regs) reg.update().catch(() => {});
+            });
             checkUpdates();
         }
     };
