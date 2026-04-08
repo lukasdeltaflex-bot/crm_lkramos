@@ -5,7 +5,7 @@ import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Calendar as CalendarIcon, History, Search, User, CheckCircle2, RefreshCw, XCircle, Loader2, FilterX, Clock, Sparkles, AlertTriangle, Trash2 } from 'lucide-react';
+import { PlusCircle, Calendar as CalendarIcon, History, Search, User, CheckCircle2, RefreshCw, XCircle, Loader2, FilterX, Clock, Sparkles, AlertTriangle, Trash2, Phone, MessageCircle, Copy } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc, setDoc, orderBy } from 'firebase/firestore';
 import type { FollowUp, Customer } from '@/lib/types';
@@ -276,7 +276,18 @@ export default function FollowUpsPage() {
                                         <div className="h-12 w-12 rounded-full bg-primary/5 flex items-center justify-center shrink-0"><User className="h-6 w-6 text-primary/60" /></div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-1"><h4 className="font-semibold truncate">{f.contactName}</h4>{getStatusBadge(f)}</div>
-                                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground"><span className="flex items-center gap-1"><CalendarIcon className="h-3 w-3" />{format(new Date(f.dueDate.replace(/-/g, '/')), "dd 'de' MMMM", { locale: ptBR })}</span>{f.dueTime && <span className="font-bold text-primary">{f.dueTime}</span>}</div>
+                                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+                                                <span className="flex items-center gap-1"><CalendarIcon className="h-3 w-3" />{format(new Date(f.dueDate.replace(/-/g, '/')), "dd 'de' MMMM", { locale: ptBR })}</span>
+                                                {f.dueTime && <span className="font-bold text-primary">{f.dueTime}</span>}
+                                                {f.contactPhone && (
+                                                    <span className="flex items-center gap-1 bg-muted/40 px-2 py-0.5 rounded-full border border-border/50">
+                                                        <span className="flex items-center gap-1 font-medium text-foreground/80"><Phone className="h-3 w-3" />{f.contactPhone}</span>
+                                                        <span className="h-3 w-px bg-border mx-1"></span>
+                                                        <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full hover:bg-green-100 hover:text-green-600 text-muted-foreground" onClick={(e) => { e.stopPropagation(); const p = f.contactPhone!.replace(/\D/g, ''); window.open(`https://wa.me/${p.startsWith('55') ? p : '55'+p}`, '_blank'); }} title="Abrir WhatsApp"><MessageCircle className="h-3 w-3" /></Button>
+                                                        <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full hover:bg-primary/20 text-muted-foreground" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(f.contactPhone!); toast({ title: 'Telefone copiado!' }); }} title="Copiar"><Copy className="h-3 w-3" /></Button>
+                                                    </span>
+                                                )}
+                                            </div>
                                             <p className="mt-2 text-sm line-clamp-1 opacity-80 italic">"{f.description}"</p>
                                         </div>
                                         <Button variant="ghost" size="icon" className="shrink-0 group-hover:bg-primary group-hover:text-white transition-colors" disabled={isSaving} onClick={(e) => { e.stopPropagation(); setSelectedFollowUp(f); setIsFinishConfirmOpen(true); }}><CheckCircle2 className="h-5 w-5" /></Button>
@@ -292,17 +303,27 @@ export default function FollowUpsPage() {
                     <div className="grid gap-4">
                         {filteredFollowUps.map((f) => (
                             <Card key={f.id} className="opacity-80 grayscale-[0.5] hover:grayscale-0 transition-all">
-                                <div className="p-4"><div className="flex items-center justify-between mb-2">
-      <h4>{f.contactName}</h4>
-      <div className="flex items-center gap-2">
-          {getStatusBadge(f)}
-          {(f.status === 'concluido' || f.status === 'completed') && (
-              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setSelectedFollowUp(f); setIsReopenConfirmOpen(true); }}>
-                  <RefreshCw className="w-3 h-3 mr-1" /> Reabrir
-              </Button>
-          )}
-      </div>
-  </div><p className="text-xs text-muted-foreground italic">"{f.notes || 'Sem observações.'}"</p></div>
+                                <div className="p-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h4>{f.contactName}</h4>
+                                        <div className="flex items-center gap-2">
+                                            {getStatusBadge(f)}
+                                            {(f.status === 'concluido' || f.status === 'completed') && (
+                                                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setSelectedFollowUp(f); setIsReopenConfirmOpen(true); }}>
+                                                    <RefreshCw className="w-3 h-3 mr-1" /> Reabrir
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                    {f.contactPhone && (
+                                        <div className="flex items-center gap-2 mb-3 mt-1 text-xs text-muted-foreground bg-muted/20 p-2 rounded-md border border-border/40">
+                                            <span className="flex items-center gap-1 font-medium"><Phone className="h-3 w-3" />{f.contactPhone}</span>
+                                            <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-green-100 hover:text-green-600 text-muted-foreground ml-auto" onClick={(e) => { e.stopPropagation(); const p = f.contactPhone!.replace(/\D/g, ''); window.open(`https://wa.me/${p.startsWith('55') ? p : '55'+p}`, '_blank'); }} title="Abrir WhatsApp"><MessageCircle className="h-3 w-3" /></Button>
+                                            <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-primary/20 text-muted-foreground" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(f.contactPhone!); toast({ title: 'Telefone copiado!' }); }} title="Copiar"><Copy className="h-3 w-3" /></Button>
+                                        </div>
+                                    )}
+                                    <p className="text-xs text-muted-foreground italic">"{f.notes || 'Sem observações.'}"</p>
+                                </div>
                             </Card>
                         ))}
                     </div>
