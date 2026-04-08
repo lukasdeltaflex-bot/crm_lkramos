@@ -305,6 +305,9 @@ export default function FollowUpsPage() {
   </div><p className="text-xs text-muted-foreground italic">"{f.notes || 'Sem observações.'}"</p></div>
                             </Card>
                         ))}
+  </div><p className="text-xs text-muted-foreground italic">"{f.notes || 'Sem observações.'}"</p></div>
+                            </Card>
+                        ))}
                     </div>
                 </TabsContent>
             </Tabs>
@@ -314,21 +317,24 @@ export default function FollowUpsPage() {
 
       {/* MODAL DE AÇÃO NO RETORNO */}
       <Dialog open={isActionDialogOpen} onOpenChange={setIsActionDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Realizar Retorno: {selectedFollowUp?.contactName}</DialogTitle>
+        <DialogContent className="sm:max-w-xl w-[95vw] max-w-[95vw] sm:w-full flex flex-col p-6 overflow-hidden max-h-[90vh]">
+          <DialogHeader className="flex-shrink-0 mb-4">
+            <DialogTitle className="break-words pr-6">Realizar Retorno: {selectedFollowUp?.contactName}</DialogTitle>
             <DialogDescription>Registre o resultado do contato realizado com o cliente.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="p-3 bg-secondary/30 rounded-md text-sm border">{selectedFollowUp?.description}</div>
+
+          <div className="flex flex-col space-y-4 w-full overflow-y-auto overflow-x-hidden flex-1 pb-4 pr-1">
+            <div className="p-3 bg-secondary/30 rounded-md text-sm border break-words w-full max-w-full overflow-hidden box-border">
+              {selectedFollowUp?.description}
+            </div>
             
-            <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                    <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Anotações da Conversa</label>
+            <div className="flex flex-col space-y-2 w-full max-w-full box-border">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                    <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest min-w-0 break-words flex-1">Anotações da Conversa</label>
                     <Button 
                         variant="outline" 
                         size="sm" 
-                        className="h-7 px-3 rounded-full text-[10px] font-bold border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all"
+                        className="h-7 px-3 rounded-full text-[10px] font-bold border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all flex-shrink-0"
                         onClick={handleSummarizeAction}
                         disabled={isSummarizingAction || !actionNotes}
                     >
@@ -337,7 +343,7 @@ export default function FollowUpsPage() {
                     </Button>
                 </div>
                 <textarea 
-                    className="w-full min-h-[120px] p-4 rounded-2xl border-2 bg-muted/5 text-sm focus:ring-2 focus:ring-primary outline-none font-medium" 
+                    className="flex w-full max-w-full box-border min-h-[120px] p-4 rounded-2xl border-2 bg-muted/5 text-sm focus:ring-2 focus:ring-primary outline-none font-medium resize-y" 
                     placeholder="O que foi conversado..." 
                     value={actionNotes} 
                     onChange={(e) => setActionNotes(e.target.value)} 
@@ -345,11 +351,12 @@ export default function FollowUpsPage() {
                 />
             </div>
           </div>
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => setIsTrashConfirmOpen(true)} disabled={isSaving}><Trash2 className="mr-2 h-4 w-4" /> Lixeira</Button>
-            <Button variant="outline" className="text-primary hover:bg-primary/10 border-primary/20" onClick={() => { setIsActionDialogOpen(false); setIsFormOpen(true); }} disabled={isSaving}><PlusCircle className="mr-2 h-4 w-4" /> Editar Dados</Button>
-            <Button variant="outline" onClick={() => setIsRescheduleOpen(true)} disabled={isSaving}><RefreshCw className="mr-2 h-4 w-4" /> Reagendar</Button>
-            <Button onClick={() => setIsFinishConfirmOpen(true)} disabled={isSaving || isSummarizingAction}>{isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="mr-2 h-4 w-4" />} Concluído</Button>
+
+          <DialogFooter className="flex flex-col sm:flex-row flex-wrap items-center gap-2 sm:gap-2 sm:space-x-0 justify-end w-full mt-4 flex-shrink-0">
+            <Button variant="ghost" className="text-destructive hover:bg-destructive/10 w-full sm:w-auto" onClick={() => setIsTrashConfirmOpen(true)} disabled={isSaving}><Trash2 className="mr-2 h-4 w-4" /> Lixeira</Button>
+            <Button variant="outline" className="text-primary hover:bg-primary/10 border-primary/20 w-full sm:w-auto" onClick={() => { setIsActionDialogOpen(false); setIsFormOpen(true); }} disabled={isSaving}><PlusCircle className="mr-2 h-4 w-4" /> Editar Dados</Button>
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setIsRescheduleOpen(true)} disabled={isSaving}><RefreshCw className="mr-2 h-4 w-4" /> Reagendar</Button>
+            <Button className="w-full sm:w-auto" onClick={() => setIsFinishConfirmOpen(true)} disabled={isSaving || isSummarizingAction}>{isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="mr-2 h-4 w-4" />} Concluído</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
