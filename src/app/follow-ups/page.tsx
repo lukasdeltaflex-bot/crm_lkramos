@@ -5,7 +5,8 @@ import { AppLayout } from '@/components/app-layout';
 import { PageHeader } from '@/components/page-header';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Calendar as CalendarIcon, History, Search, User, CheckCircle2, RefreshCw, XCircle, Loader2, FilterX, Clock, Sparkles, AlertTriangle, Trash2, Phone, MessageCircle, Copy } from 'lucide-react';
+import { PlusCircle, Calendar as CalendarIcon, History, Search, User, CheckCircle2, RefreshCw, XCircle, Loader2, FilterX, Clock, Sparkles, AlertTriangle, Trash2, Phone, Copy } from 'lucide-react';
+import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc, setDoc, orderBy } from 'firebase/firestore';
 import type { FollowUp, Customer } from '@/lib/types';
@@ -283,7 +284,7 @@ export default function FollowUpsPage() {
                                                     <span className="flex items-center gap-1 bg-muted/40 px-2 py-0.5 rounded-full border border-border/50">
                                                         <span className="flex items-center gap-1 font-medium text-foreground/80"><Phone className="h-3 w-3" />{f.contactPhone}</span>
                                                         <span className="h-3 w-px bg-border mx-1"></span>
-                                                        <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full hover:bg-green-100 hover:text-green-600 text-muted-foreground" onClick={(e) => { e.stopPropagation(); const p = f.contactPhone!.replace(/\D/g, ''); window.open(`https://wa.me/${p.startsWith('55') ? p : '55'+p}`, '_blank'); }} title="Abrir WhatsApp"><MessageCircle className="h-3 w-3" /></Button>
+                                                        <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full hover:bg-green-100 hover:text-green-600 text-muted-foreground flex items-center justify-center pt-[1px]" onClick={(e) => { e.stopPropagation(); const p = f.contactPhone!.replace(/\D/g, ''); window.open(`https://wa.me/${p.startsWith('55') ? p : '55'+p}`, '_blank'); }} title="Abrir WhatsApp"><WhatsAppIcon className="h-3 w-3" /></Button>
                                                         <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full hover:bg-primary/20 text-muted-foreground" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(f.contactPhone!); toast({ title: 'Telefone copiado!' }); }} title="Copiar"><Copy className="h-3 w-3" /></Button>
                                                     </span>
                                                 )}
@@ -318,7 +319,7 @@ export default function FollowUpsPage() {
                                     {f.contactPhone && (
                                         <div className="flex items-center gap-2 mb-3 mt-1 text-xs text-muted-foreground bg-muted/20 p-2 rounded-md border border-border/40">
                                             <span className="flex items-center gap-1 font-medium"><Phone className="h-3 w-3" />{f.contactPhone}</span>
-                                            <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-green-100 hover:text-green-600 text-muted-foreground ml-auto" onClick={(e) => { e.stopPropagation(); const p = f.contactPhone!.replace(/\D/g, ''); window.open(`https://wa.me/${p.startsWith('55') ? p : '55'+p}`, '_blank'); }} title="Abrir WhatsApp"><MessageCircle className="h-3 w-3" /></Button>
+                                            <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-green-100 hover:text-green-600 text-muted-foreground ml-auto flex items-center justify-center pt-[1px]" onClick={(e) => { e.stopPropagation(); const p = f.contactPhone!.replace(/\D/g, ''); window.open(`https://wa.me/${p.startsWith('55') ? p : '55'+p}`, '_blank'); }} title="Abrir WhatsApp"><WhatsAppIcon className="h-[14px] w-[14px]" /></Button>
                                             <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-primary/20 text-muted-foreground" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(f.contactPhone!); toast({ title: 'Telefone copiado!' }); }} title="Copiar"><Copy className="h-3 w-3" /></Button>
                                         </div>
                                     )}

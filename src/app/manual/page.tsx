@@ -155,6 +155,18 @@ export default function ManualPage() {
                                 <strong>Segurança e Controle Visual:</strong> Acompanhe o status rapidamente pelas novas etiquetas (Amarelo para Pendentes e Verde para Concluídos). Adicionalmente, ações críticas como Excluir, Concluir e Reagendar agora solicitam confirmação prévia para evitar cliques acidentais.
                             </p>
                         </div>
+                        <div className="p-4 rounded-xl bg-green-50/5 border border-green-500/20 mt-4">
+                            <h4 className="font-bold text-green-700 flex items-center gap-2 mb-2">
+                                <MessageSquareText className="h-4 w-4" /> Ações Rápidas nos Cards
+                            </h4>
+                            <p className="text-xs text-muted-foreground mb-2">
+                                Os cards externos de retornos (pendentes e histórico) agora exibem o <strong>telefone do cliente</strong> diretamente na listagem, economizando tempo e cliques. Ao lado do telefone, você encontra dois atalhos úteis:
+                            </p>
+                            <ul className="mt-2 space-y-2 list-disc pl-5 text-xs font-medium text-muted-foreground">
+                                <li><strong>Botão Oficial do WhatsApp:</strong> Ao clicar no ícone do WhatsApp, o sistema formata o número automaticamente e abre a conversa pronta com o cliente no seu aplicativo ou WhatsApp Web.</li>
+                                <li><strong>Botão de Copiar:</strong> Um ícone dedicado ao lado do WhatsApp permite copiar instantaneamente o número para a área de transferência.</li>
+                            </ul>
+                        </div>
                     </AccordionContent>
                 </AccordionItem>
 
