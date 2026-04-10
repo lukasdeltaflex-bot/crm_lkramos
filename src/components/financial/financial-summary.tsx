@@ -3,7 +3,7 @@
 import * as React from 'react';
 import type { Proposal, Customer, UserSettings } from '@/lib/types';
 import { StatsCard } from '@/components/dashboard/stats-card';
-import { formatCurrency, parseDateSafe } from '@/lib/utils';
+import { formatCurrency, parseDateSafe, normalizeStatuses, getStatusBehavior } from '@/lib/utils';
 import { Hourglass, CircleDollarSign, Activity, Wallet } from 'lucide-react';
 import { startOfMonth, endOfMonth, subMonths, eachDayOfInterval, subDays, startOfDay, endOfDay, isSameMonth } from 'date-fns';
 
