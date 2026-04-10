@@ -103,16 +103,16 @@ export function PwaRegister() {
             await reg.update().catch(() => {});
 
             if (reg.waiting) {
-                console.log("[PWA Stage: Check] 📦 Service Worker em estado WAITING detectado.");
+                // console.log("[PWA Stage: Check] 📦 Service Worker em estado WAITING detectado.");
                 triggerUpdatePrompt(reg);
                 return;
             }
 
             if (reg.installing) {
-                console.log("[PWA Stage: Check] ⚙️ Service Worker em estado INSTALLING detectado. Aguardando...");
+                // console.log("[PWA Stage: Check] ⚙️ Service Worker em estado INSTALLING detectado. Aguardando...");
                 reg.installing.addEventListener('statechange', (e: any) => {
                     if (e.target.state === 'installed') {
-                        console.log("[PWA Stage: Check] ✅ SW instalado com sucesso durante a sessão.");
+                        // console.log("[PWA Stage: Check] ✅ SW instalado com sucesso durante a sessão.");
                         triggerUpdatePrompt(reg);
                     }
                 });
@@ -130,7 +130,7 @@ export function PwaRegister() {
             const currentVersion = localStorage.getItem('lk-app-version');
             
             if (currentVersion && currentVersion !== data.version) {
-                console.log(`[PWA Stage: Check] 🚨 Versão detectada via fallback: ${data.version}`);
+                // console.log(`[PWA Stage: Check] 🚨 Versão detectada via fallback: ${data.version}`);
                 triggerUpdatePrompt(undefined, data.version);
             } else if (!currentVersion) {
                 localStorage.setItem('lk-app-version', data.version);
@@ -152,7 +152,7 @@ export function PwaRegister() {
 
     const initPwa = async () => {
         try {
-            console.log("[PWA Stage: Init] 🚀 Registrando Service Worker...");
+            // // console.log("[PWA Stage: Init] 🚀 Registrando Service Worker...");
             const registration = await navigator.serviceWorker.register('/sw.js', {
                 updateViaCache: 'none'
             });

@@ -23,10 +23,13 @@ export function formatCurrency(amount: number | undefined | null) {
 export function getSafeStorageUrl(url?: string): string {
     if (!url || typeof url !== 'string') return url || '';
     if (url.includes('firebasestorage.googleapis.com') && !url.includes('userProject=')) {
-        const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'studio-248448941-9c1c2';
-        const separator = url.includes('?') ? '&' : '?';
-        return `${url}${separator}userProject=${projectId}`;
+        const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+        if (projectId) {
+            const separator = url.includes('?') ? '&' : '?';
+            return `${url}${separator}userProject=${projectId}`;
+        }
     }
+
     return url;
 }
 

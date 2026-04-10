@@ -323,8 +323,8 @@ export default function DashboardPage() {
       const endToday = endOfDay(new Date());
       return stats.proposals.digitadoNoMes.reduce((sum, p) => {
           if (!p.dateDigitized) return sum;
-          // 🛡️ REGRA: Somente propostas não canceladas/reprovadas entram na meta diária (R$)
-          const isInvalid = p.status === 'Reprovado' || p.status === 'Cancelado' || p.status === 'Cancelada';
+          const behavior = getStatusBehavior(p.status, stats.activeConfigs);
+          const isInvalid = behavior === 'rejection' || behavior === 'canceled';
           if (isInvalid) return sum;
 
           const pd = new Date(p.dateDigitized);
@@ -502,7 +502,8 @@ export default function DashboardPage() {
                             const pd = new Date(p.dateDigitized);
                             if (isValid(pd) && pd >= ds && pd <= de) {
                                 // 🛡️ SINCRONIA: Aplicar o mesmo filtro do 'currentDailyProduction' para consistência visual
-                                const isInvalid = p.status === 'Reprovado' || p.status === 'Cancelado' || p.status === 'Cancelada';
+                                const behavior = getStatusBehavior(p.status, stats.activeConfigs);
+                                const isInvalid = behavior === 'rejection' || behavior === 'canceled';
                                 if (!isInvalid) {
                                     commission += (p.commissionValue || 0);
                                     contract += (p.grossAmount || 0);
