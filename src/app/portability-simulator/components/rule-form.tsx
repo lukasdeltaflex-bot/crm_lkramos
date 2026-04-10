@@ -110,7 +110,7 @@ export function RuleForm({ initialData, onClose, onSaved }: RuleFormProps) {
     const list = formData.sourceBankRules || [];
     setFormData(prev => ({
       ...prev,
-      sourceBankRules: [...list, { bankName: '', minPaidInstallments: 0, isBlocked: false, isAllowed: true, notes: '' }]
+      sourceBankRules: [...list, { bankName: '', minPaidInstallments: undefined as any, isBlocked: false, isAllowed: true, notes: '' }]
     }));
   };
 
@@ -368,7 +368,21 @@ export function RuleForm({ initialData, onClose, onSaved }: RuleFormProps) {
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-[10px] font-black uppercase text-muted-foreground">Parcelas Pagas (Mín)</Label>
-                                    <Input type="number" value={rule.minPaidInstallments} onChange={e => updateSourceBank(index, 'minPaidInstallments', Number(e.target.value))} className="h-10 rounded-xl" />
+                                    <Input 
+                                        type="text" 
+                                        inputMode="numeric"
+                                        value={rule.minPaidInstallments ?? ''} 
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if (val === '') {
+                                                updateSourceBank(index, 'minPaidInstallments', undefined);
+                                            } else {
+                                                const num = parseInt(val.replace(/\D/g, ""), 10);
+                                                updateSourceBank(index, 'minPaidInstallments', isNaN(num) ? undefined : num);
+                                            }
+                                        }} 
+                                        className="h-10 rounded-xl font-bold" 
+                                    />
                                 </div>
                                 <div className="flex items-center gap-6 md:col-span-1 pt-6 px-2">
                                     <div className="flex items-center gap-2">
