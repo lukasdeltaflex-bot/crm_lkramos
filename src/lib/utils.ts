@@ -2,7 +2,7 @@ import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { format, parseISO, isValid, differenceInDays, startOfDay, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import type { Customer, Proposal } from './types';
+import type { Customer, Proposal, ProposalStatusConfig, StatusBehavior } from './types';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -235,11 +235,70 @@ export function calculateBusinessDays(startDateStr: string | Date): number {
 }
 
 /**
+ * 📊 GESTÃO DE STATUS DINÂMICA
+ * Normaliza o formato de status (string -> objeto) e utilitários de busca com suporte a semântica (behavior).
+ */
+
+function deduceStatusBehavior(statusId: string): StatusBehavior {
+    const s = statusId.toLowerCase();
+    if (s.includes('pago')) return 'success';
+    if (s.includes('reprovado') || s.includes('indeferido') || s.includes('negado')) return 'rejection';
+    if (s.includes('cancelado') || s.includes('desistência')) return 'canceled';
+    if (s.includes('pendente')) return 'pending';
+    return 'in_progress';
+}
+
+export function normalizeStatuses(statuses: (string | ProposalStatusConfig)[] | undefined | null): ProposalStatusConfig[] {
+    if (!statuses || !Array.isArray(statuses)) return [];
+    
+    return statuses.map((s, index) => {
+        if (typeof s === 'string') {
+            return {
+                id: s, 
+                label: s,
+                isActive: true,
+                showOnDashboard: true,
+                order: index,
+                behavior: deduceStatusBehavior(s)
+            };
+        }
+        return {
+            ...s,
+            behavior: s.behavior || deduceStatusBehavior(s.id)
+        };
+    }).sort((a, b) => a.order - b.order);
+}
+
+export function getStatusBehavior(statusId: string, configs: ProposalStatusConfig[]): StatusBehavior {
+    if (!statusId) return 'pending';
+    const config = configs.find(c => c.id === statusId);
+    if (config?.behavior) return config.behavior;
+    return deduceStatusBehavior(statusId);
+}
+
+export function getStatusLabel(statusId: string, configs: ProposalStatusConfig[]): string {
+    if (!configs || configs.length === 0) return statusId;
+    const config = configs.find(c => c.id === statusId);
+    return config ? config.label : statusId;
+}
+
+export function getStatusColor(statusId: string, configs: ProposalStatusConfig[], themeColors: Record<string, string>): string | undefined {
+    if (configs && configs.length > 0) {
+        const config = configs.find(c => c.id === statusId);
+        if (config?.color) return config.color;
+    }
+    
+    const key = statusId.toUpperCase();
+    return themeColors[key] || themeColors[statusId];
+}
+
+/**
  * ⚡ MOTOR DE INTELIGÊNCIA OPERACIONAL
  * Determina se uma proposta está em atraso crítico.
  */
-export function isProposalCritical(p: Proposal): boolean {
-    if (p.status === 'Reprovado' || p.status === 'Pago' || p.status === 'Saldo Pago' || p.deleted === true) return false;
+export function isProposalCritical(p: Proposal, statusConfigs: ProposalStatusConfig[] = []): boolean {
+    const behavior = getStatusBehavior(p.status, statusConfigs);
+    if (behavior === 'success' || behavior === 'rejection' || behavior === 'canceled' || p.deleted === true) return false;
 
     // Captura a data da última ação no histórico
     const historyDates = (p.history || []).map(h => h.date);
@@ -251,14 +310,16 @@ export function isProposalCritical(p: Proposal): boolean {
         baseDate = p.statusAwaitingBalanceAt;
     }
 
-    // O Alerta considera o que for mais RECENTE
-    const referenceDate = (lastHistoryDate && lastHistoryDate > baseDate) ? lastHistoryDate : baseDate;
+    if (!baseDate) return false;
     
-    const bizDays = calculateBusinessDays(referenceDate);
+    const businessDays = calculateBusinessDays(baseDate);
+    
+    // Regras de atraso por tipo de status
+    if (p.status === 'Aguardando Saldo' && businessDays >= 5) return true;
+    if (behavior === 'in_progress' && businessDays >= 7) return true;
+    if (behavior === 'pending' && businessDays >= 3) return true;
 
-    return (p.status === 'Pendente' && bizDays >= 2) || 
-           (p.status === 'Aguardando Saldo' && p.product === 'Portabilidade' && bizDays >= 5) || 
-           (p.status === 'Em Andamento' && bizDays >= 5);
+    return false;
 }
 
 export function validateCPF(cpf: string): boolean {
@@ -316,7 +377,7 @@ export function cleanFirestoreData(data: any): any {
     return data;
 }
 
-export function getSmartTags(customer: Customer, proposals: Proposal[] = []): { label: string; color: string }[] {
+export function getSmartTags(customer: Customer, proposals: Proposal[] = [], statusConfigs: ProposalStatusConfig[] = []): { label: string; color: string }[] {
     const tags: { label: string; color: string }[] = [];
     const now = new Date();
 
@@ -326,7 +387,10 @@ export function getSmartTags(customer: Customer, proposals: Proposal[] = []): { 
     }
 
     const customerProposals = proposals.filter(p => p.customerId === customer.id && p.deleted !== true);
-    const totalComm = customerProposals.reduce((s, p) => s + (p.amountPaid || 0), 0);
+    const totalComm = customerProposals.reduce((s, p) => {
+        const behavior = getStatusBehavior(p.status, statusConfigs);
+        return s + (behavior === 'success' ? (p.amountPaid || 0) : 0);
+    }, 0);
     
     if (totalComm >= 5000) tags.push({ label: '💎 ELITE', color: 'bg-amber-500' });
     
@@ -342,7 +406,10 @@ export function getSmartTags(customer: Customer, proposals: Proposal[] = []): { 
     });
     if (!hasAnyInLast6Months && customerProposals.length > 0) tags.push({ label: '🧊 REATIVAR', color: 'bg-blue-400' });
     
-    if (customerProposals.some(p => !['Pago', 'Reprovado', 'Saldo Pago'].includes(p.status))) {
+    if (customerProposals.some(p => {
+        const behavior = getStatusBehavior(p.status, statusConfigs);
+        return behavior === 'in_progress' || behavior === 'pending';
+    })) {
         tags.push({ label: '⚖️ EM ESTEIRA', color: 'bg-blue-500' });
     }
     

@@ -4,10 +4,12 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Zap, ChevronRight, User, TrendingUp } from 'lucide-react';
-import type { Customer, Proposal } from '@/lib/types';
+import { useUser, useFirestore, useDoc } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import type { Customer, Proposal, UserSettings } from '@/lib/types';
 import { differenceInMonths } from 'date-fns';
 import Link from 'next/link';
-import { formatCurrency, getAge, parseDateSafe } from '@/lib/utils';
+import { formatCurrency, getAge, parseDateSafe, normalizeStatuses, getStatusBehavior } from '@/lib/utils';
 import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
 
@@ -18,11 +20,21 @@ interface RadarWidgetProps {
 }
 
 export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProps) {
+  const { user } = useUser();
+  const firestore = useFirestore();
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
     setHasMounted(true);
   }, []);
+
+  const settingsDocRef = useMemo(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'userSettings', user.uid);
+  }, [firestore, user]);
+
+  const { data: userSettings } = useDoc<UserSettings>(settingsDocRef as any);
+  const activeConfigs = useMemo(() => normalizeStatuses(userSettings?.proposalStatuses || []), [userSettings]);
 
   const radarOpportunities = useMemo(() => {
     if (!hasMounted || !proposals || !customers) return [];
@@ -34,7 +46,9 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
       .map(customer => {
         const maturedProposals = proposals.filter(p => {
           if (p.customerId !== customer.id) return false;
-          if (p.status !== 'Pago' && p.status !== 'Saldo Pago') return false;
+          
+          const behavior = getStatusBehavior(p.status, activeConfigs);
+          if (behavior !== 'success') return false;
           if (!p.datePaidToClient) return false;
           
           const paidDate = parseDateSafe(p.datePaidToClient);

@@ -28,8 +28,8 @@ import {
   Target,
   Trophy
 } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, isValid, startOfDay, subDays, endOfDay, subMonths, parse, eachDayOfInterval } from 'date-fns';
-import { formatCurrency, cn, calculateBusinessDays, cleanFirestoreData } from '@/lib/utils';
+import { formatCurrency, cn, calculateBusinessDays, cleanFirestoreData, normalizeStatuses, getStatusBehavior } from '@/lib/utils';
+import { proposalStatuses as initialProposalStatuses } from '@/lib/config-data';
 import type { Proposal, Customer, UserProfile, UserSettings, Lead, Expense } from '@/lib/types';
 import {
   Dialog,
@@ -66,6 +66,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { startOfMonth, endOfMonth, endOfDay, subMonths, eachDayOfInterval, subDays, startOfDay, isValid } from 'date-fns';
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -207,33 +208,49 @@ export default function DashboardPage() {
 
     const safeVal = (v: any) => (v === null || v === undefined || isNaN(v)) ? 0 : Number(v);
 
+    const activeConfigs = normalizeStatuses(userSettings?.proposalStatuses || initialProposalStatuses);
+
     const digitizedInPeriod: Proposal[] = [];
     const digitizedInPrevPeriod: Proposal[] = [];
     const paidInPeriod: Proposal[] = [];
     
-    const statusLists: Record<string, Proposal[]> = {
-        'Pendente': [], 'Em Andamento': [], 'Aguardando Saldo': [], 'Saldo Pago': [], 'Reprovado': []
-    };
+    const statusLists: Record<string, Proposal[]> = {};
+    activeConfigs.forEach(conf => {
+        statusLists[conf.id] = [];
+    });
+    
+    // Caso algum status antigo não esteja nas configs mas ainda esteja nas propostas,
+    // garantimos que o objeto exista para não dar erro, embora não vá aparecer no Dashboard se não estiver na config.
+    proposals.forEach(p => {
+        if (p.status && !statusLists[p.status]) {
+            statusLists[p.status] = [];
+        }
+    });
 
     proposals.forEach(p => {
         const d = p.dateDigitized ? new Date(p.dateDigitized) : null;
+        const behavior = getStatusBehavior(p.status, activeConfigs);
+
         if (d && isValid(d)) {
-            if (d >= fromDate && d <= effectiveToDate) digitizedInPeriod.push(p);
-            if (d >= prevMonthStart && d <= prevMonthEnd) digitizedInPrevPeriod.push(p);
-        }
-
-        if (p.status !== 'Reprovado' && statusLists[p.status]) {
-            statusLists[p.status].push(p);
-        }
-
-        if (p.status === 'Reprovado') {
-            const rejectionDate = p.statusUpdatedAt ? new Date(p.statusUpdatedAt) : (p.dateDigitized ? new Date(p.dateDigitized) : null);
-            if (rejectionDate && isValid(rejectionDate) && rejectionDate >= fromDate && rejectionDate <= effectiveToDate) {
-                statusLists['Reprovado'].push(p);
+            // Conta como "Digitado" tudo que não foi explicitamente cancelado/reprovado
+            if (behavior !== 'rejection' && behavior !== 'canceled') {
+                if (d >= fromDate && d <= effectiveToDate) digitizedInPeriod.push(p);
+                if (d >= prevMonthStart && d <= prevMonthEnd) digitizedInPrevPeriod.push(p);
             }
         }
 
-        if (p.status === 'Pago' && p.datePaidToClient) {
+        if (behavior !== 'rejection' && statusLists[p.status]) {
+            statusLists[p.status].push(p);
+        }
+
+        if (behavior === 'rejection') {
+            const rejectionDate = p.statusUpdatedAt ? new Date(p.statusUpdatedAt) : (p.dateDigitized ? new Date(p.dateDigitized) : null);
+            if (rejectionDate && isValid(rejectionDate) && rejectionDate >= fromDate && rejectionDate <= effectiveToDate) {
+                if (statusLists[p.status]) statusLists[p.status].push(p);
+            }
+        }
+
+        if (behavior === 'success' && p.datePaidToClient) {
             const pd = new Date(p.datePaidToClient);
             if (isValid(pd) && pd >= fromDate && pd <= effectiveToDate) paidInPeriod.push(p);
         }
@@ -290,7 +307,8 @@ export default function DashboardPage() {
         statusAnalysis, 
         criticalPortabilityCount, 
         proposals: { digitadoNoMes: digitizedInPeriod, pagoNoMes: paidInPeriod },
-        hotStatus: Object.entries(statusAnalysis).filter(([n]) => n !== 'Reprovado').sort((a: any, b: any) => b[1].total - a[1].total)[0]?.[0]
+        hotStatus: Object.entries(statusAnalysis).filter(([n]) => n !== 'Reprovado').sort((a: any, b: any) => b[1].total - a[1].total)[0]?.[0],
+        activeConfigs
     };
   }, [isClient, proposals, appliedDateRange]);
 
@@ -315,6 +333,8 @@ export default function DashboardPage() {
   })();
 
   const isGoalReached = currentMonthlyProduction >= (userSettings?.monthlyGoal || 150000);
+
+  if (!isClient) return null;
 
   return (
     <AppLayout>
@@ -412,18 +432,18 @@ export default function DashboardPage() {
             <div className="cursor-pointer" onClick={() => setDialogData({ title: 'Total Digitado (Mês Vigente)', proposals: stats.proposals.digitadoNoMes })}>
                 <StatsCard title="TOTAL DIGITADO" value={isPrivacyMode ? '•••••' : formatCurrency(stats.totalDigitado)} icon={FileText} description="PRODUÇÃO MENSAL" topContributor={stats.topTotal} percentage={stats.digitizedTrendPercentage} sparklineData={stats.productionTrend}/>
             </div>
-            {['Pendente', 'Em Andamento', 'Aguardando Saldo', 'Saldo Pago', 'Reprovado'].map(s => (
-                <div key={s} className="cursor-pointer" onClick={() => setDialogData({ title: `${s} (${s === 'Reprovado' ? 'Mês Vigente' : 'Esteira'})`, proposals: stats.statusAnalysis[s].proposals })}>
+            {stats.activeConfigs.filter(conf => conf.showOnDashboard && conf.isActive).map(conf => (
+                <div key={conf.id} className="cursor-pointer" onClick={() => setDialogData({ title: `${conf.label} (${conf.id === 'Reprovado' ? 'Mês Vigente' : 'Esteira'})`, proposals: stats.statusAnalysis[conf.id]?.proposals || [] })}>
                     <StatsCard 
-                        title={s} 
-                        value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis[s].total)} 
-                        icon={s === 'Pendente' ? BadgePercent : s === 'Em Andamento' ? Hourglass : s === 'Aguardando Saldo' ? Clock : s === 'Saldo Pago' ? CheckCircle2 : XCircle} 
-                        description={s === 'Reprovado' ? "TOTAL REPROVADO NO MÊS" : "ESTEIRA ATUAL"} 
-                        topContributor={stats.statusAnalysis[s].top} 
-                        isHot={stats.hotStatus === s} 
-                        isCritical={s === 'Aguardando Saldo' && stats.criticalPortabilityCount > 0}
-                        subValue={s === 'Aguardando Saldo' && stats.criticalPortabilityCount > 0 ? `${stats.criticalPortabilityCount} CRÍTICAS` : undefined}
-                        sparklineData={stats.statusAnalysis[s].trend}
+                        title={conf.label} 
+                        value={isPrivacyMode ? '•••••' : formatCurrency(stats.statusAnalysis[conf.id]?.total || 0)} 
+                        icon={conf.id === 'Pendente' ? BadgePercent : conf.id === 'Em Andamento' ? Hourglass : conf.id === 'Aguardando Saldo' ? Clock : conf.id === 'Saldo Pago' ? CheckCircle2 : XCircle} 
+                        description={conf.id === 'Reprovado' ? "TOTAL REPROVADO NO MÊS" : "ESTEIRA ATUAL"} 
+                        topContributor={stats.statusAnalysis[conf.id]?.top || '---'} 
+                        isHot={stats.hotStatus === conf.id} 
+                        isCritical={conf.id === 'Aguardando Saldo' && stats.criticalPortabilityCount > 0}
+                        subValue={conf.id === 'Aguardando Saldo' && stats.criticalPortabilityCount > 0 ? `${stats.criticalPortabilityCount} CRÍTICAS` : undefined}
+                        sparklineData={stats.statusAnalysis[conf.id]?.trend || []}
                     />
                 </div>
             ))}

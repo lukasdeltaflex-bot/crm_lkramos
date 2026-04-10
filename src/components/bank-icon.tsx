@@ -84,7 +84,17 @@ export function BankIcon({ bankName, domain, className, showLogo = true }: BankI
       'votorantim': 'bv.com.br',
       'bv': 'bv.com.br',
       'daycoval': 'daycoval.com.br',
-      'banco daycoval': 'daycoval.com.br'
+      'banco daycoval': 'daycoval.com.br',
+      'inss': 'inss.gov.br',
+      'fgts': 'fgts.gov.br',
+      'siape': 'gov.br',
+      'prefeitura': 'prefeitura.sp.gov.br',
+      'governo': 'gov.br',
+      'exercito': 'eb.mil.br',
+      'marinha': 'marinha.mil.br',
+      'aeronautica': 'fab.mil.br',
+      'governo federal': 'gov.br',
+      'estado': 'gov.br'
   };
 
   const finalDomain = domain || domainMap[cleanedName] || domainMap[bankName] || flexibleMap[searchKey] || null;

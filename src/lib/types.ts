@@ -131,9 +131,21 @@ export type Proposal = {
   deletedBy?: string;
 };
 
+export type StatusBehavior = 'pending' | 'in_progress' | 'success' | 'rejection' | 'canceled';
+
+export type ProposalStatusConfig = {
+  id: string;
+  label: string;
+  color?: string;
+  isActive: boolean;
+  showOnDashboard: boolean;
+  order: number;
+  behavior: StatusBehavior;
+};
+
 export type UserSettings = {
   productTypes: string[];
-  proposalStatuses: string[];
+  proposalStatuses: (string | ProposalStatusConfig)[];
   commissionStatuses: string[];
   approvingBodies: string[];
   banks: string[];
@@ -145,6 +157,7 @@ export type UserSettings = {
   historyTopics?: string[]; // Tópicos rápidos para a linha do tempo
   bankDomains?: Record<string, string>;
   promoterDomains?: Record<string, string>;
+  approvingBodyDomains?: Record<string, string>;
   showBankLogos?: boolean;
   showPromoterLogos?: boolean;
   // Appearance Elite
@@ -255,3 +268,105 @@ export type ManagementPromoter = {
   managerEmail?: string;
   observations?: string;
 }
+
+// ---------------------------------------------------------
+// SIMULADOR DE PORTABILIDADE (FASE 1)
+// ---------------------------------------------------------
+
+export type SourceBankRule = {
+  bankName: string;
+  minPaidInstallments: number;
+  isBlocked: boolean;
+  isAllowed: boolean;
+  notes?: string;
+};
+
+export type ConditionRule = {
+  conditionType: 'byValue' | 'byInstallments' | 'byBank';
+  minValue?: number;
+  maxValue?: number;
+  minInstallments?: number;
+  ruleDescription: string;
+};
+
+export interface AgeRule {
+  id: string;
+  minAge?: number;
+  maxAge?: number;
+  maxAgeAtContractEnd?: number;
+  contractMustEndByAge?: number;
+  minContractValue?: number;
+  maxContractValue?: number;
+  maxInstallments?: number;
+  observations?: string;
+}
+
+export type PortabilityRule = {
+  id: string;
+  ownerId: string;
+  
+  // Metadados
+  promoter: string;
+  bankName: string;
+  product: string; // Ex: 'INSS'
+  isActive: boolean;
+  version: number;
+  validFrom: string; // ISO String (UTC)
+  validUntil: string; // ISO String (UTC)
+  isCurrent: boolean;
+  updatedAt: string; // ISO String
+  
+  // Regras Gerais
+  generalRules: {
+    acceptsNegativeMargin: boolean;
+    aggregatesMargin: boolean;
+    reducesInstallment: boolean;
+    purePortability: boolean;
+    requiresRefinancing: boolean;
+    mandatoryRefin: boolean;
+  };
+
+  // Regras Por Banco de Origem
+  sourceBankRules: SourceBankRule[];
+
+  // Regras Financeiras
+  valuesRules: {
+    minInstallment: number;
+    minOperationValue: number;
+    minBalance: number;
+    minCashback: number;
+    cashbackPercentage: number;
+    allowPercentageRule: boolean;
+  };
+
+  // Regras Condicionais
+  conditions: ConditionRule[];
+
+  // Regras de Taxa
+  rateRules: {
+    minPortabilityRate: number;
+    maxPortabilityRate: number;
+    minRefinRate: number;
+    maxRefinRate: number;
+    requiresRefinForRate: boolean;
+    hasSpecialTable: boolean;
+    requiresTicketCheck: boolean;
+  };
+
+  // Regras Avançadas
+  advancedRules: {
+    rulesByAge: string;
+    rulesBySpecies: string;
+    rulesByAgreement: string;
+  };
+
+  ageRules?: AgeRule[];
+
+  // Textos Guias e Lógicos
+  texts: {
+    whatItDoes: string;
+    whatItDoesNotDo: string;
+    observations: string;
+    manualAnalysisRequired: boolean;
+  };
+};

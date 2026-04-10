@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Trash2, Edit, Save, X, Globe, Sparkles, Loader2, Bot, Building2 } from 'lucide-react';
+import { PlusCircle, Trash2, Edit, Save, X, Globe, Sparkles, Loader2, Bot, Building2, Landmark } from 'lucide-react';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -91,7 +91,7 @@ export function BankEditableList({ title = "Bancos e Ícones Inteligentes", bank
   return (
     <AccordionItem value={title}>
       <AccordionTrigger className="flex items-center gap-2">
-        {title.includes("Bancos") ? <Building2 className="h-4 w-4 text-blue-500" /> : <Bot className="h-4 w-4 text-purple-500" />}
+        {title.includes("Bancos") ? <Building2 className="h-4 w-4 text-blue-500" /> : title.includes("Órgãos") ? <Landmark className="h-4 w-4 text-emerald-500" /> : <Bot className="h-4 w-4 text-purple-500" />}
         {title}
       </AccordionTrigger>
       <AccordionContent>

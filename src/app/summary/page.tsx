@@ -6,8 +6,9 @@ import { PageHeader } from '@/components/page-header';
 import { DailySummary } from '@/components/summary/daily-summary';
 import { useUser, useFirestore } from '@/firebase';
 import { collection, query, where, doc, getDocs, getDoc } from 'firebase/firestore';
-import type { Proposal, Customer, UserProfile } from '@/lib/types';
+import { Proposal, Customer, UserProfile } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { subMonths, format } from 'date-fns';
 
 export default function SummaryPage() {
   const { user, isUserLoading } = useUser();
@@ -24,8 +25,22 @@ export default function SummaryPage() {
         if (!firestore || !user) return;
         setIsLoadingMain(true);
         try {
-            const pQ = query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid));
-            const cQ = query(collection(firestore, 'customers'), where('ownerId', '==', user.uid));
+            // 🛡️ Onda de Risco Zero: Limitar janela para 24 meses e ignorar deletados
+            const timeWindow = format(subMonths(new Date(), 24), 'yyyy-MM-dd');
+            
+            const pQ = query(
+                collection(firestore, 'loanProposals'), 
+                where('ownerId', '==', user.uid),
+                where('deleted', '!=', true),
+                where('dateDigitized', '>=', timeWindow)
+            );
+            
+            const cQ = query(
+                collection(firestore, 'customers'), 
+                where('ownerId', '==', user.uid),
+                where('deleted', '!=', true)
+            );
+            
             const uRef = doc(firestore, 'users', user.uid);
             
             const [pSnap, cSnap, uSnap] = await Promise.all([

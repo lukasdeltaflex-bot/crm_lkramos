@@ -16,6 +16,8 @@ interface FinancialSummaryProps {
 }
 
 export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onShowDetails, userSettings }: FinancialSummaryProps) {
+  const activeConfigs = React.useMemo(() => normalizeStatuses(userSettings?.proposalStatuses || []), [userSettings]);
+
   const {
     totalComissaoProducaoDigitada,
     digitizedTrend,
@@ -52,7 +54,8 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
     let receivedPrevSum = 0;
 
     rows.forEach(p => {
-        const isReprovado = p.status === 'Reprovado';
+        const behavior = getStatusBehavior(p.status, activeConfigs);
+        const isReprovado = behavior === 'rejection' || behavior === 'canceled';
         
         const dDigit = parseDateSafe(p.dateDigitized);
         const dPay = parseDateSafe(p.commissionPaymentDate);
@@ -80,7 +83,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
             averbados.push(p);
         }
 
-        if (!isReprovado && !['Pago', 'Saldo Pago'].includes(p.status)) {
+        if (!isReprovado && behavior !== 'success') {
             esperados.push(p);
         }
     });
@@ -101,7 +104,9 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
         const de = endOfDay(day);
         return rows.reduce((sum, p) => {
             const d = parseDateSafe(p.dateDigitized);
-            return (d && d >= ds && d <= de && p.status !== 'Reprovado') ? sum + safeValue(p.commissionValue) : sum;
+            const behavior = getStatusBehavior(p.status, activeConfigs);
+            const isReprovado = behavior === 'rejection' || behavior === 'canceled';
+            return (d && d >= ds && d <= de && !isReprovado) ? sum + safeValue(p.commissionValue) : sum;
         }, 0);
     });
 
@@ -131,7 +136,7 @@ export function FinancialSummary({ rows, currentMonthRange, isPrivacyMode, onSho
       receivedTrendData,
       metrics: { hotKpi: totalComissaoRecebida > totalComissaoProducaoDigitada ? "COMISSÃO RECEBIDA" : "PRODUÇÃO DIGITADA" }
     };
-  }, [rows, currentMonthRange]);
+  }, [rows, currentMonthRange, activeConfigs]);
   
   const privacyPlaceholder = '•••••';
 

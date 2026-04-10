@@ -27,7 +27,8 @@ import {
     useSensors,
     DragEndEvent,
 } from '@dnd-kit/core';
-import { SortableContext, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { SortableContext, horizontalListSortingStrategy, arrayMove, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { parse, isValid, startOfDay, endOfDay, subDays, startOfMonth, format } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 
@@ -70,8 +71,10 @@ import { Separator } from '@/components/ui/separator';
 import { normalizeString, cn, formatCurrency, cleanBankName, isProposalCritical } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { BankIcon } from '@/components/bank-icon';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 import { safeStorage } from '@/lib/storage-utils';
+import { normalizeStatuses } from '@/lib/utils';
 
 const COLUMN_LABELS: Record<string, string> = {
     col_select: "Seleção",
@@ -92,6 +95,24 @@ const COLUMN_LABELS: Record<string, string> = {
     col_operator: "Operador",
     col_actions: "Ações"
 };
+
+function SortableStatusTab({ id, value, className, style, children }: any) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+    const dndStyle = {
+        transform: CSS.Translate.toString(transform),
+        transition,
+        zIndex: isDragging ? 50 : undefined,
+        opacity: isDragging ? 0.6 : 1,
+    };
+
+    return (
+        <div ref={setNodeRef} style={{ ...dndStyle, ...style }} {...attributes} {...listeners}>
+            <TabsTrigger value={value} className={className}>
+                {children}
+            </TabsTrigger>
+        </div>
+    );
+}
 
 interface DataTableProps {
   columns: ColumnDef<ProposalWithCustomer, unknown>[];
@@ -117,6 +138,7 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   initialGlobalFilter = '',
 }, ref) => {
   const { user } = useUser();
+  const firestore = useFirestore();
   const { statusColors } = useTheme();
   const [statusFilter, setStatusFilter] = React.useState('Todos');
   const [globalFilter, setGlobalFilter] = React.useState(initialGlobalFilter);
@@ -139,6 +161,15 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
   
   const initialIds = React.useMemo(() => columns.map(c => c.id!).filter(Boolean), [columns]);
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(initialIds);
+  
+  // 🔄 Gestão Dinâmica de Abas
+  const activeStatusConfigs = React.useMemo(() => normalizeStatuses(userSettings?.proposalStatuses), [userSettings]);
+  const initialStatusIds = React.useMemo(() => ['Todos', ...activeStatusConfigs.filter(c => c.isActive).map(c => c.id)], [activeStatusConfigs]);
+  const [statusOrder, setStatusOrder] = React.useState<string[]>(initialStatusIds);
+
+  React.useEffect(() => {
+      setStatusOrder(initialStatusIds);
+  }, [initialStatusIds]);
   
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
     'col_operator': false,
@@ -256,12 +287,48 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (active.id !== over?.id) {
-      setColumnOrder((items) => {
-        const oldIndex = items.indexOf(active.id as string);
-        const newIndex = items.indexOf(over!.id as string);
-        return arrayMove(items, oldIndex, newIndex);
-      });
+    if (!over) return;
+
+    if (active.id !== over.id) {
+      const activeId = active.id as string;
+      const overId = over.id as string;
+
+      // 🛡️ Caso seja arraste de Abas (prefixo tab_)
+      if (activeId.startsWith('tab_')) {
+          const cleanActive = activeId.replace('tab_', '');
+          const cleanOver = overId.replace('tab_', '');
+          
+          const oldIndex = statusOrder.indexOf(cleanActive);
+          const newIndex = statusOrder.indexOf(cleanOver);
+          const nextOrder = arrayMove(statusOrder, oldIndex, newIndex);
+          
+          setStatusOrder(nextOrder);
+
+          // Persistência no Firestore
+          if (firestore && user) {
+              const updatedStatuses = [...(userSettings?.proposalStatuses || [])];
+              
+              // Mapeia a nova ordem para os objetos de status originais
+              const finalSortedStatuses = nextOrder
+                  .filter(id => id !== 'Todos')
+                  .map((id, index) => {
+                      const existing = normalizeStatuses(userSettings?.proposalStatuses).find(s => s.id === id);
+                      return existing ? { ...existing, order: index } : id;
+                  });
+              
+              setDoc(doc(firestore, 'userSettings', user.uid), {
+                  proposalStatuses: finalSortedStatuses
+              }, { merge: true });
+          }
+      } 
+      // 🛡️ Caso seja arraste de Colunas
+      else {
+          setColumnOrder((items) => {
+            const oldIndex = items.indexOf(activeId);
+            const newIndex = items.indexOf(overId);
+            return arrayMove(items, oldIndex, newIndex);
+          });
+      }
     }
   };
 
@@ -347,17 +414,25 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
             <div className="flex items-center justify-between flex-wrap gap-4 bg-muted/10 p-3 rounded-2xl border-2 border-zinc-200 dark:border-primary/20 shadow-sm">
                 <Tabs value={statusFilter} onValueChange={setStatusFilter}>
                     <TabsList className="h-auto flex-wrap justify-start bg-transparent p-0 gap-1">
-                        <TabsTrigger value="Todos" className="font-bold px-4 h-9">Todos</TabsTrigger>
-                        {['Em Andamento', 'Aguardando Saldo', 'Pago', 'Saldo Pago', 'Pendente', 'Reprovado'].map(s => {
-                            const colorValue = statusColors[s.toUpperCase()] || statusColors[s];
-                            return (
-                                <TabsTrigger 
-                                    key={s} value={s} 
-                                    className="status-tab font-bold uppercase text-[10px] tracking-widest px-4 h-9 border-2 border-transparent data-[state=active]:bg-background"
-                                    style={{ '--status-color': colorValue } as any}
-                                >{s}</TabsTrigger>
-                            );
-                        })}
+                        <SortableContext items={statusOrder.map(id => `tab_${id}`)} strategy={horizontalListSortingStrategy}>
+                            {statusOrder.map(s => {
+                                const config = activeStatusConfigs.find(c => c.id === s);
+                                const label = config ? config.label : s;
+                                const colorValue = statusColors[s.toUpperCase()] || statusColors[s];
+                                
+                                return (
+                                    <SortableStatusTab 
+                                        key={`tab_${s}`} 
+                                        id={`tab_${s}`} 
+                                        value={s} 
+                                        className="status-tab font-bold uppercase text-[10px] tracking-widest px-4 h-9 border-2 border-transparent data-[state=active]:bg-background"
+                                        style={{ '--status-color': colorValue } as any}
+                                    >
+                                        {label}
+                                    </SortableStatusTab>
+                                );
+                            })}
+                        </SortableContext>
                     </TabsList>
                 </Tabs>
                 <div className="flex items-center gap-3 ml-auto">

@@ -69,7 +69,9 @@ import {
     ShieldAlert,
     RotateCcw,
     WifiOff,
-    EyeOff
+    EyeOff,
+    Calculator,
+    Settings2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -402,6 +404,49 @@ export default function ManualPage() {
                                 <li><strong>Criptografia AES-256:</strong> As senhas são blindadas e só podem ser visualizadas por quem tem permissão, através do ícone de "olhinho".</li>
                                 <li><strong>Botões de Cópia:</strong> Ícones dedicados para copiar usuário e senhas instantaneamente, agilizando o login em sites externos.</li>
                                 <li><strong>Abrir Sistema:</strong> Botão direto que abre o portal da promotora em uma nova aba, usando o link cadastrado.</li>
+                            </ul>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+
+                {/* 10. SIMULADOR DE PORTABILIDADE (NOVO) */}
+                <AccordionItem value="portability-simulator" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-emerald-500/20">
+                    <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600"><Calculator className="h-5 w-5" /></div>
+                            <div className="text-left">
+                                <p className="font-bold text-sm">10. Simulador de Portabilidade</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Motor Autônomo e Editável</p>
+                            </div>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
+                        <div className="p-4 rounded-xl bg-emerald-50/5 border border-emerald-600/20 mb-4">
+                            <h4 className="font-bold text-emerald-700 flex items-center gap-2 mb-2">
+                                <Settings2 className="h-4 w-4" /> Cadastro Manual de Regras
+                            </h4>
+                            <p className="text-xs text-muted-foreground mb-3">
+                                O Simulador de Portabilidade foi estruturado sob uma <strong>regra absoluta</strong>: A Inteligência Artificial nunca inventa ou assume regras. Todas as decisões vêm estritamente do banco de dados que você alimenta.
+                            </p>
+                            <ul className="mt-3 space-y-2 list-disc pl-5 text-xs font-medium">
+                                <li><strong>Como cadastrar:</strong> Acesse "Simul. Portabilidade" no menu lateral. Clique em "Nova Regra" e preencha as abas (Identificação, Ações, Origem, Valores e Taxas).</li>
+                                <li><strong>Bancos Específicos:</strong> Na aba "Bancos Específicos", adicione regras exclusivas para cada banco que será portado (ex: Daycoval não é permitido).</li>
+                                <li><strong>Atualização Mensal:</strong> As regras possuem versionamento automático. Basta clicar em "Editar" para atualizar a política do mês, e o simulador passará a respeitá-la imediatamente.</li>
+                            </ul>
+                        </div>
+                        <div className="p-4 rounded-xl bg-blue-50/5 border border-blue-600/20 mb-4">
+                            <h4 className="font-bold text-blue-700 flex items-center gap-2 mb-2">
+                                <Zap className="h-4 w-4" /> Fase 2: Motor de Simulação
+                            </h4>
+                            <p className="text-xs text-muted-foreground mb-3">
+                                O Simulador agora é autônomo. Ele lê HISCON / Extratos em PDF e cruza com suas regras estritas em um passe de mágica.
+                            </p>
+                            <ul className="mt-3 space-y-2 list-disc pl-5 text-xs font-medium">
+                                <li><strong>Upload:</strong> Acesse "Simul. Portabilidade", mude para a aba "Motor de Simulação" e suba o PDF do cliente.</li>
+                                <li><strong>Leitura Burra (Ocular):</strong> A IA fará uma leitura crua. Ela extrairá apenas os Contratos, Bancos, Parcelas e Margem. Ela não infere negócio, apenas copia os números que enxerga.</li>
+                                <li><strong>Revisão de Dados (OBRIGATÓRIO):</strong> Antes de rodar, o sistema colocará os dados extraídos numa grade. Você preenche o que faltou, corrige algum banco digitado errado e clica em Simular.</li>
+                                <li><strong>Cartões de Veredito:</strong> O Motor processa e joga os blocos de Cada Regra sob Cada Contrato. Você verá instantaneamente o "Cabe", "Não Cabe" ou "Atenção (Requer análise manual)".</li>
+                                <li><strong>Auditoria Automática:</strong> Tudo o que você simulou foi salvo numa aba de auditorias para segurança da operação, gravando os dados extraídos contra as regras daquele exato momento.</li>
                             </ul>
                         </div>
                     </AccordionContent>

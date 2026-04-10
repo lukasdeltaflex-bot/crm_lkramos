@@ -16,7 +16,7 @@ import { useCollection, useFirestore, useUser, useMemoFirebase, useDoc } from '@
 import { collection, query, where, doc, setDoc, orderBy, limit } from 'firebase/firestore';
 import type { Customer, Proposal, FollowUp, UserSettings, Lead, Expense } from '@/lib/types';
 import { differenceInDays, format, differenceInMonths, parseISO, isAfter, subDays, startOfDay, isBefore } from 'date-fns';
-import { getWhatsAppUrl, calculateBusinessDays, getAge, parseDateSafe } from '@/lib/utils';
+import { getWhatsAppUrl, calculateBusinessDays, getAge, parseDateSafe, normalizeStatuses, getStatusBehavior } from '@/lib/utils';
 import Link from 'next/link';
 import { generateBirthdayMessage } from '@/ai/flows/generate-birthday-message-flow';
 import { toast } from '@/hooks/use-toast';
@@ -102,6 +102,7 @@ export function NotificationBell() {
   const { data: leads } = useCollection<Lead>(leadsQuery);
   const { data: expenses } = useCollection<Expense>(expensesQuery);
   const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
+  const activeConfigs = React.useMemo(() => normalizeStatuses(userSettings?.proposalStatuses || []), [userSettings]);
 
   useEffect(() => {
     if (leads && leads.length > 0) {
@@ -198,7 +199,8 @@ export function NotificationBell() {
 
       const hasMatured = proposals?.some(p => {
           if (p.deleted === true || p.customerId !== c.id) return false;
-          if (!['Pago', 'Saldo Pago'].includes(p.status)) return false;
+          const behavior = getStatusBehavior(p.status, activeConfigs);
+          if (behavior !== 'success') return false;
           if (!p.datePaidToClient) return false;
           const paidDate = parseDateSafe(p.datePaidToClient);
           return paidDate && differenceInMonths(now, paidDate) >= 12;
@@ -234,8 +236,10 @@ export function NotificationBell() {
 
     // 6. PROPOSTAS (Comissões e Pendências Operacionais)
     proposals?.filter(p => p.deleted !== true).forEach(p => {
+      const behavior = getStatusBehavior(p.status, activeConfigs);
+
       // Comissão Pendente
-      if (['Pago', 'Saldo Pago'].includes(p.status) && p.commissionStatus === 'Pendente' && p.datePaidToClient) {
+      if (behavior === 'success' && p.commissionStatus === 'Pendente' && p.datePaidToClient) {
         const paidDate = parseDateSafe(p.datePaidToClient);
         const days = paidDate ? differenceInDays(now, paidDate) : 0;
         if (days > 7) {
@@ -279,7 +283,7 @@ export function NotificationBell() {
       }
 
       // Lembrete de Acompanhamento (Em Andamento há muito tempo) - NOVO NO SINO
-      if (p.status === 'Em Andamento' && p.dateDigitized) {
+      if (behavior === 'in_progress' && p.dateDigitized) {
           const digitDate = parseDateSafe(p.dateDigitized);
           const days = digitDate ? differenceInDays(now, digitDate) : 0;
           if (days > 20) {
@@ -295,7 +299,7 @@ export function NotificationBell() {
     });
 
     return alerts;
-  }, [customers, proposals, followUps, news, leads, expenses, isClient]);
+  }, [customers, proposals, followUps, news, leads, expenses, isClient, activeConfigs]);
 
   const visibleNotifications = React.useMemo(() => {
     const readIds = userSettings?.readAlerts || [];

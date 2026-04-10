@@ -7,7 +7,7 @@ import { Bot, Send, X, Loader2, CalendarClock, Cake, Hourglass, BadgePercent, Za
 import type { Customer, Proposal, UserProfile, FollowUp, UserSettings, Expense, Lead } from '@/lib/types';
 import { differenceInDays, format, differenceInMonths, startOfDay, isBefore, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { calculateBusinessDays, getAge, cn, getWhatsAppUrl, formatCurrency, parseDateSafe } from '@/lib/utils';
+import { calculateBusinessDays, getAge, cn, getWhatsAppUrl, formatCurrency, parseDateSafe, normalizeStatuses, getStatusBehavior } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from '@/hooks/use-toast';
 import { sendSummaryEmail } from '@/ai/flows/send-summary-email-flow';
@@ -105,6 +105,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
   const { data: followUps } = useCollection<FollowUp>(followUpsQuery);
   const { data: leadsData } = useCollection<Lead>(leadsQuery);
   const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
+  const activeConfigs = useMemo(() => normalizeStatuses(userSettings?.proposalStatuses || []), [userSettings]);
 
   useEffect(() => {
     setIsClient(true);
@@ -171,7 +172,8 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
         .filter(c => {
             return proposals.some(p => {
                 if (p.deleted === true || p.customerId !== c.id) return false;
-                if (p.status !== 'Pago' && p.status !== 'Saldo Pago') return false;
+                const behavior = getStatusBehavior(p.status, activeConfigs);
+                if (behavior !== 'success') return false;
                 if (!p.datePaidToClient) return false;
                 const paidDate = parseDateSafe(p.datePaidToClient);
                 return paidDate && differenceInMonths(now, paidDate) >= 12;
@@ -185,7 +187,11 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
         }));
 
     const followUpReminders = proposals
-      .filter(p => p.deleted !== true && p.status === 'Em Andamento' && p.dateDigitized)
+      .filter(p => {
+          if (p.deleted === true || !p.dateDigitized) return false;
+          const behavior = getStatusBehavior(p.status, activeConfigs);
+          return behavior === 'in_progress';
+      })
       .map(p => {
           const digitDate = parseDateSafe(p.dateDigitized);
           return { ...p, digitDate };
@@ -200,12 +206,15 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
       }));
 
     const commissionReminders = proposals
-      .filter(p => 
-        p.deleted !== true &&
-        (p.status === 'Pago' || p.status === 'Saldo Pago') && 
-        p.commissionStatus === 'Pendente' &&
-        p.datePaidToClient
-      )
+      .filter(p => {
+        const behavior = getStatusBehavior(p.status, activeConfigs);
+        return (
+            p.deleted !== true &&
+            behavior === 'success' && 
+            p.commissionStatus === 'Pendente' &&
+            p.datePaidToClient
+        );
+      })
       .map(p => {
           const paidDate = parseDateSafe(p.datePaidToClient);
           return { ...p, paidDate };
@@ -316,7 +325,7 @@ export function DailySummary({ proposals, customers, userProfile, expenses = [] 
         expenseAlerts,
         leadAlerts
     };
-  }, [isClient, proposals, customers, followUps, expenses, leadsData, user?.uid]);
+  }, [isClient, proposals, customers, followUps, expenses, leadsData, user?.uid, activeConfigs]);
   
   const visibleBirthdayAlerts = alertData.birthdayAlerts.filter(a => !dismissedItems.includes(a.id));
   const visibleBirthdayTodayAlerts = alertData.birthdayTodayAlerts.filter(a => !dismissedItems.includes(a.id));

@@ -43,7 +43,7 @@ import {
 import { format, parse, differenceInMonths, isValid as isValidDate } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { formatCurrency, getAge, cn, getWhatsAppUrl, isWhatsApp, formatDateSafe, cleanBankName, cleanFirestoreData, getSmartTags } from '@/lib/utils';
+import { formatCurrency, getAge, cn, getWhatsAppUrl, isWhatsApp, formatDateSafe, cleanBankName, cleanFirestoreData, getSmartTags, normalizeStatuses, getStatusBehavior } from '@/lib/utils';
 import { SimpleProposalsTable } from '@/components/customers/simple-proposals-table';
 import { CustomerAiSummary } from '@/components/customers/customer-ai-summary';
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
@@ -368,6 +368,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
   const { data: allCustomers } = useCollection<Customer>(allCustomersQuery);
 
+  const activeConfigs = React.useMemo(() => normalizeStatuses(userSettings?.proposalStatuses || []), [userSettings]);
+
   const businessStats = React.useMemo(() => {
     if (!proposals) return { count: 0, volume: 0, commission: 0, proposalsByCommission: [] };
     
@@ -388,7 +390,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     if (!proposals || !hasMounted) return null;
     const now = new Date();
     return proposals.find(p => {
-        if ((p.status === 'Pago' || p.status === 'Saldo Pago') && p.datePaidToClient) {
+        const behavior = getStatusBehavior(p.status, activeConfigs);
+        if (behavior === 'success' && p.datePaidToClient) {
             try {
                 const paidDate = new Date(p.datePaidToClient);
                 if (!isValidDate(paidDate)) return false;
@@ -397,7 +400,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         }
         return false;
     });
-  }, [proposals, hasMounted]);
+  }, [proposals, hasMounted, activeConfigs]);
 
   const handleExportDossier = async () => {
     if (!customer || !proposals || !user) return;

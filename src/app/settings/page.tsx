@@ -63,7 +63,9 @@ import {
     Smartphone,
     AlertTriangle
 } from 'lucide-react';
+import { logSignificantChange } from '@/lib/auto-guide-logger';
 import { EditableList } from '@/components/settings/editable-list';
+import { StatusManagementList } from '@/components/settings/status-management-list';
 import { BankEditableList } from '@/components/settings/bank-editable-list';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, doc, setDoc, query, where, getDocs } from 'firebase/firestore';
@@ -171,9 +173,12 @@ export default function SettingsPage() {
     }
   }, [userSettings, hasLoadedSettings]);
 
-  const saveSettingsToFirebase = (updated: Partial<UserSettings>) => {
+  const saveSettingsToFirebase = (updated: Partial<UserSettings>, changeLog?: { type: any, desc: string }) => {
     if (settingsDocRef) {
         setDoc(settingsDocRef, cleanFirestoreData(updated), { merge: true });
+        if (changeLog && user) {
+            logSignificantChange(firestore, user.uid, changeLog.type, changeLog.desc);
+        }
         toast({ title: "Configurações Salvas!" });
     }
   };
@@ -804,9 +809,20 @@ export default function SettingsPage() {
                     <CardContent>
                         <Accordion type="multiple" className="w-full space-y-4">
                         <EditableList title="Tipos de Produto" items={userSettings?.productTypes || initialProductTypes} setItems={(n) => saveSettingsToFirebase({ productTypes: n as string[] })} />
-                        <EditableList title="Status da Proposta" items={userSettings?.proposalStatuses || initialProposalStatuses} setItems={(n) => saveSettingsToFirebase({ proposalStatuses: n as string[] })} />
+                        <StatusManagementList 
+                            items={userSettings?.proposalStatuses || initialProposalStatuses} 
+                            setItems={(n) => saveSettingsToFirebase({ proposalStatuses: n }, { 
+                                type: 'status_management', 
+                                desc: 'Alteração na estrutura, ordem ou visibilidade dos status de propostas.' 
+                            })} 
+                        />
                         <EditableList title="Status da Comissão" items={userSettings?.commissionStatuses || initialCommissionStatuses} setItems={(n) => saveSettingsToFirebase({ commissionStatuses: n as string[] })} />
-                        <EditableList title="Órgãos Aprovadores" items={userSettings?.approvingBodies || initialApprovingBodies} setItems={(n) => saveSettingsToFirebase({ approvingBodies: n as string[] })} />
+                        <BankEditableList 
+                            title="Órgãos Aprovadores"
+                            banks={userSettings?.approvingBodies || initialApprovingBodies} 
+                            bankDomains={userSettings?.approvingBodyDomains || {}} 
+                            onUpdate={(bodies, domains) => saveSettingsToFirebase({ approvingBodies: bodies, approvingBodyDomains: domains })} 
+                        />
                         <EditableList title="Categorias de Despesas" items={userSettings?.expenseCategories || initialExpenseCategories} setItems={(n) => saveSettingsToFirebase({ expenseCategories: n as string[] })} />
                         
                         <AccordionItem value="tramites" className="border-b">
@@ -826,11 +842,11 @@ export default function SettingsPage() {
                         <AccordionItem value="reprovas" className="border-b">
                             <AccordionTrigger className="flex items-center gap-2">
                                 <SearchX className="h-4 w-4 text-red-500" />
-                                Motivos de Reprova (Portabilidade)
+                                Motivos de Cancelamento e Indeferimento
                             </AccordionTrigger>
                             <AccordionContent>
                                 <EditableList 
-                                    title="Tópicos de Reprova" 
+                                    title="Motivos Curtos" 
                                     items={userSettings?.rejectionReasons || initialRejectionReasons as any} 
                                     setItems={(n) => saveSettingsToFirebase({ rejectionReasons: n as string[] })} 
                                 />

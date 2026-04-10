@@ -7,11 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ProfileForm } from './profile-form';
 import { useFirebase, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { doc, setDoc, query, collection, where } from 'firebase/firestore';
-import type { UserProfile, Proposal } from '@/lib/types';
+import type { UserProfile, Proposal, UserSettings } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { updateEmail } from 'firebase/auth';
-import { cleanFirestoreData, formatCurrency } from '@/lib/utils';
+import { cleanFirestoreData, formatCurrency, normalizeStatuses, getStatusBehavior } from '@/lib/utils';
 import { Trophy, Star, Crown, Medal, TrendingUp, Wallet, Share2, Copy, Mail, MessageSquareText, Check, Link as LinkIcon } from 'lucide-react';
 import { startOfMonth, format, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -45,18 +45,29 @@ export default function ProfilePage() {
         return doc(firestore, 'users', user.uid);
     }, [firestore, user]);
 
+    const settingsDocRef = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return doc(firestore, 'userSettings', user.uid);
+    }, [firestore, user]);
+
     const proposalsQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
         return query(collection(firestore, 'loanProposals'), where('ownerId', '==', user.uid));
     }, [firestore, user]);
 
     const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileDocRef);
+    const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
     const { data: proposals, isLoading: isProposalsLoading } = useCollection<Proposal>(proposalsQuery);
     
+    const activeConfigs = React.useMemo(() => normalizeStatuses(userSettings?.proposalStatuses || []), [userSettings]);
+
     const achievements = React.useMemo(() => {
         if (!proposals) return null;
 
-        const paidProposals = proposals.filter(p => p.status === 'Pago' || p.status === 'Saldo Pago');
+        const paidProposals = proposals.filter(p => {
+            const behavior = getStatusBehavior(p.status, activeConfigs);
+            return behavior === 'success';
+        });
         
         const biggestOne = [...paidProposals].sort((a,b) => (b.grossAmount || 0) - (a.grossAmount || 0))[0];
         const totalCommissions = proposals.reduce((sum, p) => sum + (p.amountPaid || 0), 0);

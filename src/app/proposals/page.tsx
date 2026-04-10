@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/page-header';
 import { ProposalsDataTable, type ProposalsDataTableHandle } from './data-table';
 import { getColumns } from './columns';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, FileDown, Trash2, CheckCircle2, ChevronDown, FileSpreadsheet, FileText as FilePdf, FileBadge, Printer, Download, Sparkles, ChevronRight } from 'lucide-react';
+import { PlusCircle, FileDown, Trash2, CheckCircle2, ChevronDown, FileSpreadsheet, FileText as FilePdf, FileBadge, Printer, Download, ChevronRight } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -29,9 +29,10 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { cleanFirestoreData, formatCurrency, cleanBankName, formatDateSafe } from '@/lib/utils';
+import { cleanFirestoreData, formatCurrency, cleanBankName, formatDateSafe, normalizeStatuses } from '@/lib/utils';
+import { proposalStatuses as initialProposalStatuses } from '@/lib/config-data';
 import { format } from 'date-fns';
-import { CustomerAiForm } from '@/components/customers/customer-ai-form';
+
 
 // 🛡️ FIX BUILD: Garante que esta rota seja tratada como dinâmica
 export const dynamic = 'force-dynamic';
@@ -66,7 +67,7 @@ function ProposalsPageContent() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCustomerSearchOpen, setIsCustomerSearchOpen] = useState(false);
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+
   const [newlySelectedCustomer, setNewlySelectedCustomer] = useState<Customer | null>(null);
 
   const [selectedProposal, setSelectedProposal] = useState<ProposalWithCustomer | undefined>(undefined);
@@ -109,6 +110,8 @@ function ProposalsPageContent() {
   const { data: proposals, isLoading: proposalsLoading } = useCollection<Proposal>(proposalsQuery);
   const { data: customers, isLoading: customersLoading } = useCollection<Customer>(customersQuery);
   const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
+
+  const activeConfigs = useMemo(() => normalizeStatuses(userSettings?.proposalStatuses || initialProposalStatuses), [userSettings]);
 
   const isLoading = proposalsLoading || customersLoading || isUserLoading;
 
@@ -366,11 +369,7 @@ function ProposalsPageContent() {
     }
   }, [firestore, user, sheetMode, selectedProposal]);
 
-  const handleAiFormSubmit = useCallback((aiData: any) => {
-    setNewlySelectedCustomer(aiData);
-    setIsAiModalOpen(false);
-    handleNewProposal();
-  }, [handleNewProposal]);
+
 
   const columns = useMemo(() => getColumns(
     handleEditProposal, 
@@ -401,9 +400,7 @@ function ProposalsPageContent() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <PageHeader title="Propostas" />
         <div className="flex items-center gap-3 flex-wrap">
-            <Button variant="outline" className="h-10 px-6 rounded-full font-bold border-border/50 hover:bg-muted/50 transition-all text-xs" onClick={() => setIsAiModalOpen(true)}>
-                <Sparkles className="h-4 w-4 mr-2" /> Novo Cliente com IA
-            </Button>
+
 
             {selectedCount > 0 && (
                 <div className="flex items-center gap-2 animate-in slide-in-from-right-2 duration-300">
@@ -426,8 +423,8 @@ function ProposalsPageContent() {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            {['Pendente', 'Em Andamento', 'Aguardando Saldo', 'Pago', 'Saldo Pago'].map(s => (
-                                <DropdownMenuItem key={s} onSelect={() => handleBulkStatusChange(s as ProposalStatus)}>{s}</DropdownMenuItem>
+                            {activeConfigs.filter(c => c.isActive && c.id !== 'Reprovado').map(conf => (
+                                <DropdownMenuItem key={conf.id} onSelect={() => handleBulkStatusChange(conf.id as ProposalStatus)}>{conf.label}</DropdownMenuItem>
                             ))}
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -463,15 +460,7 @@ function ProposalsPageContent() {
         )}
       </div>
 
-      <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
-        <DialogContent className="max-w-xl">
-            <DialogHeader>
-                <DialogTitle>Extração de Dados com IA</DialogTitle>
-                <DialogDescription>A IA processará seu documento ou texto para preencher os dados do cliente automaticamente.</DialogDescription>
-            </DialogHeader>
-            <CustomerAiForm onSubmit={handleAiFormSubmit} />
-        </DialogContent>
-      </Dialog>
+
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-4xl w-[95vw] h-[90vh] flex flex-col p-0 overflow-hidden rounded-[2rem] border-none shadow-2xl">

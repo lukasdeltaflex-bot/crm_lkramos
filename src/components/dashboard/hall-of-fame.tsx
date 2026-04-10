@@ -5,9 +5,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Trophy, Zap, Star } from 'lucide-react';
 import { format, isSameMonth, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { formatCurrency, cn } from '@/lib/utils';
-import type { Proposal, Customer } from '@/lib/types';
+import { formatCurrency, cn, normalizeStatuses, getStatusBehavior } from '@/lib/utils';
+import type { Proposal, Customer, UserSettings } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useUser, useFirestore, useDoc } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 interface HallOfFameProps {
   proposals: Proposal[];
@@ -16,11 +18,21 @@ interface HallOfFameProps {
 }
 
 export function HallOfFame({ proposals, customers, isLoading }: HallOfFameProps) {
+  const { user } = useUser();
+  const firestore = useFirestore();
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
     setHasMounted(true);
   }, []);
+
+  const settingsDocRef = useMemo(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'userSettings', user.uid);
+  }, [firestore, user]);
+
+  const { data: userSettings } = useDoc<UserSettings>(settingsDocRef as any);
+  const activeConfigs = useMemo(() => normalizeStatuses(userSettings?.proposalStatuses || []), [userSettings]);
 
   const stats = useMemo(() => {
     if (!hasMounted || !proposals || !customers) return null;
@@ -35,7 +47,10 @@ export function HallOfFame({ proposals, customers, isLoading }: HallOfFameProps)
         } catch { return false; }
     });
 
-    const paidThisMonth = currentMonthProposals.filter(p => p.status === 'Pago' || p.status === 'Saldo Pago');
+    const paidThisMonth = currentMonthProposals.filter(p => {
+        const behavior = getStatusBehavior(p.status, activeConfigs);
+        return behavior === 'success';
+    });
 
     // 1. Maior Contrato Pago (Ouro)
     const biggestPaid = [...paidThisMonth].sort((a,b) => (b.grossAmount || 0) - (a.grossAmount || 0))[0];

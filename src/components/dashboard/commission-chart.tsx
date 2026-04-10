@@ -2,8 +2,10 @@
 
 import { Area, AreaChart, CartesianGrid, XAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatCurrency } from '@/lib/utils';
-import type { Proposal } from '@/lib/types';
+import { useUser, useFirestore, useDoc } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { formatCurrency, normalizeStatuses, getStatusBehavior } from '@/lib/utils';
+import type { Proposal, UserSettings } from '@/lib/types';
 import { useMemo, useState } from 'react';
 import { Skeleton } from '../ui/skeleton';
 import { Button } from '../ui/button';
@@ -16,7 +18,18 @@ interface CommissionChartProps {
 }
 
 export function CommissionChart({ proposals }: CommissionChartProps) {
+    const { user } = useUser();
+    const firestore = useFirestore();
     const [isPrivacyMode, setIsPrivacyMode] = useState(false);
+
+    const settingsDocRef = useMemo(() => {
+        if (!user || !firestore) return null;
+        return doc(firestore, 'userSettings', user.uid);
+    }, [firestore, user]);
+
+    const { data: userSettings } = useDoc<UserSettings>(settingsDocRef as any);
+    const activeConfigs = useMemo(() => normalizeStatuses(userSettings?.proposalStatuses || []), [userSettings]);
+
     const data = useMemo(() => {
         const monthlyData: { [key: string]: number } = {};
 
@@ -25,7 +38,9 @@ export function CommissionChart({ proposals }: CommissionChartProps) {
         monthOrder.forEach(m => monthlyData[m.toLowerCase()] = 0);
 
         proposals.forEach(p => {
-            if (p.commissionStatus !== 'Pendente' && p.commissionPaymentDate) {
+            const behavior = getStatusBehavior(p.status, activeConfigs);
+            // Considera comissões de propostas com comportamento de sucesso
+            if (behavior === 'success' && p.commissionStatus !== 'Pendente' && p.commissionPaymentDate) {
                 try {
                     const date = new Date(p.commissionPaymentDate);
                     if (isValid(date)) {
@@ -46,7 +61,7 @@ export function CommissionChart({ proposals }: CommissionChartProps) {
             total: monthlyData[monthName.toLowerCase()] || 0,
         }));
 
-    }, [proposals]);
+    }, [proposals, activeConfigs]);
 
   return (
     <Card className="border-border/50 shadow-lg rounded-xl overflow-hidden">

@@ -7,7 +7,10 @@ import { commissionReminder } from '@/ai/flows/commission-reminder-flow';
 import { useEffect, useState, useMemo } from 'react';
 import { Skeleton } from '../ui/skeleton';
 import { differenceInDays } from 'date-fns';
-import type { Proposal, Customer } from '@/lib/types';
+import { useUser, useFirestore, useDoc } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { normalizeStatuses, getStatusBehavior } from '@/lib/utils';
+import type { Proposal, Customer, UserSettings } from '@/lib/types';
 
 type ReminderMessage = {
   proposalId: string;
@@ -42,10 +45,20 @@ function CommissionReminderItem({ reminder, onDismiss }: { reminder: ReminderMes
 }
 
 export function CommissionReminders({ proposals, customers, isLoading }: CommissionRemindersProps) {
+  const { user } = useUser();
+  const firestore = useFirestore();
   const [reminders, setReminders] = useState<ReminderMessage[]>([]);
   const [dismissedReminders, setDismissedReminders] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(true);
   const [isClient, setIsClient] = useState(false);
+
+  const settingsDocRef = useMemo(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'userSettings', user.uid);
+  }, [firestore, user]);
+
+  const { data: userSettings } = useDoc<UserSettings>(settingsDocRef as any);
+  const activeConfigs = useMemo(() => normalizeStatuses(userSettings?.proposalStatuses || []), [userSettings]);
 
   useEffect(() => {
     setIsClient(true);
@@ -64,15 +77,18 @@ export function CommissionReminders({ proposals, customers, isLoading }: Commiss
     if (!customers || !proposals) return [];
     const customerMap = new Map(customers.map(c => [c.id, c]));
     return proposals
-      .filter(p => 
-        (p.status === 'Pago' || p.status === 'Saldo Pago') && 
-        p.commissionStatus === 'Pendente' &&
-        p.datePaidToClient && 
-        differenceInDays(new Date(), new Date(p.datePaidToClient)) > 7
-      )
+      .filter(p => {
+        const behavior = getStatusBehavior(p.status, activeConfigs);
+        return (
+          behavior === 'success' && 
+          p.commissionStatus === 'Pendente' &&
+          p.datePaidToClient && 
+          differenceInDays(new Date(), new Date(p.datePaidToClient)) > 7
+        );
+      })
       .map(p => ({...p, customer: customerMap.get(p.customerId)}))
       .filter(p => p.customer);
-  }, [proposals, customers]);
+  }, [proposals, customers, activeConfigs]);
 
   useEffect(() => {
     async function fetchReminders() {

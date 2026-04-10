@@ -2,8 +2,10 @@
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { formatCurrency } from '@/lib/utils';
-import type { Proposal } from '@/lib/types';
+import { useUser, useFirestore, useDoc } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { formatCurrency, normalizeStatuses, getStatusBehavior } from '@/lib/utils';
+import type { Proposal, UserSettings } from '@/lib/types';
 import { useMemo } from 'react';
 
 interface OperatorPerformanceChartProps {
@@ -11,10 +13,22 @@ interface OperatorPerformanceChartProps {
 }
 
 export function OperatorPerformanceChart({ proposals }: OperatorPerformanceChartProps) {
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const settingsDocRef = useMemo(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'userSettings', user.uid);
+  }, [firestore, user]);
+
+  const { data: userSettings } = useDoc<UserSettings>(settingsDocRef as any);
+  const activeConfigs = useMemo(() => normalizeStatuses(userSettings?.proposalStatuses || []), [userSettings]);
+
   const data = useMemo(() => {
     const operatorData: Record<string, { total: number; paid: number; count: number }> = {};
 
     proposals.forEach(p => {
+      const behavior = getStatusBehavior(p.status, activeConfigs);
       const operator = p.operator || 'Sem Operador';
       if (!operatorData[operator]) {
         operatorData[operator] = { total: 0, paid: 0, count: 0 };
@@ -24,7 +38,7 @@ export function OperatorPerformanceChart({ proposals }: OperatorPerformanceChart
       operatorData[operator].total += amount;
       operatorData[operator].count += 1;
       
-      if (p.status === 'Pago' || p.status === 'Saldo Pago') {
+      if (behavior === 'success') {
         operatorData[operator].paid += amount;
       }
     });
@@ -37,7 +51,7 @@ export function OperatorPerformanceChart({ proposals }: OperatorPerformanceChart
         conversion: stats.total > 0 ? (stats.paid / stats.total) * 100 : 0,
       }))
       .sort((a, b) => b.paid - a.paid);
-  }, [proposals]);
+  }, [proposals, activeConfigs]);
 
   if (data.length === 0) return null;
 

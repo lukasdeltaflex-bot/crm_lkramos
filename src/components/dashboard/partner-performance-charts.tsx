@@ -2,7 +2,7 @@
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { formatCurrency, cleanBankName } from '@/lib/utils';
+import { formatCurrency, cleanBankName, normalizeStatuses, getStatusBehavior } from '@/lib/utils';
 import type { Proposal, UserSettings } from '@/lib/types';
 import { useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -80,6 +80,8 @@ export function PartnerPerformanceCharts({ proposals }: PartnerPerformanceCharts
   }, [firestore, user]);
 
   const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
+  const activeConfigs = useMemo(() => normalizeStatuses(userSettings?.proposalStatuses || []), [userSettings]);
+  
   const showBankLogos = userSettings?.showBankLogos ?? true;
   const showPromoterLogos = userSettings?.showPromoterLogos ?? true;
   const bankDomains = userSettings?.bankDomains || {};
@@ -116,7 +118,8 @@ export function PartnerPerformanceCharts({ proposals }: PartnerPerformanceCharts
   const operatorData = useMemo(() => {
     const dataMap: Record<string, number> = {};
     proposals.forEach(p => {
-      if (p.status === 'Pago' || p.status === 'Saldo Pago') {
+      const behavior = getStatusBehavior(p.status, activeConfigs);
+      if (behavior === 'success') {
         const operator = p.operator || 'Sem Operador';
         const amount = Number(p.commissionBase === 'net' ? (p.netAmount || 0) : (p.grossAmount || 0)) || 0;
         dataMap[operator] = (dataMap[operator] || 0) + amount;

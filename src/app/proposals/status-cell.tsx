@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Select,
   SelectContent,
@@ -10,8 +10,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { cn, cleanFirestoreData } from '@/lib/utils';
-import { proposalStatuses, defaultRejectionReasons, defaultHistoryTopics } from '@/lib/config-data';
+import { cn, cleanFirestoreData, normalizeStatuses, getStatusLabel, getStatusColor, getStatusBehavior } from '@/lib/utils';
+import { proposalStatuses as initialProposalStatuses, defaultRejectionReasons, defaultHistoryTopics } from '@/lib/config-data';
 import type { ProposalStatus, ProposalHistoryEntry, UserSettings } from '@/lib/types';
 import { useFirestore, auth, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
@@ -59,6 +59,8 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
   }, [firestore, user]);
 
   const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
+  
+  const activeConfigs = useMemo(() => normalizeStatuses(userSettings?.proposalStatuses || initialProposalStatuses), [userSettings]);
   const finalRejectionReasons = userSettings?.rejectionReasons || defaultRejectionReasons;
   const historyTopics = userSettings?.historyTopics || defaultHistoryTopics;
 
@@ -80,7 +82,8 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
     setIsSummarizing(true);
     try {
         // Se for reprova, envia o motivo selecionado para dar contexto à IA
-        const contextPrefix = pendingStatus === 'Reprovado' && rejectionReason 
+        const behavior = getStatusBehavior(pendingStatus || '', activeConfigs);
+        const contextPrefix = behavior === 'rejection' && rejectionReason 
             ? `MOTIVO DE REPROVA: ${rejectionReason}. NOTA ADICIONAL: ` 
             : "";
             
@@ -119,6 +122,8 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
     const now = new Date().toISOString();
     const currentUser = auth?.currentUser;
     const userName = currentUser?.displayName || currentUser?.email || 'Sistema';
+    
+    const behavior = getStatusBehavior(pendingStatus || '', activeConfigs);
 
     const dataToUpdate: any = { 
       status: pendingStatus,
@@ -127,7 +132,7 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
     
     const isPortability = product === 'Portabilidade';
 
-    if (pendingStatus === 'Pago') {
+    if (behavior === 'success') {
         dataToUpdate.dateApproved = now;
         dataToUpdate.datePaidToClient = now;
     } else if (pendingStatus === 'Saldo Pago' && isPortability) {
@@ -136,9 +141,9 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
         dataToUpdate.statusAwaitingBalanceAt = now;
     }
 
-    dataToUpdate.rejectionReason = pendingStatus === 'Reprovado' ? rejectionReason : "";
+    dataToUpdate.rejectionReason = behavior === 'rejection' ? rejectionReason : "";
 
-    const historyMessage = pendingStatus === 'Reprovado'
+    const historyMessage = behavior === 'rejection'
         ? `⚙️ Status para "${pendingStatus}". MOTIVO: ${rejectionReason}${quickNote ? ` | NOTA: ${quickNote}` : ''}`
         : quickNote.trim() 
             ? `⚙️ Status para "${pendingStatus}". Nota: ${quickNote.trim()}`
@@ -171,8 +176,8 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
     }
   };
 
-  const statusKey = currentStatus.toUpperCase();
-  const colorValue = statusColors[statusKey] || statusColors[currentStatus];
+  const label = getStatusLabel(currentStatus, activeConfigs);
+  const colorValue = getStatusColor(currentStatus, activeConfigs, statusColors);
 
   return (
     <>
@@ -192,14 +197,14 @@ export function StatusCell({ proposalId, currentStatus, product, onStatusChange 
                     '--status-color': colorValue 
                 } as any : {}}
             >
-                {currentStatus}
+                {label}
             </Badge>
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
-        {proposalStatuses.map((status) => (
-          <SelectItem key={status} value={status} className="text-[10px] font-bold uppercase">
-            {status}
+        {activeConfigs.filter(conf => conf.isActive || conf.id === currentStatus).map((conf) => (
+          <SelectItem key={conf.id} value={conf.id} className="text-[10px] font-bold uppercase">
+            {conf.label}
           </SelectItem>
         ))}
       </SelectContent>

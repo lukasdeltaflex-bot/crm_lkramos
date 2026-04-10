@@ -58,7 +58,7 @@ import {
     Sparkles
 } from 'lucide-react';
 import { format, parse, parseISO, isValid } from 'date-fns';
-import { cn, formatCurrency, cleanBankName, cleanFirestoreData, formatCurrencyInput } from '@/lib/utils';
+import { cn, formatCurrency, cleanBankName, cleanFirestoreData, formatCurrencyInput, normalizeStatuses, getStatusLabel, getStatusColor } from '@/lib/utils';
 import * as configData from '@/lib/config-data';
 import type { Proposal, Customer, ProposalStatus, UserSettings, ProposalHistoryEntry } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -203,8 +203,8 @@ export function ProposalForm({
   const [stagedHistory, setStagedHistory] = useState<ProposalHistoryEntry[]>([]);
   const [isSummarizingObs, setIsSummarizingObs] = useState(false);
 
+  const activeConfigs = useMemo(() => normalizeStatuses(userSettings?.proposalStatuses || configData.proposalStatuses), [userSettings]);
   const productTypes = userSettings?.productTypes || configData.productTypes;
-  const proposalStatuses = userSettings?.proposalStatuses || configData.proposalStatuses;
   const rejectionReasons = userSettings?.rejectionReasons || configData.defaultRejectionReasons;
   const historyTopics = userSettings?.historyTopics || configData.defaultHistoryTopics;
   const approvingBodies = userSettings?.approvingBodies || configData.approvingBodies;
@@ -406,7 +406,7 @@ export function ProposalForm({
     onSubmit(finalData);
   }
 
-  const statusColor = currentStatusValue ? (statusColors[currentStatusValue.toUpperCase()] || statusColors[currentStatusValue]) : undefined;
+  const statusColor = currentStatusValue ? getStatusColor(currentStatusValue, activeConfigs, statusColors) : undefined;
 
   return (
     <Form {...form}>
@@ -528,7 +528,11 @@ export function ProposalForm({
                                   <SelectValue />
                               </SelectTrigger>
                           </FormControl>
-                          <SelectContent>{proposalStatuses.map(s => <SelectItem key={s} value={s} className="text-[10px] font-bold uppercase">{s}</SelectItem>)}</SelectContent>
+                          <SelectContent>
+                            {activeConfigs.filter(conf => conf.isActive || conf.id === field.value).map(conf => (
+                              <SelectItem key={conf.id} value={conf.id} className="text-[10px] font-bold uppercase">{conf.label}</SelectItem>
+                            ))}
+                          </SelectContent>
                           </Select><FormMessage /></FormItem>
                       )}
                   />

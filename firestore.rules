@@ -92,6 +92,24 @@ service cloud.firestore {
       );
     }
     
+    // Simulador de Portabilidade (Regras Cadastradas)
+    match /portabilityRules/{ruleId} {
+      allow read, write: if isSignedIn() && (
+        resource == null || resource.data.ownerId == request.auth.uid
+      ) && (
+        request.resource == null || request.resource.data.ownerId == request.auth.uid
+      );
+    }
+
+    // Auditoria de Simulações de Portabilidade
+    match /portabilitySimulations/{simId} {
+      allow read, write: if isSignedIn() && (
+        resource == null || resource.data.ownerId == request.auth.uid
+      ) && (
+        request.resource == null || request.resource.data.ownerId == request.auth.uid
+      );
+    }
+
     // Regra de fallback para evitar bloqueios inesperados em outros caminhos
     match /{document=**} {
       allow read, write: if isSignedIn();
