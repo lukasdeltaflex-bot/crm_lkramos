@@ -6,7 +6,7 @@ import { PortabilityRule, SourceBankRule, ConditionRule, UserSettings, AgeRule }
 import { portabilityRulesService } from '@/lib/services/portabilityRules';
 import { logSignificantChange } from '@/lib/auto-guide-logger';
 import { doc } from 'firebase/firestore';
-import { cleanBankName } from '@/lib/utils';
+import { cleanBankName, formatCurrencyInput } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -394,22 +394,42 @@ export function RuleForm({ initialData, onClose, onSaved }: RuleFormProps) {
           <TabsContent value="valores" className="mt-0 pt-2 pb-10">
              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {[
-                    { key: 'minInstallment', label: 'Parcela Mínima (R$)', type: 'number' },
-                    { key: 'minOperationValue', label: 'Valor Op. Mínimo (Ticket R$)', type: 'number' },
-                    { key: 'minBalance', label: 'Saldo Devedor Mínimo (R$)', type: 'number' },
-                    { key: 'minCashback', label: 'Troco Mínimo (R$)', type: 'number' },
-                    { key: 'cashbackPercentage', label: 'Mínimo Troco (%)', type: 'number' },
-                ].map(item => (
-                    <div key={item.key} className="space-y-3 p-6 rounded-[2rem] border bg-muted/5 shadow-sm">
-                        <Label className="text-xs font-black uppercase text-muted-foreground">{item.label}</Label>
-                        <Input 
-                            type={item.type}
-                            value={(formData.valuesRules as any)?.[item.key]} 
-                            onChange={e => updateField('valuesRules', item.key, Number(e.target.value))} 
-                            className="bg-background border-border/50 h-11"
-                        />
-                    </div>
-                ))}
+                    { key: 'minInstallment', label: 'Parcela Mínima', isCurrency: true },
+                    { key: 'minOperationValue', label: 'Valor Op. Mínimo (Ticket)', isCurrency: true },
+                    { key: 'minBalance', label: 'Saldo Devedor Mínimo', isCurrency: true },
+                    { key: 'minCashback', label: 'Troco Mínimo', isCurrency: true },
+                    { key: 'cashbackPercentage', label: 'Mínimo Troco (%)', isCurrency: false },
+                ].map(item => {
+                    const value = (formData.valuesRules as any)?.[item.key];
+                    
+                    return (
+                        <div key={item.key} className="space-y-3 p-6 rounded-[2rem] border bg-muted/5 shadow-sm">
+                            <Label className="text-xs font-black uppercase text-muted-foreground">{item.label}</Label>
+                            <div className="relative">
+                                {item.isCurrency && (
+                                    <span className="absolute left-4 top-3 text-[10px] font-black opacity-30">R$</span>
+                                )}
+                                <Input 
+                                    type="text"
+                                    value={item.isCurrency ? formatCurrencyInput(value) : (value ?? '')} 
+                                    onChange={e => {
+                                        const rawValue = e.target.value;
+                                        if (item.isCurrency) {
+                                            const numericValue = parseInt(rawValue.replace(/\D/g, "")) / 100 || 0;
+                                            updateField('valuesRules', item.key, numericValue);
+                                        } else {
+                                            updateField('valuesRules', item.key, Number(rawValue));
+                                        }
+                                    }} 
+                                    className={cn(
+                                        "bg-background border-border/50 h-11 font-bold",
+                                        item.isCurrency && "pl-10"
+                                    )}
+                                />
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
           </TabsContent>
 
