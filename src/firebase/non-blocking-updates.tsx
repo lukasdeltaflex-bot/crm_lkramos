@@ -10,7 +10,8 @@ import {
   SetOptions,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
-import {FirestorePermissionError} from '@/firebase/errors';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { toast } from '@/hooks/use-toast';
 
 /**
  * Initiates a setDoc operation for a document reference.
@@ -18,11 +19,17 @@ import {FirestorePermissionError} from '@/firebase/errors';
  */
 export function setDocumentNonBlocking(docRef: DocumentReference, data: any, options: SetOptions) {
   setDoc(docRef, data, options).catch(error => {
+    console.error("Firebase Set Error:", error);
+    toast({
+      variant: "destructive",
+      title: "Erro de Sincronização",
+      description: "Não foi possível salvar os dados. Verifique sua conexão."
+    });
     errorEmitter.emit(
       'permission-error',
       new FirestorePermissionError({
         path: docRef.path,
-        operation: 'write', // or 'create'/'update' based on options
+        operation: 'write', 
         requestResourceData: data,
       })
     )
@@ -39,6 +46,12 @@ export function setDocumentNonBlocking(docRef: DocumentReference, data: any, opt
 export function addDocumentNonBlocking(colRef: CollectionReference, data: any) {
   const promise = addDoc(colRef, data)
     .catch(error => {
+      console.error("Firebase Add Error:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao Criar",
+        description: "Falha ao registrar novo item no servidor."
+      });
       errorEmitter.emit(
         'permission-error',
         new FirestorePermissionError({
@@ -59,6 +72,12 @@ export function addDocumentNonBlocking(colRef: CollectionReference, data: any) {
 export function updateDocumentNonBlocking(docRef: DocumentReference, data: any) {
   updateDoc(docRef, data)
     .catch(error => {
+      console.error("Firebase Update Error:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro de Atualização",
+        description: "A alteração não pôde ser salva no servidor."
+      });
       errorEmitter.emit(
         'permission-error',
         new FirestorePermissionError({
@@ -78,6 +97,12 @@ export function updateDocumentNonBlocking(docRef: DocumentReference, data: any) 
 export function deleteDocumentNonBlocking(docRef: DocumentReference) {
   deleteDoc(docRef)
     .catch(error => {
+      console.error("Firebase Delete Error:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao Excluir",
+        description: "Não foi possível remover o item no servidor."
+      });
       errorEmitter.emit(
         'permission-error',
         new FirestorePermissionError({
