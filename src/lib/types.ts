@@ -276,6 +276,8 @@ export type ManagementPromoter = {
 export type SourceBankRule = {
   bankName: string;
   minPaidInstallments: number;
+  allowsZeroPaid?: boolean;
+  minContractDays?: number;
   isBlocked: boolean;
   isAllowed: boolean;
   notes?: string;
@@ -337,6 +339,11 @@ export type PortabilityRule = {
     minCashback: number;
     cashbackPercentage: number;
     allowPercentageRule: boolean;
+    // Regras Temporais
+    allowsZeroPaidInstallments?: boolean;
+    minPaidInstallmentsGeneral?: number;
+    minContractDays?: number;
+    minOriginationDays?: number;
   };
 
   // Regras Condicionais

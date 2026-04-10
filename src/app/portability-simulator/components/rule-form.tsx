@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { Save, Plus, Trash2, Info, Check, Search, PlusCircle, UserCircle } from 'lucide-react';
+import { Save, Plus, Trash2, Info, Check, Search, PlusCircle, UserCircle, Timer, History } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { banks } from '@/lib/config-data';
@@ -110,7 +110,15 @@ export function RuleForm({ initialData, onClose, onSaved }: RuleFormProps) {
     const list = formData.sourceBankRules || [];
     setFormData(prev => ({
       ...prev,
-      sourceBankRules: [...list, { bankName: '', minPaidInstallments: undefined as any, isBlocked: false, isAllowed: true, notes: '' }]
+      sourceBankRules: [...list, { 
+        bankName: '', 
+        minPaidInstallments: undefined as any, 
+        allowsZeroPaid: false, // Novo
+        minContractDays: 0,    // Novo
+        isBlocked: false, 
+        isAllowed: true, 
+        notes: '' 
+      }]
     }));
   };
 
@@ -384,7 +392,7 @@ export function RuleForm({ initialData, onClose, onSaved }: RuleFormProps) {
                                         className="h-10 rounded-xl font-bold" 
                                     />
                                 </div>
-                                <div className="flex items-center gap-6 md:col-span-1 pt-6 px-2">
+                                <div className="flex flex-wrap items-center gap-6 md:col-span-2 pt-6 px-2">
                                     <div className="flex items-center gap-2">
                                         <Switch checked={rule.isAllowed} onCheckedChange={c => updateSourceBank(index, 'isAllowed', c)} />
                                         <Label className="text-xs font-bold whitespace-nowrap">Aceita?</Label>
@@ -392,6 +400,19 @@ export function RuleForm({ initialData, onClose, onSaved }: RuleFormProps) {
                                     <div className="flex items-center gap-2">
                                         <Switch checked={rule.isBlocked} onCheckedChange={c => updateSourceBank(index, 'isBlocked', c)} />
                                         <Label className="text-xs font-bold text-destructive whitespace-nowrap">Bloqueado?</Label>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Switch checked={rule.allowsZeroPaid} onCheckedChange={c => updateSourceBank(index, 'allowsZeroPaid', c)} />
+                                        <Label className="text-xs font-bold text-blue-600 whitespace-nowrap">Aceita 0?</Label>
+                                    </div>
+                                    <div className="flex items-center gap-2 ml-4">
+                                        <Label className="text-[10px] font-black uppercase text-muted-foreground mr-2">Dias Mín.</Label>
+                                        <Input 
+                                            type="number" 
+                                            value={rule.minContractDays ?? 0} 
+                                            onChange={e => updateSourceBank(index, 'minContractDays', Number(e.target.value))} 
+                                            className="h-8 w-20 rounded-lg text-center font-bold" 
+                                        />
                                     </div>
                                 </div>
                                 <div className="space-y-2 md:col-span-4">
@@ -444,6 +465,51 @@ export function RuleForm({ initialData, onClose, onSaved }: RuleFormProps) {
                         </div>
                     );
                 })}
+            </div>
+
+            <div className="mt-12 p-8 rounded-[2.5rem] bg-blue-50/20 border-2 border-blue-100/30">
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600/60 mb-8 flex items-center gap-2">
+                   <Timer className="h-4 w-4" /> Regras Temporais e Carência de Contrato
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div className="space-y-3 p-6 rounded-[2rem] border bg-background shadow-sm">
+                        <Label className="text-xs font-black uppercase text-muted-foreground">Aceita 0 parcelas pagas?</Label>
+                        <div className="flex items-center gap-3 pt-2">
+                            <Switch 
+                                checked={formData.valuesRules?.allowsZeroPaidInstallments} 
+                                onCheckedChange={c => updateField('valuesRules', 'allowsZeroPaidInstallments', c)} 
+                            />
+                            <span className="text-sm font-bold">{formData.valuesRules?.allowsZeroPaidInstallments ? 'Sim' : 'Não'}</span>
+                        </div>
+                    </div>
+                    <div className="space-y-3 p-6 rounded-[2rem] border bg-background shadow-sm">
+                        <Label className="text-xs font-black uppercase text-muted-foreground">Min. Parcelas Pagas (Geral)</Label>
+                        <Input 
+                            type="number" 
+                            value={formData.valuesRules?.minPaidInstallmentsGeneral ?? 0} 
+                            onChange={e => updateField('valuesRules', 'minPaidInstallmentsGeneral', Number(e.target.value))} 
+                            className="bg-muted/10 border-border/50 h-11 font-bold rounded-2xl" 
+                        />
+                    </div>
+                    <div className="space-y-3 p-6 rounded-[2rem] border bg-background shadow-sm">
+                        <Label className="text-xs font-black uppercase text-muted-foreground">Tempo Min. Contrato (Dias)</Label>
+                        <Input 
+                            type="number" 
+                            value={formData.valuesRules?.minContractDays ?? 0} 
+                            onChange={e => updateField('valuesRules', 'minContractDays', Number(e.target.value))} 
+                            className="bg-muted/10 border-border/50 h-11 font-bold rounded-2xl" 
+                        />
+                    </div>
+                    <div className="space-y-3 p-6 rounded-[2rem] border bg-background shadow-sm">
+                        <Label className="text-xs font-black uppercase text-muted-foreground">Tempo Min. Originação (Dias)</Label>
+                        <Input 
+                            type="number" 
+                            value={formData.valuesRules?.minOriginationDays ?? 0} 
+                            onChange={e => updateField('valuesRules', 'minOriginationDays', Number(e.target.value))} 
+                            className="bg-muted/10 border-border/50 h-11 font-bold rounded-2xl" 
+                        />
+                    </div>
+                </div>
             </div>
           </TabsContent>
 

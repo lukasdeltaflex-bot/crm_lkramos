@@ -13,6 +13,7 @@ const ContractExtractionSchema = z.object({
     totalInstallments: z.number().optional().describe('Quantidade total de parcelas do contrato original.'),
     outstandingBalance: z.number().optional().describe('Saldo devedor restante (R$).'),
     interestRate: z.number().optional().describe('Taxa de juros atual (%) se informada.'),
+    contractStartDate: z.string().optional().describe('Data de início/assinatura do contrato (ex: 2023-05-15 ou 15/05/2023).'),
 });
 
 const ExtractPortabilityDataOutputSchema = z.object({

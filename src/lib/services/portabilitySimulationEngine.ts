@@ -1,5 +1,25 @@
 import { PortabilityRule, SourceBankRule, ConditionRule } from '@/lib/types';
 import { ExtractPortabilityDataOutput } from '@/ai/flows/extract-portability-data-flow';
+import { differenceInDays, parse, parseISO, isValid } from 'date-fns';
+
+function parseContractDate(dateStr?: string): Date | null {
+    if (!dateStr) return null;
+    try {
+        // Tenta ISO primeiro
+        let d = parseISO(dateStr);
+        if (isValid(d)) return d;
+        
+        // Tenta DD/MM/YYYY
+        d = parse(dateStr, 'dd/MM/yyyy', new Date());
+        if (isValid(d)) return d;
+        
+        // Tenta YYYY-MM-DD
+        d = parse(dateStr, 'yyyy-MM-dd', new Date());
+        if (isValid(d)) return d;
+        
+        return null;
+    } catch { return null; }
+}
 
 export type SimulationResultStatus = 'GREEN' | 'RED' | 'YELLOW';
 
@@ -35,10 +55,15 @@ export function runSimulationForContract(
     let status: SimulationResultStatus = 'GREEN';
     const reasons: string[] = [];
     
-    // 1. Validar se o banco de origem está nas regras de "Origem" (SourceBankRules)
+    // 1. Validar regras de Origem (SourceBankRules) - Exceções
     const sourceBankName = contract.sourceBank?.toLowerCase() || '';
+    const installmentsPaid = contract.installmentsPaid ?? 0;
+    const contractDate = parseContractDate((contract as any).contractStartDate);
+    const contractDays = contractDate ? differenceInDays(new Date(), contractDate) : null;
+
+    let matchedSourceRule: SourceBankRule | undefined;
     if (sourceBankName && rule.sourceBankRules && rule.sourceBankRules.length > 0) {
-      const matchedSourceRule = rule.sourceBankRules.find(r => 
+      matchedSourceRule = rule.sourceBankRules.find(r => 
         sourceBankName.includes(r.bankName.toLowerCase()) || r.bankName.toLowerCase().includes(sourceBankName)
       );
       
@@ -51,15 +76,61 @@ export function runSimulationForContract(
            reasons.push(`Banco de origem (${matchedSourceRule.bankName}) não é permitido nesta regra.`);
         }
         
+        // Validação de 0 pagas (Específica do banco)
+        if (installmentsPaid === 0 && matchedSourceRule.allowsZeroPaid === false) {
+            status = 'RED';
+            reasons.push(`O banco de origem ${matchedSourceRule.bankName} não aceita contratos com 0 parcelas pagas.`);
+        }
+
         // Regra de parcelas pagas específicas do banco
-        if (matchedSourceRule.minPaidInstallments > 0 && (contract.installmentsPaid || 0) < matchedSourceRule.minPaidInstallments) {
+        if (matchedSourceRule.minPaidInstallments > 0 && installmentsPaid < matchedSourceRule.minPaidInstallments) {
           status = 'RED';
-          reasons.push(`Contrato possui ${(contract.installmentsPaid || 0)} parcelas pagas, mas o exigido pelo banco origem é ${matchedSourceRule.minPaidInstallments}.`);
+          reasons.push(`Banco origem ${matchedSourceRule.bankName} exige no mínimo ${matchedSourceRule.minPaidInstallments} parcelas pagas (possui ${installmentsPaid}).`);
+        }
+
+        // Regra de dias mín. específica do banco
+        if (matchedSourceRule.minContractDays && matchedSourceRule.minContractDays > 0) {
+            if (contractDays === null) {
+                if (status !== 'RED') status = 'YELLOW';
+                reasons.push(`Data de início não extraída. Este banco exige carência de ${matchedSourceRule.minContractDays} dias.`);
+            } else if (contractDays < matchedSourceRule.minContractDays) {
+                status = 'RED';
+                reasons.push(`Tempo de contrato insuficiente (${contractDays} dias). Exigido: ${matchedSourceRule.minContractDays} dias.`);
+            }
         }
       }
     }
 
-    // 2. Validação Financeira (Valores Mínimos)
+    // 2. Validação de Regras Temporais Gerais (se não houver exceção específica ou se a exceção não bloqueou)
+    const t = rule.valuesRules;
+    if (t && status !== 'RED') {
+        // Validação de 0 pagas (Geral)
+        if (installmentsPaid === 0 && t.allowsZeroPaidInstallments === false && !matchedSourceRule?.allowsZeroPaid) {
+            status = 'RED';
+            reasons.push(`Esta regra de banco não aceita contratos com 0 parcelas pagas.`);
+        }
+
+        // Mínimo de parcelas pagas (Geral)
+        const minPAG = t.minPaidInstallmentsGeneral || 0;
+        if (minPAG > 0 && installmentsPaid < minPAG && !matchedSourceRule?.minPaidInstallments) {
+            status = 'RED';
+            reasons.push(`Exige no mínimo ${minPAG} parcelas pagas (atualmente possui ${installmentsPaid}).`);
+        }
+
+        // Dias de contrato (Geral)
+        const minDays = t.minContractDays || 0;
+        if (minDays > 0 && !matchedSourceRule?.minContractDays) {
+            if (contractDays === null) {
+                if (status !== 'RED') status = 'YELLOW';
+                reasons.push(`Data de início não informada. Exigido carência de ${minDays} dias de contrato.`);
+            } else if (contractDays < minDays) {
+                status = 'RED';
+                reasons.push(`Tempo de contrato (${contractDays} dias) é inferior ao mínimo exigido de ${minDays} dias.`);
+            }
+        }
+    }
+
+    // 3. Validação Financeira (Valores Mínimos)
     const v = rule.valuesRules;
     if (v) {
       if (v.minInstallment > 0 && (contract.installmentValue || 0) < v.minInstallment) {
