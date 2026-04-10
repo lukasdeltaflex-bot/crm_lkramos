@@ -60,6 +60,7 @@ export default function FollowUpsPage() {
     if (!firestore || !user) return null;
     return query(
       collection(firestore, 'users', user.uid, 'followUps'),
+      where('deleted', '!=', true),
       orderBy('dueDate', 'asc')
     );
   }, [firestore, user]);
@@ -75,7 +76,6 @@ export default function FollowUpsPage() {
   const filteredFollowUps = useMemo(() => {
     if (!followUps) return [];
     let list = followUps
-        .filter(f => f.deleted !== true) // Filtro de Lixeira
         .filter(f => tab === 'history' ? (f.status !== 'pending' && f.status !== 'pendente') : (f.status === 'pending' || f.status === 'pendente'));
     
     if (dateFilter && tab === 'pending') {

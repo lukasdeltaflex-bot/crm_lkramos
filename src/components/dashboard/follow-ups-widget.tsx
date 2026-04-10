@@ -24,6 +24,7 @@ export function FollowUpsWidget() {
     return query(
       collection(firestore, 'users', user.uid, 'followUps'),
       where('status', '==', 'pending'),
+      where('deleted', '!=', true),
       orderBy('dueDate', 'asc'),
       limit(5)
     );

@@ -47,12 +47,11 @@ export function FollowUpCalendar({ followUps, onSelectDate }: FollowUpCalendarPr
   const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
   const goToToday = () => setCurrentMonth(new Date());
 
-  const getFollowUpsForDay = (day: Date) => {
     return followUps.filter(f => 
         f.status === 'pending' && 
+        f.deleted !== true &&
         isSameDay(parseISO(f.dueDate), day)
     );
-  };
 
   return (
     <div className="space-y-4">

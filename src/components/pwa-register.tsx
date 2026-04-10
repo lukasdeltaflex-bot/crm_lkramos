@@ -153,7 +153,9 @@ export function PwaRegister() {
     const initPwa = async () => {
         try {
             console.log("[PWA Stage: Init] 🚀 Registrando Service Worker...");
-            const registration = await navigator.serviceWorker.register('/sw.js');
+            const registration = await navigator.serviceWorker.register('/sw.js', {
+                updateViaCache: 'none'
+            });
             
             // Listener de atualizações futuras na mesma sessão
             registration.addEventListener('updatefound', () => {
