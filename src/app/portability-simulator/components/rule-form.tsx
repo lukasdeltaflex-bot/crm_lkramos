@@ -6,7 +6,7 @@ import { PortabilityRule, SourceBankRule, ConditionRule, UserSettings, AgeRule }
 import { portabilityRulesService } from '@/lib/services/portabilityRules';
 import { logSignificantChange } from '@/lib/auto-guide-logger';
 import { doc } from 'firebase/firestore';
-import { cleanBankName, formatCurrencyInput } from '@/lib/utils';
+import { cn, cleanBankName, formatCurrencyInput } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
