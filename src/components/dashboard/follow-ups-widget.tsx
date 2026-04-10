@@ -24,13 +24,17 @@ export function FollowUpsWidget() {
     return query(
       collection(firestore, 'users', user.uid, 'followUps'),
       where('status', '==', 'pending'),
-      where('deleted', '!=', true),
       orderBy('dueDate', 'asc'),
-      limit(5)
+      limit(10) // Aumentamos o limite para filtrar os deletados no cliente sem perder volume
     );
   }, [firestore, user]);
 
-  const { data: followUps, isLoading } = useCollection<FollowUp>(followUpsQuery);
+  const { data: rawFollowUps, isLoading } = useCollection<FollowUp>(followUpsQuery);
+  
+  const followUps = useMemo(() => {
+    if (!rawFollowUps) return [];
+    return rawFollowUps.filter(f => f.deleted !== true).slice(0, 5);
+  }, [rawFollowUps]);
 
   const getStatusInfo = (dueDate: string) => {
     const date = parseISO(dueDate);
