@@ -17,7 +17,7 @@ Estes índices são vitais para o Dashboard, Financeiro e Resumo Diário.
 
 | Índice # | Campo 1 | Ordem | Campo 2 | Ordem | Campo 3 | Ordem | Usado em: |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **1** | `ownerId` | Ascendente | `dateDigitized` | Descendente | - | - | Dashboard / Financeiro |
+| **1** | `ownerId` | Ascendente | `deleted` | Ascendente | `dateDigitized` | Descendente | Dashboard / Financeiro |
 | **2** | `ownerId` | Ascendente | `deleted` | Ascendente | `dateDigitized` | Ascendente | Resumo Diário |
 | **3** | `ownerId` | Ascendente | `customerId` | Ascendente | - | - | Ficha do Cliente |
 | **4** | `ownerId` | Ascendente | `deleted` | Ascendente | - | - | Lixeira |

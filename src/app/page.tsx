@@ -94,27 +94,26 @@ export default function DashboardPage() {
     return query(
         collection(firestore, 'loanProposals'), 
         where('ownerId', '==', user.uid), 
-        where('dateDigitized', '>=', timeWindowStr) // ⚡ Requer índice: ownerId + dateDigitized
+        where('deleted', '!=', true),
+        where('dateDigitized', '>=', timeWindowStr) // ⚡ Requer índice: ownerId + deleted + dateDigitized
     );
   }, [firestore, user, timeWindowStr]);
 
   const { data: rawProposals, isLoading: proposalsLoading } = useCollection<Proposal>(proposalsQuery);
   
-  const proposals = useMemo(() => {
-    if (!rawProposals) return [];
-    return rawProposals.filter(p => p.deleted !== true);
-  }, [rawProposals]);
+  const proposals = rawProposals || [];
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'customers'), where('ownerId', '==', user.uid)); // Limite removido para não afetar base de clientes do Dashboard
+    return query(
+      collection(firestore, 'customers'), 
+      where('ownerId', '==', user.uid),
+      where('deleted', '!=', true)
+    ); // Limite removido para não afetar base de clientes do Dashboard
   }, [firestore, user]);
   const { data: rawCustomers } = useCollection<Customer>(customersQuery);
   
-  const customers = useMemo(() => {
-    if (!rawCustomers) return [];
-    return rawCustomers.filter(c => c.deleted !== true);
-  }, [rawCustomers]);
+  const customers = rawCustomers || [];
 
   const expensesQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
