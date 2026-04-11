@@ -231,14 +231,14 @@ export function runSimulationForContract(
       reasons.push("Esta operação exige OBRIGATORIAMENTE análise manual do digitador antes da inserção.");
     }
 
-    // Validação de falta de dados críticos
+    // 6. Validação de falta de dados críticos
     if (!contract.installmentValue && v?.minInstallment > 0) {
       status = 'YELLOW';
-      reasons.push("Regra insuficiente para decidir com Exatidão: Faltou extrair/informar o Valor da Parcela.");
+      reasons.push("Regra insuficiente para decidir: Faltou extrair/informar o Valor da Parcela.");
     }
-    if (!contract.installmentsPaid && rule.sourceBankRules?.some(r=>r.minPaidInstallments > 0)) {
+    if (contract.installmentsPaid === undefined && (rule.valuesRules?.minPaidInstallmentsGeneral || rule.sourceBankRules?.some(r=>r.minPaidInstallments > 0))) {
         status = 'YELLOW';
-        reasons.push("Regra insuficiente para decidir com Exatidão: Faltou extrair/informar a Qtd. Parcelas Pagas.");
+        reasons.push("Regra insuficiente para decidir: Faltou extrair/informar a Qtd. Parcelas Pagas.");
     }
 
     if (reasons.length === 0) {

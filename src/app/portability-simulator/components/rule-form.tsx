@@ -408,9 +408,18 @@ export function RuleForm({ initialData, onClose, onSaved }: RuleFormProps) {
                                     <div className="flex items-center gap-2 ml-4">
                                         <Label className="text-[10px] font-black uppercase text-muted-foreground mr-2">Dias Mín.</Label>
                                         <Input 
-                                            type="number" 
-                                            value={rule.minContractDays ?? 0} 
-                                            onChange={e => updateSourceBank(index, 'minContractDays', Number(e.target.value))} 
+                                            type="text" 
+                                            inputMode="numeric"
+                                            value={rule.minContractDays ?? ''} 
+                                            onChange={e => {
+                                                const val = e.target.value;
+                                                if (val === '') {
+                                                    updateSourceBank(index, 'minContractDays', undefined);
+                                                } else {
+                                                    const num = parseInt(val.replace(/\D/g, ""), 10);
+                                                    updateSourceBank(index, 'minContractDays', isNaN(num) ? undefined : num);
+                                                }
+                                            }} 
                                             className="h-8 w-20 rounded-lg text-center font-bold" 
                                         />
                                     </div>
