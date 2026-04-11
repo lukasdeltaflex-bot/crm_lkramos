@@ -108,7 +108,7 @@ export function SimulationEngine() {
     const allResults = [];
 
     for (const contract of contracts) {
-      const results = runSimulationForContract(extractedData!, contract, activeRules);
+      const results = await runSimulationForContract(extractedData!, contract, activeRules);
       allResults.push({ contract, results });
     }
 

@@ -462,7 +462,13 @@ export function RuleForm({ initialData, onClose, onSaved }: RuleFormProps) {
                                             const numericValue = parseInt(rawValue.replace(/\D/g, "")) / 100 || 0;
                                             updateField('valuesRules', item.key, numericValue);
                                         } else {
-                                            updateField('valuesRules', item.key, Number(rawValue));
+                                            if (rawValue === '') {
+                                                updateField('valuesRules', item.key, undefined);
+                                            } else {
+                                                const normalized = rawValue.replace(',', '.');
+                                                const num = parseFloat(normalized);
+                                                updateField('valuesRules', item.key, isNaN(num) ? undefined : num);
+                                            }
                                         }
                                     }} 
                                     className={cn(
@@ -560,10 +566,20 @@ export function RuleForm({ initialData, onClose, onSaved }: RuleFormProps) {
                     <div key={item.key} className="space-y-3 p-6 rounded-[2rem] border bg-muted/5 shadow-sm">
                         <Label className="text-xs font-black uppercase text-muted-foreground">{item.label}</Label>
                         <Input 
-                            type="number" step="0.01"
-                            value={(formData.rateRules as any)?.[item.key]} 
-                            onChange={e => updateField('rateRules', item.key, Number(e.target.value))} 
-                            className="bg-background border-border/50 h-11"
+                            type="text" 
+                            inputMode="decimal"
+                            value={(formData.rateRules as any)?.[item.key] ?? ''} 
+                            onChange={e => {
+                                const val = e.target.value;
+                                if (val === '') {
+                                    updateField('rateRules', item.key, undefined);
+                                } else {
+                                    const normalized = val.replace(',', '.');
+                                    const num = parseFloat(normalized);
+                                    updateField('rateRules', item.key, isNaN(num) ? undefined : num);
+                                }
+                            }} 
+                            className="bg-background border-border/50 h-11 font-bold"
                         />
                     </div>
                 ))}
