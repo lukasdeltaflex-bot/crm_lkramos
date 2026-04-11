@@ -59,9 +59,7 @@ export function runSimulationForContract(
     const sourceBankName = contract.sourceBank?.toLowerCase() || '';
     const installmentsPaid = contract.installmentsPaid ?? 0;
     const contractDate = parseContractDate((contract as any).contractStartDate);
-    const contractDays = contractDate ? differenceInDays(new Date(), contractDate) : null;
-
-    let matchedSourceRule: SourceBankRule | undefined;
+    const contractDays = contractDate ? differenceInDays(new Date(), contractDate) : null;    let matchedSourceRule: SourceBankRule | undefined;
     if (sourceBankName && rule.sourceBankRules && rule.sourceBankRules.length > 0) {
       matchedSourceRule = rule.sourceBankRules.find(r => 
         sourceBankName.includes(r.bankName.toLowerCase()) || r.bankName.toLowerCase().includes(sourceBankName)
@@ -75,57 +73,50 @@ export function runSimulationForContract(
            status = 'RED';
            reasons.push(`Banco de origem (${matchedSourceRule.bankName}) não é permitido nesta regra.`);
         }
-        
-        // Validação de 0 pagas (Específica do banco)
-        if (installmentsPaid === 0 && matchedSourceRule.allowsZeroPaid === false) {
-            status = 'RED';
-            reasons.push(`O banco de origem ${matchedSourceRule.bankName} não aceita contratos com 0 parcelas pagas.`);
-        }
-
-        // Regra de parcelas pagas específicas do banco
-        if (matchedSourceRule.minPaidInstallments > 0 && installmentsPaid < matchedSourceRule.minPaidInstallments) {
-          status = 'RED';
-          reasons.push(`Banco origem ${matchedSourceRule.bankName} exige no mínimo ${matchedSourceRule.minPaidInstallments} parcelas pagas (possui ${installmentsPaid}).`);
-        }
-
-        // Regra de dias mín. específica do banco
-        if (matchedSourceRule.minContractDays && matchedSourceRule.minContractDays > 0) {
-            if (contractDays === null) {
-                if (status !== 'RED') status = 'YELLOW';
-                reasons.push(`Data de início não extraída. Este banco exige carência de ${matchedSourceRule.minContractDays} dias.`);
-            } else if (contractDays < matchedSourceRule.minContractDays) {
-                status = 'RED';
-                reasons.push(`Tempo de contrato insuficiente (${contractDays} dias). Exigido: ${matchedSourceRule.minContractDays} dias.`);
-            }
-        }
       }
     }
 
-    // 2. Validação de Regras Temporais Gerais (se não houver exceção específica ou se a exceção não bloqueou)
+    // ---------------------------------------------------------
+    // 2. Validação de Carência e Parcelas (Baseline vs Exceção)
+    // ---------------------------------------------------------
     const t = rule.valuesRules;
     if (t && status !== 'RED') {
-        // Validação de 0 pagas (Geral)
-        if (installmentsPaid === 0 && t.allowsZeroPaidInstallments === false && !matchedSourceRule?.allowsZeroPaid) {
+        // a) Zero Pagas (Exceção sobrescreve Geral)
+        let allowsZero = t.allowsZeroPaidInstallments ?? true;
+        if (matchedSourceRule && matchedSourceRule.allowsZeroPaid !== undefined) {
+            allowsZero = matchedSourceRule.allowsZeroPaid;
+        }
+        if (installmentsPaid === 0 && !allowsZero) {
             status = 'RED';
-            reasons.push(`Esta regra de banco não aceita contratos com 0 parcelas pagas.`);
+            reasons.push(matchedSourceRule 
+                ? `O banco de origem ${matchedSourceRule.bankName} não aceita contratos com 0 parcelas pagas.`
+                : `Esta regra de banco não aceita contratos com 0 parcelas pagas.`);
         }
 
-        // Mínimo de parcelas pagas (Geral)
-        const minPAG = t.minPaidInstallmentsGeneral || 0;
-        if (minPAG > 0 && installmentsPaid < minPAG && !matchedSourceRule?.minPaidInstallments) {
+        // b) Mínimo de Parcelas Pagas (Exceção sobrescreve Geral)
+        let minPAG = t.minPaidInstallmentsGeneral ?? 0;
+        if (matchedSourceRule && matchedSourceRule.minPaidInstallments !== undefined) {
+            minPAG = matchedSourceRule.minPaidInstallments;
+        }
+        if (status !== 'RED' && minPAG > 0 && installmentsPaid < minPAG) {
             status = 'RED';
-            reasons.push(`Exige no mínimo ${minPAG} parcelas pagas (atualmente possui ${installmentsPaid}).`);
+            reasons.push(matchedSourceRule
+                ? `Banco origem ${matchedSourceRule.bankName} exige no mínimo ${minPAG} parcelas pagas (possui ${installmentsPaid}).`
+                : `Exige no mínimo ${minPAG} parcelas pagas (atualmente possui ${installmentsPaid}).`);
         }
 
-        // Dias de contrato (Geral)
-        const minDays = t.minContractDays || 0;
-        if (minDays > 0 && !matchedSourceRule?.minContractDays) {
+        // c) Dias de Contrato (Exceção sobrescreve Geral)
+        let minDays = t.minContractDays ?? 0;
+        if (matchedSourceRule && matchedSourceRule.minContractDays !== undefined) {
+            minDays = matchedSourceRule.minContractDays;
+        }
+        if (status !== 'RED' && minDays > 0) {
             if (contractDays === null) {
-                if (status !== 'RED') status = 'YELLOW';
-                reasons.push(`Data de início não informada. Exigido carência de ${minDays} dias de contrato.`);
+                status = 'YELLOW';
+                reasons.push(`Data de início não extraída. Exigido carência de ${minDays} dias de contrato.`);
             } else if (contractDays < minDays) {
                 status = 'RED';
-                reasons.push(`Tempo de contrato (${contractDays} dias) é inferior ao mínimo exigido de ${minDays} dias.`);
+                reasons.push(`Tempo de contrato insuficiente (${contractDays} dias). Exigido: ${minDays} dias.`);
             }
         }
     }

@@ -485,27 +485,54 @@ export function RuleForm({ initialData, onClose, onSaved }: RuleFormProps) {
                     <div className="space-y-3 p-6 rounded-[2rem] border bg-background shadow-sm">
                         <Label className="text-xs font-black uppercase text-muted-foreground">Min. Parcelas Pagas (Geral)</Label>
                         <Input 
-                            type="number" 
-                            value={formData.valuesRules?.minPaidInstallmentsGeneral ?? 0} 
-                            onChange={e => updateField('valuesRules', 'minPaidInstallmentsGeneral', Number(e.target.value))} 
+                            type="text" 
+                            inputMode="numeric"
+                            value={formData.valuesRules?.minPaidInstallmentsGeneral ?? ''} 
+                            onChange={e => {
+                                const val = e.target.value;
+                                if (val === '') {
+                                    updateField('valuesRules', 'minPaidInstallmentsGeneral', undefined);
+                                } else {
+                                    const num = parseInt(val.replace(/\D/g, ""), 10);
+                                    updateField('valuesRules', 'minPaidInstallmentsGeneral', isNaN(num) ? undefined : num);
+                                }
+                            }} 
                             className="bg-muted/10 border-border/50 h-11 font-bold rounded-2xl" 
                         />
                     </div>
                     <div className="space-y-3 p-6 rounded-[2rem] border bg-background shadow-sm">
                         <Label className="text-xs font-black uppercase text-muted-foreground">Tempo Min. Contrato (Dias)</Label>
                         <Input 
-                            type="number" 
-                            value={formData.valuesRules?.minContractDays ?? 0} 
-                            onChange={e => updateField('valuesRules', 'minContractDays', Number(e.target.value))} 
+                            type="text" 
+                            inputMode="numeric"
+                            value={formData.valuesRules?.minContractDays ?? ''} 
+                            onChange={e => {
+                                const val = e.target.value;
+                                if (val === '') {
+                                    updateField('valuesRules', 'minContractDays', undefined);
+                                } else {
+                                    const num = parseInt(val.replace(/\D/g, ""), 10);
+                                    updateField('valuesRules', 'minContractDays', isNaN(num) ? undefined : num);
+                                }
+                            }} 
                             className="bg-muted/10 border-border/50 h-11 font-bold rounded-2xl" 
                         />
                     </div>
                     <div className="space-y-3 p-6 rounded-[2rem] border bg-background shadow-sm">
                         <Label className="text-xs font-black uppercase text-muted-foreground">Tempo Min. Originação (Dias)</Label>
                         <Input 
-                            type="number" 
-                            value={formData.valuesRules?.minOriginationDays ?? 0} 
-                            onChange={e => updateField('valuesRules', 'minOriginationDays', Number(e.target.value))} 
+                            type="text" 
+                            inputMode="numeric"
+                            value={formData.valuesRules?.minOriginationDays ?? ''} 
+                            onChange={e => {
+                                const val = e.target.value;
+                                if (val === '') {
+                                    updateField('valuesRules', 'minOriginationDays', undefined);
+                                } else {
+                                    const num = parseInt(val.replace(/\D/g, ""), 10);
+                                    updateField('valuesRules', 'minOriginationDays', isNaN(num) ? undefined : num);
+                                }
+                            }} 
                             className="bg-muted/10 border-border/50 h-11 font-bold rounded-2xl" 
                         />
                     </div>
@@ -580,33 +607,122 @@ export function RuleForm({ initialData, onClose, onSaved }: RuleFormProps) {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Valor Mínimo (R$)</Label>
-                                    <Input type="number" value={rule.minContractValue || 0} onChange={e => updateAgeRule(idx, 'minContractValue', Number(e.target.value))} className="h-11 rounded-2xl bg-muted/5 border-border/50 font-bold" />
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-3 text-[10px] font-black opacity-30">R$</span>
+                                        <Input 
+                                            value={formatCurrencyInput(rule.minContractValue)} 
+                                            onChange={e => {
+                                                const val = e.target.value;
+                                                const num = parseInt(val.replace(/\D/g, "")) / 100 || 0;
+                                                updateAgeRule(idx, 'minContractValue', num);
+                                            }}
+                                            className="h-11 pl-10 rounded-2xl bg-muted/5 border-border/50 font-bold" 
+                                        />
+                                    </div>
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Valor Máximo (R$)</Label>
-                                    <Input type="number" value={rule.maxContractValue || 0} onChange={e => updateAgeRule(idx, 'maxContractValue', Number(e.target.value))} className="h-11 rounded-2xl bg-muted/5 border-border/50 font-bold" />
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-3 text-[10px] font-black opacity-30">R$</span>
+                                        <Input 
+                                            value={formatCurrencyInput(rule.maxContractValue)} 
+                                            onChange={e => {
+                                                const val = e.target.value;
+                                                const num = parseInt(val.replace(/\D/g, "")) / 100 || 0;
+                                                updateAgeRule(idx, 'maxContractValue', num);
+                                            }}
+                                            className="h-11 pl-10 rounded-2xl bg-muted/5 border-border/50 font-bold" 
+                                        />
+                                    </div>
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 pt-2">
                                 <div className="space-y-2">
                                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Idade Mínima</Label>
-                                    <Input type="number" value={rule.minAge || 0} onChange={e => updateAgeRule(idx, 'minAge', Number(e.target.value))} className="h-11 rounded-2xl bg-muted/5 border-border/50" />
+                                    <Input 
+                                        type="text" inputMode="numeric"
+                                        value={rule.minAge ?? ''} 
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if (val === '') {
+                                                updateAgeRule(idx, 'minAge', undefined);
+                                            } else {
+                                                const num = parseInt(val.replace(/\D/g, ""), 10);
+                                                updateAgeRule(idx, 'minAge', isNaN(num) ? undefined : num);
+                                            }
+                                        }} 
+                                        className="h-11 rounded-2xl bg-muted/5 border-border/50 font-bold" 
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Idade Máxima</Label>
-                                    <Input type="number" value={rule.maxAge || 0} onChange={e => updateAgeRule(idx, 'maxAge', Number(e.target.value))} className="h-11 rounded-2xl bg-muted/5 border-border/50" />
+                                    <Input 
+                                        type="text" inputMode="numeric"
+                                        value={rule.maxAge ?? ''} 
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if (val === '') {
+                                                updateAgeRule(idx, 'maxAge', undefined);
+                                            } else {
+                                                const num = parseInt(val.replace(/\D/g, ""), 10);
+                                                updateAgeRule(idx, 'maxAge', isNaN(num) ? undefined : num);
+                                            }
+                                        }} 
+                                        className="h-11 rounded-2xl bg-muted/5 border-border/50 font-bold" 
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Máx. Fim Volante</Label>
-                                    <Input type="number" value={rule.maxAgeAtContractEnd || 0} onChange={e => updateAgeRule(idx, 'maxAgeAtContractEnd', Number(e.target.value))} className="h-11 rounded-2xl bg-muted/5 border-border/50" title="Idade máxima permitida no fim do contrato (Idade + Prazo)" />
+                                    <Input 
+                                        type="text" inputMode="numeric"
+                                        value={rule.maxAgeAtContractEnd ?? ''} 
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if (val === '') {
+                                                updateAgeRule(idx, 'maxAgeAtContractEnd', undefined);
+                                            } else {
+                                                const num = parseInt(val.replace(/\D/g, ""), 10);
+                                                updateAgeRule(idx, 'maxAgeAtContractEnd', isNaN(num) ? undefined : num);
+                                            }
+                                        }} 
+                                        className="h-11 rounded-2xl bg-muted/5 border-border/50 font-bold" 
+                                        title="Idade máxima permitida no fim do contrato (Idade + Prazo)" 
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Idade Final Fixa</Label>
-                                    <Input type="number" value={rule.contractMustEndByAge || 0} onChange={e => updateAgeRule(idx, 'contractMustEndByAge', Number(e.target.value))} className="h-11 rounded-2xl bg-muted/5 border-border/50" title="Idade absoluta em que o contrato TEM que terminar" />
+                                    <Input 
+                                        type="text" inputMode="numeric"
+                                        value={rule.contractMustEndByAge ?? ''} 
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if (val === '') {
+                                                updateAgeRule(idx, 'contractMustEndByAge', undefined);
+                                            } else {
+                                                const num = parseInt(val.replace(/\D/g, ""), 10);
+                                                updateAgeRule(idx, 'contractMustEndByAge', isNaN(num) ? undefined : num);
+                                            }
+                                        }} 
+                                        className="h-11 rounded-2xl bg-muted/5 border-border/50 font-bold" 
+                                        title="Idade absoluta em que o contrato TEM que terminar" 
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Prazo Máx. (m)</Label>
-                                    <Input type="number" value={rule.maxInstallments || 0} onChange={e => updateAgeRule(idx, 'maxInstallments', Number(e.target.value))} className="h-11 rounded-2xl bg-muted/5 border-border/50" />
+                                    <Input 
+                                        type="text" inputMode="numeric"
+                                        value={rule.maxInstallments ?? ''} 
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if (val === '') {
+                                                updateAgeRule(idx, 'maxInstallments', undefined);
+                                            } else {
+                                                const num = parseInt(val.replace(/\D/g, ""), 10);
+                                                updateAgeRule(idx, 'maxInstallments', isNaN(num) ? undefined : num);
+                                            }
+                                        }} 
+                                        className="h-11 rounded-2xl bg-muted/5 border-border/50 font-bold" 
+                                    />
                                 </div>
                             </div>
                             <div className="space-y-2">
@@ -651,15 +767,51 @@ export function RuleForm({ initialData, onClose, onSaved }: RuleFormProps) {
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-black uppercase text-muted-foreground">Teto Mínimo</Label>
-                                        <Input type="number" value={rule.minValue} onChange={e => updateCondition(index, 'minValue', Number(e.target.value))} className="bg-background" />
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-2.5 text-[10px] font-black opacity-30">R$</span>
+                                            <Input 
+                                                value={formatCurrencyInput(rule.minValue)} 
+                                                onChange={e => {
+                                                    const val = e.target.value;
+                                                    const num = parseInt(val.replace(/\D/g, "")) / 100 || 0;
+                                                    updateCondition(index, 'minValue', num);
+                                                }}
+                                                className="bg-background pl-8 h-10 rounded-xl font-bold" 
+                                            />
+                                        </div>
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-black uppercase text-muted-foreground">Teto Máximo</Label>
-                                        <Input type="number" value={rule.maxValue} onChange={e => updateCondition(index, 'maxValue', Number(e.target.value))} className="bg-background" />
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-2.5 text-[10px] font-black opacity-30">R$</span>
+                                            <Input 
+                                                value={formatCurrencyInput(rule.maxValue)} 
+                                                onChange={e => {
+                                                    const val = e.target.value;
+                                                    const num = parseInt(val.replace(/\D/g, "")) / 100 || 0;
+                                                    updateCondition(index, 'maxValue', num);
+                                                }}
+                                                className="bg-background pl-8 h-10 rounded-xl font-bold" 
+                                            />
+                                        </div>
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-black uppercase text-muted-foreground">Nº Parc. Condicional</Label>
-                                        <Input type="number" value={rule.minInstallments} onChange={e => updateCondition(index, 'minInstallments', Number(e.target.value))} className="bg-background" />
+                                        <Input 
+                                            type="text" 
+                                            inputMode="numeric"
+                                            value={rule.minInstallments ?? ''} 
+                                            onChange={e => {
+                                                const val = e.target.value;
+                                                if (val === '') {
+                                                    updateCondition(index, 'minInstallments', undefined);
+                                                } else {
+                                                    const num = parseInt(val.replace(/\D/g, ""), 10);
+                                                    updateCondition(index, 'minInstallments', isNaN(num) ? undefined : num);
+                                                }
+                                            }} 
+                                            className="bg-background h-10 rounded-xl font-bold" 
+                                        />
                                     </div>
                                 </div>
                             </div>
