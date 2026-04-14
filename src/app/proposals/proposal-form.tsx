@@ -297,6 +297,7 @@ export function ProposalForm({
   const watchObservations = watch('observations');
 
   const bankDomainsMap = userSettings?.bankDomains;
+  const approvingBodyDomainsMap = userSettings?.approvingBodyDomains;
 
   // 🛡️ OTIMIZAÇÃO: Memoização da lista de bancos para curar o gargalo massivo de renders
   const memoizedBankOptions = useMemo(() => {
@@ -309,6 +310,18 @@ export function ProposalForm({
           </SelectItem>
       ));
   }, [banks, bankDomainsMap, showLogosSettings]);
+
+  // 🛡️ OTIMIZAÇÃO: Memoização da lista de órgãos para manter o padrão visual
+  const memoizedApprovingBodyOptions = useMemo(() => {
+    return approvingBodies.map(body => (
+        <SelectItem key={body} value={body}>
+            <div className="flex items-center gap-2">
+                <BankIcon bankName={body} domain={approvingBodyDomainsMap?.[body]} showLogo={showLogosSettings} className="h-4 w-4" />
+                <span className="font-bold text-xs uppercase">{body}</span>
+            </div>
+        </SelectItem>
+    ));
+}, [approvingBodies, approvingBodyDomainsMap, showLogosSettings]);
 
   const selectedCustomer = useMemo(() => {
     return customers.find(c => c.id === selectedCustomerId);
@@ -677,8 +690,14 @@ export function ProposalForm({
                     <FormItem>
                         <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Órgão Aprovador</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
-                            <FormControl><SelectTrigger className="h-12 font-black rounded-xl border-2"><SelectValue /></SelectTrigger></FormControl>
-                            <SelectContent>{approvingBodies.map(body => <SelectItem key={body} value={body}>{body}</SelectItem>)}</SelectContent>
+                            <FormControl>
+                                <SelectTrigger className="h-12 font-black rounded-xl border-2">
+                                    <SelectValue placeholder="Selecione o órgão..." />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {memoizedApprovingBodyOptions}
+                            </SelectContent>
                         </Select>
                     </FormItem>
                   )}
