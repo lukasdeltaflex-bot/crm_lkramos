@@ -1,7 +1,7 @@
 # 📘 Guia do Usuário - CRM LK RAMOS
 
 Este guia é gerado automaticamente com base nas configurações atuais do sistema.
-**Última Atualização:** 10/04/2026, 17:04:18
+**Última Atualização:** 15/04/2026, 18:56:09
 
 ---
 
@@ -107,5 +107,13 @@ Atualmente operamos com as seguintes instituições:
 
 ---
 
+## 💻 Interface e Layout
+
+### Painel de Cadastro de Cliente
+- Modal de Cadastro ampliado (`max-w-5xl`) para proporcionar maior flexibilidade horizontal e conforto visual.
+- Os blocos de Benefícios (Órgão / Espécie) possuem layout fluído, facilitando o manuseio de nomenclaturas longas (ex: opções extensas do INSS).
+
+---
+
 > [!TIP]
-> Para alterar qualquer uma dessas informações, acesse o menu **Configurações > Parâmetros** no CRM.
+> Para alterar qualquer uma dessas informações (Instituições, Tag, etc), acesse o menu **Configurações > Parâmetros** no CRM.

@@ -723,7 +723,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent 
-            className="max-w-4xl w-[95vw] h-[90vh] flex flex-col p-0 overflow-hidden rounded-[2rem] border-none shadow-2xl" 
+            className="max-w-5xl w-[95vw] h-[90vh] flex flex-col p-0 overflow-hidden rounded-[2rem] border-none shadow-2xl" 
             onPointerDownOutside={(e) => e.preventDefault()} 
             onInteractOutside={(e) => e.preventDefault()}
         >

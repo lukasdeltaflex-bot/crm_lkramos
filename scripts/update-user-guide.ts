@@ -74,8 +74,16 @@ ${banks.length > 15 ? `*... e mais ${banks.length - 15} instituições.*` : ''}
 
 ---
 
+## 💻 Interface e Layout
+
+### Painel de Cadastro de Cliente
+- Modal de Cadastro ampliado (\`max-w-5xl\`) para proporcionar maior flexibilidade horizontal e conforto visual.
+- Os blocos de Benefícios (Órgão / Espécie) possuem layout fluído, facilitando o manuseio de nomenclaturas longas (ex: opções extensas do INSS).
+
+---
+
 > [!TIP]
-> Para alterar qualquer uma dessas informações, acesse o menu **Configurações > Parâmetros** no CRM.
+> Para alterar qualquer uma dessas informações (Instituições, Tag, etc), acesse o menu **Configurações > Parâmetros** no CRM.
 `;
 
   if (!fs.existsSync(DOCS_DIR)) {
