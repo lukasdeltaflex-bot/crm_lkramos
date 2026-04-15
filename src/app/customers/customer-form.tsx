@@ -152,6 +152,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
   const showLogos = userSettings?.showBankLogos ?? true;
 
   const [customINSSSpecies, setCustomINSSSpecies] = useState<string[]>([]);
+  const [manualSpeciesIndexes, setManualSpeciesIndexes] = useState<number[]>([]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -734,30 +735,74 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                                                 render={({ field }) => {
                                                     const currentOrgan = form.watch(`benefits.${index}.organ`);
                                                     const isINSS = currentOrgan?.toUpperCase() === 'INSS';
+                                                    const isManual = manualSpeciesIndexes.includes(index);
+                                                    const currentValue = field.value || undefined;
+                                                    const isValueInLists = currentValue && (defaultINSSSpecies.includes(currentValue) || customINSSSpecies.includes(currentValue));
+
+                                                    if (!isINSS || isManual) {
+                                                        return (
+                                                            <FormControl>
+                                                                <div className="relative flex items-center w-full">
+                                                                    <Input 
+                                                                        placeholder={isINSS ? "Digite a espécie..." : "Aposentadoria..."}
+                                                                        {...field} 
+                                                                        value={field.value ?? ''} 
+                                                                        onBlur={(e) => {
+                                                                            field.onBlur();
+                                                                            if (isINSS && e.target.value) handleSaveCustomSpecies(e.target.value);
+                                                                        }}
+                                                                        autoComplete="off"
+                                                                        className="h-9 border-none bg-transparent shadow-none p-0 focus:ring-0 font-bold text-sm w-full pr-8" 
+                                                                    />
+                                                                    {isINSS && (
+                                                                        <Button 
+                                                                            type="button" 
+                                                                            variant="ghost" 
+                                                                            size="icon" 
+                                                                            className="absolute right-0 h-6 w-6 text-muted-foreground hover:bg-muted"
+                                                                            onClick={() => {
+                                                                                setManualSpeciesIndexes(prev => prev.filter(i => i !== index));
+                                                                            }}
+                                                                            title="Voltar para lista"
+                                                                        >
+                                                                            <X className="h-3.5 w-3.5" />
+                                                                        </Button>
+                                                                    )}
+                                                                </div>
+                                                            </FormControl>
+                                                        )
+                                                    }
+
                                                     return (
-                                                    <FormControl>
-                                                        <div className="relative w-full">
-                                                            <Input 
-                                                                placeholder="Aposentadoria Idade" 
-                                                                {...field} 
-                                                                value={field.value ?? ''} 
-                                                                list={isINSS ? `inss-species-list-${index}` : undefined}
-                                                                onBlur={(e) => {
-                                                                    field.onBlur();
-                                                                    if (isINSS && e.target.value) handleSaveCustomSpecies(e.target.value);
-                                                                }}
-                                                                autoComplete="off"
-                                                                className="h-9 border-none bg-transparent shadow-none p-0 focus:ring-0 font-bold text-sm w-full" 
-                                                            />
-                                                            {isINSS && (
-                                                                <datalist id={`inss-species-list-${index}`}>
-                                                                    {defaultINSSSpecies.map(s => <option key={s} value={s} />)}
-                                                                    {customINSSSpecies.map(s => <option key={s} value={s} />)}
-                                                                </datalist>
-                                                            )}
-                                                        </div>
-                                                    </FormControl>
-                                                )}}
+                                                        <Select 
+                                                            onValueChange={(val) => {
+                                                                if (val === 'NOVA_ESPECIE') {
+                                                                    setManualSpeciesIndexes(prev => [...prev, index]);
+                                                                    field.onChange('');
+                                                                } else {
+                                                                    field.onChange(val);
+                                                                }
+                                                            }} 
+                                                            value={currentValue}
+                                                        >
+                                                            <FormControl>
+                                                                <SelectTrigger className="h-9 border-none bg-transparent shadow-none p-0 focus:ring-0 font-bold text-sm overflow-hidden w-full">
+                                                                    <SelectValue placeholder="Selecione" />
+                                                                </SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent>
+                                                                {defaultINSSSpecies.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                                                {customINSSSpecies.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                                                {currentValue && !isValueInLists && currentValue !== 'NOVA_ESPECIE' && (
+                                                                    <SelectItem key="current_val" value={currentValue}>{currentValue}</SelectItem>
+                                                                )}
+                                                                <SelectItem value="NOVA_ESPECIE" className="text-[#00AEEF] font-black border-t border-border/50 mt-1 pt-2">
+                                                                    + Cadastrar manualmente
+                                                                </SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    )
+                                                }}
                                             />
                                         </div>
                                         <div className="flex-1 flex flex-col justify-center px-5 py-3 md:py-0 w-full">
