@@ -66,8 +66,18 @@ import { BankIcon } from '@/components/bank-icon';
 import { Label } from '@/components/ui/label';
 import * as configData from '@/lib/config-data';
 
+const defaultINSSSpecies = [
+    "21 – Pensão por morte",
+    "42 – Aposentadoria por tempo de contribuição",
+    "31 – Auxílio doença",
+    "32 – Aposentadoria por invalidez",
+    "46 – Aposentadoria especial",
+    "88 – LOAS"
+];
+
 const benefitSchema = z.object({
     number: z.string().min(1, "O N° do benefício é obrigatório."),
+    organ: z.string().optional(),
     species: z.string().nullable().optional(),
     salary: z.coerce.number().min(0, "Valor inválido.").optional(),
     rmcBank: z.string().optional(),
@@ -138,11 +148,30 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
 
   const banks = userSettings?.banks || configData.banks;
   const availableTags = userSettings?.customerTags || configData.defaultCustomerTags;
+  const approvingBodies = userSettings?.approvingBodies || configData.approvingBodies;
   const showLogos = userSettings?.showBankLogos ?? true;
+
+  const [customINSSSpecies, setCustomINSSSpecies] = useState<string[]>([]);
 
   useEffect(() => {
     setIsMounted(true);
+    try {
+        const saved = localStorage.getItem('crm_custom_inss_species');
+        if (saved) setCustomINSSSpecies(JSON.parse(saved));
+    } catch (e) {}
   }, []);
+
+  const handleSaveCustomSpecies = useCallback((species: string) => {
+    if (!species) return;
+    const isDefault = defaultINSSSpecies.includes(species);
+    if (!isDefault && !customINSSSpecies.includes(species)) {
+        const updated = [...customINSSSpecies, species];
+        setCustomINSSSpecies(updated);
+        try {
+            localStorage.setItem('crm_custom_inss_species', JSON.stringify(updated));
+        } catch (e) {}
+    }
+  }, [customINSSSpecies]);
 
   const initialValues = useMemo(() => {
     const source = customer || defaultValues;
@@ -651,7 +680,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                     <h3 className="text-xl font-bold uppercase tracking-tight text-[#00AEEF]">
                         Benefícios e Reservas de Cartão
                     </h3>
-                    <Button type="button" variant="outline" size="sm" onClick={() => appendBenefit({ number: '', species: '', salary: 0, rmcBank: '', rccBank: '' })} className="rounded-full h-9 px-5 border-[#00AEEF]/30 hover:bg-[#00AEEF]/5 text-[#00AEEF] font-bold">
+                    <Button type="button" variant="outline" size="sm" onClick={() => appendBenefit({ number: '', organ: '', species: '', salary: 0, rmcBank: '', rccBank: '' })} className="rounded-full h-9 px-5 border-[#00AEEF]/30 hover:bg-[#00AEEF]/5 text-[#00AEEF] font-bold">
                         <PlusCircle className="h-4 w-4 mr-2" /> Adicionar N° Benefício
                     </Button>
                 </div>
@@ -672,13 +701,63 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                                             />
                                         </div>
                                         <div className="flex-1 flex flex-col justify-center px-5 border-b md:border-b-0 md:border-r border-border/30 py-3 md:py-0 w-full">
+                                            <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-1.5">Órgão</span>
+                                            <FormField
+                                                control={form.control}
+                                                name={`benefits.${index}.organ`}
+                                                render={({ field }) => (
+                                                    <Select onValueChange={field.onChange} value={field.value ?? ''}>
+                                                        <FormControl>
+                                                            <SelectTrigger className="h-9 border-none bg-transparent shadow-none p-0 focus:ring-0 font-bold text-sm overflow-hidden">
+                                                                <SelectValue placeholder="Selecione" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {approvingBodies.map(b => (
+                                                                <SelectItem key={b} value={b}>
+                                                                    <div className="flex items-center gap-2.5 w-full overflow-hidden">
+                                                                        <BankIcon bankName={b} domain={userSettings?.approvingBodyDomains?.[b]} showLogo={showLogos} className="h-4 w-4 shrink-0" />
+                                                                        <span className="text-xs uppercase font-bold truncate">{b}</span>
+                                                                    </div>
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                )}
+                                            />
+                                        </div>
+                                        <div className="flex-1 flex flex-col justify-center px-5 border-b md:border-b-0 md:border-r border-border/30 py-3 md:py-0 w-full">
                                             <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1.5">Espécie / Tipo</span>
                                             <FormField
                                                 control={form.control}
                                                 name={`benefits.${index}.species`}
-                                                render={({ field }) => (
-                                                    <FormControl><Input placeholder="Aposentadoria Idade" {...field} value={field.value ?? ''} className="h-9 border-none bg-transparent shadow-none p-0 focus:ring-0 font-bold text-sm" /></FormControl>
-                                                )}
+                                                render={({ field }) => {
+                                                    const currentOrgan = form.watch(`benefits.${index}.organ`);
+                                                    const isINSS = currentOrgan?.toUpperCase() === 'INSS';
+                                                    return (
+                                                    <FormControl>
+                                                        <div className="relative w-full">
+                                                            <Input 
+                                                                placeholder="Aposentadoria Idade" 
+                                                                {...field} 
+                                                                value={field.value ?? ''} 
+                                                                list={isINSS ? `inss-species-list-${index}` : undefined}
+                                                                onBlur={(e) => {
+                                                                    field.onBlur();
+                                                                    if (isINSS && e.target.value) handleSaveCustomSpecies(e.target.value);
+                                                                }}
+                                                                autoComplete="off"
+                                                                className="h-9 border-none bg-transparent shadow-none p-0 focus:ring-0 font-bold text-sm w-full" 
+                                                            />
+                                                            {isINSS && (
+                                                                <datalist id={`inss-species-list-${index}`}>
+                                                                    {defaultINSSSpecies.map(s => <option key={s} value={s} />)}
+                                                                    {customINSSSpecies.map(s => <option key={s} value={s} />)}
+                                                                </datalist>
+                                                            )}
+                                                        </div>
+                                                    </FormControl>
+                                                )}}
                                             />
                                         </div>
                                         <div className="flex-1 flex flex-col justify-center px-5 py-3 md:py-0 w-full">

@@ -276,9 +276,17 @@ const CustomerInfoCard = ({ customer, proposals, onExportDossier, onToggleStatus
                                             </div>
                                         </div>
                                     </div>
-                                    {benefit.species && (
-                                        <div className="pl-4 border-l-4 border-emerald-500/20 py-1">
-                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{benefit.species}</p>
+                                    {(benefit.organ || benefit.species) && (
+                                        <div className="flex items-center gap-4 pl-4 border-l-4 border-emerald-500/20 py-1">
+                                            {benefit.organ && (
+                                                <div className="flex items-center gap-2 px-3 py-1 bg-muted/50 rounded-full border border-border/40">
+                                                    <BankIcon bankName={benefit.organ} domain={userSettings?.approvingBodyDomains?.[benefit.organ]} showLogo={showLogos} className="h-4 w-4 shrink-0" />
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-foreground">{benefit.organ}</span>
+                                                </div>
+                                            )}
+                                            {benefit.species && (
+                                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{benefit.species}</p>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -453,10 +461,10 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(0); doc.text("BENEFÍCIOS E RESERVAS DE CARTÃO", 14, getFinalY() + 15);
         autoTable(doc, { 
             startY: getFinalY() + 18, 
-            head: [['Número', 'Espécie', 'Salário', 'Cartão RMC', 'Cartão RCC']], 
+            head: [['Número', 'Órgão/Espécie', 'Salário', 'Cartão RMC', 'Cartão RCC']], 
             body: customer.benefits.map(b => [
                 b.number, 
-                b.species || '-',
+                b.organ ? `${b.organ}${b.species ? ` - ${b.species}` : ''}` : (b.species || '-'),
                 b.salary > 0 ? formatCurrency(b.salary) : '-',
                 cleanBankName(b.rmcBank) || '-',
                 cleanBankName(b.rccBank) || '-'
