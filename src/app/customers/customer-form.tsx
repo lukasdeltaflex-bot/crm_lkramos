@@ -691,7 +691,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                             <div className="flex justify-between items-start">
                                 <div className="w-full space-y-6">
                                     <div className="flex flex-col md:flex-row items-center gap-3 bg-background/60 border border-border/50 rounded-2xl p-1.5 shadow-sm h-auto md:h-20 w-full">
-                                        <div className="flex-1 flex flex-col justify-center px-5 border-b md:border-b-0 md:border-r border-border/30 py-3 md:py-0 w-full">
+                                        <div className="w-full md:flex-[0.8] flex flex-col justify-center px-4 border-b md:border-b-0 md:border-r border-border/30 py-3 md:py-0">
                                             <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1.5">N° do Benefício</span>
                                             <FormField
                                                 control={form.control}
@@ -701,7 +701,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                                                 )}
                                             />
                                         </div>
-                                        <div className="flex-1 flex flex-col justify-center px-5 border-b md:border-b-0 md:border-r border-border/30 py-3 md:py-0 w-full">
+                                        <div className="w-full md:flex-[1.1] flex flex-col justify-center px-4 border-b md:border-b-0 md:border-r border-border/30 py-3 md:py-0">
                                             <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-1.5">Órgão</span>
                                             <FormField
                                                 control={form.control}
@@ -727,7 +727,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                                                 )}
                                             />
                                         </div>
-                                        <div className="flex-1 flex flex-col justify-center px-5 border-b md:border-b-0 md:border-r border-border/30 py-3 md:py-0 w-full">
+                                        <div className="w-full md:flex-[1.5] flex flex-col justify-center px-4 border-b md:border-b-0 md:border-r border-border/30 py-3 md:py-0">
                                             <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1.5">Espécie / Tipo</span>
                                             <FormField
                                                 control={form.control}
@@ -805,7 +805,7 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
                                                 }}
                                             />
                                         </div>
-                                        <div className="flex-1 flex flex-col justify-center px-5 py-3 md:py-0 w-full">
+                                        <div className="w-full md:flex-[0.8] flex flex-col justify-center px-4 py-3 md:py-0">
                                             <span className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1.5">Valor Salário (R$)</span>
                                             <FormField
                                                 control={form.control}
