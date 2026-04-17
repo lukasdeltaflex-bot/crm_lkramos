@@ -535,7 +535,7 @@ export default function DashboardPage() {
       <Dialog open={!!dialogData} onOpenChange={(isOpen) => !isOpen && setDialogData(null)}>
             <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
                 <DialogHeader><DialogTitle>{dialogData?.title}</DialogTitle></DialogHeader>
-                <div className="flex-1 overflow-y-auto"><ProposalsStatusTable proposals={dialogData?.proposals || []} customers={customers || []} /></div>
+                <div className="flex-1 overflow-y-auto"><ProposalsStatusTable proposals={dialogData?.proposals || []} customers={customers || []} amountType={dialogData?.title?.includes('Total Digitado') ? 'commissionValue' : 'grossAmount'} /></div>
             </DialogContent>
       </Dialog>
     </AppLayout>

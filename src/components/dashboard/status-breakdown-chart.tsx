@@ -8,9 +8,10 @@ import { useMemo } from 'react';
 
 interface StatusBreakdownChartProps {
     proposals: Proposal[];
+    amountType?: 'grossAmount' | 'commissionValue';
 }
 
-export function StatusBreakdownChart({ proposals }: StatusBreakdownChartProps) {
+export function StatusBreakdownChart({ proposals, amountType = 'grossAmount' }: StatusBreakdownChartProps) {
     const data = useMemo(() => {
         const productBreakdown: { [key: string]: number } = {};
 
@@ -18,7 +19,7 @@ export function StatusBreakdownChart({ proposals }: StatusBreakdownChartProps) {
             if (!productBreakdown[p.product]) {
                 productBreakdown[p.product] = 0;
             }
-            productBreakdown[p.product] += p.grossAmount;
+            productBreakdown[p.product] += Number(p[amountType] || 0);
         });
 
         return Object.keys(productBreakdown).map(product => ({

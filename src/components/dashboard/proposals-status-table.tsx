@@ -129,7 +129,7 @@ function DataTable<TData, TValue>({
 
 type ProposalWithCustomer = Proposal & { customer: { name: string } | undefined };
 
-export function ProposalsStatusTable({ proposals = [], customers = [] }: { proposals?: Proposal[], customers?: Customer[] }) {
+export function ProposalsStatusTable({ proposals = [], customers = [], amountType = 'grossAmount' }: { proposals?: Proposal[], customers?: Customer[], amountType?: 'grossAmount' | 'commissionValue' }) {
     
     const data: ProposalWithCustomer[] = React.useMemo(() => {
         const safeProposals = Array.isArray(proposals) ? proposals : [];
@@ -155,7 +155,7 @@ export function ProposalsStatusTable({ proposals = [], customers = [] }: { propo
 
   return (
     <div className="space-y-4">
-        <StatusBreakdownChart proposals={Array.isArray(proposals) ? proposals : []} />
+        <StatusBreakdownChart proposals={Array.isArray(proposals) ? proposals : []} amountType={amountType} />
         <DataTable columns={statusColumns} data={data} />
     </div>
     );
