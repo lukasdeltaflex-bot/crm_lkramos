@@ -43,8 +43,8 @@ export function ProductBreakdownChart({ proposals }: ProductBreakdownChartProps)
   const chartData = React.useMemo(() => {
     const data: Record<string, number> = {}
     proposals.forEach((p) => {
-      // Usamos sempre a base de comissão ou valor bruto para o mix de produtos
-      const amount = p.grossAmount || 0;
+      // Usamos a base de comissão conforme regra de negócio
+      const amount = p.commissionValue || 0;
       data[p.product] = (data[p.product] || 0) + amount
     })
 
@@ -59,7 +59,7 @@ export function ProductBreakdownChart({ proposals }: ProductBreakdownChartProps)
 
   const totalVolume = React.useMemo(() => {
     // Sincroniza com o Total Digitado passado via props (Mês Vigente)
-    return proposals.reduce((acc, curr) => acc + (curr.grossAmount || 0), 0);
+    return proposals.reduce((acc, curr) => acc + (curr.commissionValue || 0), 0);
   }, [proposals])
 
   if (proposals.length === 0) return (

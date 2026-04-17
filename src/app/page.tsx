@@ -212,6 +212,8 @@ export default function DashboardPage() {
 
     const digitizedInPeriod: Proposal[] = [];
     const digitizedInPrevPeriod: Proposal[] = [];
+    const allDigitizedInPeriod: Proposal[] = [];
+    const allDigitizedInPrevPeriod: Proposal[] = [];
     const paidInPeriod: Proposal[] = [];
     
     const statusLists: Record<string, Proposal[]> = {};
@@ -232,6 +234,9 @@ export default function DashboardPage() {
         const behavior = getStatusBehavior(p.status, activeConfigs);
 
         if (d && isValid(d)) {
+            if (d >= fromDate && d <= effectiveToDate) allDigitizedInPeriod.push(p);
+            if (d >= prevMonthStart && d <= prevMonthEnd) allDigitizedInPrevPeriod.push(p);
+
             // Conta como "Digitado" tudo que não foi explicitamente cancelado/reprovado
             if (behavior !== 'rejection' && behavior !== 'canceled') {
                 if (d >= fromDate && d <= effectiveToDate) digitizedInPeriod.push(p);
@@ -257,10 +262,16 @@ export default function DashboardPage() {
     });
 
     const getSum = (list: Proposal[]) => list.reduce((sum, p) => sum + safeVal(p.grossAmount), 0);
+    const getCommissionSum = (list: Proposal[]) => list.reduce((sum, p) => sum + safeVal(p.commissionValue), 0);
     
     const getTopOperator = (list: Proposal[]) => {
         const ops: Record<string, number> = {};
         list.forEach(p => { if (p.operator) ops[p.operator] = (ops[p.operator] || 0) + safeVal(p.grossAmount); });
+        return Object.entries(ops).sort((a,b) => b[1] - a[1])[0]?.[0] || '---';
+    };
+    const getTopOperatorCommission = (list: Proposal[]) => {
+        const ops: Record<string, number> = {};
+        list.forEach(p => { if (p.operator) ops[p.operator] = (ops[p.operator] || 0) + safeVal(p.commissionValue); });
         return Object.entries(ops).sort((a,b) => b[1] - a[1])[0]?.[0] || '---';
     };
 
@@ -270,7 +281,7 @@ export default function DashboardPage() {
         const de = endOfDay(day);
         return proposals.reduce((sum, p) => {
             const d = p.dateDigitized ? new Date(p.dateDigitized) : null;
-            return (d && d >= ds && d <= de) ? sum + safeVal(p.grossAmount) : sum;
+            return (d && d >= ds && d <= de) ? sum + safeVal(p.commissionValue) : sum;
         }, 0);
     });
 
@@ -293,8 +304,8 @@ export default function DashboardPage() {
         };
     });
 
-    const totalDigitizedCurrent = getSum(digitizedInPeriod);
-    const totalDigitizedPrev = getSum(digitizedInPrevPeriod);
+    const totalDigitizedCurrent = getCommissionSum(allDigitizedInPeriod);
+    const totalDigitizedPrev = getCommissionSum(allDigitizedInPrevPeriod);
     const digitizedTrendPercentage = totalDigitizedPrev > 0 ? ((totalDigitizedCurrent - totalDigitizedPrev) / totalDigitizedPrev) * 100 : 0;
 
     const criticalPortabilityCount = proposals.filter(p => p.product === 'Portabilidade' && p.status === 'Aguardando Saldo' && p.dateDigitized && calculateBusinessDays(p.dateDigitized) >= 5).length;
@@ -303,10 +314,11 @@ export default function DashboardPage() {
         totalDigitado: totalDigitizedCurrent, 
         digitizedTrendPercentage, 
         productionTrend, 
-        topTotal: getTopOperator(digitizedInPeriod), 
+        topTotal: getTopOperatorCommission(allDigitizedInPeriod), 
         statusAnalysis, 
         criticalPortabilityCount, 
         proposals: { digitadoNoMes: digitizedInPeriod, pagoNoMes: paidInPeriod },
+        allDigitizedInPeriod,
         hotStatus: Object.entries(statusAnalysis).filter(([n]) => n !== 'Reprovado').sort((a: any, b: any) => b[1].total - a[1].total)[0]?.[0],
         activeConfigs
     };
@@ -429,7 +441,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            <div className="cursor-pointer" onClick={() => setDialogData({ title: 'Total Digitado (Mês Vigente)', proposals: stats.proposals.digitadoNoMes })}>
+            <div className="cursor-pointer" onClick={() => setDialogData({ title: 'Total Digitado (Mês Vigente)', proposals: stats.allDigitizedInPeriod })}>
                 <StatsCard title="TOTAL DIGITADO" value={isPrivacyMode ? '•••••' : formatCurrency(stats.totalDigitado)} icon={FileText} description="PRODUÇÃO MENSAL" topContributor={stats.topTotal} percentage={stats.digitizedTrendPercentage} sparklineData={stats.productionTrend}/>
             </div>
             {stats.activeConfigs.filter(conf => conf.showOnDashboard && conf.isActive).map(conf => (
@@ -453,7 +465,7 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2"><CommissionChart proposals={proposals || []} /></div>
-            <div className="lg:col-span-1"><ProductBreakdownChart proposals={stats.proposals.digitadoNoMes} /></div>
+            <div className="lg:col-span-1"><ProductBreakdownChart proposals={stats.allDigitizedInPeriod} /></div>
         </div>
 
         <div className="w-full"><PartnerPerformanceCharts proposals={stats.proposals.digitadoNoMes} /></div>
