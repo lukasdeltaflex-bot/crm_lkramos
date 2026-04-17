@@ -269,11 +269,6 @@ export default function DashboardPage() {
         list.forEach(p => { if (p.operator) ops[p.operator] = (ops[p.operator] || 0) + safeVal(p.grossAmount); });
         return Object.entries(ops).sort((a,b) => b[1] - a[1])[0]?.[0] || '---';
     };
-    const getTopOperatorCommission = (list: Proposal[]) => {
-        const ops: Record<string, number> = {};
-        list.forEach(p => { if (p.operator) ops[p.operator] = (ops[p.operator] || 0) + safeVal(p.commissionValue); });
-        return Object.entries(ops).sort((a,b) => b[1] - a[1])[0]?.[0] || '---';
-    };
 
     const last7Days = eachDayOfInterval({ start: subDays(today, 6), end: today });
     const productionTrend = last7Days.map(day => {
@@ -281,7 +276,7 @@ export default function DashboardPage() {
         const de = endOfDay(day);
         return proposals.reduce((sum, p) => {
             const d = p.dateDigitized ? new Date(p.dateDigitized) : null;
-            return (d && d >= ds && d <= de) ? sum + safeVal(p.commissionValue) : sum;
+            return (d && d >= ds && d <= de) ? sum + safeVal(p.grossAmount) : sum;
         }, 0);
     });
 
@@ -304,8 +299,8 @@ export default function DashboardPage() {
         };
     });
 
-    const totalDigitizedCurrent = getCommissionSum(allDigitizedInPeriod);
-    const totalDigitizedPrev = getCommissionSum(allDigitizedInPrevPeriod);
+    const totalDigitizedCurrent = getSum(allDigitizedInPeriod);
+    const totalDigitizedPrev = getSum(allDigitizedInPrevPeriod);
     const digitizedTrendPercentage = totalDigitizedPrev > 0 ? ((totalDigitizedCurrent - totalDigitizedPrev) / totalDigitizedPrev) * 100 : 0;
 
     const criticalPortabilityCount = proposals.filter(p => p.product === 'Portabilidade' && p.status === 'Aguardando Saldo' && p.dateDigitized && calculateBusinessDays(p.dateDigitized) >= 5).length;
@@ -314,7 +309,7 @@ export default function DashboardPage() {
         totalDigitado: totalDigitizedCurrent, 
         digitizedTrendPercentage, 
         productionTrend, 
-        topTotal: getTopOperatorCommission(allDigitizedInPeriod), 
+        topTotal: getTopOperator(allDigitizedInPeriod), 
         statusAnalysis, 
         criticalPortabilityCount, 
         proposals: { digitadoNoMes: digitizedInPeriod, pagoNoMes: paidInPeriod },
@@ -535,7 +530,7 @@ export default function DashboardPage() {
       <Dialog open={!!dialogData} onOpenChange={(isOpen) => !isOpen && setDialogData(null)}>
             <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
                 <DialogHeader><DialogTitle>{dialogData?.title}</DialogTitle></DialogHeader>
-                <div className="flex-1 overflow-y-auto"><ProposalsStatusTable proposals={dialogData?.proposals || []} customers={customers || []} amountType={dialogData?.title?.includes('Total Digitado') ? 'commissionValue' : 'grossAmount'} /></div>
+                <div className="flex-1 overflow-y-auto"><ProposalsStatusTable proposals={dialogData?.proposals || []} customers={customers || []} /></div>
             </DialogContent>
       </Dialog>
     </AppLayout>
