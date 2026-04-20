@@ -15,9 +15,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Save, Landmark, Link as LinkIcon, Lock, User, Eye, EyeOff, ShieldCheck } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { encryptPassword, decryptPassword } from '@/lib/crypto-utils';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useDoc } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { BankIcon } from '@/components/bank-icon';
+import { cleanBankName } from '@/lib/utils';
+import * as configData from '@/lib/config-data';
 
 const bankSchema = z.object({
   bankName: z.string().min(2, 'Nome do banco é obrigatório.'),
@@ -37,8 +42,35 @@ interface BankFormProps {
 
 export function BankForm({ initialData, onSubmit, isSaving = false }: BankFormProps) {
   const { user } = useUser();
+  const firestore = useFirestore();
   const [showPassword, setShowPassword] = useState(false);
   const [isDecrypting, setIsDecrypting] = useState(false);
+  const [showCustomBankInput, setShowCustomBankInput] = useState(false);
+
+  const settingsDocRef = useMemo(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'userSettings', user.uid);
+  }, [firestore, user]);
+
+  const { data: userSettings } = useDoc<any>(settingsDocRef as any);
+  const banks = userSettings?.banks || configData.banks;
+  const bankDomainsMap = userSettings?.bankDomains;
+  const showLogosSettings = userSettings?.showBankLogos ?? true;
+
+  const memoizedBankOptions = useMemo(() => {
+      const currentList = new Set(banks);
+      if (initialData?.bankName && !currentList.has(initialData.bankName)) {
+          currentList.add(initialData.bankName);
+      }
+      return Array.from(currentList).map(b => (
+          <SelectItem key={b as string} value={b as string}>
+              <div className="flex items-center gap-2">
+                  <BankIcon bankName={b as string} domain={bankDomainsMap?.[b as string]} showLogo={showLogosSettings} className="h-4 w-4" />
+                  <span className="font-bold text-xs uppercase">{cleanBankName(b as string)}</span>
+              </div>
+          </SelectItem>
+      ));
+  }, [banks, bankDomainsMap, showLogosSettings, initialData?.bankName]);
 
   const form = useForm<BankFormValues>({
     resolver: zodResolver(bankSchema),
@@ -92,7 +124,38 @@ export function BankForm({ initialData, onSubmit, isSaving = false }: BankFormPr
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel className="flex items-center gap-2"><Landmark className="h-3.5 w-3.5" /> Nome do Banco</FormLabel>
-                    <FormControl><Input placeholder="Ex: Banco Itaú" {...field} /></FormControl>
+                    {showCustomBankInput || (initialData?.bankName && !banks.includes(initialData.bankName) && !showCustomBankInput && field.value === initialData.bankName && false) ? (
+                        <div className="space-y-2">
+                          <FormControl><Input placeholder="Ex: Banco Itaú" {...field} /></FormControl>
+                          <Button type="button" variant="link" className="h-auto p-0 text-[10px] uppercase text-muted-foreground" onClick={() => {
+                            setShowCustomBankInput(false);
+                            field.onChange('');
+                          }}>
+                            Voltar para lista padrão
+                          </Button>
+                        </div>
+                    ) : (
+                        <Select onValueChange={(val) => {
+                            if (val === 'custom') {
+                                setShowCustomBankInput(true);
+                                field.onChange('');
+                            } else {
+                                field.onChange(val);
+                            }
+                        }} value={field.value || undefined}>
+                            <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Selecione o banco..." />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {memoizedBankOptions}
+                                <SelectItem value="custom" className="font-bold text-primary">
+                                    + Digitar manualmente
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    )}
                     <FormMessage />
                     </FormItem>
                 )}
