@@ -215,6 +215,33 @@ export function NotificationBell() {
               link: `/customers/${c.id}`
           });
       }
+
+      // NOVO: Saque Complementar > 30 dias
+      const saques = proposals?.filter(p => {
+          if (p.deleted === true || p.customerId !== c.id) return false;
+          if (p.product !== 'Saque Complementar') return false;
+          const behavior = getStatusBehavior(p.status, activeConfigs);
+          if (behavior !== 'success') return false;
+          if (!p.datePaidToClient) return false;
+          return true;
+      });
+
+      if (saques && saques.length > 0) {
+          const latestSaque = [...saques].sort((a,b) => (b.datePaidToClient || '').localeCompare(a.datePaidToClient || ''))[0];
+          const paidDate = parseDateSafe(latestSaque.datePaidToClient);
+          if (paidDate) {
+              const days = differenceInDays(now, paidDate);
+              if (days >= 30) {
+                  alerts.push({
+                      id: `radar-saque-${c.id}`,
+                      title: `Revisar Saque: ${c.name}`,
+                      type: 'radar',
+                      date: `${days} dias`,
+                      link: `/customers/${c.id}`
+                  });
+              }
+          }
+      }
     });
 
     // 5. RETORNOS AGENDADOS (Follow-ups Manuais)
@@ -441,6 +468,8 @@ export function NotificationBell() {
                                         {n.type === 'partial' && <Coins className="h-5 w-5 text-blue-500" />}
                                         {n.type === 'news' && <Newspaper className="h-5 w-5 text-emerald-500" />}
                                         {n.type === 'expense' && <Receipt className="h-5 w-5 text-red-500" />}
+                                        {n.type === 'radar' && <Zap className="h-5 w-5 text-orange-500" />}
+                                        {n.type === 'age' && <AlertTriangle className="h-5 w-5 text-orange-500" />}
                                     </div>
                                     <div className="flex flex-col gap-1 min-w-0 flex-1">
                                         <p className="text-sm font-bold leading-tight break-words whitespace-normal text-foreground">{n.title}</p>

@@ -7,7 +7,7 @@ import { Zap, ChevronRight, User, TrendingUp } from 'lucide-react';
 import { useUser, useFirestore, useDoc } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { Customer, Proposal, UserSettings } from '@/lib/types';
-import { differenceInMonths } from 'date-fns';
+import { differenceInMonths, differenceInDays } from 'date-fns';
 import Link from 'next/link';
 import { formatCurrency, getAge, parseDateSafe, normalizeStatuses, getStatusBehavior } from '@/lib/utils';
 import { Badge } from '../ui/badge';
@@ -77,6 +77,56 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
     return opportunities;
   }, [proposals, customers, hasMounted]);
 
+  const saqueComplementarOpportunities = useMemo(() => {
+    if (!hasMounted || !proposals || !customers) return [];
+    
+    const now = new Date();
+    
+    const opportunities = customers
+      .filter(c => c.status === 'active')
+      .map(customer => {
+        const saques = proposals.filter(p => {
+          if (p.customerId !== customer.id) return false;
+          if (p.product !== 'Saque Complementar') return false;
+          
+          const behavior = getStatusBehavior(p.status, activeConfigs);
+          if (behavior !== 'success') return false;
+          if (!p.datePaidToClient) return false;
+          return true;
+        });
+
+        if (saques.length === 0) return null;
+
+        const latestSaque = [...saques].sort((a,b) => (b.datePaidToClient || '').localeCompare(a.datePaidToClient || ''))[0];
+        
+        const paidDate = parseDateSafe(latestSaque.datePaidToClient);
+        if (!paidDate) return null;
+        
+        const days = differenceInDays(now, paidDate);
+        if (days >= 30) {
+            return {
+                customer,
+                days,
+                lastProposal: latestSaque,
+                isSaqueComplementar: true
+            };
+        }
+        return null;
+      })
+      .filter((opt): opt is NonNullable<typeof opt> => opt !== null)
+      .sort((a, b) => b.days - a.days)
+      .slice(0, 10);
+
+    return opportunities;
+  }, [proposals, customers, hasMounted, activeConfigs]);
+
+  const combinedOpportunities = useMemo(() => {
+    return [
+        ...radarOpportunities.map(opt => ({ ...opt, isSaqueComplementar: false, days: 0 })),
+        ...saqueComplementarOpportunities
+    ];
+  }, [radarOpportunities, saqueComplementarOpportunities]);
+
   return (
     <Card className="h-full flex flex-col border-orange-500/20 bg-orange-500/5 dark:bg-orange-500/[0.03] shadow-lg overflow-hidden">
       <CardHeader className="pb-4 bg-orange-500/[0.08] dark:bg-orange-500/[0.05] border-b border-orange-500/10">
@@ -88,9 +138,9 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
                 </CardTitle>
                 <CardDescription className="text-[10px] font-black uppercase text-orange-600/70 dark:text-orange-400/60 tracking-widest">Retenção e Refinanciamento</CardDescription>
             </div>
-            {!isLoading && radarOpportunities.length > 0 && (
+            {!isLoading && combinedOpportunities.length > 0 && (
                 <Badge variant="outline" className="bg-background dark:bg-zinc-900 border-orange-500/30 text-orange-600 dark:text-orange-400 font-bold">
-                    {radarOpportunities.length} OPORTUNIDADES
+                    {combinedOpportunities.length} OPORTUNIDADES
                 </Badge>
             )}
         </div>
@@ -102,7 +152,7 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
                     <div key={i} className="h-16 w-full bg-muted animate-pulse rounded-lg" />
                 ))}
             </div>
-        ) : radarOpportunities.length === 0 ? (
+        ) : combinedOpportunities.length === 0 ? (
             <div className="flex h-[400px] flex-col items-center justify-center text-center text-muted-foreground p-8 border-2 border-dashed border-orange-500/10 rounded-xl bg-muted/5">
                 <Zap className="h-10 w-10 mb-4 opacity-10" />
                 <p className="font-bold text-sm text-foreground/80">Radar Limpo</p>
@@ -111,8 +161,8 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
         ) : (
             <ScrollArea className="h-[400px] w-full">
                 <div className="space-y-3 pr-4 pb-6">
-                    {radarOpportunities.map((opt) => (
-                        <Link key={opt.customer.id} href={`/customers/${opt.customer.id}`}>
+                    {combinedOpportunities.map((opt) => (
+                        <Link key={`${opt.customer.id}-${opt.isSaqueComplementar ? 'saque' : 'reten'}`} href={`/customers/${opt.customer.id}`}>
                             <div className="group flex items-center gap-3 p-3 rounded-xl border border-orange-500/10 dark:border-orange-500/20 bg-card dark:bg-zinc-900/50 hover:border-orange-500/40 hover:bg-orange-500/[0.02] dark:hover:bg-orange-500/[0.05] transition-all">
                                 <div className="h-10 w-10 rounded-full bg-orange-500/10 flex items-center justify-center shrink-0">
                                     <User className="h-5 w-5 text-orange-600 dark:text-orange-400" />
@@ -121,7 +171,9 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
                                     <p className="text-sm font-bold text-foreground group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors truncate">{opt.customer.name}</p>
                                     <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground dark:text-zinc-400 uppercase">
                                         <TrendingUp className="h-3 w-3 text-orange-500" />
-                                        Pago há {opt.months} meses • {formatCurrency(opt.lastProposal.grossAmount)}
+                                        {opt.isSaqueComplementar 
+                                            ? `Revisar Saque Complementar (${opt.days} dias)`
+                                            : `Pago há ${opt.months} meses`} • {formatCurrency(opt.lastProposal.grossAmount)}
                                     </div>
                                 </div>
                                 <ChevronRight className="h-4 w-4 text-orange-500/30 group-hover:text-orange-500 transition-all" />
