@@ -21,7 +21,19 @@ import Link from 'next/link';
 import { generateBirthdayMessage } from '@/ai/flows/generate-birthday-message-flow';
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { useRadar, RadarOpportunity } from '@/hooks/use-radar';
+
+const JUSTIFICATIVAS = [
+  "Sem margem",
+  "Banco não liberou",
+  "Sem troco mínimo",
+  "Cliente não quis",
+  "Sem limite de saque",
+  "Já atendido recentemente",
+  "Outro"
+];
 
 export function NotificationBell() {
   const { user } = useUser();
@@ -35,6 +47,11 @@ export function NotificationBell() {
   const [generatedBdayMessage, setGeneratedBdayMessage] = useState('');
   const [selectedBdayCustomer, setSelectedBdayCustomer] = useState<Customer | null>(null);
   const [isBdayModalOpen, setIsBdayModalOpen] = useState(false);
+
+  // Radar Dispense State
+  const [dispenseTarget, setDispenseTarget] = useState<RadarOpportunity | null>(null);
+  const [justificativa, setJustificativa] = useState<string>('');
+  const [isDispenseModalOpen, setIsDispenseModalOpen] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -67,7 +84,6 @@ export function NotificationBell() {
     if (!firestore || !user) return null;
     return query(
         collection(firestore, 'users', user.uid, 'followUps'), 
-        // Removemos o filtro de status da query do Firestore para aceitar 'pending' e 'pendente' via loop local
         limit(100)
     );
   }, [firestore, user]);
@@ -104,6 +120,9 @@ export function NotificationBell() {
   const { data: userSettings } = useDoc<UserSettings>(settingsDocRef);
   const activeConfigs = React.useMemo(() => normalizeStatuses(userSettings?.proposalStatuses || []), [userSettings]);
 
+  // USE RADAR
+  const { activeSignals, dismissSignal } = useRadar(customers, proposals, activeConfigs);
+
   useEffect(() => {
     if (leads && leads.length > 0) {
         const sortedLeads = [...leads].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
@@ -125,7 +144,18 @@ export function NotificationBell() {
   const notifications = React.useMemo(() => {
     if (!isClient) return [];
     
-    const alerts: { id: string; title: string; type: 'birthday' | 'commission' | 'followup' | 'debt' | 'partial' | 'radar' | 'age' | 'news' | 'lead' | 'expense'; date: string; link: string; customerId?: string }[] = [];
+    // Extracted type for our notification array
+    type NotificationItem = {
+      id: string;
+      title: string;
+      type: 'birthday' | 'commission' | 'followup' | 'debt' | 'partial' | 'radar' | 'age' | 'news' | 'lead' | 'expense';
+      date: string;
+      link: string;
+      customerId?: string;
+      opportunity?: RadarOpportunity;
+    };
+
+    const alerts: NotificationItem[] = [];
     const now = new Date();
     const todayStr = format(now, 'MM-dd');
     const todayIso = format(now, 'yyyy-MM-dd');
@@ -157,7 +187,7 @@ export function NotificationBell() {
         }
     });
 
-    // 3. CONTAS A PAGAR (Operacional) - NOVO NO SINO
+    // 3. CONTAS A PAGAR (Operacional)
     expenses?.filter(e => !e.paid).forEach(e => {
         const expDate = parseDateSafe(e.date);
         if (expDate && (differenceInDays(expDate, now) <= 5 || isBefore(expDate, startOfToday))) {
@@ -171,7 +201,7 @@ export function NotificationBell() {
         }
     });
 
-    // 4. CLIENTES (Aniversário, Idade, Radar)
+    // 4. CLIENTES (Aniversário, Idade)
     customers?.filter(c => c.deleted !== true && c.status !== 'inactive').forEach(c => {
       const age = getAge(c.birthDate);
       
@@ -188,7 +218,7 @@ export function NotificationBell() {
 
       if (c.birthDate && c.birthDate.substring(5) === todayStr) {
         alerts.push({
-          id: `bday-today-${c.id}`, // Sincronizado com DailySummary
+          id: `bday-today-${c.id}`,
           title: `Parabéns: ${c.name}`,
           type: 'birthday',
           date: 'Hoje',
@@ -196,52 +226,18 @@ export function NotificationBell() {
           customerId: c.id
         });
       }
+    });
 
-      const hasMatured = proposals?.some(p => {
-          if (p.deleted === true || p.customerId !== c.id) return false;
-          const behavior = getStatusBehavior(p.status, activeConfigs);
-          if (behavior !== 'success') return false;
-          if (!p.datePaidToClient) return false;
-          const paidDate = parseDateSafe(p.datePaidToClient);
-          return paidDate && differenceInMonths(now, paidDate) >= 12;
-      });
-
-      if (hasMatured && age < 75) {
-          alerts.push({
-              id: `radar-${c.id}`,
-              title: `Radar: ${c.name}`,
-              type: 'radar',
-              date: 'Contrato Maduro',
-              link: `/customers/${c.id}`
-          });
-      }
-
-      // NOVO: Saque Complementar > 30 dias
-      const saques = proposals?.filter(p => {
-          if (p.deleted === true || p.customerId !== c.id) return false;
-          if (p.product !== 'Saque Complementar') return false;
-          const behavior = getStatusBehavior(p.status, activeConfigs);
-          if (behavior !== 'success') return false;
-          if (!p.datePaidToClient) return false;
-          return true;
-      });
-
-      if (saques && saques.length > 0) {
-          const latestSaque = [...saques].sort((a,b) => (b.datePaidToClient || '').localeCompare(a.datePaidToClient || ''))[0];
-          const paidDate = parseDateSafe(latestSaque.datePaidToClient);
-          if (paidDate) {
-              const days = differenceInDays(now, paidDate);
-              if (days >= 30) {
-                  alerts.push({
-                      id: `radar-saque-${c.id}`,
-                      title: `Revisar Saque: ${c.name}`,
-                      type: 'radar',
-                      date: `${days} dias`,
-                      link: `/customers/${c.id}`
-                  });
-              }
-          }
-      }
+    // 4.1 RADAR (Centralizado c/ hook stateful)
+    activeSignals.forEach(opt => {
+        alerts.push({
+            id: opt.id, // e.g. "clientId_saque_YYYY-MM-DD"
+            title: opt.type === 'saque' ? `Revisar Saque: ${opt.customer.name}` : `Radar: ${opt.customer.name}`,
+            type: 'radar',
+            date: opt.type === 'saque' ? `${opt.daysSincePaid} dias` : 'Contrato Maduro',
+            link: `/customers/${opt.customer.id}`,
+            opportunity: opt
+        });
     });
 
     // 5. RETORNOS AGENDADOS (Follow-ups Manuais)
@@ -265,7 +261,6 @@ export function NotificationBell() {
     proposals?.filter(p => p.deleted !== true).forEach(p => {
       const behavior = getStatusBehavior(p.status, activeConfigs);
 
-      // Comissão Pendente
       if (behavior === 'success' && p.commissionStatus === 'Pendente' && p.datePaidToClient) {
         const paidDate = parseDateSafe(p.datePaidToClient);
         const days = paidDate ? differenceInDays(now, paidDate) : 0;
@@ -280,7 +275,6 @@ export function NotificationBell() {
         }
       }
 
-      // Saldo Atrasado (Portabilidade)
       if (p.product === 'Portabilidade' && p.status === 'Aguardando Saldo' && p.dateDigitized) {
           const bizDays = calculateBusinessDays(p.dateDigitized);
           if (bizDays >= 5) {
@@ -294,7 +288,6 @@ export function NotificationBell() {
           }
       }
 
-      // Cobrança de Saldo (Parcial)
       if (p.commissionStatus === 'Parcial' && p.commissionPaymentDate) {
           const lastPayDate = parseDateSafe(p.commissionPaymentDate);
           const daysSince = lastPayDate ? differenceInDays(now, lastPayDate) : 0;
@@ -309,7 +302,6 @@ export function NotificationBell() {
           }
       }
 
-      // Lembrete de Acompanhamento (Em Andamento há muito tempo) - NOVO NO SINO
       if (behavior === 'in_progress' && p.dateDigitized) {
           const digitDate = parseDateSafe(p.dateDigitized);
           const days = digitDate ? differenceInDays(now, digitDate) : 0;
@@ -326,17 +318,27 @@ export function NotificationBell() {
     });
 
     return alerts;
-  }, [customers, proposals, followUps, news, leads, expenses, isClient, activeConfigs]);
+  }, [customers, proposals, followUps, news, leads, expenses, isClient, activeConfigs, activeSignals]);
 
   const visibleNotifications = React.useMemo(() => {
     const readIds = userSettings?.readAlerts || [];
     return notifications.filter(n => !dismissedIds.includes(n.id) && !readIds.includes(n.id));
   }, [notifications, dismissedIds, userSettings?.readAlerts]);
 
-  const handleDismiss = async (e: React.MouseEvent, id: string) => {
+  const handleDismiss = async (e: React.MouseEvent, id: string, type: string, nObj: any) => {
     e.preventDefault();
     e.stopPropagation();
     if (!user || !firestore) return;
+
+    // Se for do Radar, interceptamos para o fluxo de justificativa em vez de esconder localmente
+    if (type === 'radar' && nObj.opportunity) {
+        setDispenseTarget(nObj.opportunity);
+        setJustificativa('');
+        setIsDispenseModalOpen(true);
+        // Não fechamos o menu de dropdown aqui para não quebrar o modal se for o caso, 
+        // ou dependendo da abordagem deixamos fechar e abrir o modal fixo por cima.
+        return;
+    }
 
     try {
         await setDoc(doc(firestore, 'userSettings', user.uid), {
@@ -345,6 +347,13 @@ export function NotificationBell() {
     } catch (err) {
         console.error("Failed to dismiss cloud alert:", err);
     }
+  };
+
+  const confirmDispense = async () => {
+    if (!dispenseTarget || !justificativa) return;
+    await dismissSignal(dispenseTarget, justificativa);
+    setIsDispenseModalOpen(false);
+    setDispenseTarget(null);
   };
 
   const dismissQuietly = async (id: string) => {
@@ -360,12 +369,10 @@ export function NotificationBell() {
   };
 
   const handleBdayClick = async (e: React.MouseEvent | React.SyntheticEvent, customerId: string) => {
-    // 🛡️ ISOLAMENTO TOTAL: Impede que o clique dispare navegação no Link pai ou feche o DropdownMenu
     if (e) {
         e.preventDefault();
         e.stopPropagation();
     }
-    
     const customer = customers?.find(c => c.id === customerId);
     if (!customer) return;
 
@@ -380,7 +387,6 @@ export function NotificationBell() {
     } catch (error) {
         console.error("Erro na geração de parabéns:", error);
         toast({ variant: 'destructive', title: 'Erro na IA', description: 'Não foi possível gerar a mensagem agora.' });
-        // Mantemos o modal aberto para não dar a impressão de "apenas fechou"
     } finally {
         setIsGeneratingBday(false);
     }
@@ -492,7 +498,7 @@ export function NotificationBell() {
                             )}
                         </div>
                         <button
-                            onClick={(e) => handleDismiss(e, n.id)}
+                            onClick={(e) => handleDismiss(e, n.id, n.type, n)}
                             className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted/80 rounded-full bg-background/50 shadow-sm border"
                             title="Remover"
                         >
@@ -507,6 +513,7 @@ export function NotificationBell() {
       </DropdownMenuContent>
     </DropdownMenu>
 
+    {/* Bday IA Modal */}
     <Dialog open={isBdayModalOpen} onOpenChange={setIsBdayModalOpen}>
         <DialogContent className="max-w-md rounded-[2rem]">
             <DialogHeader>
@@ -537,6 +544,41 @@ export function NotificationBell() {
                 </Button>
             </DialogFooter>
         </DialogContent>
+    </Dialog>
+
+    {/* Dispense Modal (Sincronizado c/ Radar) */}
+    <Dialog open={isDispenseModalOpen} onOpenChange={setIsDispenseModalOpen}>
+      <DialogContent className="max-w-md z-[100]">
+        <DialogHeader>
+          <DialogTitle>Dispensar Oportunidade</DialogTitle>
+          <DialogDescription>
+            Justifique o motivo da dispensa de <strong>{dispenseTarget?.customer.name}</strong>.
+            {dispenseTarget?.type === 'saque' && (
+              <span className="block mt-2 text-orange-600 text-[11px] font-bold uppercase bg-orange-500/10 p-2 rounded-lg">
+                Regra do Saque: Cliente retornará automaticamente em 10 dias.
+              </span>
+            )}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-2">
+          <Select value={justificativa} onValueChange={setJustificativa}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione o motivo..." />
+            </SelectTrigger>
+            <SelectContent>
+              {JUSTIFICATIVAS.map(j => (
+                <SelectItem key={j} value={j}>{j}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => setIsDispenseModalOpen(false)}>Cancelar</Button>
+          <Button onClick={confirmDispense} disabled={!justificativa} variant="destructive">
+            Confirmar Dispensa
+          </Button>
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
     </>
   );
