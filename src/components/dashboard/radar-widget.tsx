@@ -17,21 +17,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format, differenceInDays } from 'date-fns';
 
+import { defaultRadarJustifications } from '@/lib/config-data';
+
 interface RadarWidgetProps {
   proposals: Proposal[];
   customers: Customer[];
   isLoading: boolean;
 }
-
-const JUSTIFICATIVAS = [
-  "Sem margem",
-  "Banco não liberou",
-  "Sem troco mínimo",
-  "Cliente não quis",
-  "Sem limite de saque",
-  "Já atendido recentemente",
-  "Outro"
-];
 
 export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProps) {
   const { user } = useUser();
@@ -49,6 +41,10 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
 
   const { data: userSettings } = useDoc<UserSettings>(settingsDocRef as any);
   const activeConfigs = useMemo(() => userSettings?.proposalStatuses || [], [userSettings]);
+  
+  const justificativasList = useMemo(() => {
+    return userSettings?.radarJustifications || defaultRadarJustifications;
+  }, [userSettings?.radarJustifications]);
 
   const { activeSignals, dismissedSignals, dismissSignal, restoreSignal } = useRadar(customers, proposals, activeConfigs);
 
@@ -254,8 +250,8 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o motivo..." />
               </SelectTrigger>
-              <SelectContent>
-                {JUSTIFICATIVAS.map(j => (
+              <SelectContent className="max-h-[300px] z-[9999]" position="popper">
+                {justificativasList.map(j => (
                   <SelectItem key={j} value={j}>{j}</SelectItem>
                 ))}
               </SelectContent>
@@ -347,7 +343,11 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-[10px] text-muted-foreground mt-1">
                         <span className="uppercase font-bold text-orange-600/70">{opt.type}</span>
                         <div className="flex items-center gap-2">
-                          <span>Motivo: <strong className={opt.dbSignal?.justificativa ? "" : "opacity-50"}>{opt.dbSignal?.justificativa || 'Nenhum salvo'}</strong></span>
+                          <span>Motivo: <strong className={opt.dbSignal?.justificativa ? "" : "opacity-50"}>{opt.dbSignal?.justificativa || 'Nenhum salvo'}</strong>
+                            {opt.dbSignal?.justificativa && !justificativasList.includes(opt.dbSignal.justificativa) && (
+                                <span className="ml-1 text-[8px] uppercase bg-red-500/10 text-red-500 px-1 rounded">(Desativado)</span>
+                            )}
+                          </span>
                           
                           <div className="flex items-center opacity-40 hover:opacity-100 transition-opacity gap-1 ml-1">
                             <button onClick={() => handleEditMotiveClick(opt)} title="Editar Motivo" className="p-1 hover:text-primary transition-colors focus:outline-none">

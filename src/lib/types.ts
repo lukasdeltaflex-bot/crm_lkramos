@@ -179,6 +179,7 @@ export type UserSettings = {
   dailyGoal?: number;
   dismissedAlerts?: string[];
   readAlerts?: string[];
+  radarJustifications?: string[];
 };
 
 export type UserProfile = {

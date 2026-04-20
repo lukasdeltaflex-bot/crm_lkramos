@@ -115,10 +115,18 @@ Atualmente operamos com as seguintes instituições:
 
 ---
 
-## 📡 Inteligências e Radar de Vendas
+## 📡 Inteligências, Radar de Vendas e Sino de Notificações
 
 - **Retenção / Refinanciamento**: Clientes com contratos ativos e liquidados há **mais de 1 ano (12 meses)** entrarão automaticamente no Radar de Vendas alertando oportunidade de retenção.
 - **Saque Complementar**: O sistema mapeia sua carteira em busca de propostas deste tipo. Exatos **30 dias após a data de pagamento do saque**, o cliente surge no Radar de Vendas e aciona um aviso visual no Sino de Notificações, guiando os agentes a realizarem novas abordagens de relacionamento. Para não inflar o radar desnecessariamente a régua sempre utiliza o último saque daquele CPF.
+
+### Gestão Configurável de Motivos (Dispensa)
+Os motivos utilizados para dispensar clientes no Radar agora são totalmente **configuráveis**. 
+Você pode acessá-regras através do menu **Configurações > Parâmetros > Motivos de Dispensa (Radar e Sino)**.
+- **Criar, Editar ou Excluir:** Gerencie a lista de motivos operacionais diretamente pelo menu.
+- **Sincronização Absoluta:** Os motivos registrados refletem instantaneamente no *Radar de Vendas* e nos modais rápidos de dispensa abertos pelo *Sino de Notificações*.
+- **Exclusão Segura:** Se um motivo for excluído ou editado das configurações, os clientes já dispensados não perderão o histórico. O contrato lembrará do antigo motivo e sinalizará visualmente a tag de `(Desativado)`.
+
 
 ---
 

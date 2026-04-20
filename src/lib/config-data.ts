@@ -19,6 +19,18 @@ export const defaultCustomerTags: string[] = ['💎 VIP', '✅ Margem Livre', '�
 
 export const defaultRejectionReasons: string[] = ['Retenção do cliente', 'Contrato já liquidado', 'Contrato não encontrado', 'Saldo devedor divergente', 'Erro de averbação', 'Desistência do cliente', 'Margem excedida', 'Vínculo empregatício incompatível'];
 
+export const defaultRadarJustifications: string[] = [
+  "Sem margem",
+  "Banco não liberou",
+  "Sem troco mínimo",
+  "Cliente não quis",
+  "Sem limite de saque",
+  "Já atendido recentemente",
+  "Venda fechada",
+  "Cliente respondeu depois",
+  "Outro"
+];
+
 export const defaultHistoryTopics: string[] = [
   '⏳ Aguardando retorno da CIP (Saldo)',
   '⏳ Aguardando desbloqueio benefício',

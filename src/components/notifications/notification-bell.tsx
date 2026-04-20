@@ -25,15 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import { useRadar, RadarOpportunity } from '@/hooks/use-radar';
 
-const JUSTIFICATIVAS = [
-  "Sem margem",
-  "Banco não liberou",
-  "Sem troco mínimo",
-  "Cliente não quis",
-  "Sem limite de saque",
-  "Já atendido recentemente",
-  "Outro"
-];
+import { defaultRadarJustifications } from '@/lib/config-data';
 
 export function NotificationBell() {
   const { user } = useUser();
@@ -122,6 +114,10 @@ export function NotificationBell() {
 
   // USE RADAR
   const { activeSignals, dismissSignal } = useRadar(customers, proposals, activeConfigs);
+
+  const justificativasList = React.useMemo(() => {
+    return userSettings?.radarJustifications || defaultRadarJustifications;
+  }, [userSettings?.radarJustifications]);
 
   useEffect(() => {
     if (leads && leads.length > 0) {
@@ -565,8 +561,8 @@ export function NotificationBell() {
             <SelectTrigger>
               <SelectValue placeholder="Selecione o motivo..." />
             </SelectTrigger>
-            <SelectContent>
-              {JUSTIFICATIVAS.map(j => (
+            <SelectContent className="max-h-[300px] z-[9999]" position="popper">
+              {justificativasList.map(j => (
                 <SelectItem key={j} value={j}>{j}</SelectItem>
               ))}
             </SelectContent>

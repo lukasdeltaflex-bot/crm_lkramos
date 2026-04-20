@@ -27,7 +27,8 @@ import {
   expenseCategories as initialExpenseCategories,
   defaultCustomerTags as initialCustomerTags,
   defaultRejectionReasons as initialRejectionReasons,
-  defaultHistoryTopics as initialHistoryTopics
+  defaultHistoryTopics as initialHistoryTopics,
+  defaultRadarJustifications as initialRadarJustifications
 } from '@/lib/config-data';
 import { 
     ListChecks, 
@@ -849,6 +850,20 @@ export default function SettingsPage() {
                                     title="Motivos Curtos" 
                                     items={userSettings?.rejectionReasons || initialRejectionReasons as any} 
                                     setItems={(n) => saveSettingsToFirebase({ rejectionReasons: n as string[] })} 
+                                />
+                            </AccordionContent>
+                        </AccordionItem>
+
+                        <AccordionItem value="radar" className="border-b">
+                            <AccordionTrigger className="flex items-center gap-2">
+                                <Zap className="h-4 w-4 text-orange-500" />
+                                Motivos de Dispensa (Radar e Sino)
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                <EditableList 
+                                    title="Motivos Operacionais" 
+                                    items={userSettings?.radarJustifications || initialRadarJustifications as any} 
+                                    setItems={(n) => saveSettingsToFirebase({ radarJustifications: n as string[] })} 
                                 />
                             </AccordionContent>
                         </AccordionItem>
