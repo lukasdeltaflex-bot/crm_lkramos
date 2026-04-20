@@ -1,7 +1,7 @@
 # 📘 Guia do Usuário - CRM LK RAMOS
 
 Este guia é gerado automaticamente com base nas configurações atuais do sistema.
-**Última Atualização:** 15/04/2026, 18:56:09
+**Última Atualização:** 20/04/2026, 12:48:00
 
 ---
 
@@ -112,6 +112,13 @@ Atualmente operamos com as seguintes instituições:
 ### Painel de Cadastro de Cliente
 - Modal de Cadastro ampliado (`max-w-5xl`) para proporcionar maior flexibilidade horizontal e conforto visual.
 - Os blocos de Benefícios (Órgão / Espécie) possuem layout fluído, facilitando o manuseio de nomenclaturas longas (ex: opções extensas do INSS).
+
+---
+
+## 📡 Inteligências e Radar de Vendas
+
+- **Retenção / Refinanciamento**: Clientes com contratos ativos e liquidados há **mais de 1 ano (12 meses)** entrarão automaticamente no Radar de Vendas alertando oportunidade de retenção.
+- **Saque Complementar**: O sistema mapeia sua carteira em busca de propostas deste tipo. Exatos **30 dias após a data de pagamento do saque**, o cliente surge no Radar de Vendas e aciona um aviso visual no Sino de Notificações, guiando os agentes a realizarem novas abordagens de relacionamento. Para não inflar o radar desnecessariamente a régua sempre utiliza o último saque daquele CPF.
 
 ---
 
