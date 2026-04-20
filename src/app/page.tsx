@@ -299,8 +299,8 @@ export default function DashboardPage() {
         };
     });
 
-    const totalDigitizedCurrent = getSum(allDigitizedInPeriod);
-    const totalDigitizedPrev = getSum(allDigitizedInPrevPeriod);
+    const totalDigitizedCurrent = getSum(digitizedInPeriod);
+    const totalDigitizedPrev = getSum(digitizedInPrevPeriod);
     const digitizedTrendPercentage = totalDigitizedPrev > 0 ? ((totalDigitizedCurrent - totalDigitizedPrev) / totalDigitizedPrev) * 100 : 0;
 
     const criticalPortabilityCount = proposals.filter(p => p.product === 'Portabilidade' && p.status === 'Aguardando Saldo' && p.dateDigitized && calculateBusinessDays(p.dateDigitized) >= 5).length;
@@ -309,7 +309,7 @@ export default function DashboardPage() {
         totalDigitado: totalDigitizedCurrent, 
         digitizedTrendPercentage, 
         productionTrend, 
-        topTotal: getTopOperator(allDigitizedInPeriod), 
+        topTotal: getTopOperator(digitizedInPeriod), 
         statusAnalysis, 
         criticalPortabilityCount, 
         proposals: { digitadoNoMes: digitizedInPeriod, pagoNoMes: paidInPeriod },
@@ -436,7 +436,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            <div className="cursor-pointer" onClick={() => setDialogData({ title: 'Total Digitado (Mês Vigente)', proposals: stats.allDigitizedInPeriod })}>
+            <div className="cursor-pointer" onClick={() => setDialogData({ title: 'Total Digitado (Mês Vigente)', proposals: stats.proposals.digitadoNoMes })}>
                 <StatsCard title="TOTAL DIGITADO" value={isPrivacyMode ? '•••••' : formatCurrency(stats.totalDigitado)} icon={FileText} description="PRODUÇÃO MENSAL" topContributor={stats.topTotal} percentage={stats.digitizedTrendPercentage} sparklineData={stats.productionTrend}/>
             </div>
             {stats.activeConfigs.filter(conf => conf.showOnDashboard && conf.isActive).map(conf => (
@@ -460,7 +460,7 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2"><CommissionChart proposals={proposals || []} /></div>
-            <div className="lg:col-span-1"><ProductBreakdownChart proposals={stats.allDigitizedInPeriod} /></div>
+            <div className="lg:col-span-1"><ProductBreakdownChart proposals={stats.proposals.digitadoNoMes} /></div>
         </div>
 
         <div className="w-full"><PartnerPerformanceCharts proposals={stats.proposals.digitadoNoMes} /></div>

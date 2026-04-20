@@ -50,6 +50,20 @@ export function useRadar(customers: Customer[] | undefined, proposals: Proposal[
     const opportunities: RadarOpportunity[] = [];
 
     customers.forEach(customer => {
+      // 0. TRAVA OPERACIONAL REQUERIDA: 
+      // Se o cliente possuir QUALQUER proposta atualmente "em andamento" ou "pendente", 
+      // ele NÃO deve aparecer no Radar (fica suspenso até o desfecho da proposta).
+      const hasOngoingProposal = proposals.some(p => {
+        if (p.customerId !== customer.id) return false;
+        if (p.deleted) return false;
+        const behavior = getStatusBehavior(p.status, activeConfigs);
+        return behavior === 'in_progress' || behavior === 'pending';
+      });
+
+      if (hasOngoingProposal) {
+        return; // Pula este cliente, suspendendo do Radar
+      }
+
       // 1. Check for Retenção / Refinanciamento (Matured Contracts >= 12 months)
       if (customer.status === 'active' && getAge(customer.birthDate) < 75) {
         const maturedProposals = proposals.filter(p => {
