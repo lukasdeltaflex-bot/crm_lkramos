@@ -213,8 +213,7 @@ export function useRadar(customers: Customer[] | undefined, proposals: Proposal[
     const docRef = doc(firestore, 'users', user.uid, 'radarSignals', opportunity.id);
     
     try {
-      // Instead of deleting, we can either delete or set status to 'ativa'. Let's delete to clean up DB.
-      await deleteDoc(docRef);
+      await setDoc(docRef, { status: 'ativa' }, { merge: true });
       toast({ title: 'Restaurado', description: 'Oportunidade voltou ao Radar com sucesso.' });
     } catch (err) {
       console.error('Error restoring signal', err);
@@ -222,10 +221,23 @@ export function useRadar(customers: Customer[] | undefined, proposals: Proposal[
     }
   }, [user, firestore]);
 
+  const updateSignalJustification = useCallback(async (opportunity: RadarOpportunity, justificativa: string) => {
+    if (!user || !firestore) return;
+    const docRef = doc(firestore, 'users', user.uid, 'radarSignals', opportunity.id);
+    try {
+      await setDoc(docRef, { justificativa }, { merge: true });
+      toast({ title: 'Motivo atualizado', description: 'A justificativa foi salva com sucesso.' });
+    } catch (err) {
+      console.error('Error updating signal justification', err);
+      toast({ title: 'Erro', description: 'Não foi possível atualizar o motivo.', variant: 'destructive' });
+    }
+  }, [user, firestore]);
+
   return {
     activeSignals,
     dismissedSignals,
     dismissSignal,
-    restoreSignal
+    restoreSignal,
+    updateSignalJustification
   };
 }

@@ -3,10 +3,11 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Zap, ChevronRight, User, TrendingUp, X, RefreshCcw, ArchiveRestore, Archive } from 'lucide-react';
+import { Zap, ChevronRight, User, TrendingUp, X, RefreshCcw, ArchiveRestore, Archive, Copy, MessageCircle, Edit2, Trash2, History, Clock } from 'lucide-react';
 import type { Customer, Proposal, UserSettings } from '@/lib/types';
 import Link from 'next/link';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useRadar, RadarOpportunity } from '@/hooks/use-radar';
@@ -14,7 +15,7 @@ import { useUser, useFirestore, useDoc } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 
 interface RadarWidgetProps {
   proposals: Proposal[];
@@ -55,22 +56,43 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
   const [dispenseTarget, setDispenseTarget] = useState<RadarOpportunity | null>(null);
   const [justificativa, setJustificativa] = useState<string>('');
   const [isDispenseModalOpen, setIsDispenseModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   
   const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [historyTarget, setHistoryTarget] = useState<RadarOpportunity | null>(null);
 
   const handleDispenseClick = (e: React.MouseEvent, opt: RadarOpportunity) => {
     e.preventDefault();
     e.stopPropagation();
     setDispenseTarget(opt);
     setJustificativa('');
+    setIsEditMode(false);
     setIsDispenseModalOpen(true);
   };
 
   const confirmDispense = async () => {
-    if (!dispenseTarget || !justificativa) return;
-    await dismissSignal(dispenseTarget, justificativa);
+    if (!dispenseTarget || (!justificativa && !isEditMode)) return;
+    
+    if (isEditMode) {
+       await updateSignalJustification(dispenseTarget, justificativa);
+    } else {
+       await dismissSignal(dispenseTarget, justificativa);
+    }
+    
     setIsDispenseModalOpen(false);
     setDispenseTarget(null);
+  };
+
+  const handleEditMotiveClick = (opt: RadarOpportunity) => {
+    setDispenseTarget(opt);
+    setJustificativa(opt.dbSignal?.justificativa || '');
+    setIsEditMode(true);
+    setIsDispenseModalOpen(true);
+  };
+
+  const handleDeleteMotiveClick = async (opt: RadarOpportunity) => {
+    await updateSignalJustification(opt, '');
   };
 
   const handleRestoreClick = async (opt: RadarOpportunity) => {
@@ -132,16 +154,62 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
                                       <User className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                                   </div>
                                   <div className="flex-1 min-w-0 pr-8">
-                                      <p className="text-sm font-bold text-foreground group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors truncate">{opt.customer.name}</p>
-                                      <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground dark:text-zinc-400 uppercase">
+                                      <p className="text-sm font-bold text-foreground group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors truncate mb-0.5">{opt.customer.name}</p>
+                                      
+                                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1.5">
+                                          <span className="font-mono bg-muted/50 px-1 rounded text-[11px]">{opt.customer.cpf?.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}</span>
+                                          <button 
+                                            onClick={(e) => { 
+                                                e.preventDefault(); 
+                                                e.stopPropagation();
+                                                navigator.clipboard.writeText(opt.customer.cpf || ''); 
+                                                toast({title: "Copiado", description: "CPF copiado para a área de transferência."}); 
+                                            }} 
+                                            className="hover:text-primary transition-colors focus:outline-none"
+                                            title="Copiar CPF"
+                                          >
+                                            <Copy className="h-3 w-3" />
+                                          </button>
+                                          {opt.customer.phone && isWhatsApp(opt.customer.phone) && (
+                                              <a 
+                                                href={getWhatsAppUrl(opt.customer.phone)} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer" 
+                                                onClick={e => e.stopPropagation()} 
+                                                className="text-emerald-500 hover:text-emerald-600 transition-colors"
+                                                title="Chamar no WhatsApp"
+                                              >
+                                                <MessageCircle className="h-3.5 w-3.5" />
+                                              </a>
+                                          )}
+                                      </div>
+
+                                      <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground dark:text-zinc-400 uppercase mb-1">
                                           <TrendingUp className="h-3 w-3 text-orange-500" />
                                           {opt.type === 'saque' 
                                               ? `Revisar Saque (${opt.daysSincePaid} dias)`
                                               : `Retenção (${opt.monthsSincePaid} meses)`} • {formatCurrency(opt.lastProposal.grossAmount)}
                                       </div>
+
+                                      {opt.dbSignal?.justificativa && (
+                                          <div className="text-[10px] text-muted-foreground mt-1 bg-muted/30 px-2 py-1.5 rounded border border-border/50 inline-flex items-center gap-1.5 leading-none">
+                                              <span>Última análise: <strong>{opt.dbSignal.justificativa}</strong></span>
+                                          </div>
+                                      )}
                                   </div>
                                   
                                   <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                    {opt.dbSignal?.justificativa && (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 z-10"
+                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setHistoryTarget(opt); setIsHistoryModalOpen(true); }}
+                                        title="Histórico"
+                                      >
+                                        <History className="h-4 w-4" />
+                                      </Button>
+                                    )}
                                     <Button
                                       variant="ghost"
                                       size="icon"
@@ -195,9 +263,58 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setIsDispenseModalOpen(false)}>Cancelar</Button>
-            <Button onClick={confirmDispense} disabled={!justificativa} variant="destructive">
-              Confirmar Dispensa
-            </Button>
+          <Button onClick={confirmDispense} disabled={!justificativa && !isEditMode} variant="destructive">
+            {isEditMode ? 'Salvar Edição' : 'Confirmar Dispensa'}
+          </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Histórico */}
+      <Dialog open={isHistoryModalOpen} onOpenChange={setIsHistoryModalOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="h-5 w-5 text-muted-foreground" />
+              Histórico
+            </DialogTitle>
+            <DialogDescription>
+              {historyTarget?.customer.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2 space-y-3">
+            <div className="bg-muted/30 p-3 rounded-lg border text-sm flex flex-col gap-2">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Último motivo:</span>
+                <span className="font-bold">{historyTarget?.dbSignal?.justificativa || '-'}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Dispensado em:</span>
+                <span className="font-medium">
+                  {historyTarget?.dbSignal?.dismissedAt 
+                    ? `${format(new Date(historyTarget.dbSignal.dismissedAt), 'dd/MM/yyyy')} (${differenceInDays(new Date(), new Date(historyTarget.dbSignal.dismissedAt))} dias atrás)`
+                    : '-'}
+                </span>
+              </div>
+              
+              {historyTarget?.type === 'saque' && historyTarget?.dbSignal?.nextReentryDate && (
+                <div className="flex justify-between items-center pt-2 border-t mt-1">
+                  <span className="text-muted-foreground">Retorno:</span>
+                  <span className="font-bold text-primary">
+                    {(() => {
+                      const reentry = new Date(historyTarget.dbSignal.nextReentryDate);
+                      const diff = differenceInDays(reentry, new Date());
+                      if (diff > 0) return `Em ${diff} dias (${format(reentry, 'dd/MM')})`;
+                      if (diff === 0) return `Hoje (${format(reentry, 'dd/MM')})`;
+                      return `Já retornou (${format(reentry, 'dd/MM')})`;
+                    })()}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setIsHistoryModalOpen(false)}>Fechar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -229,9 +346,29 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
                       <p className="text-sm font-bold">{opt.customer.name}</p>
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-[10px] text-muted-foreground mt-1">
                         <span className="uppercase font-bold text-orange-600/70">{opt.type}</span>
-                        <span>Motivo: <strong>{opt.dbSignal?.justificativa || 'Sem justificativa'}</strong></span>
+                        <div className="flex items-center gap-2">
+                          <span>Motivo: <strong className={opt.dbSignal?.justificativa ? "" : "opacity-50"}>{opt.dbSignal?.justificativa || 'Nenhum salvo'}</strong></span>
+                          
+                          <div className="flex items-center opacity-40 hover:opacity-100 transition-opacity gap-1 ml-1">
+                            <button onClick={() => handleEditMotiveClick(opt)} title="Editar Motivo" className="p-1 hover:text-primary transition-colors focus:outline-none">
+                              <Edit2 className="h-3 w-3" />
+                            </button>
+                            {opt.dbSignal?.justificativa && (
+                                <button onClick={() => handleDeleteMotiveClick(opt)} title="Excluir Motivo" className="p-1 hover:text-destructive transition-colors focus:outline-none">
+                                  <Trash2 className="h-3 w-3" />
+                                </button>
+                            )}
+                          </div>
+                        </div>
                         {opt.type === 'saque' && opt.dbSignal?.nextReentryDate && (
-                          <span className="text-primary font-bold">Retorno em: {format(new Date(opt.dbSignal.nextReentryDate), 'dd/MM/yyyy')}</span>
+                          <span className="text-primary font-bold">
+                            {(() => {
+                              const diff = differenceInDays(new Date(opt.dbSignal.nextReentryDate), new Date());
+                              if (diff > 0) return `Retorna em ${diff} dias`;
+                              if (diff === 0) return `Retorna hoje`;
+                              return `Retornou há ${Math.abs(diff)} dias`;
+                            })()}
+                          </span>
                         )}
                       </div>
                     </div>
