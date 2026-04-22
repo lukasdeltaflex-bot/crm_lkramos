@@ -237,11 +237,11 @@ export default function DashboardPage() {
             if (d >= fromDate && d <= effectiveToDate) allDigitizedInPeriod.push(p);
             if (d >= prevMonthStart && d <= prevMonthEnd) allDigitizedInPrevPeriod.push(p);
 
-            // Conta como "Digitado" tudo que não foi explicitamente cancelado/reprovado
-            if (behavior !== 'rejection' && behavior !== 'canceled') {
-                if (d >= fromDate && d <= effectiveToDate) digitizedInPeriod.push(p);
-                if (d >= prevMonthStart && d <= prevMonthEnd) digitizedInPrevPeriod.push(p);
-            }
+            // 🎯 FONTE ÚNICA DE VERDADE PARA O TOTAL DIGITADO:
+            // Regra Incondicional: Entrou no mês filtrado, soma tudo. Não exclui reprovadas, canceladas, nada.
+            // O Total Digitado reflete o esforço de digitação/produção (volume bruto operado).
+            if (d >= fromDate && d <= effectiveToDate) digitizedInPeriod.push(p);
+            if (d >= prevMonthStart && d <= prevMonthEnd) digitizedInPrevPeriod.push(p);
         }
 
         if (behavior !== 'rejection' && statusLists[p.status]) {
