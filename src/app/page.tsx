@@ -282,9 +282,28 @@ export default function DashboardPage() {
 
     const statusAnalysis: any = {};
     Object.keys(statusLists).forEach(s => {
-        const list = statusLists[s];
+        let list = statusLists[s];
+        let statusTotal = 0;
+
+        // Identificação exata do card "Total Liberado" / "Pago"
+        const configLabel = activeConfigs.find(c => c.id === s)?.label || s;
+        const isTotalLiberado = s === 'Pago' || s === 'Total Liberado' || configLabel === 'Total Liberado' || configLabel.toLowerCase().includes('liberado');
+
+        if (isTotalLiberado) {
+            // Regra 1: Filtro de tempo (Somente as liberadas/pagas dentro do período filtrado)
+            list = list.filter(p => {
+                const pd = p.datePaidToClient ? new Date(p.datePaidToClient) : (p.statusUpdatedAt ? new Date(p.statusUpdatedAt) : (p.dateDigitized ? new Date(p.dateDigitized) : null));
+                return pd && isValid(pd) && pd >= fromDate && pd <= effectiveToDate;
+            });
+            // Regra 2: Campo correto (Valor Líquido = netAmount)
+            statusTotal = list.reduce((sum, p) => sum + safeVal(p.netAmount), 0);
+        } else {
+            // Demais cards (Esteira) seguem com regra original sem filtro de data de corte e usando Valor Bruto
+            statusTotal = getSum(list);
+        }
+
         statusAnalysis[s] = { 
-            total: getSum(list), 
+            total: statusTotal, 
             count: list.length, 
             proposals: list, 
             top: getTopOperator(list),
