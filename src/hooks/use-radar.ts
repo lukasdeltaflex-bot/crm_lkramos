@@ -134,47 +134,78 @@ export function useRadar(customers: Customer[] | undefined, proposals: Proposal[
     return opportunities;
   }, [proposals, customers, activeConfigs]);
 
-  // Merge raw opportunities with their states from Firestore
-  const { activeSignals, dismissedSignals } = useMemo(() => {
-    const active: RadarOpportunity[] = [];
-    const dismissed: RadarOpportunity[] = [];
-    const now = new Date();
+    // Merge raw opportunities with their states from Firestore
+    const { activeSignals, dismissedSignals } = useMemo(() => {
+      const active: RadarOpportunity[] = [];
+      const dismissed: RadarOpportunity[] = [];
+      const now = new Date();
+  
+      const signalMap = new Map<string, RadarSignalData>();
+      // If there are multiple records for the same client+type+baseDate, the last one in the array wins. 
+      // Ideally, there should only be one due to our save logic.
+      radarSignals.forEach(sig => {
+         const key = `${sig.clientId}_${sig.type}_${sig.baseDate}`;
+         signalMap.set(key, sig);
+      });
+  
+      const processedRawOppIds = new Set<string>();
 
-    const signalMap = new Map<string, RadarSignalData>();
-    // If there are multiple records for the same client+type+baseDate, the last one in the array wins. 
-    // Ideally, there should only be one due to our save logic.
-    radarSignals.forEach(sig => {
-       const key = `${sig.clientId}_${sig.type}_${sig.baseDate}`;
-       signalMap.set(key, sig);
-    });
-
-    rawOpportunities.forEach(opp => {
-      const dbSignal = signalMap.get(opp.id);
-      
-      const mergedOpp = { ...opp, dbSignal };
-
-      if (dbSignal && dbSignal.status === 'dispensada') {
-        // Recurrence logic for Saque Complementar
-        if (mergedOpp.type === 'saque' && dbSignal.nextReentryDate) {
-          const reEntryDate = new Date(dbSignal.nextReentryDate);
-          if (now >= reEntryDate) {
-            // Recurrence hit, treat as active
-            active.push(mergedOpp);
-            // It could be shown visually as a recurrence if we wanted, but the rule is just "voltar automaticamente"
+      rawOpportunities.forEach(opp => {
+        const dbSignal = signalMap.get(opp.id);
+        
+        const mergedOpp = { ...opp, dbSignal };
+        processedRawOppIds.add(opp.id);
+  
+        if (dbSignal && dbSignal.status === 'dispensada') {
+          // Recurrence logic for Saque Complementar
+          if (mergedOpp.type === 'saque' && dbSignal.nextReentryDate) {
+            const reEntryDate = new Date(dbSignal.nextReentryDate);
+            if (now >= reEntryDate) {
+              // Recurrence hit, treat as active
+              active.push(mergedOpp);
+              // It could be shown visually as a recurrence if we wanted, but the rule is just "voltar automaticamente"
+            } else {
+              dismissed.push(mergedOpp);
+            }
           } else {
+            // Normal dismissed (e.g. retenção without reentry date or missing it)
             dismissed.push(mergedOpp);
           }
         } else {
-          // Normal dismissed (e.g. retenção without reentry date or missing it)
-          dismissed.push(mergedOpp);
+          // No signal doc or explicitly active -> active
+          active.push(mergedOpp);
         }
-      } else {
-        // No signal doc or explicitly active -> active
-        active.push(mergedOpp);
-      }
-    });
+      });
+  
+      // Fetch completely the dismissed list with any other signal that is 'dispensada'
+      // but was not caught in the rawOpportunities (due to active constraints like ongoing proposals or older saques).
+      // This ensures the Historical view of dismissed opportunities works correctly.
+      radarSignals.forEach(sig => {
+        if (sig.status === 'dispensada') {
+          const key = `${sig.clientId}_${sig.type}_${sig.baseDate}`;
+          if (!processedRawOppIds.has(key)) {
+            const cust = customers?.find(c => c.id === sig.clientId);
+            if (cust) {
+              const matchingProposal = proposals?.find(
+                p => p.customerId === cust.id && !p.deleted && p.datePaidToClient?.startsWith(sig.baseDate)
+              ) || proposals?.find(p => p.customerId === cust.id && !p.deleted);
+  
+              if (matchingProposal) {
+                dismissed.push({
+                  id: key,
+                  customer: cust,
+                  lastProposal: matchingProposal,
+                  type: sig.type,
+                  baseDate: sig.baseDate,
+                  dbSignal: sig
+                });
+              }
+            }
+          }
+        }
+      });
 
-    // Sort active: Saque first (by days desc), then Retention (by months desc)
+      // Sort active: Saque first (by days desc), then Retention (by months desc)
     active.sort((a, b) => {
        if (a.type !== b.type) return a.type === 'saque' ? -1 : 1;
        if (a.type === 'saque') return (b.daysSincePaid || 0) - (a.daysSincePaid || 0);
