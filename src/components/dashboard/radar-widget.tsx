@@ -328,7 +328,7 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
             </DialogDescription>
           </DialogHeader>
           
-          <ScrollArea className="flex-1 pr-4 py-4 min-h-[300px]">
+          <div className="flex-1 pr-4 py-4 min-h-[300px] max-h-[60vh] overflow-y-auto overflow-x-hidden">
             {dismissedSignals.length === 0 ? (
               <div className="flex h-full flex-col justify-center items-center text-muted-foreground opacity-60 p-8">
                 <ArchiveRestore className="h-10 w-10 mb-2" />
@@ -384,7 +384,7 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
                 ))}
               </div>
             )}
-          </ScrollArea>
+          </div>
         </DialogContent>
       </Dialog>
     </>
