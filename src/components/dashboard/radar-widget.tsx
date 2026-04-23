@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Zap, ChevronRight, User, TrendingUp, X, RefreshCcw, ArchiveRestore, Archive, Copy, MessageCircle, Edit2, Trash2, History, Clock } from 'lucide-react';
 import type { Customer, Proposal, UserSettings } from '@/lib/types';
 import Link from 'next/link';
-import { formatCurrency, isWhatsApp, getWhatsAppUrl } from '@/lib/utils';
+import { formatCurrency, isWhatsApp, getWhatsAppUrl, cleanBankName } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -189,14 +189,14 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
                                                   {opt.lastProposal?.bank && (
                                                       <>
                                                           <span className="opacity-50 shrink-0">•</span>
-                                                          <div className="flex items-center gap-1" title={opt.lastProposal.bank}>
+                                                          <div className="flex items-center gap-1" title={cleanBankName(opt.lastProposal.bank)}>
                                                               <BankIcon 
                                                                   bankName={opt.lastProposal.bank} 
                                                                   domain={userSettings?.bankDomains?.[opt.lastProposal.bank]} 
                                                                   showLogo={userSettings?.showBankLogos ?? true} 
                                                                   className="h-3 w-3 border-none shadow-none bg-transparent" 
                                                               />
-                                                              <span className="truncate max-w-[60px] sm:max-w-[100px]">{opt.lastProposal.bank}</span>
+                                                              <span className="truncate max-w-[60px] sm:max-w-[100px]">{cleanBankName(opt.lastProposal.bank)}</span>
                                                           </div>
                                                       </>
                                                   )}
