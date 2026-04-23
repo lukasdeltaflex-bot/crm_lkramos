@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useRadar, RadarOpportunity } from '@/hooks/use-radar';
 import { useUser, useFirestore, useDoc } from '@/firebase';
+import { BankIcon } from '@/components/bank-icon';
 import { doc } from 'firebase/firestore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -180,11 +181,31 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
                                           )}
                                       </div>
 
-                                      <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground dark:text-zinc-400 uppercase mb-1">
-                                          <TrendingUp className="h-3 w-3 text-orange-500" />
-                                          {opt.type === 'saque' 
-                                              ? `Revisar Saque (${opt.daysSincePaid} dias)`
-                                              : `Retenção (${opt.monthsSincePaid} meses)`} • {formatCurrency(opt.lastProposal.grossAmount)}
+                                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground dark:text-zinc-400 uppercase mb-1">
+                                          <TrendingUp className="h-3 w-3 text-orange-500 shrink-0" />
+                                          {opt.type === 'saque' ? (
+                                              <>
+                                                  <span className="shrink-0">Revisar Saque ({opt.daysSincePaid} dias)</span>
+                                                  {opt.lastProposal?.bank && (
+                                                      <>
+                                                          <span className="opacity-50 shrink-0">•</span>
+                                                          <div className="flex items-center gap-1" title={opt.lastProposal.bank}>
+                                                              <BankIcon 
+                                                                  bankName={opt.lastProposal.bank} 
+                                                                  domain={userSettings?.bankDomains?.[opt.lastProposal.bank]} 
+                                                                  showLogo={userSettings?.showBankLogos ?? true} 
+                                                                  className="h-3 w-3 border-none shadow-none bg-transparent" 
+                                                              />
+                                                              <span className="truncate max-w-[60px] sm:max-w-[100px]">{opt.lastProposal.bank}</span>
+                                                          </div>
+                                                      </>
+                                                  )}
+                                              </>
+                                          ) : (
+                                              <span className="shrink-0">Retenção ({opt.monthsSincePaid} meses)</span>
+                                          )}
+                                          <span className="opacity-50 shrink-0">•</span> 
+                                          <span className="shrink-0 truncate">{formatCurrency(opt.lastProposal.grossAmount)}</span>
                                       </div>
 
                                       {opt.dbSignal?.justificativa && (
