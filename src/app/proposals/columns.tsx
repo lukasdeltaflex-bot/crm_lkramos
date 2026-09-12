@@ -34,7 +34,8 @@ import {
     ShieldCheck,
     CopyPlus,
     Calendar as CalendarIcon,
-    AlertTriangle
+    AlertTriangle,
+    Link2
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { formatCurrency, cleanBankName, cn, formatDateSafe, isWhatsApp, getWhatsAppUrl, calculateBusinessDays, isProposalCritical } from '@/lib/utils';
@@ -264,7 +265,40 @@ export const getColumns = (
         const sett = (table.options.meta as any)?.userSettings;
         return (<div className="flex items-center gap-2"><BankIcon bankName={prom} domain={sett?.promoterDomains?.[prom]} showLogo={sett?.showPromoterLogos ?? true} className="h-4 w-4" /><span className="truncate text-sm font-bold">{prom}</span></div>)
     }, size: 150 },
-  { id: 'col_pnum', accessorKey: 'proposalNumber', header: 'N° Proposta', cell: ({ row }) => (<div className="flex items-center gap-1 text-sm font-bold"><span>{row.original.proposalNumber}</span><CopyButton text={row.original.proposalNumber} label="Proposta" /></div>), size: 150 },
+  { 
+    id: 'col_pnum', 
+    accessorKey: 'proposalNumber', 
+    header: 'N° Proposta', 
+    cell: ({ row }) => {
+        const p = row.original;
+        const isLinked = !!p.linkedProposalId;
+        const groupIdx = (p.contractGroupIndex ?? 0) + 1;
+        const roleLabel = p.operationRole === 'portabilidade' ? `Port #${groupIdx}` : p.operationRole === 'refin' ? `Refin #${groupIdx}` : 'Vinculada';
+
+        return (
+            <div className="flex flex-col gap-0.5">
+                <div className="flex items-center gap-1 text-sm font-bold">
+                    <span>{p.proposalNumber}</span>
+                    <CopyButton text={p.proposalNumber} label="Proposta" />
+                </div>
+                {isLinked && (
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md w-max bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 cursor-help">
+                                <Link2 className="h-2.5 w-2.5" />
+                                {roleLabel}
+                            </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                            <p className="text-xs">Operação conjunta Portabilidade + Refin (Contrato #{groupIdx})</p>
+                        </TooltipContent>
+                    </Tooltip>
+                )}
+            </div>
+        );
+    }, 
+    size: 150 
+  },
   { id: 'col_customer', accessorFn: (row) => row.customer?.name, header: 'Cliente', cell: ({ row }) => {
         const customer = row.original.customer;
         const phone = customer?.phone;
@@ -280,7 +314,20 @@ export const getColumns = (
         );
     }, size: 220 },
   { id: 'col_cpf', accessorFn: (row) => row.customer?.cpf, header: 'CPF', cell: ({ row }) => (<div className="flex items-center gap-1 text-sm font-bold text-foreground/80"><span>{row.original.customer?.cpf || '-'}</span><CopyButton text={row.original.customer?.cpf} label="CPF" /></div>), size: 160 },
-  { id: 'col_product', accessorKey: 'product', header: 'Produto', cell: ({ row }) => <span className="text-sm font-bold text-muted-foreground/80">{row.original.product}</span>, size: 120 },
+  { 
+    id: 'col_product', 
+    accessorKey: 'product', 
+    header: 'Produto', 
+    cell: ({ row }) => {
+        const p = row.original;
+        let displayProduct: string = p.product;
+        if (p.product === 'Portabilidade' && !p.linkedProposalId) {
+            displayProduct = 'Portabilidade Pura';
+        }
+        return <span className="text-sm font-bold text-muted-foreground/80">{displayProduct}</span>;
+    }, 
+    size: 130 
+  },
   { id: 'col_gross', accessorKey: 'grossAmount', header: () => <div className="text-right">Valor Bruto</div>, cell: ({ row }) => <div className="text-right font-bold text-sm">{formatCurrency(row.original.grossAmount)}</div>, size: 120 },
   { id: 'col_comm', accessorKey: 'commissionValue', header: () => <div className="text-right">Comissão</div>, cell: ({ row }) => <div className="text-right font-bold text-emerald-600">{formatCurrency(row.original.commissionValue)}</div>, size: 120 },
   { id: 'col_bank', accessorKey: 'bank', header: 'Banco Digitado', cell: ({ row, table }) => {

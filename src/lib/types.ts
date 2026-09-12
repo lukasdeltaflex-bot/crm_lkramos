@@ -130,6 +130,11 @@ export type Proposal = {
   deleted?: boolean;
   deletedAt?: string;
   deletedBy?: string;
+  // 🔗 Vínculo Operacional (Portabilidade + Refin)
+  operationId?: string;
+  linkedProposalId?: string;
+  operationRole?: 'portabilidade' | 'refin';
+  contractGroupIndex?: number;
 };
 
 export type StatusBehavior = 'pending' | 'in_progress' | 'success' | 'rejection' | 'canceled';

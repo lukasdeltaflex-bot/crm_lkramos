@@ -55,8 +55,10 @@ import {
     UserCircle2,
     Search,
     ListChecks,
-    Sparkles
+    Sparkles,
+    Link2
 } from 'lucide-react';
+import { GroupedPortabilityForm } from './grouped-portability-form';
 import { format, parse, parseISO, isValid } from 'date-fns';
 import { cn, formatCurrency, cleanBankName, cleanFirestoreData, formatCurrencyInput, normalizeStatuses, getStatusLabel, getStatusColor } from '@/lib/utils';
 import * as configData from '@/lib/config-data';
@@ -164,7 +166,7 @@ interface ProposalFormProps {
   userSettings: UserSettings | null;
   isReadOnly?: boolean;
   onSubmit: (data: any) => void;
-  onDuplicate: (proposal: Proposal) => void;
+  onDuplicate?: (proposal: Proposal) => void;
   defaultValues?: ProposalFormData;
   sheetMode: 'new' | 'edit' | 'view';
   onOpenCustomerSearch: () => void;
@@ -202,6 +204,12 @@ export function ProposalForm({
   const [newHistoryEntry, setNewHistoryEntry] = useState('');
   const [stagedHistory, setStagedHistory] = useState<ProposalHistoryEntry[]>([]);
   const [isSummarizingObs, setIsSummarizingObs] = useState(false);
+  const [isGroupedMode, setIsGroupedMode] = useState(false);
+
+  const linkedProposal = useMemo(() => {
+    if (!proposal?.linkedProposalId) return null;
+    return allProposals.find(p => p.id === proposal.linkedProposalId) || null;
+  }, [proposal?.linkedProposalId, allProposals]);
 
   const activeConfigs = useMemo(() => normalizeStatuses(userSettings?.proposalStatuses || configData.proposalStatuses), [userSettings]);
   const productTypes = userSettings?.productTypes || configData.productTypes;
@@ -421,12 +429,50 @@ export function ProposalForm({
 
   const statusColor = currentStatusValue ? getStatusColor(currentStatusValue, activeConfigs, statusColors) : undefined;
 
+  if (isGroupedMode && sheetMode === 'new') {
+    return (
+      <GroupedPortabilityForm
+        customers={customers}
+        allProposals={allProposals}
+        userSettings={userSettings}
+        onSubmit={onSubmit}
+        onCancel={() => {
+          setIsGroupedMode(false);
+          setValue('product', 'Portabilidade');
+        }}
+        onOpenCustomerSearch={onOpenCustomerSearch}
+        selectedCustomerFromSearch={selectedCustomerFromSearch}
+        onCustomerSearchSelectionHandled={onCustomerSearchSelectionHandled}
+        isSaving={isSaving}
+        initialCustomerId={form.getValues('customerId')}
+        initialBenefitNumber={form.getValues('selectedBenefitNumber')}
+      />
+    );
+  }
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex flex-col h-full overflow-hidden">
         <ScrollArea className="flex-1 px-8">
           <div className="space-y-12 pb-10 pt-6">
             
+            {proposal?.linkedProposalId && (
+              <Alert className="rounded-3xl border-2 border-blue-400 bg-blue-50/50 dark:bg-blue-950/20 text-blue-900 dark:text-blue-100 animate-in slide-in-from-top-2">
+                <Link2 className="h-5 w-5 text-blue-600" />
+                <AlertTitle className="font-black uppercase text-xs">
+                  Operação Casada: Portabilidade + Refin {proposal.contractGroupIndex ? `(Contrato #${proposal.contractGroupIndex})` : ''}
+                </AlertTitle>
+                <AlertDescription className="text-xs font-bold text-blue-700 dark:text-blue-200 mt-1">
+                  Esta proposta é {proposal.operationRole === 'portabilidade' ? 'a Portabilidade' : 'o Refin da Portabilidade'}.
+                  {linkedProposal ? (
+                    <> Vinculada à proposta <strong>{linkedProposal.product} N° {linkedProposal.proposalNumber}</strong> (Status: <strong>{linkedProposal.status}</strong>).</>
+                  ) : (
+                    <> Possui vínculo recíproco registrado na esteira.</>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
             {rejectedPrevious && (
                 <Alert variant="destructive" className="rounded-3xl border-2 border-red-500 bg-red-50 animate-in slide-in-from-top-4">
                     <AlertTriangle className="h-5 w-5 text-red-600" />
@@ -520,9 +566,32 @@ export function ProposalForm({
                       render={({ field }) => (
                       <FormItem>
                           <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tipo de Produto *</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
+                          <Select 
+                            onValueChange={(val) => {
+                              if (val === 'Portabilidade + Refin') {
+                                setIsGroupedMode(true);
+                              } else {
+                                setIsGroupedMode(false);
+                                field.onChange(val);
+                              }
+                            }} 
+                            value={isGroupedMode ? 'Portabilidade + Refin' : field.value} 
+                            disabled={isReadOnly}
+                          >
                           <FormControl><SelectTrigger className="h-12 font-black rounded-xl border-2"><SelectValue /></SelectTrigger></FormControl>
-                          <SelectContent>{productTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}</SelectContent>
+                          <SelectContent>
+                            <SelectItem value="Portabilidade" className="font-bold text-blue-600">Portabilidade Pura</SelectItem>
+                            {sheetMode === 'new' && (
+                              <SelectItem value="Portabilidade + Refin" className="font-black text-blue-700 bg-blue-50/50">
+                                ⚡ Portabilidade + Refin (Fluxo Agrupado)
+                              </SelectItem>
+                            )}
+                            {productTypes.filter(type => type !== 'Portabilidade').map(type => (
+                              <SelectItem key={type} value={type}>
+                                {type === 'Refin Port' ? 'Refin da Portabilidade' : type}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
                           </Select><FormMessage /></FormItem>
                       )}
                   />

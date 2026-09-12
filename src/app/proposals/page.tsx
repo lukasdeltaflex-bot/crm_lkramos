@@ -292,11 +292,65 @@ function ProposalsPageContent() {
     };
     dataToUpdate.history = arrayUnion(historyEntry);
     
-    const docRef = doc(firestore, 'loanProposals', proposalId);
+    // 🔗 Sincronização Cirúrgica de Proposta Vinculada (Portabilidade <-> Refin)
+    const linkedProposal = proposal.linkedProposalId
+        ? proposals?.find(p => p.id === proposal.linkedProposalId)
+        : null;
+
     setIsSaving(true);
     try {
-        await updateDoc(docRef, cleanFirestoreData(dataToUpdate));
-        toast({ title: 'Status Atualizado!' });
+        if (linkedProposal && isPortability) {
+            const batch = writeBatch(firestore);
+            const portDocRef = doc(firestore, 'loanProposals', proposalId);
+            batch.update(portDocRef, cleanFirestoreData(dataToUpdate));
+
+            const linkedDocRef = doc(firestore, 'loanProposals', linkedProposal.id);
+            const linkedUpdate: any = { statusUpdatedAt: now };
+
+            if (newStatus === 'Reprovado' && linkedProposal.status !== 'Reprovado') {
+                linkedUpdate.status = 'Reprovado';
+                linkedUpdate.rejectionReason = rejectionReason || 'Reprovado por cancelamento da Portabilidade vinculada';
+                linkedUpdate.history = arrayUnion({
+                    id: crypto.randomUUID(),
+                    date: now,
+                    message: `⚙️ Reprovado automaticamente: Portabilidade vinculada (${proposal.proposalNumber || 'S/N'}) foi reprovada. MOTIVO: ${rejectionReason || 'Não informado'}`,
+                    userName: userName
+                });
+            } else if (newStatus === 'Pendente' && linkedProposal.status !== 'Pendente' && linkedProposal.status !== 'Reprovado') {
+                linkedUpdate.status = 'Pendente';
+                linkedUpdate.history = arrayUnion({
+                    id: crypto.randomUUID(),
+                    date: now,
+                    message: `⚙️ Status alterado para "Pendente": acompanhando pendência da Portabilidade vinculada (${proposal.proposalNumber || 'S/N'}).`,
+                    userName: userName
+                });
+            } else if (newStatus === 'Saldo Pago') {
+                linkedUpdate.history = arrayUnion({
+                    id: crypto.randomUUID(),
+                    date: now,
+                    message: `ℹ️ Saldo Devedor da Portabilidade vinculada (${proposal.proposalNumber || 'S/N'}) foi pago. Refin apto para andamento.`,
+                    userName: userName
+                });
+            } else if (newStatus === 'Pago') {
+                linkedUpdate.history = arrayUnion({
+                    id: crypto.randomUUID(),
+                    date: now,
+                    message: `ℹ️ Portabilidade vinculada (${proposal.proposalNumber || 'S/N'}) concluída (Averbada/Paga). Refin apto para conclusão.`,
+                    userName: userName
+                });
+            }
+
+            if (Object.keys(linkedUpdate).length > 1 || linkedUpdate.history) {
+                batch.update(linkedDocRef, cleanFirestoreData(linkedUpdate));
+            }
+
+            await batch.commit();
+            toast({ title: 'Status Atualizado (com sincronização da proposta vinculada)!' });
+        } else {
+            const docRef = doc(firestore, 'loanProposals', proposalId);
+            await updateDoc(docRef, cleanFirestoreData(dataToUpdate));
+            toast({ title: 'Status Atualizado!' });
+        }
     } catch (error: any) {
         toast({ variant: 'destructive', title: 'Erro ao atualizar' });
     } finally {
@@ -323,26 +377,118 @@ function ProposalsPageContent() {
   const handleMoveToTrash = useCallback(async (id: string) => {
     if (!firestore || !user) return;
     setIsSaving(true);
-    const docRef = doc(firestore, 'loanProposals', id);
+    const proposal = proposals?.find(p => p.id === id);
+    const linkedProposal = proposal?.linkedProposalId
+        ? proposals?.find(p => p.id === proposal.linkedProposalId)
+        : null;
+    const now = new Date().toISOString();
+
     try {
-        await updateDoc(docRef, {
-            deleted: true,
-            deletedAt: new Date().toISOString(),
-            deletedBy: user.uid
-        });
-        toast({ title: 'Proposta movida para a Lixeira' });
+        if (linkedProposal) {
+            const batch = writeBatch(firestore);
+            batch.update(doc(firestore, 'loanProposals', id), {
+                deleted: true,
+                deletedAt: now,
+                deletedBy: user.uid
+            });
+            batch.update(doc(firestore, 'loanProposals', linkedProposal.id), {
+                deleted: true,
+                deletedAt: now,
+                deletedBy: user.uid
+            });
+            await batch.commit();
+            toast({ title: 'Proposta e registro vinculado movidos para a Lixeira' });
+        } else {
+            const docRef = doc(firestore, 'loanProposals', id);
+            await updateDoc(docRef, {
+                deleted: true,
+                deletedAt: now,
+                deletedBy: user.uid
+            });
+            toast({ title: 'Proposta movida para a Lixeira' });
+        }
     } catch (error: any) {
         toast({ variant: 'destructive', title: 'Erro ao excluir' });
     } finally {
         setIsSaving(false);
     }
-  }, [firestore, user]);
+  }, [firestore, user, proposals]);
 
   const handleFormSubmit = useCallback(async (formData: any) => {
     if (!firestore || !user) return;
     setIsSaving(true);
     
     try {
+        // ⚡ FLUXO DE OPERAÇÃO AGRUPADA (PORTABILIDADE + REFIN — MÚLTIPLOS CONTRATOS)
+        if (formData.isGroupedOperation && Array.isArray(formData.contracts)) {
+            const batch = writeBatch(firestore);
+            const now = new Date().toISOString();
+            const userName = user.displayName || user.email || 'Sistema';
+            const batchOpId = `OP-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+
+            formData.contracts.forEach((contractItem: any, idx: number) => {
+                const portDocId = doc(collection(firestore, 'loanProposals')).id;
+                const refinDocId = doc(collection(firestore, 'loanProposals')).id;
+                const contractPairOpId = `${batchOpId}-C${idx + 1}`;
+
+                const portRef = doc(firestore, 'loanProposals', portDocId);
+                const refinRef = doc(firestore, 'loanProposals', refinDocId);
+
+                const portProposalData = cleanFirestoreData({
+                    ...contractItem.portabilidade,
+                    id: portDocId,
+                    ownerId: user.uid,
+                    operationId: contractPairOpId,
+                    linkedProposalId: refinDocId,
+                    operationRole: 'portabilidade',
+                    contractGroupIndex: idx + 1,
+                    history: [
+                        ...(contractItem.portabilidade.history || []),
+                        {
+                            id: crypto.randomUUID(),
+                            date: now,
+                            message: `Operação Casada Portabilidade + Refin (Contrato #${idx + 1}). Vinculada ao Refin N° ${contractItem.refin.proposalNumber || 'S/N'}.`,
+                            userName
+                        }
+                    ]
+                });
+
+                const refinProposalData = cleanFirestoreData({
+                    ...contractItem.refin,
+                    id: refinDocId,
+                    ownerId: user.uid,
+                    operationId: contractPairOpId,
+                    linkedProposalId: portDocId,
+                    operationRole: 'refin',
+                    contractGroupIndex: idx + 1,
+                    history: [
+                        ...(contractItem.refin.history || []),
+                        {
+                            id: crypto.randomUUID(),
+                            date: now,
+                            message: `Operação Casada Portabilidade + Refin (Contrato #${idx + 1}). Vinculada à Portabilidade N° ${contractItem.portabilidade.proposalNumber || 'S/N'}.`,
+                            userName
+                        }
+                    ]
+                });
+
+                batch.set(portRef, portProposalData);
+                batch.set(refinRef, refinProposalData);
+            });
+
+            await batch.commit();
+            const totalProposals = formData.contracts.length * 2;
+            toast({ 
+                title: 'Operação Cadastrada com Sucesso!', 
+                description: `${formData.contracts.length} contrato(s) gravado(s) com sucesso (${totalProposals} propostas vinculadas geradas).` 
+            });
+            setIsDialogOpen(false);
+            setSelectedProposal(undefined);
+            setSheetMode('new');
+            return;
+        }
+
+        // Fluxo existente para propostas individuais (Portabilidade Pura, Margem, etc.)
         const isEdit = sheetMode === 'edit' && selectedProposal?.id;
         const docId = isEdit ? selectedProposal.id : doc(collection(firestore, 'loanProposals')).id;
         const docRef = doc(firestore, 'loanProposals', docId);
