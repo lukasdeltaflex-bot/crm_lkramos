@@ -216,6 +216,9 @@ export function GroupedPortabilityForm({
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>(initialCustomerId);
   const [selectedBenefitNumber, setSelectedBenefitNumber] = useState<string>(initialBenefitNumber);
 
+  // Modalidade da operação: 'individual' (1:1) ou 'junction' (N:1 - Junção de Parcelas)
+  const [operationMode, setOperationMode] = useState<'individual' | 'junction'>('individual');
+
   const [contracts, setContracts] = useState<ContractPairItem[]>([
     {
       id: 'contract-1',
@@ -224,10 +227,20 @@ export function GroupedPortabilityForm({
     },
   ]);
 
+  // Refin Consolidado único utilizado quando operationMode === 'junction'
+  const [consolidatedRefin, setConsolidatedRefin] = useState<ContractRefinData>(
+    createDefaultRefin(todayFormatted, defaultOperator)
+  );
+
   const [activeContractIndex, setActiveContractIndex] = useState<number>(0);
   const [activeSubTab, setActiveSubTab] = useState<'portabilidade' | 'refin'>('portabilidade');
   const [validationErrors, setValidationErrors] = useState<{ contractIdx: number; role: string; message: string } | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
+
+  // Soma de todas as parcelas portadas no lote (para apoiar a junção de parcelas)
+  const totalPortInstallmentsSum = useMemo(() => {
+    return contracts.reduce((acc, c) => acc + (Number(c.portabilidade.installmentAmount) || 0), 0);
+  }, [contracts]);
 
   // Estado local de TEXTO para os campos de percentual de comissão.
   // Separados do valor numérico para preservar zeros iniciais e vírgulas durante a digitação.
@@ -362,6 +375,20 @@ export function GroupedPortabilityForm({
 
   const updateRefinField = useCallback(
     <K extends keyof ContractRefinData>(field: K, value: ContractRefinData[K]) => {
+      if (operationMode === 'junction') {
+        setConsolidatedRefin((prev) => {
+          const updatedRefin = { ...prev, [field]: value };
+          if (field === 'commissionPercentage' || field === 'commissionBase' || field === 'grossAmount' || field === 'netAmount') {
+            const baseAmount = updatedRefin.commissionBase === 'gross' ? updatedRefin.grossAmount : updatedRefin.netAmount;
+            const rawPercent = field === 'commissionPercentage' ? value : updatedRefin.commissionPercentage;
+            const percent = parseFloat(String(rawPercent).replace(',', '.')) || 0;
+            updatedRefin.commissionValue = parseFloat(((baseAmount * percent) / 100).toFixed(2));
+          }
+          return updatedRefin;
+        });
+        return;
+      }
+
       setContracts((prev) => {
         const next = [...prev];
         const currentPair = { ...next[activeContractIndex] };
@@ -380,12 +407,14 @@ export function GroupedPortabilityForm({
         return next;
       });
     },
-    [activeContractIndex]
+    [activeContractIndex, operationMode]
   );
 
   const handleSummarizeObs = async (role: 'portabilidade' | 'refin') => {
     const currentPair = contracts[activeContractIndex];
-    const text = role === 'portabilidade' ? currentPair.portabilidade.observations : currentPair.refin.observations;
+    const text = role === 'portabilidade' 
+      ? currentPair?.portabilidade?.observations 
+      : (operationMode === 'junction' ? consolidatedRefin.observations : currentPair?.refin?.observations);
     if (!text || text.trim().length < 10) {
       toast({ variant: 'destructive', title: 'Texto curto', description: 'Escreva um parecer para a IA resumir.' });
       return;
@@ -411,6 +440,161 @@ export function GroupedPortabilityForm({
       return;
     }
 
+    const convertToIso = (dateStr?: string) => {
+      if (!dateStr || dateStr.trim() === '') return null;
+      try {
+        const parsed = parse(dateStr, 'dd/MM/yyyy', new Date());
+        return isValid(parsed) ? parsed.toISOString() : null;
+      } catch {
+        return null;
+      }
+    };
+
+    // ⚡ MODO: JUNÇÃO DE PARCELAS (N:1)
+    if (operationMode === 'junction') {
+      if (contracts.length < 2) {
+        toast({
+          variant: 'destructive',
+          title: 'Mínimo de 2 Portabilidades',
+          description: 'A Junção de Parcelas exige ao menos 2 contratos de Portabilidade para unificação das parcelas.'
+        });
+        return;
+      }
+
+      // Validação das N Portabilidades
+      for (let i = 0; i < contracts.length; i++) {
+        const p = contracts[i].portabilidade;
+
+        if (!p.originalContractNumber || p.originalContractNumber.trim() === '') {
+          setActiveContractIndex(i);
+          setActiveSubTab('portabilidade');
+          setValidationErrors({ contractIdx: i + 1, role: 'Portabilidade', message: 'N° do contrato portado (origem) é obrigatório.' });
+          toast({ variant: 'destructive', title: `Erro na Portabilidade #${i + 1}`, description: 'N° do contrato portado é obrigatório.' });
+          return;
+        }
+        if (!p.bank || p.bank.trim() === '') {
+          setActiveContractIndex(i);
+          setActiveSubTab('portabilidade');
+          setValidationErrors({ contractIdx: i + 1, role: 'Portabilidade', message: 'Banco digitado é obrigatório.' });
+          toast({ variant: 'destructive', title: `Erro na Portabilidade #${i + 1}`, description: 'Banco digitado é obrigatório.' });
+          return;
+        }
+        if (!p.proposalNumber || p.proposalNumber.trim() === '') {
+          setActiveContractIndex(i);
+          setActiveSubTab('portabilidade');
+          setValidationErrors({ contractIdx: i + 1, role: 'Portabilidade', message: 'N° da proposta de Portabilidade é obrigatório.' });
+          toast({ variant: 'destructive', title: `Erro na Portabilidade #${i + 1}`, description: 'N° da proposta é obrigatório.' });
+          return;
+        }
+        if (!p.table || p.table.trim() === '') {
+          setActiveContractIndex(i);
+          setActiveSubTab('portabilidade');
+          setValidationErrors({ contractIdx: i + 1, role: 'Portabilidade', message: 'Tabela utilizada é obrigatória.' });
+          toast({ variant: 'destructive', title: `Erro na Portabilidade #${i + 1}`, description: 'Tabela é obrigatória.' });
+          return;
+        }
+        if (!p.promoter || p.promoter.trim() === '') {
+          setActiveContractIndex(i);
+          setActiveSubTab('portabilidade');
+          setValidationErrors({ contractIdx: i + 1, role: 'Portabilidade', message: 'Promotora é obrigatória.' });
+          toast({ variant: 'destructive', title: `Erro na Portabilidade #${i + 1}`, description: 'Promotora é obrigatória.' });
+          return;
+        }
+        if (!p.operator || p.operator.trim() === '') {
+          setActiveContractIndex(i);
+          setActiveSubTab('portabilidade');
+          setValidationErrors({ contractIdx: i + 1, role: 'Portabilidade', message: 'Operador responsável é obrigatório.' });
+          toast({ variant: 'destructive', title: `Erro na Portabilidade #${i + 1}`, description: 'Operador é obrigatório.' });
+          return;
+        }
+        if (p.status === 'Reprovado' && (!p.rejectionReason || p.rejectionReason.trim() === '')) {
+          setActiveContractIndex(i);
+          setActiveSubTab('portabilidade');
+          setValidationErrors({ contractIdx: i + 1, role: 'Portabilidade', message: 'Selecione o motivo da reprova.' });
+          toast({ variant: 'destructive', title: `Erro na Portabilidade #${i + 1}`, description: 'Motivo da reprova obrigatório.' });
+          return;
+        }
+      }
+
+      // Validação do Refin Consolidado único
+      const r = consolidatedRefin;
+      if (!r.proposalNumber || r.proposalNumber.trim() === '') {
+        setActiveSubTab('refin');
+        setValidationErrors({ contractIdx: 0, role: 'Refin Consolidado', message: 'N° da proposta do Refin Consolidado é obrigatório.' });
+        toast({ variant: 'destructive', title: 'Erro no Refin Consolidado', description: 'N° da proposta do Refin Consolidado é obrigatório.' });
+        return;
+      }
+      if (!r.bank || r.bank.trim() === '') {
+        setActiveSubTab('refin');
+        setValidationErrors({ contractIdx: 0, role: 'Refin Consolidado', message: 'Banco digitado do Refin Consolidado é obrigatório.' });
+        toast({ variant: 'destructive', title: 'Erro no Refin Consolidado', description: 'Banco digitado é obrigatório.' });
+        return;
+      }
+      if (!r.table || r.table.trim() === '') {
+        setActiveSubTab('refin');
+        setValidationErrors({ contractIdx: 0, role: 'Refin Consolidado', message: 'Tabela do Refin Consolidado é obrigatória.' });
+        toast({ variant: 'destructive', title: 'Erro no Refin Consolidado', description: 'Tabela é obrigatória.' });
+        return;
+      }
+      if (!r.term || r.term <= 0) {
+        setActiveSubTab('refin');
+        setValidationErrors({ contractIdx: 0, role: 'Refin Consolidado', message: 'Prazo digitado em meses é obrigatório.' });
+        toast({ variant: 'destructive', title: 'Erro no Refin Consolidado', description: 'Prazo do Refin é obrigatório.' });
+        return;
+      }
+      if (!r.promoter || r.promoter.trim() === '') {
+        setActiveSubTab('refin');
+        setValidationErrors({ contractIdx: 0, role: 'Refin Consolidado', message: 'Promotora do Refin Consolidado é obrigatória.' });
+        toast({ variant: 'destructive', title: 'Erro no Refin Consolidado', description: 'Promotora é obrigatória.' });
+        return;
+      }
+      if (!r.operator || r.operator.trim() === '') {
+        setActiveSubTab('refin');
+        setValidationErrors({ contractIdx: 0, role: 'Refin Consolidado', message: 'Operador do Refin Consolidado é obrigatório.' });
+        toast({ variant: 'destructive', title: 'Erro no Refin Consolidado', description: 'Operador é obrigatório.' });
+        return;
+      }
+      if (r.status === 'Reprovado' && (!r.rejectionReason || r.rejectionReason.trim() === '')) {
+        setActiveSubTab('refin');
+        setValidationErrors({ contractIdx: 0, role: 'Refin Consolidado', message: 'Selecione o motivo da reprova do Refin.' });
+        toast({ variant: 'destructive', title: 'Erro no Refin Consolidado', description: 'Motivo da reprova obrigatório.' });
+        return;
+      }
+
+      const formattedPortabilidades = contracts.map((pair) => ({
+        ...pair.portabilidade,
+        product: 'Portabilidade',
+        customerId: selectedCustomerId,
+        selectedBenefitNumber: selectedBenefitNumber || '',
+        dateDigitized: convertToIso(pair.portabilidade.dateDigitized),
+        debtBalanceArrivalDate: convertToIso(pair.portabilidade.debtBalanceArrivalDate),
+        dateApproved: convertToIso(pair.portabilidade.dateApproved),
+        netAmount: 0,
+        term: pair.portabilidade.remainingInstallments || pair.portabilidade.originalTerm || 84,
+      }));
+
+      const formattedRefin = {
+        ...consolidatedRefin,
+        product: 'Refin Port',
+        customerId: selectedCustomerId,
+        selectedBenefitNumber: selectedBenefitNumber || '',
+        dateDigitized: convertToIso(consolidatedRefin.dateDigitized),
+        dateApproved: convertToIso(consolidatedRefin.dateApproved),
+        datePaidToClient: convertToIso(consolidatedRefin.datePaidToClient),
+      };
+
+      onSubmit({
+        isGroupedOperation: true,
+        operationMode: 'junction',
+        operationType: 'portabilidade_refin',
+        customerId: selectedCustomerId,
+        portabilidades: formattedPortabilidades,
+        refin: formattedRefin,
+      });
+      return;
+    }
+
+    // ⚡ MODO: INDIVIDUAL POR CONTRATO (1:1)
     // Validação estrita de todos os contratos antes do writeBatch
     for (let i = 0; i < contracts.length; i++) {
       const pair = contracts[i];
@@ -520,17 +704,7 @@ export function GroupedPortabilityForm({
       }
     }
 
-    const convertToIso = (dateStr?: string) => {
-      if (!dateStr || dateStr.trim() === '') return null;
-      try {
-        const parsed = parse(dateStr, 'dd/MM/yyyy', new Date());
-        return isValid(parsed) ? parsed.toISOString() : null;
-      } catch {
-        return null;
-      }
-    };
-
-    // Formatação do payload agrupado
+    // Formatação do payload agrupado individual
     const formattedContracts = contracts.map((pair, index) => ({
       index: index + 1,
       portabilidade: {
@@ -557,6 +731,7 @@ export function GroupedPortabilityForm({
 
     onSubmit({
       isGroupedOperation: true,
+      operationMode: 'individual',
       operationType: 'portabilidade_refin',
       customerId: selectedCustomerId,
       contracts: formattedContracts,
@@ -565,18 +740,21 @@ export function GroupedPortabilityForm({
 
   const currentContract = contracts[activeContractIndex] || contracts[0];
   const currentPort = currentContract.portabilidade;
-  const currentRefin = currentContract.refin;
+  const currentRefin = operationMode === 'junction' ? consolidatedRefin : currentContract.refin;
 
-  // Sincroniza os estados locais de texto quando o contrato ativo muda.
-  // Usa `activeContractIndex` como dependência (NÃO `commissionPercentage`) para não
-  // destruir o texto intermediário que o usuário está digitando.
+  // Sincroniza os estados locais de texto quando o contrato ativo ou a modalidade muda.
   useEffect(() => {
     const pair = contracts[activeContractIndex];
-    if (!pair) return;
-    setPortPercRaw(String(pair.portabilidade.commissionPercentage ?? 0));
-    setRefinPercRaw(String(pair.refin.commissionPercentage ?? 0));
+    if (pair) {
+      setPortPercRaw(String(pair.portabilidade.commissionPercentage ?? 0));
+    }
+    if (operationMode === 'junction') {
+      setRefinPercRaw(String(consolidatedRefin.commissionPercentage ?? 0));
+    } else if (pair) {
+      setRefinPercRaw(String(pair.refin.commissionPercentage ?? 0));
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeContractIndex]);
+  }, [activeContractIndex, operationMode]);
 
   const currentRejectedPrevious = useMemo(() => {
     if (!allProposals || !currentPort.originalContractNumber || currentPort.originalContractNumber.trim().length < 5) return null;
@@ -596,31 +774,120 @@ export function GroupedPortabilityForm({
       <ScrollArea className="flex-1 px-8">
         <div className="space-y-8 pb-10 pt-4">
 
-          {/* Banner de Operação Agrupada */}
-          <div className="p-4 rounded-3xl bg-blue-50/50 dark:bg-blue-950/20 border-2 border-blue-200 dark:border-blue-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-2xl bg-blue-500 text-white flex items-center justify-center font-bold shadow-md shadow-blue-500/20">
-                <Layers className="h-5 w-5" />
+          {/* Banner de Operação Agrupada + Seletor de Modalidade */}
+          <div className="space-y-3">
+            <div className="p-4 rounded-3xl bg-blue-50/50 dark:bg-blue-950/20 border-2 border-blue-200 dark:border-blue-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-blue-500 text-white flex items-center justify-center font-bold shadow-md shadow-blue-500/20">
+                  <Layers className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-black text-sm uppercase tracking-tight text-blue-900 dark:text-blue-100">
+                    Operação Casada: Portabilidade + Refin
+                  </h4>
+                  <p className="text-[11px] font-bold text-blue-600/80 dark:text-blue-300">
+                    {operationMode === 'junction'
+                      ? <>Junção de Parcelas: <span className="underline font-extrabold">{contracts.length} Portabilidade(s) → 1 Refin Consolidado ({contracts.length + 1} propostas)</span></>
+                      : <>Individual: <span className="underline font-extrabold">{contracts.length} contrato(s) = {contracts.length * 2} propostas</span></>
+                    }
+                  </p>
+                </div>
               </div>
-              <div>
-                <h4 className="font-black text-sm uppercase tracking-tight text-blue-900 dark:text-blue-100">
-                  Operação Casada: Portabilidade + Refin
-                </h4>
-                <p className="text-[11px] font-bold text-blue-600/80 dark:text-blue-300">
-                  Cada contrato gerará 2 propostas reais vinculadas (Portabilidade + Refin Port). Total no lote: <span className="underline font-extrabold">{contracts.length} contrato(s) = {contracts.length * 2} propostas</span>.
-                </p>
+
+              <div className="flex items-center gap-2">
+                {operationMode === 'individual' && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleAddContract}
+                    disabled={isSaving}
+                    className="h-11 px-5 rounded-2xl border-2 border-blue-500 text-blue-600 dark:text-blue-300 bg-white dark:bg-zinc-900 font-black text-xs uppercase tracking-wider hover:bg-blue-50 transition-all shadow-sm"
+                  >
+                    <Plus className="h-4 w-4 mr-1.5" /> Adicionar Contrato
+                  </Button>
+                )}
               </div>
             </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleAddContract}
-              disabled={isSaving}
-              className="h-11 px-5 rounded-2xl border-2 border-blue-500 text-blue-600 dark:text-blue-300 bg-white dark:bg-zinc-900 font-black text-xs uppercase tracking-wider hover:bg-blue-50 transition-all shadow-sm"
-            >
-              <Plus className="h-4 w-4 mr-1.5" /> Adicionar Contrato
-            </Button>
+            {/* Seletor de Modalidade */}
+            <div className="p-1 rounded-2xl bg-muted/30 border-2 border-muted flex gap-2">
+              <button
+                type="button"
+                onClick={() => setOperationMode('individual')}
+                className={cn(
+                  'flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 select-none',
+                  operationMode === 'individual'
+                    ? 'bg-background text-blue-600 shadow-md border border-blue-100'
+                    : 'text-muted-foreground opacity-60 hover:opacity-100'
+                )}
+              >
+                <Zap className="h-3.5 w-3.5" />
+                Refin Individual por Contrato
+              </button>
+              <button
+                type="button"
+                onClick={() => setOperationMode('junction')}
+                className={cn(
+                  'flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 select-none',
+                  operationMode === 'junction'
+                    ? 'bg-background text-purple-600 shadow-md border border-purple-200'
+                    : 'text-muted-foreground opacity-60 hover:opacity-100'
+                )}
+              >
+                <Layers className="h-3.5 w-3.5" />
+                Refin com Junção de Parcelas
+              </button>
+            </div>
+
+            {/* Painel informativo quando modo Junção ativo */}
+            {operationMode === 'junction' && (
+              <Alert className="rounded-2xl border-2 border-purple-300 bg-purple-50/60 dark:bg-purple-950/20 animate-in slide-in-from-top-2">
+                <Layers className="h-5 w-5 text-purple-600" />
+                <AlertTitle className="font-black uppercase text-xs text-purple-800 dark:text-purple-200">
+                  Modo: Refin com Junção de Parcelas
+                </AlertTitle>
+                <AlertDescription className="text-[11px] font-bold text-purple-700 dark:text-purple-300 flex items-center justify-between flex-wrap gap-2">
+                  <span>
+                    Adicione {contracts.length >= 2 ? contracts.length : 'ao menos 2'} Portabilidade(s).
+                    Soma das parcelas portadas: <strong>R$ {totalPortInstallmentsSum.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {contracts.length < 2 && (
+                      <Badge variant="outline" className="text-[10px] border-red-400 text-red-600 font-bold uppercase">
+                        Mín. 2 contratos
+                      </Badge>
+                    )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={handleAddContract}
+                      disabled={isSaving}
+                      className="h-8 px-4 rounded-full font-black text-[10px] uppercase border-purple-400 text-purple-700 hover:bg-purple-50"
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Portabilidade
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setConsolidatedRefin(prev => ({
+                          ...prev,
+                          installmentAmount: parseFloat(totalPortInstallmentsSum.toFixed(2))
+                        }));
+                        setActiveSubTab('refin');
+                        toast({ title: 'Soma aplicada!', description: `R$ ${totalPortInstallmentsSum.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} usado como parcela do Refin Consolidado.` });
+                      }}
+                      disabled={isSaving || contracts.length < 2}
+                      className="h-8 px-4 rounded-full font-black text-[10px] uppercase border-emerald-400 text-emerald-700 hover:bg-emerald-50"
+                    >
+                      <Copy className="h-3.5 w-3.5 mr-1" /> Usar Soma na Parcela
+                    </Button>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
           {/* Seção 1: Dados do Cliente (Compartilhado com toda a operação) */}
@@ -786,7 +1053,9 @@ export function GroupedPortabilityForm({
                 )}
               >
                 <span className="h-2 w-2 rounded-full bg-blue-500" />
-                1. Portabilidade Pura (Contrato #{activeContractIndex + 1})
+                {operationMode === 'junction'
+                  ? `Portabilidade #${activeContractIndex + 1}`
+                  : `1. Portabilidade Pura (Contrato #${activeContractIndex + 1})`}
               </button>
               <button
                 type="button"
@@ -794,12 +1063,16 @@ export function GroupedPortabilityForm({
                 className={cn(
                   'flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 select-none',
                   activeSubTab === 'refin'
-                    ? 'bg-background text-emerald-600 shadow-md border border-emerald-100'
+                    ? operationMode === 'junction'
+                      ? 'bg-background text-purple-600 shadow-md border border-purple-200'
+                      : 'bg-background text-emerald-600 shadow-md border border-emerald-100'
                     : 'text-muted-foreground opacity-60 hover:opacity-100'
                 )}
               >
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                2. Refin da Portabilidade (Contrato #{activeContractIndex + 1})
+                <span className={cn('h-2 w-2 rounded-full', operationMode === 'junction' ? 'bg-purple-500' : 'bg-emerald-500')} />
+                {operationMode === 'junction'
+                  ? 'Refin Consolidado (único)'
+                  : `2. Refin da Portabilidade (Contrato #${activeContractIndex + 1})`}
               </button>
             </div>
           </div>
@@ -1730,8 +2003,17 @@ export function GroupedPortabilityForm({
       {/* Barra Inferior Fixa com Salvar Operação */}
       <div className="sticky bottom-0 px-8 py-5 border-t bg-background z-20 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider py-1 px-3">
-            {contracts.length} Contrato(s) no Lote ({contracts.length * 2} Propostas)
+          <Badge
+            variant="outline"
+            className={cn(
+              "text-[10px] font-bold uppercase tracking-wider py-1 px-3",
+              operationMode === 'junction' ? 'border-purple-400 text-purple-700' : ''
+            )}
+          >
+            {operationMode === 'junction'
+              ? `${contracts.length} Port(s) + 1 Refin Consolidado (${contracts.length + 1} Propostas)`
+              : `${contracts.length} Contrato(s) no Lote (${contracts.length * 2} Propostas)`
+            }
           </Badge>
           <Button
             type="button"
@@ -1747,8 +2029,13 @@ export function GroupedPortabilityForm({
         <Button
           type="button"
           onClick={handleValidateAndSubmit}
-          disabled={isSaving || isSummarizing}
-          className="rounded-full px-10 font-black uppercase text-xs tracking-[0.2em] bg-[#00AEEF] hover:bg-[#0096D1] text-white shadow-2xl shadow-[#00AEEF]/30 transition-all border-none h-14"
+          disabled={isSaving || isSummarizing || (operationMode === 'junction' && contracts.length < 2)}
+          className={cn(
+            "rounded-full px-10 font-black uppercase text-xs tracking-[0.2em] text-white shadow-2xl transition-all border-none h-14",
+            operationMode === 'junction'
+              ? 'bg-purple-600 hover:bg-purple-700 shadow-purple-500/30'
+              : 'bg-[#00AEEF] hover:bg-[#0096D1] shadow-[#00AEEF]/30'
+          )}
         >
           {isSaving ? (
             <>
@@ -1756,7 +2043,11 @@ export function GroupedPortabilityForm({
             </>
           ) : (
             <>
-              <Save className="mr-3 h-5 w-5" /> Salvar Operação ({contracts.length * 2} Propostas)
+              <Save className="mr-3 h-5 w-5" />
+              {operationMode === 'junction'
+                ? `Salvar Junção (${contracts.length + 1} Propostas)`
+                : `Salvar Operação (${contracts.length * 2} Propostas)`
+              }
             </>
           )}
         </Button>

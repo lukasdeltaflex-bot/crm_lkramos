@@ -135,6 +135,7 @@ export type Proposal = {
   linkedProposalId?: string;
   operationRole?: 'portabilidade' | 'refin';
   contractGroupIndex?: number;
+  operationMode?: 'individual' | 'junction';
 };
 
 export type StatusBehavior = 'pending' | 'in_progress' | 'success' | 'rejection' | 'canceled';

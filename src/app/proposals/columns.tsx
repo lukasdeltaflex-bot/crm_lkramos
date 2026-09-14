@@ -271,9 +271,22 @@ export const getColumns = (
     header: 'N° Proposta', 
     cell: ({ row }) => {
         const p = row.original;
-        const isLinked = !!p.linkedProposalId;
-        const groupIdx = (p.contractGroupIndex ?? 0) + 1;
-        const roleLabel = p.operationRole === 'portabilidade' ? `Port #${groupIdx}` : p.operationRole === 'refin' ? `Refin #${groupIdx}` : 'Vinculada';
+        const isLinked = !!p.linkedProposalId || !!p.operationId;
+        const isJunction = p.operationMode === 'junction';
+        const groupIdx = p.contractGroupIndex ?? 1;
+
+        let roleLabel = p.operationRole === 'portabilidade' ? `Port #${groupIdx}` : p.operationRole === 'refin' ? `Refin #${groupIdx}` : 'Vinculada';
+        let tooltipText = `Operação conjunta Portabilidade + Refin (Contrato #${groupIdx})`;
+
+        if (isJunction) {
+            if (p.operationRole === 'portabilidade') {
+                roleLabel = `Port #${groupIdx} (Junção)`;
+                tooltipText = `Portabilidade #${groupIdx} vinculada à Junção de Parcelas`;
+            } else if (p.operationRole === 'refin') {
+                roleLabel = `Refin Consolidado`;
+                tooltipText = `Refinanciamento Consolidado com Junção de Parcelas`;
+            }
+        }
 
         return (
             <div className="flex flex-col gap-0.5">
@@ -284,13 +297,18 @@ export const getColumns = (
                 {isLinked && (
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md w-max bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 cursor-help">
+                            <span className={cn(
+                                "inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md w-max border cursor-help transition-all",
+                                isJunction
+                                  ? "bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border-purple-200 dark:border-purple-800"
+                                  : "bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200 dark:border-blue-800"
+                            )}>
                                 <Link2 className="h-2.5 w-2.5" />
                                 {roleLabel}
                             </span>
                         </TooltipTrigger>
                         <TooltipContent side="top">
-                            <p className="text-xs">Operação conjunta Portabilidade + Refin (Contrato #{groupIdx})</p>
+                            <p className="text-xs">{tooltipText}</p>
                         </TooltipContent>
                     </Tooltip>
                 )}

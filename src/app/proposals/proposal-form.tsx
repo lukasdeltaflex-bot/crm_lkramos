@@ -211,9 +211,20 @@ export function ProposalForm({
   const [commPercRaw, setCommPercRaw] = useState<string>('0');
 
   const linkedProposal = useMemo(() => {
-    if (!proposal?.linkedProposalId) return null;
-    return allProposals.find(p => p.id === proposal.linkedProposalId) || null;
-  }, [proposal?.linkedProposalId, allProposals]);
+    if (!proposal?.linkedProposalId && !proposal?.operationId) return null;
+    if (proposal?.linkedProposalId) {
+      const direct = allProposals.find(p => p.id === proposal.linkedProposalId);
+      if (direct) return direct;
+    }
+    if (proposal?.operationMode === 'junction' && proposal?.operationId) {
+      if (proposal.operationRole === 'portabilidade') {
+        return allProposals.find(p => p.operationId === proposal.operationId && p.operationRole === 'refin') || null;
+      } else {
+        return allProposals.find(p => p.operationId === proposal.operationId && p.operationRole === 'portabilidade') || null;
+      }
+    }
+    return null;
+  }, [proposal?.linkedProposalId, proposal?.operationId, proposal?.operationMode, proposal?.operationRole, allProposals]);
 
   const activeConfigs = useMemo(() => normalizeStatuses(userSettings?.proposalStatuses || configData.proposalStatuses), [userSettings]);
   const productTypes = userSettings?.productTypes || configData.productTypes;
@@ -468,18 +479,35 @@ export function ProposalForm({
         <ScrollArea className="flex-1 px-8">
           <div className="space-y-12 pb-10 pt-6">
             
-            {proposal?.linkedProposalId && (
-              <Alert className="rounded-3xl border-2 border-blue-400 bg-blue-50/50 dark:bg-blue-950/20 text-blue-900 dark:text-blue-100 animate-in slide-in-from-top-2">
-                <Link2 className="h-5 w-5 text-blue-600" />
+            {(proposal?.linkedProposalId || proposal?.operationMode === 'junction') && (
+              <Alert className={cn(
+                "rounded-3xl border-2 animate-in slide-in-from-top-2",
+                proposal?.operationMode === 'junction'
+                  ? "border-purple-400 bg-purple-50/50 dark:bg-purple-950/20 text-purple-900 dark:text-purple-100"
+                  : "border-blue-400 bg-blue-50/50 dark:bg-blue-950/20 text-blue-900 dark:text-blue-100"
+              )}>
+                <Link2 className={cn("h-5 w-5", proposal?.operationMode === 'junction' ? "text-purple-600" : "text-blue-600")} />
                 <AlertTitle className="font-black uppercase text-xs">
-                  Operação Casada: Portabilidade + Refin {proposal.contractGroupIndex ? `(Contrato #${proposal.contractGroupIndex})` : ''}
+                  {proposal?.operationMode === 'junction'
+                    ? `Operação Casada: Portabilidade + Refin com Junção de Parcelas ${proposal.contractGroupIndex ? `(Portabilidade #${proposal.contractGroupIndex})` : '(Refin Consolidado)'}`
+                    : `Operação Casada: Portabilidade + Refin ${proposal.contractGroupIndex ? `(Contrato #${proposal.contractGroupIndex})` : ''}`}
                 </AlertTitle>
-                <AlertDescription className="text-xs font-bold text-blue-700 dark:text-blue-200 mt-1">
-                  Esta proposta é {proposal.operationRole === 'portabilidade' ? 'a Portabilidade' : 'o Refin da Portabilidade'}.
-                  {linkedProposal ? (
-                    <> Vinculada à proposta <strong>{linkedProposal.product} N° {linkedProposal.proposalNumber}</strong> (Status: <strong>{linkedProposal.status}</strong>).</>
+                <AlertDescription className={cn("text-xs font-bold mt-1", proposal?.operationMode === 'junction' ? "text-purple-700 dark:text-purple-200" : "text-blue-700 dark:text-blue-200")}>
+                  {proposal?.operationMode === 'junction' ? (
+                    proposal.operationRole === 'portabilidade' ? (
+                      <>Esta proposta é a <strong>Portabilidade #{proposal.contractGroupIndex}</strong> da operação com junção de parcelas{linkedProposal ? <> vinculada ao <strong>Refin Consolidado N° {linkedProposal.proposalNumber}</strong> (Status: <strong>{linkedProposal.status}</strong>)</> : ''}.</>
+                    ) : (
+                      <>Esta proposta é o <strong>Refin Consolidado</strong> que unifica as parcelas de Portabilidade da operação ({proposal.operationId || 'Junção'}).</>
+                    )
                   ) : (
-                    <> Possui vínculo recíproco registrado na esteira.</>
+                    <>
+                      Esta proposta é {proposal.operationRole === 'portabilidade' ? 'a Portabilidade' : 'o Refin da Portabilidade'}.
+                      {linkedProposal ? (
+                        <> Vinculada à proposta <strong>{linkedProposal.product} N° {linkedProposal.proposalNumber}</strong> (Status: <strong>{linkedProposal.status}</strong>).</>
+                      ) : (
+                        <> Possui vínculo recíproco registrado na esteira.</>
+                      )}
+                    </>
                   )}
                 </AlertDescription>
               </Alert>

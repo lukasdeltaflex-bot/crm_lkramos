@@ -300,6 +300,29 @@ function ProposalsPageContent() {
     setIsSaving(true);
     try {
         if (linkedProposal && isPortability) {
+            // ⚡ SE FOR OPERAÇÃO COM JUNÇÃO DE PARCELAS: Registra no histórico do Refin Consolidado sem alterar status arbitrariamente
+            if (proposal.operationMode === 'junction' && proposal.operationId) {
+                const batch = writeBatch(firestore);
+                const portDocRef = doc(firestore, 'loanProposals', proposalId);
+                batch.update(portDocRef, cleanFirestoreData(dataToUpdate));
+
+                const consolidatedRefin = proposals?.find(p => p.operationId === proposal.operationId && p.operationRole === 'refin');
+                if (consolidatedRefin) {
+                    const refinDocRef = doc(firestore, 'loanProposals', consolidatedRefin.id);
+                    batch.update(refinDocRef, {
+                        history: arrayUnion({
+                            id: crypto.randomUUID(),
+                            date: now,
+                            message: `ℹ️ Portabilidade #${proposal.contractGroupIndex || 1} (${proposal.proposalNumber || 'S/N'}) mudou para "${newStatus}".`,
+                            userName: userName
+                        })
+                    });
+                }
+                await batch.commit();
+                toast({ title: 'Status Atualizado (notificado no histórico do Refin Consolidado)!' });
+                return;
+            }
+
             const batch = writeBatch(firestore);
             const portDocRef = doc(firestore, 'loanProposals', proposalId);
             batch.update(portDocRef, cleanFirestoreData(dataToUpdate));
@@ -384,7 +407,23 @@ function ProposalsPageContent() {
     const now = new Date().toISOString();
 
     try {
-        if (linkedProposal) {
+        // ⚡ SE FOR JUNÇÃO DE PARCELAS: Move TODAS as propostas com o mesmo operationId para a lixeira!
+        if (proposal?.operationMode === 'junction' && proposal?.operationId) {
+            const batch = writeBatch(firestore);
+            const siblings = (proposals || []).filter(p => p.operationId === proposal.operationId && !p.deleted);
+            siblings.forEach(sib => {
+                batch.update(doc(firestore, 'loanProposals', sib.id), {
+                    deleted: true,
+                    deletedAt: now,
+                    deletedBy: user.uid
+                });
+            });
+            await batch.commit();
+            toast({ 
+                title: 'Operação com Junção Movida para a Lixeira', 
+                description: `Todas as ${siblings.length} propostas da operação conjunta foram movidas para a lixeira.` 
+            });
+        } else if (linkedProposal) {
             const batch = writeBatch(firestore);
             batch.update(doc(firestore, 'loanProposals', id), {
                 deleted: true,
@@ -419,7 +458,83 @@ function ProposalsPageContent() {
     setIsSaving(true);
     
     try {
-        // ⚡ FLUXO DE OPERAÇÃO AGRUPADA (PORTABILIDADE + REFIN — MÚLTIPLOS CONTRATOS)
+        // ⚡ FLUXO DE OPERAÇÃO COM JUNÇÃO DE PARCELAS (N PORTABILIDADES -> 1 REFIN CONSOLIDADO)
+        if (formData.isGroupedOperation && formData.operationMode === 'junction' && Array.isArray(formData.portabilidades) && formData.refin) {
+            const batch = writeBatch(firestore);
+            const now = new Date().toISOString();
+            const userName = user.displayName || user.email || 'Sistema';
+            const batchOpId = `OP-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+
+            const refinDocId = doc(collection(firestore, 'loanProposals')).id;
+            const refinRef = doc(firestore, 'loanProposals', refinDocId);
+
+            const createdPortDocIds: string[] = [];
+
+            // Gravar N Portabilidades
+            formData.portabilidades.forEach((portItem: any, idx: number) => {
+                const portDocId = doc(collection(firestore, 'loanProposals')).id;
+                createdPortDocIds.push(portDocId);
+                const portRef = doc(firestore, 'loanProposals', portDocId);
+
+                const portProposalData = cleanFirestoreData({
+                    ...portItem,
+                    id: portDocId,
+                    ownerId: user.uid,
+                    operationId: batchOpId,
+                    linkedProposalId: refinDocId,
+                    operationRole: 'portabilidade',
+                    contractGroupIndex: idx + 1,
+                    operationMode: 'junction',
+                    history: [
+                        ...(portItem.history || []),
+                        {
+                            id: crypto.randomUUID(),
+                            date: now,
+                            message: `Operação Casada com Junção de Parcelas (Portabilidade #${idx + 1}). Vinculada ao Refin Consolidado N° ${formData.refin.proposalNumber || 'S/N'}.`,
+                            userName
+                        }
+                    ]
+                });
+
+                batch.set(portRef, portProposalData);
+            });
+
+            // Gravar 1 Refin Consolidado
+            const refinProposalData = cleanFirestoreData({
+                ...formData.refin,
+                id: refinDocId,
+                ownerId: user.uid,
+                operationId: batchOpId,
+                linkedProposalId: createdPortDocIds[0],
+                operationRole: 'refin',
+                contractGroupIndex: 0,
+                operationMode: 'junction',
+                history: [
+                    ...(formData.refin.history || []),
+                    {
+                        id: crypto.randomUUID(),
+                        date: now,
+                        message: `Operação Casada com Junção de Parcelas (Refin Consolidado unificando ${formData.portabilidades.length} contratos portados).`,
+                        userName
+                    }
+                ]
+            });
+
+            batch.set(refinRef, refinProposalData);
+
+            await batch.commit();
+            const totalProposals = formData.portabilidades.length + 1;
+            toast({ 
+                title: 'Operação com Junção Cadastrada com Sucesso!', 
+                description: `${formData.portabilidades.length} portabilidade(s) unificada(s) em 1 Refin Consolidado (${totalProposals} propostas geradas).` 
+            });
+            setIsDialogOpen(false);
+            setSelectedProposal(undefined);
+            setSheetMode('new');
+            return;
+        }
+
+        // ⚡ FLUXO DE OPERAÇÃO AGRUPADA (PORTABILIDADE + REFIN — MÚLTIPLOS CONTRATOS INDIVIDUAIS)
         if (formData.isGroupedOperation && Array.isArray(formData.contracts)) {
             const batch = writeBatch(firestore);
             const now = new Date().toISOString();
@@ -442,6 +557,7 @@ function ProposalsPageContent() {
                     linkedProposalId: refinDocId,
                     operationRole: 'portabilidade',
                     contractGroupIndex: idx + 1,
+                    operationMode: 'individual',
                     history: [
                         ...(contractItem.portabilidade.history || []),
                         {
@@ -461,6 +577,7 @@ function ProposalsPageContent() {
                     linkedProposalId: portDocId,
                     operationRole: 'refin',
                     contractGroupIndex: idx + 1,
+                    operationMode: 'individual',
                     history: [
                         ...(contractItem.refin.history || []),
                         {
