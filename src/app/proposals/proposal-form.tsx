@@ -644,7 +644,17 @@ export function ProposalForm({
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel className="text-[10px] font-black uppercase tracking-widest text-blue-600">N° Contrato Origem (Obrigatório) *</FormLabel>
-                                <FormControl><Input placeholder="Número do contrato no banco anterior" {...field} readOnly={isReadOnly} className="h-12 font-black border-2 border-white rounded-xl" /></FormControl>
+                                <FormControl><Input
+                                    placeholder="Número do contrato no banco anterior"
+                                    {...field}
+                                    readOnly={isReadOnly}
+                                    className="h-12 font-black border-2 border-white rounded-xl"
+                                    onPaste={(e) => {
+                                        e.preventDefault();
+                                        const pasted = e.clipboardData.getData('text').replace(/\s+/g, '');
+                                        field.onChange(pasted);
+                                    }}
+                                /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -748,7 +758,17 @@ export function ProposalForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">N° Proposta *</FormLabel>
-                      <FormControl><Input placeholder="000000000" {...field} readOnly={isReadOnly} className="h-12 font-black border-2 rounded-xl" /></FormControl>
+                      <FormControl><Input
+                        placeholder="000000000"
+                        {...field}
+                        readOnly={isReadOnly}
+                        className="h-12 font-black border-2 rounded-xl"
+                        onPaste={productValue === 'Portabilidade' ? (e) => {
+                          e.preventDefault();
+                          const pasted = e.clipboardData.getData('text').replace(/\s+/g, '');
+                          field.onChange(pasted);
+                        } : undefined}
+                      /></FormControl>
                     </FormItem>
                   )}
                 />
@@ -932,7 +952,20 @@ export function ProposalForm({
                                 <FormLabel className="text-[10px] font-black uppercase text-emerald-700">Porcentagem (%)</FormLabel>
                                 <FormControl>
                                     <div className="relative">
-                                        <Input type="number" step="0.01" className="h-12 pr-10 font-black border-2 rounded-xl text-emerald-600" {...field} readOnly={isReadOnly} />
+                                        <Input
+                                            type="text"
+                                            inputMode="decimal"
+                                            className="h-12 pr-10 font-black border-2 rounded-xl text-emerald-600"
+                                            value={String(field.value ?? '')}
+                                            readOnly={isReadOnly}
+                                            onChange={(e) => {
+                                                const raw = e.target.value;
+                                                if (raw === '' || /^[0-9]*[,.]?[0-9]*$/.test(raw)) {
+                                                    const numericVal = raw === '' || raw === ',' || raw === '.' ? 0 : parseFloat(raw.replace(',', '.')) || 0;
+                                                    field.onChange(numericVal);
+                                                }
+                                            }}
+                                        />
                                         <Percent className="absolute right-4 top-3.5 h-4 w-4 text-emerald-600/40" />
                                     </div>
                                 </FormControl>

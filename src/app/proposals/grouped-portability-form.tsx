@@ -211,7 +211,7 @@ export function GroupedPortabilityForm({
   const { statusColors } = useTheme();
 
   const todayFormatted = useMemo(() => format(new Date(), 'dd/MM/yyyy'), []);
-  const defaultOperator = useMemo(() => user?.displayName || user?.email || '', [user]);
+  const defaultOperator = '';
 
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>(initialCustomerId);
   const [selectedBenefitNumber, setSelectedBenefitNumber] = useState<string>(initialBenefitNumber);
@@ -331,7 +331,8 @@ export function GroupedPortabilityForm({
         // Recálculo automático de comissão
         if (field === 'commissionPercentage' || field === 'commissionBase' || field === 'grossAmount') {
           const baseAmount = updatedPort.commissionBase === 'gross' ? updatedPort.grossAmount : 0;
-          const percent = field === 'commissionPercentage' ? (value as number) : updatedPort.commissionPercentage;
+          const rawPercent = field === 'commissionPercentage' ? value : updatedPort.commissionPercentage;
+          const percent = parseFloat(String(rawPercent).replace(',', '.')) || 0;
           updatedPort.commissionValue = parseFloat(((baseAmount * percent) / 100).toFixed(2));
         }
 
@@ -364,7 +365,8 @@ export function GroupedPortabilityForm({
         // Recálculo automático de comissão
         if (field === 'commissionPercentage' || field === 'commissionBase' || field === 'grossAmount' || field === 'netAmount') {
           const baseAmount = updatedRefin.commissionBase === 'gross' ? updatedRefin.grossAmount : updatedRefin.netAmount;
-          const percent = field === 'commissionPercentage' ? (value as number) : updatedRefin.commissionPercentage;
+          const rawPercent = field === 'commissionPercentage' ? value : updatedRefin.commissionPercentage;
+          const percent = parseFloat(String(rawPercent).replace(',', '.')) || 0;
           updatedRefin.commissionValue = parseFloat(((baseAmount * percent) / 100).toFixed(2));
         }
 
@@ -868,6 +870,11 @@ export function GroupedPortabilityForm({
                       placeholder="Número do contrato no banco anterior"
                       value={currentPort.originalContractNumber}
                       onChange={(e) => updatePortabilityField('originalContractNumber', e.target.value)}
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        const pasted = e.clipboardData.getData('text').replace(/\s+/g, '');
+                        updatePortabilityField('originalContractNumber', pasted);
+                      }}
                       className="h-12 font-black border-2 border-white rounded-xl"
                     />
                   </div>
@@ -954,6 +961,11 @@ export function GroupedPortabilityForm({
                       placeholder="000000000"
                       value={currentPort.proposalNumber}
                       onChange={(e) => updatePortabilityField('proposalNumber', e.target.value)}
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        const pasted = e.clipboardData.getData('text').replace(/\s+/g, '');
+                        updatePortabilityField('proposalNumber', pasted);
+                      }}
                       className="h-12 font-black border-2 rounded-xl"
                     />
                   </div>
@@ -1105,10 +1117,16 @@ export function GroupedPortabilityForm({
                     </Label>
                     <div className="relative">
                       <Input
-                        type="number"
-                        step="0.01"
-                        value={currentPort.commissionPercentage || ''}
-                        onChange={(e) => updatePortabilityField('commissionPercentage', parseFloat(e.target.value) || 0)}
+                        type="text"
+                        inputMode="decimal"
+                        value={String(currentPort.commissionPercentage ?? '')}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          if (raw === '' || /^[0-9]*[,.]?[0-9]*$/.test(raw)) {
+                            const numericVal = raw === '' || raw === ',' || raw === '.' ? 0 : parseFloat(raw.replace(',', '.')) || 0;
+                            updatePortabilityField('commissionPercentage', numericVal as any);
+                          }
+                        }}
                         className="h-12 pr-10 font-black border-2 rounded-xl text-emerald-600"
                       />
                       <Percent className="absolute right-4 top-3.5 h-4 w-4 text-emerald-600/40" />
@@ -1531,10 +1549,16 @@ export function GroupedPortabilityForm({
                     </Label>
                     <div className="relative">
                       <Input
-                        type="number"
-                        step="0.01"
-                        value={currentRefin.commissionPercentage || ''}
-                        onChange={(e) => updateRefinField('commissionPercentage', parseFloat(e.target.value) || 0)}
+                        type="text"
+                        inputMode="decimal"
+                        value={String(currentRefin.commissionPercentage ?? '')}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          if (raw === '' || /^[0-9]*[,.]?[0-9]*$/.test(raw)) {
+                            const numericVal = raw === '' || raw === ',' || raw === '.' ? 0 : parseFloat(raw.replace(',', '.')) || 0;
+                            updateRefinField('commissionPercentage', numericVal as any);
+                          }
+                        }}
                         className="h-12 pr-10 font-black border-2 rounded-xl text-emerald-600"
                       />
                       <Percent className="absolute right-4 top-3.5 h-4 w-4 text-emerald-600/40" />

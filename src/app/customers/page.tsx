@@ -10,7 +10,7 @@ import { PlusCircle, FileDown, UserCheck, UserX, Trash2, Sparkles, Landmark, X, 
 import { CustomerForm } from './customer-form';
 import type { Customer, UserSettings, Proposal, Lead } from '@/lib/types';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, doc, updateDoc, setDoc, query, where, writeBatch, limit, orderBy, getDocs } from 'firebase/firestore';
+import { collection, doc, updateDoc, setDoc, query, where, writeBatch, limit, orderBy, getDocs, getDoc } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -83,6 +83,7 @@ function CustomersPageContent() {
   const [rmcFilter, setRmcFilter] = React.useState('all');
   const [rccFilter, setRccFilter] = React.useState('all');
   const [tagFilter, setTagFilter] = React.useState('all');
+  const [globalSearchTerm, setGlobalSearchTerm] = React.useState('');
 
   const customersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -194,6 +195,79 @@ function CustomersPageContent() {
       }
   };
 
+  // 🔍 BUSCA POR ID EXATO NO FIRESTORE (PAGINAÇÃO TRANSPARENTE / FORA DO CHUNK INICIAL)
+  React.useEffect(() => {
+    const trimmed = globalSearchTerm.trim();
+    if (!trimmed || !firestore || !user) return;
+
+    // Se o cliente já estiver presente nos clientes carregados, não precisa consultar Firestore
+    const existsLocally = customers.some(
+      (c: any) => String(c.id).trim() === trimmed || String(c.numericId).trim() === trimmed
+    );
+    if (existsLocally) return;
+
+    let isMounted = true;
+    const fetchExactCustomer = async () => {
+      try {
+        // 1. Busca por Document ID no Firestore
+        const docRef = doc(firestore, 'customers', trimmed);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const d = docSnap.data();
+          if (d.ownerId === user.uid && d.deleted !== true && isMounted) {
+            const found = { ...d, id: docSnap.id } as Customer;
+            setStaticCustomers(prev => prev.some(c => c.id === found.id) ? prev : [found, ...prev]);
+            return;
+          }
+        }
+
+        // 2. Busca pelo campo 'id'
+        const qId = query(
+          collection(firestore, 'customers'),
+          where('ownerId', '==', user.uid),
+          where('id', '==', trimmed),
+          limit(1)
+        );
+        const snapId = await getDocs(qId);
+        if (!snapId.empty && isMounted) {
+          const docItem = snapId.docs[0];
+          const found = { ...docItem.data(), id: docItem.id } as Customer;
+          if (found.deleted !== true) {
+            setStaticCustomers(prev => prev.some(c => c.id === found.id) ? prev : [found, ...prev]);
+            return;
+          }
+        }
+
+        // 3. Busca pelo campo 'numericId' se for numérico
+        if (/^\d+$/.test(trimmed)) {
+          const num = Number(trimmed);
+          if (!isNaN(num)) {
+            const qNum = query(
+              collection(firestore, 'customers'),
+              where('ownerId', '==', user.uid),
+              where('numericId', '==', num),
+              limit(1)
+            );
+            const snapNum = await getDocs(qNum);
+            if (!snapNum.empty && isMounted) {
+              const docItem = snapNum.docs[0];
+              const found = { ...docItem.data(), id: docItem.id } as Customer;
+              if (found.deleted !== true) {
+                setStaticCustomers(prev => prev.some(c => c.id === found.id) ? prev : [found, ...prev]);
+                return;
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Erro na busca por ID exato no Firestore:', err);
+      }
+    };
+
+    fetchExactCustomer();
+    return () => { isMounted = false; };
+  }, [globalSearchTerm, firestore, user, customers]);
+
   const banks = userSettings?.banks || configData.banks;
   const availableTags = userSettings?.customerTags || configData.defaultCustomerTags;
   const showLogos = userSettings?.showBankLogos ?? true;
@@ -226,7 +300,14 @@ function CustomersPageContent() {
   }, [customers, proposalsByCustomer]);
 
   const filteredCustomers = React.useMemo(() => {
+    const trimmedSearch = globalSearchTerm.trim();
+
     return processedCustomers.filter(c => {
+        // ⚡ PRIORIDADE MÁXIMA: Se for o cliente exato buscado por ID, exibe imediatamente
+        if (trimmedSearch && (String(c.id).trim() === trimmedSearch || String(c.numericId).trim() === trimmedSearch)) {
+            return true;
+        }
+
         if (filter === 'birthdays') return false;
         if (c.name === 'Cliente Removido') return false;
 
@@ -260,7 +341,7 @@ function CustomersPageContent() {
 
         return true;
     });
-  }, [processedCustomers, filter, rmcFilter, rccFilter, tagFilter]);
+  }, [processedCustomers, filter, rmcFilter, rccFilter, tagFilter, globalSearchTerm]);
 
   const handleEditCustomer = React.useCallback((customer: Customer) => {
     setSelectedCustomer(customer);
@@ -689,6 +770,7 @@ function CustomersPageContent() {
                 isLoading={isCustomersLoading}
                 rowSelection={rowSelection}
                 setRowSelection={setRowSelection}
+                onGlobalFilterChange={setGlobalSearchTerm}
             />
             {/* ⚡ PERFORMANCE: Botão para carregar mais registros (Manual) */}
             {hasMoreCustomers && ((realTimeCustomers?.length || 0) + staticCustomers.length) >= LOAD_CHUNK_SIZE && !isCustomersLoading && (

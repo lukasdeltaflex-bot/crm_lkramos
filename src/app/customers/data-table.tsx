@@ -83,6 +83,7 @@ interface DataTableProps {
   isLoading: boolean;
   rowSelection: RowSelectionState;
   setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>;
+  onGlobalFilterChange?: (filter: string) => void;
 }
 
 export interface CustomerDataTableHandle {
@@ -95,6 +96,7 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   isLoading,
   rowSelection,
   setRowSelection,
+  onGlobalFilterChange,
 }, ref) => {
   const { user } = useUser();
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'col_id', desc: true }]);
@@ -108,9 +110,11 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
   React.useEffect(() => {
       const timeoutId = setTimeout(() => {
           setGlobalFilter(localGlobalFilter);
+          setPagination(p => ({ ...p, pageIndex: 0 }));
+          onGlobalFilterChange?.(localGlobalFilter);
       }, 300);
       return () => clearTimeout(timeoutId);
-  }, [localGlobalFilter]);
+  }, [localGlobalFilter, onGlobalFilterChange]);
 
   const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   
@@ -182,6 +186,12 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
     }
   };
 
+  const hasAnyExactIdMatch = React.useMemo(() => {
+    const term = String(globalFilter ?? '').trim();
+    if (!term) return false;
+    return data.some(c => String(c.id).trim() === term || String(c.numericId).trim() === term);
+  }, [data, globalFilter]);
+
   const table = useReactTable({
     data,
     columns,
@@ -204,16 +214,29 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
         const searchTerm = String(filterValue ?? '').trim();
         if (!searchTerm) return true;
         const customer = row.original;
+
+        // 1. PRIORIDADE MÁXIMA: Se o termo digitado corresponder exatamente a um ID existente,
+        // retorna EXCLUSIVAMENTE os registros cujo ID seja exatamente igual ao termo.
+        if (hasAnyExactIdMatch) {
+            return String(customer.id).trim() === searchTerm || String(customer.numericId).trim() === searchTerm;
+        }
+
+        // 2. Se for uma busca numérica pura (CPF, Telefone ou ID inexistente)
         const normalizedSearch = normalizeString(searchTerm);
         const isPureNumber = /^\d+$/.test(searchTerm);
         if (isPureNumber) {
-            if (String(customer.numericId) === searchTerm) return true;
             const cpfNumeric = (customer.cpf || '').replace(/\D/g, '');
             if (cpfNumeric.startsWith(searchTerm)) return true;
-            return false;
+            const phoneNumeric = (customer.phone || '').replace(/\D/g, '');
+            if (phoneNumeric.includes(searchTerm)) return true;
+            const phone2Numeric = (customer.phone2 || '').replace(/\D/g, '');
+            if (phone2Numeric.includes(searchTerm)) return true;
         }
+
+        // 3. BUSCA GENÉRICA (Nome, Cidade, Email, Telefone formatado, Observações, Tags)
         const check = (f: any) => f && normalizeString(String(f)).includes(normalizedSearch);
         if (check(customer.name) || check(customer.city) || check(customer.email) || check(customer.observations)) return true;
+        if (check(customer.phone) || check(customer.phone2)) return true;
         if (customer.tags?.some(check)) return true;
         if ((customer as any).smartTags?.some(check)) return true;
         return false;
