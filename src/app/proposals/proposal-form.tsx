@@ -206,6 +206,10 @@ export function ProposalForm({
   const [isSummarizingObs, setIsSummarizingObs] = useState(false);
   const [isGroupedMode, setIsGroupedMode] = useState(false);
 
+  // Estado local de TEXTO para o campo de percentual de comissão.
+  // Separado do field.value (number) do React Hook Form para preservar zeros e vírgulas durante a digitação.
+  const [commPercRaw, setCommPercRaw] = useState<string>('0');
+
   const linkedProposal = useMemo(() => {
     if (!proposal?.linkedProposalId) return null;
     return allProposals.find(p => p.id === proposal.linkedProposalId) || null;
@@ -291,6 +295,14 @@ export function ProposalForm({
   useEffect(() => {
     form.reset(initialValues);
   }, [initialValues, form]);
+
+  // Sincroniza o estado local de texto quando a proposta muda (form.reset).
+  // Não depende do valor numérico durante a digitação para preservar vírgulas e zeros.
+  useEffect(() => {
+    const pct = initialValues.commissionPercentage;
+    setCommPercRaw(pct === 0 ? '0' : String(pct).replace('.', ','));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialValues]);
 
   const { watch, setValue } = form;
   const productValue = watch('product');
@@ -956,13 +968,24 @@ export function ProposalForm({
                                             type="text"
                                             inputMode="decimal"
                                             className="h-12 pr-10 font-black border-2 rounded-xl text-emerald-600"
-                                            value={String(field.value ?? '')}
+                                            value={commPercRaw}
                                             readOnly={isReadOnly}
                                             onChange={(e) => {
                                                 const raw = e.target.value;
                                                 if (raw === '' || /^[0-9]*[,.]?[0-9]*$/.test(raw)) {
+                                                    setCommPercRaw(raw);
                                                     const numericVal = raw === '' || raw === ',' || raw === '.' ? 0 : parseFloat(raw.replace(',', '.')) || 0;
                                                     field.onChange(numericVal);
+                                                }
+                                            }}
+                                            onBlur={() => {
+                                                const num = parseFloat(commPercRaw.replace(',', '.'));
+                                                if (!isNaN(num)) {
+                                                    field.onChange(num);
+                                                    setCommPercRaw(String(num).replace('.', ','));
+                                                } else {
+                                                    field.onChange(0);
+                                                    setCommPercRaw('0');
                                                 }
                                             }}
                                         />

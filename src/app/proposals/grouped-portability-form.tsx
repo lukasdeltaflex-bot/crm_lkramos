@@ -229,6 +229,11 @@ export function GroupedPortabilityForm({
   const [validationErrors, setValidationErrors] = useState<{ contractIdx: number; role: string; message: string } | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
 
+  // Estado local de TEXTO para os campos de percentual de comissão.
+  // Separados do valor numérico para preservar zeros iniciais e vírgulas durante a digitação.
+  const [portPercRaw, setPortPercRaw] = useState<string>('0');
+  const [refinPercRaw, setRefinPercRaw] = useState<string>('0');
+
   const activeConfigs = useMemo(
     () => normalizeStatuses(userSettings?.proposalStatuses || configData.proposalStatuses),
     [userSettings]
@@ -561,6 +566,17 @@ export function GroupedPortabilityForm({
   const currentContract = contracts[activeContractIndex] || contracts[0];
   const currentPort = currentContract.portabilidade;
   const currentRefin = currentContract.refin;
+
+  // Sincroniza os estados locais de texto quando o contrato ativo muda.
+  // Usa `activeContractIndex` como dependência (NÃO `commissionPercentage`) para não
+  // destruir o texto intermediário que o usuário está digitando.
+  useEffect(() => {
+    const pair = contracts[activeContractIndex];
+    if (!pair) return;
+    setPortPercRaw(String(pair.portabilidade.commissionPercentage ?? 0));
+    setRefinPercRaw(String(pair.refin.commissionPercentage ?? 0));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeContractIndex]);
 
   const currentRejectedPrevious = useMemo(() => {
     if (!allProposals || !currentPort.originalContractNumber || currentPort.originalContractNumber.trim().length < 5) return null;
@@ -1119,12 +1135,23 @@ export function GroupedPortabilityForm({
                       <Input
                         type="text"
                         inputMode="decimal"
-                        value={String(currentPort.commissionPercentage ?? '')}
+                        value={portPercRaw}
                         onChange={(e) => {
                           const raw = e.target.value;
                           if (raw === '' || /^[0-9]*[,.]?[0-9]*$/.test(raw)) {
-                            const numericVal = raw === '' || raw === ',' || raw === '.' ? 0 : parseFloat(raw.replace(',', '.')) || 0;
-                            updatePortabilityField('commissionPercentage', numericVal as any);
+                            setPortPercRaw(raw);
+                            const num = raw === '' || raw === ',' || raw === '.' ? 0 : parseFloat(raw.replace(',', '.')) || 0;
+                            updatePortabilityField('commissionPercentage', num);
+                          }
+                        }}
+                        onBlur={() => {
+                          const num = parseFloat(portPercRaw.replace(',', '.'));
+                          if (!isNaN(num)) {
+                            updatePortabilityField('commissionPercentage', num);
+                            setPortPercRaw(String(num).replace('.', ','));
+                          } else {
+                            updatePortabilityField('commissionPercentage', 0);
+                            setPortPercRaw('0');
                           }
                         }}
                         className="h-12 pr-10 font-black border-2 rounded-xl text-emerald-600"
@@ -1551,12 +1578,23 @@ export function GroupedPortabilityForm({
                       <Input
                         type="text"
                         inputMode="decimal"
-                        value={String(currentRefin.commissionPercentage ?? '')}
+                        value={refinPercRaw}
                         onChange={(e) => {
                           const raw = e.target.value;
                           if (raw === '' || /^[0-9]*[,.]?[0-9]*$/.test(raw)) {
-                            const numericVal = raw === '' || raw === ',' || raw === '.' ? 0 : parseFloat(raw.replace(',', '.')) || 0;
-                            updateRefinField('commissionPercentage', numericVal as any);
+                            setRefinPercRaw(raw);
+                            const num = raw === '' || raw === ',' || raw === '.' ? 0 : parseFloat(raw.replace(',', '.')) || 0;
+                            updateRefinField('commissionPercentage', num);
+                          }
+                        }}
+                        onBlur={() => {
+                          const num = parseFloat(refinPercRaw.replace(',', '.'));
+                          if (!isNaN(num)) {
+                            updateRefinField('commissionPercentage', num);
+                            setRefinPercRaw(String(num).replace('.', ','));
+                          } else {
+                            updateRefinField('commissionPercentage', 0);
+                            setRefinPercRaw('0');
                           }
                         }}
                         className="h-12 pr-10 font-black border-2 rounded-xl text-emerald-600"
