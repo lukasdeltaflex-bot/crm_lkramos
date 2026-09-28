@@ -132,37 +132,110 @@ export function PartnerPerformanceCharts({ proposals }: PartnerPerformanceCharts
       .slice(0, 5);
   }, [proposals]);
 
+  const portEfetivadasData = useMemo(() => {
+    const countMap: Record<string, number> = {};
+    proposals.forEach(p => {
+      const isPort =
+        (p.product === 'Portabilidade' || p.operationRole === 'portabilidade') &&
+        p.operationRole !== 'refin' &&
+        p.product !== 'Refin Port';
+      if (!isPort) return;
+      const behavior = getStatusBehavior(p.status, activeConfigs);
+      if (behavior !== 'success') return;
+      const bank = cleanBankName(p.bankOrigin || p.bank || '') || 'Não Informado';
+      countMap[bank] = (countMap[bank] || 0) + 1;
+    });
+    return Object.entries(countMap)
+      .map(([name, total]) => ({ name, total }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 5);
+  }, [proposals, activeConfigs]);
+
+  const portReprovadasData = useMemo(() => {
+    const countMap: Record<string, number> = {};
+    proposals.forEach(p => {
+      const isPort =
+        (p.product === 'Portabilidade' || p.operationRole === 'portabilidade') &&
+        p.operationRole !== 'refin' &&
+        p.product !== 'Refin Port';
+      if (!isPort) return;
+      const behavior = getStatusBehavior(p.status, activeConfigs);
+      if (behavior !== 'rejection') return;
+      const bank = cleanBankName(p.bankOrigin || p.bank || '') || 'Não Informado';
+      countMap[bank] = (countMap[bank] || 0) + 1;
+    });
+    return Object.entries(countMap)
+      .map(([name, total]) => ({ name, total }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 5);
+  }, [proposals, activeConfigs]);
+
   const renderChart = (data: { name: string; total: number }[], type: 'banks' | 'promoters' | 'operators') => (
     <div className="h-[300px] w-full pt-4">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} layout="vertical" margin={{ left: 0, right: 30 }}>
           <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--muted-foreground)/0.1)" />
           <XAxis type="number" hide />
-          <YAxis 
-            dataKey="name" 
-            type="category" 
-            width={180} 
+          <YAxis
+            dataKey="name"
+            type="category"
+            width={180}
             tickLine={false}
             axisLine={false}
             tick={<CustomYAxisTick type={type} bankDomains={bankDomains} promoterDomains={promoterDomains} showBankLogos={showBankLogos} showPromoterLogos={showPromoterLogos} />}
           />
-          <Tooltip 
+          <Tooltip
             cursor={{ fill: 'hsl(var(--muted)/0.1)' }}
             formatter={(value: number, name: any, props: any) => {
-                const label = type === 'banks' ? cleanBankName(props.payload.name) : props.payload.name;
-                return [formatCurrency(value), label];
+              const label = type === 'banks' ? cleanBankName(props.payload.name) : props.payload.name;
+              return [formatCurrency(value), label];
             }}
-            contentStyle={{ 
+            contentStyle={{
               borderRadius: 'var(--radius)',
               border: '1px solid hsl(var(--border))',
               backgroundColor: 'hsl(var(--background))',
               color: 'hsl(var(--foreground))'
             }}
           />
-          <Bar 
-            dataKey="total" 
-            fill="hsl(var(--primary))" 
-            radius={[0, 4, 4, 0]} 
+          <Bar
+            dataKey="total"
+            fill="hsl(var(--primary))"
+            radius={[0, 4, 4, 0]}
+            barSize={25}
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+
+  const renderCountChart = (data: { name: string; total: number }[], fillColor: string) => (
+    <div className="h-[300px] w-full pt-4">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} layout="vertical" margin={{ left: 0, right: 50 }}>
+          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--muted-foreground)/0.1)" />
+          <XAxis type="number" hide />
+          <YAxis
+            dataKey="name"
+            type="category"
+            width={180}
+            tickLine={false}
+            axisLine={false}
+            tick={<CustomYAxisTick type="banks" bankDomains={bankDomains} promoterDomains={promoterDomains} showBankLogos={showBankLogos} showPromoterLogos={showPromoterLogos} />}
+          />
+          <Tooltip
+            cursor={{ fill: 'hsl(var(--muted)/0.1)' }}
+            formatter={(value: number) => [`${value} ${value === 1 ? 'contrato' : 'contratos'}`, 'Quantidade']}
+            contentStyle={{
+              borderRadius: 'var(--radius)',
+              border: '1px solid hsl(var(--border))',
+              backgroundColor: 'hsl(var(--background))',
+              color: 'hsl(var(--foreground))'
+            }}
+          />
+          <Bar
+            dataKey="total"
+            fill={fillColor}
+            radius={[0, 4, 4, 0]}
             barSize={25}
           />
         </BarChart>
@@ -172,13 +245,13 @@ export function PartnerPerformanceCharts({ proposals }: PartnerPerformanceCharts
 
   if (proposals.length === 0) return (
     <Card className="h-full border-border/50 shadow-md">
-        <CardHeader>
-            <CardTitle className="text-xl font-headline text-primary">Rankings de Produção</CardTitle>
-            <CardDescription>Aguardando propostas para gerar análise</CardDescription>
-        </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center text-muted-foreground border-2 border-dashed rounded-xl m-6">
-            Sem dados suficientes no período.
-        </CardContent>
+      <CardHeader>
+        <CardTitle className="text-xl font-headline text-primary">Rankings de Produção</CardTitle>
+        <CardDescription>Aguardando propostas para gerar análise</CardDescription>
+      </CardHeader>
+      <CardContent className="h-[300px] flex items-center justify-center text-muted-foreground border-2 border-dashed rounded-xl m-6">
+        Sem dados suficientes no período.
+      </CardContent>
     </Card>
   );
 
@@ -190,30 +263,46 @@ export function PartnerPerformanceCharts({ proposals }: PartnerPerformanceCharts
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="banks">
-          <TabsList className="grid w-full grid-cols-3 mb-4 bg-muted/50">
+          <TabsList className="grid w-full grid-cols-5 mb-4 bg-muted/50">
             <TabsTrigger value="banks">Bancos</TabsTrigger>
             <TabsTrigger value="promoters">Promotoras</TabsTrigger>
             <TabsTrigger value="operators">Operadores</TabsTrigger>
+            <TabsTrigger value="port-efetivadas">Port. Efetivadas</TabsTrigger>
+            <TabsTrigger value="port-reprovadas">Port. Reprovadas</TabsTrigger>
           </TabsList>
           <TabsContent value="banks" className="mt-0">
             {bankData.length > 0 ? renderChart(bankData, 'banks') : (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground text-sm border-2 border-dashed rounded-lg">
-                    Nenhum banco registrado no período.
-                </div>
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground text-sm border-2 border-dashed rounded-lg">
+                Nenhum banco registrado no período.
+              </div>
             )}
           </TabsContent>
           <TabsContent value="promoters" className="mt-0">
             {promoterData.length > 0 ? renderChart(promoterData, 'promoters') : (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground text-sm border-2 border-dashed rounded-lg">
-                    Nenhuma promotora registrada no período.
-                </div>
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground text-sm border-2 border-dashed rounded-lg">
+                Nenhuma promotora registrada no período.
+              </div>
             )}
           </TabsContent>
           <TabsContent value="operators" className="mt-0">
             {operatorData.length > 0 ? renderChart(operatorData, 'operators') : (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground text-sm border-2 border-dashed rounded-lg text-center p-4">
-                    Nenhum operador com propostas pagas neste período.
-                </div>
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground text-sm border-2 border-dashed rounded-lg text-center p-4">
+                Nenhum operador com propostas pagas neste período.
+              </div>
+            )}
+          </TabsContent>
+          <TabsContent value="port-efetivadas" className="mt-0">
+            {portEfetivadasData.length > 0 ? renderCountChart(portEfetivadasData, 'hsl(var(--chart-2))') : (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground text-sm border-2 border-dashed rounded-lg text-center p-4">
+                Nenhuma portabilidade efetivada encontrada.
+              </div>
+            )}
+          </TabsContent>
+          <TabsContent value="port-reprovadas" className="mt-0">
+            {portReprovadasData.length > 0 ? renderCountChart(portReprovadasData, 'hsl(var(--destructive))') : (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground text-sm border-2 border-dashed rounded-lg text-center p-4">
+                Nenhuma portabilidade reprovada encontrada.
+              </div>
             )}
           </TabsContent>
         </Tabs>

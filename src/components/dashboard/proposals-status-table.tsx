@@ -21,15 +21,16 @@ import { Button } from '@/components/ui/button';
 import type { Customer, Proposal } from '@/lib/types';
 import { statusColumns } from './status-columns';
 import { StatusBreakdownChart } from './status-breakdown-chart';
+import { PromoterDistribution } from './promoter-distribution';
 import { useTheme } from '@/components/theme-provider';
 import { cn } from '@/lib/utils';
 
-interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
+interface DataTableProps<TData, TValue = any> {
+  columns: ColumnDef<TData, any>[];
   data: TData[];
 }
 
-function DataTable<TData, TValue>({
+function DataTable<TData, TValue = any>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
@@ -129,21 +130,41 @@ function DataTable<TData, TValue>({
 
 type ProposalWithCustomer = Proposal & { customer: { name: string } | undefined };
 
-export function ProposalsStatusTable({ proposals = [], customers = [], amountType = 'grossAmount' }: { proposals?: Proposal[], customers?: Customer[], amountType?: 'grossAmount' | 'commissionValue' }) {
-    
-    const data: ProposalWithCustomer[] = React.useMemo(() => {
-        const safeProposals = Array.isArray(proposals) ? proposals : [];
-        const safeCustomers = Array.isArray(customers) ? customers : [];
-        const customerMap = new Map(safeCustomers.map(c => [c.id, c]));
-        
-        return safeProposals.map(proposal => {
-            const customer = customerMap.get(proposal.customerId);
-            return {
-                ...proposal,
-                customer: customer ? { name: customer.name } : undefined
-            }
-        });
-    }, [proposals, customers]);
+export function ProposalsStatusTable({
+  proposals = [],
+  customers = [],
+  amountType = 'grossAmount',
+}: {
+  proposals?: Proposal[];
+  customers?: Customer[];
+  amountType?: 'grossAmount' | 'commissionValue';
+}) {
+  const [selectedPromoter, setSelectedPromoter] = React.useState<string | null>(null);
+
+  // Propostas filtradas em memória pela promotora selecionada (se houver)
+  const filteredProposals = React.useMemo(() => {
+    const safeProposals = Array.isArray(proposals) ? proposals : [];
+    if (!selectedPromoter) return safeProposals;
+
+    return safeProposals.filter((p) => {
+      const pName = p.promoter ? p.promoter.trim() : '';
+      const finalName = pName || 'Promotora não informada';
+      return finalName === selectedPromoter;
+    });
+  }, [proposals, selectedPromoter]);
+
+  const data: ProposalWithCustomer[] = React.useMemo(() => {
+    const safeCustomers = Array.isArray(customers) ? customers : [];
+    const customerMap = new Map(safeCustomers.map((c) => [c.id, c]));
+
+    return filteredProposals.map((proposal) => {
+      const customer = customerMap.get(proposal.customerId);
+      return {
+        ...proposal,
+        customer: customer ? { name: customer.name } : undefined,
+      };
+    });
+  }, [filteredProposals, customers]);
 
   if (!proposals || (Array.isArray(proposals) && proposals.length === 0)) {
     return (
@@ -154,9 +175,17 @@ export function ProposalsStatusTable({ proposals = [], customers = [], amountTyp
   }
 
   return (
-    <div className="space-y-4">
-        <StatusBreakdownChart proposals={Array.isArray(proposals) ? proposals : []} amountType={amountType} />
-        <DataTable columns={statusColumns} data={data} />
+    <div className="space-y-6">
+      {/* 🚀 Distribuição por Promotora e Filtro Dinâmico */}
+      <PromoterDistribution
+        proposals={Array.isArray(proposals) ? proposals : []}
+        amountType={amountType}
+        selectedPromoter={selectedPromoter}
+        onSelectPromoter={setSelectedPromoter}
+      />
+
+      <StatusBreakdownChart proposals={filteredProposals} amountType={amountType} />
+      <DataTable columns={statusColumns} data={data} />
     </div>
-    );
+  );
 }
