@@ -134,10 +134,12 @@ export function ProposalsStatusTable({
   proposals = [],
   customers = [],
   amountType = 'grossAmount',
+  amountResolver,
 }: {
   proposals?: Proposal[];
   customers?: Customer[];
-  amountType?: 'grossAmount' | 'commissionValue';
+  amountType?: 'grossAmount' | 'commissionValue' | string;
+  amountResolver?: (p: Proposal) => number;
 }) {
   const [selectedPromoter, setSelectedPromoter] = React.useState<string | null>(null);
 
@@ -180,6 +182,7 @@ export function ProposalsStatusTable({
       <PromoterDistribution
         proposals={Array.isArray(proposals) ? proposals : []}
         amountType={amountType}
+        amountResolver={amountResolver}
         selectedPromoter={selectedPromoter}
         onSelectPromoter={setSelectedPromoter}
       />

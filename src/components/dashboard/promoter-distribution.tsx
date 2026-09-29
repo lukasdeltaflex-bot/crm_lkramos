@@ -7,7 +7,8 @@ import { Users, Check } from 'lucide-react';
 
 interface PromoterDistributionProps {
   proposals: Proposal[];
-  amountType?: 'grossAmount' | 'commissionValue' | 'netAmount' | 'amountPaid';
+  amountType?: 'grossAmount' | 'commissionValue' | 'netAmount' | 'amountPaid' | string;
+  amountResolver?: (p: Proposal) => number;
   selectedPromoter: string | null;
   onSelectPromoter: (promoter: string | null) => void;
 }
@@ -15,6 +16,7 @@ interface PromoterDistributionProps {
 export function PromoterDistribution({
   proposals,
   amountType = 'grossAmount',
+  amountResolver,
   selectedPromoter,
   onSelectPromoter,
 }: PromoterDistributionProps) {
@@ -28,7 +30,9 @@ export function PromoterDistribution({
       const rawPromoter = p.promoter ? p.promoter.trim() : '';
       const promoterName = rawPromoter || 'Promotora não informada';
 
-      const val = Number((p as any)[amountType] || 0);
+      const val = amountResolver
+        ? Number(amountResolver(p) || 0)
+        : Number((p as any)[amountType] || 0);
       sum += val;
 
       const current = map.get(promoterName) || { total: 0, count: 0 };

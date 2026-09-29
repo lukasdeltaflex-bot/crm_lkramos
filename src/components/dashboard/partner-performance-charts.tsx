@@ -172,8 +172,19 @@ export function PartnerPerformanceCharts({ proposals }: PartnerPerformanceCharts
         p.operationRole !== 'refin' &&
         p.product !== 'Refin Port';
       if (!isPort) return;
+
+      // 🚨 CRITÉRIO OFICIAL E CIRÚRGICO DE PORT. REPROVADAS:
+      // A proposta DEVE ter chegado à etapa de saldo devedor, comprovada pelo preenchimento
+      // do campo oficial `debtBalanceArrivalDate` (Data de Retorno/Chegada do Saldo Devedor).
+      // Desistências, cancelamentos ou reprovações antes do saldo NÃO entram no ranking.
+      const hasBalanceArrival = Boolean(p.debtBalanceArrivalDate && String(p.debtBalanceArrivalDate).trim());
+      if (!hasBalanceArrival) return;
+
+      // Confirma que a proposta não foi efetivada (rejeitada ou cancelada após a chegada do saldo)
       const behavior = getStatusBehavior(p.status, activeConfigs);
-      if (behavior !== 'rejection') return;
+      const isNotEffective = behavior === 'rejection' || behavior === 'canceled';
+      if (!isNotEffective) return;
+
       const bank = cleanBankName(p.bankOrigin || p.bank || '') || 'Não Informado';
       const val = Number(p.grossAmount ?? (p.commissionBase === 'net' ? p.netAmount : 0) ?? 0);
 
