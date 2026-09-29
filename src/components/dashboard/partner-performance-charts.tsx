@@ -167,23 +167,47 @@ export function PartnerPerformanceCharts({ proposals }: PartnerPerformanceCharts
   const portReprovadasData = useMemo(() => {
     const map = new Map<string, { count: number; amount: number }>();
     proposals.forEach((p) => {
+      // 1. Deve ser perna válida de Portabilidade (excluindo Refin)
       const isPort =
         (p.product === 'Portabilidade' || p.operationRole === 'portabilidade') &&
         p.operationRole !== 'refin' &&
         p.product !== 'Refin Port';
       if (!isPort) return;
 
-      // 🚨 CRITÉRIO OFICIAL E CIRÚRGICO DE PORT. REPROVADAS:
-      // A proposta DEVE ter chegado à etapa de saldo devedor, comprovada pelo preenchimento
-      // do campo oficial `debtBalanceArrivalDate` (Data de Retorno/Chegada do Saldo Devedor).
-      // Desistências, cancelamentos ou reprovações antes do saldo NÃO entram no ranking.
-      const hasBalanceArrival = Boolean(p.debtBalanceArrivalDate && String(p.debtBalanceArrivalDate).trim());
-      if (!hasBalanceArrival) return;
-
-      // Confirma que a proposta não foi efetivada (rejeitada ou cancelada após a chegada do saldo)
       const behavior = getStatusBehavior(p.status, activeConfigs);
-      const isNotEffective = behavior === 'rejection' || behavior === 'canceled';
-      if (!isNotEffective) return;
+      // Nunca contabilizar propostas efetivadas/pagas
+      if (behavior === 'success') return;
+
+      // 2. Identificação do motivo de Retenção do Cliente
+      const isRetention = Boolean(
+        (p.rejectionReason &&
+          p.rejectionReason.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes('retencao')) ||
+        (p.status &&
+          p.status.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes('retencao'))
+      );
+
+      let isReprovadaPort = false;
+
+      if (isRetention) {
+        // 🎯 CENÁRIO 2: Cancelamento por Retenção do Cliente.
+        // NÃO depende da Data de Retorno/Chegada do Saldo.
+        // Entra no ranking mesmo se a Data de Retorno do Saldo estiver vazia.
+        const isCanceledOrRejected = behavior === 'canceled' || behavior === 'rejection';
+        if (isCanceledOrRejected) {
+          isReprovadaPort = true;
+        }
+      } else {
+        // 🎯 CENÁRIO 1: Portabilidade que chegou à etapa de saldo (comprovada por debtBalanceArrivalDate)
+        // e posteriormente foi reprovada/cancelada (não efetivada).
+        const hasBalanceArrival = Boolean(p.debtBalanceArrivalDate && String(p.debtBalanceArrivalDate).trim());
+        const isNotEffective = behavior === 'rejection' || behavior === 'canceled';
+
+        if (hasBalanceArrival && isNotEffective) {
+          isReprovadaPort = true;
+        }
+      }
+
+      if (!isReprovadaPort) return;
 
       const bank = cleanBankName(p.bankOrigin || p.bank || '') || 'Não Informado';
       const val = Number(p.grossAmount ?? (p.commissionBase === 'net' ? p.netAmount : 0) ?? 0);
