@@ -133,8 +133,8 @@ export function PartnerPerformanceCharts({ proposals }: PartnerPerformanceCharts
   }, [proposals]);
 
   const portEfetivadasData = useMemo(() => {
-    const countMap: Record<string, number> = {};
-    proposals.forEach(p => {
+    const map = new Map<string, { count: number; amount: number }>();
+    proposals.forEach((p) => {
       const isPort =
         (p.product === 'Portabilidade' || p.operationRole === 'portabilidade') &&
         p.operationRole !== 'refin' &&
@@ -143,17 +143,30 @@ export function PartnerPerformanceCharts({ proposals }: PartnerPerformanceCharts
       const behavior = getStatusBehavior(p.status, activeConfigs);
       if (behavior !== 'success') return;
       const bank = cleanBankName(p.bankOrigin || p.bank || '') || 'Não Informado';
-      countMap[bank] = (countMap[bank] || 0) + 1;
+      const val = Number(p.grossAmount ?? (p.commissionBase === 'net' ? p.netAmount : 0) ?? 0);
+
+      const current = map.get(bank) || { count: 0, amount: 0 };
+      map.set(bank, {
+        count: current.count + 1,
+        amount: current.amount + val,
+      });
     });
-    return Object.entries(countMap)
-      .map(([name, total]) => ({ name, total }))
-      .sort((a, b) => b.total - a.total)
+
+    return Array.from(map.entries())
+      .map(([name, data]) => ({
+        name,
+        bank: name,
+        count: data.count,
+        amount: data.amount,
+        total: data.count,
+      }))
+      .sort((a, b) => b.count - a.count || b.amount - a.amount)
       .slice(0, 5);
   }, [proposals, activeConfigs]);
 
   const portReprovadasData = useMemo(() => {
-    const countMap: Record<string, number> = {};
-    proposals.forEach(p => {
+    const map = new Map<string, { count: number; amount: number }>();
+    proposals.forEach((p) => {
       const isPort =
         (p.product === 'Portabilidade' || p.operationRole === 'portabilidade') &&
         p.operationRole !== 'refin' &&
@@ -162,11 +175,24 @@ export function PartnerPerformanceCharts({ proposals }: PartnerPerformanceCharts
       const behavior = getStatusBehavior(p.status, activeConfigs);
       if (behavior !== 'rejection') return;
       const bank = cleanBankName(p.bankOrigin || p.bank || '') || 'Não Informado';
-      countMap[bank] = (countMap[bank] || 0) + 1;
+      const val = Number(p.grossAmount ?? (p.commissionBase === 'net' ? p.netAmount : 0) ?? 0);
+
+      const current = map.get(bank) || { count: 0, amount: 0 };
+      map.set(bank, {
+        count: current.count + 1,
+        amount: current.amount + val,
+      });
     });
-    return Object.entries(countMap)
-      .map(([name, total]) => ({ name, total }))
-      .sort((a, b) => b.total - a.total)
+
+    return Array.from(map.entries())
+      .map(([name, data]) => ({
+        name,
+        bank: name,
+        count: data.count,
+        amount: data.amount,
+        total: data.count,
+      }))
+      .sort((a, b) => b.count - a.count || b.amount - a.amount)
       .slice(0, 5);
   }, [proposals, activeConfigs]);
 
@@ -194,7 +220,7 @@ export function PartnerPerformanceCharts({ proposals }: PartnerPerformanceCharts
               borderRadius: 'var(--radius)',
               border: '1px solid hsl(var(--border))',
               backgroundColor: 'hsl(var(--background))',
-              color: 'hsl(var(--foreground))'
+              color: 'hsl(var(--foreground))',
             }}
           />
           <Bar
@@ -208,10 +234,10 @@ export function PartnerPerformanceCharts({ proposals }: PartnerPerformanceCharts
     </div>
   );
 
-  const renderCountChart = (data: { name: string; total: number }[], fillColor: string) => (
+  const renderPortChart = (data: { name: string; bank: string; count: number; amount: number; total: number }[]) => (
     <div className="h-[300px] w-full pt-4">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} layout="vertical" margin={{ left: 0, right: 50 }}>
+        <BarChart data={data} layout="vertical" margin={{ left: 0, right: 30 }}>
           <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--muted-foreground)/0.1)" />
           <XAxis type="number" hide />
           <YAxis
@@ -224,17 +250,44 @@ export function PartnerPerformanceCharts({ proposals }: PartnerPerformanceCharts
           />
           <Tooltip
             cursor={{ fill: 'hsl(var(--muted)/0.1)' }}
-            formatter={(value: number) => [`${value} ${value === 1 ? 'contrato' : 'contratos'}`, 'Quantidade']}
-            contentStyle={{
-              borderRadius: 'var(--radius)',
-              border: '1px solid hsl(var(--border))',
-              backgroundColor: 'hsl(var(--background))',
-              color: 'hsl(var(--foreground))'
+            content={({ active, payload }) => {
+              if (active && payload && payload.length) {
+                const item = payload[0].payload as { name: string; count: number; amount: number };
+                const bankLabel = cleanBankName(item.name);
+                return (
+                  <div
+                    style={{
+                      borderRadius: 'var(--radius)',
+                      border: '1px solid hsl(var(--border))',
+                      backgroundColor: 'hsl(var(--background))',
+                      color: 'hsl(var(--foreground))',
+                    }}
+                    className="p-3 shadow-md flex flex-col gap-1.5 text-xs min-w-[170px]"
+                  >
+                    <p className="font-bold text-foreground truncate max-w-[200px]">
+                      {bankLabel}
+                    </p>
+                    <div className="flex items-center justify-between gap-4 text-muted-foreground">
+                      <span>Quantidade:</span>
+                      <span className="font-semibold text-foreground">
+                        {item.count} {item.count === 1 ? 'contrato' : 'contratos'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-4 text-muted-foreground">
+                      <span>Valor:</span>
+                      <span className="font-bold text-primary">
+                        {formatCurrency(item.amount)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+              return null;
             }}
           />
           <Bar
             dataKey="total"
-            fill={fillColor}
+            fill="hsl(var(--primary))"
             radius={[0, 4, 4, 0]}
             barSize={25}
           />
@@ -263,12 +316,12 @@ export function PartnerPerformanceCharts({ proposals }: PartnerPerformanceCharts
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="banks">
-          <TabsList className="grid w-full grid-cols-5 mb-4 bg-muted/50">
-            <TabsTrigger value="banks">Bancos</TabsTrigger>
-            <TabsTrigger value="promoters">Promotoras</TabsTrigger>
-            <TabsTrigger value="operators">Operadores</TabsTrigger>
-            <TabsTrigger value="port-efetivadas">Port. Efetivadas</TabsTrigger>
-            <TabsTrigger value="port-reprovadas">Port. Reprovadas</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5 mb-4 bg-muted/50 h-auto p-1">
+            <TabsTrigger value="banks" className="text-xs sm:text-sm py-1.5">Bancos</TabsTrigger>
+            <TabsTrigger value="promoters" className="text-xs sm:text-sm py-1.5">Promotoras</TabsTrigger>
+            <TabsTrigger value="operators" className="text-xs sm:text-sm py-1.5">Operadores</TabsTrigger>
+            <TabsTrigger value="port-efetivadas" className="text-xs sm:text-sm py-1.5 px-1 truncate">Port. Efetivadas</TabsTrigger>
+            <TabsTrigger value="port-reprovadas" className="text-xs sm:text-sm py-1.5 px-1 truncate">Port. Reprovadas</TabsTrigger>
           </TabsList>
           <TabsContent value="banks" className="mt-0">
             {bankData.length > 0 ? renderChart(bankData, 'banks') : (
@@ -292,14 +345,14 @@ export function PartnerPerformanceCharts({ proposals }: PartnerPerformanceCharts
             )}
           </TabsContent>
           <TabsContent value="port-efetivadas" className="mt-0">
-            {portEfetivadasData.length > 0 ? renderCountChart(portEfetivadasData, 'hsl(var(--chart-2))') : (
+            {portEfetivadasData.length > 0 ? renderPortChart(portEfetivadasData) : (
               <div className="h-[300px] flex items-center justify-center text-muted-foreground text-sm border-2 border-dashed rounded-lg text-center p-4">
                 Nenhuma portabilidade efetivada encontrada.
               </div>
             )}
           </TabsContent>
           <TabsContent value="port-reprovadas" className="mt-0">
-            {portReprovadasData.length > 0 ? renderCountChart(portReprovadasData, 'hsl(var(--destructive))') : (
+            {portReprovadasData.length > 0 ? renderPortChart(portReprovadasData) : (
               <div className="h-[300px] flex items-center justify-center text-muted-foreground text-sm border-2 border-dashed rounded-lg text-center p-4">
                 Nenhuma portabilidade reprovada encontrada.
               </div>
