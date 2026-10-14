@@ -59,6 +59,11 @@ service cloud.firestore {
       match /expenses/{expenseId} {
         allow read, write: if isOwner(userId);
       }
+
+      // Subcoleção de Receitas Avulsas
+      match /extraIncomes/{incomeId} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
     // Clientes (Protegidos por ownerId)

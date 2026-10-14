@@ -15,6 +15,16 @@ export const approvingBodies: string[] = ['INSS', 'SPPREV', 'Federal', 'SIAPE', 
 
 export const expenseCategories: string[] = ['Aluguel', 'Internet', 'Telefonia', 'Tráfego Pago', 'Salários', 'Impostos', 'Outros'];
 
+export const defaultExtraIncomeCategories: string[] = [
+  'Comissão avulsa',
+  'Prestação de serviços',
+  'Receita extraordinária',
+  'Consultoria',
+  'Bônus / Premiação',
+  'Outros recebimentos'
+];
+
+
 export const defaultCustomerTags: string[] = ['💎 VIP', '✅ Margem Livre', '⚠️ Restrição', '📞 Receptivo', '🚀 Prospecção', '👴 Aposentado', '🏦 Servidor', '💼 CLT'];
 
 export const defaultRejectionReasons: string[] = ['Retenção do cliente', 'Contrato já liquidado', 'Contrato não encontrado', 'Saldo devedor divergente', 'Erro de averbação', 'Desistência do cliente', 'Margem excedida', 'Vínculo empregatício incompatível'];

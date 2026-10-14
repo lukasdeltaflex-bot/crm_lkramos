@@ -15,7 +15,7 @@ import { useUser, useFirestore } from '@/firebase';
 import { collection, query, where, limit, getDocs } from 'firebase/firestore';
 import type { Customer, Proposal } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { normalizeString, cleanBankName } from '@/lib/utils';
+import { normalizeString, cleanBankName, getCpfVariants, matchCpf } from '@/lib/utils';
 
 /**
  * 🚀 BUSCA GLOBAL REATIVA LK RAMOS V15
@@ -62,16 +62,19 @@ export function GlobalSearch() {
             // --- 🔍 BUSCA DE CLIENTES ---
             const customerMap = new Map<string, Customer>();
             
-            // 1. Busca por CPF exato (Eficiente e Sem Índice Composto)
+            // 1. Busca por CPF tolerante a pontuação (Eficiente com variants no Firestore)
             if (isPotentialId) {
-                const qExactCpf = query(
-                    collection(firestore, 'customers'),
-                    where('ownerId', '==', user.uid),
-                    where('cpf', '==', term),
-                    limit(5)
-                );
-                const snapCpf = await getDocs(qExactCpf);
-                snapCpf.docs.forEach(d => customerMap.set(d.id, { ...d.data(), id: d.id } as Customer));
+                const cpfVariants = getCpfVariants(term);
+                if (cpfVariants.length > 0) {
+                    const qExactCpf = query(
+                        collection(firestore, 'customers'),
+                        where('ownerId', '==', user.uid),
+                        where('cpf', 'in', cpfVariants.slice(0, 10)),
+                        limit(5)
+                    );
+                    const snapCpf = await getDocs(qExactCpf);
+                    snapCpf.docs.forEach(d => customerMap.set(d.id, { ...d.data(), id: d.id } as Customer));
+                }
             }
 
             // 2. Busca Ampla (Filtro Local para Nome/Cidade/Tags)
@@ -85,7 +88,7 @@ export function GlobalSearch() {
                 const c = { ...d.data(), id: d.id } as Customer;
                 if (c.deleted !== true && (
                     normalizeString(c.name || '').includes(normalized) ||
-                    (isPotentialId && (c.cpf || '').replace(/\D/g, '').includes(cleanDigits)) ||
+                    (isPotentialId && matchCpf(c.cpf, term)) ||
                     (isPotentialId && String(c.numericId).includes(cleanDigits))
                 )) {
                     customerMap.set(d.id, c);

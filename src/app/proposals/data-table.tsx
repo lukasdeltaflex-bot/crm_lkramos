@@ -68,7 +68,7 @@ import type { ProposalStatus, UserSettings } from '@/lib/types';
 import { DraggableHeader } from './columns';
 import type { ProposalWithCustomer } from './page';
 import { Separator } from '@/components/ui/separator';
-import { normalizeString, cn, formatCurrency, cleanBankName, isProposalCritical } from '@/lib/utils';
+import { normalizeString, cn, formatCurrency, cleanBankName, isProposalCritical, matchCpf, normalizeCpf } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { BankIcon } from '@/components/bank-icon';
 import { useUser, useFirestore } from '@/firebase';
@@ -373,13 +373,18 @@ export const ProposalsDataTable = React.forwardRef<ProposalsDataTableHandle, Dat
         const customer = row.original.customer;
         const p = row.original;
         const normalizedSearch = normalizeString(searchTerm);
-        const cleanDigits = searchTerm.replace(/\D/g, '');
+        const cleanDigits = normalizeCpf(searchTerm);
         
+        // 1. Busca por CPF normalizado (com ou sem pontuação)
+        if (matchCpf(customer?.cpf, searchTerm)) {
+            return true;
+        }
+
         const checkText = (f: any) => f && normalizeString(String(f)).includes(normalizedSearch);
         const matchesText = checkText(customer?.name) || checkText(customer?.cpf) || checkText(p.proposalNumber) || checkText(p.operator) || checkText(p.bank) || checkText(cleanBankName(p.bank)) || checkText(p.promoter);
         
         const isPotentialId = cleanDigits.length >= 2;
-        const matchesId = isPotentialId && (String(customer?.numericId) === searchTerm || (customer?.cpf || '').replace(/\D/g, '').startsWith(searchTerm) || (p.proposalNumber || '').replace(/\D/g, '').startsWith(searchTerm));
+        const matchesId = isPotentialId && (String(customer?.numericId) === searchTerm || (p.proposalNumber || '').replace(/\D/g, '').includes(cleanDigits) || (customer?.cpf || '').replace(/\D/g, '').includes(cleanDigits));
         
         return matchesText || matchesId;
     },

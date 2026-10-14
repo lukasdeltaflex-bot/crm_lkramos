@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/select';
 import { summarizeNotes } from '@/ai/flows/summarize-notes-flow';
 import { toast } from '@/hooks/use-toast';
+import { CustomerSelectCombobox } from '@/components/follow-ups/customer-select-combobox';
 
 const schema = z.object({
   contactName: z.string().min(2, 'O nome é obrigatório.'),
@@ -118,23 +119,24 @@ export function FollowUpForm({ customers, initialData, onSubmit, isSaving = fals
           render={({ field }) => (
             <FormItem>
               <FormLabel>Vincular a um Cliente Existente (Opcional)</FormLabel>
-              <Select 
-                onValueChange={(val) => field.onChange(val === 'none' ? '' : val)} 
-                value={field.value || 'none'}
-                disabled={isSaving}
-              >
-                <FormControl>
-                  <SelectTrigger className="bg-muted/30">
-                    <SelectValue placeholder="Selecione um cliente cadastrado..." />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="none">Nenhum (Novo Contato)</SelectItem>
-                  {customers.filter(c => c.name !== 'Cliente Removido').map(c => (
-                    <SelectItem key={c.id} value={c.id}>{c.name} ({c.cpf})</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <CustomerSelectCombobox
+                  customers={customers}
+                  selectedCustomerId={field.value}
+                  onSelectCustomer={(c) => {
+                    if (c) {
+                      field.onChange(c.id);
+                      form.setValue('contactName', c.name, { shouldValidate: true });
+                      if (c.phone) {
+                        form.setValue('contactPhone', c.phone, { shouldValidate: true });
+                      }
+                    } else {
+                      field.onChange('');
+                    }
+                  }}
+                  disabled={isSaving}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

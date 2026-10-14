@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/command';
 import type { Customer } from '@/lib/types';
 import { ScrollArea } from '../ui/scroll-area';
-import { normalizeString } from '@/lib/utils';
+import { normalizeString, normalizeCpf, formatCpf } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
 interface CustomerSearchDialogProps {
@@ -34,13 +34,11 @@ export function CustomerSearchDialog({
             className="rounded-xl border-2 overflow-hidden"
             filter={(value, search) => {
                 const normalizedSearch = normalizeString(search);
-                const isPureNumber = /^\d+$/.test(search);
+                const searchDigits = normalizeCpf(search);
                 if (!normalizedSearch) return 1;
                 
-                if (isPureNumber) {
-                    if (value.includes(`id_${search} `)) return 1;
-                    if (value.includes(`cpf_${search}`)) return 0.9;
-                    return 0;
+                if (searchDigits.length >= 2) {
+                    if (value.includes(`cpf_${searchDigits}`) || value.includes(`id_${searchDigits} `)) return 1;
                 }
                 
                 return value.includes(normalizedSearch) ? 1 : 0;
@@ -52,8 +50,9 @@ export function CustomerSearchDialog({
               <CommandEmpty className="py-10 text-center text-xs font-bold uppercase text-muted-foreground opacity-50">Nenhum cliente localizado.</CommandEmpty>
               <CommandGroup>
                 {customers.map((customer) => {
-                  const cpfNumeric = (customer.cpf || '').replace(/\D/g, '');
-                  const searchIndex = normalizeString(`id_${customer.numericId}  cpf_${cpfNumeric} ${customer.name} ${customer.cpf}`);
+                  const cpfNumeric = normalizeCpf(customer.cpf);
+                  const cpfFormatted = formatCpf(customer.cpf);
+                  const searchIndex = normalizeString(`id_${customer.numericId} cpf_${cpfNumeric} ${cpfFormatted} ${customer.name} ${customer.cpf}`);
                   
                   return (
                     <CommandItem

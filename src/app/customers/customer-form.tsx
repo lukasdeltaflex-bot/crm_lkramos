@@ -49,7 +49,7 @@ import {
     Search
 } from 'lucide-react';
 import { format, parse, isValid, differenceInYears } from 'date-fns';
-import { validateCPF, handlePhoneMask, cn, isWhatsApp, getWhatsAppUrl, cleanBankName, cleanFirestoreData, formatCurrencyInput } from '@/lib/utils';
+import { validateCPF, handlePhoneMask, cn, isWhatsApp, getWhatsAppUrl, cleanBankName, cleanFirestoreData, formatCurrencyInput, getCpfVariants, normalizeCpf } from '@/lib/utils';
 import type { Customer, UserSettings } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
@@ -294,10 +294,11 @@ export function CustomerForm({ customer, allCustomers, userSettings, defaultValu
         
         if (cleanCpf.length === 11) {
             setIsCheckingDuplicity(true);
+            const variants = getCpfVariants(watchCpf);
             const q = query(
                 collection(firestore, 'customers'), 
                 where('ownerId', '==', user.uid),
-                where('cpf', '==', watchCpf),
+                where('cpf', 'in', variants.slice(0, 10)),
                 limit(1)
             );
             const snap = await getDocs(q);

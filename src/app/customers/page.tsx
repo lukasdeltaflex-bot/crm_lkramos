@@ -38,7 +38,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getAge, cn, cleanBankName, cleanFirestoreData, getSmartTags, parseDateSafe } from '@/lib/utils';
+import { getAge, cn, cleanBankName, cleanFirestoreData, getSmartTags, parseDateSafe, normalizeCpf, matchCpf, getCpfVariants } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -202,7 +202,7 @@ function CustomersPageContent() {
 
     // Se o cliente já estiver presente nos clientes carregados, não precisa consultar Firestore
     const existsLocally = customers.some(
-      (c: any) => String(c.id).trim() === trimmed || String(c.numericId).trim() === trimmed
+      (c: any) => String(c.id).trim() === trimmed || String(c.numericId).trim() === trimmed || matchCpf(c.cpf, trimmed)
     );
     if (existsLocally) return;
 
@@ -256,6 +256,27 @@ function CustomersPageContent() {
                 setStaticCustomers(prev => prev.some(c => c.id === found.id) ? prev : [found, ...prev]);
                 return;
               }
+            }
+          }
+        }
+
+        // 4. Busca por CPF no Firestore (suporte a registros antigos fora do lote inicial com ou sem pontuação)
+        const cpfVariants = getCpfVariants(trimmed);
+        const cleanCpfDigits = normalizeCpf(trimmed);
+        if (cpfVariants.length > 0 && cleanCpfDigits.length >= 11) {
+          const qCpf = query(
+            collection(firestore, 'customers'),
+            where('ownerId', '==', user.uid),
+            where('cpf', 'in', cpfVariants.slice(0, 10)),
+            limit(1)
+          );
+          const snapCpf = await getDocs(qCpf);
+          if (!snapCpf.empty && isMounted) {
+            const docItem = snapCpf.docs[0];
+            const found = { ...docItem.data(), id: docItem.id } as Customer;
+            if (found.deleted !== true) {
+              setStaticCustomers(prev => prev.some(c => c.id === found.id) ? prev : [found, ...prev]);
+              return;
             }
           }
         }

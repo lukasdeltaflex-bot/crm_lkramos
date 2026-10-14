@@ -59,7 +59,7 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DraggableHeader } from './columns';
 import type { Customer } from '@/lib/types';
-import { normalizeString, cn } from '@/lib/utils';
+import { normalizeString, cn, matchCpf, normalizeCpf } from '@/lib/utils';
 import { useUser } from '@/firebase';
 import { safeStorage } from '@/lib/storage-utils';
 
@@ -221,21 +221,25 @@ export const CustomerDataTable = React.forwardRef<CustomerDataTableHandle, DataT
             return String(customer.id).trim() === searchTerm || String(customer.numericId).trim() === searchTerm;
         }
 
-        // 2. Se for uma busca numérica pura (CPF, Telefone ou ID inexistente)
-        const normalizedSearch = normalizeString(searchTerm);
-        const isPureNumber = /^\d+$/.test(searchTerm);
-        if (isPureNumber) {
-            const cpfNumeric = (customer.cpf || '').replace(/\D/g, '');
-            if (cpfNumeric.startsWith(searchTerm)) return true;
-            const phoneNumeric = (customer.phone || '').replace(/\D/g, '');
-            if (phoneNumeric.includes(searchTerm)) return true;
-            const phone2Numeric = (customer.phone2 || '').replace(/\D/g, '');
-            if (phone2Numeric.includes(searchTerm)) return true;
+        // 2. BUSCA POR CPF (com tolerância bidirecional a pontuação e dígitos puros)
+        if (matchCpf(customer.cpf, searchTerm)) {
+            return true;
         }
 
-        // 3. BUSCA GENÉRICA (Nome, Cidade, Email, Telefone formatado, Observações, Tags)
+        // 3. Se for uma busca com números (Telefone ou ID numérico)
+        const normalizedSearch = normalizeString(searchTerm);
+        const cleanDigits = normalizeCpf(searchTerm);
+        if (cleanDigits.length >= 2) {
+            const phoneNumeric = normalizeCpf(customer.phone);
+            if (phoneNumeric.includes(cleanDigits)) return true;
+            const phone2Numeric = normalizeCpf(customer.phone2);
+            if (phone2Numeric.includes(cleanDigits)) return true;
+            if (String(customer.numericId).includes(cleanDigits)) return true;
+        }
+
+        // 4. BUSCA GENÉRICA (Nome, Cidade, Email, Telefone formatado, Observações, Tags, CPF textual)
         const check = (f: any) => f && normalizeString(String(f)).includes(normalizedSearch);
-        if (check(customer.name) || check(customer.city) || check(customer.email) || check(customer.observations)) return true;
+        if (check(customer.name) || check(customer.cpf) || check(customer.city) || check(customer.email) || check(customer.observations)) return true;
         if (check(customer.phone) || check(customer.phone2)) return true;
         if (customer.tags?.some(check)) return true;
         if ((customer as any).smartTags?.some(check)) return true;

@@ -325,6 +325,42 @@ export function isProposalCritical(p: Proposal, statusConfigs: ProposalStatusCon
     return false;
 }
 
+export function normalizeCpf(cpf: string | null | undefined): string {
+    if (!cpf) return '';
+    return String(cpf).replace(/\D/g, '');
+}
+
+export function formatCpf(cpf: string | null | undefined): string {
+    const digits = normalizeCpf(cpf);
+    if (!digits) return '';
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return digits.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+    if (digits.length <= 9) return digits.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+    return digits.substring(0, 11).replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+}
+
+export function matchCpf(storedCpf?: string | null, searchCpf?: string | null): boolean {
+    const cleanStored = normalizeCpf(storedCpf);
+    const cleanSearch = normalizeCpf(searchCpf);
+    if (!cleanStored || !cleanSearch) return false;
+    return cleanStored.includes(cleanSearch) || cleanSearch.includes(cleanStored);
+}
+
+export function getCpfVariants(searchTerm: string | null | undefined): string[] {
+    const raw = String(searchTerm || '').trim();
+    if (!raw) return [];
+    const digits = normalizeCpf(raw);
+    const set = new Set<string>();
+    set.add(raw);
+    if (digits) {
+        set.add(digits);
+        if (digits.length === 11) {
+            set.add(formatCpf(digits));
+        }
+    }
+    return Array.from(set).filter(Boolean);
+}
+
 export function validateCPF(cpf: string): boolean {
     const cleanCPF = String(cpf || '').replace(/[^\d]+/g, '');
     

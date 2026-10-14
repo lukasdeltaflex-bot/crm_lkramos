@@ -6,7 +6,7 @@ import { FinancialDataTable, type FinancialDataTableHandle } from './data-table'
 import { getColumns } from './columns';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { collection, query, where, doc, setDoc, deleteField, deleteDoc, writeBatch, limit, orderBy } from 'firebase/firestore';
-import type { Proposal, Customer, CommissionStatus, UserSettings, Expense } from '@/lib/types';
+import type { Proposal, Customer, CommissionStatus, UserSettings, Expense, ExtraIncome } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -63,7 +63,9 @@ import { PromoterEfficiencyReport } from '@/components/financial/promoter-effici
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { ExpenseForm } from '@/components/financial/expense-form';
 import { ExpenseTable } from '@/components/financial/expense-table';
-import { expenseCategories as initialExpenseCategories } from '@/lib/config-data';
+import { expenseCategories as initialExpenseCategories, defaultExtraIncomeCategories } from '@/lib/config-data';
+import { ExtraIncomeForm } from '@/components/financial/extra-income-form';
+import { ExtraIncomeTable } from '@/components/financial/extra-income-table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
@@ -92,6 +94,8 @@ export default function FinancialPage() {
   
   const [selectedProposal, setSelectedProposal] = useState<ProposalWithCustomer | undefined>(undefined);
   const [selectedExpense, setSelectedExpense] = useState<Expense | undefined>(undefined);
+  const [isExtraIncomeOpen, setIsExtraIncomeOpen] = useState(false);
+  const [selectedExtraIncome, setSelectedExtraIncome] = useState<ExtraIncome | undefined>(undefined);
   const [isClient, setIsClient] = useState(false);
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [isSaving, setIsSaving] = useState(false);
@@ -122,6 +126,11 @@ export default function FinancialPage() {
     return query(collection(firestore, 'users', user.uid, 'expenses'), limit(500));
   }, [firestore, user]);
 
+  const extraIncomesQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(collection(firestore, 'users', user.uid, 'extraIncomes'), limit(500));
+  }, [firestore, user]);
+
   const settingsDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return doc(firestore, 'userSettings', user.uid);
@@ -130,9 +139,10 @@ export default function FinancialPage() {
   const { data: proposals, isLoading: proposalsLoading } = useCollection<Proposal>(proposalsQuery);
   const { data: customers, isLoading: customersLoading } = useCollection<Customer>(customersQuery);
   const { data: expenses, isLoading: expensesLoading } = useCollection<Expense>(expensesQuery);
+  const { data: extraIncomes, isLoading: extraIncomesLoading } = useCollection<ExtraIncome>(extraIncomesQuery);
   const { data: userSettings, isLoading: settingsLoading } = useDoc<UserSettings>(settingsDocRef);
 
-  const isLoading = proposalsLoading || customersLoading || expensesLoading || isUserLoading || settingsLoading;
+  const isLoading = proposalsLoading || customersLoading || expensesLoading || extraIncomesLoading || isUserLoading || settingsLoading;
 
   const handleApplyStatsFilter = () => {
     const s = parse(statsStartDate, 'dd/MM/yyyy', new Date());
@@ -516,6 +526,77 @@ export default function FinancialPage() {
       .reduce((sum, e) => sum + e.amount, 0);
   }, [expenses]);
 
+  const totalExtraIncomeAmount = useMemo(() => {
+    if (!extraIncomes) return 0;
+    const now = new Date();
+    return extraIncomes
+      .filter(i => {
+          if (i.deleted === true) return false;
+          try {
+            const d = new Date(i.date);
+            return isSameMonth(d, now) && d.getFullYear() === now.getFullYear();
+          } catch {
+            return false;
+          }
+      })
+      .reduce((sum, i) => sum + (i.amount || 0), 0);
+  }, [extraIncomes]);
+
+  const handleExtraIncomeSubmit = async (data: any) => {
+    if (!firestore || !user) return;
+    setIsSaving(true);
+    try {
+        const parsedDate = parse(data.date, 'dd/MM/yyyy', new Date());
+        const isEditing = !!selectedExtraIncome;
+        const incomeId = isEditing ? selectedExtraIncome.id : doc(collection(firestore, 'users', user.uid, 'extraIncomes')).id;
+        const nowIso = new Date().toISOString();
+
+        const incomeData: any = {
+            ...data,
+            id: incomeId,
+            ownerId: user.uid,
+            date: format(parsedDate, 'yyyy-MM-dd'),
+            updatedAt: nowIso,
+            ...(isEditing ? {} : { createdAt: nowIso }),
+        };
+
+        const docRef = doc(firestore, 'users', user.uid, 'extraIncomes', incomeId);
+        await setDoc(docRef, cleanFirestoreData(incomeData), { merge: true });
+        
+        setIsExtraIncomeOpen(false);
+        setSelectedExtraIncome(undefined);
+        toast({ title: isEditing ? 'Receita Atualizada com Sucesso!' : 'Receita Avulsa Lançada!' });
+    } catch (e: any) {
+        console.error("Extra Income Save Error:", e);
+        if (e.code === 'permission-denied') {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: `users/${user.uid}/extraIncomes`,
+                operation: 'create'
+            }));
+        }
+        toast({ variant: 'destructive', title: 'Erro ao salvar receita avulsa' });
+    } finally {
+        setIsSaving(false);
+    }
+  };
+
+  const handleExtraIncomeDelete = async (id: string) => {
+    if (!firestore || !user) return;
+    const docRef = doc(firestore, 'users', user.uid, 'extraIncomes', id);
+    try {
+        await deleteDoc(docRef);
+        toast({ title: 'Receita Avulsa Removida com Sucesso' });
+    } catch (error: any) {
+        if (error.code === 'permission-denied') {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: docRef.path,
+                operation: 'delete'
+            }));
+        }
+        toast({ variant: 'destructive', title: 'Erro ao remover receita' });
+    }
+  };
+
   return (
     <AppLayout>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 print:hidden">
@@ -620,8 +701,9 @@ export default function FinancialPage() {
             />
 
             <Tabs defaultValue="commissions" className="w-full">
-                <TabsList className="bg-muted/30 p-1 rounded-full mb-6 border w-fit">
-                    <TabsTrigger value="commissions" className="gap-2 rounded-full px-6 data-[state=active]:bg-primary data-[state=active]:text-white font-bold transition-all"><CircleDollarSign className="h-4 w-4" /> Comissões</TabsTrigger>
+                <TabsList className="bg-muted/30 p-1 rounded-full mb-6 border w-fit flex flex-wrap">
+                    <TabsTrigger value="commissions" className="gap-2 rounded-full px-6 data-[state=active]:bg-primary data-[state=active]:text-white font-bold transition-all"><CircleDollarSign className="h-4 w-4" /> Comissões de Propostas</TabsTrigger>
+                    <TabsTrigger value="extra-incomes" className="gap-2 rounded-full px-6 data-[state=active]:bg-green-600 data-[state=active]:text-white font-bold transition-all"><TrendingUp className="h-4 w-4" /> Receitas Avulsas</TabsTrigger>
                     <TabsTrigger value="expenses" className="gap-2 rounded-full px-6 data-[state=active]:bg-red-600 data-[state=active]:text-white font-bold transition-all"><Wallet className="h-4 w-4" /> Despesas</TabsTrigger>
                 </TabsList>
 
@@ -636,6 +718,21 @@ export default function FinancialPage() {
                         setRowSelection={setRowSelection}
                         onShowDetails={(t, p) => setDialogData({ title: t, proposals: p })}
                         userSettings={userSettings || null}
+                    />
+                </TabsContent>
+
+                <TabsContent value="extra-incomes" className="space-y-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-muted/10 p-4 rounded-2xl border gap-4">
+                        <StatsCard title="Total Receitas Avulsas (Mês)" value={isPrivacyMode ? '•••••' : formatCurrency(totalExtraIncomeAmount)} icon={TrendingUp} className="bg-green-50/20 border-green-200" />
+                        <Button className="rounded-full font-bold bg-green-600 hover:bg-green-700 text-white shadow-lg h-11 px-8 text-xs" onClick={() => { setSelectedExtraIncome(undefined); setIsExtraIncomeOpen(true); }} disabled={isSaving}>
+                            <PlusCircle className="mr-2 h-4 w-4" /> + Lançar Receita Avulsa
+                        </Button>
+                    </div>
+                    <ExtraIncomeTable 
+                        incomes={extraIncomes || []} 
+                        onEdit={(inc) => { setSelectedExtraIncome(inc); setIsExtraIncomeOpen(true); }} 
+                        onDelete={handleExtraIncomeDelete} 
+                        isPrivacyMode={isPrivacyMode} 
                     />
                 </TabsContent>
 
@@ -668,6 +765,31 @@ export default function FinancialPage() {
             </Tabs>
         </div>
       )}
+
+      {/* MODAL DE LANÇAMENTO / EDIÇÃO DE RECEITA AVULSA */}
+      <Dialog open={isExtraIncomeOpen} onOpenChange={setIsExtraIncomeOpen}>
+        <DialogContent 
+            className="max-w-lg rounded-2xl"
+            onPointerDownOutside={(e) => e.preventDefault()}
+            onInteractOutside={(e) => e.preventDefault()}
+        >
+            <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-green-700 font-black">
+                    <TrendingUp className="h-5 w-5" />
+                    {selectedExtraIncome ? 'Editar Receita Avulsa' : '+ Lançar Receita Avulsa'}
+                </DialogTitle>
+                <DialogDescription className="text-xs">
+                    {selectedExtraIncome ? 'Atualize os dados e a categoria do lançamento avulso.' : 'Registre valores recebidos fora do fluxo de propostas.'}
+                </DialogDescription>
+            </DialogHeader>
+            <ExtraIncomeForm 
+                income={selectedExtraIncome}
+                categories={userSettings?.extraIncomeCategories || defaultExtraIncomeCategories}
+                onSubmit={handleExtraIncomeSubmit}
+                isSaving={isSaving}
+            />
+        </DialogContent>
+      </Dialog>
 
       {/* MODAL DE PERFORMANCE POR PERÍODO */}
       <Dialog open={isOperatorsDialogOpen} onOpenChange={setIsOperatorsDialogOpen}>

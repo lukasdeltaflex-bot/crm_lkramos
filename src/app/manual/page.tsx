@@ -452,6 +452,57 @@ export default function ManualPage() {
                     </AccordionContent>
                 </AccordionItem>
 
+                {/* 11. ATUALIZAÇÕES OPERACIONAIS: FINANCEIRO, AGENDA, CPF E HISTÓRICO */}
+                <AccordionItem value="updates-crm" className="border-2 rounded-2xl bg-card px-4 shadow-sm border-emerald-500/20">
+                    <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-emerald-100 text-emerald-700"><TrendingUp className="h-5 w-5" /></div>
+                            <div className="text-left">
+                                <p className="font-bold text-sm">11. Receitas Avulsas, Busca na Agenda, CPF e Performance</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Melhorias Funcionais & Técnicas</p>
+                            </div>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-6 space-y-4 text-sm leading-relaxed">
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="p-4 rounded-xl bg-emerald-50/10 border border-emerald-500/20">
+                                <h4 className="font-bold text-emerald-700 flex items-center gap-2 mb-2">
+                                    <TrendingUp className="h-4 w-4" /> Receitas Avulsas no Financeiro
+                                </h4>
+                                <p className="text-xs text-muted-foreground">
+                                    Novo botão <strong>+ Lançar Receita Avulsa</strong> e aba dedicada para registrar comissões de parcerias, consultorias e receitas extraordinárias. Totalizador próprio com apuração mensal, sem misturar ou duplicar valores com as comissões de propostas de crédito.
+                                </p>
+                            </div>
+                            <div className="p-4 rounded-xl bg-blue-50/10 border border-blue-500/20">
+                                <h4 className="font-bold text-blue-700 flex items-center gap-2 mb-2">
+                                    <UserCheck className="h-4 w-4" /> Vinculação de Clientes na Agenda
+                                </h4>
+                                <p className="text-xs text-muted-foreground">
+                                    Busca inteligente por Nome (sem acentos), CPF e Telefone ao criar retornos. A associação é 100% opcional, com exibição de homônimos e botão para desvincular quando necessário.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2 mt-4">
+                            <div className="p-4 rounded-xl bg-purple-50/10 border border-purple-500/20">
+                                <h4 className="font-bold text-purple-700 flex items-center gap-2 mb-2">
+                                    <Search className="h-4 w-4" /> Busca por CPF Unificada
+                                </h4>
+                                <p className="text-xs text-muted-foreground">
+                                    A pesquisa por CPF agora aceita indistintamente formatos com pontuação (<code>123.456.789-00</code>) ou apenas dígitos (<code>12345678900</code>) na Central de Clientes, Busca Global, Propostas e Agenda.
+                                </p>
+                            </div>
+                            <div className="p-4 rounded-xl bg-amber-50/10 border border-amber-500/20">
+                                <h4 className="font-bold text-amber-700 flex items-center gap-2 mb-2">
+                                    <Database className="h-4 w-4" /> Carregamento Rápido com Histórico Íntegro
+                                </h4>
+                                <p className="text-xs text-muted-foreground">
+                                    Carregamento incremental de alta performance sem ocultar clientes antigos ou propostas históricas. Qualquer registro do passado pode ser consultado via paginação contínua ou busca direta.
+                                </p>
+                            </div>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+
             </Accordion>
         </div>
 

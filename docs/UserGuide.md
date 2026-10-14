@@ -130,5 +130,81 @@ Você pode acessá-regras através do menu **Configurações > Parâmetros > Mot
 
 ---
 
+
+---
+
+## 💰 Módulo Financeiro — Gestão de Receitas Avulsas
+
+O CRM LK RAMOS dispõe de controle financeiro completo e independente para **Receitas Avulsas**, permitindo lançar entradas financeiras efetivamente recebidas que não decorram do fluxo habitual de propostas cadastradas.
+
+### 📌 Onde encontrar
+No menu lateral, acesse **Financeiro**. Dentro da página, você encontrará a aba dedicada **Receitas Avulsas** e o botão de ação principal:
+**`+ Lançar Receita Avulsa`**.
+
+### 📝 Como lançar uma receita
+1. Clique no botão **`+ Lançar Receita Avulsa`**.
+2. Preencha a **Descrição da Receita** (ex: *Honorários avulsos*, *Comissão de parceria externa*, *Consultoria prestada*).
+3. Informe o **Valor Recebido** em Reais (R$).
+4. Selecione ou digite a **Data do Recebimento** (formato dd/mm/aaaa).
+5. Escolha a **Categoria** correspondente (ex: *Comissão avulsa*, *Prestação de serviços*, *Receita extraordinária*, *Consultoria*, *Bônus / Premiação*, *Outros recebimentos*).
+6. Opcionalmente, indique a **Forma de Recebimento** (ex: *Pix*, *Transferência*, *Dinheiro*, *Boleto*) e adicione **Observações**.
+7. Clique em **Lançar Receita**. O lançamento será persistido com isolamento seguro por usuário.
+
+### ⚙️ Edição e Exclusão Segura
+- **Editar:** Na listagem de receitas avulsas, clique no ícone de lápis correspondente para retificar valores, datas, categorias ou anotações.
+- **Exclusão Segura com Confirmação:** Ao clicar no ícone de lixeira, um modal de confirmação exibirá explicitamente a descrição e o valor do registro selecionado. A exclusão afeta estritamente o lançamento avulso em questão e bloqueia múltiplos cliques para evitar acidentes.
+
+### 📊 Separação Absoluta entre Receitas Avulsas e Comissões de Propostas
+> [!IMPORTANT]
+> **Receitas avulsas não são propostas de crédito.** 
+> Os cards superiores do Financeiro (*Produção Digitada*, *Comissão Recebida de Propostas*, *Saldo a Receber* e *Comissão Esperada*) refletem com precisão cirúrgica a produção da esteira de crédito.
+> O montante de Receitas Avulsas possui card próprio de apuração mensal e subtotalizadores independentes, impedindo que comissões de contratos sejam infladas ou duplicadas nos relatórios.
+
+---
+
+## 📅 Agenda & Retornos — Vinculação Otimizada de Clientes
+
+Ao agendar ou atualizar um compromisso/retorno com um cliente, a experiência de busca e associação foi totalmente aprimorada.
+
+### 🔍 Como associar um cliente ao retorno
+1. No formulário do retorno, clique em **Clique para buscar e vincular um cliente...**.
+2. Uma janela de pesquisa rápida será aberta. Você pode pesquisar por:
+   - **Nome:** Busca flexível por partes do nome, nomes compostos, tolerante a acentuações e maiúsculas/minúsculas.
+   - **CPF:** Digitando com ou sem máscara/pontuação.
+   - **Telefone:** Digitando os números do telefone celular ou fixo.
+3. Para clientes homônimos, a listagem exibe claramente o **Nome Completo**, o **CPF parcialmente mascarado** para sigilo e o **Telefone de contato**, além do **ID do cadastro**, permitindo identificar com precisão o registro correto.
+4. Clique no cliente desejado para vincular. Seus dados de contato principal serão automaticamente preenchidos.
+
+### 🔓 Vinculação 100% Opcional
+- O retorno **não exige cliente vinculado**. Você pode agendar contatos avulsos ou novos prospects digitando o nome do contato diretamente.
+- Se já houver um cliente vinculado e você desejar remover a ligação, basta clicar no botão **X (Remover vínculo)** ou escolher **Limpar vínculo** na busca.
+
+---
+
+## 🔎 Busca Global e Local por CPF com e sem Pontuação
+
+A pesquisa por CPF foi unificada e normalizada em todos os pontos do CRM LK RAMOS:
+- **Central de Clientes (Tabela de Clientes):** Aceita pesquisa imediata por CPF com pontos e traço (ex: `123.456.789-00`) ou apenas dígitos (ex: `12345678900`).
+- **Busca Global (Atalho Ctrl+K / Cabeçalho):** Consulta no servidor Firestore tanto na forma mascarada quanto numérica limpa, localizando o cliente instantaneamente.
+- **Tabela de Propostas:** Permite pesquisar propostas pelo CPF do titular do contrato em qualquer formatação.
+- **Seleção de Clientes em Propostas e Agenda:** O autocomplete e modal de busca respondem imediatamente a qualquer formato digitado.
+- **Cadastro e Edição:** A verificação de duplicidade audita ambas as formatações, prevenindo que um mesmo cliente seja duplicado por variações de pontuação.
+
+---
+
+## ⚡ Carregamento Otimizado sem Ocultação do Histórico
+
+O sistema adota uma estratégia híbrida de alta performance que protege os recursos da sua máquina e as cotas do banco de dados **sem nunca esconder clientes antigos ou contratos históricos**.
+
+### 🛡️ Princípio da Preservação Integral dos Dados
+Nenhum cliente ou proposta histórica é excluído, arquivado secretamente ou limitado por data. **100% da sua base permanece acessível.**
+
+### 📦 Como funciona o Carregamento Incremental
+- **Lote Inicial Rápido:** Ao abrir as telas de Clientes ou Propostas, os registros mais recentes são carregados instantaneamente, tornando o carregamento imediato.
+- **Carregar Mais Registros:** No rodapé da listagem, utilize os botões **`Carregar Mais Clientes`** ou **`Carregar Próximas Propostas`** para paginar e avançar no histórico progressivamente.
+- **Busca Transparente no Histórico (Fora do Lote Inicial):**
+  Se você precisar localizar um cliente antigo ou um contrato do passado que esteja além da página atual, basta digitar o **CPF**, o **Número da Proposta** ou o **ID** no campo de busca. O CRM executa uma consulta direta no banco de dados, recupera o registro histórico em milissegundos e o insere na sua tabela de forma transparente, sem que você precise carregar página por página manualmente.
+
+
 > [!TIP]
 > Para alterar qualquer uma dessas informações (Instituições, Tag, etc), acesse o menu **Configurações > Parâmetros** no CRM.

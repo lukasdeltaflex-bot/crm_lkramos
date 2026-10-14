@@ -160,6 +160,7 @@ export type UserSettings = {
   customerTags?: string[]; // Etiquetas oficiais de clientes
   tagColors?: Record<string, string>; // Cores das etiquetas
   expenseCategories: string[];
+  extraIncomeCategories?: string[];
   rejectionReasons?: string[]; // Motivos de reprova de portabilidade
   historyTopics?: string[]; // Tópicos rápidos para a linha do tempo
   bankDomains?: Record<string, string>;
@@ -215,6 +216,23 @@ export type FollowUp = {
   completedAt?: string;
   notes?: string;
   // Soft Delete
+  deleted?: boolean;
+  deletedAt?: string;
+  deletedBy?: string;
+};
+
+
+export type ExtraIncome = {
+  id: string;
+  ownerId: string;
+  description: string;
+  amount: number;
+  date: string; // YYYY-MM-DD
+  category: string;
+  paymentMethod?: string;
+  observations?: string;
+  createdAt: string;
+  updatedAt?: string;
   deleted?: boolean;
   deletedAt?: string;
   deletedBy?: string;
