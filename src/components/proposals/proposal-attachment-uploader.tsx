@@ -191,6 +191,7 @@ export function ProposalAttachmentUploader({
               </div>
               <div className="flex items-center gap-1">
                 <Button 
+                    type="button"
                     variant="ghost" 
                     size="icon" 
                     className="h-8 w-8 text-primary" 
@@ -200,12 +201,12 @@ export function ProposalAttachmentUploader({
                     <Eye className="h-4 w-4" />
                 </Button>
                  <a href={attachment.url} target="_blank" rel="noopener noreferrer">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
+                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
                         <Download className="h-4 w-4" />
                     </Button>
                 </a>
                 {!isReadOnly && (
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDelete(attachment)}>
+                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDelete(attachment)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 )}

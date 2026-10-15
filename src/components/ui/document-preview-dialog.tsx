@@ -20,6 +20,13 @@ interface DocumentPreviewDialogProps {
 export function DocumentPreviewDialog({ attachment, onClose }: DocumentPreviewDialogProps) {
   const [isLoading, setIsLoading] = React.useState(true);
 
+  // 🛡️ Reseta o spinner sempre que um novo arquivo for aberto
+  React.useEffect(() => {
+    if (attachment) {
+      setIsLoading(true);
+    }
+  }, [attachment?.url]);
+
   if (!attachment) return null;
 
   const isImage = attachment.type.startsWith('image/');
@@ -72,6 +79,7 @@ export function DocumentPreviewDialog({ attachment, onClose }: DocumentPreviewDi
                     alt={attachment.name} 
                     className="max-w-full max-h-full object-contain shadow-2xl"
                     onLoad={() => setIsLoading(false)}
+                    onError={() => setIsLoading(false)}
                 />
             ) : isPdf ? (
                 <iframe 
@@ -80,12 +88,13 @@ export function DocumentPreviewDialog({ attachment, onClose }: DocumentPreviewDi
                     onLoad={() => setIsLoading(false)}
                 />
             ) : (
-                <div className="text-center p-10 space-y-4">
+                // 🛡️ Tipos não visualizáveis: oculta o spinner imediatamente
+                <div className="text-center p-10 space-y-4" ref={(el) => { if (el) setIsLoading(false); }}>
                     <div className="h-20 w-20 bg-zinc-800 rounded-full flex items-center justify-center mx-auto">
                         <FileText className="h-10 w-10 text-zinc-500" />
                     </div>
                     <p className="text-zinc-400 text-sm">Visualização não disponível para este tipo de arquivo.</p>
-                    <Button variant="secondary" asChild>
+                    <Button type="button" variant="secondary" asChild>
                         <a href={attachment.url} download={attachment.name}>Baixar Arquivo</a>
                     </Button>
                 </div>
