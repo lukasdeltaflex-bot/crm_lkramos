@@ -28,7 +28,7 @@ import {
   Target,
   Trophy
 } from 'lucide-react';
-import { formatCurrency, cn, calculateBusinessDays, cleanFirestoreData, normalizeStatuses, getStatusBehavior } from '@/lib/utils';
+import { formatCurrency, cn, calculateBusinessDays, cleanFirestoreData, normalizeStatuses, getStatusBehavior, parseDateSafe } from '@/lib/utils';
 import { proposalStatuses as initialProposalStatuses } from '@/lib/config-data';
 import type { Proposal, Customer, UserProfile, UserSettings, Lead, Expense } from '@/lib/types';
 import {
@@ -66,7 +66,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { startOfMonth, endOfMonth, endOfDay, subMonths, eachDayOfInterval, subDays, startOfDay, isValid } from 'date-fns';
+import { format, parse, startOfMonth, endOfMonth, endOfDay, subMonths, eachDayOfInterval, subDays, startOfDay, isValid } from 'date-fns';
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -75,6 +75,7 @@ export default function DashboardPage() {
   const [dialogData, setDialogData] = useState<{ title: string; proposals: Proposal[] } | null>(null);
   const [startDateInput, setStartDateInput] = useState('');
   const [endDateInput, setEndDateInput] = useState('');
+  const [selectedShortcut, setSelectedShortcut] = useState<string>('');
   const [appliedDateRange, setAppliedDateRange] = useState<DateRange | undefined>(undefined);
   const [isPrivacyMode, setIsPrivacyMode] = useState(false);
   const [isClient, setIsClient] = useState(false);
@@ -155,14 +156,35 @@ export default function DashboardPage() {
   };
 
   const handleApplyFilter = () => {
-    const startDate = parse(startDateInput, 'dd/MM/yyyy', new Date());
-    const endDate = parse(endDateInput, 'dd/MM/yyyy', new Date());
-    if (isValid(startDate) && isValid(endDate)) {
-        setAppliedDateRange({ from: startOfDay(startDate), to: endOfDay(endDate) });
-    } else if (isValid(startDate)) {
-        setAppliedDateRange({ from: startOfDay(startDate), to: endOfDay(startDate) });
+    if (!startDateInput.trim() && !endDateInput.trim()) {
+      setAppliedDateRange(undefined);
+      setSelectedShortcut('');
+      return;
+    }
+
+    const startDate = startDateInput.trim().length === 10 ? parse(startDateInput.trim(), 'dd/MM/yyyy', new Date()) : null;
+    const endDate = endDateInput.trim().length === 10 ? parse(endDateInput.trim(), 'dd/MM/yyyy', new Date()) : null;
+
+    const isStartValid = Boolean(startDate && isValid(startDate));
+    const isEndValid = Boolean(endDate && isValid(endDate));
+
+    if (isStartValid && isEndValid && startDate && endDate) {
+      const from = startOfDay(startDate <= endDate ? startDate : endDate);
+      const to = endOfDay(startDate <= endDate ? endDate : startDate);
+      setAppliedDateRange({ from, to });
+      setSelectedShortcut('');
+    } else if (isStartValid && startDate && !endDateInput.trim()) {
+      setAppliedDateRange({ from: startOfDay(startDate), to: endOfDay(startDate) });
+      setSelectedShortcut('');
+    } else if (isEndValid && endDate && !startDateInput.trim()) {
+      setAppliedDateRange({ from: startOfDay(endDate), to: endOfDay(endDate) });
+      setSelectedShortcut('');
     } else {
-        setAppliedDateRange(undefined);
+      toast({
+        title: 'Data inválida',
+        description: 'Por favor, insira datas válidas no formato DD/MM/AAAA.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -171,18 +193,30 @@ export default function DashboardPage() {
     if (value.length > 8) value = value.substring(0, 8);
     value = value.replace(/(\d{2})(\d)/, '$1/$2');
     value = value.replace(/(\d{2})(\d)/, '$1/$2');
-    e.target.value = value;
     return value;
   };
 
   const applyRangeShortcut = (range: string) => {
+    setSelectedShortcut(range);
     const now = new Date();
     let from = startOfMonth(now);
-    let to = now;
-    if (range === 'today') from = startOfDay(now);
-    if (range === 'yesterday') { from = startOfDay(subDays(now, 1)); to = endOfDay(subDays(now, 1)); }
-    if (range === 'week') from = startOfDay(subDays(now, 7));
-    
+    let to = endOfDay(now);
+
+    if (range === 'today') {
+      from = startOfDay(now);
+      to = endOfDay(now);
+    } else if (range === 'yesterday') {
+      const yesterday = subDays(now, 1);
+      from = startOfDay(yesterday);
+      to = endOfDay(yesterday);
+    } else if (range === 'week') {
+      from = startOfDay(subDays(now, 6)); // Últimos 7 dias completos incluindo hoje
+      to = endOfDay(now);
+    } else if (range === 'month') {
+      from = startOfMonth(now);
+      to = endOfMonth(now);
+    }
+
     setStartDateInput(format(from, 'dd/MM/yyyy'));
     setEndDateInput(format(to, 'dd/MM/yyyy'));
     setAppliedDateRange({ from, to });
@@ -230,7 +264,7 @@ export default function DashboardPage() {
     });
 
     proposals.forEach(p => {
-        const d = p.dateDigitized ? new Date(p.dateDigitized) : null;
+        const d = parseDateSafe(p.dateDigitized);
         const behavior = getStatusBehavior(p.status, activeConfigs);
 
         if (d && isValid(d)) {
@@ -249,15 +283,15 @@ export default function DashboardPage() {
         }
 
         if (behavior === 'rejection') {
-            const rejectionDate = p.statusUpdatedAt ? new Date(p.statusUpdatedAt) : (p.dateDigitized ? new Date(p.dateDigitized) : null);
+            const rejectionDate = parseDateSafe(p.statusUpdatedAt) || parseDateSafe(p.dateDigitized);
             if (rejectionDate && isValid(rejectionDate) && rejectionDate >= fromDate && rejectionDate <= effectiveToDate) {
                 if (statusLists[p.status]) statusLists[p.status].push(p);
             }
         }
 
         if (behavior === 'success' && p.datePaidToClient) {
-            const pd = new Date(p.datePaidToClient);
-            if (isValid(pd) && pd >= fromDate && pd <= effectiveToDate) paidInPeriod.push(p);
+            const pd = parseDateSafe(p.datePaidToClient);
+            if (pd && isValid(pd) && pd >= fromDate && pd <= effectiveToDate) paidInPeriod.push(p);
         }
     });
 
@@ -275,7 +309,7 @@ export default function DashboardPage() {
         const ds = startOfDay(day);
         const de = endOfDay(day);
         return proposals.reduce((sum, p) => {
-            const d = p.dateDigitized ? new Date(p.dateDigitized) : null;
+            const d = parseDateSafe(p.dateDigitized);
             return (d && d >= ds && d <= de) ? sum + safeVal(p.grossAmount) : sum;
         }, 0);
     });
@@ -292,7 +326,7 @@ export default function DashboardPage() {
         if (isTotalLiberado) {
             // Regra 1: Filtro de tempo (Somente as liberadas/pagas dentro do período filtrado)
             list = list.filter(p => {
-                const pd = p.datePaidToClient ? new Date(p.datePaidToClient) : (p.statusUpdatedAt ? new Date(p.statusUpdatedAt) : (p.dateDigitized ? new Date(p.dateDigitized) : null));
+                const pd = parseDateSafe(p.datePaidToClient) || parseDateSafe(p.statusUpdatedAt) || parseDateSafe(p.dateDigitized);
                 return pd && isValid(pd) && pd >= fromDate && pd <= effectiveToDate;
             });
             // Regra 2: Campo correto (Valor Líquido = netAmount)
@@ -311,7 +345,7 @@ export default function DashboardPage() {
                 const ds = startOfDay(day);
                 const de = endOfDay(day);
                 return list.filter(p => {
-                    const d = p.dateDigitized ? new Date(p.dateDigitized) : null;
+                    const d = parseDateSafe(p.dateDigitized);
                     return d && d >= ds && d <= de;
                 }).length;
             })
@@ -336,7 +370,7 @@ export default function DashboardPage() {
         hotStatus: Object.entries(statusAnalysis).filter(([n]) => n !== 'Reprovado').sort((a: any, b: any) => b[1].total - a[1].total)[0]?.[0],
         activeConfigs
     };
-  }, [isClient, proposals, appliedDateRange]);
+  }, [isClient, proposals, appliedDateRange, userSettings]);
 
   if (!isClient || !stats) {
     return <AppLayout><div className="space-y-8 animate-pulse"><Skeleton className="h-32 w-full rounded-2xl" /><div className="grid grid-cols-1 md:grid-cols-3 gap-4"><Skeleton className="h-40 w-full rounded-2xl" /><Skeleton className="h-40 w-full rounded-2xl" /><Skeleton className="h-40 w-full rounded-2xl" /></div></div></AppLayout>;
@@ -353,8 +387,8 @@ export default function DashboardPage() {
           const isInvalid = behavior === 'rejection' || behavior === 'canceled';
           if (isInvalid) return sum;
 
-          const pd = new Date(p.dateDigitized);
-          return (isValid(pd) && pd >= today && pd <= endToday) ? sum + (p.commissionValue || 0) : sum;
+          const pd = parseDateSafe(p.dateDigitized);
+          return (pd && isValid(pd) && pd >= today && pd <= endToday) ? sum + (p.commissionValue || 0) : sum;
       }, 0);
   })();
 
@@ -373,7 +407,7 @@ export default function DashboardPage() {
             
             <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-3 bg-background border-2 border-zinc-200 dark:border-primary/20 rounded-full px-3 py-1 shadow-sm transition-all hover:border-primary/40">
-                    <Select onValueChange={applyRangeShortcut}>
+                    <Select value={selectedShortcut} onValueChange={applyRangeShortcut}>
                         <SelectTrigger className="h-7 w-[120px] border-none bg-transparent focus:ring-0 text-xs font-black uppercase p-0">
                             <CalendarIcon className="mr-2 h-3.5 w-3.5 text-primary" />
                             <SelectValue placeholder="PERÍODO" />
@@ -390,14 +424,26 @@ export default function DashboardPage() {
                         <Input 
                             placeholder="De" 
                             value={startDateInput} 
-                            onChange={(e) => setStartDateInput(handleDateMask(e))} 
+                            onChange={(e) => {
+                                setSelectedShortcut('');
+                                setStartDateInput(handleDateMask(e));
+                            }} 
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleApplyFilter();
+                            }}
                             className="h-7 w-28 border-none bg-muted/40 text-[11px] text-center font-black rounded-full focus-visible:ring-primary/20" 
                         />
                         <span className="text-muted-foreground font-black opacity-40">-</span>
                         <Input 
                             placeholder="Até" 
                             value={endDateInput} 
-                            onChange={(e) => setEndDateInput(handleDateMask(e))} 
+                            onChange={(e) => {
+                                setSelectedShortcut('');
+                                setEndDateInput(handleDateMask(e));
+                            }} 
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleApplyFilter();
+                            }}
                             className="h-7 w-28 border-none bg-muted/40 text-[11px] text-center font-black rounded-full focus-visible:ring-primary/20" 
                         />
                     </div>
@@ -408,12 +454,18 @@ export default function DashboardPage() {
                     >
                         <Filter className="h-3 w-3" /> APLICAR
                     </Button>
-                    {appliedDateRange && (
+                    {(appliedDateRange || startDateInput || endDateInput || selectedShortcut) && (
                         <Button 
                             variant="ghost" 
                             size="icon" 
                             className="h-7 w-7 text-destructive hover:bg-red-50 rounded-full" 
-                            onClick={() => { setStartDateInput(''); setEndDateInput(''); setAppliedDateRange(undefined); }}
+                            onClick={() => { 
+                                setStartDateInput(''); 
+                                setEndDateInput(''); 
+                                setSelectedShortcut(''); 
+                                setAppliedDateRange(undefined); 
+                            }}
+                            title="Limpar filtro de período"
                         >
                             <X className="h-3.5 w-3.5" />
                         </Button>
@@ -525,8 +577,8 @@ export default function DashboardPage() {
                         let contract = 0;
                         stats.proposals.digitadoNoMes.forEach(p => {
                             if (!p.dateDigitized) return;
-                            const pd = new Date(p.dateDigitized);
-                            if (isValid(pd) && pd >= ds && pd <= de) {
+                            const pd = parseDateSafe(p.dateDigitized);
+                            if (pd && isValid(pd) && pd >= ds && pd <= de) {
                                 // 🛡️ SINCRONIA: Aplicar o mesmo filtro do 'currentDailyProduction' para consistência visual
                                 const behavior = getStatusBehavior(p.status, stats.activeConfigs);
                                 const isInvalid = behavior === 'rejection' || behavior === 'canceled';

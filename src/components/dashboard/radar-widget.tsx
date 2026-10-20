@@ -47,7 +47,7 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
     return userSettings?.radarJustifications || defaultRadarJustifications;
   }, [userSettings?.radarJustifications]);
 
-  const { activeSignals, dismissedSignals, dismissSignal, restoreSignal } = useRadar(customers, proposals, activeConfigs);
+  const { activeSignals, dismissedSignals, dismissSignal, restoreSignal, updateSignalJustification } = useRadar(customers, proposals, activeConfigs);
 
   // Modals state
   const [dispenseTarget, setDispenseTarget] = useState<RadarOpportunity | null>(null);
