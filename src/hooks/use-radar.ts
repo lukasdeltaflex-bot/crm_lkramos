@@ -1,12 +1,12 @@
 import { useMemo, useCallback } from 'react';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, doc, setDoc, deleteDoc, addDoc } from 'firebase/firestore';
-import type { Customer, Proposal } from '@/lib/types';
+import type { Customer, Proposal, RadarTabulation, RadarSignalType } from '@/lib/types';
 import { differenceInMonths, differenceInDays, addDays } from 'date-fns';
 import { getAge, parseDateSafe, getStatusBehavior } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 
-export type RadarSignalType = 'retencao' | 'saque';
+export type { RadarSignalType, RadarTabulation };
 
 export interface RadarSignalData {
   id: string;
@@ -41,6 +41,34 @@ export function useRadar(customers: Customer[] | undefined, proposals: Proposal[
 
   const { data: radarSignalsRaw } = useCollection<RadarSignalData>(signalsQuery);
   const radarSignals = radarSignalsRaw || [];
+
+  const tabulationsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(collection(firestore, 'users', user.uid, 'radarTabulations'));
+  }, [firestore, user]);
+
+  const { data: radarTabulationsRaw } = useCollection<RadarTabulation>(tabulationsQuery);
+  const radarTabulations = radarTabulationsRaw || [];
+
+  // Active tabulations ordered by date descending
+  const activeTabulations = useMemo(() => {
+    const list = radarTabulations.filter(t => t.status === 'ativa');
+    list.sort((a, b) => {
+      const dateA = a.tabulatedAt ? new Date(a.tabulatedAt).getTime() : 0;
+      const dateB = b.tabulatedAt ? new Date(b.tabulatedAt).getTime() : 0;
+      return dateB - dateA;
+    });
+    return list;
+  }, [radarTabulations]);
+
+  // Lookup map for fast checking whether a client has active permanent tabulation for a type
+  const activeTabulationsMap = useMemo(() => {
+    const map = new Map<string, RadarTabulation>();
+    activeTabulations.forEach(tab => {
+      map.set(`${tab.clientId}_${tab.type}`, tab);
+    });
+    return map;
+  }, [activeTabulations]);
 
   // Calculate raw opportunities based on pure business rules
   const rawOpportunities = useMemo(() => {
@@ -151,6 +179,11 @@ export function useRadar(customers: Customer[] | undefined, proposals: Proposal[
       const processedRawOppIds = new Set<string>();
 
       rawOpportunities.forEach(opp => {
+        // Precedência Absoluta: clientes com tabulação permanente ativa para o tipo são completamente excluídos
+        if (activeTabulationsMap.has(`${opp.customer.id}_${opp.type}`)) {
+          return;
+        }
+
         const dbSignal = signalMap.get(opp.id);
         
         const mergedOpp = { ...opp, dbSignal };
@@ -182,6 +215,11 @@ export function useRadar(customers: Customer[] | undefined, proposals: Proposal[
       // This ensures the Historical view of dismissed opportunities works correctly.
       radarSignals.forEach(sig => {
         if (sig.status === 'dispensada') {
+          // Também ignora se estiver com tabulação permanente ativa
+          if (activeTabulationsMap.has(`${sig.clientId}_${sig.type}`)) {
+            return;
+          }
+
           const key = `${sig.clientId}_${sig.type}_${sig.baseDate}`;
           if (!processedRawOppIds.has(key)) {
             const cust = customers?.find(c => c.id === sig.clientId);
@@ -220,7 +258,7 @@ export function useRadar(customers: Customer[] | undefined, proposals: Proposal[
     });
 
     return { activeSignals: active, dismissedSignals: dismissed };
-  }, [rawOpportunities, radarSignals]);
+  }, [rawOpportunities, radarSignals, activeTabulationsMap, customers, proposals]);
 
   const dismissSignal = useCallback(async (opportunity: RadarOpportunity, justificativa: string) => {
     if (!user || !firestore) return;
@@ -278,9 +316,79 @@ export function useRadar(customers: Customer[] | undefined, proposals: Proposal[
     }
   }, [user, firestore]);
 
+  const tabulateClient = useCallback(async (
+    opportunity: RadarOpportunity,
+    motive: string,
+    details?: string
+  ) => {
+    if (!user || !firestore) return;
+
+    const tabId = `${opportunity.customer.id}_${opportunity.type}`;
+    const docRef = doc(firestore, 'users', user.uid, 'radarTabulations', tabId);
+
+    const tabulationData: RadarTabulation = {
+      id: tabId,
+      clientId: opportunity.customer.id,
+      customerName: opportunity.customer.name || 'Cliente',
+      customerCpf: opportunity.customer.cpf || '',
+      type: opportunity.type,
+      bank: opportunity.lastProposal?.bank || '',
+      motive,
+      details: details?.trim() || '',
+      tabulatedAt: new Date().toISOString(),
+      tabulatedBy: user.email || user.uid,
+      status: 'ativa'
+    };
+
+    try {
+      await setDoc(docRef, tabulationData, { merge: true });
+      toast({
+        title: 'Tabulação Permanente Registrada',
+        description: `${opportunity.customer.name} foi retirado permanentemente do Radar de Vendas.`
+      });
+    } catch (err) {
+      console.error('Error tabulating client permanently', err);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível registrar a tabulação permanente.',
+        variant: 'destructive'
+      });
+      throw err;
+    }
+  }, [user, firestore]);
+
+  const untabulateClient = useCallback(async (tabulation: RadarTabulation) => {
+    if (!user || !firestore) return;
+    const docRef = doc(firestore, 'users', user.uid, 'radarTabulations', tabulation.id);
+
+    try {
+      await setDoc(docRef, {
+        status: 'revogada',
+        revokedAt: new Date().toISOString(),
+        revokedBy: user.email || user.uid
+      }, { merge: true });
+
+      toast({
+        title: 'Tabulação Revertida',
+        description: `A restrição de ${tabulation.customerName} foi removida. O cliente volta a ser avaliado pelas regras normais.`
+      });
+    } catch (err) {
+      console.error('Error revoking permanent tabulation', err);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível reverter a tabulação permanente.',
+        variant: 'destructive'
+      });
+      throw err;
+    }
+  }, [user, firestore]);
+
   return {
     activeSignals,
     dismissedSignals,
+    activeTabulations,
+    tabulateClient,
+    untabulateClient,
     dismissSignal,
     restoreSignal,
     updateSignalJustification

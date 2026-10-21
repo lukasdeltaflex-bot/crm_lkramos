@@ -41,6 +41,14 @@ export const defaultRadarJustifications: string[] = [
   "Outro"
 ];
 
+export const defaultPermanentTabulationReasons: string[] = [
+  "Restrição definitiva no banco: cliente impossibilitado de realizar a operação.",
+  "Cliente com bloqueio/reprovação definitiva na instituição",
+  "Órgão/espécie incompatível permanentemente",
+  "Cliente solicitou não ser mais contatado para esta modalidade",
+  "Outro motivo impeditivo definitivo"
+];
+
 export const defaultHistoryTopics: string[] = [
   '⏳ Aguardando retorno da CIP (Saldo)',
   '⏳ Aguardando desbloqueio benefício',

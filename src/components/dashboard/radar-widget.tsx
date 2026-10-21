@@ -3,8 +3,8 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Zap, ChevronRight, User, TrendingUp, X, RefreshCcw, ArchiveRestore, Archive, Copy, MessageCircle, Edit2, Trash2, History, Clock } from 'lucide-react';
-import type { Customer, Proposal, UserSettings } from '@/lib/types';
+import { Zap, ChevronRight, User, TrendingUp, X, RefreshCcw, ArchiveRestore, Archive, Copy, MessageCircle, Edit2, Trash2, History, Clock, ShieldAlert, AlertTriangle, ShieldCheck } from 'lucide-react';
+import type { Customer, Proposal, UserSettings, RadarTabulation } from '@/lib/types';
 import Link from 'next/link';
 import { formatCurrency, isWhatsApp, getWhatsAppUrl, cleanBankName } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
@@ -16,9 +16,11 @@ import { BankIcon } from '@/components/bank-icon';
 import { doc } from 'firebase/firestore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { format, differenceInDays } from 'date-fns';
 
-import { defaultRadarJustifications } from '@/lib/config-data';
+import { defaultRadarJustifications, defaultPermanentTabulationReasons } from '@/lib/config-data';
 
 interface RadarWidgetProps {
   proposals: Proposal[];
@@ -47,7 +49,20 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
     return userSettings?.radarJustifications || defaultRadarJustifications;
   }, [userSettings?.radarJustifications]);
 
-  const { activeSignals, dismissedSignals, dismissSignal, restoreSignal, updateSignalJustification } = useRadar(customers, proposals, activeConfigs);
+  const tabulationReasonsList = useMemo(() => {
+    return userSettings?.radarPermanentTabulationReasons || defaultPermanentTabulationReasons;
+  }, [userSettings?.radarPermanentTabulationReasons]);
+
+  const {
+    activeSignals,
+    dismissedSignals,
+    activeTabulations,
+    tabulateClient,
+    untabulateClient,
+    dismissSignal,
+    restoreSignal,
+    updateSignalJustification
+  } = useRadar(customers, proposals, activeConfigs);
 
   // Modals state
   const [dispenseTarget, setDispenseTarget] = useState<RadarOpportunity | null>(null);
@@ -55,9 +70,17 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
   const [isDispenseModalOpen, setIsDispenseModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   
+  // Tabulação Permanente state
+  const [tabulateTarget, setTabulateTarget] = useState<RadarOpportunity | null>(null);
+  const [tabulateMotive, setTabulateMotive] = useState<string>(defaultPermanentTabulationReasons[0] || '');
+  const [tabulateDetails, setTabulateDetails] = useState<string>('');
+  const [isTabulateModalOpen, setIsTabulateModalOpen] = useState(false);
+  const [isSubmittingTabulation, setIsSubmittingTabulation] = useState(false);
+
   const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [historyTarget, setHistoryTarget] = useState<RadarOpportunity | null>(null);
+
 
   const handleDispenseClick = (e: React.MouseEvent, opt: RadarOpportunity) => {
     e.preventDefault();
@@ -94,6 +117,31 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
 
   const handleRestoreClick = async (opt: RadarOpportunity) => {
     await restoreSignal(opt);
+  };
+
+  const handleTabulateClick = (e: React.MouseEvent, opt: RadarOpportunity) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setTabulateTarget(opt);
+    setTabulateMotive(defaultPermanentTabulationReasons[0] || '');
+    setTabulateDetails('');
+    setIsTabulateModalOpen(true);
+  };
+
+  const confirmTabulate = async () => {
+    if (!tabulateTarget || !tabulateMotive) return;
+    try {
+      setIsSubmittingTabulation(true);
+      await tabulateClient(tabulateTarget, tabulateMotive, tabulateDetails);
+      setIsTabulateModalOpen(false);
+      setTabulateTarget(null);
+    } finally {
+      setIsSubmittingTabulation(false);
+    }
+  };
+
+  const handleUntabulateClick = async (tab: RadarTabulation) => {
+    await untabulateClient(tab);
   };
 
   return (
@@ -150,7 +198,7 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
                                   <div className="h-10 w-10 rounded-full bg-orange-500/10 flex items-center justify-center shrink-0">
                                       <User className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                                   </div>
-                                  <div className="flex-1 min-w-0 pr-8">
+                                  <div className="flex-1 min-w-0 pr-24">
                                       <p className="text-sm font-bold text-foreground group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors truncate mb-0.5">{opt.customer.name}</p>
                                       
                                       <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1.5">
@@ -158,7 +206,7 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
                                           <button 
                                             onClick={(e) => { 
                                                 e.preventDefault(); 
-                                                e.stopPropagation();
+                                                e.stopPropagation(); 
                                                 navigator.clipboard.writeText(opt.customer.cpf || ''); 
                                                 toast({title: "Copiado", description: "CPF copiado para a área de transferência."}); 
                                             }} 
@@ -230,9 +278,18 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
                                     <Button
                                       variant="ghost"
                                       size="icon"
+                                      className="h-8 w-8 text-muted-foreground hover:text-amber-600 hover:bg-amber-500/10 z-10"
+                                      onClick={(e) => handleTabulateClick(e, opt)}
+                                      title="Tabulação permanente (inelegível no banco)"
+                                    >
+                                      <ShieldAlert className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
                                       className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 z-10"
                                       onClick={(e) => handleDispenseClick(e, opt)}
-                                      title="Dispensar oportunidade"
+                                      title="Dispensar temporariamente"
                                     >
                                       <X className="h-4 w-4" />
                                     </Button>
@@ -336,76 +393,256 @@ export function RadarWidget({ proposals, customers, isLoading }: RadarWidgetProp
         </DialogContent>
       </Dialog>
 
-      {/* Modal Restaurar */}
+      {/* Modal Tabulação Permanente */}
+      <Dialog open={isTabulateModalOpen} onOpenChange={setIsTabulateModalOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+              <ShieldAlert className="h-5 w-5 text-amber-500" />
+              Tabulação Permanente — Inelegibilidade Comercial
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Retire o cliente do Radar de Vendas de forma definitiva e controlada.
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Aviso Obrigatório */}
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-xs text-amber-800 dark:text-amber-300 leading-relaxed flex items-start gap-2.5">
+            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <p>
+              Este cliente será retirado permanentemente do Radar de Vendas pelo motivo informado. O cadastro e o histórico continuarão disponíveis no CRM. A ação não poderá ser revertida automaticamente pelo vencimento de regras temporárias.
+            </p>
+          </div>
+
+          {/* Resumo do Cliente e Operação */}
+          {tabulateTarget && (
+            <div className="bg-muted/40 p-3 rounded-lg border text-xs space-y-1.5">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Cliente:</span>
+                <span className="font-bold text-foreground">{tabulateTarget.customer.name}</span>
+              </div>
+              {tabulateTarget.customer.cpf && (
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">CPF:</span>
+                  <span className="font-mono">{tabulateTarget.customer.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Operação no Radar:</span>
+                <span className="font-semibold uppercase text-orange-600 dark:text-orange-400">
+                  {tabulateTarget.type === 'saque' ? 'Saque Complementar' : 'Retenção'}
+                </span>
+              </div>
+              {tabulateTarget.lastProposal?.bank && (
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Banco da Operação:</span>
+                  <span className="font-semibold text-foreground">{cleanBankName(tabulateTarget.lastProposal.bank)}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Seleção do Motivo */}
+          <div className="space-y-2 py-1">
+            <label className="text-xs font-semibold text-foreground flex items-center justify-between">
+              <span>Motivo da Inelegibilidade Comercial <span className="text-red-500">*</span></span>
+            </label>
+            <Select value={tabulateMotive} onValueChange={setTabulateMotive}>
+              <SelectTrigger className="w-full text-xs">
+                <SelectValue placeholder="Selecione o motivo..." />
+              </SelectTrigger>
+              <SelectContent className="max-h-[300px] z-[9999]" position="popper">
+                {tabulationReasonsList.map(r => (
+                  <SelectItem key={r} value={r} className="text-xs py-2">
+                    {r}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Detalhes / Observações adicionais */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground">
+              Observações Adicionais (opcional)
+            </label>
+            <Textarea
+              placeholder="Ex: Restrição definitiva no sistema do banco informada pelo suporte..."
+              value={tabulateDetails}
+              onChange={(e) => setTabulateDetails(e.target.value)}
+              className="text-xs min-h-[70px] resize-none"
+            />
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="ghost" onClick={() => setIsTabulateModalOpen(false)} disabled={isSubmittingTabulation}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={confirmTabulate}
+              disabled={!tabulateMotive || isSubmittingTabulation}
+              className="bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600"
+            >
+              {isSubmittingTabulation ? 'Registrando...' : 'Confirmar Tabulação Definitiva'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Restaurar & Tabulações */}
       <Dialog open={isRestoreModalOpen} onOpenChange={setIsRestoreModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Archive className="h-5 w-5 text-muted-foreground" />
-              Oportunidades Dispensadas
+              Gestão de Dispensas e Restrições do Radar
             </DialogTitle>
             <DialogDescription>
-              Visualize os clientes removidos do Radar e restaure-os manualmente se desejar.
+              Consulte e reverta oportunidades dispensadas temporariamente ou com tabulação permanente.
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="flex-1 pr-4 py-4 min-h-[300px] max-h-[60vh] overflow-y-auto overflow-x-hidden">
-            {dismissedSignals.length === 0 ? (
-              <div className="flex h-full flex-col justify-center items-center text-muted-foreground opacity-60 p-8">
-                <ArchiveRestore className="h-10 w-10 mb-2" />
-                <p className="text-sm font-bold">Nenhum registro dispensado</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {dismissedSignals.map(opt => (
-                  <div key={opt.id} className="flex justify-between items-center p-3 rounded-lg border bg-muted/20">
-                    <div>
-                      <p className="text-sm font-bold">{opt.customer.name}</p>
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-[10px] text-muted-foreground mt-1">
-                        <span className="uppercase font-bold text-orange-600/70">{opt.type}</span>
-                        <div className="flex items-center gap-2">
-                          <span>Motivo: <strong className={opt.dbSignal?.justificativa ? "" : "opacity-50"}>{opt.dbSignal?.justificativa || 'Nenhum salvo'}</strong>
-                            {opt.dbSignal?.justificativa && !justificativasList.includes(opt.dbSignal.justificativa) && (
-                                <span className="ml-1 text-[8px] uppercase bg-red-500/10 text-red-500 px-1 rounded">(Desativado)</span>
+
+          <Tabs defaultValue="dispensadas" className="w-full flex-1 flex flex-col min-h-0">
+            <TabsList className="grid w-full grid-cols-2 mb-2">
+              <TabsTrigger value="dispensadas" className="flex items-center gap-2 text-xs">
+                <ArchiveRestore className="h-3.5 w-3.5" />
+                Dispensados Temporários
+                <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0 h-4">
+                  {dismissedSignals.length}
+                </Badge>
+              </TabsTrigger>
+              <TabsTrigger value="tabuladas" className="flex items-center gap-2 text-xs">
+                <ShieldAlert className="h-3.5 w-3.5 text-amber-500" />
+                Tabulações Permanentes
+                <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0 h-4">
+                  {activeTabulations.length}
+                </Badge>
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="dispensadas" className="flex-1 pr-2 py-2 min-h-[300px] max-h-[55vh] overflow-y-auto overflow-x-hidden mt-0">
+              {dismissedSignals.length === 0 ? (
+                <div className="flex h-full flex-col justify-center items-center text-muted-foreground opacity-60 p-8 min-h-[250px]">
+                  <ArchiveRestore className="h-10 w-10 mb-2" />
+                  <p className="text-sm font-bold">Nenhum registro dispensado temporariamente</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {dismissedSignals.map(opt => (
+                    <div key={opt.id} className="flex justify-between items-center p-3 rounded-lg border bg-muted/20">
+                      <div>
+                        <p className="text-sm font-bold">{opt.customer.name}</p>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-[10px] text-muted-foreground mt-1">
+                          <span className="uppercase font-bold text-orange-600/70">{opt.type}</span>
+                          <div className="flex items-center gap-2">
+                            <span>Motivo: <strong className={opt.dbSignal?.justificativa ? "" : "opacity-50"}>{opt.dbSignal?.justificativa || 'Nenhum salvo'}</strong>
+                              {opt.dbSignal?.justificativa && !justificativasList.includes(opt.dbSignal.justificativa) && (
+                                  <span className="ml-1 text-[8px] uppercase bg-red-500/10 text-red-500 px-1 rounded">(Desativado)</span>
+                              )}
+                            </span>
+                            
+                            <div className="flex items-center opacity-40 hover:opacity-100 transition-opacity gap-1 ml-1">
+                              <button onClick={() => handleEditMotiveClick(opt)} title="Editar Motivo" className="p-1 hover:text-primary transition-colors focus:outline-none">
+                                <Edit2 className="h-3 w-3" />
+                              </button>
+                              {opt.dbSignal?.justificativa && (
+                                  <button onClick={() => handleDeleteMotiveClick(opt)} title="Excluir Motivo" className="p-1 hover:text-destructive transition-colors focus:outline-none">
+                                    <Trash2 className="h-3 w-3" />
+                                  </button>
+                              )}
+                            </div>
+                          </div>
+                          {opt.type === 'saque' && opt.dbSignal?.nextReentryDate && (
+                            <span className="text-primary font-bold">
+                              {(() => {
+                                const diff = differenceInDays(new Date(opt.dbSignal.nextReentryDate), new Date());
+                                if (diff > 0) return `Retorna em ${diff} dias`;
+                                if (diff === 0) return `Retorna hoje`;
+                                return `Retornou há ${Math.abs(diff)} dias`;
+                              })()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="ml-4 shrink-0 transition-colors hover:text-primary hover:border-primary/50 hover:bg-primary/5"
+                        onClick={() => handleRestoreClick(opt)}
+                      >
+                        <RefreshCcw className="h-4 w-4 mr-2" /> Restaurar
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="tabuladas" className="flex-1 pr-2 py-2 min-h-[300px] max-h-[55vh] overflow-y-auto overflow-x-hidden mt-0">
+              {activeTabulations.length === 0 ? (
+                <div className="flex h-full flex-col justify-center items-center text-muted-foreground opacity-60 p-8 min-h-[250px]">
+                  <ShieldCheck className="h-10 w-10 mb-2 text-muted-foreground" />
+                  <p className="text-sm font-bold">Nenhuma tabulação permanente ativa</p>
+                  <p className="text-[11px] text-center mt-1">Clientes com restrições comerciais definitivas aparecerão aqui quando tabulados.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {activeTabulations.map(tab => (
+                    <div key={tab.id} className="p-3.5 rounded-lg border border-amber-500/20 bg-amber-500/[0.04] dark:bg-amber-500/[0.02]">
+                      <div className="flex justify-between items-start gap-3">
+                        <div className="space-y-1 flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-sm text-foreground">{tab.customerName}</span>
+                            {tab.customerCpf && (
+                              <span className="font-mono text-[11px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">
+                                {tab.customerCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}
+                              </span>
                             )}
-                          </span>
-                          
-                          <div className="flex items-center opacity-40 hover:opacity-100 transition-opacity gap-1 ml-1">
-                            <button onClick={() => handleEditMotiveClick(opt)} title="Editar Motivo" className="p-1 hover:text-primary transition-colors focus:outline-none">
-                              <Edit2 className="h-3 w-3" />
-                            </button>
-                            {opt.dbSignal?.justificativa && (
-                                <button onClick={() => handleDeleteMotiveClick(opt)} title="Excluir Motivo" className="p-1 hover:text-destructive transition-colors focus:outline-none">
-                                  <Trash2 className="h-3 w-3" />
-                                </button>
+                            <Badge variant="outline" className="border-amber-500/40 text-amber-600 dark:text-amber-400 text-[10px] uppercase font-bold">
+                              {tab.type === 'saque' ? 'Saque Complementar' : 'Retenção'}
+                            </Badge>
+                            {tab.bank && (
+                              <span className="text-[11px] font-semibold text-muted-foreground">
+                                • {cleanBankName(tab.bank)}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="text-xs text-foreground/90 mt-1">
+                            <span className="font-medium text-muted-foreground">Motivo:</span>{' '}
+                            <span className="font-semibold text-red-600 dark:text-red-400">{tab.motive}</span>
+                          </div>
+
+                          {tab.details && (
+                            <div className="text-[11px] text-muted-foreground bg-background/60 dark:bg-zinc-900/60 p-2 rounded border border-border/40 mt-1">
+                              <span className="font-medium">Obs:</span> {tab.details}
+                            </div>
+                          )}
+
+                          <div className="flex items-center gap-3 text-[10px] text-muted-foreground pt-1 flex-wrap">
+                            <span>Tabulado em: <strong>{tab.tabulatedAt ? format(new Date(tab.tabulatedAt), 'dd/MM/yyyy HH:mm') : '-'}</strong></span>
+                            {tab.tabulatedBy && (
+                              <span>Por: <strong>{tab.tabulatedBy}</strong></span>
                             )}
                           </div>
                         </div>
-                        {opt.type === 'saque' && opt.dbSignal?.nextReentryDate && (
-                          <span className="text-primary font-bold">
-                            {(() => {
-                              const diff = differenceInDays(new Date(opt.dbSignal.nextReentryDate), new Date());
-                              if (diff > 0) return `Retorna em ${diff} dias`;
-                              if (diff === 0) return `Retorna hoje`;
-                              return `Retornou há ${Math.abs(diff)} dias`;
-                            })()}
-                          </span>
-                        )}
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="shrink-0 transition-colors hover:text-emerald-600 hover:border-emerald-500/50 hover:bg-emerald-500/5"
+                          onClick={() => handleUntabulateClick(tab)}
+                          title="Remover tabulação e reverter restrição"
+                        >
+                          <RefreshCcw className="h-4 w-4 mr-1.5" /> Reverter Restrição
+                        </Button>
                       </div>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="ml-4 shrink-0 transition-colors hover:text-primary hover:border-primary/50 hover:bg-primary/5"
-                      onClick={() => handleRestoreClick(opt)}
-                    >
-                      <RefreshCcw className="h-4 w-4 mr-2" /> Restaurar
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
     </>

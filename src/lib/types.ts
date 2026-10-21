@@ -187,7 +187,27 @@ export type UserSettings = {
   dismissedAlerts?: string[];
   readAlerts?: string[];
   radarJustifications?: string[];
+  radarPermanentTabulationReasons?: string[];
 };
+
+export type RadarSignalType = 'retencao' | 'saque';
+
+export interface RadarTabulation {
+  id: string; // `${clientId}_${type}`
+  clientId: string;
+  customerName: string;
+  customerCpf?: string;
+  type: RadarSignalType;
+  bank?: string;
+  motive: string;
+  details?: string;
+  tabulatedAt: string; // ISO string
+  tabulatedBy?: string;
+  status: 'ativa' | 'revogada';
+  revokedAt?: string;
+  revokedBy?: string;
+}
+
 
 export type UserProfile = {
   uid: string;
