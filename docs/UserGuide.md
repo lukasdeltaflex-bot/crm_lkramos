@@ -179,6 +179,24 @@ Ao agendar ou atualizar um compromisso/retorno com um cliente, a experiência de
 - O retorno **não exige cliente vinculado**. Você pode agendar contatos avulsos ou novos prospects digitando o nome do contato diretamente.
 - Se já houver um cliente vinculado e você desejar remover a ligação, basta clicar no botão **X (Remover vínculo)** ou escolher **Limpar vínculo** na busca.
 
+### 📋 Visualização Completa de Retornos Salvos
+Ao salvar um retorno na agenda, você pode consultar todos os seus detalhes e o conteúdo integral das informações registradas a qualquer momento:
+
+1. **Como abrir um retorno:**
+   - **Na aba Pendentes:** Basta clicar em qualquer card de retorno da lista.
+   - **Na aba Calendário:** Clique diretamente sobre o item do retorno exibido no dia (ex: `• 14:00 - João da Silva`) para abrir a consulta imediata daquele agendamento.
+   - **Na aba Histórico:** Clique sobre qualquer retorno já concluído para consultar suas anotações originais e o histórico registrado.
+2. **O que é exibido na consulta:**
+   - **Título do retorno** e etiqueta de status atualizado (*Pendente, Hoje, Atrasado, Concluído*).
+   - **Descrição completa:** Exibida em área própria com quebras de linha e formatação preservadas, sem cortes por reticências e com rolagem suave para textos longos.
+   - **Retornos sem descrição:** Caso o retorno não tenha descrição registrada, o sistema exibe uma indicação discreta (*"Nenhuma descrição registrada para este retorno"*), sem inventar informações.
+   - **Data e Horário:** Exibição clara da data agendada e horário do retorno.
+   - **Cliente Vinculado:** Quando houver cliente associado, exibe o nome e atalho direto para a ficha completa.
+   - **Telefone e WhatsApp:** Acesso rápido ao número com atalhos para WhatsApp e cópia.
+3. **Consulta Segura e Edição:**
+   - **Consulta Pura:** Abrir ou fechar o retorno (pelo botão **Fechar**, pelo botão **X** ou pela tecla `Esc`) não altera, não salva e não exclui nenhum dado no banco.
+   - **Editar Dados:** Para modificar o título, a descrição, a data ou o cliente vinculado, clique no botão **"Editar Dados"** no rodapé do modal de detalhes.
+
 ---
 
 ## 🔎 Busca Global e Local por CPF com e sem Pontuação

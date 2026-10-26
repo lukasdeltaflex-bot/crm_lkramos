@@ -26,9 +26,10 @@ import { Badge } from '@/components/ui/badge';
 interface FollowUpCalendarProps {
   followUps: FollowUp[];
   onSelectDate: (date: Date) => void;
+  onSelectFollowUp?: (followUp: FollowUp) => void;
 }
 
-export function FollowUpCalendar({ followUps, onSelectDate }: FollowUpCalendarProps) {
+export function FollowUpCalendar({ followUps, onSelectDate, onSelectFollowUp }: FollowUpCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -48,11 +49,18 @@ export function FollowUpCalendar({ followUps, onSelectDate }: FollowUpCalendarPr
   const goToToday = () => setCurrentMonth(new Date());
 
   const getFollowUpsForDay = (day: Date) => {
-    return followUps.filter(f => 
-        f.status === 'pending' && 
-        f.deleted !== true &&
-        isSameDay(parseISO(f.dueDate), day)
-    );
+    return followUps.filter(f => {
+      if (f.deleted === true) return false;
+      const status = f.status;
+      if (status !== 'pending' && status !== 'pendente') return false;
+      const dateStr = f.dueDate || f.date;
+      if (!dateStr) return false;
+      try {
+        return isSameDay(parseISO(dateStr), day);
+      } catch {
+        return false;
+      }
+    });
   };
 
   return (
@@ -122,8 +130,21 @@ export function FollowUpCalendar({ followUps, onSelectDate }: FollowUpCalendarPr
                 
                 <div className="mt-2 space-y-1 overflow-hidden">
                     {dayFollowUps.slice(0, 2).map((f) => (
-                        <div key={f.id} className="text-[9px] font-bold truncate bg-primary/5 text-primary p-1 rounded border border-primary/10 leading-none">
-                            • {f.dueTime ? `${f.dueTime} - ` : ''}{f.contactName}
+                        <div 
+                            key={f.id} 
+                            className={cn(
+                                "text-[9px] font-bold truncate bg-primary/10 text-primary p-1 rounded border border-primary/20 leading-none transition-colors",
+                                onSelectFollowUp && "cursor-pointer hover:bg-primary/20 hover:border-primary/40 shadow-xs"
+                            )}
+                            title={`Clique para ver detalhes: ${f.contactName || f.title || 'Retorno'}`}
+                            onClick={(e) => {
+                                if (onSelectFollowUp) {
+                                    e.stopPropagation();
+                                    onSelectFollowUp(f);
+                                }
+                            }}
+                        >
+                            • {f.dueTime ? `${f.dueTime} - ` : ''}{f.contactName || f.title || 'Retorno'}
                         </div>
                     ))}
                     {dayFollowUps.length > 2 && (

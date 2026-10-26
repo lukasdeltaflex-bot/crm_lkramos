@@ -71,7 +71,8 @@ import {
     WifiOff,
     EyeOff,
     Calculator,
-    Settings2
+    Settings2,
+    FileText
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -168,6 +169,20 @@ export default function ManualPage() {
                                 <li><strong>Botão Oficial do WhatsApp:</strong> Ao clicar no ícone do WhatsApp, o sistema formata o número automaticamente e abre a conversa pronta com o cliente no seu aplicativo ou WhatsApp Web.</li>
                                 <li><strong>Botão de Copiar:</strong> Um ícone dedicado ao lado do WhatsApp permite copiar instantaneamente o número para a área de transferência.</li>
                             </ul>
+                        </div>
+                        <div className="p-4 rounded-xl bg-purple-50/5 border border-purple-500/20 mt-4">
+                            <h4 className="font-bold text-purple-700 flex items-center gap-2 mb-2">
+                                <FileText className="h-4 w-4" /> Visualização Completa de Retornos Salvos
+                            </h4>
+                            <p className="text-xs text-muted-foreground mb-2">
+                                <strong>Consulta Imediata:</strong> Ao clicar em qualquer retorno (na lista de Pendentes, diretamente no dia do Calendário ou na aba Histórico), uma tela completa de consulta é aberta exibindo o título, a descrição integral com formatação e quebras de linha preservadas, data, horário, cliente vinculado e telefone.
+                            </p>
+                            <p className="text-xs text-muted-foreground mb-2">
+                                <strong>Descrições Extensas e Sem Corte:</strong> Textos longos contam com rolagem própria e não são cortados por reticências. Registros sem descrição exibem um aviso discreto sem inventar informações.
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                                <strong>Consulta Segura:</strong> Abrir ou fechar a visualização não altera nenhum registro no banco de dados. Caso deseje alterar informações, utilize o botão separado <strong>"Editar Dados"</strong>.
+                            </p>
                         </div>
                     </AccordionContent>
                 </AccordionItem>

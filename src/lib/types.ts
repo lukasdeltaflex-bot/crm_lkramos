@@ -239,6 +239,12 @@ export type FollowUp = {
   deleted?: boolean;
   deletedAt?: string;
   deletedBy?: string;
+  // Campos de compatibilidade legada
+  title?: string;
+  date?: string;
+  observation?: string;
+  observations?: string;
+  details?: string;
 };
 
 

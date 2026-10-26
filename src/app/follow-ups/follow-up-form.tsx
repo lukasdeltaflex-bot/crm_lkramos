@@ -70,12 +70,12 @@ export function FollowUpForm({ customers, initialData, onSubmit, isSaving = fals
   useEffect(() => {
     if (initialData) {
       form.reset({
-        contactName: initialData.contactName,
+        contactName: initialData.contactName || (initialData as any).title || '',
         contactPhone: initialData.contactPhone || '',
         customerId: initialData.customerId || '',
         referralInfo: initialData.referralInfo || '',
-        description: initialData.description,
-        dueDate: initialData.dueDate,
+        description: initialData.description || (initialData as any).notes || (initialData as any).observation || (initialData as any).observations || (initialData as any).details || '',
+        dueDate: initialData.dueDate || (initialData as any).date || format(new Date(), 'yyyy-MM-dd'),
         dueTime: initialData.dueTime || '',
       });
     }
