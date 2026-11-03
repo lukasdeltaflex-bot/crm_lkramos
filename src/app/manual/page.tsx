@@ -217,6 +217,21 @@ export default function ManualPage() {
                                 <div className="text-[11px] font-bold uppercase">Documentação</div>
                             </div>
                         </div>
+
+                        <div className="p-4 rounded-xl bg-amber-50/5 border border-amber-500/20 mt-4">
+                            <h4 className="font-bold text-amber-700 flex items-center gap-2 mb-2">
+                                <ShieldCheck className="h-4 w-4" /> Proteção Contra Fechamento Acidental do Cadastro
+                            </h4>
+                            <p className="text-xs text-muted-foreground mb-2">
+                                <strong>Bloqueio de Clique Externo:</strong> Clicar fora da janela central de proposta ou na área escurecida não fecha o formulário. Seus campos e contratos preenchidos permanecem protegidos.
+                            </p>
+                            <p className="text-xs text-muted-foreground mb-2">
+                                <strong>Confirmação de Descarte:</strong> Caso existam dados digitados, o botão X ou a tecla Esc abrem a confirmação <em>"Você tem um cadastro em andamento!"</em> com as opções de <strong>Continuar Cadastrando</strong> ou <strong>Descartar Cadastro</strong>.
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                                <strong>Salvamento e Recuperação de Rascunhos:</strong> O sistema salva automaticamente o estado do cadastro no Firestore e exibe uma etiqueta discreta. Se a página for fechada ou a conexão cair, ao abrir uma Nova Proposta o sistema oferece a restauração integral de todos os contratos e dados da Junção de Parcelas.
+                            </p>
+                        </div>
                     </AccordionContent>
                 </AccordionItem>
 

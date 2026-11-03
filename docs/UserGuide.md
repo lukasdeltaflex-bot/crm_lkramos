@@ -223,6 +223,44 @@ Nenhum cliente ou proposta histórica é excluído, arquivado secretamente ou li
 - **Busca Transparente no Histórico (Fora do Lote Inicial):**
   Se você precisar localizar um cliente antigo ou um contrato do passado que esteja além da página atual, basta digitar o **CPF**, o **Número da Proposta** ou o **ID** no campo de busca. O CRM executa uma consulta direta no banco de dados, recupera o registro histórico em milissegundos e o insere na sua tabela de forma transparente, sem que você precise carregar página por página manualmente.
 
+---
+
+## 🛡️ Proteção Contra Fechamento Acidental do Cadastro de Propostas
+
+O CRM LK RAMOS conta com um sistema de proteção em camadas para impedir que cliques involuntários, ações acidentais ou quedas de conexão apaguem propostas e operações em andamento.
+
+### 1. Bloqueio de Fechamento por Clique Externo (Backdrop Lock)
+- **Clique fora protegido:** Clicar acidentalmente fora da janela central de cadastro ou na área escurecida ao redor (backdrop) **não fecha o formulário**.
+- Todos os campos, contratos adicionados, seleções de clientes e anexos permanecem 100% intactos e abertos para continuidade do trabalho.
+
+### 2. Confirmação Inteligente Antes de Descartar
+- Se o formulário não tiver alterações ou dados preenchidos, o fechamento ocorre normalmente.
+- Caso existam informações digitadas, contratos adicionados ou vínculos não salvos, ao tentar fechar pelo botão **X**, pela tecla `Esc` ou por botões de cancelamento, o sistema exibe a confirmação de segurança:
+  - **Título:** *"Você tem um cadastro em andamento!"*
+  - **Mensagem:** *"Existem informações preenchidas que ainda não foram salvas. Se você sair agora, poderá perder todo o trabalho realizado. Deseja realmente descartar este cadastro?"*
+  - **Botão `CONTINUAR CADASTRANDO`:** Fecha apenas o aviso e mantém todo o formulário e contratos exatamente onde estavam.
+  - **Botão `DESCARTAR CADASTRO`:** Somente descarta e fecha após a sua confirmação explícita. Clicar fora da caixa de confirmação não executa o descarte.
+
+### 3. Salvamento Automático e Indicação Visual de Rascunho
+- Enquanto você digita ou adiciona contratos, o CRM salva automaticamente um rascunho seguro a cada alteração.
+- Uma etiqueta discreta no topo e no rodapé do formulário informa o status em tempo real:
+  - *"Salvando rascunho..."* (durante a sincronização)
+  - *"Rascunho salvo automaticamente às 14:32"* (após a confirmação da persistência)
+  - *"Falha ao salvar rascunho"* (em caso de instabilidade na conexão)
+
+### 4. Recuperação Automática de Cadastros não Finalizados
+- Se a página for recarregada acidentalmente, o navegador fechar ou a conexão cair, ao retornar para **Propostas > Nova Proposta**, o sistema apresenta o diálogo de restauração:
+  - *"Encontramos um cadastro não finalizado. Deseja continuar de onde parou?"*
+  - Exibe o tipo de operação, o cliente selecionado e a quantidade de contratos já preenchidos.
+  - **Botão `RECUPERAR CADASTRO`:** Restaura imediatamente todos os dados, contratos e abas ativas.
+  - **Botão `DESCARTAR RASCUNHO`:** Limpa o rascunho temporário e abre um cadastro limpo em branco.
+- Ao salvar a proposta com sucesso, o rascunho temporário é encerrado automaticamente.
+
+### 5. Proteção Especial para Junção de Parcelas
+- Operações de **Portabilidade + Refin com Junção de Parcelas** preservam integralmente todos os contratos de Portabilidade adicionados e os dados unificados do **Refin Consolidado**.
+- Alternar entre abas, adicionar novos contratos à operação ou abrir o seletor de clientes não reinicializa nem perde os contratos anteriores.
+- Ao clicar em *"Voltar ao Modo Unitário"*, caso existam contratos preenchidos, o CRM solicita confirmação e mantém os contratos preservados no rascunho ativo.
+
 
 > [!TIP]
 > Para alterar qualquer uma dessas informações (Instituições, Tag, etc), acesse o menu **Configurações > Parâmetros** no CRM.

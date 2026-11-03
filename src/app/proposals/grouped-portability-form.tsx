@@ -56,6 +56,17 @@ import {
 import { useTheme } from '@/components/theme-provider';
 import { useUser } from '@/firebase';
 import { summarizeNotes } from '@/ai/flows/summarize-notes-flow';
+import type { DraftSaveStatus } from '@/lib/proposal-draft-service';
+import { hasGroupedDataChanges } from '@/lib/proposal-draft-service';
+import { DraftStatusIndicator } from '@/components/proposals/draft-status-indicator';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+} from '@/components/ui/alert-dialog';
 
 export interface ContractPortabilityData {
   status: ProposalStatus;
@@ -113,7 +124,7 @@ export interface ContractPairItem {
   refin: ContractRefinData;
 }
 
-interface GroupedPortabilityFormProps {
+export interface GroupedPortabilityFormProps {
   customers: Customer[];
   allProposals?: Proposal[];
   userSettings: UserSettings | null;
@@ -125,6 +136,19 @@ interface GroupedPortabilityFormProps {
   isSaving?: boolean;
   initialCustomerId?: string;
   initialBenefitNumber?: string;
+  initialGroupedData?: {
+    operationMode: 'individual' | 'junction';
+    customerId: string;
+    selectedBenefitNumber: string;
+    contracts: ContractPairItem[];
+    consolidatedRefin: ContractRefinData;
+    activeContractIndex?: number;
+    activeSubTab?: 'portabilidade' | 'refin';
+  };
+  onDraftSave?: (draftPayload: any) => void;
+  onDirtyChange?: (isDirty: boolean) => void;
+  draftStatus?: DraftSaveStatus;
+  lastDraftSavedAt?: string | null;
 }
 
 const applyDateMask = (value: string) => {
@@ -206,6 +230,11 @@ export function GroupedPortabilityForm({
   isSaving = false,
   initialCustomerId = '',
   initialBenefitNumber = '',
+  initialGroupedData,
+  onDraftSave,
+  onDirtyChange,
+  draftStatus,
+  lastDraftSavedAt,
 }: GroupedPortabilityFormProps) {
   const { user } = useUser();
   const { statusColors } = useTheme();
@@ -213,29 +242,110 @@ export function GroupedPortabilityForm({
   const todayFormatted = useMemo(() => format(new Date(), 'dd/MM/yyyy'), []);
   const defaultOperator = '';
 
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>(initialCustomerId);
-  const [selectedBenefitNumber, setSelectedBenefitNumber] = useState<string>(initialBenefitNumber);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>(
+    initialGroupedData?.customerId || initialCustomerId
+  );
+  const [selectedBenefitNumber, setSelectedBenefitNumber] = useState<string>(
+    initialGroupedData?.selectedBenefitNumber || initialBenefitNumber
+  );
 
   // Modalidade da operação: 'individual' (1:1) ou 'junction' (N:1 - Junção de Parcelas)
-  const [operationMode, setOperationMode] = useState<'individual' | 'junction'>('individual');
+  const [operationMode, setOperationMode] = useState<'individual' | 'junction'>(
+    initialGroupedData?.operationMode || 'individual'
+  );
 
-  const [contracts, setContracts] = useState<ContractPairItem[]>([
-    {
-      id: 'contract-1',
-      portabilidade: createDefaultPortability(todayFormatted, defaultOperator),
-      refin: createDefaultRefin(todayFormatted, defaultOperator),
-    },
-  ]);
+  const [contracts, setContracts] = useState<ContractPairItem[]>(
+    initialGroupedData?.contracts && initialGroupedData.contracts.length > 0
+      ? initialGroupedData.contracts
+      : [
+          {
+            id: 'contract-1',
+            portabilidade: createDefaultPortability(todayFormatted, defaultOperator),
+            refin: createDefaultRefin(todayFormatted, defaultOperator),
+          },
+        ]
+  );
 
   // Refin Consolidado único utilizado quando operationMode === 'junction'
   const [consolidatedRefin, setConsolidatedRefin] = useState<ContractRefinData>(
-    createDefaultRefin(todayFormatted, defaultOperator)
+    initialGroupedData?.consolidatedRefin || createDefaultRefin(todayFormatted, defaultOperator)
   );
 
-  const [activeContractIndex, setActiveContractIndex] = useState<number>(0);
-  const [activeSubTab, setActiveSubTab] = useState<'portabilidade' | 'refin'>('portabilidade');
+  const [activeContractIndex, setActiveContractIndex] = useState<number>(
+    initialGroupedData?.activeContractIndex ?? 0
+  );
+  const [activeSubTab, setActiveSubTab] = useState<'portabilidade' | 'refin'>(
+    initialGroupedData?.activeSubTab || 'portabilidade'
+  );
   const [validationErrors, setValidationErrors] = useState<{ contractIdx: number; role: string; message: string } | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
+  const [isVoltarConfirmOpen, setIsVoltarConfirmOpen] = useState(false);
+
+  // Sincroniza se initialGroupedData for injetado posteriormente
+  useEffect(() => {
+    if (initialGroupedData) {
+      if (initialGroupedData.customerId) setSelectedCustomerId(initialGroupedData.customerId);
+      if (initialGroupedData.selectedBenefitNumber) setSelectedBenefitNumber(initialGroupedData.selectedBenefitNumber);
+      if (initialGroupedData.operationMode) setOperationMode(initialGroupedData.operationMode);
+      if (initialGroupedData.contracts && initialGroupedData.contracts.length > 0) setContracts(initialGroupedData.contracts);
+      if (initialGroupedData.consolidatedRefin) setConsolidatedRefin(initialGroupedData.consolidatedRefin);
+      if (typeof initialGroupedData.activeContractIndex === 'number') setActiveContractIndex(initialGroupedData.activeContractIndex);
+      if (initialGroupedData.activeSubTab) setActiveSubTab(initialGroupedData.activeSubTab);
+    }
+  }, [initialGroupedData]);
+
+  // 🛡️ PROTEÇÃO CONTRA PERDA DE DADOS: Auto-save debounced e rastreamento de dirty state
+  useEffect(() => {
+    const isDirty = hasGroupedDataChanges({
+      contracts,
+      consolidatedRefin,
+      customerId: selectedCustomerId,
+      selectedBenefitNumber,
+    });
+    onDirtyChange?.(isDirty);
+
+    if (!isDirty || !onDraftSave) return;
+
+    const timer = setTimeout(() => {
+      const cust = customers.find(c => c.id === selectedCustomerId);
+      onDraftSave({
+        mode: 'grouped',
+        sheetMode: 'new',
+        groupedData: {
+          operationMode,
+          customerId: selectedCustomerId,
+          selectedBenefitNumber,
+          contracts,
+          consolidatedRefin,
+          activeContractIndex,
+          activeSubTab,
+        },
+        summary: {
+          customerName: cust?.name,
+          operationTypeLabel: operationMode === 'junction'
+            ? `Junção de Parcelas (${contracts.length} Port + 1 Refin Consolidado)`
+            : `Portabilidade + Refin (${contracts.length} contratos)`,
+          contractsCount: contracts.length,
+          description: operationMode === 'junction'
+            ? `${contracts.length} portabilidades unificadas no Refin Consolidado`
+            : `${contracts.length} contratos no lote`,
+        },
+      });
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [
+    contracts,
+    consolidatedRefin,
+    operationMode,
+    selectedCustomerId,
+    selectedBenefitNumber,
+    activeContractIndex,
+    activeSubTab,
+    customers,
+    onDraftSave,
+    onDirtyChange,
+  ]);
 
   // Soma de todas as parcelas portadas no lote (para apoiar a junção de parcelas)
   const totalPortInstallmentsSum = useMemo(() => {
@@ -795,6 +905,7 @@ export function GroupedPortabilityForm({
               </div>
 
               <div className="flex items-center gap-2">
+                <DraftStatusIndicator status={draftStatus || 'idle'} lastSavedAt={lastDraftSavedAt} />
                 {operationMode === 'individual' && (
                   <Button
                     type="button"
@@ -2018,7 +2129,19 @@ export function GroupedPortabilityForm({
           <Button
             type="button"
             variant="ghost"
-            onClick={onCancel}
+            onClick={() => {
+              const isDirty = hasGroupedDataChanges({
+                contracts,
+                consolidatedRefin,
+                customerId: selectedCustomerId,
+                selectedBenefitNumber,
+              });
+              if (isDirty) {
+                setIsVoltarConfirmOpen(true);
+              } else {
+                onCancel();
+              }
+            }}
             disabled={isSaving}
             className="text-xs font-bold text-muted-foreground hover:text-foreground"
           >
@@ -2052,6 +2175,48 @@ export function GroupedPortabilityForm({
           )}
         </Button>
       </div>
+
+      {/* Confirmação de Alternância para Modo Unitário */}
+      <AlertDialog open={isVoltarConfirmOpen} onOpenChange={setIsVoltarConfirmOpen}>
+        <AlertDialogContent
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+          className="rounded-[2rem] border-2 max-w-md p-6 shadow-2xl"
+        >
+          <AlertDialogHeader className="space-y-3">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              <AlertTriangle className="h-7 w-7" />
+            </div>
+            <AlertDialogTitle className="text-center text-lg font-black uppercase text-foreground">
+              Voltar ao Modo Unitário?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-xs font-medium leading-relaxed text-muted-foreground">
+              Você possui contratos preenchidos na operação agrupada. Ao voltar para o modo unitário, seus contratos continuarão preservados no rascunho. Deseja alternar a visualização?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-col sm:flex-row gap-2 mt-4 sm:justify-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsVoltarConfirmOpen(false)}
+              className="w-full sm:w-auto font-bold uppercase text-xs rounded-xl h-11 px-5"
+            >
+              Continuar no Lote
+            </Button>
+            <Button
+              type="button"
+              variant="default"
+              onClick={() => {
+                setIsVoltarConfirmOpen(false);
+                onCancel();
+              }}
+              className="w-full sm:w-auto font-bold uppercase text-xs rounded-xl h-11 px-5"
+            >
+              Sim, Voltar ao Unitário
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

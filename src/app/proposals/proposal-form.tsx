@@ -77,6 +77,9 @@ import { useTheme } from '@/components/theme-provider';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { summarizeNotes } from '@/ai/flows/summarize-notes-flow';
+import type { DraftSaveStatus, ProposalDraft } from '@/lib/proposal-draft-service';
+import { hasSingleFormDataChanges } from '@/lib/proposal-draft-service';
+import { DraftStatusIndicator } from '@/components/proposals/draft-status-indicator';
 
 const attachmentSchema = z.object({
   name: z.string(),
@@ -173,6 +176,11 @@ interface ProposalFormProps {
   selectedCustomerFromSearch: Customer | null;
   onCustomerSearchSelectionHandled: () => void;
   isSaving?: boolean;
+  initialDraft?: ProposalDraft | null;
+  onDirtyChange?: (isDirty: boolean) => void;
+  draftStatus?: DraftSaveStatus;
+  lastDraftSavedAt?: string | null;
+  onDraftSave?: (data: any) => void;
 }
 
 const applyDateMask = (value: string) => {
@@ -195,7 +203,12 @@ export function ProposalForm({
     onOpenCustomerSearch,
     selectedCustomerFromSearch,
     onCustomerSearchSelectionHandled,
-    isSaving = false
+    isSaving = false,
+    initialDraft,
+    onDirtyChange,
+    draftStatus,
+    lastDraftSavedAt,
+    onDraftSave
 }: ProposalFormProps) {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -204,7 +217,7 @@ export function ProposalForm({
   const [newHistoryEntry, setNewHistoryEntry] = useState('');
   const [stagedHistory, setStagedHistory] = useState<ProposalHistoryEntry[]>([]);
   const [isSummarizingObs, setIsSummarizingObs] = useState(false);
-  const [isGroupedMode, setIsGroupedMode] = useState(false);
+  const [isGroupedMode, setIsGroupedMode] = useState(Boolean(initialDraft?.mode === 'grouped'));
 
   // Estado local de TEXTO para o campo de percentual de comissão.
   // Separado do field.value (number) do React Hook Form para preservar zeros e vírgulas durante a digitação.
@@ -253,7 +266,7 @@ export function ProposalForm({
 
   const initialValues = useMemo(() => {
     const base = proposal || {};
-    const overrides = defaultValues || {};
+    const overrides = defaultValues || (initialDraft?.mode === 'single' ? initialDraft.formData : {}) || {};
     const source = { ...base, ...overrides };
 
     return {
@@ -296,7 +309,7 @@ export function ProposalForm({
         approval: false
       },
     };
-  }, [proposal, defaultValues, isClient]);
+  }, [proposal, defaultValues, initialDraft, isClient]);
 
   const form = useForm<ProposalFormValues>({
     resolver: zodResolver(proposalSchema),
@@ -314,6 +327,45 @@ export function ProposalForm({
     setCommPercRaw(pct === 0 ? '0' : String(pct).replace('.', ','));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialValues]);
+
+  // 🛡️ PROTEÇÃO CONTRA PERDA DE DADOS: Rastreamento de dirty state e auto-save debounced no modo unitário
+  useEffect(() => {
+    if (isReadOnly || isGroupedMode) return;
+
+    let timeoutId: NodeJS.Timeout;
+
+    const subscription = form.watch((values) => {
+      const isDirty = sheetMode === 'edit'
+        ? form.formState.isDirty
+        : hasSingleFormDataChanges(values);
+
+      onDirtyChange?.(isDirty);
+
+      if (!isDirty || !onDraftSave) return;
+
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        const selectedCust = customers.find(c => c.id === values.customerId);
+        onDraftSave({
+          mode: 'single',
+          sheetMode,
+          proposalId: proposal?.id,
+          formData: values,
+          summary: {
+            customerName: selectedCust?.name,
+            operationTypeLabel: `Proposta de ${values.product || 'Crédito'}`,
+            contractsCount: 1,
+            description: values.proposalNumber ? `Proposta N° ${values.proposalNumber}` : 'Proposta em preenchimento',
+          },
+        });
+      }, 1500);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeoutId);
+    };
+  }, [form, isReadOnly, isGroupedMode, sheetMode, proposal?.id, customers, onDraftSave, onDirtyChange]);
 
   const { watch, setValue } = form;
   const productValue = watch('product');
@@ -469,6 +521,11 @@ export function ProposalForm({
         isSaving={isSaving}
         initialCustomerId={form.getValues('customerId')}
         initialBenefitNumber={form.getValues('selectedBenefitNumber')}
+        initialGroupedData={initialDraft?.mode === 'grouped' ? initialDraft.groupedData : undefined}
+        onDraftSave={onDraftSave}
+        onDirtyChange={onDirtyChange}
+        draftStatus={draftStatus}
+        lastDraftSavedAt={lastDraftSavedAt}
       />
     );
   }
@@ -1211,7 +1268,8 @@ export function ProposalForm({
           </div>
         </ScrollArea>
         
-        <div className="sticky bottom-0 px-8 py-6 border-t bg-background z-20 flex justify-end">
+        <div className="sticky bottom-0 px-8 py-6 border-t bg-background z-20 flex justify-between items-center">
+            <DraftStatusIndicator status={draftStatus || 'idle'} lastSavedAt={lastDraftSavedAt} />
             {!isReadOnly && (
                 <Button type="submit" disabled={isSaving || isSummarizingObs} className="rounded-full px-12 font-black uppercase text-xs tracking-[0.2em] bg-[#00AEEF] hover:bg-[#0096D1] shadow-2xl shadow-[#00AEEF]/30 transition-all border-none h-14">
                     {isSaving ? <><Loader2 className="mr-3 h-5 w-5 animate-spin" /> Gravando...</> : <><Save className="mr-3 h-5 w-5" /> Salvar Proposta</>}

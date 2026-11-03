@@ -32,6 +32,16 @@ import {
 import { cleanFirestoreData, formatCurrency, cleanBankName, formatDateSafe, normalizeStatuses } from '@/lib/utils';
 import { proposalStatuses as initialProposalStatuses } from '@/lib/config-data';
 import { format } from 'date-fns';
+import { 
+  saveProposalDraft, 
+  loadProposalDraft, 
+  clearProposalDraft, 
+  type ProposalDraft, 
+  type DraftSaveStatus 
+} from '@/lib/proposal-draft-service';
+import { DraftStatusIndicator } from '@/components/proposals/draft-status-indicator';
+import { DraftRecoveryDialog } from '@/components/proposals/draft-recovery-dialog';
+import { DiscardProposalDialog } from '@/components/proposals/discard-proposal-dialog';
 
 
 // 🛡️ FIX BUILD: Garante que esta rota seja tratada como dinâmica
@@ -78,6 +88,15 @@ function ProposalsPageContent() {
   const [formKey, setFormKey] = React.useState('new');
   const tableRef = React.useRef<ProposalsDataTableHandle>(null);
   const [hasOpenedFromParam, setHasOpenedFromParam] = useState(false);
+  
+  // 🛡️ PROTEÇÃO CONTRA FECHAMENTO ACIDENTAL E RECUPERAÇÃO DE RASCUNHOS
+  const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false);
+  const [isRecoveryOpen, setIsRecoveryOpen] = useState(false);
+  const [activeDraft, setActiveDraft] = useState<ProposalDraft | null>(null);
+  const [recoveredDraftData, setRecoveredDraftData] = useState<ProposalDraft | null>(null);
+  const [draftSaveStatus, setDraftSaveStatus] = useState<DraftSaveStatus>('idle');
+  const [lastDraftSavedAt, setLastDraftSavedAt] = useState<string | null>(null);
+  const [isFormDirty, setIsFormDirty] = useState(false);
   
   // ⚡ PERFORMANCE: Limite de carregamento inicial equalizado com Financeiro para garantir consistência
   const [loadLimit, setLoadLimit] = useState(500);
@@ -136,19 +155,117 @@ function ProposalsPageContent() {
 
   const selectedCount = selectedIds.length;
 
+  // 🛡️ Carrega rascunho ativo do usuário ao iniciar
+  React.useEffect(() => {
+    if (!user || !firestore) return;
+    loadProposalDraft(firestore, user.uid).then((draft) => {
+      if (draft) {
+        setActiveDraft(draft);
+        setLastDraftSavedAt(draft.updatedAt);
+      }
+    });
+  }, [user, firestore]);
+
   const handleNewProposal = useCallback(() => {
+    if (activeDraft) {
+      setIsRecoveryOpen(true);
+      return;
+    }
     setSelectedProposal(undefined);
     setDefaultValues(undefined);
+    setRecoveredDraftData(null);
     setNewlySelectedCustomer(null);
+    setIsFormDirty(false);
     setSheetMode('new');
     setFormKey(`new-${Date.now()}`);
     setIsDialogOpen(true);
-  }, []);
+  }, [activeDraft]);
+
+  const handleRecoverDraft = useCallback(() => {
+    if (!activeDraft) return;
+    setDraftSaveStatus('restoring');
+    setRecoveredDraftData(activeDraft);
+    setSelectedProposal(undefined);
+    setDefaultValues(activeDraft.mode === 'single' ? activeDraft.formData : undefined);
+    setNewlySelectedCustomer(null);
+    setSheetMode(activeDraft.sheetMode || 'new');
+    setIsFormDirty(true);
+    setFormKey(`recovered-${Date.now()}`);
+    setIsRecoveryOpen(false);
+    setIsDialogOpen(true);
+    setDraftSaveStatus('saved');
+    toast({
+      title: 'Cadastro Recuperado!',
+      description: 'Seus dados e contratos não finalizados foram restaurados com sucesso.',
+    });
+  }, [activeDraft]);
+
+  const handleDiscardDraftFromPrompt = useCallback(async () => {
+    if (user && firestore) {
+      await clearProposalDraft(firestore, user.uid);
+    }
+    setActiveDraft(null);
+    setRecoveredDraftData(null);
+    setIsRecoveryOpen(false);
+    setSelectedProposal(undefined);
+    setDefaultValues(undefined);
+    setNewlySelectedCustomer(null);
+    setIsFormDirty(false);
+    setSheetMode('new');
+    setFormKey(`new-${Date.now()}`);
+    setIsDialogOpen(true);
+    toast({ title: 'Rascunho descartado', description: 'Iniciando novo cadastro em branco.' });
+  }, [user, firestore]);
+
+  const handleDraftSave = useCallback(async (draftPayload: any) => {
+    if (!user) return;
+    setDraftSaveStatus('saving');
+    try {
+      await saveProposalDraft(firestore, user.uid, draftPayload);
+      setDraftSaveStatus('saved');
+      setLastDraftSavedAt(new Date().toISOString());
+    } catch (e) {
+      console.error('Falha ao salvar rascunho:', e);
+      setDraftSaveStatus('error');
+    }
+  }, [user, firestore]);
+
+  const handleRequestClose = useCallback(() => {
+    if (sheetMode === 'view') {
+      setIsDialogOpen(false);
+      setSelectedProposal(undefined);
+      setRecoveredDraftData(null);
+      return;
+    }
+
+    if (isFormDirty) {
+      setIsDiscardConfirmOpen(true);
+    } else {
+      setIsDialogOpen(false);
+      setSelectedProposal(undefined);
+      setRecoveredDraftData(null);
+    }
+  }, [sheetMode, isFormDirty]);
+
+  const handleConfirmDiscard = useCallback(async () => {
+    setIsDiscardConfirmOpen(false);
+    setIsDialogOpen(false);
+    if (user && firestore) {
+      await clearProposalDraft(firestore, user.uid);
+    }
+    setActiveDraft(null);
+    setRecoveredDraftData(null);
+    setIsFormDirty(false);
+    setSelectedProposal(undefined);
+    toast({ title: 'Cadastro descartado com sucesso.' });
+  }, [user, firestore]);
 
   const handleEditProposal = useCallback((proposal: ProposalWithCustomer) => {
     setSelectedProposal(proposal);
     setDefaultValues(undefined);
+    setRecoveredDraftData(null);
     setNewlySelectedCustomer(null);
+    setIsFormDirty(false);
     setSheetMode('edit');
     setFormKey(`edit-${proposal.id}`);
     setIsDialogOpen(true);
@@ -157,7 +274,9 @@ function ProposalsPageContent() {
   const handleViewProposal = useCallback((proposal: ProposalWithCustomer) => {
     setSelectedProposal(proposal);
     setDefaultValues(undefined);
+    setRecoveredDraftData(null);
     setNewlySelectedCustomer(null);
+    setIsFormDirty(false);
     setSheetMode('view');
     setFormKey(`view-${proposal.id}`);
     setIsDialogOpen(true);
@@ -528,6 +647,12 @@ function ProposalsPageContent() {
                 title: 'Operação com Junção Cadastrada com Sucesso!', 
                 description: `${formData.portabilidades.length} portabilidade(s) unificada(s) em 1 Refin Consolidado (${totalProposals} propostas geradas).` 
             });
+            if (user && firestore) {
+                await clearProposalDraft(firestore, user.uid);
+            }
+            setActiveDraft(null);
+            setRecoveredDraftData(null);
+            setIsFormDirty(false);
             setIsDialogOpen(false);
             setSelectedProposal(undefined);
             setSheetMode('new');
@@ -599,6 +724,12 @@ function ProposalsPageContent() {
                 title: 'Operação Cadastrada com Sucesso!', 
                 description: `${formData.contracts.length} contrato(s) gravado(s) com sucesso (${totalProposals} propostas vinculadas geradas).` 
             });
+            if (user && firestore) {
+                await clearProposalDraft(firestore, user.uid);
+            }
+            setActiveDraft(null);
+            setRecoveredDraftData(null);
+            setIsFormDirty(false);
             setIsDialogOpen(false);
             setSelectedProposal(undefined);
             setSheetMode('new');
@@ -621,6 +752,12 @@ function ProposalsPageContent() {
         await setDoc(docRef, finalData, { merge: true });
         toast({ title: isEdit ? 'Proposta Atualizada!' : 'Proposta Salva!' });
         
+        if (user && firestore) {
+            await clearProposalDraft(firestore, user.uid);
+        }
+        setActiveDraft(null);
+        setRecoveredDraftData(null);
+        setIsFormDirty(false);
         setIsDialogOpen(false);
         setSelectedProposal(undefined);
         setSheetMode('new');
@@ -725,19 +862,78 @@ function ProposalsPageContent() {
 
 
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl w-[95vw] h-[90vh] flex flex-col p-0 overflow-hidden rounded-[2rem] border-none shadow-2xl">
-          <DialogHeader className="px-8 pt-8 pb-4 shrink-0 bg-muted/5 border-b">
-            <DialogTitle className="text-xl font-black uppercase text-primary">
-                {sheetMode === 'edit' ? 'Editar Registro' : sheetMode === 'view' ? 'Detalhes' : 'Cadastrar Proposta'}
-            </DialogTitle>
+      <Dialog open={isDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          handleRequestClose();
+        }
+      }}>
+        <DialogContent 
+          onPointerDownOutside={(e) => {
+            // 🛡️ PRIMEIRA PROTEÇÃO: Bloqueia fechamento ao clicar fora ou na área escurecida
+            e.preventDefault();
+          }}
+          onInteractOutside={(e) => {
+            // 🛡️ PRIMEIRA PROTEÇÃO: Bloqueia interações externas de fechar a janela
+            e.preventDefault();
+          }}
+          onEscapeKeyDown={(e) => {
+            // 🛡️ SEGUNDA PROTEÇÃO: Intercepta ESC e aciona confirmação se houver alterações
+            e.preventDefault();
+            handleRequestClose();
+          }}
+          onCloseClick={handleRequestClose}
+          className="max-w-4xl w-[95vw] h-[90vh] flex flex-col p-0 overflow-hidden rounded-[2rem] border-none shadow-2xl"
+        >
+          <DialogHeader className="px-8 pt-8 pb-4 shrink-0 bg-muted/5 border-b flex flex-row items-center justify-between pr-14">
+            <div className="flex items-center gap-3">
+              <DialogTitle className="text-xl font-black uppercase text-primary">
+                  {sheetMode === 'edit' ? 'Editar Registro' : sheetMode === 'view' ? 'Detalhes' : 'Cadastrar Proposta'}
+              </DialogTitle>
+              {sheetMode !== 'view' && (
+                <DraftStatusIndicator status={draftSaveStatus} lastSavedAt={lastDraftSavedAt} />
+              )}
+            </div>
             <DialogDescription className="sr-only">Formulário para gerenciamento de propostas bancárias</DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-hidden">
-            <ProposalForm key={formKey} onSubmit={handleFormSubmit} proposal={selectedProposal} allProposals={proposals || []} customers={customers || []} userSettings={userSettings || null} isReadOnly={sheetMode === 'view'} defaultValues={defaultValues} sheetMode={sheetMode} onOpenCustomerSearch={() => setIsCustomerSearchOpen(true)} selectedCustomerFromSearch={newlySelectedCustomer} onCustomerSearchSelectionHandled={handleCustomerSearchSelectionHandled} isSaving={isSaving} />
+            <ProposalForm 
+              key={formKey} 
+              onSubmit={handleFormSubmit} 
+              proposal={selectedProposal} 
+              allProposals={proposals || []} 
+              customers={customers || []} 
+              userSettings={userSettings || null} 
+              isReadOnly={sheetMode === 'view'} 
+              defaultValues={defaultValues} 
+              sheetMode={sheetMode} 
+              onOpenCustomerSearch={() => setIsCustomerSearchOpen(true)} 
+              selectedCustomerFromSearch={newlySelectedCustomer} 
+              onCustomerSearchSelectionHandled={handleCustomerSearchSelectionHandled} 
+              isSaving={isSaving}
+              initialDraft={recoveredDraftData}
+              onDirtyChange={setIsFormDirty}
+              draftStatus={draftSaveStatus}
+              lastDraftSavedAt={lastDraftSavedAt}
+              onDraftSave={handleDraftSave}
+            />
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* 🛡️ SEGUNDA PROTEÇÃO: Confirmação antes de descartar cadastro em andamento */}
+      <DiscardProposalDialog
+        open={isDiscardConfirmOpen}
+        onContinue={() => setIsDiscardConfirmOpen(false)}
+        onDiscard={handleConfirmDiscard}
+      />
+
+      {/* 🛡️ TERCEIRA PROTEÇÃO: Recuperação automática de rascunhos salvos */}
+      <DraftRecoveryDialog
+        open={isRecoveryOpen}
+        draft={activeDraft}
+        onRecover={handleRecoverDraft}
+        onDiscard={handleDiscardDraftFromPrompt}
+      />
 
       <Dialog open={isCustomerSearchOpen} onOpenChange={setIsCustomerSearchOpen}>
         <DialogContent className="max-w-2xl overflow-hidden rounded-[2rem] p-0">

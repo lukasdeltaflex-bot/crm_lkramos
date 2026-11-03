@@ -219,6 +219,17 @@ export type UserProfile = {
   phone?: string;
 }
 
+export type Reminder = {
+  id: string;
+  ownerId?: string;
+  title: string;
+  description?: string;
+  dueDate: string; // YYYY-MM-DD
+  customerId?: string;
+  status: 'pending' | 'completed';
+  createdAt?: string;
+};
+
 export type FollowUpStatus = 'pending' | 'completed' | 'rescheduled' | 'cancelled' | 'pendente' | 'concluido';
 
 export type FollowUp = {
