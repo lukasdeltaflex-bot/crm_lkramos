@@ -6,12 +6,14 @@ import { PageHeader } from '@/components/page-header';
 import { CustomerDataTable, type CustomerDataTableHandle } from './data-table';
 import { getColumns } from './columns';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, FileDown, UserCheck, UserX, Trash2, Sparkles, Landmark, X, Tag, Cake, ChevronRight, Zap } from 'lucide-react';
+import { PlusCircle, FileDown, UserCheck, UserX, Trash2, Sparkles, Landmark, X, Tag, Cake, ChevronRight, Zap, AlertCircle, CheckCircle2, RotateCw } from 'lucide-react';
 import { CustomerForm } from './customer-form';
 import type { Customer, UserSettings, Proposal, Lead } from '@/lib/types';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, doc, updateDoc, setDoc, query, where, writeBatch, limit, orderBy, getDocs, getDoc } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
+import { SalaryFilterComponent } from '@/components/customers/salary-filter';
+import { SalaryFilter, DEFAULT_SALARY_FILTER, customerMatchesSalaryFilter } from '@/lib/salary-utils';
 import {
   Dialog,
   DialogContent,
@@ -83,6 +85,8 @@ function CustomersPageContent() {
   const [rmcFilter, setRmcFilter] = React.useState('all');
   const [rccFilter, setRccFilter] = React.useState('all');
   const [tagFilter, setTagFilter] = React.useState('all');
+  const [salaryFilter, setSalaryFilter] = React.useState<SalaryFilter>(DEFAULT_SALARY_FILTER);
+  const [isLoadingAll, setIsLoadingAll] = React.useState(false);
   const [globalSearchTerm, setGlobalSearchTerm] = React.useState('');
 
   const customersQuery = useMemoFirebase(() => {
@@ -192,6 +196,53 @@ function CustomersPageContent() {
           toast({ variant: 'destructive', title: "Erro ao buscar mais dados" });
       } finally {
           setIsLoadingMore(false);
+      }
+  };
+
+  const loadAllRemainingCustomers = async () => {
+      if (!firestore || !user || !customers.length || isLoadingAll || isLoadingMore) return;
+      setIsLoadingAll(true);
+      try {
+          let currentCustomers = [...customers];
+          let hasMore = true;
+          let loadedCount = 0;
+          const BATCH_SIZE = 300;
+
+          while (hasMore) {
+              const lastCustomer = currentCustomers[currentCustomers.length - 1];
+              const lastId = lastCustomer?.numericId || 1;
+
+              const q = query(
+                  collection(firestore, 'customers'),
+                  where('ownerId', '==', user.uid),
+                  where('numericId', '<', lastId),
+                  orderBy('numericId', 'desc'),
+                  limit(BATCH_SIZE)
+              );
+              const snap = await getDocs(q);
+              const newDocs = snap.docs.map(d => ({ ...d.data(), id: d.id } as Customer));
+
+              if (newDocs.length > 0) {
+                  loadedCount += newDocs.length;
+                  currentCustomers = [...currentCustomers, ...newDocs];
+                  setStaticCustomers(prev => [...prev, ...newDocs]);
+                  if (newDocs.length < BATCH_SIZE) {
+                      hasMore = false;
+                  }
+              } else {
+                  hasMore = false;
+              }
+          }
+          setHasMoreCustomers(false);
+          toast({ 
+              title: "Toda a carteira carregada!", 
+              description: `${loadedCount} registros históricos adicionados à consulta.` 
+          });
+      } catch (e) {
+          console.error(e);
+          toast({ variant: 'destructive', title: "Erro ao carregar carteira completa" });
+      } finally {
+          setIsLoadingAll(false);
       }
   };
 
@@ -346,12 +397,12 @@ function CustomersPageContent() {
         if (!isStatusMatch) return false;
 
         if (rmcFilter !== 'all') {
-            const hasRmc = c.benefits?.some(b => b.rmcBank === rmcFilter);
+            const hasRmc = c.benefits?.some((b: any) => b.rmcBank === rmcFilter);
             if (!hasRmc) return false;
         }
 
         if (rccFilter !== 'all') {
-            const hasRcc = c.benefits?.some(b => b.rccBank === rccFilter);
+            const hasRcc = c.benefits?.some((b: any) => b.rccBank === rccFilter);
             if (!hasRcc) return false;
         }
 
@@ -360,9 +411,14 @@ function CustomersPageContent() {
             if (!hasTag) return false;
         }
 
+        if (salaryFilter.presetId !== 'all' && (salaryFilter.min !== undefined || salaryFilter.max !== undefined)) {
+            const matchesSalary = customerMatchesSalaryFilter(c, salaryFilter.min, salaryFilter.max);
+            if (!matchesSalary) return false;
+        }
+
         return true;
     });
-  }, [processedCustomers, filter, rmcFilter, rccFilter, tagFilter, globalSearchTerm]);
+  }, [processedCustomers, filter, rmcFilter, rccFilter, tagFilter, salaryFilter, globalSearchTerm]);
 
   const handleEditCustomer = React.useCallback((customer: Customer) => {
     setSelectedCustomer(customer);
@@ -539,9 +595,11 @@ function CustomersPageContent() {
       setRmcFilter('all');
       setRccFilter('all');
       setTagFilter('all');
+      setSalaryFilter(DEFAULT_SALARY_FILTER);
   };
 
-  const hasActiveFilters = rmcFilter !== 'all' || rccFilter !== 'all' || tagFilter !== 'all';
+  const isSalaryFilterActive = salaryFilter.presetId !== 'all' && (salaryFilter.min !== undefined || salaryFilter.max !== undefined);
+  const hasActiveFilters = rmcFilter !== 'all' || rccFilter !== 'all' || tagFilter !== 'all' || isSalaryFilterActive;
 
   React.useEffect(() => {
     const action = searchParams.get('action');
@@ -689,6 +747,10 @@ function CustomersPageContent() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                    <SalaryFilterComponent value={salaryFilter} onChange={setSalaryFilter} />
+                </div>
+
+                <div className="flex items-center gap-2">
                     <Select value={rmcFilter} onValueChange={setRmcFilter}>
                         <SelectTrigger className="h-10 min-w-[180px] bg-background rounded-full text-[10px] font-black uppercase px-5 border-orange-200 text-orange-600 shadow-sm hover:bg-orange-50 transition-colors">
                             <div className="flex items-center gap-2">
@@ -785,6 +847,55 @@ function CustomersPageContent() {
           )
       ) : (
           <div className="space-y-6">
+            {isSalaryFilterActive && (
+                <div className={cn(
+                    "flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 px-5 rounded-2xl border text-xs font-bold transition-all shadow-sm animate-in fade-in slide-in-from-top-2",
+                    hasMoreCustomers 
+                        ? "bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200" 
+                        : "bg-emerald-500/10 border-emerald-500/30 text-emerald-900 dark:text-emerald-200"
+                )}>
+                    <div className="flex items-center gap-2.5">
+                        {hasMoreCustomers ? (
+                            <>
+                                <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                                <span>
+                                    Filtro salarial aplicado aos <strong>{customers.length}</strong> clientes carregados. 
+                                    Ainda existem registros históricos no banco que não foram consultados.
+                                </span>
+                            </>
+                        ) : (
+                            <>
+                                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                                <span>
+                                    <strong>Toda a carteira ({customers.length} clientes)</strong> foi consultada pelo filtro salarial ({salaryFilter.label}).
+                                </span>
+                            </>
+                        )}
+                    </div>
+                    {hasMoreCustomers && (
+                        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={loadMoreCustomers}
+                                disabled={isLoadingMore || isLoadingAll}
+                                className="h-8 rounded-full font-bold text-[11px] bg-background border-amber-300 hover:bg-amber-100/50 shadow-sm"
+                            >
+                                {isLoadingMore ? "Carregando..." : "+ 150 Registros"}
+                            </Button>
+                            <Button
+                                size="sm"
+                                onClick={loadAllRemainingCustomers}
+                                disabled={isLoadingMore || isLoadingAll}
+                                className="h-8 rounded-full font-black text-[11px] bg-amber-600 hover:bg-amber-700 text-white uppercase tracking-wider shadow-sm gap-1.5"
+                            >
+                                {isLoadingAll ? <RotateCw className="h-3 w-3 animate-spin" /> : null}
+                                {isLoadingAll ? "Consultando..." : "Consultar Toda a Carteira"}
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            )}
             <CustomerDataTable 
                 columns={columns} 
                 data={filteredCustomers} 

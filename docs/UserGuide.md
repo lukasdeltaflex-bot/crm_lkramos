@@ -69,6 +69,45 @@ Classificamos nossos clientes utilizando as seguintes etiquetas:
 
 ---
 
+## 💵 Filtro por Salário na Central de Clientes
+
+A Central de Clientes conta com o filtro **TODOS OS SALÁRIOS**, permitindo localizar clientes com base no valor de seus benefícios previdenciários e contratuais.
+
+### 📌 Onde encontrar
+Na barra superior da tela **Central de Clientes** (`/customers`), posicionado junto aos filtros de *Etiquetas (Tags)*, *Banco RMC* e *Banco RCC*.
+
+### ⚡ Como selecionar uma faixa predefinida
+1. Clique no botão **`TODOS OS SALÁRIOS`**.
+2. Escolha uma das opções rápidas disponíveis:
+   - **Até R$ 1.621,00** (Piso Nacional / Salário Mínimo Vigente)
+   - **R$ 1.621,00 a R$ 2.500,00**
+   - **R$ 2.500,00 a R$ 3.500,00**
+   - **R$ 3.500,00 a R$ 5.000,00**
+   - **Acima de R$ 5.000,00**
+3. A listagem filtrará imediatamente os clientes correspondentes.
+
+### 🎯 Como informar um intervalo personalizado
+1. No menu aberto pelo botão de salário, localize a seção **Faixa Personalizada (R$)**.
+2. Digite o valor no campo **Mínimo** (ex: `2.000,00`) e/ou no campo **Máximo** (ex: `3.000,00`).
+3. O sistema valida os valores para impedir intervalos inválidos (mínimo superior ao máximo).
+4. Clique em **`Aplicar Faixa Personalizada`**.
+
+### 🔍 Particularidade: Clientes com Múltiplos Benefícios
+- **Avaliação Individual:** O filtro avalia cada benefício do cliente como uma fonte isolada de renda.
+- **Regra de Correspondência:** Um cliente é apresentado na tabela quando **pelo menos um** de seus benefícios estiver dentro da faixa selecionada.
+- **Sem Somatória ou Média:** O sistema não soma os benefícios nem calcula médias para enquadrar o cliente.
+- **Sem Duplicação:** Mesmo que um cliente possua dois ou mais benefícios que atendam ao critério, ele aparece **uma única vez** na listagem.
+
+### 🔄 Como limpar o filtro
+- Para remover apenas o filtro de salário, clique no ícone **`X`** no botão do filtro ou abra o seletor e selecione **`Todos os Salários`** (ou o botão rápido **`Limpar`**).
+- Clicar no botão geral **`Limpar Filtros`** da barra superior também restaura o filtro salarial para o padrão junto com os demais filtros.
+
+### 📦 Consulta em Lotes e Toda a Carteira
+- Quando o filtro salarial estiver ativo, um aviso informativo exibe a quantidade de clientes consultados no lote atual.
+- Caso existam mais registros no histórico do Firestore, o sistema exibe os botões **`+ 150 Registros`** e **`Consultar Toda a Carteira`**, permitindo carregar o histórico sob demanda sem travamentos e com economia de leituras no banco.
+
+---
+
 ## ⚠️ Motivos de Cancelamento/Indeferimento
 
 Principais motivos registrados no sistema para controle de qualidade:
